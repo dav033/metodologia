@@ -59,6 +59,13 @@ class OpsTests(unittest.TestCase):
         ops.apply("p", "REQ-001", self.rdir, "reopen", "T3", "retry")
         self.sch.reopen.assert_called_once_with("T3", ops.OPERATOR, "retry")
 
+    def test_rework_sends_the_listed_tasks_back_through_m1(self):
+        self.sch.rework.return_value = ("T1", "T2")
+        lines = ops.apply("p", "REQ-001", self.rdir, "rework", "T1, T2", "audit found it")
+        self.sch.rework.assert_called_once_with(("T1", "T2"), ops.OPERATOR, "audit found it")
+        self.assertIn("sent back for rework: T1, T2", lines)
+        self.assertFalse(ops.on_hold(self.rdir))
+
     def test_revise_cancels_live_attempts_then_rebases(self):
         report = SimpleNamespace(from_revision=6, to_revision=7, kept=["T1"], reset=[], added=[], removed=[])
         with patch.object(adapter, "rebase_to_latest", return_value=report) as rebase, \

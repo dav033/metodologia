@@ -178,3 +178,125 @@ class Loop(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Rework(unittest.TestCase):
+    """An audit rejected work built on accepted tasks: the system sends them back, never completes anything itself."""
+
+    def chain(self, **kw):
+        h = Harness([indep("T1"), indep("T2", ["T1"]), indep("T3", ["T2"]), indep("T9")], parallel=2, max_attempts=2, **kw)
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.finish_and_accept("T2")
+        h.core.step()
+        return h
+
+    def reject(self, h, tid, named, reason="F1 critical"):
+        h.core.step()
+        h.send(tid, "execution_finished")
+        h.core.step()
+        h.n += 1
+        attempt = h.attempt(tid)
+        verdict = sc.Verdict(f"vd-r{h.n}", h.plan.plan_id, h.plan.revision, tid, attempt, False, "validator",
+                             "audit gate: open findings", h.token(attempt))
+        return h.core.reject_and_rework(verdict, named, "audit-gate", reason)
+
+    def states(self, h):
+        return {tid: v["state"] for tid, v in h.core.snapshot().tasks.items()}
+
+    def test_the_named_task_its_dependents_and_the_rejected_task_go_back(self):
+        h = self.chain()
+        result, moved = self.reject(h, "T3", ("T1",))
+        self.assertEqual(result.status, "applied")
+        self.assertEqual(moved, ("T1", "T2", "T3"))
+        states = self.states(h)
+        self.assertEqual((states["T1"], states["T2"], states["T3"]), ("ready", "pending", "pending"))
+        self.assertIn("rework_requested", h.audit_kinds())
+
+    def test_independent_branches_are_left_alone(self):
+        h = self.chain()
+        h.finish_and_accept("T9")
+        self.reject(h, "T3", ("T1",))
+        self.assertEqual(self.states(h)["T9"], "completed")
+
+    def test_rework_gets_a_fresh_attempt_budget_and_is_completed_only_by_a_new_verdict(self):
+        h = self.chain()
+        self.reject(h, "T3", ("T2",))
+        h.core.step()
+        self.assertEqual(self.states(h)["T2"], "active")
+        h.finish_and_accept("T2")
+        self.assertEqual(self.states(h)["T2"], "completed")
+
+    def test_the_limit_blocks_the_rejected_task_at_once_instead_of_burning_retries(self):
+        h = Harness([indep("T1"), indep("T2", ["T1"])], parallel=1, max_attempts=3,
+                    config=sc.Config(max_attempts=3, max_reworks=1))
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()
+        result, moved = self.reject(h, "T2", ("T1",))
+        self.assertEqual(moved, ("T1", "T2"))
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()
+        result, moved = self.reject(h, "T2", ("T1",))
+        self.assertEqual((result.status, moved), ("applied", ()))
+        self.assertIn("rework_refused", h.audit_kinds())
+        states = self.states(h)
+        self.assertEqual((states["T1"], states["T2"]), ("completed", "blocked"))
+        self.assertEqual(h.core.snapshot().tasks["T2"]["reason"], "rework_limit")
+
+    def test_the_owner_may_rework_past_the_limit(self):
+        h = Harness([indep("T1"), indep("T2", ["T1"])], parallel=1, max_attempts=3,
+                    config=sc.Config(max_attempts=3, max_reworks=1))
+        h.core.step()
+        h.core.pause("owner")                                   # nothing new starts: T2 never gets a live attempt
+        h.finish_and_accept("T1")
+        self.assertEqual(h.core.rework(("T1",), "owner", "redo it"), ("T1", "T2"))
+        h.core.resume("owner")
+        h.core.step()
+        h.core.pause("owner")
+        h.finish_and_accept("T1")
+        self.assertEqual(h.core.rework(("T1",), "owner", "and again"), ("T1", "T2"))   # past max_reworks
+        self.assertEqual(self.states(h)["T1"], "ready")
+
+    def test_a_live_attempt_in_scope_defers_the_whole_verdict(self):
+        h = Harness([indep("T1"), indep("T2", ["T1"]), indep("T3", ["T1"])], parallel=2, max_attempts=2)
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()                                   # T2 and T3 are both active now
+        result, moved = self.reject(h, "T2", ("T1",))
+        self.assertEqual((result.status, moved), ("deferred", ()))
+        self.assertTrue(result.reason.startswith("busy"))
+        self.assertEqual(self.states(h)["T2"], "active")           # nothing was applied: M6 offers it again later
+        self.assertEqual(self.states(h)["T1"], "completed")
+        h.finish_and_accept("T3")
+        h.core.step()
+        result, moved = self.reject(h, "T2", ("T1",))
+        self.assertEqual((result.status, moved), ("applied", ("T1", "T2", "T3")))
+
+    def test_an_accepting_verdict_cannot_ask_for_rework(self):
+        h = self.chain()
+        h.core.step()
+        h.send("T3", "execution_finished")
+        h.core.step()
+        attempt = h.attempt("T3")
+        verdict = sc.Verdict("vd-ok", h.plan.plan_id, h.plan.revision, "T3", attempt, True, "validator", "ok", h.token(attempt))
+        with self.assertRaises(sc.SchedulerError):
+            h.core.reject_and_rework(verdict, ("T1",), "audit-gate")
+
+    def test_the_same_verdict_twice_reworks_once(self):
+        h = self.chain()
+        h.core.step()
+        h.send("T3", "execution_finished")
+        h.core.step()
+        attempt = h.attempt("T3")
+        verdict = sc.Verdict("vd-dup", h.plan.plan_id, h.plan.revision, "T3", attempt, False, "validator", "bad", h.token(attempt))
+        first = h.core.reject_and_rework(verdict, ("T1",), "audit-gate")
+        second = h.core.reject_and_rework(verdict, ("T1",), "audit-gate")
+        self.assertEqual((first[0].status, first[1]), ("applied", ("T1", "T2", "T3")))
+        self.assertEqual((second[0].status, second[1]), ("duplicate", ()))
+
+    def test_unknown_task_is_refused(self):
+        h = self.chain()
+        with self.assertRaises(sc.SchedulerError):
+            self.reject(h, "T3", ("T404",))

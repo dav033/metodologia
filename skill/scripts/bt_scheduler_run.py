@@ -41,7 +41,8 @@ def _run_config():
     scopes = bt_config.get("scheduler.exclusive_scopes", [])
     scopes = tuple(s for s in scopes if isinstance(s, str) and s) if isinstance(scopes, list) else ()
     return adapter.core.Config(max_attempts=number("scheduler.max_attempts", 3),
-                               max_parallel_tasks=number("scheduler.max_parallel_tasks", 3), exclusive_scopes=scopes)
+                               max_parallel_tasks=number("scheduler.max_parallel_tasks", 3), exclusive_scopes=scopes,
+                               max_reworks=number("gates.max_reworks", 2))
 
 
 def _executor_config():

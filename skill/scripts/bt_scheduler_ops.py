@@ -1,5 +1,5 @@
 """Operator moves on a Scheduler run: stop its owner, cancel a live attempt (and its agent), reopen a blocked task,
-revise the run onto the latest frozen plan. Each one used to be a throwaway Python snippet.
+send accepted work back for rework, revise the run onto the latest frozen plan. Each one used to be a throwaway Python snippet.
 
 Every move that writes needs the owner stopped (M1 allows one owner), and the watchdog (`bt_scheduler_watch`) would
 restart it at once, so a move first puts a `hold` on the run; the watchdog honours it, and the move releases it when done.
@@ -219,6 +219,10 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
             elif action == "reopen":
                 sch.reopen(target, OPERATOR, why)
                 lines.append(f"{target}: reopened")
+            elif action == "rework":
+                tasks = tuple(item.strip() for item in target.split(",") if item.strip())
+                moved = sch.rework(tasks, OPERATOR, why)
+                lines.append(f"sent back for rework: {', '.join(moved) or 'nothing (already pending)'}")
             elif action == "revise":
                 live = [a for a, _, _ in _live_attempts(sch)]
                 lines += cancel_attempts(project, req, rdir, sch, live, f"{why}: superseded by a plan revision")

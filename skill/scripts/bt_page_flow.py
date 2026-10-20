@@ -18,7 +18,7 @@ TASK_KEY = (("k-verify", "aceptada"), ("k-run", "en curso"), ("k-recover", "rein
             ("k-state", "pendiente"))
 
 
-def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026") -> str:
+def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026", token: str = "") -> str:
     """`sim` = project/REQ whose plan «Simular» runs on the core's doubles (default: the DEMO plan)."""
     key = "".join(f'<span class="{cls}"><i></i>{e(text)}</span>' for cls, text in TASK_KEY)
     label = {"global": "todas las ejecuciones"}.get(scope, scope.replace(":", " · "))
@@ -29,12 +29,13 @@ def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026") -> str:
 <button type="button" id="flow-pause">Pausar animación<small>Deja quietas las partículas del mapa</small></button>
 <button type="button" id="flow-sim" data-sim="{e(sim)}">Simular<small>Corre el plan {e(sim)} con dobles de M2–M5, sin proveedores ni escribir nada</small></button>
 </div></details></div></div>
-<div id="flow" class="flowpage" data-scope="{e(scope)}">
+<div id="flow" class="flowpage" data-scope="{e(scope)}" data-token="{e(token)}">
 <section class="fl-runs" id="fl-runs" aria-label="Ejecuciones"><p class="muted">Cargando ejecuciones…</p></section>
 <p class="fl-now" id="fl-now" aria-live="polite"></p>
 <section class="fl-tasks" id="fl-tasks-box" aria-label="Tareas" hidden>
 <div class="fl-row"><h2>Tareas</h2><div class="fl-key">{key}</div><span class="fl-hint">clic en una tarea para seguir su recorrido</span></div>
 <div class="fl-chips" id="fl-tasks"></div></section>
+<section class="fl-decisions" id="fl-decisions" aria-live="polite" hidden></section>
 <section class="fl-stage">
 <div class="fl-mapcard"><div class="fl-live" id="fl-live" aria-live="polite" hidden></div><div class="fl-crumbs" id="fl-crumbs"></div>
 <div class="fl-mapwrap" id="flow-map"></div>
@@ -52,5 +53,6 @@ def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026") -> str:
 <div class="fl-trace" id="fl-trace" hidden></div></aside>
 </section></div>
 <noscript><p class="muted">Esta vista necesita JavaScript.</p></noscript>
-<script src="/static/flow-core.js"></script><script src="/static/flow.js"></script>"""
+<script src="/static/flow-core.js"></script><script src="/static/flow-failure-links.js"></script>
+<script src="/static/flow.js"></script><script src="/static/flow-decisions.js"></script>"""
     return layout("Flujo", body, [("Flujo", "/flow")])

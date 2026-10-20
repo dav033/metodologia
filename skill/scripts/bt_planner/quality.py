@@ -9,6 +9,7 @@ from __future__ import annotations
 import fnmatch
 import re
 
+LEDGER_SUFFIX = ".findings.json"   # the findings ledger an audit task declares
 VERIFICATION_CATEGORIES = ("static", "functional", "integration", "regression", "product")
 
 _WILD = re.compile(r"[*?\[]")
@@ -348,6 +349,43 @@ def verification_report(plan: dict) -> dict[str, object]:
     """Stable Planner report fields for T10 to expose without changing legacy analysis output."""
     return {"verification_categories": verification_categories(plan),
             "criteria_without_command": criteria_without_command(plan)}
+
+
+def audit_findings(plan: dict) -> list[str]:
+    """Schema 1.2.0 errors for audits that cannot reject anything. A passing «the report file exists» says nothing about
+    what the audit found, so an audit task must declare its machine-readable findings ledger (the Scheduler rejects it
+    while a critical/high finding is open and sends the named tasks back), and a plan with an audit must run, before it,
+    an end-to-end test over the real entry points: components that pass alone but were never started together are what
+    an audit finds too late."""
+    if not isinstance(plan, dict) or not isinstance(plan.get("tasks"), list):
+        return []
+    tasks = {t["id"]: t for t in plan["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)}
+    audits = [tid for tid, t in tasks.items() if t.get("kind") == "audit"]
+    errors: list[str] = []
+    for tid in audits:
+        paths = tasks[tid].get("expected_paths")
+        ledgers = [p for p in paths if isinstance(p, str) and p.endswith(LEDGER_SUFFIX)] if isinstance(paths, list) else []
+        if len(ledgers) != 1:
+            errors.append(f"{tid}.expected_paths: an audit task must list exactly one findings ledger "
+                          f"(a path ending {LEDGER_SUFFIX}); the Scheduler rejects the audit while a critical or high "
+                          "finding in it is open")
+    if not audits:
+        return errors
+    before = ancestors(plan)
+
+    def integration(task: dict) -> bool:
+        verification = task.get("verification")
+        return task.get("kind") == "test" and isinstance(verification, list) and any(
+            isinstance(v, dict) and v.get("type") == "command" and v.get("category") == "integration"
+            for v in verification)
+
+    integration_ids = {tid for tid, t in tasks.items() if integration(t)}
+    for tid in audits:
+        if not integration_ids & before.get(tid, set()):
+            errors.append(f"{tid}: an audit needs a `kind: test` task with an `integration` command verification "
+                          "among the tasks it follows; that test must start the real entry points (server, worker, "
+                          "CLI) together, not only import their modules")
+    return errors
 
 
 def verification_findings(plan: dict) -> list[str]:

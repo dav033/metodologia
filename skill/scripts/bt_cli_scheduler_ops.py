@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "revise")
+ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "revise")
 
 
 def register(subparsers) -> None:
@@ -17,7 +17,8 @@ def register(subparsers) -> None:
     op.add_argument("req", help="REQ-NNN")
     op.add_argument("action", choices=ACTIONS)
     op.add_argument("target", nargs="?", default="",
-                    help="attempt id for cancel-attempt, task id for reopen and retry, request id for decide")
+                    help="attempt id for cancel-attempt, task id for reopen and retry, comma-separated task ids for rework "
+                         "(they and everything downstream go back to be redone), request id for decide")
     op.add_argument("option", nargs="?", default="", help="the option to take, for decide")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
     op.add_argument("--hold", action="store_true", help="leave the run stopped; `resume` releases it")
@@ -57,8 +58,8 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
     if args.action == "resume":
         print(ops.resume(project, args.req, rdir))
         return 0
-    if args.action in {"cancel-attempt", "reopen", "retry"} and not args.target:
-        print(f"{args.action} needs a target (attempt id, or task id for reopen and retry)")
+    if args.action in {"cancel-attempt", "reopen", "retry", "rework"} and not args.target:
+        print(f"{args.action} needs a target (attempt id, or task id(s) for reopen, retry and rework)")
         return 2
     try:
         if args.action == "stop":

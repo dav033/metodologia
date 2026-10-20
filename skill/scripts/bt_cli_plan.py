@@ -14,7 +14,7 @@ from bt_core import find_req
 def add_parser(sub: argparse._SubParsersAction) -> None:
     parser = sub.add_parser("plan-json", help="manage PLAN.json or read the conservative planning-history projection")
     parser.add_argument("action", choices=["init", "check", "freeze", "bind", "report", "show", "compat", "history",
-                                           "amend", "amendments"])
+                                           "amend", "amendments", "retrofit-audit"])
     parser.add_argument("req", nargs="?", help="REQ-NNN (not used by history)")
     parser.add_argument("rest", nargs="*", help="amend: TASK FIELD VALUE (e.g. T4 complexity high)")
     parser.add_argument("--reason", help="amend: why the classification changed")

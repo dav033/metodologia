@@ -50,12 +50,13 @@ class EventKind(str, Enum):
 T, A = TaskState, AttemptState
 
 TASK_TRANSITIONS: dict[TaskState, frozenset[TaskState]] = {
+    # PENDING again is reached only by `operations.rework` (an audit rejected work built on this task's result)
     T.PENDING: frozenset({T.READY, T.CANCELLED}),
-    T.READY: frozenset({T.ACTIVE, T.BLOCKED, T.CANCELLED}),
+    T.READY: frozenset({T.ACTIVE, T.BLOCKED, T.PENDING, T.CANCELLED}),
     T.ACTIVE: frozenset({T.COMPLETED, T.RECOVERING, T.CANCELLED}),
-    T.RECOVERING: frozenset({T.READY, T.BLOCKED, T.CANCELLED}),
-    T.BLOCKED: frozenset({T.READY, T.CANCELLED}),
-    T.COMPLETED: frozenset(),
+    T.RECOVERING: frozenset({T.READY, T.BLOCKED, T.PENDING, T.CANCELLED}),
+    T.BLOCKED: frozenset({T.READY, T.PENDING, T.CANCELLED}),
+    T.COMPLETED: frozenset({T.PENDING}),
     T.CANCELLED: frozenset(),
 }
 
@@ -75,7 +76,7 @@ ATTEMPT_TRANSITIONS: dict[AttemptState, frozenset[AttemptState]] = {
 
 ATTEMPT_TERMINAL = frozenset({A.ACCEPTED, A.FAILED, A.REJECTED, A.CANCELLED})
 ATTEMPT_LIVE = frozenset(set(AttemptState) - ATTEMPT_TERMINAL)
-TASK_TERMINAL = frozenset({T.COMPLETED, T.CANCELLED})
+TASK_TERMINAL = frozenset({T.COMPLETED, T.CANCELLED})  # COMPLETED only leaves it through `rework`
 
 # Which attempt state an executor event leads to, from which states (anything else is stale or invalid).
 _EARLY = frozenset({A.RESERVED, A.DISPATCHED, A.UNCERTAIN})

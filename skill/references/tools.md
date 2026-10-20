@@ -25,15 +25,18 @@ Netlify", "baja el backup del bucket":
 4. Log it in today's session section (what, where, result). A deploy or infra change is also worth a line in
    SUMMARY.md's current state.
 
-**Autonomy line:**
-- **Read-only** (status, logs, listing deployments, inspecting files/containers, querying with SELECT, `df`, `top`)
-  → do it freely, whenever it helps — also unprompted while debugging.
-- **Changes** (deploy, restart, migrations, editing server files, env vars, DNS, deleting anything, scaling,
-  anything that costs money) → do it when the user asked for that action (their request *is* the authorization),
-  otherwise ask first — batched, per `execution.md` §2. Executor sessions launched with full permissions follow
-  the same line.
-- Before a risky change on a server (migration, config edit), take the cheap safety step first: backup/dump, copy
-  the file, note the current version to roll back to.
+**Autonomy line (owner decision 2026-10-19, replaces the earlier ask-first rule):**
+- Agents run with no permission prompts (Claude `bypassPermissions` / `--dangerously-skip-permissions`, Codex
+  `approval_policy = "never"` + `danger-full-access` / `--yolo`) and may ship to production on their own with the CLIs
+  in `~/bitacora/TOOLS.md`: `git push`, merges to `main`, `gh`, `vercel`, `netlify`, `ssh` to the registered hosts.
+  The owner does not have to ask for each one; the rest of the method still applies.
+- Do it, then **prove it**: tests pass before pushing, the deploy is checked afterwards (status, logs, a request to
+  the live URL), and the result is reported in Spanish with that evidence plus a line in the session log.
+- **Cheap safety first** for anything hard to undo on a server or database (migration, config edit, delete, scaling,
+  anything that costs money): backup/dump, copy the file, or note the current version/deployment to roll back to.
+- Still not done without the owner asking: deleting the user's files or branches, `reset --hard`, force-push or
+  rebasing a shared branch.
+- Never put credentials in the bitácora (below).
 
 ## Keeping it current
 

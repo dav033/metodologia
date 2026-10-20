@@ -9,6 +9,7 @@ import unittest
 from datetime import UTC, datetime
 from pathlib import Path
 
+import bt_audit_gate
 import bt_scheduler_adapter as scheduler_adapter
 import bt_scheduler_executor_adapter as executor_adapter
 from bt_scheduler_quality.policy import QualityPolicy
@@ -88,13 +89,23 @@ class ScriptedRunner:
 
 class M6M1AdapterTests(unittest.TestCase):
     def _system(
-        self, tasks, *, runner=None, recovery=None, max_attempts=1, store_path=None
+        self,
+        tasks,
+        *,
+        runner=None,
+        recovery=None,
+        max_attempts=1,
+        store_path=None,
+        schema_version="1.0.0",
+        read_ledger=None,
+        rework_notes=None,
+        audit_policy=None,
     ):
         temporary = tempfile.TemporaryDirectory(prefix="m6-m1-")
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         plan_value = {
-            "schema_version": "1.0.0",
+            "schema_version": schema_version,
             "plan_id": "PLAN-M6-INTEGRATION",
             "revision": 1,
             "tasks": tasks,
@@ -123,6 +134,9 @@ class M6M1AdapterTests(unittest.TestCase):
             QualityPolicy(),
             lambda order: root / order.task_id,
             runner=runner or ScriptedRunner(),
+            read_ledger=read_ledger,
+            rework_notes=rework_notes,
+            audit_policy=audit_policy,
         )
         core.ports.verification = adapter
         adapter.start()
@@ -164,6 +178,107 @@ class M6M1AdapterTests(unittest.TestCase):
                 )
                 self.assertEqual(core.ingest(event).status, "applied")
         return attempts
+
+    # ---- audit gate: the ledger decides, and the system sends the named work back -------------------------------
+    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None):
+        implement = _task("T1", "python3 build.py")
+        implement.update(kind="implement")
+        implement["verification"][0]["category"] = "functional"
+        audit = _task("T2", "test -s audit.md")
+        audit.update(kind="audit", after=["T1"], expected_paths=["docs/audit.md"]
+                     + (["docs/audit.findings.json"] if declare_ledger else []))
+        audit["verification"][0]["category"] = "functional"
+        system = self._system(
+            [implement, audit],
+            max_attempts=2,
+            schema_version="1.2.0",
+            read_ledger=ledger,
+            rework_notes=lambda task_id, text: notes.append((task_id, text)),
+            audit_policy=policy,
+        )
+        root, core, _, executor, _, _ = system
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(
+            _wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed")
+        )
+        self._start_attempts(core, executor, root, ("T2",))
+        core.step()
+        return core
+
+    @staticmethod
+    def _ledger(*findings):
+        return json.dumps({"schema": "audit-findings/1", "findings": list(findings)}).encode()
+
+    def test_an_audit_with_a_clean_ledger_is_accepted(self):
+        notes = []
+        core = self._audit_system(lambda order, path: self._ledger(), notes)
+        self.assertTrue(
+            _wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed")
+        )
+        self.assertEqual(notes, [])
+
+    def test_an_open_critical_finding_rejects_the_audit_and_the_system_reopens_the_named_task(self):
+        notes = []
+        finding = {
+            "id": "F1", "severity": "critical", "status": "open",
+            "summary": "the gateway never listens", "tasks": ["T1"],
+        }
+        asked = []
+
+        def ledger(order, path):
+            asked.append(path)
+            return self._ledger(finding)
+
+        core = self._audit_system(ledger, notes)
+        self.assertTrue(
+            _wait_for(lambda: core.snapshot().tasks["T1"]["state"] != "completed")
+        )
+        states = {t: v["state"] for t, v in core.snapshot().tasks.items()}
+        self.assertIn(states["T1"], {"ready", "active"})
+        self.assertEqual(states["T2"], "pending")
+        self.assertEqual(asked[0], "docs/audit.findings.json")
+        self.assertEqual({task for task, _ in notes}, {"T1", "T2"})
+        self.assertIn("the gateway never listens", dict(notes)["T1"])
+        kinds = [entry.kind for entry in core.audit_log()]
+        self.assertIn("rework_requested", kinds)
+
+    def test_an_audit_with_a_missing_ledger_is_rejected_without_reopening_anything(self):
+        notes = []
+        core = self._audit_system(lambda order, path: None, notes)
+        self.assertTrue(
+            _wait_for(
+                lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                            and e.detail.get("to") == "rejected" for e in core.audit_log())
+            )
+        )
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")
+        self.assertNotIn("rework_requested", [e.kind for e in core.audit_log()])
+        self.assertEqual(notes, [])
+
+    def test_an_audit_without_a_declared_ledger_is_rejected_by_default(self):
+        core = self._audit_system(lambda order, path: self._ledger(), [], declare_ledger=False)
+        self.assertTrue(
+            _wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                                  and e.detail.get("to") == "rejected" for e in core.audit_log()))
+        )
+
+    def test_the_owner_can_let_an_old_plan_without_a_ledger_through_and_it_is_recorded(self):
+        policy = bt_audit_gate.Policy(ledger_required=False)
+        core = self._audit_system(lambda order, path: self._ledger(), [], declare_ledger=False, policy=policy)
+        self.assertTrue(
+            _wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed")
+        )
+        self.assertIn("audit_gate_skipped", [e.kind for e in core.audit_log()])
+
+    def test_an_unreadable_snapshot_leaves_the_verdict_pending_instead_of_judging_the_ledger(self):
+        def unavailable(order, path):
+            raise RuntimeError("the audited snapshot is unavailable")
+
+        core = self._audit_system(unavailable, [])
+        time.sleep(0.3)
+        self.assertEqual(core.snapshot().tasks["T2"]["state"], "active")
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")
 
     def test_ack_is_durable_admission_and_execution_finished_does_not_complete(self):
         runner = BlockingRunner()

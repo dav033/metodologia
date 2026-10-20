@@ -28,6 +28,12 @@ package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
 packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality"]
 py-modules = [
   "bitacora",
+  "bt_audit_gate",
+  "bt_cli_scheduler_ops",
+  "bt_page_flow_review",
+  "bt_scheduler_decisions",
+  "bt_scheduler_ops",
+  "bt_scheduler_watch",
   "bt_agents",
   "bt_agent_models",
   "bt_role_policy",

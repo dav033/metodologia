@@ -1,4 +1,4 @@
-"""Authorised operator operations: pause, resume, cancel, reopen, manual resolution of an uncertain attempt.
+"""Authorised operations: pause, resume, cancel, reopen, rework, manual resolution of an uncertain attempt.
 
 Each one needs `by` (who authorises) and leaves an audit entry. None of them can complete a task: completion only
 ever comes from an independent verdict.
@@ -11,7 +11,7 @@ from .recovery import apply_observation
 from .states import ATTEMPT_LIVE
 from .states import AttemptState as A
 from .states import TaskState as T
-from .transitions import Ctx, add_outbox, end_attempt, live_attempt, set_task, void_outbox
+from .transitions import Ctx, add_outbox, end_attempt, live_attempt, promote_ready, set_task, void_outbox
 
 
 def _who(by: object, reason: object) -> tuple[str, str]:
@@ -58,7 +58,7 @@ def cancel(ctx: Ctx, by: str, reason: str = "") -> None:
 
 
 def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
-    """BLOCKED -> READY with a fresh attempt budget. Completed and cancelled tasks never reopen (new revision instead)."""
+    """BLOCKED -> READY with a fresh attempt budget. Completed tasks come back only through `rework`; cancelled ones never (new revision instead)."""
     by, reason = _who(by, reason)
     if task_id not in ctx.state.tasks:
         raise SchedulerError("UNKNOWN_TASK", task_id)
@@ -67,6 +67,61 @@ def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
         raise SchedulerError("NOT_ALLOWED", f"only a blocked task of a live run can be reopened ({task_id} is {rec.state})")
     rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
     set_task(ctx, task_id, T.READY, by=by, reason=reason, decision="reopen")
+
+
+def rework_scope(ctx: Ctx, task_ids: tuple[str, ...]) -> tuple[str, ...]:
+    """The tasks a rework of `task_ids` sends back: each one and everything downstream of it, in plan order."""
+    for task_id in task_ids:
+        if task_id not in ctx.state.tasks:
+            raise SchedulerError("UNKNOWN_TASK", task_id)
+    wanted = set(task_ids)
+    for task_id in task_ids:
+        wanted |= ctx.plan.descendants(task_id)
+    return tuple(spec.id for spec in ctx.plan.tasks if spec.id in wanted)
+
+
+def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = (), *, owner: bool = False) -> str:
+    """Why a rework cannot start now ('' when it can). The text starts with a code: `cancelled` (the run is being
+    cancelled), `limit` (a named task was already sent back `max_reworks` times: only the owner can decide more) or
+    `busy` (a task it would reset has a live attempt, whose result would be built on work being redone: try later).
+    `also` is the task whose rejecting verdict asks for the rework: its attempt closes with that verdict, so it is not
+    counted."""
+    if ctx.state.cancel_requested:
+        return "cancelled: the run is being cancelled"
+    scope = rework_scope(ctx, (*task_ids, *also))
+    for task_id in () if owner else task_ids:      # the owner may send work back more often than the system does
+        if ctx.state.tasks[task_id].reworks >= ctx.config.max_reworks:
+            return f"limit: {task_id} was already sent back {ctx.config.max_reworks} time(s)"
+    live = [task_id for task_id in scope if task_id not in also and live_attempt(ctx.state, task_id) is not None]
+    if live:
+        return f"busy: live attempt on {', '.join(live)}"
+    return ""
+
+
+def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, also: tuple[str, ...] = (),
+           owner: bool = False) -> tuple[str, ...]:
+    """Send accepted work back: the named tasks, the tasks downstream of them and `also` (the task whose rejection asked
+    for it) return to PENDING with a fresh attempt budget; those whose prerequisites are all still completed become
+    READY at once. It never completes anything: the redone work needs a new independent verdict. Cancelled tasks stay."""
+    by, reason = _who(by, reason)
+    if not task_ids:
+        raise SchedulerError("NOT_ALLOWED", "rework needs at least one task")
+    problem = rework_problem(ctx, task_ids, also, owner=owner)
+    if problem:
+        raise SchedulerError("NOT_ALLOWED", f"rework refused: {problem}")
+    scope = rework_scope(ctx, (*task_ids, *also))
+    moved = []
+    for task_id in scope:
+        rec = ctx.state.tasks[task_id]
+        if rec.state in (T.PENDING.value, T.CANCELLED.value):
+            continue
+        rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
+        rec.reworks += 1
+        set_task(ctx, task_id, T.PENDING, by=by, reason=reason, decision="rework")
+        moved.append(task_id)
+    ctx.audit("rework_requested", by=by, reason=reason, named=list(task_ids), tasks=moved)
+    promote_ready(ctx)
+    return tuple(moved)
 
 
 def resolve_attempt(ctx: Ctx, attempt_id: str, outcome: str, by: str, reason: str = "") -> str:

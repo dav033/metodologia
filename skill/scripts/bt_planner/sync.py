@@ -17,6 +17,7 @@ from pathlib import Path
 from . import contract as pc
 from . import evidence as ev
 from . import markdown as md
+from . import quality
 from . import revisions as rev
 from . import traceability
 
@@ -373,6 +374,44 @@ def approve_freeze(directory: Path, plan_id: str | None = None,
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
     return rev.freeze(directory, plan, narrative=narrative_digest(directory))
+
+
+def retrofit_audit(directory: Path) -> list[str]:
+    """Bring a plan written before the audit gate in line, as a new working revision: each `kind: audit` task that does
+    not list exactly one findings ledger gets `<its first .md report>` with the ledger suffix (else `<task>.findings.json`
+    in its first directory), in PLAN.json and on its PLAN.md line. Nothing else changes and nothing is frozen: review the
+    diff, then `freeze`. It never invents an end-to-end test; if the plan lacks one `check` still says so. Returns what
+    it changed (empty when the plan already complies)."""
+    directory = Path(directory)
+    plan, report = read_plan(directory)
+    if not isinstance(plan, dict) or not isinstance(plan.get("tasks"), list):
+        raise pc.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json is missing or unreadable"])
+    last = rev.latest(directory)
+    changed: list[str] = []
+    md_path = directory / PLAN_MD
+    md_text = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
+    for task in plan["tasks"]:
+        if not isinstance(task, dict) or task.get("kind") != "audit":
+            continue
+        paths = task.get("expected_paths") if isinstance(task.get("expected_paths"), list) else []
+        if sum(1 for p in paths if isinstance(p, str) and p.endswith(quality.LEDGER_SUFFIX)) == 1:
+            continue
+        report_md = next((p for p in paths if isinstance(p, str) and p.endswith(".md")), None)
+        if report_md:
+            ledger = report_md[:-3] + quality.LEDGER_SUFFIX
+        else:
+            first_dir = next((p.rsplit("/", 1)[0] + "/" for p in paths if isinstance(p, str) and "/" in p), "")
+            ledger = f"{first_dir}{str(task.get('id')).lower()}{quality.LEDGER_SUFFIX}"
+        task["expected_paths"] = [p for p in paths if not (isinstance(p, str) and p.endswith(quality.LEDGER_SUFFIX))] + [ledger]
+        line = re.compile(rf"^(- \[.\] {re.escape(str(task.get('id')))} .*?· files: )([^·\n]*?)(\s*(?:·|$))", re.M)
+        md_text, count = line.subn(lambda m: f"{m.group(1)}{m.group(2).rstrip()}, {ledger}{m.group(3)}", md_text, count=1)
+        changed.append(f"{task['id']}: declares {ledger}" + ("" if count else " (PLAN.md line has no `files:`; add it by hand)"))
+    if changed:
+        plan["revision"] = (last["revision"] + 1) if last else plan.get("revision", 1)
+        (directory / PLAN_JSON).write_text(pc.dumps(plan), encoding="utf-8")
+        if md_text:
+            md_path.write_text(md_text, encoding="utf-8")
+    return changed
 
 
 def freeze_if_present(directory: Path, plan_id: str | None = None,

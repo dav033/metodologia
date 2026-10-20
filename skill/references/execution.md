@@ -110,7 +110,7 @@ From the web UI, the plan-approval form launches it for you. Follow progress wit
 durable run; it never approves a plan or creates a replacement run. To run unattended use
 `bitacora.py --project <p> scheduler-watch REQ-NNN --detach`: the watchdog resumes the owner whenever it dies (backoff,
 gives up with a notification after 5 failures in 30 min) and login autostart launches it. Moves on a live run are
-commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|revise` (stop the owner
+commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|rework T1,T2|revise` (stop the owner
 under a hold, apply through M1, kill the attempt's agent, release the hold; `revise` cancels live attempts and rebases onto
 the latest frozen plan revision). When a run cannot go on alone (a blocked task, an open verifier review) it asks:
 `scheduler-op REQ-NNN decisions` lists the requests (what happened, evidence, closed options with their consequence, a
@@ -120,6 +120,11 @@ watchdog notifies each new request once and keeps the run waiting for the answer
 `retry_with_note` puts the owner's text in the task's next prompt. Cancelling a scheduler plan (web "Planes" view,
 confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
 router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
+
+**An audit that finds critical or high problems does not end the run as a success.** Its findings ledger rejects it
+and the Scheduler itself sends the named tasks (and what depends on them) back for rework, then runs the audit again
+(`modules.md` §Audit gate and rework). A run is `done` only when the last audit accepted a ledger with no open
+critical/high finding; after `max_reworks` rounds the owner decides.
 
 `launch` writes `HANDOFF.md` next to the plan (everything the executor needs), refreshes the PLAN.md status block, and
 opens a native terminal window (Linux terminal, macOS Terminal, or Windows Terminal) in the project's repo running

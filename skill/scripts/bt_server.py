@@ -111,7 +111,10 @@ class Handler(BaseHTTPRequestHandler):
             scope = q.get("scope", "global")
             sim = "/".join(scope.split(":", 1)[1].split("/")[:2]) if scope.startswith(("run:", "task:")) else \
                 "metodologia/REQ-026"
-            return self.send(bt_page_flow.flow_page(scope, sim))
+            return self.send(bt_page_flow.flow_page(scope, sim, token()))
+        if parts == ["flow", "review"]:
+            import bt_page_flow_review
+            return self.send(bt_page_flow_review.review_page(ROOT, q))
         if parts == ["now"]:
             import bt_live_api as live
             import bt_page_now
@@ -169,6 +172,15 @@ class Handler(BaseHTTPRequestHandler):
         host = self.headers.get("Host") or ""
         if form.get("token") != token() or (origin and urlparse(origin).netloc != host):
             return self.send("Forbidden", 403, "text/plain")
+        if parts == ["api", "flow", "decision"]:
+            import bt_plans_api as api
+            try:
+                message = api.decide(ROOT, form.get("project", ""), form.get("req", ""),
+                                     form.get("request", ""), form.get("option", ""), form.get("reason", ""),
+                                     by="flow")
+            except api.PlanError as exc:
+                return self.send(json.dumps({"error": str(exc)}), 409, "application/json; charset=utf-8")
+            return self.send(json.dumps({"message": message}), 200, "application/json; charset=utf-8")
         if parts and parts[0] == "plans":
             return self.plans_post(parts, form)
         if len(parts) != 5 or parts[0] != "p" or parts[2] != "req":

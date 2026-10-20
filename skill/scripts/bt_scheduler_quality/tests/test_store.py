@@ -4,9 +4,12 @@ import hashlib
 import json
 import os
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from bt_scheduler_quality.contracts import QualityError, VerifyRequest
 from bt_scheduler_quality.evidence import canonical_json
@@ -19,6 +22,34 @@ class QualityStoreTests(unittest.TestCase):
     def setUp(self):
         self.raw = json.loads(FIXTURE.read_text(encoding="utf-8"))
         self.order = VerifyRequest.from_mapping(self.raw)
+
+    def test_permission_refresh_preserves_sqlite_lock_against_another_process(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / "quality.sqlite3"
+            with QualityStore(database) as store:
+                store._connection.execute("BEGIN IMMEDIATE")
+                try:
+                    store._secure_database_files()
+                    contender = subprocess.run(
+                        [sys.executable, "-c", ("import sqlite3,sys; "
+                         "c=sqlite3.connect(sys.argv[1], timeout=0); "
+                         "c.execute('BEGIN IMMEDIATE')"), str(database)],
+                        capture_output=True, text=True, timeout=10, check=False,
+                    )
+                    self.assertNotEqual(contender.returncode, 0, contender.stdout)
+                    self.assertIn("database is locked", contender.stderr)
+                finally:
+                    store._connection.execute("ROLLBACK")
+
+    def test_permission_refresh_does_not_open_sqlite_managed_files(self):
+        # Closing another fd for the database or shm inode releases SQLite's
+        # process-scoped POSIX locks, even though SQLite still owns its fd.
+        with tempfile.TemporaryDirectory() as temporary, QualityStore(
+            Path(temporary) / "quality.sqlite3"
+        ) as store:
+            with patch("bt_scheduler_quality.store.os.open") as opened:
+                store.reserve(self.order)
+            opened.assert_not_called()
 
     def test_reserves_idempotently_and_rejects_reused_key_with_new_content(self):
         with QualityStore(":memory:") as store:

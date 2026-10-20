@@ -39,6 +39,7 @@ COVERED_TABLES = {"m1": {"audit"}, "m2": {"decision_records"}, "m3": {"events"},
                   "m4": {"normalized_events", "incidents"}, "m5": {"decisions"}, "m6": {"requests"}}
 IGNORED_TABLES = {
     "state": "M1's state document: the audit table is its message log",
+    "verification_retries": "M6 record of an operator retry of a verification; the request row keeps the verdict",
     "precious": "integrity probe of the store, no message",
     "learning_snapshots": "M2 learning input, read by M2 itself",
     "batch_decisions": "M2 batch cache; each task decision is already in decision_records",
@@ -223,6 +224,9 @@ M1_RULES: dict[str, Callable] = {
     "run_resumed_by_process": _m1("run_resumed", "owner", "M1", "Ejecución reanudada por el proceso"),
     "run_cancel_requested": _m1("run_cancelled", "owner", "M1", "Cancelación solicitada"),
     "amendment_applied": _m1("amendment", "planner", "M1", "Enmienda aplicada a {task}"),
+    "rework_requested": _m1("rework", "M6", "M1", "La auditoría devuelve trabajo aceptado: se rehacen {tasks}"),
+    "rework_refused": _m1("rework_refused", "M6", "M1", "No se pudo devolver el trabajo tras la auditoría ({why})"),
+    "audit_gate_skipped": _m1("audit_gate", "M6", "M1", "Auditoría de {task} sin ledger: el gate se omite (configurado)"),
     "run_rebased": _m1("run_rebased", "planner", "M1", "La ejecución pasa a la revisión nueva"),
 }
 

@@ -27,12 +27,12 @@ def sources(package: str):
 class Coverage(unittest.TestCase):
     def test_every_m1_audit_kind_has_a_rule(self):
         kinds = {k for text in sources(PACKAGES["m1"]) for k in AUDIT_CALL.findall(text)}
-        kinds |= {"amendment_applied"}                    # written by the methodology's adapter, not the core
+        kinds |= {"amendment_applied", "audit_gate_skipped"}   # written by the methodology's adapters, not the core
         self.assertGreater(len(kinds), 20)                # the scan itself works
         self.assertEqual(sorted(kinds - set(bus.M1_RULES)), [], "M1 audit kinds the bus cannot map")
 
     def test_rules_do_not_name_kinds_that_do_not_exist(self):
-        kinds = {k for text in sources(PACKAGES["m1"]) for k in AUDIT_CALL.findall(text)} | {"amendment_applied"}
+        kinds = {k for text in sources(PACKAGES["m1"]) for k in AUDIT_CALL.findall(text)} | {"amendment_applied", "audit_gate_skipped"}
         self.assertEqual(sorted(set(bus.M1_RULES) - kinds), [], "rules for audit kinds nobody writes")
 
     def test_every_table_of_every_module_is_a_source_or_explained(self):

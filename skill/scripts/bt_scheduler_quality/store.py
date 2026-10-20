@@ -17,6 +17,7 @@ from typing import Any, Literal, Self
 
 from .contracts import QualityError, VerifyRequest
 from .evidence import canonical_json, finished_at
+from .recovery import retry_interrupted
 
 _SCHEMA_VERSION = 1
 
@@ -326,6 +327,17 @@ class QualityStore:
             ).fetchall()
         return tuple(dict(row) for row in rows)
 
+    def retry_interrupted(self, request_key: str, operator: str, reason: str) -> None:
+        """Explicitly retry one interrupted verification, preserving its audit evidence.
+
+        No verdict is created. Normal dispatch revalidates snapshot provenance and
+        command policy and runs checks in the configured sandbox. One retry per
+        request prevents restart/retry loops from replaying commands indefinitely.
+        """
+        _validate_operator(operator, reason, "FAIL")
+        with self._transaction() as connection:
+            retry_interrupted(connection, request_key, operator, reason)
+
     def resolve_review(
         self, request_key: str, operator: str, decision: str, reason: str
     ) -> str:
@@ -577,25 +589,20 @@ class QualityStore:
             Path(str(self.path) + "-shm"),
         ):
             try:
-                fd = os.open(candidate, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW)
+                # POSIX locks belong to the process: closing ANY descriptor for
+                # SQLite's db/shm inode can release locks held by its own fd.
+                # Never open these files merely to refresh permissions.
+                if not stat.S_ISREG(candidate.lstat().st_mode):
+                    raise QualityError(
+                        "STORE_PERMISSIONS", "M6 database path is not a regular file"
+                    )
+                os.chmod(candidate, 0o600, follow_symlinks=False)
             except FileNotFoundError:
                 continue
             except OSError as error:
                 raise QualityError(
                     "STORE_PERMISSIONS", "M6 database files could not be kept private"
                 ) from error
-            try:
-                if not stat.S_ISREG(os.fstat(fd).st_mode):
-                    raise QualityError(
-                        "STORE_PERMISSIONS", "M6 database path is not a regular file"
-                    )
-                os.fchmod(fd, 0o600)
-            except OSError as error:
-                raise QualityError(
-                    "STORE_PERMISSIONS", "M6 database files could not be kept private"
-                ) from error
-            finally:
-                os.close(fd)
 
     def close(self) -> None:
         connection = getattr(self, "_connection", None)
@@ -646,6 +653,13 @@ CREATE TABLE IF NOT EXISTS reviews (
     decision TEXT,
     resolution_id TEXT,
     evidence_ref TEXT
+);
+CREATE TABLE IF NOT EXISTS verification_retries (
+    request_key TEXT PRIMARY KEY REFERENCES requests(idempotency_key),
+    operator TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    previous_result_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS outbox (
     request_key TEXT PRIMARY KEY REFERENCES requests(idempotency_key),

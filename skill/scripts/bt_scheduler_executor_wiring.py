@@ -34,14 +34,23 @@ def close(wiring: api.Wiring) -> None:
                     wiring.executor.close()
 
 
-def _with_owner_notes(rdir, base):
-    """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request."""
+def _with_owner_notes(rdir, plan, base):
+    """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request, by
+    the open audit findings of a task sent back, and, for an audit task, by how to write its findings ledger."""
+    import bt_audit_gate
     import bt_scheduler_decisions
 
     def notes(request):
-        owner = bt_scheduler_decisions.operator_notes(rdir, request.task_id)
-        rest = base(request)
-        return "\n\n".join(part for part in (owner, rest) if part)
+        parts = [bt_scheduler_decisions.operator_notes(rdir, request.task_id),
+                 bt_scheduler_decisions.audit_notes(rdir, request.task_id)]
+        try:
+            task = plan.task(request.task_id)
+            if task.meta.get("kind") == "audit":
+                parts.append(bt_audit_gate.ledger_help(bt_audit_gate.ledger_path(task.expected_paths)))
+        except api.core.SchedulerError:
+            pass
+        parts.append(base(request) if base else "")
+        return "\n\n".join(part for part in parts if part)
     return notes
 
 
@@ -112,6 +121,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         wiring.close()
         raise
     port.executor = executor
+    base_notes = None
     try:
         if integrate_predecessors:
             integrate = api.integrator.PredecessorIntegrator(fallback=base_ref)
@@ -129,8 +139,12 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
             port.base_ref = continuation.base_ref
-            executor.briefs.notes = _with_owner_notes(rdir, continuation.notes)
+            base_notes = continuation.notes
+        executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
         if quality_store_path is not None:
+            import bt_audit_gate
+            import bt_config
+            import bt_scheduler_decisions
             from bt_scheduler_quality.store import QualityStore
             from bt_scheduler_quality_adapter import QualityVerificationPort
 
@@ -148,7 +162,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
 
             wiring.verification_runtime = QualityVerificationPort(
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
-                attempts_root=executor.attempts_dir)
+                attempts_root=executor.attempts_dir,
+                rework_notes=lambda task_id, text: bt_scheduler_decisions.write_audit_notes(rdir, task_id, text),
+                audit_policy=bt_audit_gate.policy_from(bt_config.get))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)

@@ -113,6 +113,13 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
             emit(f"frozen {plan_id or sync.default_plan_id(target)} revision {entry['revision']} "
                  f"sha256 {entry['sha256'][:12]}")
             return 0
+        if action == "retrofit-audit":
+            changed = sync.retrofit_audit(target)
+            for line in changed:
+                emit(line)
+            emit(f"{len(changed)} audit task(s) updated: PLAN.json is a new working revision; review it, then `freeze`"
+                 if changed else "every audit task already declares its findings ledger")
+            return 0
         if action == "show":
             found = rev.list_revisions(target)
             emit(f"{plan_id or sync.default_plan_id(target)} frozen revisions: " +

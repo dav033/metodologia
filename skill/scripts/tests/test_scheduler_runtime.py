@@ -248,9 +248,11 @@ class RunLimits(unittest.TestCase):
         import bt_scheduler_run as run
         with patch.object(bt_config, "load", return_value={"scheduler": {"max_parallel_tasks": 3, "max_attempts": 3,
                                                                            "attempt_timeout_minutes": 120,
-                                                                           "exclusive_scopes": ["large_change"]}}):
+                                                                           "exclusive_scopes": ["large_change"]},
+                                                          "gates": {"max_reworks": 4}}):
             core_config, m3_config = run._run_config(), run._executor_config()
         self.assertEqual((core_config.max_parallel_tasks, core_config.exclusive_scopes), (3, ("large_change",)))
+        self.assertEqual(core_config.max_reworks, 4)
         self.assertEqual((m3_config.max_running, m3_config.timeout_seconds), (3, 7200.0))
 
 

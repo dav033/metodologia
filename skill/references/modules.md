@@ -127,6 +127,38 @@ Sampling is best effort and identity-checked; see the executor README for caps a
   `tests/test_scheduler_executor_integration.py` (the real core + executor + fake provider binaries; boundary from outside;
   historical `RUN.json` byte-identical) and the opt-in `tests/test_scheduler_executor_real.py` (`BITACORA_M3_REAL=1`, bounded spend).
 
+## Audit gate and rework (`bt_audit_gate`, `SchedulerCore.reject_and_rework`)
+
+An audit task is accepted by what it **found**, not by the existence of its report. It lists one `*.findings.json`
+ledger (`{"schema": "audit-findings/1", "findings": [{id, severity critical|high|medium|low, status
+open|fixed|accepted, summary, tasks: [plan task ids whose result is wrong], evidence (fixed), accepted_by: "owner" +
+reason (accepted)}]}`; the auditor's prompt carries this format). `bt_scheduler_quality_adapter` reads the ledger from
+the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evaluate`:
+
+- an open critical/high finding, a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
+  PASS into a **rejecting verdict** (evidence `audit gate: …`); a snapshot that cannot be read leaves the verdict
+  pending instead of judging the ledger;
+- when open findings name plan tasks, the same verdict calls `core.reject_and_rework(...)`: in one transaction M1
+  rejects the audit attempt and sends the named tasks, **everything downstream of them** and the audit itself back to
+  `pending` with a fresh attempt budget (`operations.rework`, audit `rework_requested`). Tasks whose prerequisites are
+  still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
+  completed by the rework: each redone task needs a new independent verdict;
+- the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
+  reset); the redo must prove each fix with a test over the real entry point;
+- bounded and owner-configurable (`bitacora.py config`): `gates.audit_blocking` (severities that reject, default
+  critical+high), `gates.max_reworks` (times one task may be sent back by the system, default 2) and
+  `gates.audit_ledger_required` (default true; set false only to let an old plan without a ledger through: each skip is
+  recorded as `audit_gate_skipped`). When the rework cannot start: a **live attempt** in scope defers the whole verdict
+  (nothing is applied; M6 offers it again later), **`max_reworks` reached** applies the rejection and blocks the audit
+  at once with reason `rework_limit` (a decision card asks the owner; retrying the auditor cannot help), a cancelled
+  run only applies the rejection. The owner can always send work back by hand past the limit:
+  `scheduler-op REQ rework T1,T2 --reason …` (refused while a task in scope has a live attempt: cancel it first);
+- a plan written before the gate is brought in line with `plan-json retrofit-audit REQ-NNN` (adds the ledger path to each
+  audit task, in PLAN.json as a new working revision and on its PLAN.md line; then review, `freeze`, `scheduler-op REQ
+  revise` and `scheduler-op REQ rework <audit task>`: the audit runs again and the system takes it from there).
+
+No agent and no operator has to reopen anything by hand: the system does it from the ledger.
+
 ## Quality verifier (`bt_scheduler_quality`, M6)
 
 M6 checks the exact approved M1 `VerifyOrder` against the matching, validated M3 handoff snapshot. Its standard-library-only

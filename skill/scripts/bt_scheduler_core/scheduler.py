@@ -42,7 +42,7 @@ from .simulators import FifoAssignment
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
-from .transitions import Ctx, promote_ready, prune_outbox
+from .transitions import Ctx, promote_ready, prune_outbox, set_task
 from .views import Snapshot, snapshot
 
 R = TypeVar("R")
@@ -227,6 +227,52 @@ class SchedulerCore:
         result = self.write(lambda c: events.apply_verdict(c, verdict))
         self._wake.set()
         return result
+
+    def rework_scope(self, task_ids: tuple[str, ...], also: tuple[str, ...] = ()) -> tuple[str, ...]:
+        """Every task `reject_and_rework(..., task_ids)` would send back with the rejected task `also`."""
+        return self.read(lambda c: operations.rework_scope(c, (*task_ids, *also)))
+
+    def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = ()) -> str:
+        """Why `reject_and_rework` would be refused right now ('' when it would not)."""
+        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also)))
+
+    def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[str, ...]:
+        """Operator move: send accepted work back (see `operations.rework`)."""
+        out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True))
+        self._wake.set()
+        return out
+
+    def reject_and_rework(self, verdict: Verdict, task_ids: tuple[str, ...], by: str, reason: str = "") -> tuple[IngestResult, tuple[str, ...]]:
+        """Apply a REJECTING verdict and, in the same transaction, send the named accepted tasks (and what depends on
+        them) back for rework together with the task just rejected. Three outcomes when the rework cannot start:
+        `busy` (live attempts in scope) defers everything — the verdict is NOT applied, status `deferred`, and the
+        caller offers it again later; `limit` applies the verdict and BLOCKS the rejected task at once with reason
+        `rework_limit` (retrying the rejected task cannot fix work that was already sent back too often: the owner
+        decides); `cancelled` just applies the verdict."""
+        if verdict.accepted:
+            raise SchedulerError("NOT_ALLOWED", "only a rejecting verdict can ask for rework")
+
+        def both(ctx: Ctx) -> tuple[IngestResult, tuple[str, ...]]:
+            ids = tuple(task_ids)
+            problem = operations.rework_problem(ctx, ids, (verdict.task_id,))
+            if problem.startswith("busy") and not ctx.state.has_seen(verdict.verdict_id):
+                return IngestResult("deferred", problem, verdict.verdict_id), ()
+            result = events.apply_verdict(ctx, verdict)
+            if result.status != "applied":
+                return result, ()
+            if problem:
+                ctx.audit("rework_refused", verdict.task_id, verdict.attempt_id, why=problem, named=list(ids))
+                if problem.startswith("limit"):
+                    rec = ctx.state.tasks[verdict.task_id]
+                    if rec.state == T.RECOVERING.value:
+                        rec.reason = "rework_limit"
+                        set_task(ctx, verdict.task_id, T.BLOCKED, reason="rework_limit")
+                return result, ()
+            return result, operations.rework(ctx, ids, by, reason, also=(verdict.task_id,))
+
+        out = self.write(both)
+        self._wake.set()
+        return out
 
     def claim(self, assignment: Assignment) -> reservation.ClaimResult:
         """Atomically reserve one task for an executor label; as many as one wins under concurrency."""

@@ -28,7 +28,7 @@ class Tables(unittest.TestCase):
                 self.assertTrue(targets <= set(table))
 
     def test_terminal_states_have_no_exit(self):
-        self.assertEqual(S.TASK_TRANSITIONS[T.COMPLETED], frozenset())
+        self.assertEqual(S.TASK_TRANSITIONS[T.COMPLETED], frozenset({T.PENDING}))  # only `operations.rework` takes it
         self.assertEqual(S.TASK_TRANSITIONS[T.CANCELLED], frozenset())
         for state in S.ATTEMPT_TERMINAL:
             self.assertEqual(S.ATTEMPT_TRANSITIONS[state], frozenset())

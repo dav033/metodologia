@@ -25,6 +25,11 @@ DEFAULTS: dict = {
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)
+    # gates: what the system enforces on its own. An audit is accepted by its findings ledger (bt_audit_gate): findings of
+    # these severities left open reject it and send the tasks they name back (at most `max_reworks` times per task, then
+    # the owner decides); with `audit_ledger_required` off, an audit that declares no ledger (a plan written before the
+    # gate) is accepted on M6's verdict alone and the skip is recorded in the run's audit trail.
+    "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2},
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120,
                   "exclusive_scopes": ["large_change", "full_feature", "full_system"]},
 }
@@ -36,6 +41,7 @@ ALLOWED: dict[str, tuple] = {
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),
 }
+ALLOWED_ITEMS: dict[str, tuple] = {"gates.audit_blocking": ("critical", "high", "medium", "low")}
 
 
 class ConfigError(SystemExit):
@@ -60,6 +66,10 @@ def _valid(key: str, value: object) -> bool:
         correct_type = isinstance(value, list) and all(isinstance(item, str) for item in value)
     else:
         correct_type = isinstance(value, type(default))
+    if correct_type and key in ALLOWED_ITEMS:
+        correct_type = bool(value) and all(item in ALLOWED_ITEMS[key] for item in value)
+    if correct_type and key == "gates.max_reworks":
+        correct_type = value >= 1
     return correct_type and (key not in ALLOWED or value in ALLOWED[key])
 
 

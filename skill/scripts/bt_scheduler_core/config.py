@@ -18,6 +18,7 @@ class Config:
     #                                        classification the core ever reads, and only when the operator names it)
     max_recovery_wait: float = 3600.0    # cap on a recovery proposal's `wait`
     max_recovery_waits: int = 3          # a recovery module may ask to wait this many times per task, then the task blocks
+    max_reworks: int = 2                 # times an audit may send one task back after acceptance; then the owner decides
     max_deliveries: int = 5              # an order whose delivery keeps failing is abandoned (attempt becomes uncertain)
     require_independent_verifier: bool = True  # the verdict's verifier must differ from the attempt's executor label
 
@@ -28,7 +29,7 @@ class Config:
             problems.append("max_parallel_tasks must be an integer >= 1")
         if not (isinstance(self.max_attempts, int) and not isinstance(self.max_attempts, bool) and self.max_attempts >= 1):
             problems.append("max_attempts must be an integer >= 1")
-        for name in ("max_recovery_waits", "max_deliveries"):
+        for name in ("max_recovery_waits", "max_deliveries", "max_reworks"):
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 1:
                 problems.append(f"{name} must be an integer >= 1")

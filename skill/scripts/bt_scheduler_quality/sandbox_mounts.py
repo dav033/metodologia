@@ -87,15 +87,37 @@ def attempt_mounts(
     if not policy.toolchain or worktree is None:
         return ()
     mounts = []
-    for name in DEPENDENCY_DIRECTORIES:
-        source = _dependency_source(name, worktree, repository, snapshot_root)
-        if source is not None:
-            mounts.append(Mount(str(source), f"{WORKSPACE}/{name}"))
+    for relative in _package_roots(snapshot_root):
+        package_worktree = worktree / relative
+        if not package_worktree.resolve().is_relative_to(worktree.resolve()):
+            continue
+        for name in DEPENDENCY_DIRECTORIES:
+            source = _dependency_source(
+                name, package_worktree,
+                repository / relative if repository is not None else None,
+                snapshot_root / relative if snapshot_root is not None else None,
+            )
+            if source is not None and (
+                _under(source, worktree) or (repository is not None and _under(source, repository))
+            ):
+                target = Path(WORKSPACE) / relative / name
+                mounts.append(Mount(str(source), str(target)))
     mounts.extend(_git_mounts(worktree, repository))
     return tuple(mounts)
 
 
 LOCKFILES = {"node_modules": "package-lock.json"}
+
+
+def _package_roots(snapshot_root: Path | None) -> tuple[Path, ...]:
+    roots = [Path('.')]
+    if snapshot_root is not None:
+        for directory, children, files in os.walk(snapshot_root, followlinks=False):
+            children[:] = sorted(name for name in children if not name.startswith('.') and name != 'node_modules')
+            package = Path(directory)
+            if package != snapshot_root and 'package.json' in files:
+                roots.append(package.relative_to(snapshot_root))
+    return tuple(roots)
 
 
 def _dependency_source(name: str, worktree: Path, repository: Path | None, snapshot_root: Path | None) -> Path | None:

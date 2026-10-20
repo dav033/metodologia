@@ -85,11 +85,23 @@ The outbox is bounded: past 1000 items, settled orders of closed attempts are pr
 ## States
 
 Task: `pending → ready → active → completed`; `active → recovering → ready | blocked`; `blocked → ready` only by an
-authorised `reopen`; `cancelled`. *Attempt*: `reserved → dispatched → running → verifying → accepted`, or `failed |
+authorised `reopen`; `completed → pending` only by `rework`; `cancelled`. *Attempt*: `reserved → dispatched → running → verifying → accepted`, or `failed |
 rejected | cancelled | uncertain`. Run: `running | paused | completed | blocked | cancelled` (derived).
 `completed` needs an **independent verdict, correlated to the current attempt, with evidence**; an executor's "finished"
 only reaches `verifying`. Tasks downstream of a blocked/cancelled task are reported as `unreachable` (derived, never
 stored), so reopening frees them. `blocked` never stops independent branches, and "nothing left to run" is never success.
+
+## Rework (an audit rejected accepted work)
+
+`core.reject_and_rework(verdict, task_ids, by, reason)` applies a **rejecting** verdict and, in the same transaction,
+sends `task_ids`, everything downstream of them and the rejected task itself back to `pending` (fresh attempt budget,
+`reworks += 1`); tasks whose prerequisites are all still completed become `ready` at once. Nothing is completed by it:
+redone work needs a new independent verdict. When it cannot start the outcome depends on why: a **live attempt** in scope defers the whole verdict (status
+`deferred`, nothing applied, the caller offers it again); a task already sent back `Config.max_reworks` times (default
+2) applies the verdict and **blocks** the rejected task at once (`rework_limit`, audit `rework_refused`) because another
+attempt cannot fix it; a cancelling run just applies the verdict. Repeating the same verdict reworks once.
+`core.rework(task_ids, by, reason)` is the owner's version (no limit; refused while a live attempt is in scope) and
+`core.rework_problem(...)` says in advance why a rework would not start (`busy:`, `limit:` or `cancelled:`).
 
 ## Persistence decision
 

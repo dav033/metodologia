@@ -105,6 +105,16 @@ verdict outbox are private to M6; neither M1 nor M3 stores are opened for writin
 NEEDS_REVIEW item holds M1 in `VERIFYING` until an explicit operator resolution records identity and rationale.
 The identity entered by the local operator is audit metadata, not cryptographic proof of a human account.
 
+After repairing an engine crash, an operator may explicitly call
+`QualityStore.retry_interrupted(request_key, operator, reason)` while the scheduler owner is stopped. This
+accepts only an open review whose sole cause is `ENGINE_INTERRUPTED`, once per request. The prior result and
+operator rationale remain in `verification_retries`; no verdict is emitted. On restart normal dispatch rechecks
+snapshot provenance and command policy and runs the checks in the sandbox. Other unknown outcomes and resolved
+reviews cannot use this recovery path. Queued work that never started remains queued during startup recovery.
+Permission refresh never opens or closes SQLite-managed database/WAL/shared-memory files: closing another fd for
+those inodes releases SQLite's process-scoped POSIX locks and can corrupt concurrent-reader coordination.
+
+
 M6 metrics keep `not_run`, `unknown` and `unmeasured` separate; `defect_count` remains `null` until it is measured.
 The existing `bt_quality` ledger records findings and rework attributed to accepted milestone audits. A failed
 verification command is not an audit finding, so M6 does not write command outcomes into that ledger or count them

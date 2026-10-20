@@ -26,6 +26,7 @@ class TaskRec:
     reason: str = ""           # why blocked / cancelled
     hold_until: float = 0.0    # recovery asked to wait until this time (epoch seconds)
     waits: int = 0             # how many times recovery asked to wait since the last reopen
+    reworks: int = 0           # how many times an audit sent this task back after it was accepted
     route_metadata: dict[str, str] = field(default_factory=dict)
     route_status: str = "unplanned"  # unplanned | recommended | unavailable | assigned
     route_reason: str = ""

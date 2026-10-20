@@ -47,6 +47,7 @@ REASONS = {
     "wait_limit": ("Ya esperó el máximo de veces a que se renueve algo.", False, "retry"),
     "wait_window_exceeded": ("La espera necesaria supera la ventana permitida.", False, "retry"),
     "elapsed_limit": ("Pasó demasiado tiempo desde el primer fallo.", False, "retry"),
+    "rework_limit": ("La auditoría volvió a pedir rehacer trabajo ya devuelto el máximo de veces permitido (gates.max_reworks).", False, "retry_with_note"),
     "manual_cancel": ("Alguien canceló el intento.", False, "retry"),
     "stale_or_cancelled": ("El intento quedó cancelado u obsoleto.", False, "retry"),
     # integrity anomalies: the evidence itself cannot be trusted, so a person looks first
@@ -75,6 +76,26 @@ def operator_notes(rdir: Path, task: str) -> str:
     except OSError:
         return ""
     return f"Indications from the owner for this task (they come first):\n{text}" if text else ""
+
+
+def audit_notes_path(rdir: Path, task: str) -> Path:
+    return Path(rdir) / NOTES / f"{task}.audit.md"
+
+
+def write_audit_notes(rdir: Path, task: str, text: str) -> None:
+    """What the independent audit found wrong with a task, written by the system when it sends the task back."""
+    path = audit_notes_path(rdir, task)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.strip() + "\n", encoding="utf-8")
+
+
+def audit_notes(rdir: Path, task: str) -> str:
+    """The system's audit indications for a task, to go into its next prompt."""
+    try:
+        text = audit_notes_path(rdir, task).read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+    return f"Indications from the independent audit for this task (they come first):\n{text}" if text else ""
 
 
 def _answered(rdir: Path) -> set[str]:

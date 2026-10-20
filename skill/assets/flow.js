@@ -378,6 +378,7 @@
         return '<div class="fl-att"><div class="fl-ah"><span class="fl-an">' + (b.id ? 'Intento ' + (b.number || '') + ' · ' + attLink(S.run, b.id) : 'Antes del primer intento') + '</span>' +
           '<span class="fl-res ' + res[1] + '">' + esc(res[0]) + '</span></div>' +
           (a ? '<div class="fl-who">' + esc([route(a), when].filter(Boolean).join(' · ')) + (a.failure ? ' · ' + esc(typeof a.failure === 'string' ? a.failure : (a.failure.cause || a.failure.reason || '')) : '') + '</div>' : '') +
+          (a ? '<p>' + window.FlowFailureLinks.link(S.run, S.task, a) + '</p>' : '') +
           '<ul class="fl-steps">' + b.steps.map(function (e) {
             return '<li class="' + C.kindClass(e) + '"><span class="fl-tm">' + hhmm(e.at_epoch, true) + '</span><span class="fl-md">' + esc(short(e.from)) + '</span>' + linkIds(e.run, e.summary) + '</li>';
           }).join('') + (d ? '<li class="k-stream fl-quiet"><span class="fl-tm">' + hhmm(d.at_epoch, true) + '</span>' + fmt(d.count) + ' eventos de detalle del proveedor (ocultos)</li>' : '') +

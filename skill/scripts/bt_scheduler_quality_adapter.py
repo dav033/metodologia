@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import threading
 from collections.abc import Callable, Mapping
@@ -18,6 +19,7 @@ from bt_scheduler_quality.identity import verdict_id
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.review import ReviewerPort
 from bt_scheduler_quality.runner import SandboxRunner
+import bt_audit_gate
 from bt_scheduler_quality.snapshot import SnapshotResolver, SnapshotSource
 from bt_scheduler_quality.store import QualityStore
 
@@ -42,8 +44,15 @@ class QualityVerificationPort:
         reviewer: ReviewerPort | None = None,
         runner: SandboxRunner | None = None,
         snapshot_resolver: SnapshotResolver | None = None,
+        rework_notes: Callable[[str, str], None] | None = None,
+        audit_policy: bt_audit_gate.Policy | None = None,
+        read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
     ):
         self.core = core
+        self.rework_notes = rework_notes
+        self.audit_policy = audit_policy or bt_audit_gate.Policy()
+        self._resolver = snapshot_resolver or SnapshotResolver(policy)
+        self._read_ledger = read_ledger or self._ledger_from_snapshot
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -264,6 +273,54 @@ class QualityVerificationPort:
             self.attempts_root, order.attempt_id, directory, handoff, repository
         )
 
+    def _ledger_from_snapshot(self, order: VerifyRequest, path: str) -> bytes | None:
+        """The audit's findings ledger as captured in the verified snapshot; None when the file is not there. A snapshot
+        that cannot be produced raises: that is an outage to retry, not a verdict about the ledger."""
+        source = self._snapshot_source(order)
+        if source is None:
+            raise RuntimeError("the audited snapshot is unavailable")
+        relative = Path(path)
+        if relative.is_absolute() or ".." in relative.parts:
+            return None
+        with self._resolver.materialize(source) as snapshot:
+            target = snapshot.directory / relative
+            if target.is_symlink() or not target.is_file():
+                return None
+            if target.stat().st_size > bt_audit_gate.MAX_BYTES:
+                return b"x" * (bt_audit_gate.MAX_BYTES + 1)
+            return target.read_bytes()
+
+    def _audit_gate(self, order: VerifyRequest) -> bt_audit_gate.Gate | None:
+        """None when the task is not an audit; otherwise the judgment of its findings ledger, whatever the checks said."""
+        try:
+            task = self.core.plan.task(order.task_id)
+        except m1.SchedulerError:
+            return None
+        if task.meta.get("kind") != "audit":
+            return None
+        path = bt_audit_gate.ledger_path(task.expected_paths)
+        if path is None:
+            if not self.audit_policy.ledger_required:
+                self.core.record("audit_gate_skipped", task_id=order.task_id, attempt_id=order.attempt_id,
+                                 why="no findings ledger declared and gates.audit_ledger_required is off")
+                return None
+            return bt_audit_gate.Gate(
+                False, (f"an audit task must declare one *{bt_audit_gate.LEDGER_SUFFIX} file",), (), ()
+            )
+        return bt_audit_gate.evaluate(
+            self._read_ledger(order, path), [spec.id for spec in self.core.plan.tasks], order.task_id,
+            self.audit_policy,
+        )
+
+    def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
+        if self.rework_notes is None:
+            return
+        for task_id in self.core.rework_scope(gate.rework, (order.task_id,)):
+            try:
+                self.rework_notes(task_id, bt_audit_gate.note_for(gate, task_id, order.task_id))
+            except OSError as error:
+                LOGGER.warning("audit rework note not written for %s (%s)", task_id, type(error).__name__)
+
     def _deliver_one(self, request_key: str) -> str:
         delivery = self.store.begin_delivery(request_key)
         if delivery is None:
@@ -298,8 +355,18 @@ class QualityVerificationPort:
                     request_key, "pending", "verdict evidence is incomplete"
                 )
                 return "pending"
+            gate = self._audit_gate(order) if accepted else None
+            if gate is not None and not gate.ok:
+                accepted = False
+                evidence = f"{gate.summary()} | M6 evidence: {evidence}"[:2000]
+            else:
+                gate = None
+            identity = verdict_id(order, delivery["result_hash"], resolution_id=resolution_id)
+            if gate is not None:  # a rejection by the gate is a different verdict from the PASS M6 reached
+                material = f"{identity}\0audit-gate\0{gate.digest()}".encode()
+                identity = "m6v-" + hashlib.sha256(material).hexdigest()
             verdict = m1.Verdict(
-                verdict_id(order, delivery["result_hash"], resolution_id=resolution_id),
+                identity,
                 order.plan_id,
                 order.revision,
                 order.task_id,
@@ -309,7 +376,12 @@ class QualityVerificationPort:
                 evidence,
                 order.token,
             )
-            response = self.core.submit_verdict(verdict)
+            if gate is not None and gate.rework:
+                if not self.core.rework_problem(gate.rework, (order.task_id,)):
+                    self._write_rework_notes(gate, order)
+                response, _moved = self.core.reject_and_rework(verdict, gate.rework, "audit-gate", gate.summary())
+            else:
+                response = self.core.submit_verdict(verdict)
         # Retain the outbox entry when any unexpected M1 integration failure occurs.
         except Exception as error:  # noqa: BLE001
             self.store.finish_delivery(request_key, "pending", type(error).__name__)

@@ -201,10 +201,29 @@ class OwnerNotes(Base):
         path = decisions.notes_path(self.rdir, "T1")
         path.parent.mkdir(parents=True)
         path.write_text("use the fixture\n")
-        notes = wiring._with_owner_notes(self.rdir, lambda request: "Continue from snapshot abc.")
+        kinds = {"T1": "implement", "T9": "audit"}
+
+        class Plan:
+            def task(self, task_id):
+                if task_id not in kinds and task_id != "T2":
+                    raise wiring.api.core.SchedulerError("UNKNOWN_TASK", task_id)
+                return SimpleNamespace(meta={"kind": kinds.get(task_id, "implement")}, expected_paths=("docs/a.findings.json",))
+
+        notes = wiring._with_owner_notes(self.rdir, Plan(), lambda request: "Continue from snapshot abc.")
         text = notes(SimpleNamespace(task_id="T1"))
         self.assertLess(text.index("use the fixture"), text.index("Continue from snapshot"))
         self.assertEqual(notes(SimpleNamespace(task_id="T2")), "Continue from snapshot abc.")
+
+        decisions.write_audit_notes(self.rdir, "T2", "F1 (critical): the gateway never listens")
+        text = notes(SimpleNamespace(task_id="T2"))
+        self.assertLess(text.index("F1 (critical)"), text.index("Continue from snapshot"))
+        self.assertIn("independent audit", text)
+
+        audit_text = notes(SimpleNamespace(task_id="T9"))
+        self.assertIn("findings ledger", audit_text)
+        self.assertIn("`docs/a.findings.json`", audit_text)
+        self.assertNotIn("findings ledger", text)
+        self.assertEqual(wiring._with_owner_notes(self.rdir, Plan(), None)(SimpleNamespace(task_id="T404")), "")
 
 
 class Announce(Base):

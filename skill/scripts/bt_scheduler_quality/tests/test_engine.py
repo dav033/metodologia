@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from bt_scheduler_quality.contracts import VerifyRequest
+from bt_scheduler_quality.contracts import QualityError, VerifyRequest
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.evidence import validate_result_contract
 from bt_scheduler_quality.policy import QualityPolicy
@@ -239,6 +239,45 @@ class QualityEngineTests(unittest.TestCase):
         self.assertIsNone(result["input"]["snapshot_sha"])
         self.assertEqual(runner.calls, [])
         validate_result_contract(result)
+
+    def test_startup_leaves_never_started_requests_queued(self):
+        with QualityStore(":memory:") as store:
+            request = VerifyRequest.from_mapping(self.raw)
+            store.reserve(request)
+            engine = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner())
+            self.assertEqual(engine.recover_interrupted(), ())
+            self.assertEqual(store.queued_requests(1)[0][0], request.idempotency_key)
+            self.assertEqual(store.list_reviews(), ())
+
+    def test_retry_rejects_review_for_missing_snapshot(self):
+        with QualityStore(":memory:") as store:
+            engine = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner())
+            engine.verify(self.raw, None)
+            with self.assertRaises(QualityError) as raised:
+                store.retry_interrupted(self.raw["idempotency_key"], "david", "Retry")
+            self.assertEqual(raised.exception.code, "RETRY_INVALID")
+            self.assertEqual(len(store.list_reviews()), 1)
+            self.assertEqual(store.queued_requests(1), ())
+
+    def test_interrupted_review_can_be_requeued_once_without_a_verdict(self):
+        with QualityStore(":memory:") as store:
+            request = VerifyRequest.from_mapping(self.raw)
+            store.reserve(request)
+            store.claim_work(request.idempotency_key)
+            engine = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner())
+            engine.recover_interrupted()
+            original = store.get_result(request.idempotency_key)
+            store.retry_interrupted(request.idempotency_key, "david", "Retry after crash repair")
+            self.assertEqual(store.queued_requests(1)[0][0], request.idempotency_key)
+            self.assertIsNone(store.get_result(request.idempotency_key))
+            self.assertEqual(store.pending_deliveries(), ())
+            self.assertEqual(store.list_reviews(), ())
+            store.claim_work(request.idempotency_key)
+            engine.recover_interrupted()
+            with self.assertRaises(QualityError) as raised:
+                store.retry_interrupted(request.idempotency_key, "david", "Retry again")
+            self.assertEqual(raised.exception.code, "RETRY_EXHAUSTED")
+            self.assertEqual(original["status"], "NEEDS_REVIEW")
 
     def test_startup_recovery_persists_interrupted_request_without_replaying_it(self):
         with tempfile.TemporaryDirectory() as temporary:

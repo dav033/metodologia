@@ -62,6 +62,21 @@ explicit `covers:` and `kind:` values. A value PLAN.md does not
 state is not a contradiction; one it states differently is an error. Fields the parser would silently drop (a repeated
 field, an `after` entry that is not a task id, an unbackticked `verify`) are reported with their line.
 
+### Audits and end-to-end tests (schema 1.2.0 errors)
+
+A passing `test -s report.md` says nothing about what an audit found, and module tests that pass alone say nothing
+about components started together. So `plan-json check` refuses a plan with a `kind: audit` task that
+
+- does not list **exactly one findings ledger** among its `files:` (a path ending `.findings.json`; format and gate in
+  `modules.md` §Audit gate), or
+- has no `kind: test` task with a command verification of category `integration` among the tasks it follows. That
+  test must start the real entry points (server, worker, CLI) together and drive one real flow; importing the
+  modules is not an integration test.
+
+`plan-json retrofit-audit REQ-NNN` fixes the first rule on a plan written before it existed: it gives each audit task its
+ledger path (next to its `.md` report) in PLAN.json (a new working revision) and on its PLAN.md `files:`. It never
+invents the integration test; `check` keeps saying so until the plan has one.
+
 ## Where the methodology touches the module
 
 Only `bt_plan_adapter.py` imports `bt_planner` (enforced by `tests/test_plan_integration.py`):
