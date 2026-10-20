@@ -173,6 +173,10 @@ class GatewayRuntime:
         except (UpstreamTimeout, UpstreamError) as exc:
             raise ChallengeRelayError(503, "UNKNOWN_OUTCOME", "Challenge outcome is unknown") from exc
 
+    def read_model(self, path: str) -> dict[str, Any]:
+        """Relay an allowlisted read-only laptop model for an authenticated web session."""
+        return self.laptop.read_model(path)
+
     def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
         if command["type"] not in {"pause", "resume"} or command["target"]["kind"] != "run":

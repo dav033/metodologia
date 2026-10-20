@@ -86,14 +86,14 @@ class RemoteApiTests(unittest.TestCase):
         routes = (
             ("GET", "/api/remote/v1/snapshot", 200),
             ("GET", "/api/remote/v1/events", 200),
-            ("GET", "/api/remote/v1/attempts/attempt-1/review", 503),
-            ("GET", "/api/remote/v1/commands", 503),
+            ("GET", "/api/remote/v1/attempts/attempt-1/review", 404),
+            ("GET", "/api/remote/v1/commands", 200),
             ("POST", "/api/remote/v1/commands", 400),
             ("GET", "/api/remote/v1/runs", 200),
             ("GET", "/api/remote/v1/plans", 200),
-            ("GET", "/api/remote/v1/history", 503),
+            ("GET", "/api/remote/v1/history", 200),
             ("GET", "/api/remote/v1/challenges", 503),
-            ("POST", "/api/remote/v1/challenges", 503),
+            ("POST", "/api/remote/v1/challenges", 400),
         )
         for method, path, expected_status in routes:
             with self.subTest(method=method, path=path):
@@ -136,6 +136,31 @@ class RemoteApiTests(unittest.TestCase):
         now_frame.assert_called_once_with(None)
         self.assertEqual(snapshot[0]["active_task"], {"id": "T2", "title": "Build"})
         self.assertEqual(snapshot[0]["last_sign_of_life"], "2026-10-19T10:03:00Z")
+
+    def test_mobile_snapshot_uses_v1_run_dialect_and_includes_rounds_and_decisions(self):
+        run = {"run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "status": "running",
+               "tasks": [{"id": "T1", "state": "running", "attempt": {"id": "a1", "state": "running", "live": True}}]}
+        round_data = {"round": 2, "status": "open", "questions": [{"id": "q1", "text": "Scope?"}]}
+        decision = {"id": "d1", "title": "Continue", "options": [{"id": "retry"}]}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY}), \
+                patch.object(bt_remote_api, "_runs", return_value=[run]), \
+                patch.object(bt_remote_api, "_shared_now_items", return_value=[]), \
+                patch.object(bt_remote_api, "_plans", return_value=[]), \
+                patch.object(bt_remote_api, "_planning_detail", return_value=(
+                    [{**round_data, "project": "demo", "req": "REQ-001"}],
+                    [{**decision, "project": "demo", "req": "REQ-001"}])):
+            class Handler:
+                headers = {"Authorization": f"Bearer {KEY}"}
+                path = "/api/remote/v1/snapshot"
+                def send(self, body, status, content_type): self.response = status, body
+            handler = Handler()
+            bt_remote_api.route_get(handler)
+        payload = json.loads(handler.response[1])
+        self.assertEqual(payload["runs"][0]["req"], "REQ-001")
+        self.assertEqual(payload["runs"][0]["state"], "running")
+        self.assertEqual(payload["runs"][0]["activeAttempt"]["id"], "a1")
+        self.assertEqual(payload["rounds"][0]["round"], 2)
+        self.assertEqual(payload["decisionRequests"][0]["id"], "d1")
 
     def test_snapshot_handles_large_fixture_within_one_second(self):
         fixture_runs = [{"run": f"demo/REQ-{index:04d}", "updated_at": None, "tasks": []}

@@ -220,6 +220,21 @@ export default function HomePage() {
     setSnapshot(parseSnapshot(await response.json()));
   }, []);
 
+  const refreshCommandHistory = useCallback(async () => {
+    const response = await fetch("/api/remote/v1/history", { cache: "no-store" });
+    if (!response.ok) throw new Error(`No se pudo cargar el historial (${response.status}).`);
+    const payload: unknown = await response.json();
+    const value = record(payload);
+    const rows = Array.isArray(value?.history) ? value.history : [];
+    setCommandHistory(rows.flatMap((row): CommandHistoryItem[] => {
+      const item = record(row);
+      if (!item || !text(item.idempotency_key) || !text(item.received_at)) return [];
+      return [{ id: item.idempotency_key, at: item.received_at,
+        origin: `${text(item.target) ? item.target : ""} · ${text(item.command) ? item.command : "comando"}`,
+        result: text(item.status) ? item.status : (text(item.code) ? item.code : "desconocido") }];
+    }));
+  }, []);
+
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
@@ -229,8 +244,8 @@ export default function HomePage() {
     if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
     setSession({ authenticated: parsedSession.authenticated });
     if (!parsedSession.authenticated) return;
-    await refreshSnapshot();
-  }, [refreshSnapshot]);
+    await Promise.all([refreshSnapshot(), refreshCommandHistory()]);
+  }, [refreshSnapshot, refreshCommandHistory]);
 
   useEffect(() => {
     void load().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "Error al cargar el panel."));
@@ -240,9 +255,10 @@ export default function HomePage() {
     if (session?.authenticated !== true) return;
     const timer = window.setInterval(() => {
       void refreshSnapshot().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el panel."));
+      void refreshCommandHistory().catch((cause: unknown) => setError(cause instanceof Error ? cause.message : "No se pudo actualizar el historial."));
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [session?.authenticated, refreshSnapshot]);
+  }, [session?.authenticated, refreshSnapshot, refreshCommandHistory]);
 
   const snapshotCursor = useRef(snapshot?.cursor);
   snapshotCursor.current = snapshot?.cursor;
@@ -271,8 +287,7 @@ export default function HomePage() {
     if (!snapshot) return;
     setWorking(key); setError("");
     const target = record(command.target);
-    const origin = `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""} · ${text(command.type) ? command.type : "comando"}`;
-    const addHistory = (result: string) => setCommandHistory((current) => [{ id: crypto.randomUUID(), at: new Date().toISOString(), origin, result }, ...current].slice(0, 20));
+    const addHistory = (_result: string) => { void refreshCommandHistory(); };
     try {
       const confirmation = record(command.confirmation);
       if (confirmation && text(confirmation.typedReq)) {
