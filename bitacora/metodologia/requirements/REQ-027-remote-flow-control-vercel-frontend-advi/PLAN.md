@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 34/43 · generado: 2026-10-20T12:11:43-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 34/43 · generado: 2026-10-20T12:13:40-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -69,7 +69,7 @@ created: 2026-10-19
 | T18.3 | Remediate T18 findings F9, F10 | alta | completada | sonnet | claude-work | 1 |
 | T18.4 | Remediate T18 findings F19 | alta | completada | sonnet | claude-work | 1 |
 | T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | completada | sonnet | claude-work | 2 |
-| T18.6 | Remediate T18 findings F14 | media | en curso | gpt-6-luna | codex-2 | 1 |
+| T18.6 | Remediate T18 findings F14 | media | verificando | gpt-6-luna | codex-2 | 1 |
 
 **M6 — Production environment** · dificultad alta · 0/5
 
