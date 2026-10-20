@@ -37,12 +37,20 @@ def close(wiring: api.Wiring) -> None:
 def _with_owner_notes(rdir, plan, base):
     """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request, by
     the open audit findings of a task sent back, and, for an audit task, by how to write its findings ledger."""
+    import bt_attempt_history
     import bt_audit_gate
     import bt_scheduler_decisions
+
+    def _history(task_id: str) -> str:
+        try:
+            return bt_attempt_history.prompt(rdir, task_id, bt_scheduler_decisions._state(rdir))
+        except Exception:  # noqa: BLE001 - a prompt without its history is still a prompt
+            return ""
 
     def notes(request):
         parts = [bt_scheduler_decisions.operator_notes(rdir, request.task_id),
                  bt_scheduler_decisions.audit_notes(rdir, request.task_id),
+                 _history(request.task_id),
                  bt_scheduler_decisions.verify_notes(rdir, request.task_id)]
         try:
             task = plan.task(request.task_id)
@@ -156,6 +164,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             base_notes = continuation.notes
         executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
         if quality_store_path is not None:
+            import bt_attempt_history
             import bt_audit_gate
             import bt_config
             import bt_remediation
@@ -180,6 +189,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 attempts_root=executor.attempts_dir,
                 rework_notes=lambda task_id, text: bt_scheduler_decisions.write_audit_notes(rdir, task_id, text),
                 verify_notes=lambda task_id, text: bt_scheduler_decisions.write_verify_notes(rdir, task_id, text),
+                verify_history=lambda task_id, attempt, text: bt_attempt_history.record(rdir, task_id, attempt, text),
                 audit_policy=bt_audit_gate.policy_from(bt_config.get),
                 integration_check=(integrate.would_conflict
                                    if integrate is not None and bt_config.get("gates.integration_check", True) is True

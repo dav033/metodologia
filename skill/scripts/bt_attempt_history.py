@@ -1,0 +1,145 @@
+"""What earlier attempts of a task tried and how each one failed, for the next attempt's prompt and the owner's card.
+
+A retry used to see only the last verification failure (`RUN.notes/<task>.verify.md`, overwritten each time): not how
+many attempts had already failed, nor failures of another kind (a start refused by a clash, a timeout, a cancellation),
+nor that the same error kept coming back. REQ-027 T15 ran 13 attempts and T14 hit the same INTEGRATION_CONFLICT three
+times. Each verification failure is now appended to `RUN.notes/<task>.history.jsonl` with a signature: its failing
+commands and error lines, without numbers, hashes and paths. The other failures are read from M1's attempts. The
+prompt lists them oldest first and says plainly when the last ones failed the same way, so the agent changes approach
+or reports what blocks it instead of repeating it.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import time
+from pathlib import Path
+
+NOTES = "RUN.notes"
+SHOWN = 6                   # attempts listed in a prompt; older ones are counted
+MAX_TEXT = 1500
+ERROR_LINE = re.compile(r"error|fail|exit code|cannot|not found|denied|refused|conflict|timeout|assert", re.I)
+NOISE = (re.compile(r"\b[0-9a-f]{7,64}\b"), re.compile(r"(?:/[\w.@+-]+)+/"), re.compile(r"\d+(?:\.\d+)?"))
+
+
+def path(rdir: Path, task: str) -> Path:
+    return Path(rdir) / NOTES / f"{task}.history.jsonl"
+
+
+def signature(text: str) -> str:
+    """The same failure gives the same signature across attempts: commands and error lines, without the numbers,
+    hashes and paths that change from one attempt to the next."""
+    lines = [line.strip() for line in (text or "").splitlines() if line.strip()]
+    keep = [line for line in lines if line.startswith("$ ") or ERROR_LINE.search(line)] or lines[:3]
+    norm = []
+    for line in keep[:12]:
+        for pattern in NOISE:
+            line = pattern.sub("#", line)
+        norm.append(re.sub(r"\s+", " ", line.lower()))
+    return hashlib.sha256("\n".join(norm).encode()).hexdigest()[:12] if norm else ""
+
+
+def record(rdir: Path, task: str, attempt: str, text: str, kind: str = "verification") -> None:
+    """Append one failure of one attempt (best effort: the history only informs, it never stops a run)."""
+    if not text.strip() or not attempt:
+        return
+    target = path(rdir, task)
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps({"attempt": attempt, "kind": kind, "at": time.time(), "signature": signature(text),
+                                     "text": text.strip()[:MAX_TEXT]}, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def _recorded(rdir: Path, task: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    try:
+        for line in path(rdir, task).read_text(encoding="utf-8").splitlines():
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(row, dict) and row.get("attempt"):
+                out[str(row["attempt"])] = row
+    except OSError:
+        pass
+    return out
+
+
+def entries(rdir: Path, task: str, doc: dict) -> list[dict]:
+    """Every settled attempt of the task, oldest first: {attempt, number, outcome, text, signature}."""
+    recorded = _recorded(rdir, task)
+    out = []
+    for number, attempt in enumerate(doc.get("tasks", {}).get(task, {}).get("attempts", []), 1):
+        rec = doc.get("attempts", {}).get(attempt, {})
+        state = rec.get("state", "")
+        if state in ("reserved", "dispatched", "running", "verifying", "uncertain", ""):
+            continue
+        failure = str(rec.get("failure") or "")
+        if state == "accepted":
+            outcome, text = "accepted", ""
+        elif attempt in recorded:
+            outcome, text = "verification failed", recorded[attempt]["text"]
+        elif failure.startswith("m6://"):
+            outcome, text = "verification failed", "(the failing checks of this attempt were not recorded)"
+        else:
+            outcome, text = ("cancelled" if state == "cancelled" else "failed"), failure
+        out.append({"attempt": attempt, "number": number, "outcome": outcome, "text": text,
+                    "signature": recorded.get(attempt, {}).get("signature") or (signature(text) if text else "")})
+    return out
+
+
+def repeats(history: list[dict]) -> int:
+    """How many of the last failed attempts, counted back from the newest, failed with the same signature."""
+    failed = [h for h in history if h["outcome"] != "accepted"]
+    if not failed or not failed[-1]["signature"]:
+        return 0
+    count = 0
+    for h in reversed(failed):
+        if h["signature"] != failed[-1]["signature"]:
+            break
+        count += 1
+    return count
+
+
+def _excerpt(text: str) -> str:
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    command = next((line for line in lines if line.startswith("$ ")), "")
+    error = next((line for line in lines if ERROR_LINE.search(line) and not line.startswith(("$ ", "exit code"))),
+                 next((line for line in lines if line.startswith("exit code")), ""))
+    picked = [x for x in (command, error) if x] or lines[:1]
+    return " — ".join(picked)[:300]
+
+
+def prompt(rdir: Path, task: str, doc: dict) -> str:
+    """The section of a retry's prompt about earlier attempts; '' for a first attempt."""
+    history = entries(rdir, task, doc)
+    if not history:
+        return ""
+    lines = ["Earlier attempts of this task (oldest first). Read them before you change anything: do not repeat an "
+             "approach that already failed."]
+    hidden = len(history) - SHOWN
+    if hidden > 0:
+        lines.append(f"- ({hidden} older attempt(s) not shown)")
+    seen: dict[str, int] = {}               # signature -> first attempt shown with its text
+    for h in history[-SHOWN:]:
+        first = seen.get(h["signature"])
+        if h["outcome"] == "accepted":
+            detail = "accepted, later sent back (rework, audit or plan revision)"
+        elif first is not None and first != h["number"]:
+            detail = f"{h['outcome']}: the same failure as attempt #{first}"
+        else:
+            detail = f"{h['outcome']}: {_excerpt(h['text'])}"
+            if h["signature"]:
+                seen[h["signature"]] = h["number"]
+        lines.append(f"- #{h['number']} {h['attempt']}: {detail}")
+    same = repeats(history)
+    if same >= 2:
+        lines.append(f"WARNING: the last {same} attempts failed in exactly the same way. Doing the same again will fail "
+                     "again. Find the root cause first; it may be outside the code you wrote (the environment, a "
+                     "dependency, the verification command, the plan). If it cannot be fixed within this task, say so "
+                     "at the top of your final report, with the evidence, instead of retrying the same change.")
+    return "\n".join(lines)

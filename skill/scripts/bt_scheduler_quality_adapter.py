@@ -48,6 +48,7 @@ class QualityVerificationPort:
         snapshot_resolver: SnapshotResolver | None = None,
         rework_notes: Callable[[str, str], None] | None = None,
         verify_notes: Callable[[str, str], None] | None = None,
+        verify_history: Callable[[str, str, str], None] | None = None,
         audit_policy: bt_audit_gate.Policy | None = None,
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
@@ -59,6 +60,7 @@ class QualityVerificationPort:
         self.core = core
         self.rework_notes = rework_notes
         self.verify_notes = verify_notes                  # (task, text): why M6 rejected the attempt; '' clears it
+        self.verify_history = verify_history              # (task, attempt, text): every rejection, kept for later retries
         self.audit_policy = audit_policy or bt_audit_gate.Policy()
         self._resolver = snapshot_resolver or SnapshotResolver(policy)
         self._read_ledger = read_ledger or self._ledger_from_snapshot
@@ -457,7 +459,10 @@ class QualityVerificationPort:
             return
         try:
             if result.get("status") == "FAIL":
-                self.verify_notes(order.task_id, self._failure_digest(result))
+                digest = self._failure_digest(result)
+                self.verify_notes(order.task_id, digest)
+                if self.verify_history is not None:
+                    self.verify_history(order.task_id, order.attempt_id, digest)
             elif result.get("status") == "PASS":
                 self.verify_notes(order.task_id, "")
         except OSError as error:

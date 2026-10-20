@@ -113,8 +113,17 @@ def _findings(request: dict, match: re.Match, refused: dict, req: str) -> tuple[
                  "rework_findings" if named else "retry_with_note"), option
 
 
-def explain(request: dict, doc: dict, *, plan=None, verify: str = "", failures: list[str] | None = None,
-            closed: str = "", refused: dict | None = None, req: str = "REQ") -> tuple[dict, list[dict]]:
+def explain(request: dict, doc: dict, *, repeats: int = 0, **evidence) -> tuple[dict, list[dict]]:
+    """(diagnosis, extra options) for one open request; `repeats`: how many of the last attempts failed the same way
+    (bt_attempt_history). A known cause that keeps coming back says so: the owner sees it is not a one-off."""
+    diagnosis, extra = _match(request, doc, repeats=repeats, **evidence)
+    if repeats >= 2 and not diagnosis["headline"].startswith("Los últimos"):
+        diagnosis["origin"] += f" Ya van {repeats} intentos seguidos con este mismo fallo: reintentar igual no lo arregla."
+    return diagnosis, extra
+
+
+def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: list[str] | None = None,
+           closed: str = "", refused: dict | None = None, repeats: int = 0, req: str = "REQ") -> tuple[dict, list[dict]]:
     """(diagnosis, extra options) for one open request. `failures` are the task's attempts' failures, oldest first."""
     failures = [f for f in (failures or []) if f]
     last = failures[-1] if failures else ""
@@ -199,10 +208,12 @@ def explain(request: dict, doc: dict, *, plan=None, verify: str = "", failures: 
         return _diag("cancelled", "El intento se canceló",
                      f"El último intento no falló: lo cerró {who}. No hay nada que arreglar en el código.",
                      ["Pulsa «Reintentar» si la tarea debe seguir."], "retry"), []
-    if len(failures) >= 2 and len(set(failures[-3:])) == 1 and verify:
-        return _diag("code", "Los intentos fallan una y otra vez igual",
-                     "Las últimas verificaciones fallaron con el mismo error: reintentar sin cambiar nada lo repetirá. "
-                     "Lee el error y decide si es del código (indicación al agente) o del plan (revisión).",
+    same = repeats or (len(failures) if len(failures) >= 2 and len(set(failures[-3:])) == 1 and verify else 0)
+    if same >= 2:
+        return _diag("code", f"Los últimos {same} intentos fallaron exactamente igual",
+                     f"Los últimos {same} intentos terminaron con el mismo error: reintentar sin cambiar nada lo "
+                     "repetirá. Lee el error y decide si es del código (indicación al agente), del entorno (arréglalo "
+                     "tú) o del plan (revisión). El agente ya ve el historial de intentos y este aviso.",
                      ["Si el error apunta al código, reintenta con una indicación que diga qué cambiar.",
                       "Si apunta a una comprobación imposible, corrige el plan y pasa el run a la revisión nueva.",
                       "Pide el diagnóstico del agente si no está claro."], "retry_with_note", confidence="media"), []

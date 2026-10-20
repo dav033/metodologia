@@ -305,10 +305,14 @@ def _plan(rdir: Path):
 
 def _context(rdir: Path, doc: dict, request: dict) -> dict:
     """The evidence the rules and the agent read for one request."""
+    import bt_attempt_history
+
     attempts = doc.get("tasks", {}).get(request["task"], {}).get("attempts", [])
     task = request["source"] == "task"
+    history = bt_attempt_history.entries(rdir, request["task"], doc)
     return {"verify": verify_notes(rdir, request["task"]),
             "failures": [doc.get("attempts", {}).get(a, {}).get("failure", "") for a in attempts],
+            "repeats": bt_attempt_history.repeats(history),
             "closed": _manual_closure(rdir, request.get("attempt", "")) if task else "",
             "refused": _refused_rework(rdir, request.get("attempt", "")) if task else {}}
 
@@ -383,7 +387,11 @@ def evidence(rdir: Path, request: dict) -> str:
     except (OSError, ValueError):
         pass
     ctx = _context(rdir, doc, request)
-    return bt_block_diagnosis.bundle(request, plan=_plan(rdir), verify=ctx["verify"], failures=ctx["failures"],
+    import bt_attempt_history
+
+    history = bt_attempt_history.prompt(rdir, request["task"], doc)
+    return bt_block_diagnosis.bundle(request, plan=_plan(rdir), verify=ctx["verify"],
+                                     failures=[history] if history else ctx["failures"],
                                      notes=operator_notes(rdir, request["task"]), audit=audit_notes(rdir, request["task"]),
                                      answered=answered, rule=request.get("diagnosis"))
 

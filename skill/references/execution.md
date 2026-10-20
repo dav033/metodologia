@@ -125,7 +125,7 @@ a check M6 cannot run (git in a sandbox without .git, a command form it refuses)
 module or variable, a service down, quota, a cancellation, the same failure repeated. The watchdog also asks a cheap
 model to diagnose each new request (`bt_block_agent`, config `diagnosis.profile|model|effort`, default Claude Haiku;
 `scheduler-op REQ-NNN diagnose <request>` by hand); its answer is cached in `RUN.diagnoses/` and both show on the card
-in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. Cancelling a scheduler plan (web "Planes" view,
+in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. A retry's prompt also lists the task's earlier attempts and how each failed (D-099, `bt_attempt_history`, `RUN.notes/<task>.history.jsonl`) and warns when the last ones failed the same way. Cancelling a scheduler plan (web "Planes" view,
 confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
 router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
 
