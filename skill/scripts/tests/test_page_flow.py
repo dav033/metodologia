@@ -100,7 +100,7 @@ class FlowPage(unittest.TestCase):
     def test_page_has_the_controls_and_loads_the_two_scripts(self):
         html = pf.flow_page("run:demo/REQ-001")
         for needle in ('data-scope="run:demo/REQ-001"', 'id="flow-live"', 'id="flow-replay"', 'data-speed="20"',
-                       "/static/flow-core.js", "/static/flow.js", "Reproducir", 'id="fl-tasks"', 'id="fl-tab-trace"',
+                       "/static/flow-core.js", "/static/flow.js", "/static/flow.css", "Reproducir", 'id="fl-tasks"', 'id="fl-tab-trace"',
                        'id="fl-detail"', "Pausar animación", 'data-sim="metodologia/REQ-026"'):
             self.assertIn(needle, html)
 

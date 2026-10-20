@@ -30,7 +30,7 @@
   var BASE_EDGES = [['agent', 'planner'], ['planner', 'M1'], ['owner', 'M1'], ['M2', 'M1'], ['M1', 'M2'], ['M1', 'M3'],
     ['M3', 'M1'], ['M3', 'M4'], ['M4', 'M1'], ['M1', 'M6'], ['M6', 'M1'], ['M5', 'M1']];
 
-  var all = [], seen = {}, digests = {}, runs = [], extraRuns = {}, doing = {};   // doing: attempt -> what its agent does now
+  var all = [], seen = {}, feedSeen = null, digests = {}, runs = [], extraRuns = {}, doing = {};   // doing: attempt -> what its agent does now
   var S = { run: '', task: '', cats: {}, node: '', edge: '', detail: false, tab: 'feed', mode: 'live', t: 0, playing: false,
     speed: 5, paused: false };
   var svg, gE, gN, gP, edgeEls = {}, nodeEls = {}, particles = [], partEls = [], shown = 0, last = 0, pending = false;
@@ -113,8 +113,14 @@
       return '<button type="button" class="fl-run ' + cls + '" data-run="' + esc(id) + '" aria-pressed="' + (id === S.run) + '">' +
         '<i class="fl-st"></i><span class="fl-nm">' + esc(id) + '</span><span class="fl-pill">' + esc(pill) + '</span>' +
         (r && r.title ? '<span class="fl-ti" title="' + esc(r.title) + '">' + esc(r.title) + '</span>' : '') +
-        '<span class="fl-ds">' + esc(desc) + '</span></button>';
+        '<span class="fl-ds">' + esc(desc) + '</span>' + progress(r) + '</button>';
     }).join('') : '<p class="muted">Ninguna ejecución del Scheduler en este alcance todavía.</p>';
+  }
+  function progress(r) {
+    if (!r || !r.summary || !r.summary.tasks_total) return '';
+    var pct = Math.round(100 * r.summary.tasks_done / r.summary.tasks_total);
+    return '<span class="fl-prog" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct +
+      '"><i style="width:' + pct + '%"></i></span>';
   }
   function statusText(s) {
     return { running: 'en marcha', waiting: 'esperando', paused: 'en pausa', completed: 'terminada', blocked: 'bloqueada',
@@ -342,11 +348,14 @@
   function renderFeed(list) {
     var vis = list.filter(function (e) { return C.matches(e, S); }), rows = C.groupRows(vis), html = [];
     var dg = S.detail && !C.anyCat(S) && !S.node && !S.edge ? runDigests(list).sort(function (a, b) { return b.at_epoch - a.at_epoch; }) : [];
-    var di = 0;
+    var di = 0, fresh = {};
+    var firstLoad = !feedSeen && all.length > 0;       // the first batch is history, not news: only later rows animate
+    if (all.length) feedSeen = feedSeen || {};
+    all.forEach(function (e) { var k = e.run + '#' + e.seq; if (!firstLoad && !feedSeen[k]) fresh[k] = 1; feedSeen[k] = 1; });
     rows.forEach(function (r) {
       while (di < dg.length && dg[di].at_epoch >= r.last) html.push(digestRow(dg[di++]));
       var e = r.ev;
-      html.push('<li class="' + C.kindClass(e) + '" data-task="' + esc(e.task || '') + '"><div class="fl-hd"><span>' + esc(short(e.from)) + ' → ' + esc(short(e.to)) +
+      html.push('<li class="' + C.kindClass(e) + (fresh[e.run + '#' + e.seq] ? ' fl-new' : '') + '" data-task="' + esc(e.task || '') + '"><div class="fl-hd"><span>' + esc(short(e.from)) + ' → ' + esc(short(e.to)) +
         ' · ' + esc(C.label(e.kind)) + '</span>' + (r.n > 1 ? '<span class="fl-x">×' + r.n + '</span>' : '') + '</div>' + linkIds(e.run, e.summary) +
         '<div class="fl-mt">' + hhmm(r.first, true) + (r.n > 1 ? '–' + hhmm(r.last, true) : '') + (e.task ? ' · ' + taskLink(e.run, e.task) : '') + (e.attempt ? ' · ' + attLink(e.run, e.attempt) : '') + '</div></li>');
     });
@@ -492,6 +501,7 @@
     });
     $('flow-pause').addEventListener('click', function (e) {
       S.paused = !S.paused;
+      $('flow').classList.toggle('fl-paused', S.paused);
       e.currentTarget.firstChild.textContent = S.paused ? 'Reanudar animación' : 'Pausar animación';
     });
     $('flow-sim').addEventListener('click', function (e) {

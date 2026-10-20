@@ -1,0 +1,60 @@
+/* /flow skin: calm cards, one idea of motion (things that are alive breathe; things that need you nudge).
+   Loaded after style.css; only touches .flowpage / .fl-* so the rest of the app is unchanged. */
+.flowpage { display: flex; flex-direction: column; gap: 20px; }
+.flowpage [hidden] { display: none !important; }
+
+/* runs: card with progress */
+.fl-run { grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; padding: 16px 18px; position: relative; overflow: hidden;
+  transition: transform .2s, border-color .2s, box-shadow .2s; }
+.fl-run:hover { transform: translateY(-2px); border-color: var(--kc); }
+.fl-run.k-bad { background: color-mix(in srgb, var(--k-bad) 8%, var(--surface)); }
+.fl-run.k-run .fl-st { animation: fl-ping 1.6s ease-out infinite; }
+.fl-run .fl-ti { font-weight: 800; font-size: 16px; }
+.fl-prog { grid-column: 1 / -1; margin-top: 8px; height: 8px; border-radius: 99px; background: var(--mantle); overflow: hidden; display: block; }
+.fl-prog i { display: block; height: 100%; border-radius: 99px; background: var(--k-verify); transition: width .8s cubic-bezier(.2, .8, .2, 1);
+  position: relative; overflow: hidden; }
+.fl-run.k-run .fl-prog i::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / .35), transparent); animation: fl-sheen 2.6s ease-in-out infinite; }
+@keyframes fl-sheen { to { transform: translateX(100%); } }
+
+/* task chips: the colour bar says the state, motion says who needs attention */
+.fl-task { min-height: 44px; transition: transform .15s, border-color .15s; }
+.fl-task:hover { transform: translateY(-2px); background: var(--accent-soft); }
+.fl-task .fl-bar { height: 3px; }
+.fl-task.s-retry .fl-bar { background: repeating-linear-gradient(90deg, var(--kc) 0 6px, transparent 6px 10px); }
+.fl-task.s-blocked { background: color-mix(in srgb, var(--k-bad) 12%, var(--mantle)); border-color: var(--k-bad); animation: fl-nudge 3.2s ease-in-out infinite; }
+@keyframes fl-nudge { 0%, 88%, 100% { transform: none; } 91% { transform: translateX(-3px); } 94% { transform: translateX(3px); } 97% { transform: translateX(-2px); } }
+
+/* decision card: reads as «this needs you» */
+.fl-decisions { position: relative; overflow: hidden; border-color: var(--k-bad); background: color-mix(in srgb, var(--k-bad) 7%, var(--surface)); padding-top: 20px; }
+.fl-decisions::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background-size: 60px 3px;
+  background-image: repeating-linear-gradient(90deg, var(--k-bad) 0 18px, transparent 18px 30px); animation: fl-stripes 1.6s linear infinite; }
+@keyframes fl-stripes { to { background-position: 60px 0; } }
+.fl-decision-option button { transition: transform .15s, border-color .15s; min-height: 36px; }
+.fl-decision-option button:hover:not(:disabled) { transform: translateY(-2px); border-color: var(--accent); }
+.dx-agent.dx-running, .dx-running { background: linear-gradient(90deg, var(--accent-soft), var(--mantle), var(--accent-soft)); background-size: 200% 100%;
+  animation: fl-shimmer 1.8s linear infinite; border-radius: 99px; padding: 3px 10px; }
+@keyframes fl-shimmer { to { background-position: -200% 0; } }
+
+/* map */
+.fl-mapwrap { background-image: radial-gradient(var(--border) 1px, transparent 1.2px); background-size: 22px 22px; border-radius: var(--radius); }
+.fl-node .fl-box { transition: stroke .25s, fill .25s, filter .25s; }
+.fl-node:hover .fl-box { stroke: var(--accent); filter: drop-shadow(0 4px 8px rgb(0 0 0 / .18)); }
+.fl-node.core .fl-box { fill: var(--accent-soft); }
+
+/* messages: only a row that just arrived slides in */
+.fl-feed li { transition: background .2s; }
+.fl-feed li.fl-new { animation: fl-slide .6s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes fl-slide { from { opacity: 0; transform: translateY(-14px); background: var(--accent-soft); } to { opacity: 1; transform: none; } }
+
+/* controls */
+.fl-seg button { min-height: 36px; transition: background .2s, color .2s; }
+.fl-seg button.on { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.fl-seg button.on .fl-dot { background: var(--on-accent); }
+.fl-replay { animation: fl-slide .4s both; }
+
+/* pause freezes everything decorative; reduced motion switches it off */
+.fl-paused *, .fl-paused *::before, .fl-paused *::after { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) {
+  .flowpage *, .flowpage *::before, .flowpage *::after { animation: none !important; transition: none !important; }
+}

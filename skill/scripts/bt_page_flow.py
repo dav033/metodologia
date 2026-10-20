@@ -22,7 +22,7 @@ def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026", token: st
     """`sim` = project/REQ whose plan «Simular» runs on the core's doubles (default: the DEMO plan)."""
     key = "".join(f'<span class="{cls}"><i></i>{e(text)}</span>' for cls, text in TASK_KEY)
     label = {"global": "todas las ejecuciones"}.get(scope, scope.replace(":", " · "))
-    body = f"""<div class="head"><div><p class="eyebrow" id="fl-eyebrow">flujo · {e(label)}</p><h1>Cómo hablan los módulos</h1></div>
+    body = f"""<link rel="stylesheet" href="/static/flow.css"><div class="head"><div><p class="eyebrow" id="fl-eyebrow">flujo · {e(label)}</p><h1>Cómo hablan los módulos</h1></div>
 <div class="fl-ctrl"><div class="fl-seg" role="group" aria-label="Modo">
 <button type="button" id="flow-live" class="on"><i class="fl-dot"></i>En vivo</button><button type="button" id="flow-replay">Repetir</button></div>
 <details class="fl-more"><summary>Más</summary><div class="fl-menu">
