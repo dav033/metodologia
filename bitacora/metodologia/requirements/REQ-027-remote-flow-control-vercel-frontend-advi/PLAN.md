@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/6 · tareas 25/37 · generado: 2026-10-19T21:51:38-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/6 · tareas 25/37 · generado: 2026-10-19T22:29:17-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -52,7 +52,7 @@ created: 2026-10-19
 | T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-luis | 3 |
 | T15c | Failure review screen | baja | completada | gpt-6-luna | codex-1 | 3 |
 | T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-1 | 3 |
-| T15e | Plans, question rounds and decision requests screens | media | bloqueada | sonnet | claude-work | 3 |
+| T15e | Plans, question rounds and decision requests screens | media | en curso | sonnet | claude-personal | 4 |
 | T15f | Recovery forms and live quotas | media | pendiente | gpt-6-luna | codex-luis | 2 |
 
 **M5 — Go-live kit and audit** · dificultad alta · 0/5
