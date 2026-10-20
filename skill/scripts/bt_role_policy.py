@@ -10,7 +10,7 @@ ROLES = ("planner", "reviewer", "explorer", "implementer", "researcher", "runner
 
 _KINDS = {"implement": "implementer", "test": "runner", "audit": "reviewer", "research": "researcher"}
 _DEFAULTS = {
-    "planner": (("codex", "gpt-6-astra", "high"), ("claude", "opus", "xhigh")),
+    "planner": (("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")),   # planning: high, never xhigh by default
     "reviewer": (("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")),
     "explorer": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")),
     "implementer": (("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")),

@@ -385,5 +385,13 @@ class Wiring(unittest.TestCase):
             self.assertIn(needle, doc)
 
 
+class AuditLedgerContract(unittest.TestCase):
+    def test_the_planner_and_the_gate_agree_on_the_ledger_suffix(self):
+        import bt_audit_gate
+        from bt_planner import quality
+        self.assertEqual(quality.LEDGER_SUFFIX, bt_audit_gate.LEDGER_SUFFIX)
+
+
 if __name__ == "__main__":
     unittest.main()
+

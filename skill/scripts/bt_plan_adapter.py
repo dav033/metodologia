@@ -51,8 +51,38 @@ def plan_schema_version_details(plan_path: Path) -> tuple[str, tuple[int, int, i
     return _schema_version(plan_path)
 
 
+def second_auditor_problem(plan_path: Path) -> str | None:
+    """Owner policy `gates.second_auditor` (default on): a plan with an audit needs an independent cross-check audit, so
+    one auditor's omissions cannot decide the outcome. Schema 1.2.0 plans only; the planner only warns, the policy is
+    configuration, so it lives here."""
+    version = _schema_version(plan_path)
+    if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
+        return None
+    try:
+        import bt_config
+        if not bt_config.get("gates.second_auditor", True):
+            return None
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    tasks = plan.get("tasks") if isinstance(plan, dict) else None
+    audits = [t.get("id") for t in tasks if isinstance(t, dict) and t.get("kind") == "audit"] if isinstance(tasks, list) else []
+    if len(audits) == 1:
+        return (f"SECOND_AUDITOR_MISSING: {audits[0]} is the only audit; gates.second_auditor is on, so add an independent "
+                "cross-check audit task (own report and findings ledger) — `plan-json retrofit-audit REQ --cross-check` "
+                "adds it — or turn the policy off with `bitacora.py config set gates.second_auditor false`")
+    return None
+
+
 def plan_consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
                           plan_path: Path | None = None) -> str | None:
+    """The consumer gate (capability report) and the owner's gate policies for the plan."""
+    return _consumer_problem(rdir, compatibility_report=compatibility_report, plan_path=plan_path) or \
+        second_auditor_problem(plan_path or (Path(rdir) / planner.PLAN_JSON))
+
+
+def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
+                      plan_path: Path | None = None) -> str | None:
     """Evaluate a caller-supplied capability report without importing downstream consumers here."""
     version = _schema_version(plan_path or (Path(rdir) / planner.PLAN_JSON))
     if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
@@ -155,7 +185,7 @@ def ref_verifier(rdir: Path):
 
 
 def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = False, emit=print,
-            compatibility_report: dict[str, object] | None = None) -> int:
+            compatibility_report: dict[str, object] | None = None, cross_check: bool = False) -> int:
     """Back the `bitacora.py plan-json <action> REQ-NNN` command."""
     if action == "compat":
         messages: list[str] = []
@@ -186,7 +216,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
             return 2
     return planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
                            approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir), ref_exists=ref_verifier(rdir),
-                           emit=emit)
+                           cross_check=cross_check, emit=emit)
 
 
 def handoff_problems(rdir: Path, limit: int = 5, *,

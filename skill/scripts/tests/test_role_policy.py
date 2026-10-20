@@ -12,7 +12,7 @@ import bt_role_policy as policy
 class RolePolicyTests(unittest.TestCase):
     def test_ordinary_choices_match_owner_selection(self):
         expected = {
-            "planner": [("codex", "gpt-6-astra", "high"), ("claude", "opus", "xhigh")],
+            "planner": [("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")],
             "reviewer": [("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")],
             "explorer": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")],
             "implementer": [("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")],

@@ -73,8 +73,9 @@ about components started together. So `plan-json check` refuses a plan with a `k
   test must start the real entry points (server, worker, CLI) together and drive one real flow; importing the
   modules is not an integration test.
 
-`plan-json retrofit-audit REQ-NNN` fixes the first rule on a plan written before it existed: it gives each audit task its
-ledger path (next to its `.md` report) in PLAN.json (a new working revision) and on its PLAN.md `files:`. It never
+`plan-json retrofit-audit REQ-NNN [--cross-check]` fixes the first rule on a plan written before it existed: it gives each audit task its
+ledger path (next to its `.md` report) in PLAN.json (a new working revision) and on its PLAN.md `files:`. With `--cross-check` it also clones a lone audit into an independent second one (the owner's `gates.second_auditor`
+policy requires a pair). It never
 invents the integration test; `check` keeps saying so until the plan has one.
 
 ## Where the methodology touches the module

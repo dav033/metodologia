@@ -105,10 +105,6 @@ class Configured(unittest.TestCase):
         self.assertFalse(bt_config._valid("gates.max_reworks", 0))
         self.assertTrue(bt_config._valid("gates.audit_ledger_required", False))
 
-    def test_the_planner_and_the_gate_agree_on_the_ledger_suffix(self):
-        from bt_planner import quality
-        self.assertEqual(quality.LEDGER_SUFFIX, gate.LEDGER_SUFFIX)
-
 
 class Paths(unittest.TestCase):
     def test_exactly_one_ledger_is_found(self):

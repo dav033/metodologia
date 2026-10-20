@@ -17,10 +17,9 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from bt_scheduler_executor import gitutil
-from bt_scheduler_executor.errors import ExecutorError
-from bt_scheduler_executor.model import StartRequest, Workspace
-from bt_scheduler_executor.workspace import GitWorkspaces, dirname_of
+from bt_scheduler_executor_adapter import dirname_of, gitutil, m3
+
+ExecutorError, StartRequest, Workspace, GitWorkspaces = m3.ExecutorError, m3.StartRequest, m3.Workspace, m3.GitWorkspaces
 
 
 @dataclass(frozen=True)

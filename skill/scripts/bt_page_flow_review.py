@@ -14,7 +14,7 @@ import bt_planstatus
 import bt_plans_api
 import bt_run_stores
 from bt_pages import layout
-from bt_scheduler_monitor.redaction import redact_evidence
+from bt_scheduler_monitor_adapter import redact_evidence
 
 _RESULT = re.compile(r"^m6://result/([0-9a-f]{64})$")
 _ARTIFACT = re.compile(r"^m6://artifact/([0-9a-f]{64})$")

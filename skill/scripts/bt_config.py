@@ -29,7 +29,8 @@ DEFAULTS: dict = {
     # these severities left open reject it and send the tasks they name back (at most `max_reworks` times per task, then
     # the owner decides); with `audit_ledger_required` off, an audit that declares no ledger (a plan written before the
     # gate) is accepted on M6's verdict alone and the skip is recorded in the run's audit trail.
-    "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2},
+    "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
+              "second_auditor": True},   # a plan with an audit also needs an independent cross-check audit
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120,
                   "exclusive_scopes": ["large_change", "full_feature", "full_system"]},
 }

@@ -39,6 +39,28 @@ class PlannerProfileTests(unittest.TestCase):
             self.assertIn(choice, self.profile)
         self.assertIn("Never choose or rank", self.profile)
         self.assertNotRegex(self.profile, r"(?im)^\s*(?:provider|service|account|model|effort):\s+\S+")
+        self.assertNotRegex(self.profile, r"(?im)^\s*codex_(?:model|effort):")
+
+    def test_model_and_effort_come_from_the_role_policy_alone(self):
+        import sys
+        sys.path.insert(0, str(REPO / "skill" / "scripts"))
+        import bt_role_policy
+        self.assertEqual(bt_role_policy.native_option("planner", "codex"), ("gpt-6.1-sol", "high"))
+        self.assertEqual(bt_role_policy.native_option("planner", "claude"), ("opus", "high"))
+        for _family, _model, effort in bt_role_policy.options("planner"):
+            self.assertNotIn(effort, ("xhigh", "max"))        # planning runs at high; xhigh is an explicit pin
+        import install_agents
+        front = self.profile.split("---")[1]
+        claude = install_agents.generated_claude({"name": "planner"}, front.strip().splitlines(), "body")
+        self.assertIn("model: opus\neffort: high", claude)
+        codex = install_agents.generated_codex({"name": "planner", "description": "d"}, "body")
+        self.assertIn('model = "gpt-6.1-sol"\nmodel_reasoning_effort = "high"', codex)
+
+    def test_profile_and_skills_carry_the_green_but_hollow_rules(self):
+        content = self.profile + "\n".join(self.skills.values())
+        for expected in ("never existence", "real entry points", "findings.json", "Review focus", "No placeholders",
+                         "Stop conditions"):
+            self.assertIn(expected, content)
 
     def test_profile_names_schema_1_2_fields_and_history_command(self):
         for expected in (

@@ -388,6 +388,19 @@ def audit_findings(plan: dict) -> list[str]:
     return errors
 
 
+def audit_advice(plan: dict) -> list[str]:
+    """Warnings for the audit shape that the Scheduler can only recommend: a single audit relies on one auditor's
+    honesty. A second, independent `audit` task over the same scope (cheap, bounded, its own ledger) catches what the
+    first one omits; whether it is required is the owner's choice (`gates.second_auditor`)."""
+    if not isinstance(plan, dict) or not isinstance(plan.get("tasks"), list):
+        return []
+    audits = [t["id"] for t in plan["tasks"] if isinstance(t, dict) and t.get("kind") == "audit" and isinstance(t.get("id"), str)]
+    if len(audits) == 1:
+        return [f"{audits[0]}: the plan has a single audit; add an independent cross-check audit (own report and "
+                f"findings ledger) so one auditor's omissions do not decide the outcome"]
+    return []
+
+
 def verification_findings(plan: dict) -> list[str]:
     """Return deterministic schema 1.2.0 warnings; M6 remains authoritative for every runtime verdict."""
     if not isinstance(plan, dict):

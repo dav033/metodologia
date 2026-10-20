@@ -398,6 +398,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.warnings.extend(found[1])
         report.warnings.extend(quality.verification_findings(plan))
         report.errors.extend(quality.audit_findings(plan))
+        report.warnings.extend(quality.audit_advice(plan))
     return report
 
 

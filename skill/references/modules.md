@@ -157,6 +157,15 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   audit task, in PLAN.json as a new working revision and on its PLAN.md line; then review, `freeze`, `scheduler-op REQ
   revise` and `scheduler-op REQ rework <audit task>`: the audit runs again and the system takes it from there).
 
+**Second auditor.** One auditor's omissions must not decide the outcome, so with `gates.second_auditor` on (default) a
+plan that has an audit also needs an independent cross-check audit: another `kind: audit` task over the same scope with its
+own report and ledger. Each audit is gated by its own ledger, so the union decides and either one reopens work. The
+launch/approval gate (`bt_plan_adapter.second_auditor_problem`, inside the consumer gate) refuses a plan with a single
+audit and names the fix: `plan-json retrofit-audit REQ-NNN --cross-check` clones the audit (own report and ledger,
+same prerequisites; whatever waited for the audit waits for both). The planner module itself only warns. Routing stays
+with M2 (cost- and quota-aware, risk floors): the cross-check is meant to be a bounded pass, so classify it honestly.
+Turn the policy off with `bitacora.py config set gates.second_auditor false`.
+
 No agent and no operator has to reopen anything by hand: the system does it from the ledger.
 
 ## Quality verifier (`bt_scheduler_quality`, M6)

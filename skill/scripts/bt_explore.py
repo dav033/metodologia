@@ -32,7 +32,7 @@ import sys
 import time
 from pathlib import Path
 
-from bt_core import STATE
+import bt_core
 
 try:  # POSIX; elsewhere the O_EXCL central lock stands in
     import fcntl
@@ -49,8 +49,13 @@ class LockUnavailable(OSError):
     """The ledger lock could not be taken in time: nothing may be admitted."""
 
 
+STATE: Path | None = None   # None follows `bt_core.STATE` at call time; a test or a relocated root may set it
+
+
 def _path() -> Path:
-    return STATE / "explore.jsonl"
+    """Looked up at call time, never copied at import: a patched `bt_core.STATE` (the test roots) must not leave the
+    exploration reservations in the real ledger, where they would eat the weekly budget of real runs."""
+    return (STATE if STATE is not None else bt_core.STATE) / "explore.jsonl"
 
 
 @contextlib.contextmanager

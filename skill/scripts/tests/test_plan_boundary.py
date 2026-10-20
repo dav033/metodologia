@@ -24,6 +24,8 @@ class Boundary(unittest.TestCase):
         "test_plan_boundary.py",
         "test_plan_integration.py",
         "test_package_install.py",
+        "test_planblock.py",      # pins the contract between the generated status block and the planner's narrative digest
+        "test_plan_bench.py",    # the benchmark harness is a planner client by design (see plan_bench below)
     }
 
     def top_imports(self, path: Path) -> set[str]:
@@ -40,8 +42,10 @@ class Boundary(unittest.TestCase):
         for path in sorted(REPO.rglob("*.py")):
             rel = path.relative_to(REPO)
             if (".git" in rel.parts or "bt_planner" in rel.parts or "node_modules" in rel.parts
-                    or ".state" in rel.parts or ".venv" in rel.parts or path.name in self.ALLOWED_USERS):
-                continue  # `.state` holds throwaway review snapshots (full copies of the tree, venv included)
+                    or ".state" in rel.parts or ".venv" in rel.parts or path.name in self.ALLOWED_USERS
+                    or "artifacts" in rel.parts or "plan_bench" in rel.parts or "build" in rel.parts):
+                continue  # `.state` holds throwaway review snapshots (full copies of the tree, venv included);
+                #           `artifacts` are experiment outputs of the bitácora (e.g. a model duel), not methodology code
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
             except (SyntaxError, UnicodeError):

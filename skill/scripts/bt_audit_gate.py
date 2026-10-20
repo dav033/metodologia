@@ -40,7 +40,8 @@ LEDGER_HELP = (
     '"evidence": "required when fixed", "accepted_by": "owner", "reason": "required when accepted"}]}. '
     "List every finding you confirm. A critical or high finding left `open` rejects this audit and sends the tasks it "
     "names back to be redone; use `fixed` only when your own change AND a regression test prove it, and never mark "
-    "`accepted` yourself: only the owner accepts a risk."
+    "`accepted` yourself: only the owner accepts a risk. Another independent auditor may review the same scope: "
+    "confirm and record your own findings and never assume the other one covers anything."
 )
 
 

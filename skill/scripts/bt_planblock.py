@@ -1,7 +1,7 @@
 """Generated status block inside PLAN.md, the SessionStart "Planes" section and the `plan-status` text table.
 
 The block lives between two HTML-comment markers, holds no checkbox and no heading (so the PLAN.md grammar and the
-checkbox ticker never see it) and is ignored by the planner's narrative digest (`bt_planner.sync.STATUS_BEGIN`).
+checkbox ticker never see it) and is ignored by the planner's narrative digest (any `<owner>:status:begin|end` block).
 PLAN.json is never touched. Rendering is derived from `bt_planstatus.plan_status`; refreshing rewrites only the region
 between the markers, atomically, under the central "plan" lock, and only when something other than the timestamp
 changed. Every entry point is best-effort: a failure is logged at debug level and reported as False.
@@ -17,7 +17,8 @@ from pathlib import Path
 from typing import Any
 
 import bt_planstatus as planstatus
-from bt_planner.sync import STATUS_BEGIN, STATUS_END
+STATUS_BEGIN = "<!-- bitacora:status:begin -->"   # the marker shape is `<owner>:status:begin|end` (bt_planner ignores it)
+STATUS_END = "<!-- bitacora:status:end -->"
 
 LOGGER = logging.getLogger(__name__)
 ACTIVE_LINES = 6

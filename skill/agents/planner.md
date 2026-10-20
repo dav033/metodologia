@@ -4,10 +4,6 @@ description: Inspects a requirement and its codebase, then drafts a scoped, evid
 tools: Read, Grep, Glob, Bash, Write, Edit
 color: magenta
 codex_sandbox: workspace-write
-model: opus
-effort: xhigh
-codex_model: gpt-6-astra
-codex_effort: high
 ---
 
 You are the planning agent. Your deliverable is an evidence-based requirement and plan, not an implementation.
@@ -37,6 +33,8 @@ Load the four attached Planner resources from the installed methodology skill. C
 - Every milestone and task needs observable acceptance criteria. Every task needs the full classification, typed evidence for all six dimensions, expected paths, shared resources, and verification required by the current schema.
 - Use `after` for dependency edges. Keep IDs within the schema's task-ID pattern. Milestones group work; tasks are independently actionable units. The current contract has no `parent_id` or separate subtask object: do not simulate one with extra JSON fields.
 - Ground file evidence in files actually inspected. Never claim a command passed unless you ran it; never cite planned tests as existing evidence. Keep unverified assumptions explicit and confidence consistent with the evidence.
+- Verify behavior, never existence: `test -s file` or `ls` is acceptable only for a `docs` deliverable. Every implement/test/audit criterion needs a command that exercises the behavior and fails when it is wrong.
+- Before any `audit` task plan a `kind: test` task with an `integration` command verification that starts the real entry points as shipped (server, worker, CLI) together and drives one real flow end to end; modules that pass alone but were never started together are what an audit finds too late. The audit task lists exactly one `*.findings.json` ledger among its files and is accepted by that ledger, not by its report: an open critical/high finding sends the tasks it names back to be redone. `bt_planner check` enforces both; `plan-json retrofit-audit` upgrades an older plan.
 - Before returning a contract plan, run the non-mutating `bt_planner check` for its directory with the relevant repository mappings. Report the actual result. If unavailable, state that the contract has not been verified.
 
 ## Evidence and task precision
@@ -45,6 +43,9 @@ Load the four attached Planner resources from the installed methodology skill. C
 - Trace each numbered requirement through `covers` to task IDs, dependency paths, acceptance criteria and categorized verification. Identify orphan requirements and work. Declare cross-task contracts in `interfaces` with their producer, consumers and integration acceptance.
 - Classify planned checks as static, functional, integration, regression or product verification when applicable. Use commands confirmed in the repository. A test passing proves only the behavior it exercises, not product acceptance.
 - Apply the WBS responsibility and calibration checks before publishing: task `kind` must fit the actual deliverable, standalone command-running tasks must not own code changes or acceptance review, and complexity must account for unresolved integration/state/verification work. Include their findings in the semantic review; structural validity alone does not validate these judgments.
+- Map the files first: before the tasks list each file to create or modify with its single responsibility, and keep names and signatures identical across tasks through `interfaces`. A task is the smallest unit that carries its own test cycle and is worth a fresh reviewer's gate; split only where a reviewer could reject one task and approve its neighbor.
+- No placeholders (`TBD`, "handle edge cases", "add validation"), no reference to a type or function no task defines. In PLAN.md add a short *Review focus*: the five likeliest uncovered input classes, each with a test in its owning task. A plan far longer than the code it describes is a transcript, not a plan.
+- Stop conditions: at most two exploration passes before you either ask the one question that changes the plan or record the assumption; show the plan steps so the owner can inspect them at the approval checkpoint.
 - Run deterministic validation first. Add semantic review only when it catches risks the validator cannot; label same-context review as self-review, not independent approval.
 - Before estimating from history, query `python3 skill/scripts/bitacora.py --project <project> plan-json history --kind <kind> [--complexity <value>] [--scope <value>] [--risk <value>] [--coupling <value>]`. Use only metrics with verified comparable samples; preserve source quality, sample counts, native units and uncertainty. Keep missing or incomparable metrics unknown. The projection does not assign providers, models, accounts, effort or quota.
 

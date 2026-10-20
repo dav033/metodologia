@@ -22,7 +22,7 @@ from . import contract as pc
 from . import amendments, interfaces, quality, resources, sync, traceability
 from . import revisions as rev
 
-ACTIONS = ("init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example", "amend",
+ACTIONS = ("retrofit-audit", "init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example", "amend",
            "amendments")
 
 
@@ -40,6 +40,7 @@ def _report(report: pc.Report, as_json: bool, emit: Callable[[str], None]) -> No
 def run(action: str, target: str | Path | None = None, *, plan_id: str | None = None, force: bool = False,
         as_json: bool = False, approved_states: tuple[str, ...] | None = None,
         repo_roots: dict[str, Path] | None = None, ref_exists=None, amend: dict | None = None,
+        cross_check: bool = False,
         emit: Callable[[str], None] = print) -> int:
     """Execute one action and return the exit code. `target` is a plan directory (a file for `validate`).
     `repo_roots` maps repository roles to paths so that `file:` evidence is verified, not just accepted; `ref_exists`
@@ -114,7 +115,7 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
                  f"sha256 {entry['sha256'][:12]}")
             return 0
         if action == "retrofit-audit":
-            changed = sync.retrofit_audit(target)
+            changed = sync.retrofit_audit(target, cross_check=cross_check)
             for line in changed:
                 emit(line)
             emit(f"{len(changed)} audit task(s) updated: PLAN.json is a new working revision; review it, then `freeze`"

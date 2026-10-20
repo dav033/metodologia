@@ -20,6 +20,13 @@ Use the actual code and validated requirement to create the smallest plan that c
 9. Before estimating from history, query `python3 skill/scripts/bitacora.py --project <project> plan-json history --kind <kind> [--complexity <value>] [--scope <value>] [--risk <value>] [--coupling <value>]`. Use observed duration, failure, retry, quality or consumption data only when verified and comparable; retain units, source quality, sample count and uncertainty. Otherwise keep it unknown. Never choose or rank providers/services, accounts, models, effort, quota or worker count; those belong to the caller or M2/Scheduler.
 10. Verify that each dependency names a real task and no task is orphaned from the goal. Let `bt_planner check` enforce the structural and graph invariants it actually implements; report its limits separately.
 
+## Ground truth before audit
+
+11. A verification proves behavior. `test -s file`, `ls` or "the report exists" prove only that a file exists and are valid solely for `docs` deliverables; reject them for implement, test and audit tasks.
+12. Plan a `kind: test` task with an `integration` command verification before every `audit`: it starts the real entry points as shipped (server, worker, CLI) together and drives one real flow. Passing module tests while an entry point exits at startup is the failure this prevents.
+13. An `audit` task lists exactly one `*.findings.json` ledger among its expected paths (`audit-findings/1`: id, severity, status, summary, `tasks` naming the plan tasks whose result is wrong). The Scheduler accepts the audit by its ledger and sends the named tasks back while a critical/high finding is open.
+14. Before the tasks, map every file to create or modify with one responsibility. Forbid placeholders ("TBD", "handle edge cases"). Keep a task to the smallest unit with its own test cycle that is worth a reviewer's gate, and add a *Review focus* to PLAN.md listing the five likeliest uncovered input classes, each tested in its owning task.
+
 ## Responsibility and calibration checks
 
 - Inspect the consumers of task `kind` and the execution-role contracts. In this methodology `test` routes to command execution: running established checks and reporting their actual outcomes. Creating/changing tests, fixtures, harnesses or package scripts is implementation work (`implement`). Evidence interpretation, cross-contract acceptance and product review are review work (`audit`); unresolved feasibility is investigation (`research`). These classify deliverables, not providers, models or assignments.

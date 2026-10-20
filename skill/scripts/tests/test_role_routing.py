@@ -203,7 +203,7 @@ class RoleRoutingTests(AgentTests):
             code = bt_cli_planner.dispatch(args, 'personal-project', self.base, self.root)
         request = invoke.call_args.args[0]
         self.assertEqual(code, 0)
-        self.assertEqual((request.provider, request.model, request.effort), ('claude', 'opus', 'xhigh'))
+        self.assertEqual((request.provider, request.model, request.effort), ('claude', 'opus', 'high'))
 
     def test_pinned_delegation_role_defaults_precede_old_tiers_and_keep_complexity_alias(self):
         with tempfile.TemporaryDirectory() as temporary, patch.object(bt_delegate, 'DIR', Path(temporary) / 'delegations'):

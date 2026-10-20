@@ -12,7 +12,7 @@ EFFORTS = ("low", "medium", "high", "xhigh", "max")
 # rank: the lowest tier the model is a sensible default for. cost: relative weight on its subscription's quota.
 MODELS: dict[str, dict] = {
     "gpt-6-astra": {"provider": "codex", "label": "GPT-6 Astra", "rank": 2, "cost": 10,
-                    "use": "owner-selected Planner"},
+                    "use": "premium planner, explicit pin only (cost 10); the default planner is gpt-6.1-sol at high"},
     "haiku": {"provider": "claude", "label": "Haiku 5.5", "rank": 0, "cost": 1,
               "use": "mechanical edits, docs, small well-specified tasks, running and reading tests"},
     "sonnet": {"provider": "claude", "label": "Sonnet 5.5", "rank": 1, "cost": 3,

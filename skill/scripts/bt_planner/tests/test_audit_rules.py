@@ -128,3 +128,69 @@ class Retrofit(unittest.TestCase):
         finally:
             rev.latest = original
         self.assertEqual(self.pc.loads((self.dir / "PLAN.json").read_text(encoding="utf-8"))["revision"], 4)
+
+
+class CrossCheck(unittest.TestCase):
+    """The second, independent auditor is added to a plan with a single audit, and what waited for it waits for both."""
+
+    def setUp(self):
+        import tempfile
+
+        from bt_planner import contract as pc
+        self.pc = pc
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.dir = Path(self._tmp.name)
+        plan = {
+            "schema_version": "1.2.0", "plan_id": "REQ-1", "revision": 1, "tasks": [
+                {"id": "T1", "kind": "test", "title": "e2e", "after": [], "expected_paths": ["e2e/**"]},
+                {"id": "T18", "kind": "audit", "title": "Audit", "objective": "audit it", "estimate_rationale": "r",
+                 "after": ["T1"], "expected_paths": ["docs/audit.md", "docs/audit.findings.json"],
+                 "verification": [{"type": "command", "value": "test -s docs/audit.md", "purpose": "p"}]},
+                {"id": "T19", "kind": "docs", "title": "Docs", "after": ["T18"], "expected_paths": ["README.md"]},
+            ]}
+        (self.dir / "PLAN.json").write_text(pc.dumps(plan), encoding="utf-8")
+        (self.dir / "PLAN.md").write_text(
+            "---\nstatus: launched\n---\n- [ ] T1 — e2e · repo: r · files: e2e/**\n"
+            "- [ ] T18 — Audit · repo: r · files: docs/audit.md, docs/audit.findings.json · after: T1 · verify: `test -s docs/audit.md`\n"
+            "- [ ] T19 — Docs · repo: r · files: README.md · after: T18\n", encoding="utf-8")
+
+    def plan(self):
+        return self.pc.loads((self.dir / "PLAN.json").read_text(encoding="utf-8"))
+
+    def test_the_clone_has_its_own_report_ledger_and_waits_like_the_original(self):
+        from bt_planner import sync
+        changed = sync.retrofit_audit(self.dir, cross_check=True)
+        self.assertTrue(any("T18b: cross-check audit of T18" in line for line in changed))
+        plan = self.plan()
+        by_id = {t["id"]: t for t in plan["tasks"]}
+        clone = by_id["T18b"]
+        self.assertEqual(clone["kind"], "audit")
+        self.assertEqual(clone["title"], "Cross-check audit of T18: Audit")    # PLAN.md carries the same title
+        self.assertEqual(clone["expected_paths"], ["docs/audit-crosscheck.md", "docs/audit-crosscheck.findings.json"])
+        self.assertEqual(clone["after"], ["T1"])
+        self.assertEqual(clone["verification"][0]["value"], "test -s docs/audit-crosscheck.md")
+        self.assertEqual(by_id["T18"]["expected_paths"], ["docs/audit.md", "docs/audit.findings.json"])
+        self.assertEqual(by_id["T19"]["after"], ["T18", "T18b"])
+        self.assertEqual([t["id"] for t in plan["tasks"]], ["T1", "T18", "T18b", "T19"])
+
+    def test_markdown_gets_the_clone_line_and_the_dependent_waits_for_both(self):
+        from bt_planner import sync
+        sync.retrofit_audit(self.dir, cross_check=True)
+        text = (self.dir / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("- [ ] T18b — Cross-check audit of T18: Audit", text)
+        self.assertIn("files: docs/audit-crosscheck.md, docs/audit-crosscheck.findings.json", text)
+        self.assertIn("after: T18, T18b", text)
+
+    def test_it_only_adds_one_and_only_for_a_single_audit(self):
+        from bt_planner import sync
+        sync.retrofit_audit(self.dir, cross_check=True)
+        self.assertEqual(sync.retrofit_audit(self.dir, cross_check=True), [])
+        self.assertEqual(sum(1 for t in self.plan()["tasks"] if t["kind"] == "audit"), 2)
+
+    def test_the_planner_advises_a_single_audit_but_does_not_force_it(self):
+        self.assertEqual(len(quality.audit_advice(self.plan())), 1)
+        self.assertEqual(quality.audit_findings(self.plan()), quality.audit_findings(self.plan()))
+        from bt_planner import sync
+        sync.retrofit_audit(self.dir, cross_check=True)
+        self.assertEqual(quality.audit_advice(self.plan()), [])

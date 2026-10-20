@@ -32,7 +32,7 @@ from bt_scheduler_monitor.recovery import (
     verify_archive,
     verify_candidate,
 )
-from bt_scheduler_monitor.redaction import allowlist_payload
+from bt_scheduler_monitor.redaction import allowlist_payload, redact_evidence  # noqa: F401 - redact_evidence is re-exported
 from bt_scheduler_monitor.storage_limits import StoreError
 from bt_scheduler_monitor.store import (
     MonitorStore,

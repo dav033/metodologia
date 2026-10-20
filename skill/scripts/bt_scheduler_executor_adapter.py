@@ -41,6 +41,8 @@ import bt_driver
 import bt_profiles
 import bt_scheduler_adapter as sched
 import bt_scheduler_executor as m3
+from bt_scheduler_executor import gitutil  # noqa: F401 - re-exported: the only door to the executor module
+from bt_scheduler_executor.workspace import dirname_of  # noqa: F401 - re-exported, same reason
 import bt_scheduler_integrator as integrator
 import bt_workspace
 from bt_scheduler_m4_wiring import (  # noqa: F401 - exported to the composition module

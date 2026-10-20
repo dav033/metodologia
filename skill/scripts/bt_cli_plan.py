@@ -23,6 +23,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     parser.add_argument("--proposed-by", choices=["owner", "agent"], default="owner",
                         help="amend: an agent may only raise a level, and needs evidence; lowering is the owner's")
     parser.add_argument("--force", action="store_true", help="init: overwrite an existing PLAN.json")
+    parser.add_argument("--cross-check", action="store_true", dest="cross_check",
+                        help="retrofit-audit: also add an independent cross-check audit when the plan has a single audit")
     parser.add_argument("--json", action="store_true", help="check: machine-readable output")
     parser.add_argument("--kind", choices=bt_plan_history.TASK_KINDS,
                         help="history: task kind")
@@ -97,7 +99,7 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
         import bt_scheduler_adapter
         compatibility_report = bt_scheduler_adapter.plan_compatibility_report(rdir)
     return adapter.run_cli(action, rdir, force=force, as_json=as_json,
-                           compatibility_report=compatibility_report)
+                           compatibility_report=compatibility_report, cross_check=bool(getattr(args, "cross_check", False)))
 
 
 def _amend(args: argparse.Namespace, rdir: Path, project: str) -> int:
