@@ -846,3 +846,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Decision:** (1) M6 provisions `node_modules` from the snapshot's `package-lock.json` when the attempt has none and the repository has no identical one: `npm ci --offline --ignore-scripts` in a scratch directory with only the manifest and lock, cached by content hash (`~/.cache/m6-deps`, `M6_DEPS_CACHE`), mounted read-only (`policy.provision_dependencies`, default on). (2) An attempt's own `node_modules` without npm's hidden lockfile (an install that stopped half-way) is ignored. (3) A failure that says a module/package is missing tells the agent, in the next prompt, to install its locked dependencies and not to edit configuration; the task prompt says to install the lockfile first.
 - **Consequences:** + a missing install no longer burns attempts and no longer pushes agents into config edits. + offline and without install scripts, so no package code runs on the host. − a package that needs its install script (native build) fails the check instead of being built; the agent's own install in its worktree still takes precedence.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18.1
+
+## D-093 — The plan check warns about verifications that need the network
+
+- **Date:** 2026-10-20 · **Status:** Accepted · **Refines:** D-090, D-092
+- **Context:** reviewing Pictures REQ-020 before launch, seven command verifications (T7, T10, T14, T14a) run `--live`/`--deployed` against real Gemini, Whisper and the deployed app, and T1 needs a Postgres server. M6 runs every check offline in a sandbox (no network, no database), so they can never pass; the tasks would burn their attempts, like T17 did on `npm ci`.
+- **Decision:** `plan-json check` warns for a command verification that uses `--live`/`--deployed`/`--remote`/`--prod`, a non-loopback URL or a network tool (`curl`, `ssh`, `gh`, `vercel`, `docker`, ...), and says to verify a receipt file the task leaves after running the live check. The planner prompt says the same. A warning, not an error: a plan can still be launched knowingly.
+- **Consequences:** + the failure is found when the plan is written. − the check is a heuristic on the command text; a database or service reached through a plain `npm test` is not seen.
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · pictures REQ-020
