@@ -36,11 +36,37 @@
   animation: fl-shimmer 1.8s linear infinite; border-radius: 99px; padding: 3px 10px; }
 @keyframes fl-shimmer { to { background-position: -200% 0; } }
 
-/* map */
+/* map: bands say what each area is for; every module has its own colour; lines flow and carry a dot when they talk */
+.fl-mapcard { background: linear-gradient(180deg, var(--mantle), color-mix(in srgb, var(--accent) 5%, var(--mantle))); }
 .fl-mapwrap { background-image: radial-gradient(var(--border) 1px, transparent 1.2px); background-size: 22px 22px; border-radius: var(--radius); }
-.fl-node .fl-box { transition: stroke .25s, fill .25s, filter .25s; }
-.fl-node:hover .fl-box { stroke: var(--accent); filter: drop-shadow(0 4px 8px rgb(0 0 0 / .18)); }
-.fl-node.core .fl-box { fill: var(--accent-soft); }
+.fl-zone { fill: color-mix(in srgb, var(--surface) 55%, transparent); stroke: var(--border); stroke-dasharray: 2 6; stroke-linecap: round; }
+.fl-zl { fill: var(--muted); font: 600 10.5px var(--mono); letter-spacing: .16em; opacity: .85; }
+.fl-node[data-node="owner"] { --nc: var(--accent); } .fl-node[data-node="planner"], .fl-node[data-node="M2"] { --nc: var(--k-plan); }
+.fl-node[data-node="agent"] { --nc: var(--k-state); } .fl-node[data-node="M1"] { --nc: var(--accent); }
+.fl-node[data-node="M3"] { --nc: var(--k-run); } .fl-node[data-node="M4"] { --nc: var(--k-warn); }
+.fl-node[data-node="M5"] { --nc: var(--k-recover); } .fl-node[data-node="M6"] { --nc: var(--k-verify); }
+.fl-node { --nc: var(--accent); transition: transform .25s; transform-box: fill-box; transform-origin: center; }
+.fl-node:hover { transform: translateY(-3px); }
+.fl-node .fl-box { fill: color-mix(in srgb, var(--nc) 9%, var(--surface)); stroke: color-mix(in srgb, var(--nc) 50%, var(--border)); stroke-width: 1.6;
+  filter: drop-shadow(0 6px 10px rgb(0 0 0 / .14)); transition: stroke .25s, fill .25s, filter .25s; }
+.fl-node .fl-acc { fill: var(--nc); }
+.fl-node:hover .fl-box, .fl-node.sel .fl-box { stroke: var(--nc); stroke-width: 2.6; filter: drop-shadow(0 10px 16px rgb(0 0 0 / .22)); }
+.fl-node.core .fl-box { fill: color-mix(in srgb, var(--accent) 16%, var(--surface)); stroke: var(--accent); stroke-width: 2.6; }
+.fl-node .fl-nl { font-weight: 800; letter-spacing: -.01em; }
+.fl-node.active .fl-halo { stroke: var(--nc); fill: color-mix(in srgb, var(--nc) 14%, transparent); animation: fl-ripple 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.fl-node.active .fl-box { stroke: var(--nc); }
+@keyframes fl-ripple { 0% { opacity: .9; transform: scale(.96); } 100% { opacity: 0; transform: scale(1.14); } }
+
+.fl-edge .fl-ln { stroke-width: 2; }
+.fl-edge.idle .fl-ln { stroke: var(--border); stroke-dasharray: 2 7; animation: fl-flow 3.2s linear infinite; }
+.fl-edge:not(.idle) .fl-ln { filter: drop-shadow(0 0 3px color-mix(in srgb, var(--kc) 55%, transparent)); }
+.fl-edge.live .fl-ln { stroke-dasharray: 10 8; animation: fl-flow 1s linear infinite; }
+.fl-edge .fl-run-path { display: none; }
+@keyframes fl-flow { to { stroke-dashoffset: -30; } }
+.fl-dotm { fill: var(--kc); stroke: var(--surface); stroke-width: 1.5; opacity: 0; filter: drop-shadow(0 0 5px var(--kc)); }
+.fl-edge:not(.idle) .fl-dotm { opacity: 1; }
+.fl-edge.fade .fl-dotm { opacity: 0; }
+.fl-edge:hover .fl-ln { stroke-width: 4 !important; }
 
 /* messages: only a row that just arrived slides in */
 .fl-feed li { transition: background .2s; }
@@ -57,4 +83,5 @@
 .fl-paused *, .fl-paused *::before, .fl-paused *::after { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) {
   .flowpage *, .flowpage *::before, .flowpage *::after { animation: none !important; transition: none !important; }
+  .fl-dotm { display: none; }
 }

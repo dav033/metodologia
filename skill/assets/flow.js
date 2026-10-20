@@ -27,6 +27,9 @@
     M6: { x: 360, y: 460, w: 172, h: 70, label: 'M6 · calidad', sub: 'verificación' },
     M5: { x: 580, y: 460, w: 184, h: 70, label: 'M5 · recuperación', sub: 'reintentos y bloqueos' }
   };
+  // soft bands behind the nodes: what each part of the map is for
+  var ZONES = [{ x: 14, y: 6, w: 214, h: 528, label: 'ENTRADA' }, { x: 300, y: 6, w: 566, h: 182, label: 'DECIDIR Y VIGILAR' },
+    { x: 300, y: 196, w: 566, h: 186, label: 'DESPACHAR Y EJECUTAR' }, { x: 300, y: 392, w: 500, h: 142, label: 'VERIFICAR Y RECUPERAR' }];
   var BASE_EDGES = [['agent', 'planner'], ['planner', 'M1'], ['owner', 'M1'], ['M2', 'M1'], ['M1', 'M2'], ['M1', 'M3'],
     ['M3', 'M1'], ['M3', 'M4'], ['M4', 'M1'], ['M1', 'M6'], ['M6', 'M1'], ['M5', 'M1']];
 
@@ -205,6 +208,8 @@
     var px = -g.ty, py = g.tx;
     el('path', { class: 'fl-hd', d: 'M' + g.q.x + ',' + g.q.y + ' L' + (g.q.x - g.tx * 11 + px * 5.5) + ',' + (g.q.y - g.ty * 11 + py * 5.5) +
       ' L' + (g.q.x - g.tx * 11 - px * 5.5) + ',' + (g.q.y - g.ty * 11 - py * 5.5) + 'z' }, grp);
+    var dot = el('circle', { class: 'fl-dotm', r: 4.5 }, grp);
+    var mo = el('animateMotion', { path: d, dur: Math.max(1.6, Math.hypot(g.q.x - g.p.x, g.q.y - g.p.y) / 110).toFixed(1) + 's', repeatCount: 'indefinite' }, dot);
     var pb = el('rect', { class: 'fl-pb', rx: 9, height: 18, y: g.m.y - 9 }, grp);
     var pt = el('text', { class: 'fl-pt', x: g.m.x, y: g.m.y + 4, 'text-anchor': 'middle' }, grp);
     edgeEls[key] = { g: grp, ln: ln, pb: pb, pt: pt, geo: g };
@@ -212,12 +217,18 @@
   }
   function drawMap() {
     svg = el('svg', { viewBox: '0 0 880 540', role: 'img', 'aria-label': 'Mapa de módulos y mensajes entre ellos' }, $('flow-map'));
+    var gZ = el('g', { class: 'fl-zones', 'aria-hidden': 'true' }, svg);
+    ZONES.forEach(function (z) {
+      el('rect', { class: 'fl-zone', x: z.x, y: z.y, width: z.w, height: z.h, rx: 22 }, gZ);
+      el('text', { class: 'fl-zl', x: z.x + 18, y: z.y + 20 }, gZ).textContent = z.label;
+    });
     gE = el('g', {}, svg); gN = el('g', {}, svg); gP = el('g', {}, svg);
     BASE_EDGES.forEach(function (e) { ensureEdge(e[0], e[1]); });
     Object.keys(N).forEach(function (id) {
       var n = N[id], g = el('g', { class: 'fl-node' + (id === 'M1' ? ' core' : ''), 'data-node': id, tabindex: 0, role: 'button', 'aria-label': n.label }, gN);
       el('rect', { class: 'fl-halo', x: n.x - n.w / 2 - 5, y: n.y - n.h / 2 - 5, width: n.w + 10, height: n.h + 10, rx: 18 }, g);
       el('rect', { class: 'fl-box', x: n.x - n.w / 2, y: n.y - n.h / 2, width: n.w, height: n.h, rx: 14 }, g);
+      el('rect', { class: 'fl-acc', x: n.x - n.w / 2 + 12, y: n.y - n.h / 2 + 10, width: 4, height: n.h - 20, rx: 2 }, g);
       el('text', { class: 'fl-nl', x: n.x, y: n.y - 10, 'text-anchor': 'middle' }, g).textContent = n.label;
       el('text', { class: 'fl-ns', x: n.x, y: n.y + 7, 'text-anchor': 'middle' }, g).textContent = n.sub;
       var meta = el('text', { class: 'fl-nm', x: n.x, y: n.y + 24, 'text-anchor': 'middle' }, g);
@@ -501,6 +512,7 @@
     });
     $('flow-pause').addEventListener('click', function (e) {
       S.paused = !S.paused;
+      if (svg && svg.pauseAnimations) S.paused ? svg.pauseAnimations() : svg.unpauseAnimations();
       $('flow').classList.toggle('fl-paused', S.paused);
       e.currentTarget.firstChild.textContent = S.paused ? 'Reanudar animación' : 'Pausar animación';
     });
