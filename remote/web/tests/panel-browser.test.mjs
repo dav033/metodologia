@@ -158,8 +158,10 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     gateway.snapshot = originalSnapshot;
     await waitForText("Intento att-0008");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
-      expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set; setter.call(input, ${JSON.stringify(value)}); input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`,
+      expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); input.focus(); input.select(); return true; })()`,
       returnByValue: true,
+    }).then(async () => {
+      await cdp(socket, "Input.insertText", { text: value });
     });
     const click = async (selector) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const button = document.querySelector(${JSON.stringify(selector)}); if (!button) throw new Error('Missing button ${selector}'); button.click(); return true; })()`,
@@ -180,6 +182,29 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
+    await waitForText("Historial de comandos");
+    await waitForText("Origen · Web");
+    await waitForText("Resultado · accepted");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-028");
+    const destructiveDisabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
+    assert.equal(destructiveDisabled.result?.value, true, "a destructive command must stay disabled when the typed REQ differs");
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+    let destructiveEnabled;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      destructiveEnabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
+      if (destructiveEnabled.result?.value === false) break;
+      await delay(100);
+    }
+    assert.equal(destructiveEnabled.result?.value, false, "typing the exact REQ should enable destructive commands");
+    gateway.nextCommandResponse = { status: 409, body: { code: "STALE_PRECONDITION", message: "stale" } };
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+    await waitForText("El estado cambió");
+    await waitForText("Resultado · Rechazado: el estado cambió");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
