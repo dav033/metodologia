@@ -280,9 +280,44 @@ def plans_payload(root: Path, filt: str = "all") -> list[dict[str, Any]]:
     return [r for r in rows if r["active"]] if filt == "active" else rows
 
 
+FINGERPRINT_TTL = 0.5        # one stat sweep over every run serves all live clients for this long
+FRAME_TTL = 1.5              # one parse + render of the plans serves every client watching the same view
+_shared_lock = threading.Lock()
+_shared: dict[Any, tuple[float, Any]] = {}
+
+
+def _shared_value(key: Any, build, ttl: float) -> Any:
+    """`build()` at most once per `ttl` for a key, however many SSE clients ask. Clients wait on the lock instead of each
+    parsing every plan, so N open tabs cost the same as one. An exception is not cached."""
+    with _shared_lock:
+        hit = _shared.get(key)
+        if hit and time.monotonic() - hit[0] < ttl:
+            return hit[1]
+        value = build()
+        stamp = time.monotonic()
+        for stale in [k for k, (at, _) in _shared.items() if stamp - at > 60]:
+            del _shared[stale]                     # frames are keyed by fingerprint: drop the old ones
+        _shared[key] = (stamp, value)
+        return value
+
+
+def _changed_frame(root: Path, plan: tuple[str, str] | None, filt: str) -> bytes:
+    from bt_page_plans import detail_fragment, index_fragment
+    rows = plans_payload(root)
+    shown = [r for r in rows if r["active"]] if filt == "active" else rows
+    frame = _event("plans", {"plans": rows, "html": index_fragment(shown, filt)})
+    if plan:
+        try:
+            status = status_of(root, *plan)
+            frame += _event("plan", {"status": status, "html": detail_fragment(status)})
+        except PlanError:
+            pass
+    return frame
+
+
 def stream(handler, root: Path, plan: tuple[str, str] | None, filt: str, sleep_tick: float = 0.25) -> None:
     """Serve one SSE client until it disconnects. Events: `plans` on any plan change, `plan` for the watched one."""
-    from bt_page_plans import detail_fragment, index_fragment
+    base = _root(root)
     if not _slots.acquire(blocking=False):
         return handler.send("Demasiados clientes en vivo", 503, "text/plain")
     try:
@@ -295,24 +330,22 @@ def stream(handler, root: Path, plan: tuple[str, str] | None, filt: str, sleep_t
         out = handler.wfile
         out.write(b"retry: 3000\n: connected\n\n")
         out.flush()
-        seen, last_beat = ps.fingerprint(_root(root)), time.monotonic()
+
+        def fingerprint() -> str:
+            return _shared_value(("fingerprint", base), lambda: ps.fingerprint(base), FINGERPRINT_TTL)
+
+        seen, last_beat = fingerprint(), time.monotonic()
+        last_frame = 0.0
         while True:
             readable, _, _ = select.select([handler.connection], [], [], sleep_tick)
             if readable and not handler.connection.recv(1, socket.MSG_PEEK):
                 return  # client closed
-            now = ps.fingerprint(_root(root))
-            if now != seen:
+            now = fingerprint()
+            if now != seen and time.monotonic() - last_frame >= FRAME_TTL:   # a busy run is coalesced, never dropped
                 seen = now
-                rows = plans_payload(root)
-                shown = [r for r in rows if r["active"]] if filt == "active" else rows
-                out.write(_event("plans", {"plans": rows, "html": index_fragment(shown, filt)}))
-                if plan:
-                    try:
-                        status = status_of(root, *plan)
-                        out.write(_event("plan", {"status": status, "html": detail_fragment(status)}))
-                    except PlanError:
-                        pass
+                out.write(_shared_value(("frame", base, plan, filt, now), lambda: _changed_frame(root, plan, filt), FRAME_TTL))
                 out.flush()
+                last_frame = time.monotonic()
                 last_beat = time.monotonic()
             elif time.monotonic() - last_beat >= KEEPALIVE_SEC:
                 out.write(b": keepalive\n\n")

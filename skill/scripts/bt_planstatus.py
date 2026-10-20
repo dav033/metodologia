@@ -26,6 +26,7 @@ legacy RUN.json log recorded it. Active plans (run status running|waiting|paused
 """
 from __future__ import annotations
 
+import copy
 import datetime as dt
 import hashlib
 import json
@@ -126,7 +127,27 @@ def _contract_structure(data: dict) -> tuple[list[dict], list[dict]]:
     return milestones, tasks
 
 
+_STRUCTURE_CACHE: dict[tuple, tuple[list[dict], list[dict]]] = {}
+_STRUCTURE_CACHE_MAX = 256
+
+
 def _markdown_structure(plan_md: Path) -> tuple[list[dict], list[dict]]:
+    """The parsed structure of a Markdown plan, memoized by (path, mtime, size): the panel asks for every plan on each
+    refresh and a plan file rarely changes. Callers get a copy, since they fill in task state afterwards."""
+    try:
+        stat = plan_md.stat()
+        key = (str(plan_md), stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return _parse_markdown_structure(plan_md)
+    hit = _STRUCTURE_CACHE.get(key)
+    if hit is None:
+        if len(_STRUCTURE_CACHE) >= _STRUCTURE_CACHE_MAX:
+            _STRUCTURE_CACHE.clear()
+        hit = _STRUCTURE_CACHE[key] = _parse_markdown_structure(plan_md)
+    return copy.deepcopy(hit)
+
+
+def _parse_markdown_structure(plan_md: Path) -> tuple[list[dict], list[dict]]:
     parsed = rs.parse_plan(plan_md)
     titles = {m["id"]: m.get("title") for m in rs.milestones(plan_md)}
     tasks = []

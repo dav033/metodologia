@@ -253,6 +253,18 @@ class SseTests(PlansBase):
             self.assertTrue(any(l.startswith(": keepalive") for l in lines), lines)
             c.close()
 
+    def test_clients_share_one_computation_per_window(self):
+        calls = []
+        key = ("test-share", id(calls))
+        build = lambda: calls.append(1) or len(calls)
+        values = [api._shared_value(key, build, 60) for _ in range(5)]
+        self.assertEqual((values, len(calls)), ([1] * 5, 1))
+        self.assertEqual(api._shared_value(key, build, 0), 2)                                # an expired window rebuilds
+        with patch.object(api, "_shared", {}):
+            with self.assertRaises(ValueError):
+                api._shared_value("boom", lambda: (_ for _ in ()).throw(ValueError("x")), 60)
+            self.assertEqual(api._shared_value("boom", lambda: "ok", 60), "ok")             # a failure is not cached
+
     def test_client_cap_returns_503(self):
         with patch.object(api, "_slots", threading.BoundedSemaphore(0)):
             self.assertEqual(self.get("/events")[0], 503)

@@ -54,13 +54,17 @@ _KIND_WORDS = (("audit", ("audit", "review", "revis", "auditor")),
                ("research", ("research", "investigate", "compare", "spike")))
 
 
+_KIND_PATTERNS = tuple((kind, re.compile(r"\b(?:" + "|".join(re.escape(w) for w in words) + ")"))
+                       for kind, words in _KIND_WORDS)
+
+
 def infer_kind(title: str | None, explicit: str | None = None) -> str:
     """The task's kind: the PLAN line's `kind:` when valid, else guessed from the title, else implement."""
     if explicit and explicit.strip().lower() in KINDS:
         return explicit.strip().lower()
     text = (title or "").lower()
-    for kind, words in _KIND_WORDS:
-        if any(re.search(r"\b" + re.escape(w), text) for w in words):
+    for kind, pattern in _KIND_PATTERNS:
+        if pattern.search(text):
             return kind
     return "implement"
 
