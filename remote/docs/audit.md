@@ -1,15 +1,32 @@
 # Independent security and specification audit — T18
 
-Audited tree: `0ba9b657011be079d160ed12134f1130cf08a4e9`.
+Audited tree: `dcfc5a591004a1848951b345a3c5b3fd5531fe44` (HEAD at the start of this retry).
 Auditor: Codex / OpenAI. Date: 2026-10-20. Provider diversity must be established by the scheduler's assignment metadata; commit authors do not establish it.
 
 **Disposition: rework required.** This review confirms 17 findings: two high, fourteen medium and one low. All remain `open` in `audit.findings.json`. No risk has been accepted and no finding is claimed fixed. The audit changes only this report and the ledger. In accordance with the task's read-only rule, the high findings are recorded for rework, not repaired here. The nonempty-report checks do not establish that the implementation meets the specification.
+
+## Retry provenance and acceptance boundary
+
+This retry started at the exact preserved snapshot named in the task. `git status --short` and `git diff --stat`
+were empty. `git diff 0ba9b657 HEAD --name-only` listed only these two audit artifacts: the implementation in this
+worktree has no later dependency remediation relative to the previous report's audited tree. This is evidence
+about the supplied tree, not a claim about other branches or attempts; no other worktree was inspected.
+
+The SPEC, approved PLAN, classified T18 acceptance/commands and the task's stricter read-only ledger instructions
+were reread. Existing useful findings/probes are preserved, but each verdict below was checked again against the
+current source and fresh runs. No earlier test result is used as a current passing result. Task attribution is
+narrowed for F7 (T15f's advertised standalone note) and F10 (T6's missing approval event); neither adjacent routing
+nor gateway notification dispatch is independently defective for those findings.
+
+The three artifact-existence commands pass. The substantive criterion **"Confirmed high findings are fixed" is
+not met**: F1/T16 and F2/T17 remain open. The read-only audit must return these tasks for correction. Provider
+diversity and final task acceptance remain for the independent scheduler/checker; this report cannot certify them.
 
 ## Scope and method
 
 Reviewed REQ-027 `SPEC.md`, approved `PLAN.md`/`PLAN.json`, the API contracts, laptop remote listener/commands/events/read models, gateway authentication/relay/cache/notifications/bot, web interactions, deployment kit and local end-to-end harness. Compared production call paths across components, ran existing checks, and exercised additional cases with synthetic data. Other auditors' findings were not used as coverage or substituted for this review.
 
-No production host, real OAuth provider, real Telegram chat, credential file or other worktree was accessed. Tests use their own fixtures; the integration harness's incomplete isolation is discussed in F2. No live deployment, hosted Vercel rewrite or real Docker/Caddy connectivity was tested. Python here is 3.14; the target is 3.12. Dependency installation completed with `cd remote/web && npm ci --offline` (320 packages; lockfile unchanged). Its cached advisory output is not a current vulnerability assessment.
+No production host, real OAuth provider, real Telegram chat, credential file or other worktree was accessed. Tests use their own fixtures; the integration harness's incomplete isolation is discussed in F2. For this retry its unittest command ran with `BITACORA_ROOT` pointing at a new empty temporary directory inside this worktree, preventing reads of the owner's live bitácora. No live deployment, hosted Vercel rewrite or real Docker/Caddy connectivity was tested. Python here is 3.14; the target is 3.12. Dependency installation completed with `cd remote/web && npm ci --offline` (320 packages; lockfile unchanged). Its cached advisory output is not a current vulnerability assessment.
 
 ## Executed checks
 
@@ -20,10 +37,32 @@ No production host, real OAuth provider, real Telegram chat, credential file or 
 | `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py` | Exit 0; 23 tests. |
 | `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` | Exit 0; 12 tests, one skipped: Caddy binary unavailable. Browser OAuth test ran. |
 | `cd remote/web && npm run verify` | Exit 0; lint/typecheck, nine tests including Chromium tests, production build. Two React hook warnings at `src/app/page.tsx:260`. |
-| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` | Exit 1; one test failed after 38.685 s at line 294: `AssertionError: forced failure did not reach the fake Telegram before its deadline`. Also upstream timeout/BrokenPipe diagnostics. See F2. |
+| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` (temporary `BITACORA_ROOT`; runner below) | Exit 1; one test failed after 35.751 s at line 294: `AssertionError: forced failure did not reach the fake Telegram before its deadline`. See F2. |
+| Report probes A, B and C below | Each exit 0; reproduced the stated defects using synthetic data, loopback HTTP and temporary databases. A probe exit 0 is reproduction evidence, not a product pass. |
 | `test -s remote/docs/audit.md` | Exit 0 for each of the task's three identical acceptance commands. |
 
-An initial gateway discovery invoked from the repository root failed imports (`ModuleNotFoundError: auth`, etc.); rerunning from the plan-prescribed `remote/gateway` directory produced the 42-test passing result above. This invocation error is not a product finding. All listed commands were attempted; real `caddy validate` was skipped by the existing suite because Caddy is unavailable. The entire legacy test suite and live production checks were not run.
+The first kit run had two skips because dependency installation was still in progress; after installation it was
+rerun with 12 tests and only the Caddy skip. An initial E2E run overlapped that kit's Chromium test, which starts
+`next dev` in the same web directory: the E2E build failed with `PageNotFoundError: Cannot find module for page:
+/_document` (zero tests). This audit execution interfered through shared `.next` output; the sequential rerun
+produced the one-test failure above and is the basis for F2. No source was changed between runs. Real `caddy validate`
+was not executed because Caddy is unavailable. The entire legacy suite, Python 3.12 and live production checks were
+not run. No gateway import-error invocation occurred during this retry.
+
+The E2E command was run from `remote/e2e` using this environment-isolation wrapper (it installs nothing when the
+already installed dependencies are present):
+
+```bash
+python - <<'PY'
+import os, subprocess, tempfile
+from pathlib import Path
+with tempfile.TemporaryDirectory(prefix='.audit-e2e-', dir='.') as root:
+    env = {**os.environ, 'BITACORA_ROOT': str(Path(root).resolve())}
+    result = subprocess.run(['python', '-m', 'unittest', 'discover', '-s', 'tests',
+                             '-p', 'test_local_e2e.py'], env=env)
+    raise SystemExit(result.returncode)
+PY
+```
 
 ## Confirmed findings and verdicts
 
@@ -31,7 +70,7 @@ An initial gateway discovery invoked from the repository root failed imports (`M
 
 Tasks: **T16**. Requirements: R1, R3, R4; approved PLAN §Approach.
 
-The plan explicitly places Caddy in the existing Docker container and the host gateway at `172.20.0.1:8790`. `remote/deploy/Caddyfile:12` instead proxies `127.0.0.1:8790`, and `remote/gateway/config.py`/`auth.py` default the gateway bind to host loopback. The env example and runbook provide no bridge-bind override or container host-network configuration. In the approved topology that Caddy upstream is the container itself, so login and every API request fail. The kit test even asserts this incorrect upstream.
+The plan explicitly places Caddy in the existing Docker container and the host gateway at `172.20.0.1:8790`. `remote/deploy/Caddyfile:12` instead proxies `127.0.0.1:8790`, and `remote/gateway/config.py`/`auth.py` default the gateway bind to host loopback. The env example lists an optional blank `GATEWAY_BIND` override, but gives no bridge address; the runbook supplies neither the bridge-bind setup nor container host networking. Overriding the gateway bind alone would still leave the Caddy upstream wrong. In the approved topology that Caddy upstream is the container itself, so login and every API request fail. The kit test even asserts this incorrect upstream.
 
 Evidence: source inspection against `PLAN.md:74`; `rg -n 'reverse_proxy|bind_host|GATEWAY_BIND' remote/deploy/Caddyfile remote/gateway/config.py remote/gateway/auth.py remote/deploy/gateway.env.example`. No live Docker inspection is claimed. **Required correction:** make the gateway bind, Caddy upstream and runbook consistent with the approved container-to-host topology; preserve a private gateway listener. Exercise the actual network boundary rather than asserting a configuration string.
 
@@ -39,9 +78,9 @@ Evidence: source inspection against `PLAN.md:74`; `rg -n 'reverse_proxy|bind_hos
 
 Tasks: **T17**. Requirements: R10, R11; T17 acceptance.
 
-The exact T17 command fails at `_wait_for_telegram(1, timeout=5)`. The fixture patches `_snapshot_runs` and `_plans`, but not `_runs`, which the real `/events` handler separately reads for retry context. Its synthetic `demo/REQ-001/T1` failure therefore does not have a matching authoritative exhausted-retry task in a clean fixture tree; `bt_remote_events.from_flow(row, {})` returns `None`. The harness also fails to provide an isolated bitácora root for this production read. Existing web tests send commands to a mock and do not close this coverage gap.
+The T17 unittest command, with an isolated empty bitácora root, fails at `_wait_for_telegram(1, timeout=5)`. The fixture patches `_snapshot_runs` and `_plans`, but not `_runs`, which the real `/events` handler separately reads for retry context. Its synthetic `demo/REQ-001/T1` failure therefore does not have a matching authoritative exhausted-retry task in a clean fixture tree; `bt_remote_events.from_flow(row, {})` returns `None`. The harness itself also fails to provide an isolated bitácora root for this production read. Existing web tests send commands to a mock and do not close this coverage gap. The harness contains no real-ledger cancel-attempt or stale-precondition scenario, although PLAN §Verification explicitly requires both; passing mock web submissions would not establish either.
 
-Evidence: executed command/result above; `remote/e2e/tests/test_local_e2e.py:146`, `skill/scripts/bt_remote_api.py:331`, and probe B below. With empty context, the real production-shaped failure is suppressed; with explicit exhausted-task context, it becomes `attempt.failed`. The test run additionally experienced slow upstream reads; this audit does not attribute every timing diagnostic to the missing fixture. **Required correction:** isolate all read models and seed real retry context for the synthetic task, then rerun the complete integration command, retaining the once-only Telegram assertion. Do not disable retry suppression to make the fixture pass.
+Evidence: executed command/result above; `remote/e2e/tests/test_local_e2e.py:146`, `skill/scripts/bt_remote_api.py:331`, and probe B below. With empty context, the real production-shaped failure is suppressed; with explicit exhausted-task context, it becomes `attempt.failed`. The isolated sequential run did not emit the previous attempt's upstream timeout/BrokenPipe diagnostics. **Required correction:** isolate all read models, seed real retry context for the synthetic task, and exercise the required real-ledger command/stale scenarios; rerun the complete integration command, retaining the once-only Telegram assertion. Do not disable retry suppression to make the fixture pass.
 
 ### F3 — Medium / open — First-time go-live instructions cannot bootstrap the services
 
@@ -73,11 +112,11 @@ Tasks: **T14b**. Requirements: R6, R12.
 
 `telegram_bot.py:_handle_callback` builds a retry precondition from `run['state']`. The laptop's `TASK_SCOPED` state reader compares retries against the task state. A running run containing a failed task yields `{'state':'running'}` and the ledger rejects it as `STALE_PRECONDITION` with zero effects. `test_safe_callback_relays_a_telegram_origin_command_once_per_press` currently asserts the wrong run-state envelope against a fake laptop that accepts everything.
 
-Evidence: probe B; actual bot output was also inspected with a synthetic owner callback and a running-run/failed-task snapshot. **Required correction:** locate the task in the cached snapshot and pin its state/revision; exercise the real ledger on the bot path.
+Evidence: probes B and C; C invokes the real bot, gateway translation, ledger and task-state reader over a synthetic running-run/failed-task snapshot and temporary Scheduler state table. Result: `STALE_PRECONDITION`, zero retry effects. **Required correction:** locate the task in the cached snapshot and pin its state/revision; exercise the real ledger on the bot path.
 
 ### F7 — Medium / open — The visible note action has no laptop dispatcher
 
-Tasks: **T8**, **T15f**. Requirements: R5, R13.
+Tasks: **T15f**. Requirements: R5, R13.
 
 The web renders a note form and the gateway accepts `note`, but `bt_remote_commands.dispatch_handlers()` has no `note` handler. A valid translated note returns `COMMAND_NOT_IMPLEMENTED`, `stored: false`. Notes supplied through retry reasons exist, but they do not implement the separate advertised note action.
 
@@ -99,7 +138,7 @@ Tasks: **T15d**. Requirement: R5.
 
 ### F10 — Medium / open — Plans waiting for approval do not produce notifications
 
-Tasks: **T6**, **T14**. Requirement: R10.
+Tasks: **T6**. Requirement: R10.
 
 `decision_events(plans)` emits `plan.waiting` only by iterating scheduler decision requests. A normal plan with `state`/`plan_status` `review` and no decisions emits nothing; `derived_events` never inspects plans. Thus normal approval waiting, an explicit notification family, is absent. **Required correction:** derive a stable approval-waiting event from plan review state/revision, independently of scheduler decisions, and test delivery/dedupe. Evidence: probe B (`approval events: []`) and `bt_remote_api.py`'s full event assembly.
 
@@ -266,6 +305,80 @@ PY
 ```
 
 Observed: `COMMAND_NOT_IMPLEMENTED`; `STALE_PRECONDITION`; missing-task errors for both UI envelopes; approval events `[]`; failure without context `None`, with context `attempt.failed`; cache time advances across failed probes; restarted stream returns `[]` and has no snapshot; synthetic provider/bearer values remain unredacted.
+
+### Probe C — bot through the ledger, restart persistence, retention and schema boundary
+
+Run from the repository root. This complements B's isolated examples with the actual bot/ledger/task-state path.
+Only the plan-location/status lookup is stubbed; the task state is read from a real temporary SQLite state table.
+The temporary `BITACORA_ROOT` is set before importing laptop modules. A and B were also run in subprocesses with an
+empty temporary `BITACORA_ROOT`; none of the probes reads the live owner state.
+
+```bash
+python - <<'PY'
+import json, os, sqlite3, sys, tempfile
+from pathlib import Path
+from unittest.mock import patch
+sys.path[:0] = ['remote/gateway', 'skill/scripts']
+with tempfile.TemporaryDirectory(prefix='.audit-boundaries-', dir='.') as tmp:
+    root = Path(tmp).resolve()
+    os.environ['BITACORA_ROOT'] = str(root)
+    import bt_remote_commands as c
+    import bt_plans_api as plans
+    from app import GatewayRuntime
+    from auth import SessionStore, SESSION_TTL_SECONDS
+    from commands import validate_command, to_laptop_command
+    from config import GatewayConfig
+    from stream import SnapshotEventStream
+    from telegram_bot import TelegramBot
+    from upstream import UpstreamResponseError
+    cfg = GatewayConfig('http://127.0.0.1:1', 'synthetic-key', 'synthetic-token', '123', root/'gateway.db')
+    run = {'project':'demo','req':'REQ-001','state':'running', 'tasks':[{'id':'T1','state':'failed'}]}
+    ledger = c.Ledger(root/'commands.db')
+    effects, results = [], []
+    with sqlite3.connect(root/'SCHEDULER.db') as db:
+        db.execute('CREATE TABLE state (id INTEGER PRIMARY KEY, doc TEXT)')
+        db.execute('INSERT INTO state VALUES (1, ?)', (json.dumps({'tasks':{'T1':{'state':'failed'}}}),))
+    class Laptop:
+        def command(self, envelope):
+            result = ledger.submit(envelope, {'retry': lambda *_: effects.append('retry')}, c.target_state)
+            results.append((envelope['precondition'], result['code']))
+            if result['code']: raise UpstreamResponseError(409, result)
+            return 200, result
+    class API:
+        def call(self, *args, **kwargs): pass
+    first = GatewayRuntime(cfg, laptop=Laptop(), sender=lambda *_:None)
+    first.stream.update_snapshot({'runs':[run]}, '2026-10-20T12:00:00Z')
+    status = {'run':{'authority':'scheduler','status':'running','plan_ref':{'revision':1}},
+              'plan':{'status':'launched','revision':1}}
+    with patch.object(c,'_run_target',return_value=('demo','REQ-001',root)), patch.object(plans,'status_of',return_value=status):
+        TelegramBot(API(), '123', first).handle_update({'callback_query':{'id':'synthetic-callback-001',
+            'message':{'chat':{'id':123}},'data':'retry|demo/REQ-001|T1'}})
+        print('bot through task-state reader:', results, 'effects:', len(effects))
+        print('active edit precondition state:', c.target_state('demo/REQ-001','edit-brief',{'task':'T1'})['state'])
+    restarted = GatewayRuntime(cfg, laptop=Laptop(), sender=lambda *_:None)
+    print('same database snapshot before/after restart:', first.stream.snapshot() is not None, restarted.stream.snapshot())
+    first.outbox._db.close()
+    restarted.outbox._db.close()
+    sessions = SessionStore(str(root/'sessions.db'), 's'*32)
+    sessions.create_session('dav033', now=0)
+    sessions.create_session('dav033', now=SESSION_TTL_SECONDS+100)
+    with sqlite3.connect(root/'sessions.db') as db:
+        print('expired sessions retained after new login:', db.execute('SELECT count(*) FROM sessions WHERE expires_at<=?',(SESSION_TTL_SECONDS+100,)).fetchone()[0])
+    print('SSE retention maxlen:', SnapshotEventStream()._events.maxlen)
+    command={'schemaVersion':1,'idempotencyKey':'x'*121,'type':'pause','target':{'kind':'run','project':'demo','req':'REQ-001'},'precondition':{'state':'running'}}
+    print('gateway accepts 121-char key; laptop:', c.validate(to_laptop_command(validate_command(command))))
+    schema=json.loads(Path('remote/contract/command.schema.json').read_text())
+    variants=[v.get('properties',{}).get('type',{}).get('const') for d in schema['$defs'].values() if isinstance(d,dict) for v in d.get('allOf',[])]
+    print('answer-decision in schema:', 'answer-decision' in variants)
+    print('gateway default bind:',cfg.bind_host)
+PY
+```
+
+Observed (exit 0): bot precondition `{'state': 'running'}` → `STALE_PRECONDITION`, zero effects; active brief-edit
+state `running`; same-database snapshot before/after restart `True None`; one expired session remains after another
+login; SSE deque `maxlen: None`; gateway accepts a 121-character key that the laptop rejects with
+`idempotency_key debe ser texto de 8 a 120 caracteres.`; schema has no `answer-decision`; gateway bind defaults to
+`127.0.0.1`. Inspection of `NotificationOutbox` also confirms no outbox/history pruning method or deletion query.
 
 ## Investigated candidates rejected as findings
 
