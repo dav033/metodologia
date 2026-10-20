@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0009:verify",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "El verificador no asocia el check genérico de T3 a ningún criterio de aceptación",
+ "origin": "No es un fallo de código: el error es CHECK_UNMAPPED, que indica que un check de verificación no corresponde exactamente a un criterio. Según el diagnóstico por reglas, los 4 criterios pasaron y los checks salieron bien; el único problema es un check genérico como `npm run asesor:test`, que no tiene un propósito literal que coincida con ningún criterio. La tarea no tiene intentos fallidos registrados.",
+ "steps": [
+  "Revisa que los 4 criterios de T3 estén en PASS y que los checks de `npx tsx --conditions=react-server --test scripts/test/asesor/agent.test.ts` hayan salido bien.",
+  "Pulsa «Aprobar a mano» (review_pass) con la razón «todos los criterios PASS; solo CHECK_UNMAPPED».",
+  "En la próxima revisión del plan, da al check `npm run asesor:test` el mismo propósito que un criterio, o quítalo, para que no vuelva a aparecer CHECK_UNMAPPED."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T14:19:52",
+ "seconds": 11.1
+}

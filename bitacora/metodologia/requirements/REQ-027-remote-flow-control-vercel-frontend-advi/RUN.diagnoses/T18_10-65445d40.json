@@ -1,0 +1,23 @@
+{
+ "request": "T18:10",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T18 sigue con 2 defectos altos (F1, F2) y T16 ya agotó sus reenvíos automáticos",
+ "origin": "La auditoría independiente de T18 encontró F1 (high): el kit apunta a 127.0.0.1 en lugar de 172.20.0.1:8790, que corrige T16; y F2 (high): el E2E corre con BITACORA_ROOT vacío, que corrige T17. El sistema no reabre T16 solo porque ya fue devuelta 2 veces (gates.max_reworks), así que T18 se queda bloqueada, y reintentar solo repetiría la misma auditoría sobre el mismo código. Los 11 hallazgos del intento #5 ya bajaron a 2, pero el registro dice que T16 y T17 se devolvieron a mano y el card sigue igual, así que esa devolución no se aplicó.",
+ "steps": [
+  "Abre `RUN.notes/T16.audit.md` y escribe F1 (high) con la evidencia del informe de auditoría del último intento: el kit debe usar 172.20.0.1:8790 en vez de 127.0.0.1.",
+  "Abre `RUN.notes/T17.audit.md` y escribe F2 (high) con su evidencia: el E2E debe fijar BITACORA_ROOT en lugar de dejarlo vacío.",
+  "Pulsa «Devolver T16, T17, T24 para que los arreglen» o ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 rework T16,T17 --only --reason \"hallazgos F1 (high), F2 (high)\"`. Incluye T24 solo si el informe la señala, porque la evidencia no la menciona.",
+  "Espera a que T18 se vuelva a auditar; si la auditoría vuelve a dar F1 o F2 con la misma evidencia, pasa a revisar T16 y T17 a mano."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T14:22:59",
+ "seconds": 20.0
+}

@@ -1,18 +1,24 @@
 {
- "attention": [],
+ "attention": [
+  {
+   "kind": "blocked_task",
+   "reason": "rework_limit",
+   "task_id": "T18"
+  }
+ ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T19:16:11+00:00",
+ "heartbeat_at": "2026-10-20T19:22:39+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 9,
   "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c"
  },
- "projected_at": "2026-10-20T19:16:11+00:00",
+ "projected_at": "2026-10-20T19:22:39+00:00",
  "projection": true,
  "req": "REQ-027",
- "scheduler_status": "running",
+ "scheduler_status": "blocked",
  "sessions": 200,
- "status": "running",
+ "status": "blocked",
  "tasks": [
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -872,7 +878,7 @@
    "attempts": 10,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
+   "evidence": "audit gate: 2 open blocking finding(s): F1 (high), F2 (high) | M6 evidence: m6://result/fc5b43f9483b51382f09346c6c4e900b510a9ba0d28afc4d5c3f83650c9466f0",
    "executor": "route:m2:v1:0e42f7c8ae8013eaaf383a592a230bdf4860a21301fece1fe87deb9c8cfdf18e:5a930d9bd470f1afd5ffd603008016dd115db022a9cd36492d43669e2bc30d12",
    "id": "T18",
    "milestone": "M5",
@@ -887,9 +893,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "blocked",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_no_verified_samples;task_ambiguous;tokens_measured",
-   "status": "in_progress",
+   "status": "blocked",
    "title": "Independent security and spec audit by another provider",
    "unreachable": false
   },
@@ -921,7 +927,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:db655fd0c084acbe5eac49a5f7ef3d4e6de52c4d8d8dda226de8d9f23f0aca42",
@@ -951,7 +957,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -980,7 +986,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1009,7 +1015,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the Vercel project and deploy the frontend to production",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1038,7 +1044,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the identity and messaging prerequisites and place the secrets",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -1067,7 +1073,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1096,7 +1102,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Live smoke test of the production environment and handover",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
