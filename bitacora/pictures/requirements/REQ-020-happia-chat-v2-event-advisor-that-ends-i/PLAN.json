@@ -349,7 +349,14 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run asesor:migrate && npm run asesor:test",
+          "value": "npm run asesor:migrate",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "created_by": "T1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
           "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
           "created_by": "T1",
           "category": "functional"
@@ -729,7 +736,14 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run asesor:test && npx tsc --noEmit",
+          "value": "npm run asesor:test",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "created_by": "T1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
           "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
           "created_by": "T1",
           "category": "functional"
@@ -1085,7 +1099,13 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run gate && npm run happie:test-webhook",
+          "value": "npm run gate",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
           "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
           "category": "regression"
         },
@@ -1098,7 +1118,25 @@
         },
         {
           "type": "command",
-          "value": "npm run lint && npm run build --workspaces --if-present && npx tsc --noEmit && npm run build",
+          "value": "npm run lint",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
           "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
           "category": "static"
         },
@@ -1475,7 +1513,25 @@
         },
         {
           "type": "command",
-          "value": "npm run lint && npm run build --workspaces --if-present && npx tsc --noEmit && npm run build",
+          "value": "npm run lint",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
           "purpose": "Check deployable revision with existing lint, workspace build, application types and production build.",
           "category": "static"
         },
@@ -2063,7 +2119,37 @@
         },
         {
           "type": "command",
-          "value": "npm run gate && npm run happie:test-webhook && npm run lint && npm run build --workspaces --if-present && npx tsc --noEmit && npm run build",
+          "value": "npm run gate",
+          "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
           "purpose": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
           "category": "regression"
         },
@@ -2182,7 +2268,13 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run gate && npm run happie:test-webhook",
+          "value": "npm run gate",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
           "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
           "category": "regression"
         },
@@ -2233,7 +2325,7 @@
       "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
       "repository": "pictures",
       "after": [
-        "T14a"
+        "T15"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -2308,7 +2400,13 @@
       "verification": [
         {
           "type": "command",
-          "value": "npm run gate && npm run happie:test-webhook",
+          "value": "npm run gate",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
           "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
           "category": "regression"
         },

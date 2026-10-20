@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 8,
+  "revision": 9,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -2757,7 +2757,8 @@
       "after": [
         "T17",
         "T18.3",
-        "T18.4"
+        "T18.4",
+        "T18.6"
       ],
       "complexity": "high",
       "scope": "small_change",
@@ -3962,6 +3963,215 @@
         "R15",
         "R5",
         "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.5",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F1, F2, F3, F4",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F1 (high; owned by T6, T12): Resolving an ephemeral decision/round event invalidates the laptop feed cursor; the gateway retries that cursor indefinitely and stops subsequent SSE/Telegram delivery. Evidence from the audit: Real route_get: resolving the last decision changes the previously valid after cursor to HTTP 400 INVALID_CURSOR. Two gateway polls retained and requested the same expired cursor. See audit.md F1.\n- F2 (high; owned by T4a, T15c): The production task projection removes non-live failed attempt identity from activeAttempt, while the web renders reviews only for failed tasks with activeAttempt; Telegram review fragments also have no matching page target. Evidence from the audit: task_view on a rejected task with a non-live failed attempt returns activeAttempt=None; page.tsx:417 cannot render its review and does not parse history or handle #attempt fragments. See audit.md F2.\n- F3 (high; owned by T13, T5a): Web decision answers are rejected by the gateway type allowlist; requestId/request_id translation and decision-specific precondition reading are also missing. Evidence from the audit: validate_command on the page's answer-decision envelope raises INVALID_COMMAND; the laptop requires request_id and reads run state instead of the open decision. See audit.md F3.\n- F4 (high; owned by T5b, T15e): Round answers compare open-round preconditions against plan/run state and send singular answer where the laptop requires answers. Evidence from the audit: Real ledger with a waiting scheduler status and the open-round web precondition returns STALE_PRECONDITION; to_laptop_command retains answer and provides no answers. See audit.md F4.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.3",
+        "T18.4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6, T12, T4a, T15c, T13, T5a, T5b, T15e, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py",
+        "remote/gateway/**",
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_api.py",
+        "remote/web/**",
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "remote-api-contract",
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "F1 (high) is fixed: Resolving an ephemeral decision/round event invalidates the laptop feed cursor; the gateway retries that cursor indefinitely and stops subsequent SSE/Telegram delivery.",
+        "F2 (high) is fixed: The production task projection removes non-live failed attempt identity from activeAttempt, while the web renders reviews only for failed tasks with activeAttempt; Telegram review fragments also have",
+        "F3 (high) is fixed: Web decision answers are rejected by the gateway type allowlist; requestId/request_id translation and decision-specific precondition reading are also missing.",
+        "F4 (high) is fixed: Round answers compare open-round preconditions against plan/run state and send singular answer where the laptop requires answers."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "F1 (high) is fixed: Resolving an ephemeral decision/round event invalidates the laptop feed cursor; the gateway retries that cursor indefinitely and stops subsequent SSE/Telegram delivery.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "F2 (high) is fixed: The production task projection removes non-live failed attempt identity from activeAttempt, while the web renders reviews only for failed tasks with activeAttempt; Telegram review fragments also have",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "F3 (high) is fixed: Web decision answers are rejected by the gateway type allowlist; requestId/request_id translation and decision-specific precondition reading are also missing.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "F4 (high) is fixed: Round answers compare open-round preconditions against plan/run state and send singular answer where the laptop requires answers.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R11",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.6",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F14",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F14 (high; owned by T4): The explicit distribution manifest omits all five bt_remote modules, breaking the remote API in installed environments despite passing checkout tests. Evidence from the audit: Built wheel/sdist via tests/migration/installed_wheel.py; wheel lacks bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery and bt_remote_views. Isolated installed import bt_remote_api raises ModuleNotFoundError. See audit.md F14.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.3",
+        "T18.4",
+        "T18.5"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T4, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/bt_server.py",
+        "skill/scripts/tests/test_remote_api.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F14 (high) is fixed: The explicit distribution manifest omits all five bt_remote modules, breaking the remote API in installed environments despite passing checkout tests."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "F14 (high) is fixed: The explicit distribution manifest omits all five bt_remote modules, breaking the remote API in installed environments despite passing checkout tests.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R18",
+        "R3"
       ],
       "kind": "implement"
     }
