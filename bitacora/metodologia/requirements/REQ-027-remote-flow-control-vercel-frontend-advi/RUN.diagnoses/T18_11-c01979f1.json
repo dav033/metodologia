@@ -1,0 +1,23 @@
+{
+ "request": "T18:11",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue encontrando 3 hallazgos bloqueantes abiertos (F2, F19, F20).",
+ "origin": "Otro proveedor audita T18 y rechaza la tarea otra vez: quedan abiertos F2, F19 y F20, todos de severidad alta. F2 ya se intentó corregir (T16/T17, att-0199/att-0200), pero T18 volvió a auditar un árbol que aún lo contiene, así que el problema está en el código o la especificación de las tareas que señala la auditoría, no en el fichero de verificación (`test -s remote/docs/audit.md`). T17 ya fue devuelta 2 veces, por eso el sistema no reabre las tareas solo y espera tu decisión.",
+ "steps": [
+  "Lee en el log del último intento (att-0202) el texto de F2, F19 y F20, con su evidencia, y anótalo en `RUN.notes/<tarea>.audit.md` de cada tarea que señala (T15a, T17, T24).",
+  "Revisa el estado con `bitacora.py --project metodologia scheduler-op REQ-027 status` para confirmar que T17 admite otra devolución antes de pulsar «Devolver».",
+  "Pulsa «Devolver T15a, T17, T24 para que los arreglen» o ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 rework T15a,T17,T24 --only --reason \"hallazgos F2 (high), F19 (high), F20 (high)\"`.",
+  "Cuando las tareas terminen, deja que T18 se reaudite; si F2 vuelve a aparecer, revisa en el código que la corrección de T16/T17 está realmente presente."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T14:51:09",
+ "seconds": 18.4
+}
