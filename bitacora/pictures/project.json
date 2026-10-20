@@ -21,5 +21,8 @@
    "hint": "~/dev/pictures"
   }
  },
- "work": true
+ "work": true,
+ "exclude_profiles": [
+  "claude-personal"
+ ]
 }

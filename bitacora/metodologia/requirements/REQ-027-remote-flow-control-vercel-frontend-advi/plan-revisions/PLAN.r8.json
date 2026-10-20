@@ -1,0 +1,3969 @@
+{
+  "schema_version": "1.2.0",
+  "plan_id": "REQ-027",
+  "revision": 8,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Contracts",
+      "acceptance_criteria": [
+        "The remote API contract and the architecture note exist in remote/docs",
+        "The route pin injection point is documented with the functions involved"
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Laptop: remote API, ledger and feed",
+      "acceptance_criteria": [
+        "The laptop answers the remote API only with the gateway key",
+        "Commands, events and failure reviews have passing offline unit tests"
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Gateway (tested against a fake laptop)",
+      "acceptance_criteria": [
+        "The gateway signs in only dav033 and relays commands with preconditions against a fake laptop",
+        "One notification per qualifying event is sent to a fake Telegram"
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Mobile web (tested against a mock gateway)",
+      "acceptance_criteria": [
+        "The web passes typecheck, lint, unit tests and an offline build",
+        "Every screen renders at 360 px without horizontal scroll against the mock gateway"
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Go-live kit and audit",
+      "acceptance_criteria": [
+        "The go-live kit is complete with rollback steps",
+        "The loopback end-to-end check and the independent audit pass"
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Production environment",
+      "acceptance_criteria": [
+        "The AdvIn services, the Caddy block, the Vercel project, the OAuth App and the Telegram bot exist and work together",
+        "Every other site behind the AdvIn Caddy answers as before and a rollback has been rehearsed"
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10",
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R15",
+    "R16",
+    "R17",
+    "R18",
+    "R19"
+  ],
+  "tasks": [
+    {
+      "id": "T2",
+      "milestone_id": "M1",
+      "title": "Research where a per-task route pin enters M2 routing and the executor",
+      "objective": "A note naming where a per-task route pin enters M2 routing and the executor, with the tests that cover it",
+      "repository": "skill",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Reading routing modules and their tests only",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_plan_routing.py",
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "Route pin crosses plan routing, the decision adapter and executor wiring"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_executor_wiring.py"
+          ],
+          "justification": "Produces one route-pin note and no code change"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_plan_routing.py"
+          ],
+          "justification": "Three routing modules and their tests to read"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_run.py"
+          ],
+          "justification": "Reading routing code cannot change the scheduler"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8"
+          ],
+          "justification": "Only the route pin task consumes this note"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "Routing modules were opened while planning r2"
+        }
+      },
+      "expected_paths": [
+        "remote/docs/route-pin.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "route-pin.md names the routing functions",
+        "route-pin.md lists the covering tests",
+        "route-pin.md states the pin precedence"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s remote/docs/route-pin.md",
+          "purpose": "route-pin.md names the routing functions",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/route-pin.md",
+          "purpose": "route-pin.md lists the covering tests",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/route-pin.md",
+          "purpose": "route-pin.md states the pin precedence",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R13"
+      ],
+      "kind": "research"
+    },
+    {
+      "id": "T3",
+      "milestone_id": "M1",
+      "title": "Remote API contract, command and event schemas, and the architecture note",
+      "objective": "A versioned contract for the laptop remote API, command and event schemas, and the architecture note with alternatives",
+      "repository": "skill",
+      "after": [
+        "T2"
+      ],
+      "complexity": "extreme",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Design over existing operations; every later task depends on it",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_plans_api.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Far-reaching contract binding laptop, gateway and web tasks"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Contract documents and schemas only, no runtime code"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Operations to describe are already enumerated in the server and decisions"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A wrong contract propagates to the gateway and web"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "task:T10",
+            "task:T15"
+          ],
+          "justification": "Laptop, gateway and web tasks all read this contract"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Existing handlers and D-020 decisions list the actions"
+        }
+      },
+      "expected_paths": [
+        "remote/docs/contract.md",
+        "remote/docs/architecture.md",
+        "remote/contract/**"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "command.schema.json validates every command family",
+        "contract.md lists every endpoint with its errors",
+        "architecture.md records the tunnel plus gateway choice"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "python -m json.tool remote/contract/command.schema.json",
+          "purpose": "command.schema.json validates every command family",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "python -m json.tool remote/contract/command.schema.json",
+          "purpose": "contract.md lists every endpoint with its errors",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "python -m json.tool remote/contract/command.schema.json",
+          "purpose": "architecture.md records the tunnel plus gateway choice",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R5",
+        "R6",
+        "R10"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4",
+      "milestone_id": "M2",
+      "title": "Remote API skeleton behind the gateway key, with health",
+      "objective": "The laptop panel answers /api/remote/v1/health only to callers presenting the gateway key",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Server routing pattern exists; small auth module",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "Constant-time key check and route hook in the server"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "New remote API module plus a route hook"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Similar flow endpoints already exist in the server"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Authentication boundary into the laptop agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4a"
+          ],
+          "justification": "The snapshot task extends this module next"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "Server dispatch code was read and is short"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/bt_server.py",
+        "skill/scripts/tests/test_remote_api.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Request without the gateway key gets 401",
+        "Health returns version and timestamp",
+        "Existing panel routes keep working"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Request without the gateway key gets 401",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Health returns version and timestamp",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Existing panel routes keep working",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R18"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T4a",
+      "milestone_id": "M2",
+      "title": "Snapshot endpoint over the shared live caches",
+      "objective": "The remote API serves a compact snapshot of runs built from the shared live caches",
+      "repository": "skill",
+      "after": [
+        "T4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Live API already builds run summaries",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Shaping run summaries and activity into one snapshot"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "One endpoint in the remote API module"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Run summaries and now frame exist already"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A wrong snapshot shows stale run state"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "Gateway snapshot cache consumes this shape"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Run summaries were profiled in the previous session"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_api.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Snapshot lists runs with active task and last sign of life",
+        "Snapshot reuses the shared now frame",
+        "Snapshot answers within one second on fixtures"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Snapshot lists runs with active task and last sign of life",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Snapshot reuses the shared now frame",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "Snapshot answers within one second on fixtures",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R4"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5",
+      "milestone_id": "M2",
+      "title": "Command ledger store: idempotency keys, preconditions and audit rows",
+      "objective": "A ledger stores each remote command once per idempotency key with its precondition and outcome",
+      "repository": "skill",
+      "after": [
+        "T4a"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "SQLite store with precondition checks over scheduler state",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Preconditions must read scheduler state consistently with operator holds"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "One ledger module and its tests"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Store plus precondition readers with tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A wrong precondition lets a stale tap act"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5a"
+          ],
+          "justification": "Dispatch tasks build on this ledger"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Operator holds and status readers exist"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Same idempotency key twice stores one row",
+        "Stale precondition returns STALE_PRECONDITION",
+        "Ledger rows keep command, target, origin and outcome"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Same idempotency key twice stores one row",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Stale precondition returns STALE_PRECONDITION",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Ledger rows keep command, target, origin and outcome",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R6",
+        "R15"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5a",
+      "milestone_id": "M2",
+      "title": "Ledger dispatch for run moves and decision answers",
+      "objective": "Ledger commands stop, resume, cancel attempts, reopen, revise and answer decision requests through the existing moves",
+      "repository": "skill",
+      "after": [
+        "T5"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Thin dispatch over scheduler ops and D-020",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Mapping ledger commands onto existing operator moves"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Dispatch functions in the ledger module"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Operations exist; each needs one test"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A wrong dispatch can cancel live agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5b"
+          ],
+          "justification": "Plan dispatch extends the same module next"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Scheduler ops and decisions modules have tests"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Cancel attempt goes through scheduler-op apply",
+        "Decision answer goes through bt_scheduler_decisions.answer",
+        "Unknown command is refused"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Cancel attempt goes through scheduler-op apply",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Decision answer goes through bt_scheduler_decisions.answer",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Unknown command is refused",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T5b",
+      "milestone_id": "M2",
+      "title": "Ledger dispatch for plans and rounds with the confirmation challenge",
+      "objective": "Ledger commands approve, launch, cancel and delete plans and answer rounds, destructive ones behind a typed challenge",
+      "repository": "skill",
+      "after": [
+        "T5a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Thin dispatch over plans API and rounds",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_plans_api.py",
+            "file:skill/scripts/bt_rounds.py"
+          ],
+          "justification": "Challenge lifecycle plus plan and round actions"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_plans_api.py"
+          ],
+          "justification": "Dispatch functions in the ledger module"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_plans_api.py"
+          ],
+          "justification": "Plan run button already wraps approve and launch"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Launching a plan starts agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "Event feed task follows in the same module chain"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_plans_api.py"
+          ],
+          "justification": "run_plan and cancel_plan exist with tests"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Launch without a valid challenge is refused",
+        "Approve launches exactly once",
+        "Round answers reach the round file"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Launch without a valid challenge is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Approve launches exactly once",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "Round answers reach the round file",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T6",
+      "milestone_id": "M2",
+      "title": "Event feed with stable ids and a cursor, including decision requests",
+      "objective": "A cursor-based feed emits notification events and open decision requests with stable ids",
+      "repository": "skill",
+      "after": [
+        "T5b"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Deterministic derivation over bus, plan status and decisions",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Events derived identically from several stores"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "One feed module plus endpoint"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Seven event kinds with fixtures"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Missed or duplicated alerts"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14"
+          ],
+          "justification": "Gateway rules consume this feed"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_flow_bus.py"
+          ],
+          "justification": "Flow bus marks incidents with severity"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Re-reading from a cursor yields identical ids",
+        "Decision requests appear as events",
+        "Each notification kind has a fixture test"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "Re-reading from a cursor yields identical ids",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "Decision requests appear as events",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "Each notification kind has a fixture test",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R11"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T7",
+      "milestone_id": "M2",
+      "title": "Failure review read model per attempt",
+      "objective": "Opening a failed attempt returns its cause, verification command and output, diff stat and log tail",
+      "repository": "skill",
+      "after": [
+        "T6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Facts exist in attempt facts, agent now and M5",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_attempt_facts.py"
+          ],
+          "justification": "Joins attempt facts, recovery causes and git diff stat"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_agent_now.py"
+          ],
+          "justification": "One read endpoint in the remote API"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_attempt_facts.py"
+          ],
+          "justification": "Data sources exist and need shaping"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_secrets.py"
+          ],
+          "justification": "Leaking a secret from logs"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15c"
+          ],
+          "justification": "Web failure review reads it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_agent_now.py"
+          ],
+          "justification": "Agent now parses Claude and Codex logs"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_review.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Failed attempt fixture returns four sections",
+        "Log tail is capped at 200 lines",
+        "Secrets are filtered from returned text"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py",
+          "purpose": "Failed attempt fixture returns four sections",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py",
+          "purpose": "Log tail is capped at 200 lines",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py",
+          "purpose": "Secrets are filtered from returned text",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8",
+      "milestone_id": "M2",
+      "title": "Retry pinned to a route, model or account",
+      "objective": "The owner can retry a blocked or failed task pinned to a chosen route, model or account",
+      "repository": "skill",
+      "after": [
+        "T7"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "low",
+      "estimate_rationale": "Depends on the injection point found by research",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_decision_adapter.py"
+          ],
+          "justification": "Pin must flow through M2 decisions without breaking quota rules"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_plan_routing.py"
+          ],
+          "justification": "One command plus a routing hook"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Scheduler-level test for the pinned attempt"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A wrong pin routes work to an exhausted account"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8a"
+          ],
+          "justification": "Brief edit task follows in the same module"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:the decision adapter accepts a pinned route"
+          ],
+          "justification": "Injection point unknown until research ends"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_recovery.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Pinned retry starts on the chosen route",
+        "Unavailable route is refused before reopening",
+        "Pin is recorded in the ledger"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Pinned retry starts on the chosen route",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Unavailable route is refused before reopening",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Pin is recorded in the ledger",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R13"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8a",
+      "milestone_id": "M2",
+      "title": "Brief or criteria edit as an owner-approved plan revision",
+      "objective": "Editing a task brief or criteria from the phone records a new plan revision frozen with the owner's approval and rebases",
+      "repository": "skill",
+      "after": [
+        "T8"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Revision and rebase exist; this wraps them",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_planner/amendments.py",
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Revision writing must pass plan-json check before freezing"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "One command over planner and revise"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "Revise action and freeze exist with tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Revisions change what a running plan executes"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T9"
+          ],
+          "justification": "Panel fix follows and shares server code"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_scheduler_ops.py"
+          ],
+          "justification": "r2 used the same freeze and revise path today"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_recovery.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "Brief edit creates revision N+1",
+        "Revision is frozen as owner-approved",
+        "Run rebases onto the new revision"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Brief edit creates revision N+1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Revision is frozen as owner-approved",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py",
+          "purpose": "Run rebases onto the new revision",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R13"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T9",
+      "milestone_id": "M2",
+      "title": "One owner of port 8765 and reloads that keep the listening socket",
+      "objective": "Port 8765 has one owner, the systemd unit, and reloads keep the listening socket",
+      "repository": "skill",
+      "after": [
+        "T8a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Journal showed 37 starts and errno 98 today",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py",
+            "file:skill/scripts/bt_platform.py"
+          ],
+          "justification": "Socket handoff with the threading server"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_platform.py"
+          ],
+          "justification": "Server start path and platform helper"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/tests/test_platform.py"
+          ],
+          "justification": "Restarts already go through systemctl"
+        },
+        "risk": {
+          "evidence": [
+            "file:skill/scripts/bt_platform.py"
+          ],
+          "justification": "A broken start path leaves the panel down"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8a"
+          ],
+          "justification": "Ordered after the other server edits"
+        },
+        "confidence": {
+          "evidence": [
+            "command:journalctl --user -u bitacora-web -> 37 starts since 11:00 and errno 98"
+          ],
+          "justification": "Restart storm observed in the user journal"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_server.py",
+        "skill/scripts/bt_platform.py",
+        "skill/scripts/tests/test_platform.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "ensure_server never starts a loose server while the unit is enabled",
+        "Reload keeps the listening socket",
+        "Platform tests pass"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py",
+          "purpose": "ensure_server never starts a loose server while the unit is enabled",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py",
+          "purpose": "Reload keeps the listening socket",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py",
+          "purpose": "Platform tests pass",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R7",
+        "R18"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T10",
+      "milestone_id": "M3",
+      "title": "Gateway skeleton: config, upstream client and liveness state",
+      "objective": "The stdlib gateway starts with typed config, an upstream client with timeouts and a laptop liveness state machine",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Small stdlib service; liveness is testable with fake time",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Liveness thresholds and transitions with fake time"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "New gateway package with one subsystem"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Skeleton plus one tested subsystem"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Wrong liveness shows stale data as live"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T11"
+          ],
+          "justification": "Gateway tasks extend it in sequence"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "bt_server shows the stdlib server pattern"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Three failed probes mark the laptop offline",
+        "One success marks it online again",
+        "Missing config refuses to start"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py",
+          "purpose": "Three failed probes mark the laptop offline",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py",
+          "purpose": "One success marks it online again",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py",
+          "purpose": "Missing config refuses to start",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R7",
+        "R17"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T11",
+      "milestone_id": "M3",
+      "title": "GitHub OAuth for dav033 and server-side sessions",
+      "objective": "Only GitHub user dav033 obtains a session through the OAuth web flow",
+      "repository": "skill",
+      "after": [
+        "T10"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Standard OAuth flow against a fake GitHub",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "OAuth state, session store and cookie attributes"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Auth module of the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Flow plus negative tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Auth bug exposes control of agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T11a"
+          ],
+          "justification": "Guard task follows in the gateway"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:Vercel rewrites forward Set-Cookie"
+          ],
+          "justification": "Cookie forwarding depends on the coordinator spike"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Foreign GitHub login is refused",
+        "OAuth state mismatch is refused",
+        "Session cookie is HttpOnly Secure SameSite Strict"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_auth.py",
+          "purpose": "Foreign GitHub login is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_auth.py",
+          "purpose": "OAuth state mismatch is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_auth.py",
+          "purpose": "Session cookie is HttpOnly Secure SameSite Strict",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T11a",
+      "milestone_id": "M3",
+      "title": "CSRF header, Origin check, rate limits and request log",
+      "objective": "State-changing requests need the X-Flow-Request header and a matching Origin; sign-in and commands are rate limited",
+      "repository": "skill",
+      "after": [
+        "T11"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Middleware checks with negative tests",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Header, Origin and token bucket checks"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Guard middleware of the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Few rules with negative tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Missing guard enables cross-site commands"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T12"
+          ],
+          "justification": "Stream task follows in the gateway"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "Panel already checks Origin and token on POST"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "POST without X-Flow-Request is refused",
+        "Foreign Origin is refused",
+        "Sixth failed login in a minute is throttled"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_guard.py",
+          "purpose": "POST without X-Flow-Request is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_guard.py",
+          "purpose": "Foreign Origin is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_guard.py",
+          "purpose": "Sixth failed login in a minute is throttled",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R2",
+        "R17"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T12",
+      "milestone_id": "M3",
+      "title": "Snapshot cache and SSE fan-out with Last-Event-ID",
+      "objective": "The gateway serves cached snapshots and fans out laptop updates over SSE with Last-Event-ID resume",
+      "repository": "skill",
+      "after": [
+        "T11a",
+        "T4a"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Fan-out and resume; panel has shared-frame caching",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Resume semantics across the 120 second rewrite cut"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Proxy and stream subsystem"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Stream tests with fake time and fake laptop"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Stale data misleads the owner"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4a"
+          ],
+          "justification": "Consumes the laptop snapshot"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_live_api.py"
+          ],
+          "justification": "Panel SSE already resumes from a last id"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Reconnect with Last-Event-ID loses no events",
+        "Offline laptop serves the cached snapshot with its time",
+        "Laptop is polled once regardless of clients"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_stream.py",
+          "purpose": "Reconnect with Last-Event-ID loses no events",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_stream.py",
+          "purpose": "Offline laptop serves the cached snapshot with its time",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_stream.py",
+          "purpose": "Laptop is polled once regardless of clients",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R7"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T13",
+      "milestone_id": "M3",
+      "title": "Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME",
+      "objective": "Commands reach the laptop ledger with confirmation challenges, offline refusal and unknown-outcome handling",
+      "repository": "skill",
+      "after": [
+        "T12",
+        "T5b"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Relay over the ledger contract",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5b"
+          ],
+          "justification": "Timeout semantics must match ledger idempotency"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One command relay endpoint in the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Few paths with negative tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Relayed commands stop or launch agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5b"
+          ],
+          "justification": "Bound to the laptop ledger"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_server.py"
+          ],
+          "justification": "Typed confirmations already exist in the panel"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Destructive command without challenge is refused",
+        "Offline laptop returns LAPTOP_OFFLINE",
+        "Timeout returns UNKNOWN_OUTCOME with the key"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "Destructive command without challenge is refused",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "Offline laptop returns LAPTOP_OFFLINE",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "Timeout returns UNKNOWN_OUTCOME with the key",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R6",
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14",
+      "milestone_id": "M3",
+      "title": "Deterministic notification rules with dedupe keys",
+      "objective": "Deterministic rules turn feed events and liveness into notifications with stable dedupe keys",
+      "repository": "skill",
+      "after": [
+        "T13",
+        "T6"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Pure rules over events, tested with fixtures",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Exactly-once semantics over at-least-once input"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Rules module of the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Seven event kinds with fixtures"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Missed alerts or spam"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6"
+          ],
+          "justification": "Reads the laptop feed"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Feed ids are defined by the contract"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Duplicate event yields no second notification",
+        "Restart re-reading the feed sends nothing new",
+        "Laptop offline over 15 min with an active run notifies once"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_notify.py",
+          "purpose": "Duplicate event yields no second notification",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_notify.py",
+          "purpose": "Restart re-reading the feed sends nothing new",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_notify.py",
+          "purpose": "Laptop offline over 15 min with an active run notifies once",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R11"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14a",
+      "milestone_id": "M3",
+      "title": "Telegram delivery with retries, backoff and history",
+      "objective": "Notifications are delivered to Telegram with retries, backoff and a history of delivered and dropped messages",
+      "repository": "skill",
+      "after": [
+        "T14"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Delivery queue over the stable Bot API",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Backoff and expiry over a fake Bot API"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Delivery subsystem of the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A delivery queue plus its tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Lost alerts when Telegram is down"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14b"
+          ],
+          "justification": "Bot task follows in the gateway"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:https://core.telegram.org/bots/api#sendmessage"
+          ],
+          "justification": "Bot API sendMessage is a stable public interface"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Telegram 5xx is retried with backoff",
+        "Message older than one hour is dropped and marked",
+        "History records each delivery"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py",
+          "purpose": "Telegram 5xx is retried with backoff",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py",
+          "purpose": "Message older than one hour is dropped and marked",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py",
+          "purpose": "History records each delivery",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R15"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14b",
+      "milestone_id": "M3",
+      "title": "Telegram bot: long polling, chat allowlist, safe buttons and /estado",
+      "objective": "A long-polling bot answers only the owner chat, offers safe buttons and replies to /estado",
+      "repository": "skill",
+      "after": [
+        "T14a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "getUpdates loop with a fake Bot API",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Update offsets, callback data and allowlist"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Bot subsystem of the gateway"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Loop plus three behaviours to test"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Bot obeying another chat would control agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T13"
+          ],
+          "justification": "Uses the command relay"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:https://core.telegram.org/bots/api#getupdates"
+          ],
+          "justification": "getUpdates long polling is a stable public interface"
+        }
+      },
+      "expected_paths": [
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package"
+      ],
+      "acceptance_criteria": [
+        "Unknown chat id gets no answer",
+        "Button press creates a ledger command",
+        "/estado lists active runs"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py",
+          "purpose": "Unknown chat id gets no answer",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py",
+          "purpose": "Button press creates a ledger command",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py",
+          "purpose": "/estado lists active runs",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R12"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15",
+      "milestone_id": "M4",
+      "title": "Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway",
+      "objective": "A Next.js app on the lotm-frontend stack builds offline with theme tokens, local fonts, a PWA manifest and a mock gateway",
+      "repository": "skill",
+      "after": [
+        "T3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "low",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Scaffold on a known stack",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:vercel project ls -> dav033s-projects has lotm-frontend and five other Node 24 projects"
+          ],
+          "justification": "Offline build constraints and PWA manifest"
+        },
+        "scope": {
+          "evidence": [
+            "command:vercel project ls -> dav033s-projects has lotm-frontend and five other Node 24 projects"
+          ],
+          "justification": "Scaffold and configuration only"
+        },
+        "duration": {
+          "evidence": [
+            "command:vercel project ls -> dav033s-projects has lotm-frontend and five other Node 24 projects"
+          ],
+          "justification": "Scaffold plus verify script"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Scaffold mistakes are reversible"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15a"
+          ],
+          "justification": "Web screens extend it in sequence"
+        },
+        "confidence": {
+          "evidence": [
+            "command:vercel project ls -> dav033s-projects has lotm-frontend and five other Node 24 projects"
+          ],
+          "justification": "lotm-frontend uses the same Next and Tailwind versions"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "npm run verify builds without network",
+        "Theme tokens follow Catppuccin Mocha with mauve accent",
+        "Mock gateway serves fixture snapshots"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "npm run verify builds without network",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Theme tokens follow Catppuccin Mocha with mauve accent",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Mock gateway serves fixture snapshots",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15a",
+      "milestone_id": "M4",
+      "title": "Login screen and runs list",
+      "objective": "The owner signs in and sees the runs list at phone width",
+      "repository": "skill",
+      "after": [
+        "T15"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Two screens over the mock gateway",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Login redirect and list rendering"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Two screens of the web app"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Screens plus component tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Wrong state misleads the owner"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15b"
+          ],
+          "justification": "Run view follows in the same app"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Contract fixes the snapshot shape"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Login redirects to the gateway OAuth start",
+        "Runs list shows state and last sign of life",
+        "No horizontal scroll at 360 px"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Login redirects to the gateway OAuth start",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Runs list shows state and last sign of life",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "No horizontal scroll at 360 px",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R4"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15b",
+      "milestone_id": "M4",
+      "title": "Run view: activity strip, tasks and feed on flow-core.js",
+      "objective": "The run view shows the activity strip, tasks and feed using flow-core.js logic",
+      "repository": "skill",
+      "after": [
+        "T15a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Porting flow view to React with shared logic",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/assets/flow-core.js",
+            "file:skill/assets/flow.js"
+          ],
+          "justification": "Porting the flow view to a small screen"
+        },
+        "scope": {
+          "evidence": [
+            "file:skill/scripts/bt_page_flow.py"
+          ],
+          "justification": "One screen with live updates"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/assets/flow-core.js"
+          ],
+          "justification": "One run view screen plus its tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "UI errors are visible but reversible"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15c"
+          ],
+          "justification": "Failure review follows in the same app"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/assets/flow-core.js"
+          ],
+          "justification": "flow-core.js is pure logic usable from node"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Active module, task and attempt are visible",
+        "Feed groups messages like /flow",
+        "Updates arrive through SSE from the mock"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Active module, task and attempt are visible",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Feed groups messages like /flow",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Updates arrive through SSE from the mock",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R14"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15c",
+      "milestone_id": "M4",
+      "title": "Failure review screen",
+      "objective": "The phone shows a failed attempt's cause, verification output, diff stat and log tail",
+      "repository": "skill",
+      "after": [
+        "T15b",
+        "T7"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "One screen over the review endpoint",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "Rendering four sections from one endpoint"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One screen of the web app"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One failure review screen plus tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Misread failures lead to wrong actions"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15d"
+          ],
+          "justification": "Control sheet follows in the same app"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T7"
+          ],
+          "justification": "Review shape comes from the laptop task"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Four sections render from fixtures",
+        "Long logs scroll inside their box",
+        "Secrets never appear"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Four sections render from fixtures",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Long logs scroll inside their box",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Secrets never appear",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15d",
+      "milestone_id": "M4",
+      "title": "Control sheet with typed confirmations and command history",
+      "objective": "The control sheet sends commands with typed confirmations and shows the command history",
+      "repository": "skill",
+      "after": [
+        "T15c",
+        "T13"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Control UX over the relay",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T13"
+          ],
+          "justification": "Confirmation and stale-state flows on touch screens"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Sheet and history screen"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Two screens plus tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A mis-tap must never cancel or launch work"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15e"
+          ],
+          "justification": "Plans screens follow in the same app"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3"
+          ],
+          "justification": "Relay errors are fixed by the contract"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Destructive action asks to type the REQ id",
+        "Stale precondition shows el estado cambió",
+        "History lists origin and result"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Destructive action asks to type the REQ id",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Stale precondition shows el estado cambió",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "History lists origin and result",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R8",
+        "R15"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15e",
+      "milestone_id": "M4",
+      "title": "Plans, question rounds and decision requests screens",
+      "objective": "The phone approves and launches plans, answers rounds and answers decision requests",
+      "repository": "skill",
+      "after": [
+        "T15d"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Forms over ledger commands",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_rounds.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Forms mirror round and decision schemas"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Three screens in the app"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_rounds.py"
+          ],
+          "justification": "Plan and round forms plus tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Launching a plan starts agents"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15f"
+          ],
+          "justification": "Recovery forms follow in the same app"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_rounds.py",
+            "file:skill/scripts/bt_scheduler_decisions.py"
+          ],
+          "justification": "Round and decision schemas are documented"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Round answers are sent as a ledger command",
+        "Decision request shows options with consequences",
+        "Approve requires the typed REQ id"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Round answers are sent as a ledger command",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Decision request shows options with consequences",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Approve requires the typed REQ id",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R5",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15f",
+      "milestone_id": "M4",
+      "title": "Recovery forms and live quotas",
+      "objective": "The phone retries with a pinned route, edits a brief, leaves a note and sees live quotas",
+      "repository": "skill",
+      "after": [
+        "T15e",
+        "T8a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Forms over recovery commands and quota data",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:skill/scripts/bt_quota_live.py"
+          ],
+          "justification": "Forms mirror recovery commands and quota windows"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Two screens in the app"
+        },
+        "duration": {
+          "evidence": [
+            "file:skill/scripts/bt_quota_live.py"
+          ],
+          "justification": "Recovery and quota forms plus tests"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Revisions change running plans"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T8a"
+          ],
+          "justification": "Depends on recovery commands"
+        },
+        "confidence": {
+          "evidence": [
+            "file:skill/scripts/bt_quota_live.py"
+          ],
+          "justification": "Quota module already reads every subscription"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**"
+      ],
+      "shared_resources": [
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "Pinned retry form lists available routes",
+        "Brief edit shows the revision it will create",
+        "Quotas show each account window"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Pinned retry form lists available routes",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Brief edit shows the revision it will create",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "Quotas show each account window",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R13",
+        "R15"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T16",
+      "milestone_id": "M5",
+      "title": "Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook",
+      "objective": "A go-live kit holds the systemd unit, the Caddy block, an env example, deploy and rollback scripts and a runbook, all checked offline",
+      "repository": "skill",
+      "after": [
+        "T14b",
+        "T15f",
+        "T9"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Files and an offline test; nothing is deployed",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy container publishes 80/443"
+          ],
+          "justification": "Caddy block for the container and host service"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Kit files and one test"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Files plus offline validation"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "A bad kit breaks other AdvIn sites at go-live"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Only the loopback check follows"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Host services on 172.20.0.1 already sit behind this Caddy"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**",
+        "remote/docs/runbook.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Kit test validates the unit and the Caddy block syntax offline",
+        "Env example lists every key without values",
+        "Runbook has a rollback per step"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py",
+          "purpose": "Kit test validates the unit and the Caddy block syntax offline",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py",
+          "purpose": "Env example lists every key without values",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py",
+          "purpose": "Runbook has a rollback per step",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R3"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T17",
+      "milestone_id": "M5",
+      "title": "Offline end-to-end: real laptop API, gateway and built web wired locally on loopback",
+      "objective": "Laptop API, gateway and built web run together on loopback with fixtures and pass the end-to-end scenarios",
+      "repository": "skill",
+      "after": [
+        "T16"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "low",
+      "estimate_rationale": "Wires three components with fakes on loopback",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:grep FORBIDDEN skill/scripts/bt_scheduler_quality/policy.py -> PYTHONPATH and shell characters are refused"
+          ],
+          "justification": "Orchestrates laptop, gateway and web processes with fakes"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One end-to-end harness and its scenarios"
+        },
+        "duration": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Several scenarios with real timeouts"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Loopback only; nothing external is touched"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Runs after the kit only"
+        },
+        "confidence": {
+          "evidence": [
+            "assumption:the verifier sandbox allows loopback sockets"
+          ],
+          "justification": "Starting processes inside the sandbox is unproven"
+        }
+      },
+      "expected_paths": [
+        "remote/e2e/**"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Fake GitHub sign-in works and a foreign user is refused",
+        "Stopping the fake tunnel shows offline within 20 s",
+        "One notification per forced failure reaches the fake Telegram"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py",
+          "purpose": "Fake GitHub sign-in works and a foreign user is refused",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py",
+          "purpose": "Stopping the fake tunnel shows offline within 20 s",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py",
+          "purpose": "One notification per forced failure reaches the fake Telegram",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R10",
+        "R11",
+        "R12",
+        "R18"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T18",
+      "milestone_id": "M5",
+      "title": "Independent security and spec audit by another provider",
+      "objective": "Another provider audits security and spec compliance and every confirmed finding is fixed or recorded",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.3",
+        "T18.4"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Independent audits find defects tests miss",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Review spans auth, relay and the laptop boundary"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "An audit report and small fixes"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "One audit pass plus fixes"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A missed hole exposes agent control"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Runs after the loopback check"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "LG-001 says audits by another provider pay off"
+        }
+      },
+      "expected_paths": [
+        "remote/docs/audit.md",
+        "remote/docs/audit.findings.json"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Audit lists findings with verdicts",
+        "Confirmed high findings are fixed",
+        "Rejected findings state why"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit.md",
+          "purpose": "Audit lists findings with verdicts",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit.md",
+          "purpose": "Confirmed high findings are fixed",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit.md",
+          "purpose": "Rejected findings state why",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16",
+        "R17"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T18b",
+      "milestone_id": "M5",
+      "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
+      "objective": "An independent second audit of the scope of T18. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "low",
+      "confidence": "medium",
+      "estimate_rationale": "Cross-check of T18: a bounded independent pass over the same scope; Independent audits find defects tests miss",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Review spans auth, relay and the laptop boundary"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "An audit report and small fixes"
+        },
+        "duration": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "One audit pass plus fixes"
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "A missed hole exposes agent control"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Runs after the loopback check"
+        },
+        "confidence": {
+          "evidence": [
+            "precedent:REQ-024"
+          ],
+          "justification": "LG-001 says audits by another provider pay off"
+        }
+      },
+      "expected_paths": [
+        "remote/docs/audit-crosscheck.md",
+        "remote/docs/audit-crosscheck.findings.json"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Audit lists findings with verdicts",
+        "Confirmed high findings are fixed",
+        "Rejected findings state why"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Audit lists findings with verdicts",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Confirmed high findings are fixed",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/audit-crosscheck.md",
+          "purpose": "Rejected findings state why",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16",
+        "R17"
+      ],
+      "kind": "audit"
+    },
+    {
+      "id": "T19",
+      "milestone_id": "M5",
+      "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
+      "objective": "A remote README and ready-to-copy TOOLS entries let any session operate gateway, bot and web after go-live",
+      "repository": "skill",
+      "after": [
+        "T18",
+        "T18b"
+      ],
+      "complexity": "low",
+      "scope": "small_change",
+      "estimated_minutes": 45,
+      "risk": "low",
+      "coupling": "low",
+      "confidence": "high",
+      "estimate_rationale": "Writing down facts from the kit",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:bitacora/dev/TOOLS.md"
+          ],
+          "justification": "Writing README and tools entries from the go-live kit"
+        },
+        "scope": {
+          "evidence": [
+            "file:bitacora/dev/TOOLS.md"
+          ],
+          "justification": "Two documentation files change and no code"
+        },
+        "duration": {
+          "evidence": [
+            "file:bitacora/dev/TOOLS.md"
+          ],
+          "justification": "Short entries in the existing TOOLS format"
+        },
+        "risk": {
+          "evidence": [
+            "file:bitacora/dev/TOOLS.md"
+          ],
+          "justification": "README or tools-entries mistakes are cheap to fix"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T18"
+          ],
+          "justification": "Last task; nothing depends on it"
+        },
+        "confidence": {
+          "evidence": [
+            "file:bitacora/dev/TOOLS.md"
+          ],
+          "justification": "TOOLS.md already documents tunnel and panel"
+        }
+      },
+      "expected_paths": [
+        "remote/README.md",
+        "remote/docs/tools-entries.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "tools-entries.md has flow-gateway and flow-remote",
+        "README explains run, test and rollback",
+        "Keys appear as references only"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s remote/docs/tools-entries.md",
+          "purpose": "tools-entries.md has flow-gateway and flow-remote",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/tools-entries.md",
+          "purpose": "README explains run, test and rollback",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "test -s remote/docs/tools-entries.md",
+          "purpose": "Keys appear as references only",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R18"
+      ],
+      "kind": "docs"
+    },
+    {
+      "id": "T20",
+      "milestone_id": "M6",
+      "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
+      "objective": "AdvIn gets a no-login service user `flow`, /opt/flow-gateway (releases, current), /var/lib/flow-gateway (SQLite) and /etc/flow-gateway/env (mode 600, skeleton without values), the gateway and bot systemd units installed and hardened (NoNewPrivileges, PrivateTmp, ProtectSystem=strict, bind only 172.20.0.1 on a free port you record), and the Caddy block for flow-api.185-147-157-25.sslip.io (reverse_proxy to 172.20.0.1:<port> with SSE flush) added to /opt/edge-proxy/Caddyfile and reloaded in the `caddy` container. Create `remote/deploy/verify_receipt.py` and its tests first; the units stay stopped until T23. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T19"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Files, a verifier and one reversible change on a shared host",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy container publishes 80/443"
+          ],
+          "justification": "Caddyfile edit and systemd units on a host shared with other production sites, plus a receipt verifier"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Scripts, a verifier with tests and one reversible host change"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "A verifier, several scripts and one live rehearsal, longer than the offline kit of T16"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "The provisioning reloads the Caddy that serves maros, lotm and training: a mistake takes those sites down"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Every later production task needs the user, directories, units and Caddy block this task creates"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Host services on 172.20.0.1 already sit behind this Caddy, so the pattern is proven"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**",
+        "remote/docs/runbook.md"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "A pre-change snapshot of every existing Caddy host (status, TLS subject, first-byte time) is recorded",
+        "A no-login service user, release/state/env directories and both systemd units exist and pass systemd-analyze verify",
+        "The Caddyfile was backed up, validated, reloaded and every pre-existing host answers as in the snapshot",
+        "A rollback that restores the Caddyfile backup and removes the units was rehearsed and left AdvIn as before",
+        "The receipt verifier rejects failed checks, missing steps, secret-looking values and a git sha that is not an ancestor of HEAD"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check snapshot-before",
+          "purpose": "A pre-change snapshot of every existing Caddy host (status, TLS subject, first-byte time) is recorded",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check service-layout",
+          "purpose": "A no-login service user, release/state/env directories and both systemd units exist and pass systemd-analyze verify",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check other-hosts-unchanged",
+          "purpose": "The Caddyfile was backed up, validated, reloaded and every pre-existing host answers as in the snapshot",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py advin-provision --check rollback-rehearsed",
+          "purpose": "A rollback that restores the Caddyfile backup and removes the units was rehearsed and left AdvIn as before",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python -m unittest discover -s tests -p test_receipts.py",
+          "purpose": "The receipt verifier rejects failed checks, missing steps, secret-looking values and a git sha that is not an ancestor of HEAD",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R3",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T21",
+      "milestone_id": "M6",
+      "title": "Create the Vercel project and deploy the frontend to production",
+      "objective": "Create the Vercel project `flow-remote` in team dav033s-projects (root directory remote/web, Next.js 15) with the CLI, set only the non-secret `GATEWAY_ORIGIN=https://flow-api.185-147-157-25.sslip.io`, deploy to production with `vercel --prod`, and record the *.vercel.app URL, deployment id and git sha. The gateway is not running yet, so the rewrite must reach AdvIn's Caddy (a 502 or a gateway answer carrying Caddy's server header), never the app's own 404. Do not commit `.vercel/`. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T20"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "One CLI project and one deploy; the rewrite check needs the live host",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:vercel whoami -> dav033"
+          ],
+          "justification": "One Vercel project and one deploy of an app that already builds"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "CLI calls and a receipt; no application code changes"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Project creation, environment variable and one production build"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "A Vercel deploy is reversible and touches no other site, but it exposes the app publicly"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Needs the gateway host from T20 and gives T22 the URL for the OAuth homepage"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "vercel whoami works and the scope dav033s-projects is known"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**"
+      ],
+      "shared_resources": [
+        "vercel-project"
+      ],
+      "acceptance_criteria": [
+        "The Vercel project flow-remote exists in dav033s-projects with root remote/web and nothing from .vercel is committed",
+        "Only non-secret environment variables are set; their names are recorded without values",
+        "A production deployment is Ready and its URL, deployment id and git sha are recorded",
+        "The deployed app's same-origin rewrite reaches the AdvIn Caddy and not an app 404"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check project-linked",
+          "purpose": "The Vercel project flow-remote exists in dav033s-projects with root remote/web and nothing from .vercel is committed",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check env-names",
+          "purpose": "Only non-secret environment variables are set; their names are recorded without values",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check deployment-ready",
+          "purpose": "A production deployment is Ready and its URL, deployment id and git sha are recorded",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py vercel-frontend --check rewrite-reaches-caddy",
+          "purpose": "The deployed app's same-origin rewrite reaches the AdvIn Caddy and not an app 404",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T22",
+      "milestone_id": "M6",
+      "title": "Create the identity and messaging prerequisites and place the secrets",
+      "objective": "Create the GitHub OAuth App `flow-remote` (homepage = the Vercel URL from T21, callback = the gateway host) in the agents' Firefox (BiDi on 127.0.0.1:9223, Xephyr) if a GitHub session is there. The Telegram bot is created by the owner in @BotFather: read TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID from `~/.config/flow/secrets.env`, verify them with getMe/getChat and never create a bot yourself. Generate FLOW_GATEWAY_KEY (48 bytes) and SESSION_SECRET with `openssl rand` on the target, write /etc/flow-gateway/env on AdvIn and `~/.config/bitacora/remote.env` on the laptop (mode 600) and set the secret Vercel env vars via stdin. Never touch GitHub account settings other than that OAuth App. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T21"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Browser automation of one form plus secret placement; prerequisites only the owner can supply may stop it",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Browser automation of one GitHub form plus secret placement across three stores"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "One OAuth App, two bot values read from the owner's file and generated keys"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Form filling and key placement, with stops for anything only the owner can do"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "Secrets are involved: a leak into git, logs or argv is the failure to prevent"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "The OAuth callback and the Vercel URL must match what T21 and T23 use"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "The agents' Firefox keeps GitHub sessions but 2FA or sudo mode may interrupt"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "The GitHub OAuth App flow-remote exists with the Vercel URL as homepage and the gateway callback; its client id is recorded by name only",
+        "The Telegram bot token and the owner's chat id came from the owner's secrets file and were verified with getMe and getChat",
+        "FLOW_GATEWAY_KEY and SESSION_SECRET were generated on the target and never printed",
+        "Secrets exist only in mode-600 files on AdvIn and the laptop and in Vercel env, and a scan of the tree and the last 50 commits finds none"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check oauth-app",
+          "purpose": "The GitHub OAuth App flow-remote exists with the Vercel URL as homepage and the gateway callback; its client id is recorded by name only",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check telegram",
+          "purpose": "The Telegram bot token and the owner's chat id came from the owner's secrets file and were verified with getMe and getChat",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check generated-keys",
+          "purpose": "FLOW_GATEWAY_KEY and SESSION_SECRET were generated on the target and never printed",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py identity --check secrets-placement",
+          "purpose": "Secrets exist only in mode-600 files on AdvIn and the laptop and in Vercel env, and a scan of the tree and the last 50 commits finds none",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R1",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T23",
+      "milestone_id": "M6",
+      "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
+      "objective": "Build a release from the exact HEAD sha (git archive), upload it to /opt/flow-gateway/releases/<sha>, create a venv and install from the hash-locked requirements (no unpinned installs), migrate the SQLite database, switch `current` atomically, enable and start the gateway and bot units, and keep the previous release (for the first deploy rehearse with a copy). Replace the laptop's whole-panel reverse tunnel unit with the retargeted remote-only one (back up the old unit; the local panel and its tests stay unchanged, R18) so AdvIn can no longer reach anything but /api/remote/v1. Write `remote/deploy/smoke.py` for T24. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T22"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A live release, a tunnel change on the laptop and a rehearsed rollback",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "A live release, a database migration, an atomic switch and a laptop tunnel retarget with rehearsed rollback"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Release scripts, a smoke script and changes on two machines"
+        },
+        "duration": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "The longest step: build, upload, install, migrate, switch and rehearse the rollback"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "It starts the gateway on the production host and replaces the tunnel that currently exposes the whole panel"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T16"
+          ],
+          "justification": "Uses the secrets of T22 and gives T24 a running service"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "Releases with a current symlink and a systemd unit are an established pattern on this host"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/**",
+        "remote/docs/runbook.md"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "A release for the exact HEAD sha is on AdvIn, dependencies come from the hash-locked file, the database is migrated, current switched atomically and both services are enabled and active",
+        "The gateway listens only on 172.20.0.1 and AdvIn's port 8765 now exposes only /api/remote/v1 of the laptop, not the whole panel",
+        "The public health URL answers 200 with the release sha, an unauthenticated API call answers 401 and the security headers are present",
+        "Rollback to the previous release and forward again were rehearsed with health 200 each time",
+        "Every pre-existing AdvIn host still answers as in the snapshot"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check release-active",
+          "purpose": "A release for the exact HEAD sha is on AdvIn, dependencies come from the hash-locked file, the database is migrated, current switched atomically and both services are enabled and active",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check listeners-and-tunnel",
+          "purpose": "The gateway listens only on 172.20.0.1 and AdvIn's port 8765 now exposes only /api/remote/v1 of the laptop, not the whole panel",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check public-health",
+          "purpose": "The public health URL answers 200 with the release sha, an unauthenticated API call answers 401 and the security headers are present",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check rollback-rehearsed",
+          "purpose": "Rollback to the previous release and forward again were rehearsed with health 200 each time",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py gateway-release --check other-hosts-unchanged",
+          "purpose": "Every pre-existing AdvIn host still answers as in the snapshot",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R16",
+        "R17",
+        "R19"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24",
+      "milestone_id": "M6",
+      "title": "Live smoke test of the production environment and handover",
+      "objective": "Run `remote/deploy/smoke.py --live` against the real Vercel URL and the gateway host and record every named check in the receipt `live-smoke`; send exactly one Telegram test message to the owner. Report the URLs, the release sha, how to roll back (`remote/docs/runbook.md`) and what remains manual. Do not change code in this task. Rules for every M6 task (owner decision D-078, 2026-10-19: agents ship to production): (1) Never print, log, commit or pass a secret in argv: read secrets from the owner's file `~/.config/flow/secrets.env` (mode 600, outside any repo) and move them over ssh stdin or `vercel env add` stdin. (2) AdvIn also serves other production sites behind the same Caddy: before touching it snapshot the status and TLS subject of every host, back up what you change (timestamped copy), validate before reload, and if any other host answers differently afterwards restore the backup at once and fail the task. (3) Write a receipt `remote/deploy/receipts/<name>.json` (steps with redacted commands and exit codes, named checks with ok/detail, the git sha you deployed) that `remote/deploy/verify_receipt.py` can validate offline: the verifier has no network, so the receipt is the evidence. (4) If something only the owner can supply is missing or a site asks for 2FA, sudo mode, a captcha or a Cloudflare challenge, stop at once and say exactly which: do not improvise, invent a secret or retry.",
+      "repository": "skill",
+      "after": [
+        "T23"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "A scripted live run plus one human confirmation",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy container publishes 80/443"
+          ],
+          "justification": "A scripted live run of known checks plus one human confirmation"
+        },
+        "scope": {
+          "evidence": [
+            "spec:SPEC.md"
+          ],
+          "justification": "Running a smoke script and recording a receipt, no code changes"
+        },
+        "duration": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Minutes of checks plus the owner's phone test"
+        },
+        "risk": {
+          "evidence": [
+            "command:ssh advin docker ps -> caddy serves maros, lotm and training hosts"
+          ],
+          "justification": "It sends one real Telegram message and probes the public sign-in, nothing destructive"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T17"
+          ],
+          "justification": "Depends on every previous M6 task being live"
+        },
+        "confidence": {
+          "evidence": [
+            "command:ssh advin ss -ltnp -> python on 172.20.0.1:8100"
+          ],
+          "justification": "The checks mirror the loopback end-to-end of T17"
+        }
+      },
+      "expected_paths": [
+        "remote/deploy/receipts/**"
+      ],
+      "shared_resources": [
+        "advin-host"
+      ],
+      "acceptance_criteria": [
+        "Sign-in start redirects to github.com with the OAuth App's client id, a state and the gateway callback, and the cookies carry Secure, HttpOnly and SameSite=Strict",
+        "A callback with a bad state is refused, an unauthenticated API call is 401 and a state-changing call without X-Flow-Request is refused",
+        "Through the Vercel URL the page loads and the event stream connects and reconnects with Last-Event-ID",
+        "One Telegram test message was accepted by the Bot API for the owner's chat",
+        "David signs in with GitHub on his phone, sees the runs list at 360 px, and a foreign GitHub account is refused"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check signin-start",
+          "purpose": "Sign-in start redirects to github.com with the OAuth App's client id, a state and the gateway callback, and the cookies carry Secure, HttpOnly and SameSite=Strict",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check negative-paths",
+          "purpose": "A callback with a bad state is refused, an unauthenticated API call is 401 and a state-changing call without X-Flow-Request is refused",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check sse",
+          "purpose": "Through the Vercel URL the page loads and the event stream connects and reconnects with Last-Event-ID",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/deploy && python verify_receipt.py live-smoke --check telegram-delivery",
+          "purpose": "One Telegram test message was accepted by the Bot API for the owner's chat",
+          "category": "integration"
+        },
+        {
+          "type": "manual",
+          "value": "Open the Vercel URL on the phone, sign in as dav033, look at the runs list; try another GitHub account",
+          "purpose": "David signs in with GitHub on his phone, sees the runs list at 360 px, and a foreign GitHub account is refused",
+          "expected": "The owner confirms sign-in works, the list renders at 360 px and a foreign account is refused",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R10",
+        "R19"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T18.1",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F1, F2, F3, F4",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F1 (high; owned by T15a): The displayed GitHub sign-in route returns 404; the displayed logout route is also absent. Evidence from the audit: Probe A: GET /api/auth/github and /api/auth/logout -> 404; page.tsx:390/412 versus gateway/server.py:60.\n- F2 (high; owned by T15d): The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused. Evidence from the audit: Probe A: matching Origin and valid fixture session with the web's headers -> 403 forbidden.\n- F3 (high; owned by T13): The gateway forwards the public command schema unchanged to a laptop ledger that requires another format. Evidence from the audit: Probe A: contract-valid pause through both production HTTP handlers -> 400 INVALID_COMMAND. Laptop requires idempotency_key/command/string target/origin/params.\n- F4 (high; owned by T13): The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations. Evidence from the audit: Probe A: POST /api/remote/v1/challenges with valid session, Origin and marker -> 404.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T15a, T15d, T13, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**",
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "F1 (high) is fixed: The displayed GitHub sign-in route returns 404; the displayed logout route is also absent.",
+        "F2 (high) is fixed: The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused.",
+        "F3 (high) is fixed: The gateway forwards the public command schema unchanged to a laptop ledger that requires another format.",
+        "F4 (high) is fixed: The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "F1 (high) is fixed: The displayed GitHub sign-in route returns 404; the displayed logout route is also absent.",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "F2 (high) is fixed: The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused.",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "F3 (high) is fixed: The gateway forwards the public command schema unchanged to a laptop ledger that requires another format.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "F4 (high) is fixed: The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R15",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.2",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F5, F6, F7, F8",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F5 (high; owned by T4a, T15a, T15b, T15e): Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail. Evidence from the audit: Probe A: real run_summaries projection emits req_id/status/attempt, not required req/state/activeAttempt; bt_planstatus.list_plans emits summary rows only.\n- F6 (high; owned by T12, T15c, T15d, T15f): Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders. Evidence from the audit: Probe A: authenticated gateway GET review, quotas, commands and routes -> 404; laptop quotas/commands -> unconditional 503; UI history is per-page React state.\n- F7 (high; owned by T14b): The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing. Evidence from the audit: Probe B: sendMessage payload has only chat_id/text. test_telegram_bot.py is absent; its discovery command runs zero tests.\n- F8 (high; owned by T6, T14): Production alerts lack several specified event producers and do not establish retry exhaustion before notifying. Evidence from the audit: Probe B: a real attempt_transition failed row produces a no-retries alert without retry facts. Production plan summaries omit decisions; no derivation of completion/round/quota/stall conditions exists in the audited remote path.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T4a, T15a, T15b, T15e, T12, T15c, T15d, T15f, T14b, T6, T14, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_api.py",
+        "remote/web/**",
+        "remote/gateway/**",
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "remote-api-contract",
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "F5 (high) is fixed: Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail.",
+        "F6 (high) is fixed: Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders.",
+        "F7 (high) is fixed: The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing.",
+        "F8 (high) is fixed: Production alerts lack several specified event producers and do not establish retry exhaustion before notifying."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "F5 (high) is fixed: Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_stream.py",
+          "purpose": "F6 (high) is fixed: Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders.",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py",
+          "purpose": "F7 (high) is fixed: The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "F8 (high) is fixed: Production alerts lack several specified event producers and do not establish retry exhaustion before notifying.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R4",
+        "R5",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.3",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F9, F10",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F9 (high; owned by T6, T7): SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads. Evidence from the audit: Probe A: synthetic SESSION_SECRET assignment remains in 200 snapshot and review payloads. No real credential was inspected or found.\n- F10 (high; owned by T11a): Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled. Evidence from the audit: Probe B: 30 anonymous command requests -> 401, next owner request -> 429; limiter keys socket peer before session check. Probe A: six login starts -> six 302s.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6, T7, T11a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py",
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_review.py",
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F9 (high) is fixed: SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads.",
+        "F10 (high) is fixed: Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "F9 (high) is fixed: SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_guard.py",
+          "purpose": "F10 (high) is fixed: Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R11",
+        "R17",
+        "R2",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.4",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F19",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F19 (high; owned by T5, T5a): Task/attempt preconditions resolve run state rather than the actual mutation target. Evidence from the audit: Probe C: failed-task retry against a running run -> STALE_PRECONDITION, zero handler calls. target_state only accepts project/REQ and has no task/attempt state lookup.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, T5a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F19 (high) is fixed: Task/attempt preconditions resolve run state rather than the actual mutation target."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "F19 (high) is fixed: Task/attempt preconditions resolve run state rather than the actual mutation target.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R15",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    }
+  ]
+}

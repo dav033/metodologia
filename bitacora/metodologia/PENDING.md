@@ -7,7 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-- P-134 · REQ-028 interview and plan: per-run integration branch + remediation tasks for blocking audit findings (the structural fix behind D-087..D-089); until then the planner warns when a chain of dependent tasks shares files · urgency: high · complexity: L · added 2026-10-20 · D-089
+- P-134 · REQ-028 part 1 (integration branch per run, merged continuously) is not built; part 2 (remediation tasks, D-091) is. Revisit part 1 if clashes keep costing attempts · urgency: low · complexity: L · added 2026-10-20 · D-091
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin = GitHub, 778 bitácora files already on `origin/main`), so a push is the backup; BUT the repo is PUBLIC (checked 2026-10-14 with `gh`) while these notes called it private: owner decision 2026-10-14: no push for now; SUPERSEDED 2026-10-19: owner said push everything to main and keep the repo public (pushed de0576f) · urgency: high · complexity: M · added 2026-10-13 · user: "tenemos un problema" (GitHub review)
   - Context: since remote commit `4cfd74f` the bitácora lives outside the repo (D-007). Its legacy history reached GitHub with `a67371f`. The silent push failure no longer applies, because nothing pushes the live copy.

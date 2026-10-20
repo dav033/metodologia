@@ -1,12 +1,12 @@
 ---
 id: REQ-028
-status: clarifying
+status: in-progress
 created: 2026-10-20
 track: standard
 ---
 # REQ-028 — Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds
 
-<!-- status: clarifying → ready → planned → in-progress → done | dropped -->
+<!-- status: in-progress → ready → planned → in-progress → done | dropped -->
 
 ## Problem & goal
 Today every task builds on a merge of its ancestors' snapshots, so an audit finding that edits a base task makes every task built on it stale: they are redone one by one (REQ-027 round 3: T3 → T6/T10 → T12/T13 → T15b-f, with attempts spent on start rejections and gate rejections). D-087/D-088/D-089 bound and soften that, but the cause stays: there are parallel versions of the code and the scheduler reconciles them after the fact.
@@ -29,9 +29,14 @@ As a <actor>, I want <capability> so that <benefit>.
 -->
 
 ## Out of scope
--
+- A branch per run merged continuously (part 1): the remediation tasks remove the cascade without it; the integrator keeps merging ancestor snapshots and D-089 resolves overlaps. Revisit if clashes keep costing attempts.
 
 ## Requirements
+- R1. When an audit has blocking findings, the system shall record them and reject the audit without reopening any accepted task.
+- R2. When findings are recorded, the system shall add remediation tasks to the plan (next revision), after the audit's prerequisites, and move the audit after them.
+- R3. While findings share a task or overlapping paths, the system shall chain their remediation tasks; independent groups may run in parallel.
+- R4. If an audit has no rounds left or a task cannot be built soundly, then the system shall send the named tasks back as before.
+- R5. The system shall keep accepted work when it rebases onto the new revision and charge each finding to the tasks that own it.
 <!-- EARS style, numbered so tests/plan can cite them:
 - R1. When <trigger>, the system shall <response>.
 - R2. If <unwanted condition>, then the system shall <response>.

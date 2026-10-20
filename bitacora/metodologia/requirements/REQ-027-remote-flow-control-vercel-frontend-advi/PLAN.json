@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 7,
+  "revision": 8,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -2755,7 +2755,9 @@
       "objective": "Another provider audits security and spec compliance and every confirmed finding is fixed or recorded",
       "repository": "skill",
       "after": [
-        "T17"
+        "T17",
+        "T18.3",
+        "T18.4"
       ],
       "complexity": "high",
       "scope": "small_change",
@@ -3545,6 +3547,423 @@
         "R19"
       ],
       "kind": "test"
+    },
+    {
+      "id": "T18.1",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F1, F2, F3, F4",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F1 (high; owned by T15a): The displayed GitHub sign-in route returns 404; the displayed logout route is also absent. Evidence from the audit: Probe A: GET /api/auth/github and /api/auth/logout -> 404; page.tsx:390/412 versus gateway/server.py:60.\n- F2 (high; owned by T15d): The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused. Evidence from the audit: Probe A: matching Origin and valid fixture session with the web's headers -> 403 forbidden.\n- F3 (high; owned by T13): The gateway forwards the public command schema unchanged to a laptop ledger that requires another format. Evidence from the audit: Probe A: contract-valid pause through both production HTTP handlers -> 400 INVALID_COMMAND. Laptop requires idempotency_key/command/string target/origin/params.\n- F4 (high; owned by T13): The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations. Evidence from the audit: Probe A: POST /api/remote/v1/challenges with valid session, Origin and marker -> 404.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T15a, T15d, T13, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "remote/web/**",
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "F1 (high) is fixed: The displayed GitHub sign-in route returns 404; the displayed logout route is also absent.",
+        "F2 (high) is fixed: The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused.",
+        "F3 (high) is fixed: The gateway forwards the public command schema unchanged to a laptop ledger that requires another format.",
+        "F4 (high) is fixed: The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "F1 (high) is fixed: The displayed GitHub sign-in route returns 404; the displayed logout route is also absent.",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/web && npm run verify",
+          "purpose": "F2 (high) is fixed: The shared web command/challenge sender omits X-Flow-Request and all web mutations are refused.",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "F3 (high) is fixed: The gateway forwards the public command schema unchanged to a laptop ledger that requires another format.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_commands.py",
+          "purpose": "F4 (high) is fixed: The gateway has no authenticated challenge-issuance relay, blocking genuine destructive confirmations.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R15",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.2",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F5, F6, F7, F8",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F5 (high; owned by T4a, T15a, T15b, T15e): Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail. Evidence from the audit: Probe A: real run_summaries projection emits req_id/status/attempt, not required req/state/activeAttempt; bt_planstatus.list_plans emits summary rows only.\n- F6 (high; owned by T12, T15c, T15d, T15f): Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders. Evidence from the audit: Probe A: authenticated gateway GET review, quotas, commands and routes -> 404; laptop quotas/commands -> unconditional 503; UI history is per-page React state.\n- F7 (high; owned by T14b): The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing. Evidence from the audit: Probe B: sendMessage payload has only chat_id/text. test_telegram_bot.py is absent; its discovery command runs zero tests.\n- F8 (high; owned by T6, T14): Production alerts lack several specified event producers and do not establish retry exhaustion before notifying. Evidence from the audit: Probe B: a real attempt_transition failed row produces a no-retries alert without retry facts. Production plan summaries omit decisions; no derivation of completion/round/quota/stall conditions exists in the audited remote path.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.1"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T4a, T15a, T15b, T15e, T12, T15c, T15d, T15f, T14b, T6, T14, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T4a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_api.py",
+        "remote/web/**",
+        "remote/gateway/**",
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "remote-api-contract",
+        "web-app"
+      ],
+      "acceptance_criteria": [
+        "F5 (high) is fixed: Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail.",
+        "F6 (high) is fixed: Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders.",
+        "F7 (high) is fixed: The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing.",
+        "F8 (high) is fixed: Production alerts lack several specified event producers and do not establish retry exhaustion before notifying."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py",
+          "purpose": "F5 (high) is fixed: Production run/plan snapshots use a different dialect from the mobile parser and omit round/decision detail.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_stream.py",
+          "purpose": "F6 (high) is fixed: Required review/quotas/history/routes read paths are not connected; quotas/history remain laptop placeholders.",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_telegram_bot.py",
+          "purpose": "F7 (high) is fixed: The Telegram owner-only bot, safe callbacks, inline buttons and /estado are missing.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "F8 (high) is fixed: Production alerts lack several specified event producers and do not establish retry exhaustion before notifying.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R4",
+        "R5",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.3",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F9, F10",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F9 (high; owned by T6, T7): SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads. Evidence from the audit: Probe A: synthetic SESSION_SECRET assignment remains in 200 snapshot and review payloads. No real credential was inspected or found.\n- F10 (high; owned by T11a): Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled. Evidence from the audit: Probe B: 30 anonymous command requests -> 401, next owner request -> 429; limiter keys socket peer before session check. Probe A: six login starts -> six 302s.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18.2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6, T7, T11a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_events.py",
+        "skill/scripts/tests/test_remote_events.py",
+        "skill/scripts/bt_remote_api.py",
+        "skill/scripts/tests/test_remote_review.py",
+        "remote/gateway/**"
+      ],
+      "shared_resources": [
+        "gateway-package",
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F9 (high) is fixed: SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads.",
+        "F10 (high) is fixed: Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py",
+          "purpose": "F9 (high) is fixed: SESSION_SECRET is omitted from laptop remote redaction and can pass through diagnostic payloads.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd remote/gateway && python -m unittest discover -s tests -p test_guard.py",
+          "purpose": "F10 (high) is fixed: Anonymous requests consume the owner's shared command quota; OAuth starts are not throttled.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R11",
+        "R17",
+        "R2",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.4",
+      "milestone_id": "M5",
+      "title": "Remediate T18 findings F19",
+      "objective": "Fix these confirmed audit findings of T18 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F19 (high; owned by T5, T5a): Task/attempt preconditions resolve run state rather than the actual mutation target. Evidence from the audit: Probe C: failed-task retry against a running run -> STALE_PRECONDITION, zero handler calls. target_state only accepts project/REQ and has no task/attempt state lookup.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, T5a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F19 (high) is fixed: Task/attempt preconditions resolve run state rather than the actual mutation target."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "F19 (high) is fixed: Task/attempt preconditions resolve run state rather than the actual mutation target.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R15",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
     }
   ]
 }
