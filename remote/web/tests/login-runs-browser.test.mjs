@@ -141,7 +141,7 @@ test("OAuth redirect and authenticated runs list render without overflow at 360 
 
     assert.ok(pageState?.text?.includes("REQ-027"), "authenticated page should render the run id");
     assert.ok(pageState.text.includes("En curso"), "authenticated page should render the run state");
-    assert.ok(pageState.text.includes("Última señal de vida"), "authenticated page should label last sign of life");
+    assert.match(pageState.text, /Última señal de vida/i, "authenticated page should label last sign of life");
     assert.match(pageState.text, /2026/, "authenticated page should render the gateway's last-seen timestamp");
     assert.equal(pageState.viewport, 360);
     assert.equal(pageState.width, 360, `page overflowed horizontally at 360 px: ${pageState.width}px`);
