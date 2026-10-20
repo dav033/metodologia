@@ -1,9 +1,50 @@
 ---
 req: REQ-020
-status: approved
+status: launched
 created: 2026-10-20
 ---
 # Plan — Happia chat v2 event advisor that ends in a brief
+
+<!-- bitacora:status:begin -->
+> Bloque generado, no editar a mano. Plan: launched · ejecución: — · hitos 0/4 · tareas 0/17 · generado: 2026-10-20T12:14:59-05:00
+
+**M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 0/7
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T1 | Worktree from origin/main; Supabase pool (`src/lib/asesor/db.ts`), migrations folder `scripts/migrations-asesor/` + runner (`npm run asesor:migrate`), schema: accounts, conversations, messages, attachments, briefs; `npm run asesor:test` script wired into the gate | alta | pendiente | — | — | 0 |
+| T2 | Own auth: scrypt-hashed accounts `user`/`admin`, seed script with generated passwords, `/asesor/login`, signed session cookie, proxy matcher exclusion for `/asesor` + `/api/asesor`, role guard helpers | alta | pendiente | — | — | 0 |
+| T3 | Advisor agent: `EventBrief` schema (R3 fields, event kinds incl. corporate/school), system prompt, tools (save fields, propose summary, approve), progress calculator, streaming route `/api/asesor/conversar` persisting every turn, retry on provider failure; deterministic tests with a fake `ChatPort` | alta | pendiente | — | — | 0 |
+| T4 | Chat UI `/asesor`: guiado components, privacy + test-version notices, progress bar, resume by conversation id in localStorage (transcript reloaded from the server) | alta | pendiente | — | — | 0 |
+| T5 | Brief: summary to approve/correct, stored full brief + vendor version without name/contact/budget, printable one-page view | alta | pendiente | — | — | 0 |
+| T6 | Admin monitor `/asesor/admin`: conversation list (status, progress, last question, 5 s refresh) and read-only detail (transcript, brief); `user` gets 403 | media | pendiente | — | — | 0 |
+| T7 | M1 acceptance: e2e script (login → conversation → approved brief → visible to admin), one real Gemini conversation, `/happie` regression (`npm run happie:test-webhook`), env vars on Vercel + VPS, deploy | alta | pendiente | — | — | 0 |
+
+**M2 — Photos and voice notes (~Fri 6 Nov)** · dificultad alta · 0/3
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T8 | Photo upload from camera/gallery (`capture` + gallery), `preparar-foto`, bytea storage, inline to the model for first look, confirm + likes/dislikes per photo, venue photo flag, photos in brief/admin | alta | pendiente | — | — | 0 |
+| T9 | Voice notes: `BotonVoz`/`useDictado` + `/api/voz/transcribir` for advisor sessions (VOZ_* env from the `voz-decoracion` container), transcript stored as the customer's text | alta | pendiente | — | — | 0 |
+| T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | pendiente | — | — | 0 |
+
+**M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 0/4
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T11 | Happia catalogue daily cache in Postgres (refresh when older than 24 h) + fallback list seeded from the last good read; read-only reuse of `HappiaClient` | alta | pendiente | — | — | 0 |
+| T12 | Directions: editable config of 12 decorations from `biblioteca-sempertex/decoraciones.json` (with photos) + themed items, tool to show them to undecided customers | media | pendiente | — | — | 0 |
+| T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | pendiente | — | — | 0 |
+| T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | pendiente | — | — | 0 |
+
+**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 0/3
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | — | — | 0 |
+| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
+| T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
+<!-- bitacora:status:end -->
 
 ## Approach
 New section **Asesor Happia** (`/asesor`, APIs under `/api/asesor/*`) inside the Pictures Next app, built from
@@ -261,3 +302,4 @@ Deterministic validation: the project plan-json check was run after enrichment a
 - 2026-10-20 Plan drafted after rounds 1–2; Supabase pooler connection verified (prior planning record, not rerun in classification).
 - 2026-10-20 Contract classification added against inspected local code; approved scope and existing status/revision preserved. No approval, freeze, handoff, launch or implementation performed.
 - 2026-10-20 12:14 plan APPROVED (terminal)
+- 2026-10-20 12:14 launched Scheduler supervisor from HQ in `/home/david/dev`
