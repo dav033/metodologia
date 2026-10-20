@@ -117,10 +117,23 @@ class RetryAcrossRevisions(unittest.TestCase):
         self.assertEqual(source.base_ref("T1"), "clean")
         self.assertNotIn("conflict marker", source.notes(SimpleNamespace(task_id="T1", base_ref="clean")))
 
-    def test_a_failed_retry_continues_whatever_the_base(self):
+    def test_a_failed_retry_continues_on_an_unchanged_base_and_is_carried_onto_a_changed_one(self):
+        """REQ-027 T18: an audit retried from its own snapshot after its prerequisites were redone audited a stale tree."""
         source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")
         source._handoff = lambda _task: "oldsnap"
+        source._previous_base = lambda _task: "basesha"
+        source.fallback = lambda _task: "basesha"
+        self.assertEqual(source.base_ref("T1"), "oldsnap")               # nothing changed underneath: continue as it is
         source.fallback = lambda _task: "newbase"
+        source.integrator = SimpleNamespace(carry=lambda task, snap, base=None: ("carriedcommit", ()))
+        self.assertEqual(source.base_ref("T1"), "carriedcommit")
+        note = source.notes(SimpleNamespace(task_id="T1", base_ref="carriedcommit"))
+        self.assertIn("moved onto its prerequisites, which were redone", note)
+        self.assertNotIn("audit notes", note)
+        source.integrator = SimpleNamespace(carry=lambda task, snap, base=None: (None, ()))
+        self.assertEqual(source.base_ref("T1"), "newbase")               # cannot carry: the new base, old work as reference
+        self.assertIn("kept read-only as snapshot oldsnap", source.notes(SimpleNamespace(task_id="T1", base_ref="newbase")))
+        source._previous_base = lambda _task: None                       # base unknown: keep continuing as before
         self.assertEqual(source.base_ref("T1"), "oldsnap")
 
     def test_a_failed_attempt_is_not_a_rework_and_an_operator_cancel_leaves_nothing_to_continue(self):

@@ -255,9 +255,12 @@ class RetryContinuation:
         if snapshot is None:
             earlier = self._earlier_revision_result(task_id)
             return (earlier, "continue", earlier) if earlier else (None, "fresh", None)
-        if not self._reworked(task_id) or self._same_base(task_id, self._previous_base(task_id)):
+        # Any retry, failed or sent back, builds on today's base: continuing a failed attempt's snapshot after its
+        # prerequisites were redone hid their fixes (REQ-027 T18 audited its own stale tree and found the same F1/F2).
+        previous = self._previous_base(task_id)
+        if self._same_base(task_id, previous) or (previous is None and not self._reworked(task_id)):
             return snapshot, "continue", snapshot
-        carried, conflicts = self._carry(task_id, snapshot, self._previous_base(task_id))
+        carried, conflicts = self._carry(task_id, snapshot, previous)
         if carried is None:
             return None, "fresh", snapshot
         return carried, ("resolve" if conflicts else "carried"), snapshot
@@ -274,8 +277,12 @@ class RetryContinuation:
     def notes(self, request):
         base, kind, snapshot = self._plan(request.task_id)
         if base is None:
-            if snapshot is None or not self._reworked(request.task_id):
+            if snapshot is None:
                 return ""
+            if not self._reworked(request.task_id):
+                return ("The prerequisites of this task were redone after your previous attempt, and its work could not be "
+                        f"carried onto them, so you start from their new result. That attempt is kept read-only as "
+                        f"snapshot {snapshot} (inspect it with `git show {snapshot}`): reuse what is still correct.")
             return ("An independent audit sent this task's earlier work back, and it overlaps the redone prerequisites it "
                     f"builds on, so you start from their new result. The earlier result is kept read-only as snapshot "
                     f"{snapshot} (inspect it with `git show {snapshot}`): reuse what is still correct and keep your "
@@ -291,6 +298,11 @@ class RetryContinuation:
                     "intents, never drop either side's behaviour, and leave no marker behind (a result with markers is "
                     "rejected). Then recheck the complete frozen acceptance and verification instructions and run the "
                     "tests of both sides. Do not rewrite or delete working code.")
+        if kind == "carried" and not self._reworked(request.task_id):
+            return (f"Your tree is this task's previous attempt ({snapshot}) moved onto its prerequisites, which were redone "
+                    "since: their new work is in your tree and must be kept. The previous attempt failed or was rejected "
+                    "and its output is unaccepted: recheck the complete frozen acceptance and verification instructions "
+                    "against this tree. No private conversation or agent reasoning is transferred.")
         if kind in ("directed", "carried") or (kind == "continue" and (self._handoff(request.task_id) is None)):
             where = "chosen by the owner" if kind == "directed" else \
                 "moved onto the prerequisites that were redone since" if kind == "carried" else "accepted earlier"
