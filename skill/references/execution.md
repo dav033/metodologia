@@ -117,7 +117,15 @@ the latest frozen plan revision). When a run cannot go on alone (a blocked task,
 recommendation; some are marked «nadie puede responder por ti»: integrity anomalies, human overrides of the verifier and
 reasons the system does not know) and `scheduler-op REQ-NNN decide <request> <option> [--reason …]` answers one. The
 watchdog notifies each new request once and keeps the run waiting for the answer; no timeout ever answers for the owner.
-`retry_with_note` puts the owner's text in the task's next prompt. Cancelling a scheduler plan (web "Planes" view,
+`retry_with_note` puts the owner's text in the task's next prompt. Every request carries a **diagnosis** (D-097,
+`bt_block_diagnosis`): what failed, where it comes from and the steps to fix it, read from the run's evidence (start
+rejections, M6 failure notes, every attempt's failure) rather than the reason code, which is often only the last guard
+that tripped. Known causes: a clash between tasks (offers `rework_conflict`: redo the task built on a replaced result),
+a check M6 cannot run (git in a sandbox without .git, a command form it refuses), read-only node_modules, a missing
+module or variable, a service down, quota, a cancellation, the same failure repeated. The watchdog also asks a cheap
+model to diagnose each new request (`bt_block_agent`, config `diagnosis.profile|model|effort`, default Claude Haiku;
+`scheduler-op REQ-NNN diagnose <request>` by hand); its answer is cached in `RUN.diagnoses/` and both show on the card
+in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. Cancelling a scheduler plan (web "Planes" view,
 confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
 router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
 

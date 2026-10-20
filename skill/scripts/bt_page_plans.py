@@ -10,6 +10,7 @@ from html import escape as e
 from urllib.parse import quote
 
 import bt_page_attempts as attempts_
+import bt_page_diagnosis as dx
 from bt_pages import layout
 
 LEVELS = ("low", "medium", "high", "extreme")
@@ -79,7 +80,7 @@ CSS = """<style>
 .pl details{margin-top:4px;font-size:13px}.pl details summary{cursor:pointer;color:var(--accent)}
 .pl table.att{margin-top:6px;white-space:nowrap}.pl table.att td,.pl table.att th{padding:3px 12px 3px 0;font-size:12px}.pl .tscroll{overflow-x:auto}
 .pl .amends{display:flex;gap:6px 14px;flex-wrap:wrap}.pl .amend{font:400 12px var(--mono);color:var(--warn)}.pl .amend s{color:var(--muted)}.pl details.evo{margin:0 0 18px}.pl details.evo ol{margin:8px 0 0 18px;padding:0;font:400 12.5px var(--mono);color:var(--muted)}
-.pl .mchip{font:500 12px var(--mono);color:var(--lav)}.pl .muted{color:var(--muted)}.pl .working{color:var(--info)}.pl .working .dot{display:inline-block;margin-right:6px;vertical-align:middle}
+.pl .mchip{font:500 12px var(--mono);color:var(--lav)}.pl .muted{color:var(--muted)}.pl .blocked{color:var(--bad);margin-top:6px}.pl .blocked a{color:var(--bad);text-decoration:underline}.pl .working{color:var(--info)}.pl .working .dot{display:inline-block;margin-right:6px;vertical-align:middle}
 .pl .phead{margin:0 0 28px}.pl .phead h1{margin:0 0 14px}.pl .phead .bar{margin-top:16px}
 .pl .back{display:inline-block;margin:0 0 16px;font-size:13.5px}
 .pl .flash-new{animation:plflash 1.6s ease-out}
@@ -333,8 +334,9 @@ def detail_fragment(s: dict) -> str:
             f'<div class="meta">{summ["tasks_done"]}/{summ["tasks_total"]} tareas · '
             f'{summ["milestones_done"]}/{summ["milestones_total"]} hitos</div></div>')
     parts = [head, _timeline(s)]
+    asks = {r["task"]: r for r in s.get("decisions") or [] if r.get("task")}
     for m in s["milestones"]:
-        parts.append(f'<div class="ms">{_milestone_head(m)}{"".join(_task(t) for t in m["tasks"])}</div>')
+        parts.append(f'<div class="ms">{_milestone_head(m)}{"".join(_task(t, asks) for t in m["tasks"])}</div>')
     return "".join(parts)
 
 
@@ -435,7 +437,20 @@ def _detail(t: dict) -> str:
     return objective + warn + body
 
 
-def _task(t: dict) -> str:
+def _blocked_note(t: dict, asks: dict) -> str:
+    """On a blocked task row: that it waits for the owner, the first line of the error and where to answer."""
+    r = asks.get(t["id"])
+    if t.get("state") != "blocked" and not (r and r.get("source") == "review"):
+        return ""
+    if not r:
+        return '<div class="meta blocked"><b>Bloqueada.</b> El sistema no tiene aún una tarjeta para esta tarea.</div>'
+    first = next((x for x in (r.get("error") or "").splitlines() if x.strip()), "")
+    return (f'<div class="meta blocked"><b>Espera por ti:</b> {e(dx.headline(r) or r.get("needs") or r["what"])}'
+            f'{f" <br>Error: <code>{e(first[:240])}</code>" if first else ""}'
+            f' <a href="#d-{e(r["id"])}">Ver el origen y cómo solucionarlo</a></div>')
+
+
+def _task(t: dict, asks: dict | None = None) -> str:
     chips = "".join(f'<span class="chip">tras {e(a)}</span>' for a in t["after"])
     assigned = attempts_.assigned_line(t.get("route"))
     current = f'<div class="meta">{assigned}</div>' if assigned else ""
@@ -445,7 +460,7 @@ def _task(t: dict) -> str:
             f'<div><div class="tt">{e(t["title"] or "")}</div>{_detail(t)}'
             f'<div class="tl" style="margin-top:6px">{level_badge(t["complexity"]) or _unclassified(t)}'
             f'{_pill("bad", "sin detalle") if _missing_detail(t) else ""}'
-            f'<span class="chip">{t["attempts"]} intentos</span>{chips}</div>{_amended(t)}{current}{working}'
+            f'<span class="chip">{t["attempts"]} intentos</span>{chips}</div>{_amended(t)}{current}{working}{_blocked_note(t, asks or {})}'
             f'{attempts_.attempts_table(t["history"])}</div>{state_badge(t["state"])}</div>')
 
 
@@ -485,12 +500,13 @@ def _decisions(s: dict, base: str, token: str) -> str:
                    f'<a href="/p/{quote(project)}/req/{quote(req)}?tab=rounds">Responder</a></div>')
     for r in s.get("decisions") or []:
         flag = ' <span class="pill bad">nadie puede responder por ti</span>' if r.get("unskippable") else ""
-        ev = "".join(f"<li>{e(x)}</li>" for x in (r.get("evidence") or [])[:8])
+        prefill = dx.note_for(r)
         opts = []
         for o in r.get("options") or []:
             star = " (recomendada)" if o["id"] == r.get("recommended") else ""
-            needs = o["id"] in ("retry_with_note", "review_pass", "review_fail")
-            note = (f'<textarea name="reason" required placeholder="Escribe tu indicación o razón"></textarea>'
+            needs = o["id"] in ("retry_with_note", "review_pass", "review_fail", "rework_findings")
+            text = prefill if o["id"] == "retry_with_note" else ""
+            note = (f'<textarea name="reason" required placeholder="Escribe tu indicación o razón">{e(text)}</textarea>'
                     if needs else "")
             cls = "primary" if o["id"] == r.get("recommended") else ""
             opts.append(f'<form method="post" action="{base}/decide" class="opt">'
@@ -499,11 +515,22 @@ def _decisions(s: dict, base: str, token: str) -> str:
                         f'<input type="hidden" name="option" value="{e(o["id"])}">{note}'
                         f'<button type="submit" class="{cls}">{e(o["label"])}{star}</button>'
                         f'<p class="muted">{e(o["consequence"])}</p></form>')
-        out.append(f'<div class="ask" id="d-{e(r["id"])}"><h3>{e(r["title"])}{flag}</h3><p>{e(r["what"])}</p>'
-                   f'<ul class="muted">{ev}</ul>{"".join(opts)}</div>')
+        again = (r.get("agent") or {}).get("state") == "done"
+        ask = (f'<form method="post" action="{base}/diagnose" style="display:inline">'
+               f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="request" value="{e(r["id"])}">'
+               f'<button type="submit" class="dx-ask">{"Pedir otra vez al agente" if again else "Pedir diagnóstico al agente"}</button></form>')
+        first = [f for f, o in zip(opts, r.get("options") or []) if o["id"] == r.get("recommended")]
+        rest = [f for f, o in zip(opts, r.get("options") or []) if o["id"] != r.get("recommended")]
+        more = f'<details class="dx-more"><summary>Otras opciones ({len(rest)})</summary>{"".join(rest)}</details>' if rest else ""
+        code = f' <span class="muted" style="font-weight:400;font-size:12px">· {e(r.get("reason", ""))}</span>' if r.get("reason") else ""
+        out.append(f'<div class="ask" id="d-{e(r["id"])}"><h3>{e(r["title"].split(":")[0])}{code}{flag}</h3>{dx.html(r, ask)}'
+                   f'{"".join(first)}{more}</div>')
     if not out:
         return ""
-    return f'<h2 id="asks">Esperando tu decisión</h2><div class="asks">{"".join(out)}</div>'
+    waiting = any((r.get("agent") or {}).get("state") == "running" for r in s.get("decisions") or [])
+    reload = ('<script>setTimeout(function(){var a=document.activeElement;'
+              'if(!a||a.tagName!=="TEXTAREA")location.reload();},8000)</script>') if waiting else ""
+    return f'<h2 id="asks">Esperando tu decisión</h2><div class="asks">{"".join(out)}</div>{reload}'
 
 
 def _run_form(s: dict, base: str, token: str) -> str:

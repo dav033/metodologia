@@ -173,6 +173,26 @@ REQUEST = {"id": "T3:2", "source": "task", "task": "T3", "attempt": "att-0002", 
                        {"id": "retry_with_note", "label": "Reintentar con una indicación tuya", "consequence": "Con tu nota."}]}
 
 
+class BlockedRows(unittest.TestCase):
+    def test_a_blocked_task_row_says_it_waits_for_the_owner_with_the_error_and_a_link_to_the_card(self):
+        import bt_page_plans as pages
+        ask = dict(REQUEST, needs="Decidir cómo seguir.", error="check failed\nCannot find module 'x'", you_can=["Reintenta."])
+        html = pages._blocked_note({"id": "T3", "state": "blocked"}, {"T3": ask})
+        for needle in ("Espera por ti", "Decidir cómo seguir.", "check failed", 'href="#d-T3:2"'):
+            self.assertIn(needle, html)
+        self.assertNotIn("Cannot find module", html)                      # only the first line of the error is on the row
+        self.assertIn("no tiene aún una tarjeta", pages._blocked_note({"id": "T4", "state": "blocked"}, {}))
+        self.assertEqual(pages._blocked_note({"id": "T5", "state": "running"}, {"T3": ask}), "")
+
+    def test_the_card_on_the_plan_page_shows_needs_error_and_actions(self):
+        import bt_page_plans as pages
+        ask = dict(REQUEST, needs="Decidir cómo seguir.", error="boom", you_can=["Reintenta."])
+        html = pages._decisions({"project": "demo", "req_id": "REQ-001", "decisions": [ask]}, "/plans/demo/REQ-001", "tok")
+        for needle in ("De dónde viene", "Decidir cómo seguir.", "boom", "Cómo solucionarlo", "Reintenta.",
+                       "/plans/demo/REQ-001/diagnose", "Pedir diagnóstico al agente"):
+            self.assertIn(needle, html)
+
+
 class DecisionTests(PlansBase):
     def scheduler_req(self, status="launched"):
         rdir = self.req(status=status)

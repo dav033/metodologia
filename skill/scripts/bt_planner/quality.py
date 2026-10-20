@@ -205,20 +205,25 @@ def file_hotspots(plan: dict) -> list[str]:
 
 _LEADING_CD = re.compile(r"^\s*cd\s+\S+\s*&&\s*")
 _SHELL_SYNTAX = re.compile(r"&&|\|\||[;|<>`$]")
+_GIT = re.compile(r"^\s*(?:[A-Za-z_][A-Za-z0-9_]*=\S*\s+)*git\s")
 
 
 def chained_verifications(plan: dict) -> list[str]:
     """Command checks written as a shell chain (`a && b`, pipes, redirects). The verifier runs one program per check
-    and rejects shell syntax (only a leading `cd <dir> &&` is allowed), so such a check can never pass: write one
+    and rejects shell syntax (only a leading `cd <dir> &&` and `NAME=value` assignments are allowed), so such a check can never pass: write one
     verification per command."""
     out = []
     for task_id, task in _plan_tasks(plan):
         for index, item in enumerate(task.get("verification") if isinstance(task.get("verification"), list) else []):
             if not isinstance(item, dict) or item.get("type") != "command" or not isinstance(item.get("value"), str):
                 continue
-            if _SHELL_SYNTAX.search(_LEADING_CD.sub("", item["value"], count=1)):
+            command = _LEADING_CD.sub("", item["value"], count=1)
+            if _SHELL_SYNTAX.search(command):
                 out.append(f"{task_id}.verification[{index}]: `{item['value'][:90]}` uses shell syntax (`&&`, `|`, `;`, "
                            "redirects) and the verifier rejects it; split it into one verification per command")
+            elif _GIT.match(command):
+                out.append(f"{task_id}.verification[{index}]: `{item['value'][:90]}` runs git, and the verifier's copy "
+                           "has no .git, so it can never pass; make it a manual check")
     return out
 
 

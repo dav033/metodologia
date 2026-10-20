@@ -489,8 +489,11 @@ class Coherence(unittest.TestCase):
         for chained in ("npm run lint && npm run build", "pytest -q | tee out.txt", "npm test; npm run e2e",
                         "cd app && npm test && npm run lint"):
             self.assertTrue(any("shell syntax" in w for w in check(with_command(chained)).warnings), chained)
-        for single in ("pytest -q", "cd app && npm test", "npx tsx run.ts --live --milestone M1"):
+        for single in ("pytest -q", "cd app && npm test", "npx tsx run.ts --live --milestone M1", "DB_URL=x npm test"):
             self.assertFalse(any("shell syntax" in w for w in check(with_command(single)).warnings), single)
+        for git in ("git merge-base --is-ancestor origin/main HEAD", "cd app && git diff --exit-code"):
+            self.assertTrue(any("runs git" in w for w in check(with_command(git)).warnings), git)
+        self.assertFalse(any("runs git" in w for w in check(with_command("npm run digit")).warnings))
 
     def test_path_overlap_rules(self):
         yes = [("src/**", "src/a.py"), ("src/auth/**", "src/auth/x/y.py"), ("**", "docs/a.md"), ("a/b.py", "a/b.py"),

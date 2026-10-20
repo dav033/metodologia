@@ -166,7 +166,8 @@ class Watch:
     def _announce(self) -> None:
         import bt_scheduler_decisions
 
-        bt_scheduler_decisions.announce(self.project, self.req, self.rdir)
+        bt_scheduler_decisions.announce(self.project, self.req, self.rdir,
+                                        diagnose=bt_scheduler_decisions.auto_diagnoser(self.project, self.req, self.rdir))
 
     def _wait(self, owner) -> int:
         while True:

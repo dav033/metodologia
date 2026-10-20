@@ -53,6 +53,21 @@ class VerificationPolicyTests(unittest.TestCase):
                     VerifyRequest.from_mapping(self.raw), root, QualityPolicy()
                 )
 
+    def test_a_leading_variable_assignment_runs_through_env_without_a_shell(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "web").mkdir()
+            self.raw["verification"][0]["value"] = (
+                "cd web && DB_URL=postgresql://u:p@127.0.0.1:5432/db npx tsx --test a.ts"
+            )
+            check = compile_verification(VerifyRequest.from_mapping(self.raw), root, QualityPolicy())[0]
+            self.assertEqual(check.argv, ("env", "DB_URL=postgresql://u:p@127.0.0.1:5432/db", "npx", "tsx", "--test", "a.ts"))
+            self.assertEqual(check.cwd, "web")
+            for value in ("PATH=/tmp npm test", "LD_PRELOAD=x.so npm test", "DB_URL=x"):
+                self.raw["verification"][0]["value"] = value
+                with self.assertRaises(ValueError):
+                    compile_verification(VerifyRequest.from_mapping(self.raw), root, QualityPolicy())
+
     def test_refuses_working_directories_that_escape_the_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

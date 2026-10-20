@@ -280,6 +280,7 @@ def _parse_command(command: str, root: Path, production_allowed: bool = False) -
             )
         cwd = _contained_cwd(root, tokens[1])
         tokens = tokens[3:]
+    tokens = _leading_assignments(tokens)
     if not tokens or any(token in SHELL_OPERATORS for token in tokens):
         raise QualityError(
             "CHECK_UNSUPPORTED", "command contains unsupported shell operators"
@@ -304,6 +305,22 @@ def _parse_command(command: str, root: Path, production_allowed: bool = False) -
         )
     _validate_executable(tokens[0], root, cwd)
     return tuple(tokens), cwd
+
+
+def _leading_assignments(tokens: list[str]) -> list[str]:
+    """`NAME=value cmd …` (a variable for one command, as a shell reads it) becomes `env NAME=value cmd …`: argv
+    without a shell. Names the sandbox owns (PATH, HOME, loader and git variables) are refused."""
+    count = 0
+    while count < len(tokens) and ENV_NAME.fullmatch(tokens[count].partition("=")[0]) and "=" in tokens[count]:
+        count += 1
+    if not count:
+        return tokens
+    names = [token.split("=", 1)[0] for token in tokens[:count]]
+    if any(name in FORBIDDEN_ENV for name in names):
+        raise QualityError("CHECK_UNSUPPORTED", "command assigns a variable the sandbox owns")
+    if count == len(tokens):
+        raise QualityError("CHECK_UNSUPPORTED", "command only assigns variables")
+    return ["env", *tokens]
 
 
 def _requires_operator_review(tokens: list[str]) -> bool:

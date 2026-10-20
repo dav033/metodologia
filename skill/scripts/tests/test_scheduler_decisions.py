@@ -84,6 +84,35 @@ class Requests(Base):
         self.assertEqual(decisions.render([], "REQ-001"), "Ninguna decisión pendiente.")
 
 
+class WhatTheOwnerSees(Base):
+    """A stop says what it needs from the owner, what the owner can do and the error itself."""
+
+    def test_a_blocked_task_shows_its_error_what_it_needs_and_what_can_be_done(self):
+        decisions.write_verify_notes(self.rdir, "T1", "check `npm test` failed (exit 1): Cannot find module 'x'")
+        [request] = decisions.open_requests(self.rdir)
+        self.assertIn("Cannot find module", request["error"])
+        self.assertIn("verification_rejected", request["error"])
+        self.assertTrue(request["needs"])
+        self.assertTrue(any("entorno" in item for item in request["you_can"]))
+        text = decisions.render([request], "REQ-001")
+        for needle in ("Qué necesita de ti:", "Error:", "Cannot find module", "Diagnóstico (reglas): [Dependencias]",
+                       "Falta la dependencia x", "1. Reintenta con la indicación"):
+            self.assertIn(needle, text)
+        self.assertEqual(request["recommended"], "retry_with_note")        # the rule knows the cause: it picks the note
+
+    def test_every_known_reason_has_guidance_and_an_unknown_one_says_to_look(self):
+        self.assertEqual(set(decisions.REASONS) - set(decisions.GUIDE), set())
+        self.doc = doc(reason="somebody wrote this")
+        [request] = decisions.open_requests(self.rdir)
+        self.assertIn("somebody wrote this", request["error"])
+        self.assertIn("no reconoce", request["needs"] + request["what"])
+
+    def test_a_quota_stop_is_not_presented_as_a_code_defect(self):
+        self.doc = doc(reason="m5:quota_reset_unknown")
+        [request] = decisions.open_requests(self.rdir)
+        self.assertIn("No es un fallo del código", request["needs"])
+
+
 class AgainstARealRun(unittest.TestCase):
     """The request is read from the state document a real core wrote, not from a hand-made dictionary."""
 
@@ -136,6 +165,30 @@ class Reviews(Base):
         self.assertEqual([o["id"] for o in request["options"]], ["review_fail", "review_pass", "stop"])
         self.assertEqual(request["recommended"], "review_fail")
         self.assertTrue(any("SNAPSHOT_INVALID" in line for line in request["evidence"]))
+
+    def test_a_review_says_whether_the_verifier_broke_or_a_person_must_check_by_hand(self):
+        def ask(checks, issues):
+            path = Path(self.temp.name) / "m6.sqlite3"
+            path.unlink(missing_ok=True)
+            conn = sqlite3.connect(path)
+            conn.execute("CREATE TABLE requests (idempotency_key TEXT, request_json TEXT, result_json TEXT)")
+            conn.execute("CREATE TABLE reviews (request_key TEXT, state TEXT)")
+            conn.execute("INSERT INTO requests VALUES ('k1', ?, ?)", (json.dumps({"task_id": "T9", "attempt_id": "att-9"}),
+                                                                      json.dumps({"checks": checks, "issues": issues})))
+            conn.execute("INSERT INTO reviews VALUES ('k1', 'open')")
+            conn.commit()
+            conn.close()
+            self.doc = {"revision": 1, "tasks": {}, "attempts": {"att-9": {"id": "att-9", "state": "verifying"}}}
+            with patch.object(bt_run_stores, "paths", return_value={"m6": path}):
+                return decisions.open_requests(self.rdir)[0]
+
+        infra = ask([{"command": "npm test", "status": "unknown", "issue_code": "SANDBOX_UNAVAILABLE"}],
+                    [{"code": "SANDBOX_UNAVAILABLE", "detail": "no sandbox"}])
+        self.assertIn("no es un fallo de la tarea", infra["needs"])
+        self.assertIn("No apruebes a mano", " ".join(infra["you_can"]))
+        manual = ask([{"command": "Use the advisor on a phone", "status": "unknown", "issue_code": "CHECK_MANUAL"}], [])
+        self.assertIn("a mano", manual["needs"])
+        self.assertTrue(any(line.startswith("Comprobar a mano: Use the advisor on a phone") for line in manual["evidence"]))
 
     def test_a_review_of_an_attempt_that_moved_on_asks_nobody(self):
         path = self.make_store("cancelled")

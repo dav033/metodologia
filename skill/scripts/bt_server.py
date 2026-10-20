@@ -181,6 +181,13 @@ class Handler(BaseHTTPRequestHandler):
             except api.PlanError as exc:
                 return self.send(json.dumps({"error": str(exc)}), 409, "application/json; charset=utf-8")
             return self.send(json.dumps({"message": message}), 200, "application/json; charset=utf-8")
+        if parts == ["api", "flow", "diagnose"]:
+            import bt_plans_api as api
+            try:
+                message = api.diagnose(ROOT, form.get("project", ""), form.get("req", ""), form.get("request", ""))
+            except api.PlanError as exc:
+                return self.send(json.dumps({"error": str(exc)}), 409, "application/json; charset=utf-8")
+            return self.send(json.dumps({"message": message}), 202, "application/json; charset=utf-8")
         if parts and parts[0] == "plans":
             return self.plans_post(parts, form)
         if len(parts) != 5 or parts[0] != "p" or parts[2] != "req":
@@ -271,6 +278,7 @@ class Handler(BaseHTTPRequestHandler):
         actions = {"run": lambda p, r: self.run_plan(api, p, r, form.get("expected", "")),
                    "decide": lambda p, r: api.decide(ROOT, p, r, form.get("request", ""), form.get("option", ""),
                                                      form.get("reason", "")),
+                   "diagnose": lambda p, r: api.diagnose(ROOT, p, r, form.get("request", "")),
                    "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
                    "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
         try:

@@ -142,5 +142,24 @@ class M4SummaryTests(unittest.TestCase):
                 self.assertEqual(first["A-1"]["tokens_total"], 50)                  # callers never share the totals
 
 
+class ManualClosure(unittest.TestCase):
+    def test_an_attempt_closed_by_hand_says_who_and_why_not_only_what_the_executor_saw(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "m1.sqlite3"
+            conn = sqlite3.connect(path)
+            conn.execute("CREATE TABLE audit (seq INTEGER, kind TEXT, attempt_id TEXT, detail TEXT)")
+            conn.execute("INSERT INTO audit VALUES (1, 'attempt_resolved_manually', 'A-1', ?)",
+                         (json.dumps({"by": "operator", "outcome": "cancelled", "reason": "wrong base"}),))
+            conn.execute("INSERT INTO audit VALUES (2, 'task_transition', 'A-2', '{}')")
+            conn.commit()
+            conn.close()
+            found = facts.manual_resolutions(path)
+            self.assertEqual(found, {"A-1": {"by": "operator", "outcome": "cancelled", "reason": "wrong base"}})
+            self.assertEqual(facts.resolution_text(found["A-1"]), "cancelled by operator: wrong base")
+            self.assertEqual(facts.resolution_text(None), "")
+            self.assertEqual(facts.manual_resolutions(Path(temp) / "absent.sqlite3"), {})
+            self.assertEqual(facts.manual_resolutions(None), {})
+
+
 if __name__ == "__main__":
     unittest.main()

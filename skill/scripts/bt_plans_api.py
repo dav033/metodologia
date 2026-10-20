@@ -76,10 +76,15 @@ def open_decisions(rdir: Path) -> list[dict[str, Any]]:
     if not (rdir / scheduler_.PROJECTION).is_file():
         return []
     try:
+        import bt_page_diagnosis
         import bt_scheduler_decisions
-        return bt_scheduler_decisions.open_requests(rdir)
+        requests = bt_scheduler_decisions.open_requests(rdir)
     except Exception:  # noqa: BLE001 - the plan page must render even when the run state cannot be read
         return []
+    for r in requests:          # /flow shows the same panel as the plan page and adds its own forms
+        r["diagnosis_html"] = bt_page_diagnosis.html(r)
+        r["note_prefill"] = bt_page_diagnosis.note_for(r)
+    return requests
 
 
 def open_rounds(rdir: Path) -> list[int]:
@@ -106,6 +111,20 @@ def decide(root: Path, project: str, req: str, request_id: str, option: str, rea
     except scheduler_.core.SchedulerError as exc:
         raise PlanError(str(exc)) from exc
     return f"Decisión {request_id} → {option}: " + "; ".join(lines)
+
+
+def diagnose(root: Path, project: str, req: str, request_id: str) -> str:
+    """Ask the diagnosing agent (again) about one open request; it answers in the background."""
+    import bt_block_agent
+    rdir = req_dir(root, project, req)
+    if request_id not in {r["id"] for r in open_decisions(rdir)}:
+        raise PlanError(f"No hay una decisión abierta {request_id}. Recarga la página.")
+    if (bt_block_agent.cached(rdir, request_id) or {}).get("state") == "running":
+        return f"El agente ya está diagnosticando {request_id}."
+    bt_block_agent.forget(rdir, request_id)
+    if not bt_block_agent.spawn(project, req, rdir, request_id):
+        raise PlanError("No se pudo lanzar el agente de diagnóstico.")
+    return f"El agente está diagnosticando {request_id}; el resultado aparece en la tarjeta en un minuto o dos."
 
 
 # ---------------------------------------------------------------- trash

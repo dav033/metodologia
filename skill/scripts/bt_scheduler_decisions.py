@@ -61,6 +61,41 @@ REASONS = {
 }
 
 
+# What each kind of stop needs from the owner and what the owner can do about it. The error itself is read from the run.
+_TRANSIENT = ("No es un fallo del código: la tarea espera tu decisión de volver a intentarlo.",
+              ["Reintenta: casi siempre basta.",
+               "Si el motivo es la cuota de un agente, mira `globalusage` y reintenta cuando se renueve."])
+_CODE = ("Decidir cómo seguir: leer el error de abajo y reintentar, con una indicación tuya o cambiando el plan.",
+         ["Si el error es del entorno (una variable que falta, un servicio caído, dependencias, un permiso), arréglalo y reintenta.",
+          "Si es del código, reintenta con una indicación (`retry_with_note`) que diga qué cambiar.",
+          "Si el plan está mal planteado, corrígelo (nueva revisión) y pasa el run a ella (`revise`)."])
+_INTEGRITY = ("Que una persona mire primero: la evidencia del intento no es fiable y nadie responde por ti.",
+              ["Mira el estado del run con `scheduler-op status` y el trabajo del intento antes de decidir.",
+               "Si no hay nada raro, reintenta."])
+GUIDE = {
+    "attempts_exhausted": _CODE, "timeout_repeated": _CODE, "same_cause_limit": _CODE, "decision_limit": _CODE,
+    "permanent_or_unknown_cause": _CODE,
+    "rework_limit": ("Decidir si la auditoría vuelve a mirar el árbol actual, con una indicación tuya si quieres.",
+                     ["Reintenta para que la auditoría revise el árbol de ahora (los arreglos previos ya están integrados).",
+                      "Con `retry_with_note` dile qué hallazgos priorizar."]),
+}
+for _code in ("handoff_missing", "transience_unconfirmed", "quota_reset_unknown", "wait_limit", "wait_window_exceeded",
+              "elapsed_limit", "manual_cancel", "stale_or_cancelled"):
+    GUIDE[_code] = _TRANSIENT
+for _code in ("identity_unverified", "execution_unsettled", "evidence_from_future", "evidence_stale", "evidence_insufficient",
+              "cause_state_mismatch", "verification_evidence_missing"):
+    GUIDE[_code] = _INTEGRITY
+UNKNOWN_GUIDE = ("Mirar el motivo de abajo: el sistema no lo reconoce y no sabe cómo seguir solo.",
+                 ["Reintenta con una indicación tuya si sabes qué pasó.", "Si no, detén el run y revisa el intento."])
+INFRA_ISSUES = ("SANDBOX_UNAVAILABLE", "RUNNER_BUSY", "CHECK_TIMEOUT")
+MAX_ERROR = 1500
+
+
+def _clip(text: str, limit: int = MAX_ERROR) -> str:
+    text = (text or "").strip()
+    return text if len(text) <= limit else text[:limit].rstrip() + " …"
+
+
 def answers_path(rdir: Path) -> Path:
     return Path(rdir) / ANSWERS
 
@@ -166,6 +201,20 @@ def _newer_revision(rdir: Path, current: int) -> bool:
         return False
 
 
+def _manual_closure(rdir: Path, attempt_id: str) -> str:
+    """Who ended the attempt by hand and why («cancelled by operator: wrong base»), or ''."""
+    import bt_attempt_facts
+    import bt_run_stores
+
+    if not attempt_id:
+        return ""
+    try:
+        m1 = bt_run_stores.paths(rdir).get("m1")
+    except Exception:  # noqa: BLE001 - explaining a stop never stops the explanation
+        return ""
+    return bt_attempt_facts.resolution_text(bt_attempt_facts.manual_resolutions(m1).get(attempt_id))
+
+
 def _blocked(doc: dict, rdir: Path) -> list[dict]:
     out = []
     for task, rec in doc.get("tasks", {}).items():
@@ -181,7 +230,13 @@ def _blocked(doc: dict, rdir: Path) -> list[dict]:
         if _newer_revision(rdir, int(doc.get("revision", 0))):
             options.append(REVISE)
         options.append(STOP)
+        needs, you_can = known and GUIDE.get(code) or UNKNOWN_GUIDE
+        closed = _manual_closure(rdir, last.get("id", ""))
+        error = _clip("\n".join(x for x in (verify_notes(rdir, task), f"Cerrado a mano: {closed}" if closed else "",
+                                              f"Último fallo: {last.get('failure')}" if last.get("failure") else "",
+                                              f"Motivo del bloqueo: {rec.get('reason', '')}" if not known else "") if x))
         out.append({
+            "needs": needs, "you_can": list(you_can), "error": error,
             "id": f"{task}:{len(attempts)}", "source": "task", "task": task, "attempt": last.get("id", ""),
             "title": f"{task} bloqueada: {code or 'sin razón'}", "what": what, "reason": rec.get("reason", ""),
             "evidence": [e for e in (f"intentos: {len(attempts)}", f"último fallo: {last.get('failure')}" if last.get("failure") else "",
@@ -210,27 +265,127 @@ def _reviews(rdir: Path, doc: dict) -> list[dict]:
             request, result = json.loads(row["request_json"]), json.loads(row["result_json"] or "{}")
         except ValueError:
             continue
-        checks = [f"{c.get('command', '?')[:90]} → {c.get('status')}" + (f" ({c['issue_code']})" if c.get("issue_code") else "")
+        checks = [(f"Comprobar a mano: {c.get('command', '?')[:300]}" if c.get("issue_code") == "CHECK_MANUAL" else
+                   f"{c.get('command', '?')[:90]} → {c.get('status')}" + (f" ({c['issue_code']})" if c.get("issue_code") else ""))
                   for c in result.get("checks", [])]
         issues = [f"{i.get('code')}: {i.get('detail')}" for i in result.get("issues", [])]
+        criteria = [f"criterio {str(c.get('status', '?')).upper()}: {str(c.get('criterion', ''))[:160]}"
+                    for c in result.get("criteria", [])]
         if doc.get("attempts", {}).get(request.get("attempt_id"), {}).get("state") not in ("verifying", "uncertain"):
             continue          # the attempt moved on (cancelled, rebased away): nobody is waiting for this review
+        codes = {c.get("issue_code") for c in result.get("checks", [])} | {i.get("code") for i in result.get("issues", [])}
+        if codes & set(INFRA_ISSUES):
+            needs = "Rechazar para que la tarea se reintente: el verificador no pudo comprobar nada, no es un fallo de la tarea."
+            you_can = ["Rechaza (`review_fail`) con la razón; el sistema reintenta en un entorno sano.",
+                       "No apruebes a mano: nada se comprobó."]
+        elif "CHECK_MANUAL" in codes:
+            needs = "Comprobar a mano lo que dicen los criterios manuales y responder si se cumple."
+            you_can = ["Haz la comprobación descrita abajo (por ejemplo en el teléfono) y aprueba (`review_pass`, con tu razón) si se cumple.",
+                       "Si no se cumple, rechaza (`review_fail`) y di qué falló."]
+        else:
+            needs = "Decidir si los checks que no dieron veredicto bastan para aceptar la tarea."
+            you_can = ["Mira los checks de abajo: si fallaron por el entorno, rechaza para reintentar.",
+                       "Aprueba a mano solo si tú mismo comprobaste lo que ellos no pudieron."]
         out.append({
+            "needs": needs, "you_can": you_can, "error": _clip("\n".join(issues)),
             "id": row["request_key"], "source": "review", "task": request.get("task_id", ""),
             "attempt": request.get("attempt_id", ""), "title": f"{request.get('task_id', '?')}: el verificador pide una persona",
             "what": "Las comprobaciones no pudieron dar un veredicto y el verificador espera que decida una persona.",
-            "reason": "needs_review", "evidence": issues + checks, "options": [FAIL, PASS, STOP],
+            "reason": "needs_review", "evidence": issues + criteria + checks, "options": [FAIL, PASS, STOP],
             "recommended": "review_fail", "unskippable": True})
     return out
 
 
+def _plan(rdir: Path):
+    try:
+        return adapter.approved_plan(rdir)
+    except Exception:  # noqa: BLE001 - without the plan a diagnosis just knows less
+        return None
+
+
+def _context(rdir: Path, doc: dict, request: dict) -> dict:
+    """The evidence the rules and the agent read for one request."""
+    attempts = doc.get("tasks", {}).get(request["task"], {}).get("attempts", [])
+    task = request["source"] == "task"
+    return {"verify": verify_notes(rdir, request["task"]),
+            "failures": [doc.get("attempts", {}).get(a, {}).get("failure", "") for a in attempts],
+            "closed": _manual_closure(rdir, request.get("attempt", "")) if task else "",
+            "refused": _refused_rework(rdir, request.get("attempt", "")) if task else {}}
+
+
+def _refused_rework(rdir: Path, attempt_id: str) -> dict:
+    """{named, why} when the audit gate could not send the tasks of an audit's findings back (M1 `rework_refused`)."""
+    import bt_run_stores
+
+    try:
+        m1 = bt_run_stores.paths(rdir).get("m1")
+        if not attempt_id or m1 is None or not Path(m1).exists():
+            return {}
+        conn = _ro(m1)
+        try:
+            row = conn.execute("SELECT detail FROM audit WHERE kind = 'rework_refused' AND attempt_id = ? "
+                               "ORDER BY seq DESC LIMIT 1", (attempt_id,)).fetchone()
+        finally:
+            conn.close()
+        body = json.loads(row[0]) if row else {}
+    except (sqlite3.Error, OSError, ValueError, TypeError):
+        return {}
+    return body if isinstance(body, dict) else {}
+
+
+def _explain(rdir: Path, doc: dict, request: dict, plan) -> dict:
+    """Attach what failed, its origin and the steps (`diagnosis`), an option that fixes it in one move when there is
+    one, and the agent's diagnosis when one was asked (`agent`)."""
+    import bt_block_agent
+    import bt_block_diagnosis
+
+    request["project"], request["req"] = Path(rdir).parent.parent.name, _req_of(rdir)
+    try:
+        diagnosis, extra = bt_block_diagnosis.explain(request, doc, plan=plan, req=_req_of(rdir), **_context(rdir, doc, request))
+    except Exception:  # noqa: BLE001 - explaining a stop never stops the card
+        diagnosis, extra = None, []
+    if extra:
+        stop = [o for o in request["options"] if o["id"] == "stop"]
+        request["options"] = [o for o in request["options"] if o["id"] != "stop"] + extra + stop
+    if diagnosis and diagnosis["confidence"] == "alta" and diagnosis["option"] in {o["id"] for o in request["options"]}:
+        request["recommended"] = diagnosis["option"]
+    request["diagnosis"] = diagnosis
+    request["agent"] = bt_block_agent.cached(rdir, request["id"])
+    return request
+
+
+def _req_of(rdir: Path) -> str:
+    return "-".join(Path(rdir).name.split("-")[:2])
+
+
 def open_requests(rdir: Path) -> list[dict]:
-    """Every question the run is waiting on, derived from its state. Answered ones are left out."""
+    """Every question the run is waiting on, derived from its state, each with its diagnosis. Answered ones are left out."""
     rdir = Path(rdir)
     done = _answered(rdir)
     doc = _state(rdir)
-    found = _blocked(doc, rdir) + _reviews(rdir, doc)
-    return [r for r in found if r["id"] not in done]
+    found = [r for r in _blocked(doc, rdir) + _reviews(rdir, doc) if r["id"] not in done]
+    plan = _plan(rdir) if found else None
+    return [_explain(rdir, doc, r, plan) for r in found]
+
+
+def evidence(rdir: Path, request: dict) -> str:
+    """What the diagnosing agent reads for one request (bt_block_diagnosis.bundle)."""
+    import bt_block_diagnosis
+
+    rdir = Path(rdir)
+    doc = _state(rdir)
+    answered = []
+    try:
+        for line in answers_path(rdir).read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            if row.get("task") == request["task"]:
+                answered.append(row)
+    except (OSError, ValueError):
+        pass
+    ctx = _context(rdir, doc, request)
+    return bt_block_diagnosis.bundle(request, plan=_plan(rdir), verify=ctx["verify"], failures=ctx["failures"],
+                                     notes=operator_notes(rdir, request["task"]), audit=audit_notes(rdir, request["task"]),
+                                     answered=answered, rule=request.get("diagnosis"))
 
 
 def _record(rdir: Path, request: dict, option: str, by: str, reason: str, result: list[str]) -> None:
@@ -249,7 +404,7 @@ def answer(project: str, req: str, rdir: Path, request_id: str, option: str, rea
         raise ValueError(f"no open request {request_id}")
     if option not in {o["id"] for o in request["options"]}:
         raise ValueError(f"{option} is not offered for {request_id}: " + ", ".join(o["id"] for o in request["options"]))
-    needs_reason = option in {"retry_with_note", "review_pass", "review_fail"}
+    needs_reason = option in {"retry_with_note", "review_pass", "review_fail", "rework_findings"}
     if needs_reason and not reason.strip():
         raise ValueError(f"{option} needs --reason")
     task = request["task"]
@@ -260,6 +415,15 @@ def answer(project: str, req: str, rdir: Path, request_id: str, option: str, rea
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(reason.strip() + "\n", encoding="utf-8")
         result = [f"{task}: note saved"] + ops.apply(project, req, rdir, "reopen", task, f"decision {request_id}: retry with a note")
+    elif option in ("rework_conflict", "rework_findings"):
+        target = next(o["target"] for o in request["options"] if o["id"] == option)
+        if option == "rework_findings":                 # the findings the owner wrote reach each task's next prompt
+            for name in target.split(","):
+                write_audit_notes(rdir, name, f"The independent audit {task} still finds, in the current tree:\n{reason.strip()}")
+        result = ops.apply(project, req, rdir, "rework", target, reason or f"decision {request_id}: redo {target} on the "
+                           f"current work it clashed with", only=True)
+        if task in ops.status(project, req, rdir)["blocked_tasks"]:
+            result += ops.apply(project, req, rdir, "reopen", task, f"decision {request_id}: waits for {target}")
     elif option == "revise":
         result = ops.apply(project, req, rdir, "revise", "", reason or f"decision {request_id}: revise")
     elif option == "stop":
@@ -279,7 +443,7 @@ def _resolve_review(project: str, req: str, rdir: Path, request: dict, verdict: 
 
     with ops.hold(rdir, f"review {request['id']}: {verdict}"):
         stopped = ops.stop_owner(project, req)
-        store = QualityStore(bt_run_stores.paths(rdir)["m6"])
+        store = _open_store(QualityStore, bt_run_stores.paths(rdir)["m6"])
         try:
             store.resolve_review(request["id"], by, verdict, reason)
         finally:
@@ -289,8 +453,30 @@ def _resolve_review(project: str, req: str, rdir: Path, request: dict, verdict: 
     return [f"owner stopped: {stopped}", f"review {request['id']}: {verdict} by {by}; the owner delivers it on restart"]
 
 
-def announce(project: str, req: str, rdir: Path, notify=None) -> list[str]:
-    """Notify once per new open request; returns the ids announced. Best effort: a run without state announces nothing."""
+def _open_store(cls, path, wait: float = 15.0):
+    """The M6 store once the stopped owner's last process lets go of it (a verifier child can outlive it a moment)."""
+    deadline = time.monotonic() + wait
+    while True:
+        try:
+            return cls(path)
+        except Exception as exc:  # noqa: BLE001 - QualityError; only STORE_IN_USE is worth waiting for
+            if getattr(exc, "code", "") != "STORE_IN_USE" or time.monotonic() > deadline:
+                raise
+            time.sleep(0.5)
+
+
+def auto_diagnoser(project: str, req: str, rdir: Path):
+    """What the watchdog passes to `announce`: start the diagnosing agent per new request (config `diagnosis.auto`)."""
+    import bt_block_agent
+    import bt_config
+    if not bt_config.get("diagnosis.auto"):
+        return None
+    return lambda request: bt_block_agent.spawn(project, req, Path(rdir), request["id"])
+
+
+def announce(project: str, req: str, rdir: Path, notify=None, diagnose=None) -> list[str]:
+    """Notify once per new open request and hand it to `diagnose` (see auto_diagnoser); returns the ids announced.
+    Best effort: a run without state announces nothing."""
     if notify is None:
         import bt_notify
         notify = bt_notify.notify
@@ -306,7 +492,13 @@ def announce(project: str, req: str, rdir: Path, notify=None) -> list[str]:
     fresh = [r for r in requests if r["id"] not in seen]
     for request in fresh:
         flag = " (nadie puede responder por ti)" if request["unskippable"] else ""
-        notify(f"Bitácora · {req}", f"{request['title']}{flag}. Responde con: scheduler-op {req} decisions")
+        what = (request.get("diagnosis") or {}).get("headline") or request["needs"]
+        notify(f"Bitácora · {req}", f"{request['title']}{flag}. {what}. Detalle y opciones: scheduler-op {req} decisions")
+        if diagnose:
+            try:
+                diagnose(request)
+            except Exception:  # noqa: BLE001 - the watchdog must never fail because of a diagnosis
+                pass
     if fresh:
         try:
             path.write_text(json.dumps(sorted(seen | {r["id"] for r in fresh})), encoding="utf-8")
@@ -321,8 +513,17 @@ def render(requests: list[dict], req: str) -> str:
     blocks = []
     for r in requests:
         lines = [f"{r['id']}  {r['title']}" + ("   [nadie puede responder por ti]" if r["unskippable"] else ""),
-                 f"  Qué pasó: {r['what']}"]
+                 f"  Qué pasó: {r['what']}", f"  Qué necesita de ti: {r['needs']}"]
+        if r.get("error"):
+            lines += ["  Error:"] + [f"    {x}" for x in r["error"].splitlines()[:14]]
         lines += [f"  · {e}" for e in r["evidence"][:8]]
+        rule, agent = r.get("diagnosis"), r.get("agent") or {}
+        d = agent if agent.get("state") == "done" and (rule or {}).get("confidence") != "alta" else rule  # as the panel
+        if d:
+            lines += [f"  Diagnóstico ({d.get('source', 'reglas')}): [{d['label']}] {d['headline']}", f"    Origen: {d['origin']}"]
+            lines += [f"    {n}. {x}" for n, x in enumerate(d["steps"], 1)]
+        else:
+            lines += ["  Qué puedes hacer:"] + [f"    - {x}" for x in r["you_can"]]
         for o in r["options"]:
             star = " (recomendada)" if o["id"] == r["recommended"] else ""
             lines.append(f"  - {o['id']}{star}: {o['label']}. {o['consequence']}")

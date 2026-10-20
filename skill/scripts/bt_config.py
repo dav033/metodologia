@@ -34,6 +34,9 @@ DEFAULTS: dict = {
     # deploy/migrate-style commands; off, they need operator review.
     # `env_file`: a dotenv file kept outside the repositories whose variables the checks receive (a database URL, an API
     # key; `{project}` in the path is replaced by the project name); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
+    # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
+    # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
+    "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": ""},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)

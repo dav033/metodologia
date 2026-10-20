@@ -469,3 +469,25 @@ sl-badge::part(base) { font: 700 11px var(--mono); }
 .warnbox code { word-break: break-all; }
 .pl .pill.bad { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
 .warnbox code { overflow-wrap: anywhere; word-break: normal; }
+
+/* decision diagnosis panel (bt_page_diagnosis) */
+.dx{border:1px solid var(--border);border-left:4px solid var(--dx,var(--accent));border-radius:var(--radius,8px);padding:12px 14px;margin:10px 0;background:var(--surface)}
+.dx-warn{--dx:var(--warn)}.dx-bad{--dx:var(--bad)}.dx-info{--dx:var(--info)}.dx-lav{--dx:var(--accent)}.dx-muted{--dx:var(--muted)}
+.dx-top{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between}
+.dx-chip{display:inline-flex;gap:6px;align-items:center;font:600 12px var(--mono,monospace);color:var(--dx);border:1px solid var(--dx);border-radius:999px;padding:2px 10px}
+.dx-src{font-size:12px;color:var(--muted)}
+.dx-head{font-size:17px;font-weight:600;margin:10px 0 6px;line-height:1.35}
+.dx-sec{margin:8px 0}.dx-sec p{margin:2px 0 0}.dx-sec ol{margin:4px 0 0 20px;padding:0}.dx-sec li{margin:3px 0}
+.dx-k{display:block;font:600 11px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dx code{font:12.5px var(--mono,monospace);background:var(--code,var(--mantle));padding:1px 5px;border-radius:4px;word-break:break-word}
+.dx-pick{margin:10px 0 0;padding:8px 10px;border-radius:6px;background:var(--accent-soft,transparent)}
+.dx-agent{font-size:13px;color:var(--muted);margin:6px 0}
+.dx-ask{min-height:36px;padding:6px 14px;border-radius:var(--radius,8px);border:1px dashed var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.dx-spin{display:inline-block;width:10px;height:10px;border:2px solid var(--accent);border-right-color:transparent;border-radius:50%;animation:dxspin .8s linear infinite;vertical-align:middle}
+@keyframes dxspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.dx-spin{animation:none}}
+.dx-more{margin:6px 0;font-size:13px}.dx-more summary{cursor:pointer;color:var(--accent)}
+.dx-err{white-space:pre-wrap;word-break:break-word;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:8px 12px;font:12px var(--mono,monospace)}
+.fl-decision .dx li, .fl-decision .dx p { color: var(--text); }
+.fl-decision .dx .dx-src, .fl-decision .dx-agent { color: var(--muted); }
+.fl-decision h3 .fl-reason { font-weight: 400; color: var(--muted); font-size: 12px; }

@@ -57,6 +57,38 @@ def core_document(db: Path) -> dict[str, Any]:
     return doc if isinstance(doc, dict) else {}
 
 
+def manual_resolutions(db: Path | None) -> dict[str, dict[str, str]]:
+    """{attempt id: {by, outcome, reason}} for attempts an operator closed by hand, from M1's audit trail. The attempt's
+    own `failure` then only says what the executor saw («cancelled_by_executor»); this says who ended it and why."""
+    if db is None or not Path(db).exists():
+        return {}
+    try:
+        conn = sqlite3.connect(f"{Path(db).resolve().as_uri()}?mode=ro", uri=True, timeout=0.2)
+        try:
+            rows = conn.execute("SELECT attempt_id, detail FROM audit WHERE kind = 'attempt_resolved_manually' "
+                                "ORDER BY seq").fetchall()
+        finally:
+            conn.close()
+    except (sqlite3.Error, OSError):
+        return {}
+    out: dict[str, dict[str, str]] = {}
+    for attempt_id, detail in rows:
+        try:
+            body = json.loads(detail)
+        except (TypeError, ValueError):
+            continue
+        if attempt_id and isinstance(body, dict):
+            out[str(attempt_id)] = {key: str(body.get(key) or "") for key in ("by", "outcome", "reason")}
+    return out
+
+
+def resolution_text(resolution: dict[str, str] | None) -> str:
+    if not resolution:
+        return ""
+    verb = {"cancelled": "cancelled", "accepted": "accepted", "rejected": "rejected"}.get(resolution["outcome"], resolution["outcome"])
+    return f"{verb} by {resolution['by'] or 'the operator'}" + (f": {resolution['reason']}" if resolution["reason"] else "")
+
+
 _routes: dict[tuple[str, str], dict[str, Any]] = {}     # (M2 ledger, reference) -> route: a recorded decision never changes
 ROUTES_MAX = 4096
 
@@ -186,4 +218,11 @@ def build(doc: dict[str, Any], ledger: Path | None, usage: dict[str, dict[str, A
 def attempt_facts(rdir: Path, now: float | None = None) -> dict[str, list[dict[str, Any]]]:
     paths = bt_run_stores.paths(Path(rdir))
     doc = core_document(paths["m1"])
-    return build(doc, paths.get("m2"), usage_by_attempt(Path(rdir)), now)
+    facts = build(doc, paths.get("m2"), usage_by_attempt(Path(rdir)), now)
+    manual = manual_resolutions(paths["m1"])
+    for rows in facts.values():
+        for row in rows:
+            text = resolution_text(manual.get(row["attempt"]))
+            if text:
+                row["failure_executor"], row["failure"] = row["failure"], text
+    return facts

@@ -89,14 +89,53 @@ def push_async(root: Path) -> None:
 
 
 def pull(root: Path, timeout: int = 8) -> str:
-    """Bring other machines' changes. Returns "" on success/offline/no remote, or a warning for the agent."""
+    """Bring other machines' changes. Returns "" on success/offline/no remote/up to date, or a warning for the agent.
+
+    Only the fetch is time-bounded: killing it loses nothing. The rebase is local and never killed, because a git
+    killed between saving its autostash and applying it back leaves the working tree reset and the work in the stash
+    (it happened on 2026-10-20: a slow pull at session start emptied the skill's uncommitted changes). Nor does it run
+    while code outside the bitácora has uncommitted changes: rebasing stashes them for a moment and running schedulers
+    import the skill lazily."""
     if not has_remote(root):
         return ""
-    res = _run(root, "pull", "--rebase", "--autostash", "-q", timeout=timeout)
-    if res is None:
+    fetched = _run(root, "fetch", "-q", timeout=timeout)
+    if fetched is None:
         return ""  # offline or slow: keep working with the local copy
-    if res.returncode != 0:
+    if fetched.returncode != 0:
+        return f"bitácora sync failed (local copy kept, nothing lost): {_last_line(fetched)}"
+    behind = _run(root, "rev-list", "--count", "HEAD..@{upstream}")
+    if not _ok(behind) or behind.stdout.strip() in ("", "0"):
+        return ""
+    outside = _dirty_outside(root)
+    if outside:
+        return (f"bitácora sync skipped: other machines' changes are not applied while {outside} has uncommitted "
+                "changes outside the bitácora; commit them, then pull")
+    res = _run(root, "rebase", "--autostash", "-q", "@{upstream}", timeout=600)
+    if res is None or res.returncode != 0:
         _run(root, "rebase", "--abort")
-        detail = (res.stderr or res.stdout).strip().splitlines()[-1:] or [""]
-        return f"bitácora sync failed (local copy kept, nothing lost): {detail[0][:200]}"
+        return (f"bitácora sync failed (local copy kept; if work is missing, it is in `git stash list` as autostash): "
+                f"{_last_line(res) if res else 'git did not finish'}")
+    return ""
+
+
+def _last_line(res: subprocess.CompletedProcess) -> str:
+    return ((res.stderr or res.stdout).strip().splitlines()[-1:] or [""])[0][:200]
+
+
+def _dirty_outside(root: Path) -> str:
+    """The first changed path of the repository outside `root` (the bitácora), or ''."""
+    top = _run(root, "rev-parse", "--show-toplevel")
+    status = _run(root, "status", "--porcelain", "--untracked-files=no", "--", ":/")
+    if not _ok(top) or not _ok(status):
+        return ""
+    try:
+        inside = Path(root).resolve().relative_to(Path(top.stdout.strip()).resolve()).as_posix()
+    except ValueError:
+        return ""
+    if inside in ("", "."):
+        return ""                       # the bitácora is its own repository: nothing lives outside it
+    for line in status.stdout.splitlines():
+        path = line[3:].split(" -> ")[-1].strip('"')
+        if not path.startswith(inside + "/"):
+            return path
     return ""

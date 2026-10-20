@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -19,7 +19,7 @@ def register(subparsers) -> None:
     op.add_argument("target", nargs="?", default="",
                     help="attempt id for cancel-attempt, task id for reopen and retry, comma-separated task ids for rework "
                          "(they and everything downstream go back to be redone; with --only just them) and withdraw-rework "
-                         "(take the rework back for tasks that redid nothing), request id for decide")
+                         "(take the rework back for tasks that redid nothing), request id for decide and diagnose (diagnose: a cheap model reads why it stopped, config diagnosis.*)")
     op.add_argument("option", nargs="?", default="",
                     help="the option to take, for decide; the accepted attempt to continue from, for continue-from")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
@@ -47,6 +47,16 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         import bt_scheduler_decisions as decisions
         print(decisions.render(decisions.open_requests(rdir), args.req))
         return 0
+    if args.action == "diagnose":
+        import bt_block_agent
+        import bt_scheduler_decisions as decisions
+        request = next((r for r in decisions.open_requests(rdir) if r["id"] == args.target), None)
+        if request is None:
+            print(f"no open request {args.target!r}")
+            return 2
+        result = bt_block_agent.diagnose(project, rdir, request, decisions.evidence(rdir, request))
+        print(json.dumps(result, ensure_ascii=False, indent=1))
+        return 0 if result["state"] == "done" else 1
     if args.action == "decide":
         import bt_scheduler_decisions as decisions
         if not args.target or not args.option:
