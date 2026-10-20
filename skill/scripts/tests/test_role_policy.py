@@ -71,5 +71,26 @@ class RolePolicyTests(unittest.TestCase):
         self.assertEqual(len(policy.options("runner")), 2)
 
 
+class EscalatedAudit(unittest.TestCase):
+    """The one exception to «risk does not change the options»: an audit the run escalated (tier 2) reads at high."""
+
+    def test_only_an_escalated_audit_changes_the_reviewer_options(self):
+        import bt_role_policy as policy
+        normal = policy.options("reviewer")
+        self.assertEqual(normal[0], ("codex", "gpt-6.1-sol", "medium"))
+        escalated = policy.options("reviewer", escalated=True)
+        self.assertEqual(escalated, [("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")])
+        for role in ("planner", "implementer", "runner"):
+            self.assertEqual(policy.options(role, escalated=True), policy.options(role))
+
+    def test_escalation_needs_an_audit_at_tier_two(self):
+        import bt_role_policy as policy
+        self.assertTrue(policy.escalated_audit("audit", 2))
+        self.assertFalse(policy.escalated_audit("audit", 1))
+        self.assertFalse(policy.escalated_audit("implement", 2))
+        self.assertFalse(policy.escalated_audit("audit", None))
+        self.assertFalse(policy.escalated_audit("audit", True))
+
+
 if __name__ == "__main__":
     unittest.main()

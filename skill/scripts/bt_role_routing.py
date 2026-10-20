@@ -60,12 +60,12 @@ def recent_sessions(now: float) -> dict[str, int]:
 
 
 def candidates(project, pool, tier, kind, role, configured=None, avoid_providers=None,
-               busy=None, complexity=None, effort=None):
+               busy=None, complexity=None, effort=None, escalated=False):
     import bt_agents as agents
     import bt_profiles
     import bt_subscriptions
 
-    choices = policy.options(role, complexity)
+    choices = policy.options(role, complexity, escalated=escalated)
     if configured:
         provider = agents.provider_of_model(configured)
         choices = [(p, configured, effort or e) for p, _, e in choices if p == provider]

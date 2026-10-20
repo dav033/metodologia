@@ -272,7 +272,19 @@ class QualityProtection(RouterBase):
         self.assertEqual({r["tier"] for r in routes}, {2})
 
 
-class ExplorationBudget(RouterBase):
+class LearningRouter(RouterBase):
+    """The learning router (exploration, effort evidence) is what these classes test. A kind with an owner role is routed
+    by the role policy instead (bt_role_policy), so the role lookup is switched off to reach the learning path."""
+
+    def setUp(self):
+        super().setUp()
+        import bt_role_policy
+        patcher = patch.object(bt_role_policy, "role_for_kind", return_value=None)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+
+class ExplorationBudget(LearningRouter):
     def pool_state(self):
         return {"pool": ["claude", "codex-named"], "req": "REQ-1", "agent": "claude"}
 
@@ -400,7 +412,7 @@ class EfficiencyCoverage(AgentTests):
         self.assertEqual(group["seconds"], 100)                                      # not 200
 
 
-class EffortSeparation(RouterBase):
+class EffortSeparation(LearningRouter):
     def setUp(self):
         super().setUp()
         self.attempts("codex-named", "codex", "gpt-6.1-sol", 5, 15, effort="medium")   # fixture of the brief

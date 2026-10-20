@@ -39,8 +39,21 @@ def role_for_kind(kind: str | None) -> str | None:
     return _KINDS.get(kind)
 
 
-def options(role: str | None, complexity: str | None = None) -> list[tuple[str, str, str]]:
-    """Return fresh, ordered allowed choices; unknown roles have no choices."""
+# The one exception to "risk never changes the options": an audit that the plan or the run already escalated (high risk or
+# architecture level reaches the audit as tier 2) is read by the strongest reviewer of each provider, at high.
+_ESCALATED_AUDIT = (("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high"))
+ESCALATED_AUDIT_TIER = 2
+
+
+def escalated_audit(kind: str | None, tier: int | None) -> bool:
+    return kind == "audit" and isinstance(tier, int) and not isinstance(tier, bool) and tier >= ESCALATED_AUDIT_TIER
+
+
+def options(role: str | None, complexity: str | None = None, *, escalated: bool = False) -> list[tuple[str, str, str]]:
+    """Return fresh, ordered allowed choices; unknown roles have no choices. `escalated` (see `escalated_audit`) only
+    changes the reviewer role."""
+    if escalated and role == "reviewer":
+        return list(_ESCALATED_AUDIT)
     table = _HIGH if high_complexity(complexity) else {}
     return list(table.get(role, _DEFAULTS.get(role, ())))
 

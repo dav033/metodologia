@@ -86,6 +86,7 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
     --profile nor --agent the router picks account, model and effort for the task's kind and tier."""
     kind = kind if kind in bt_agents.KINDS else bt_agents.infer_kind(task[:200])
     import bt_role_policy
+    explicit_role = role
     role = role or bt_role_policy.role_for_kind(kind)
     if role and role not in bt_role_policy.ROLES:
         raise SystemExit(f"Unknown role: {role}")
@@ -116,7 +117,8 @@ def create(project: str, task: str, profile: str | None, agent: str | None, work
         model = model or default_model
         effort = effort or default_effort
     if role and not routed:
-        choice = next(((m, e) for p, m, e in bt_role_policy.options(role, complexity) if p == agent), None)
+        choice = next(((m, e) for p, m, e in bt_role_policy.options(
+            role, complexity, escalated=not explicit_role and bt_role_policy.escalated_audit(kind, tier)) if p == agent), None)
         if choice:
             model, effort = model or choice[0], effort or choice[1]
         elif not model:

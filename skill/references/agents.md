@@ -45,7 +45,7 @@ the ladder live in `scripts/bt_agents.py` (`MODELS`, `LADDER`): edit them there 
 
 The active role policy above governs automatic role routes (`bt_role_policy`, `bt_role_routing`). The generic tier catalog remains for documentation work, explicit legacy model selection and separate pinned runtimes; a retry tier never replaces a role configuration. Subscription samples refresh before routing at most every900s/account, retaining existing challenge and Retry-After handling.100% usage excludes the account until its reset; known auth failures rank behind healthy accounts.
 
-The scheduler's router uses every eligible registered account; `launch --profile X` / `--agent X` pins the account. `delegate start --profile X` stays pinned. Provider independence precedes quota balancing for audits. Source model aliases, installed role files and CLI argv all consume the same role policy table.
+One exception to «risk does not change the options» (D-081): an audit the run escalated to tier 2 (high risk or architecture level) is routed to the strongest reviewer of each provider at high (`gpt-6.1-sol` high, `opus` high); an explicitly pinned role keeps its own configuration. The scheduler's router uses every eligible registered account; `launch --profile X` / `--agent X` pins the account. `delegate start --profile X` stays pinned. Provider independence precedes quota balancing for audits. Source model aliases, installed role files and CLI argv all consume the same role policy table.
 
 ## Antigravity (Gemini 3.8 Flash): the default auditor (D-004)
 

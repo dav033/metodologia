@@ -152,8 +152,9 @@ class RuntimeTests(unittest.TestCase):
     def test_scheduler_autostart_command_is_mode_specific(self):
         import bt_notify
         from bt_notify import install_autostart
-        with patch.object(bt_notify.bt_autostart, "install") as install:   # the module bt_notify holds, even if another
-            install_autostart("demo", "REQ-042", scheduler=True)           # test re-imported bt_autostart
+        with patch.object(bt_notify.host, "platform", return_value="linux"), \
+                patch.object(bt_notify.bt_autostart, "install") as install:   # the objects bt_notify holds, whatever an
+            install_autostart("demo", "REQ-042", scheduler=True)              # earlier test did to the platform or imports
         self.assertIs(install.call_args.kwargs["scheduler"], True)
 
     def test_composition_requires_distinct_private_m4_m5_m6_stores(self):

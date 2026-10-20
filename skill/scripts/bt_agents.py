@@ -235,7 +235,8 @@ def _quality_order(agent: str, kind: str, rate: float | None, pressure: float | 
 
 def candidates(project: str, pool: list[str], tier: int, kind: str = "implement", configured: str | None = None,
                avoid_providers: set | None = None, busy: set | None = None, risk: str | None = None,
-               complexity: str | None = None, allow_explore: bool = True, effort: str | None = None, role: str | None = None
+               complexity: str | None = None, allow_explore: bool = True, effort: str | None = None, role: str | None = None,
+               escalated: bool = False
                ) -> tuple[list[dict], float | None]:
     """(routes of `tier` ordered best first, earliest epoch a cooling account frees up when none is available).
     `busy`: account keys already taken by sessions being started in the same batch (they go last). `risk` and
@@ -246,7 +247,8 @@ def candidates(project: str, pool: list[str], tier: int, kind: str = "implement"
     one of the effort that will really run."""
     if role:
         from bt_role_routing import candidates as role_candidates
-        return role_candidates(project, pool, tier, kind, role, configured, avoid_providers, busy, complexity, effort)
+        return role_candidates(project, pool, tier, kind, role, configured, avoid_providers, busy, complexity, effort,
+                               escalated)
     from bt_subscriptions import capacity
     from bt_subscriptions import load as load_usage
     samples = load_usage(STATE)
@@ -385,8 +387,11 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
     escalation (a failure moved the work) or explicit (a pinned agent)."""
     import bt_explore
     import bt_role_policy
-    role = role or state.get("role") or bt_role_policy.role_for_kind(kind)
+    explicit_role = role or state.get("role")
+    role = explicit_role or bt_role_policy.role_for_kind(kind)
     tier = bt_routing_policy.cap_tier(tier, kind)
+    # an audit the run escalated (tier 2) is read by the strongest reviewer, unless the caller pinned a role explicitly
+    escalated = not explicit_role and bt_role_policy.escalated_audit(kind, tier)
     pool = state.get("pool") or []
     if not pool:
         asked_effort = effort
@@ -394,7 +399,8 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
         model, effort = (model_for(agent, tier, kind=kind) if kind == "audit" or kind in MAX_KIND_TIER
                          else legacy_model_for(state, tier))
         if role:
-            choices = [(m, e) for p, m, e in bt_role_policy.options(role, complexity) if p == agent]
+            choices = [(m, e) for p, m, e in bt_role_policy.options(
+                role, complexity, escalated=escalated) if p == agent]
             configured = state.get("model") if kind != "audit" or state.get("role") else None
             if choices:
                 model = configured or choices[0][0]
@@ -411,7 +417,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
     if (role and configured == "haiku" and not state.get("model_pinned")) or (kind == "audit" and not state.get("role")):
         configured = None
     args = (project, pool, tier, kind, configured, avoid_providers, busy, risk, complexity)
-    routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort, role=role)
+    routes, soonest = candidates(*args, allow_explore=allow_explore, effort=effort, role=role, escalated=escalated)
     if not routes:
         if soonest is None:  # nothing is cooling: no account of the pool may run this project any more
             raise bt_profiles.ProfileError(f"No account of the pool ({', '.join(pool)}) may run '{project}'. "
@@ -429,7 +435,7 @@ def route(project: str, state: dict, tier: int, kind: str = "implement", avoid_p
             f"and {len(routes) - 1} other admissible route(s) exist",
             limit, int(global_limit or 0) or None, key=decision_key)
         if record is None:  # the weekly budget is spent (possibly by a concurrent supervisor): rank it as unproven
-            routes, soonest = candidates(*args, allow_explore=False, effort=effort, role=role)
+            routes, soonest = candidates(*args, allow_explore=False, effort=effort, role=role, escalated=escalated)
             chosen = routes[0]
     if record:
         decision = bt_explore.decision_for("explore", record["reason"], record)
