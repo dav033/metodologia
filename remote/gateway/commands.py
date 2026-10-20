@@ -10,7 +10,7 @@ COMMAND_TYPES = frozenset({
     "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note",
 })
 CONFIRMATION_REQUIRED_TYPES = frozenset({
-    "revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief",
+    "revise", "approve", "launch", "cancel-plan", "delete-plan",
 })
 IDEMPOTENCY_KEY = re.compile(r"^[A-Za-z0-9._:-]{16,128}$")
 REQ_ID = re.compile(r"^REQ-[0-9]{3,}$")
