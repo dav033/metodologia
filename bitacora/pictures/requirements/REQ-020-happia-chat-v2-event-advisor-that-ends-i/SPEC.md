@@ -29,7 +29,7 @@ brief; briefs sent to vendors without a call; Diana's time per brief vs today; c
 - Owner of this REQ: David.
 
 ## Scope (in)
-Owner scope decision 2026-10-20: a **new section "Happia chat v2"** inside the Pictures app (`dav033/pictures`),
+Owner scope decision 2026-10-20: a **new section "Asesor Happia" (route `/asesor`)** inside the Pictures app (`dav033/pictures`),
 with the new flow and all the new capabilities; it reuses Pictures pieces. The existing `/happie` chat, its webhook and
 the `happie.v1`/`happie.v2` contracts stay untouched.
 
@@ -48,9 +48,15 @@ Candidate capabilities (from the client doc, minus the removed blocks):
 - Brief: customer approves or corrects a summary; one-page brief with photos, likes/dislikes, venue, priorities,
   budget and requests; vendor version without name, contact and budget.
 
+- Admin profile (round 1): a new "admin" user profile whose only difference is that it can monitor conversations
+  (and see the briefs). Conversations are stored in Postgres on **Supabase**.
+- Access: the customer side stays behind the current Pictures password (`APP_PASSWORD`) until launch; the customer
+  resumes only on the same device (browser storage) for now.
+- Milestone M1 = Halloween test (Thu 29 Oct): a text conversation that ends in a brief; photos, voice and ideas after.
+
 ## Out of scope
-- Diana's operator screen (live list, needs-attention queue, takeover/handback, edit/approve, send to vendors) —
-  removed temporarily by the owner (2026-10-20).
+- Diana's full operator screen (needs-attention queue, takeover/handback, edit/approve, send to vendors) — removed
+  temporarily by the owner (2026-10-20); only read-only monitoring by the admin profile stays in.
 - Soft-launch safety block (per-link limits, per-conversation AI caps, end rating, drop-off analytics, ~50 testers) —
   removed temporarily by the owner (2026-10-20).
 - Any change to the `/happie` webhook or the `happie.v1`/`happie.v2` contracts.
@@ -115,6 +121,16 @@ _Pending interview._
 | Timeline | Partial |
 
 ## Clarifications
+### Round 1 — 2026-10-20
+- Q: Route/name → A: "Asesor Happia", `/asesor`.
+- Q: Access without the safety block → A: behind the current `APP_PASSWORD`.
+- Q: Where are conversation, photos and brief stored → A: browser only for the customer for now; but an admin profile
+  must monitor conversations, so they are saved to Postgres on Supabase.
+- Q: Brief outputs without Diana's screen → A: customer summary + full brief + vendor version, visible to a new
+  "admin" profile whose only extra power is monitoring conversations.
+- Q: Halloween milestone → A: yes, M1 = text → brief by 29 Oct. Owner: ask for every connection, key, password and
+  credential before starting.
+
 ### Round 0 — 2026-10-20 (conversation)
 - Q: Modify the `/happie` webhook/contracts? → A: No; build a new "Happia chat v2" section.
 - Q: Diana's screen and soft-launch safety? → A: Removed temporarily from this scope.

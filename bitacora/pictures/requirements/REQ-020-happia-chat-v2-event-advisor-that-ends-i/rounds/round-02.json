@@ -1,0 +1,94 @@
+{
+ "title": "Ronda 2 — Supabase, perfil admin y accesos",
+ "intro": "Ya tengo: clave de Gemini, API de Happia (URL y llave), APP_PASSWORD, SSH al VPS (advin, 185.147.157.25), el contenedor Whisper voz-decoracion vivo, Vercel CLI (dav033, proyecto demo-decoracion) y gh. Falta lo de Supabase y el perfil admin.",
+ "coverage": "6/10",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "choice",
+   "text": "¿Cómo se crea el proyecto de Supabase?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Lo creas tú (región São Paulo, sa-east-1) y me pasas: Project URL, anon key, service_role key y la cadena de conexión del pooler (puerto 6543) con la contraseña de la base"
+    },
+    {
+     "key": "b",
+     "label": "Me pasas un token personal de Supabase (SUPABASE_ACCESS_TOKEN) y el nombre de la organización, y lo creo yo con la CLI"
+    },
+    {
+     "key": "c",
+     "label": "Usamos un proyecto de Supabase que ya existe (dime cuál)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Crear el proyecto define cuenta, plan y facturación: mejor que lo hagas tú desde la cuenta correcta (¿la de Sempertex?)."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "¿Cómo inicia sesión el perfil admin?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Supabase Auth con correo y contraseña; las cuentas las creo yo y el rol admin vive en una tabla; sin registro público"
+    },
+    {
+     "key": "b",
+     "label": "Una segunda contraseña compartida (ADMIN_PASSWORD)"
+    },
+    {
+     "key": "c",
+     "label": "Enlace mágico por correo"
+    }
+   ],
+   "recommended": "a",
+   "why": "Cada persona con su cuenta deja rastro de quién vio qué (hay datos personales); y sirve tal cual para la futura pantalla de Diana."
+  },
+  {
+   "id": "q3",
+   "type": "open",
+   "text": "¿Qué correos tienen perfil admin?",
+   "suggested": "davidt@sempertex.com, el de Diana y el de la persona de respaldo.",
+   "why": "Los creo al montar Supabase Auth; las contraseñas se comparten fuera del chat."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "¿Qué ve y hace el admin al monitorear?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Solo lectura: lista de conversaciones (en curso y terminadas) con estado, la transcripción, fotos y el brief; se refresca sola cada pocos segundos"
+    },
+    {
+     "key": "b",
+     "label": "Lo anterior + escribir al cliente o tomar la conversación"
+    }
+   ],
+   "recommended": "a",
+   "why": "Tomar la conversación era parte de la pantalla de Diana, que quedó fuera; leer en vivo basta para la prueba de Halloween."
+  },
+  {
+   "id": "q5",
+   "type": "choice",
+   "text": "Fotos, voz y despliegue: ¿aceptas estos defaults?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Fotos en un bucket privado de Supabase Storage (URLs firmadas); voz con el Whisper que ya corre en el VPS (tomo su secreto de allí); deploy igual que hoy (Vercel demo-decoracion + VPS) con las mismas claves de Gemini y Happia"
+    },
+    {
+     "key": "b",
+     "label": "Quiero cambiar algo (dime qué)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Todo queda en un solo proveedor para datos y no hay credenciales nuevas que pedir aparte de Supabase."
+  }
+ ],
+ "round": 2,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-20T10:51:03"
+}
