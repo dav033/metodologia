@@ -240,6 +240,66 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(calls[0][4], "att-001")
         status_reader.assert_called_once()
 
+    def _task_run(self, tasks, attempts=None):
+        import sqlite3
+        import bt_plans_api
+
+        db = Path(self.temp.name) / "run.db"
+        db.unlink(missing_ok=True)
+        conn = sqlite3.connect(db)
+        conn.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, doc TEXT)")
+        conn.execute("INSERT INTO state VALUES (1, ?)", (json.dumps(
+            {"tasks": {k: {"state": v} for k, v in tasks.items()},
+             "attempts": {k: {"state": v} for k, v in (attempts or {}).items()}}),))
+        conn.commit()
+        conn.close()
+        model = {"run": {"authority": "scheduler", "status": "running", "updated_at": "t1",
+                         "plan_ref": {"revision": 3}}, "plan": {"revision": 3, "status": "approved"}}
+        return db, [patch.object(bt_plans_api, "status_of", return_value=model),
+                    patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))),
+                    patch("bt_scheduler_adapter.run_db_path", return_value=db)]
+
+    def _post_real_state(self, request, patches):
+        h = FakeHandler(json.dumps(request).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, self.handlers, clear=True):
+            for p in patches:
+                p.start()
+            try:
+                bt_remote_api.route_post(h)
+            finally:
+                patch.stopall()
+        return h.sent
+
+    def test_f19_retry_precondition_pins_the_task_state_not_the_run_state(self):
+        _, patches = self._task_run({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+        status, body = self._post_real_state(
+            req(command="retry", params={"task": "T1"}, precondition={"state": "failed", "revision": 3}), patches)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(len(self.calls), 1)
+
+    def test_f19_retry_is_stale_when_the_task_is_no_longer_failed(self):
+        _, patches = self._task_run({"T1": "done"})
+        self.handlers["retry"] = self._pause
+        status, body = self._post_real_state(
+            req(command="retry", params={"task": "T1"}, precondition={"state": "failed", "revision": 3}), patches)
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_cancel_attempt_precondition_pins_the_attempt_state(self):
+        _, patches = self._task_run({"T1": "running"}, {"att-001": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+        status, body = self._post_real_state(
+            req(command="cancel-attempt", params={"attempt": "att-001"},
+                precondition={"state": "running", "revision": 3}), patches)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        _, patches = self._task_run({"T1": "running"}, {"att-001": "cancelled"})
+        status, body = self._post_real_state(
+            req(command="cancel-attempt", idempotency_key="key-00000002", params={"attempt": "att-001"},
+                precondition={"state": "running", "revision": 3}), patches)
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+
     def test_route_post_rejects_stale_plan_revision(self):
         import bt_plans_api
 
