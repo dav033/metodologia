@@ -120,5 +120,26 @@ class Notes(unittest.TestCase):
         self.assertIn("depends on", gate.note_for(result, "T2", "T9"))
 
 
+class ReadOnly(unittest.TestCase):
+    def test_only_the_declared_files_are_allowed(self):
+        declared = ["docs/audit.md", "docs/audit.findings.json"]
+        self.assertEqual(gate.stray_changes(["docs/audit.md", "/docs/audit.findings.json"], declared), ())
+        self.assertEqual(gate.stray_changes(["remote/a.py", "docs/audit.md", "b.txt"], declared),
+                         ("b.txt", "remote/a.py"))
+
+    def test_the_message_names_the_files_and_what_to_do(self):
+        text = gate.scope_problem(tuple(f"f{i}.py" for i in range(7)))
+        self.assertIn("7 file(s)", text)
+        self.assertIn("2 more", text)
+        self.assertIn("open finding", text)
+
+    def test_policy_reads_the_flag_and_defaults_to_on(self):
+        self.assertTrue(gate.policy_from(lambda key, default: default).read_only)
+        self.assertFalse(gate.policy_from(
+            lambda key, default: False if key == "gates.audit_read_only" else default).read_only)
+        self.assertTrue(gate.policy_from(
+            lambda key, default: "no" if key == "gates.audit_read_only" else default).read_only)
+
+
 if __name__ == "__main__":
     unittest.main()

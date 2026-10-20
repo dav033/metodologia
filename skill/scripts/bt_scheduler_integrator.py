@@ -165,8 +165,8 @@ class PredecessorIntegrator:
             done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", current, sha, check=False)
             if done.returncode == 1:
                 files = [line for line in done.stdout.splitlines()[1:] if line.strip()][:6]
-                raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: the files come first
-                                       f"{', '.join(files)} ({current_task} vs {tid} for {task_id})"[:170])
+                raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: who clashes comes first
+                                       f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"[:170])
             if done.returncode:
                 raise IntegrationError("INTEGRATION_GIT", f"merge-tree: {(done.stderr or done.stdout).strip()[:300]}")
             tree = done.stdout.splitlines()[0].strip()

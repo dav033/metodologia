@@ -98,6 +98,7 @@ class M6M1AdapterTests(unittest.TestCase):
         store_path=None,
         schema_version="1.0.0",
         read_ledger=None,
+        read_changes=None,
         rework_notes=None,
         audit_policy=None,
     ):
@@ -135,6 +136,7 @@ class M6M1AdapterTests(unittest.TestCase):
             lambda order: root / order.task_id,
             runner=runner or ScriptedRunner(),
             read_ledger=read_ledger,
+            read_changes=read_changes,
             rework_notes=rework_notes,
             audit_policy=audit_policy,
         )
@@ -180,7 +182,7 @@ class M6M1AdapterTests(unittest.TestCase):
         return attempts
 
     # ---- audit gate: the ledger decides, and the system sends the named work back -------------------------------
-    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None):
+    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=()):
         implement = _task("T1", "python3 build.py")
         implement.update(kind="implement")
         implement["verification"][0]["category"] = "functional"
@@ -193,6 +195,7 @@ class M6M1AdapterTests(unittest.TestCase):
             max_attempts=2,
             schema_version="1.2.0",
             read_ledger=ledger,
+            read_changes=lambda order: tuple(changes),
             rework_notes=lambda task_id, text: notes.append((task_id, text)),
             audit_policy=policy,
         )
@@ -242,6 +245,25 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("the gateway never listens", dict(notes)["T1"])
         kinds = [entry.kind for entry in core.audit_log()]
         self.assertIn("rework_requested", kinds)
+
+    def test_an_audit_that_changes_source_is_rejected_and_the_builders_work_is_not_hidden(self):
+        core = self._audit_system(lambda order, path: self._ledger(), [],
+                                  changes=("docs/audit.md", "docs/audit.findings.json", "remote/gateway/server.py"))
+        self.assertTrue(
+            _wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                                  and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")    # nothing is sent back: the audit reruns
+        self.assertNotIn("rework_requested", [e.kind for e in core.audit_log()])
+
+    def test_an_audit_that_only_writes_its_declared_files_is_accepted(self):
+        core = self._audit_system(lambda order, path: self._ledger(), [],
+                                  changes=("docs/audit.md", "docs/audit.findings.json"))
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed"))
+
+    def test_read_only_can_be_switched_off_by_configuration(self):
+        core = self._audit_system(lambda order, path: self._ledger(), [], changes=("remote/gateway/server.py",),
+                                  policy=bt_audit_gate.Policy(read_only=False))
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "completed"))
 
     def test_an_audit_with_a_missing_ledger_is_rejected_without_reopening_anything(self):
         notes = []

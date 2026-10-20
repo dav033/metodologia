@@ -145,6 +145,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   completed by the rework: each redone task needs a new independent verdict;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
   reset); the redo must prove each fix with a test over the real entry point;
+- an audit is **read-only**: the adapter compares the snapshot with its base (`git diff`, exact) and rejects the audit if it changed any file other than the ones it declares (report, ledger; `gates.audit_read_only`, default true). An auditor that patches source hides the builder's defect from the router and, beside a second auditor, hands every later task an `INTEGRATION_CONFLICT` between the two patches (REQ-027, T18 vs T18b). It records the defect as an open finding naming the task that owns it, and the system sends that task back;
 - bounded and owner-configurable (`bitacora.py config`): `gates.audit_blocking` (severities that reject, default
   critical+high), `gates.max_reworks` (times one task may be sent back by the system, default 2) and
   `gates.audit_ledger_required` (default true; set false only to let an old plan without a ledger through: each skip is

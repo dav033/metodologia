@@ -39,9 +39,11 @@ LEDGER_HELP = (
     '"status": "open|fixed|accepted", "summary": "...", "tasks": ["<plan task id whose result is wrong>"], '
     '"evidence": "required when fixed", "accepted_by": "owner", "reason": "required when accepted"}]}. '
     "List every finding you confirm. A critical or high finding left `open` rejects this audit and sends the tasks it "
-    "names back to be redone; use `fixed` only when your own change AND a regression test prove it, and never mark "
-    "`accepted` yourself: only the owner accepts a risk. Another independent auditor may review the same scope: "
-    "confirm and record your own findings and never assume the other one covers anything."
+    "names back to be redone. An audit is read-only: change only your report and this ledger, never source, tests or "
+    "configuration (a change outside them rejects the audit). Use `fixed` only for a finding you re-checked and found "
+    "already fixed in the audited tree, with the command and result as `evidence`, and never mark `accepted` "
+    "yourself: only the owner accepts a risk. Another independent auditor may review the same scope: confirm and "
+    "record your own findings and never assume the other one covers anything."
 )
 
 
@@ -50,6 +52,7 @@ class Policy:
     """What the gate enforces. Built from the owner's configuration (`policy_from`), never inferred from a plan."""
     blocking: tuple[str, ...] = BLOCKING_SEVERITIES   # open findings of these severities reject the audit
     ledger_required: bool = True                      # an audit without a declared ledger: reject (True) or skip
+    read_only: bool = True                            # an audit may change only the files it declares (report, ledger)
 
 
 def policy_from(get) -> Policy:
@@ -57,7 +60,9 @@ def policy_from(get) -> Policy:
     severities = get("gates.audit_blocking", list(BLOCKING_SEVERITIES))
     ok = isinstance(severities, list) and severities and all(item in SEVERITIES for item in severities)
     required = get("gates.audit_ledger_required", True)
-    return Policy(tuple(severities) if ok else BLOCKING_SEVERITIES, required if isinstance(required, bool) else True)
+    read_only = get("gates.audit_read_only", True)
+    return Policy(tuple(severities) if ok else BLOCKING_SEVERITIES, required if isinstance(required, bool) else True,
+                  read_only if isinstance(read_only, bool) else True)
 
 
 @dataclass(frozen=True)
@@ -71,13 +76,27 @@ class Gate:
         if self.ok:
             return "audit gate: no open blocking finding"
         if self.problems:
-            return "audit gate: ledger unusable: " + "; ".join(self.problems[:5])
+            return "audit gate: rejected: " + "; ".join(self.problems[:5])
         ids = ", ".join(f"{f['id']} ({f['severity']})" for f in self.blocking[:12])
         return f"audit gate: {len(self.blocking)} open blocking finding(s): {ids}"
 
     def digest(self) -> str:
         body = json.dumps([self.ok, self.problems, self.blocking, self.rework], sort_keys=True)
         return hashlib.sha256(body.encode()).hexdigest()[:16]
+
+
+def stray_changes(changed, declared) -> tuple[str, ...]:
+    """The changed paths an audit may not touch: everything outside the files it declares (its report and ledger). An
+    audit reports; the tasks it names are sent back to be redone. One that patches source itself hides the builder's
+    defect from the router and, run beside a second auditor, hands every later task a merge conflict between the two."""
+    allowed = {p.strip("/") for p in declared if isinstance(p, str)}
+    return tuple(sorted(p for p in changed if isinstance(p, str) and p.strip("/") not in allowed))
+
+
+def scope_problem(stray) -> str:
+    shown = ", ".join(stray[:5]) + (f" and {len(stray) - 5} more" if len(stray) > 5 else "")
+    return (f"the audit changed {len(stray)} file(s) it did not declare: {shown}. An audit only writes its report and "
+            "ledger; leave the source as it is and record each defect as an open finding naming the task that owns it")
 
 
 def ledger_path(expected_paths) -> str | None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import subprocess
 import threading
 from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
@@ -47,12 +48,14 @@ class QualityVerificationPort:
         rework_notes: Callable[[str, str], None] | None = None,
         audit_policy: bt_audit_gate.Policy | None = None,
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
+        read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
         self.audit_policy = audit_policy or bt_audit_gate.Policy()
         self._resolver = snapshot_resolver or SnapshotResolver(policy)
         self._read_ledger = read_ledger or self._ledger_from_snapshot
+        self._read_changes = read_changes or self._changes_from_snapshot
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -290,6 +293,18 @@ class QualityVerificationPort:
                 return b"x" * (bt_audit_gate.MAX_BYTES + 1)
             return target.read_bytes()
 
+    def _changes_from_snapshot(self, order: VerifyRequest) -> tuple[str, ...]:
+        """The paths the attempt changed against its base (exact: `git diff`, not the manifest's capped list). A snapshot
+        that cannot be read raises: an outage to retry, not a verdict."""
+        source = self._snapshot_source(order)
+        if source is None:
+            raise RuntimeError("the audited snapshot is unavailable")
+        done = subprocess.run(["git", "-C", str(source.repository), "diff", "--name-only", "-z", "--no-renames",
+                               source.base_sha, source.snapshot_sha], capture_output=True, timeout=60, check=False)
+        if done.returncode:
+            raise RuntimeError("the audited snapshot could not be compared with its base")
+        return tuple(name for name in done.stdout.decode("utf-8", "replace").split("\0") if name)
+
     def _audit_gate(self, order: VerifyRequest) -> bt_audit_gate.Gate | None:
         """None when the task is not an audit; otherwise the judgment of its findings ledger, whatever the checks said."""
         try:
@@ -307,10 +322,16 @@ class QualityVerificationPort:
             return bt_audit_gate.Gate(
                 False, (f"an audit task must declare one *{bt_audit_gate.LEDGER_SUFFIX} file",), (), ()
             )
-        return bt_audit_gate.evaluate(
+        gate = bt_audit_gate.evaluate(
             self._read_ledger(order, path), [spec.id for spec in self.core.plan.tasks], order.task_id,
             self.audit_policy,
         )
+        stray = bt_audit_gate.stray_changes(self._read_changes(order), task.expected_paths) \
+            if self.audit_policy.read_only else ()
+        if stray:
+            return bt_audit_gate.Gate(False, (*gate.problems, bt_audit_gate.scope_problem(stray)), gate.blocking,
+                                      gate.rework)
+        return gate
 
     def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
         if self.rework_notes is None:

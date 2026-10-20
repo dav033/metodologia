@@ -30,7 +30,7 @@ DEFAULTS: dict = {
     # the owner decides); with `audit_ledger_required` off, an audit that declares no ledger (a plan written before the
     # gate) is accepted on M6's verdict alone and the skip is recorded in the run's audit trail.
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
-              "second_auditor": True,
+              "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
               "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit

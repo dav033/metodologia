@@ -184,14 +184,14 @@ class Unit(unittest.TestCase):
         self.assertEqual(refs.strip(), "", "a ref was written to another repository")
         self.assertTrue(git(self.app, "for-each-ref", "refs/m3/integration") if "GIT_DIR" not in os.environ else True)
 
-    def test_the_conflict_detail_leads_with_the_files_and_fits_the_core_limit(self):
+    def test_the_conflict_detail_names_who_clashes_then_the_files_and_fits_the_core_limit(self):
         s2 = snapshot(self.app, self.head, {"README.md": "left\n"})
         s3 = snapshot(self.app, self.head, {"README.md": "right\n"})
         self.accept("T2", s2)
         self.accept("T3", s3)
         with self.assertRaises(integ.IntegrationError) as caught:
             self.bound({"T2": ([], "app"), "T3": ([], "app"), "T4": (["T2", "T3"], "app")}).base_ref("T4")
-        self.assertTrue(caught.exception.detail.startswith("README.md"))
+        self.assertTrue(caught.exception.detail.startswith("T2 vs T3 for T4: README.md"))
         self.assertLessEqual(len(f"{caught.exception.code}: {caught.exception.detail}"), 200)
         self.assertTrue(caught.exception.permanent)
 
