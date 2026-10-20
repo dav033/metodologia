@@ -132,13 +132,14 @@ def route_get(handler) -> None:
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
 
 
-HANDLERS: dict = {}     # command -> handler(target, params); filled by the dispatch layer (T5a/T5b)
+HANDLERS: dict = {}     # additional command handlers supplied by later dispatch layers
 _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
                    "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409, "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503}
 
 
 def _target_state(target: str) -> dict | None:
-    return None     # replaced by the dispatch layer; an unreadable target never satisfies a precondition
+    import bt_remote_commands as commands
+    return commands.target_state(target)
 
 
 def _submit_command(handler, length: int) -> None:
@@ -147,7 +148,9 @@ def _submit_command(handler, length: int) -> None:
         request = json.loads(handler.rfile.read(length) or b"null")
     except (ValueError, OSError):
         return _problem(handler, 400, "INVALID_COMMAND", "El cuerpo debe ser JSON válido.")
-    result = commands.Ledger().submit(request, HANDLERS, _target_state)
+    handlers = commands.dispatch_handlers()
+    handlers.update(HANDLERS)
+    result = commands.Ledger().submit(request, handlers, _target_state)
     _json(handler, result, _COMMAND_STATUS.get(result.get("code") or result["status"], 200))
 
 

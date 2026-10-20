@@ -7,11 +7,12 @@ import json
 import os
 import sqlite3
 import threading
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable
 
-COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve", "launch",
-            "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
+COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision",
+            "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
 _LOCK = threading.Lock()
@@ -27,6 +28,89 @@ StateReader = Callable[[str], "dict | None"]    # target -> {"state", "revision"
 def default_path() -> Path:
     root = Path(os.environ.get("BITACORA_ROOT") or Path.home() / "bitacora")
     return root / ".state" / "remote" / "commands.db"
+
+
+def _run_target(target: str) -> tuple[str, str, Path]:
+    """Resolve the stable remote run target `project/REQ-NNN` beneath the configured bitácora root."""
+    import bt_core
+    import bt_plans_api
+
+    project, separator, req = target.partition("/")
+    if not separator or not project or "/" in req:
+        raise ValueError("target debe tener el formato project/REQ-NNN.")
+    rdir = bt_plans_api.req_dir(bt_core.ROOT, project, req)
+    return project, req, rdir
+
+
+def target_state(target: str) -> dict | None:
+    """Return the same public run-state vocabulary used by the plans read model."""
+    import bt_core
+    import bt_plans_api
+
+    try:
+        project, req, _ = _run_target(target)
+        status = bt_plans_api.status_of(bt_core.ROOT, project, req)
+    except (ValueError, bt_plans_api.PlanError, OSError):
+        return None
+    run = status["run"]
+    if not isinstance(run, dict) or run.get("authority") != "scheduler":
+        return None
+    # The precondition pins the revision the live run uses, not the newest plan a user may have edited.
+    revision = (run.get("plan_ref") or {}).get("revision")
+    return {"state": run.get("status"), "revision": revision, "updatedAt": run.get("updated_at")}
+
+
+def dispatch_run_command(command: str, target: str, params: dict) -> Any:
+    """Apply a remote run move through the existing Scheduler operator and decision APIs."""
+    project, req, rdir = _run_target(target)
+    import bt_scheduler_ops as ops
+
+    reason = params.get("reason", "")
+    if not isinstance(reason, str):
+        raise ValueError("reason debe ser texto.")
+    if command == "pause":
+        with ops.hold(rdir, reason or "remote pause", keep=True):
+            return {"messages": [f"owner stopped: {ops.stop_owner(project, req)} process(es)"]}
+    if command == "resume":
+        return {"messages": [ops.resume(project, req, rdir)]}
+    if command in {"cancel-attempt", "reopen", "revise"}:
+        if command == "cancel-attempt":
+            attempt = params.get("attempt")
+            if not isinstance(attempt, str) or not attempt:
+                raise ValueError("cancel-attempt requiere params.attempt.")
+            target_id = attempt
+        elif command == "reopen":
+            task = params.get("task")
+            if not isinstance(task, str) or not task:
+                raise ValueError("reopen requiere params.task.")
+            target_id = task
+        else:
+            target_id = ""
+        messages = ops.apply(project, req, rdir, command, target_id, reason)
+        messages.append(ops.resume(project, req, rdir))
+        return {"messages": messages}
+    if command == "retry":
+        task = params.get("task")
+        if not isinstance(task, str) or not task:
+            raise ValueError("retry requiere params.task.")
+        if params.get("route"):
+            raise ValueError("retry con route requiere el despachador de recuperación.")
+        messages = ops.retry(project, req, rdir, task, reason)
+        messages.append(ops.resume(project, req, rdir))
+        return {"messages": messages}
+    if command == "answer-decision":
+        request_id, option = params.get("request_id"), params.get("option")
+        if not isinstance(request_id, str) or not request_id or not isinstance(option, str) or not option:
+            raise ValueError("answer-decision requiere params.request_id y params.option.")
+        import bt_scheduler_decisions as decisions
+        return {"messages": decisions.answer(project, req, rdir, request_id, option, reason, by="remote")}
+    raise ValueError(f"Comando no implementado por el despachador de runs: {command}.")
+
+
+def dispatch_handlers() -> dict[str, Handler]:
+    """Build handlers for commands owned by the Scheduler run surface."""
+    return {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
+            for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
 
 
 def _now() -> str:
@@ -67,10 +151,18 @@ class Ledger:
         with self._db() as db:
             db.execute(_SCHEMA)
 
-    def _db(self) -> sqlite3.Connection:
+    @contextmanager
+    def _db(self):
         db = sqlite3.connect(self.path, timeout=10)
         db.row_factory = sqlite3.Row
-        return db
+        try:
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+        finally:
+            db.close()
 
     def rows(self) -> list[dict]:
         with self._db() as db:

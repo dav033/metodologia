@@ -14,6 +14,7 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 import bt_remote_api
 import bt_remote_commands as rc
+import bt_scheduler_ops
 
 KEY = "test-gateway-key-0123456789"
 
@@ -134,6 +135,10 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(precondition={"revision": 1}))[0], 409)
         self.assertEqual(self.post(req(idempotency_key="key-00000002", precondition={"revision": 1}))[1]["code"],
                          "STALE_PRECONDITION")
+        self.assertEqual(self.post(req(idempotency_key="key-00000004", precondition={"revision": 4}))[1]["code"],
+                         "STALE_PRECONDITION")
+        self.assertEqual(self.post(req(idempotency_key="key-00000005", precondition={"updatedAt": "t0"}))[1]["code"],
+                         "STALE_PRECONDITION")
         self.post(req(idempotency_key="key-00000003"))
         self.assertEqual(self.post(req(idempotency_key="key-00000003", params={"a": 1}))[1]["code"], "IDEMPOTENCY_CONFLICT")
         self.assertEqual(self.post(req(command="nope"))[0], 400)
@@ -141,8 +146,75 @@ class EntryPointTests(LedgerBase):
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
-        status, body = self.post(req())
+        status, body = self.post(req(command="approve"))
         self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_route_post_cancel_attempt_dispatches_through_scheduler_operator(self):
+        request = req(command="cancel-attempt", params={"attempt": "att-001", "reason": "owner request"})
+        calls = []
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(bt_scheduler_ops, "apply", side_effect=lambda *a, **kw: calls.append((a, kw)) or ["cancelled"]), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            status, body = self.post(request)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(calls[0][0][0:5], ("demo", "REQ-001", Path(self.temp.name), "cancel-attempt", "att-001"))
+        self.assertEqual(calls[0][0][5], "owner request")
+
+    def test_route_post_reads_public_state_and_live_revision_for_precondition(self):
+        import bt_plans_api
+
+        status_model = {"run": {"authority": "scheduler", "status": "running", "updated_at": "t1",
+                                "plan_ref": {"revision": 3}}, "plan": {"revision": 4}}
+        request = req(command="cancel-attempt", params={"attempt": "att-001"})
+        calls = []
+        h = FakeHandler(json.dumps(request).encode())
+        with patch.object(bt_plans_api, "status_of", return_value=status_model) as status_reader, \
+                patch.object(bt_scheduler_ops, "apply", side_effect=lambda *a, **kw: calls.append(a) or ["cancelled"]), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"), \
+                patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True):
+            bt_remote_api.route_post(h)
+        status, body = h.sent
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(calls[0][4], "att-001")
+        status_reader.assert_called_once()
+
+    def test_route_post_decision_answer_uses_scheduler_decisions_api(self):
+        import bt_scheduler_decisions as decisions
+
+        request = req(command="answer-decision", params={"request_id": "T1:2", "option": "retry",
+                                                            "reason": "please retry"})
+        calls = []
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(decisions, "answer", side_effect=lambda *a, **kw: calls.append((a, kw)) or ["answered"]):
+            status, body = self.post(request)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(calls[0][0], ("demo", "REQ-001", Path(self.temp.name), "T1:2", "retry", "please retry"))
+        self.assertEqual(calls[0][1], {"by": "remote"})
+
+    def test_route_post_decision_note_is_read_by_next_attempt_prompt(self):
+        import bt_scheduler_decisions as decisions
+        import bt_scheduler_executor_wiring as wiring
+
+        request = req(command="answer-decision", params={"request_id": "T1:2", "option": "retry_with_note",
+                                                            "reason": "use the fixture"})
+        open_request = {"id": "T1:2", "task": "T1", "options": [{"id": "retry_with_note"}]}
+        with patch.object(rc, "_run_target", return_value=("demo", "REQ-001", Path(self.temp.name))), \
+                patch.object(decisions, "open_requests", return_value=[open_request]), \
+                patch.object(bt_scheduler_ops, "apply", return_value=["T1: reopened"]), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            status, body = self.post(request)
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        prompt = wiring._with_owner_notes(Path(self.temp.name), lambda _request: "base prompt")(
+            type("PromptRequest", (), {"task_id": "T1"})())
+        self.assertIn("use the fixture", prompt)
+        self.assertIn("base prompt", prompt)
+
+    def test_route_post_refuses_unknown_command_without_ledger_row(self):
+        status, body = self.post(req(command="erase-everything"))
+        self.assertEqual((status, body["code"]), (400, "INVALID_COMMAND"))
         self.assertEqual(self.route_ledger().rows(), [])
 
 
