@@ -42,7 +42,8 @@ def _with_owner_notes(rdir, plan, base):
 
     def notes(request):
         parts = [bt_scheduler_decisions.operator_notes(rdir, request.task_id),
-                 bt_scheduler_decisions.audit_notes(rdir, request.task_id)]
+                 bt_scheduler_decisions.audit_notes(rdir, request.task_id),
+                 bt_scheduler_decisions.verify_notes(rdir, request.task_id)]
         try:
             task = plan.task(request.task_id)
             if task.meta.get("kind") == "audit":
@@ -168,6 +169,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
                 attempts_root=executor.attempts_dir,
                 rework_notes=lambda task_id, text: bt_scheduler_decisions.write_audit_notes(rdir, task_id, text),
+                verify_notes=lambda task_id, text: bt_scheduler_decisions.write_verify_notes(rdir, task_id, text),
                 audit_policy=bt_audit_gate.policy_from(bt_config.get),
                 integration_check=(integrate.would_conflict
                                    if integrate is not None and bt_config.get("gates.integration_check", True) is True

@@ -46,6 +46,7 @@ class QualityVerificationPort:
         runner: SandboxRunner | None = None,
         snapshot_resolver: SnapshotResolver | None = None,
         rework_notes: Callable[[str, str], None] | None = None,
+        verify_notes: Callable[[str, str], None] | None = None,
         audit_policy: bt_audit_gate.Policy | None = None,
         read_ledger: Callable[[VerifyRequest, str], bytes | None] | None = None,
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
@@ -55,6 +56,7 @@ class QualityVerificationPort:
     ):
         self.core = core
         self.rework_notes = rework_notes
+        self.verify_notes = verify_notes                  # (task, text): why M6 rejected the attempt; '' clears it
         self.audit_policy = audit_policy or bt_audit_gate.Policy()
         self._resolver = snapshot_resolver or SnapshotResolver(policy)
         self._read_ledger = read_ledger or self._ledger_from_snapshot
@@ -412,6 +414,46 @@ class QualityVerificationPort:
             return ()
         return redo
 
+    def _failure_digest(self, result) -> str:
+        """The failing checks of an M6 result, with the tail of what each printed: what the agent must read to fix them."""
+        seen: set[tuple] = set()
+        blocks = []
+        for check in result.get("checks") or ():
+            if not isinstance(check, Mapping) or check.get("status") == "pass":
+                continue
+            key = (check.get("command"), check.get("stderr_ref"), check.get("stdout_ref"))
+            if key in seen:
+                continue
+            seen.add(key)
+            output = b""
+            for ref in (check.get("stderr_ref"), check.get("stdout_ref")):
+                try:
+                    output = self.store.get_artifact(ref) or b"" if isinstance(ref, str) else b""
+                except Exception:  # noqa: BLE001 - a missing artifact only shortens the note
+                    output = b""
+                if output.strip():
+                    break
+            tail = output.decode("utf-8", "replace").strip()[-1500:]
+            blocks.append(f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n{tail}")
+            if len(blocks) == 3:
+                break
+        if not blocks:
+            return ""
+        return ("The independent verification of your previous attempt failed. The checks run in a sandbox: no network, "
+                "`node_modules` mounted read-only, a clean copy of your final files. Fix the cause shown here before "
+                "anything else:\n\n" + "\n\n".join(blocks))
+
+    def _write_verify_note(self, order: VerifyRequest, result) -> None:
+        if self.verify_notes is None or not isinstance(result, Mapping):
+            return
+        try:
+            if result.get("status") == "FAIL":
+                self.verify_notes(order.task_id, self._failure_digest(result))
+            elif result.get("status") == "PASS":
+                self.verify_notes(order.task_id, "")
+        except OSError as error:
+            LOGGER.warning("verification note not written for %s (%s)", order.task_id, type(error).__name__)
+
     def _write_rework_notes(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> None:
         if self.rework_notes is None:
             return
@@ -456,6 +498,7 @@ class QualityVerificationPort:
                     request_key, "pending", "verdict evidence is incomplete"
                 )
                 return "pending"
+            self._write_verify_note(order, result)
             gate = self._audit_gate(order) if accepted else None
             clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
             give_way: tuple[str, ...] = ()

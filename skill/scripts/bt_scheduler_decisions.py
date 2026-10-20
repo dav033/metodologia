@@ -89,6 +89,29 @@ def write_audit_notes(rdir: Path, task: str, text: str) -> None:
     path.write_text(text.strip() + "\n", encoding="utf-8")
 
 
+def verify_notes_path(rdir: Path, task: str) -> Path:
+    return Path(rdir) / NOTES / f"{task}.verify.md"
+
+
+def write_verify_notes(rdir: Path, task: str, text: str) -> None:
+    """Why the independent verification rejected the last attempt (empty text clears it once the task passes)."""
+    path = verify_notes_path(rdir, task)
+    if not text.strip():
+        path.unlink(missing_ok=True)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.strip() + "\n", encoding="utf-8")
+
+
+def verify_notes(rdir: Path, task: str) -> str:
+    """The failing checks of the previous attempt, to go into the next prompt: a retry that cannot see why it failed
+    repeats the failure (REQ-027 T17 failed three times on the same sandbox error)."""
+    try:
+        return verify_notes_path(rdir, task).read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
 def audit_notes(rdir: Path, task: str) -> str:
     """The system's audit indications for a task, to go into its next prompt."""
     try:

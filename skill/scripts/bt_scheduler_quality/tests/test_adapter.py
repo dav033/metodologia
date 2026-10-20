@@ -103,6 +103,7 @@ class M6M1AdapterTests(unittest.TestCase):
         integration_check=None,
         unresolved_check=None,
         rework_notes=None,
+        verify_notes=None,
         audit_policy=None,
     ):
         temporary = tempfile.TemporaryDirectory(prefix="m6-m1-")
@@ -143,6 +144,7 @@ class M6M1AdapterTests(unittest.TestCase):
             integration_check=integration_check,
             unresolved_check=unresolved_check,
             rework_notes=rework_notes,
+            verify_notes=verify_notes,
             audit_policy=audit_policy,
         )
         core.ports.verification = adapter
@@ -407,6 +409,30 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertEqual([task_id for task_id, _ in notes], ["T1"])
         self.assertIn("a.py, b.py", notes[0][1])
         self.assertIn("delete the markers", notes[0][1])
+
+    def test_a_failed_verification_leaves_the_failing_output_for_the_retry_and_a_pass_clears_it(self):
+        class Failing(ScriptedRunner):
+            fail = True
+
+            def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
+                if not self.fail:
+                    return super().run(check, snapshot_root, timeout_seconds=timeout_seconds, mounts=mounts)
+                return CommandOutcome("fail", 1, 2, b"", b"npm error code EROFS: read-only file system\n", None, True)
+
+        runner, notes = Failing(), []
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, runner=runner,
+                                                     verify_notes=lambda task_id, text: notes.append((task_id, text)))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: bool(notes)))
+        task_id, text = notes[0]
+        self.assertEqual(task_id, "T1")
+        self.assertIn("python3 build.py", text)
+        self.assertIn("EROFS: read-only file system", text)
+        self.assertIn("node_modules", text)
 
     def test_a_result_that_combines_cleanly_is_accepted(self):
         task = _task("T1", "python3 build.py")

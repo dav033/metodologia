@@ -20,8 +20,10 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
         parts.append(f"\n## How the work will be checked (by someone else)\n{bullets(brief.verification)}\n\n"
                      "The checks run from a clean copy of your final worktree: tracked and untracked files, nothing git-ignored, "
                      "no network, no running server. A script or test that these commands name and the repository does not "
-                     "have yet is yours to create, and every command must pass on your final files. Run each one yourself "
-                     "before you finish and say which you could not run.")
+                     "have yet is yours to create, and every command must pass on your final files. Installed dependencies "
+                     "(`node_modules`) are mounted read-only: a check or test that runs `npm install`/`npm ci` or writes "
+                     "inside `node_modules` fails there, so a test must use what is installed and write build output "
+                     "elsewhere. Run each one yourself before you finish and say which you could not run.")
     if brief.expected_paths:
         parts.append(f"\n## Expected paths (guidance, not a limit)\n{bullets(brief.expected_paths)}")
     if brief.notes:
