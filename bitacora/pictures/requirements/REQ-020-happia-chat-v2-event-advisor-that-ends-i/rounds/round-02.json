@@ -88,7 +88,29 @@
   }
  ],
  "round": 2,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-20T10:51:03"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "c",
+   "note": "Owner created project byepzsrbjgvrmsmfuzhj (us-east-2). Supabase is ONLY a managed Postgres: no Supabase Auth, no Storage. Verified: transaction pooler aws-0-us-east-2:6543 works, Postgres 17.11; direct host is IPv6-only"
+  },
+  "q2": {
+   "choice": "b",
+   "note": "Own auth solution: two accounts - general 'user' (any password) and 'admin' (other password); nothing else"
+  },
+  "q3": {
+   "text": "No personal emails: accounts are usernames 'user' and 'admin'"
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Not answered explicitly; default read-only monitoring applies (admin's only difference is monitoring)"
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Yes, except Supabase Storage (Supabase only for Postgres): photos go to Postgres bytea. Keys handling is fine, local and quick"
+  }
+ },
+ "created_at": "2026-10-20T10:51:03",
+ "answered_at": "2026-10-20T10:55:15",
+ "answered_via": "terminal"
 }
