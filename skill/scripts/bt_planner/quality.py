@@ -203,6 +203,30 @@ def file_hotspots(plan: dict) -> list[str]:
                   for (_, path), ids in seen.items() if len(ids) >= HOTSPOT_TASKS)
 
 
+LIVE_FLAGS = ("--live", "--deployed", "--remote", "--prod", "--production")
+LIVE_TOOLS = ("ssh", "scp", "curl", "wget", "gh", "vercel", "netlify", "psql", "docker", "kubectl")
+_URL = re.compile(r"https?://(?!(?:localhost|127\.|0\.0\.0\.0|\[::1\]))", re.IGNORECASE)
+
+
+def live_verifications(plan: dict) -> list[str]:
+    """Command checks that need the network or a live service. The verifier runs every check offline in a sandbox, so
+    these can never pass there and the task burns its attempts (REQ-020 had seven). The live run belongs to the task;
+    the check should read a receipt that run leaves in the repository."""
+    out = []
+    for task_id, task in _plan_tasks(plan):
+        for index, item in enumerate(task.get("verification") if isinstance(task.get("verification"), list) else []):
+            if not isinstance(item, dict) or item.get("type") != "command" or not isinstance(item.get("value"), str):
+                continue
+            value = item["value"]
+            segments = [seg.split() for seg in re.split(r"&&|\|\||[|;]", value)]
+            if any(flag in seg for seg in segments for flag in LIVE_FLAGS) or _URL.search(value) \
+                    or any(seg and seg[0] in LIVE_TOOLS for seg in segments):
+                out.append(f"{task_id}.verification[{index}]: `{item['value'][:90]}` needs the network or a live service, "
+                           "but checks run offline in a sandbox and can never pass; have the task run it and leave a "
+                           "receipt file, and verify the receipt")
+    return out
+
+
 def analyze(plan: dict) -> dict:
     """Read-only quality summary of a (valid) plan."""
     order, tasks, _, _ = _ordered_masks(plan)

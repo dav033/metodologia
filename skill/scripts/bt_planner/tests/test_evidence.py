@@ -483,6 +483,15 @@ class Coherence(unittest.TestCase):
         globs = mini(*[dict(id=f"T{n}", expected_paths=["gateway/**"]) for n in range(1, 6)])
         self.assertFalse(any("declared by" in w for w in check(globs).warnings))                # globs name no one file
 
+    def test_checks_that_need_the_network_are_a_warning(self):
+        def with_command(value):
+            return mini(dict(id="T1", verification=[{"type": "command", "value": value, "purpose": "x"}]))
+        for live in ("npx tsx run.ts --live --milestone M1", "cd app && npm run e2e -- --deployed", "curl -s http://example.com",
+                     "python probe.py https://api.example.com/health", "npm test && vercel ls"):
+            self.assertTrue(any("needs the network" in w for w in check(with_command(live)).warnings), live)
+        for offline in ("pytest -q", "python probe.py http://127.0.0.1:8000/health", "npm run lint && npm run build"):
+            self.assertFalse(any("needs the network" in w for w in check(with_command(offline)).warnings), offline)
+
     def test_path_overlap_rules(self):
         yes = [("src/**", "src/a.py"), ("src/auth/**", "src/auth/x/y.py"), ("**", "docs/a.md"), ("a/b.py", "a/b.py"),
                ("src/*.py", "src/a.py")]
