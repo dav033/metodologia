@@ -37,6 +37,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
   let frontendOrigin;
   let sawStateOnCallback = false;
   let sawSessionAfterCallback = false;
+  let sawSessionOnLogout = false;
   let gateway;
   let provider;
   let next;
@@ -89,6 +90,15 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
         response.end(JSON.stringify({ authenticated: sawSessionAfterCallback }));
         return;
       }
+      if (requestUrl.pathname === "/api/auth/logout") {
+        sawSessionOnLogout = (request.headers.cookie ?? "").includes("flow_session=browser-session");
+        response.writeHead(302, {
+          "set-cookie": "flow_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict",
+          location: "/",
+        });
+        response.end();
+        return;
+      }
       response.writeHead(404);
       response.end();
     });
@@ -126,6 +136,14 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
     assert.match(stdout, /authenticated.*true|true.*authenticated/i);
     assert.equal(sawStateOnCallback, true, "frontend callback must receive the Lax state cookie");
     assert.equal(sawSessionAfterCallback, true, "same-origin API session request must receive the Strict session cookie");
+
+    const logout = await fetch(`${frontendOrigin}/api/auth/logout`, {
+      headers: { cookie: "flow_session=browser-session" },
+      redirect: "manual",
+    });
+    assert.equal(logout.status, 302, "displayed logout entrypoint must reach the gateway and redirect");
+    assert.equal(sawSessionOnLogout, true, "logout must forward the active session to the gateway");
+    assert.match(logout.headers.get("set-cookie") ?? "", /flow_session=;.*Max-Age=0/);
   } catch (error) {
     if (error?.code === "ENOENT") {
       assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
