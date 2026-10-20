@@ -21,8 +21,8 @@ class RecoverySources(unittest.TestCase):
 
 
 class RetryAcrossRevisions(unittest.TestCase):
-    def _source(self, old_key, old_state="cancelled", revision=2):
-        old = SimpleNamespace(id="att-0001", key=old_key, state=old_state, token=1)
+    def _source(self, old_key, old_state="cancelled", revision=2, failure=""):
+        old = SimpleNamespace(id="att-0001", key=old_key, state=old_state, token=1, failure=failure)
         current = SimpleNamespace(id="att-0002", key=f"REQ-1:r{revision}:T1:att-0002", state="reserved", token=1)
         state = SimpleNamespace(
             plan_id="REQ-1", revision=revision, plan_sha256="b" * 64, cancel_requested=False,
@@ -47,6 +47,21 @@ class RetryAcrossRevisions(unittest.TestCase):
     def test_a_failed_attempt_of_the_same_revision_is_the_predecessor(self):
         source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")
         self.assertEqual(source._previous("T1")["attempt_id"], "att-0001")
+
+    def test_work_an_audit_sent_back_is_continued_not_refused(self):
+        """After a rework the previous attempt was ACCEPTED (or superseded while verifying): the redo builds on it."""
+        for state, failure in (("accepted", ""), ("cancelled", "superseded_by_rework: reworked by audit-gate")):
+            with self.subTest(state=state):
+                source = self._source("REQ-1:r2:T1:att-0001", old_state=state, failure=failure)
+                self.assertEqual(source._previous("T1")["attempt_id"], "att-0001")
+                self.assertTrue(source._reworked("T1"))
+
+    def test_a_failed_attempt_is_not_a_rework_and_an_operator_cancel_still_blocks(self):
+        from bt_scheduler_integrator import IntegrationError
+
+        self.assertFalse(self._source("REQ-1:r2:T1:att-0001", old_state="failed")._reworked("T1"))
+        with self.assertRaises(IntegrationError):
+            self._source("REQ-1:r2:T1:att-0001", old_state="cancelled", failure="operator cancelled")._previous("T1")
 
     def test_a_start_the_executor_never_accepted_leaves_nothing_to_continue(self):
         source = self._source("REQ-1:r2:T1:att-0001", old_state="failed")

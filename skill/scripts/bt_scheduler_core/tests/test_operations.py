@@ -300,3 +300,50 @@ class Rework(unittest.TestCase):
         h = self.chain()
         with self.assertRaises(sc.SchedulerError):
             self.reject(h, "T3", ("T404",))
+
+
+class ReworkOfPairedAudits(unittest.TestCase):
+    """Two audits that both reject must not wait for each other: the first rework supersedes the other's verdict wait."""
+
+    def pair(self):
+        h = Harness([indep("T1"), indep("A", ["T1"]), indep("B", ["T1"])], parallel=2, max_attempts=2)
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()                                  # A and B active
+        h.send("A", "execution_finished")
+        h.send("B", "execution_finished")
+        h.core.step()                                  # both VERIFYING
+        return h
+
+    def reject(self, h, tid, vid):
+        attempt = h.attempt(tid)
+        return h.core.reject_and_rework(sc.Verdict(vid, h.plan.plan_id, h.plan.revision, tid, attempt, False,
+                                                   "validator", "audit gate: open findings", h.token(attempt)),
+                                        ("T1",), "audit-gate", "F1")
+
+    def test_the_first_rejection_supersedes_the_other_audit_instead_of_deferring_forever(self):
+        h = self.pair()
+        first, moved = self.reject(h, "A", "vd-a")
+        self.assertEqual((first.status, moved), ("applied", ("T1", "A", "B")))
+        states = {t: v["state"] for t, v in h.core.snapshot().tasks.items()}
+        self.assertEqual((states["A"], states["B"]), ("pending", "pending"))
+        self.assertEqual(states["T1"], "ready")
+        superseded = [e for e in h.core.audit_log() if e.kind == "attempt_transition" and e.task_id == "B"
+                      and e.detail.get("to") == "cancelled"]
+        self.assertEqual(len(superseded), 1)
+
+    def test_the_late_verdict_of_the_superseded_audit_is_stale_not_applied(self):
+        h = self.pair()
+        self.reject(h, "A", "vd-a")
+        late, moved = self.reject(h, "B", "vd-b")
+        self.assertEqual((late.status, moved), ("stale", ()))
+
+    def test_a_running_attempt_still_defers(self):
+        h = Harness([indep("T1"), indep("A", ["T1"]), indep("B", ["T1"])], parallel=2, max_attempts=2)
+        h.core.step()
+        h.finish_and_accept("T1")
+        h.core.step()
+        h.send("A", "execution_finished")
+        h.core.step()                                  # B is still running
+        result, moved = self.reject(h, "A", "vd-a")
+        self.assertEqual((result.status, moved), ("deferred", ()))

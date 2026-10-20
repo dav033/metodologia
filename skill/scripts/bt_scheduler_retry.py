@@ -37,6 +37,16 @@ def _process_may_live(identity: object) -> bool:
         return True
 
 
+
+def _sent_back(attempt) -> bool:
+    """An attempt whose work an audit sent back: accepted before the rework, or cancelled by it while verifying."""
+    return attempt.state == "accepted" or (attempt.state == "cancelled"
+                                            and str(getattr(attempt, "failure", "")).startswith("superseded_by_rework"))
+
+
+def _continuable(attempt) -> bool:
+    return attempt.state in {"failed", "rejected"} or _sent_back(attempt)
+
 class RetryContinuation:
     def __init__(self, scheduler, executor, repo_of, fallback, *, default_repository=""):
         self.scheduler, self.executor, self.repo_of = scheduler, executor, repo_of
@@ -88,11 +98,19 @@ class RetryContinuation:
             if not old.key.startswith(f"{ctx.state.plan_id}:r{ctx.state.revision}:"):
                 return None  # an attempt of an earlier plan revision (the run was rebased): this one starts fresh
             if (rec.state != "active" or current.state not in {"reserved", "dispatched", "running"}
-                    or old.state not in {"failed", "rejected"} or ctx.state.cancel_requested):
+                    or not _continuable(old) or ctx.state.cancel_requested):
                 raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry is not authorised")
             return {"plan_id": ctx.state.plan_id, "plan_sha256": ctx.state.plan_sha256,
                     "revision": ctx.state.revision, "task_id": task_id,
                     "attempt_id": old.id, "token": old.token}
+        return self.scheduler.read(read)
+
+    def _reworked(self, task_id) -> bool:
+        """True when the previous attempt's work was sent back by an audit (accepted earlier, or superseded while it
+        waited for its verdict) instead of failing: the redo continues from it with the audit's findings."""
+        def read(ctx):
+            rec = ctx.state.tasks[task_id]
+            return len(rec.attempts) >= 2 and _sent_back(ctx.state.attempts[rec.attempts[-2]])
         return self.scheduler.read(read)
 
     def _handoff(self, task_id):
@@ -119,6 +137,11 @@ class RetryContinuation:
             return ""
         if request.base_ref != snapshot:
             raise integration.IntegrationError("PREDECESSOR_HANDOFF_MISSING", "retry base does not match its snapshot")
+        if self._reworked(request.task_id):
+            return (f"Continue the preserved files from this task's previous attempt, snapshot {snapshot}. "
+                    "That work was accepted or finished, and an independent audit then sent it back: fix what the audit "
+                    "notes above say is wrong, keep what is correct, and recheck the complete frozen acceptance and "
+                    "verification instructions. No private conversation or agent reasoning is transferred.")
         return (f"Continue the preserved files from this task's previous attempt, snapshot {snapshot}. "
                 "The previous attempt failed or was rejected by independent verification. Its output is unaccepted. "
                 "Recheck the complete frozen acceptance and verification instructions; preserve useful partial changes. "

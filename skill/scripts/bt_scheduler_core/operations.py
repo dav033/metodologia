@@ -80,19 +80,27 @@ def rework_scope(ctx: Ctx, task_ids: tuple[str, ...]) -> tuple[str, ...]:
     return tuple(spec.id for spec in ctx.plan.tasks if spec.id in wanted)
 
 
+def _building(ctx: Ctx, task_id: str):
+    """The live attempt of a task that is still producing work (reserved, dispatched or running). An attempt that already
+    finished and only waits for its verdict (VERIFYING) is not building anything: a rework supersedes it."""
+    att = live_attempt(ctx.state, task_id)
+    return att if att is not None and A(att.state) != A.VERIFYING else None
+
+
 def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = (), *, owner: bool = False) -> str:
     """Why a rework cannot start now ('' when it can). The text starts with a code: `cancelled` (the run is being
     cancelled), `limit` (a named task was already sent back `max_reworks` times: only the owner can decide more) or
-    `busy` (a task it would reset has a live attempt, whose result would be built on work being redone: try later).
-    `also` is the task whose rejecting verdict asks for the rework: its attempt closes with that verdict, so it is not
-    counted."""
+    `busy` (a task it would reset is still building: its result would sit on work being redone, try later). `also` is
+    the task whose rejecting verdict asks for the rework: its attempt closes with that verdict. An attempt waiting for
+    its verdict does not count: two audits that both reject would otherwise wait for each other forever, so the rework
+    supersedes it instead (see `rework`)."""
     if ctx.state.cancel_requested:
         return "cancelled: the run is being cancelled"
     scope = rework_scope(ctx, (*task_ids, *also))
     for task_id in () if owner else task_ids:      # the owner may send work back more often than the system does
         if ctx.state.tasks[task_id].reworks >= ctx.config.max_reworks:
             return f"limit: {task_id} was already sent back {ctx.config.max_reworks} time(s)"
-    live = [task_id for task_id in scope if task_id not in also and live_attempt(ctx.state, task_id) is not None]
+    live = [task_id for task_id in scope if task_id not in also and _building(ctx, task_id) is not None]
     if live:
         return f"busy: live attempt on {', '.join(live)}"
     return ""
@@ -112,6 +120,10 @@ def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, al
     scope = rework_scope(ctx, (*task_ids, *also))
     moved = []
     for task_id in scope:
+        att = live_attempt(ctx.state, task_id)
+        if att is not None and task_id not in also and A(att.state) == A.VERIFYING:
+            # finished work waiting for a verdict that would judge the old result: its verdict becomes stale
+            end_attempt(ctx, att.id, A.CANCELLED, "superseded_by_rework", f"superseded_by_rework: reworked by {by}")
         rec = ctx.state.tasks[task_id]
         if rec.state in (T.PENDING.value, T.CANCELLED.value):
             continue
