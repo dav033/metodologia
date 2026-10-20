@@ -17,6 +17,7 @@ COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "a
             "approve", "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
 CHALLENGED = frozenset(("revise", "approve", "launch", "cancel-plan", "delete-plan"))
 ORIGINS = ("web", "telegram")
+PLAN_PINNED = frozenset(("approve", "launch", "cancel-plan", "delete-plan", "edit-brief"))  # pin the plan, not the run
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
 _LOCK = threading.Lock()
 _SCHEMA = """CREATE TABLE IF NOT EXISTS commands (
@@ -149,7 +150,51 @@ def dispatch_handlers() -> dict[str, Handler]:
                 for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
+    handlers["edit-brief"] = lambda target, params: edit_brief(target, params)
     return handlers
+
+
+def edit_brief(target: str, params: dict) -> dict:
+    """Owner edit of a task's brief (`objective`) and/or `acceptance_criteria` from the phone.
+
+    It is recorded as plan revision N+1, frozen as owner-approved (the owner's confirmed command is the approval),
+    and a Scheduler run is rebased onto it (live attempts are cancelled; unchanged accepted work is kept).
+    """
+    import bt_planner as planner
+    import bt_planner.revisions
+    import bt_scheduler_adapter as adapter
+    import bt_scheduler_ops as ops
+
+    project, req, rdir = _run_target(target)
+    task_id, objective, criteria = params.get("task"), params.get("objective"), params.get("acceptance_criteria")
+    if not isinstance(task_id, str) or not task_id:
+        raise ValueError("edit-brief requiere params.task.")
+    if objective is None and criteria is None:
+        raise ValueError("edit-brief requiere params.objective y/o params.acceptance_criteria.")
+    if objective is not None and (not isinstance(objective, str) or not objective.strip()):
+        raise ValueError("objective debe ser texto no vacío.")
+    if criteria is not None and (not isinstance(criteria, list) or not criteria or any(
+            not isinstance(c, str) or not c.strip() for c in criteria)):
+        raise ValueError("acceptance_criteria debe ser una lista de textos no vacíos.")
+    last = planner.latest(rdir)
+    if last is None:
+        raise ValueError("El plan aún no tiene una revisión congelada que editar.")
+    plan = json.loads(json.dumps(planner.load_revision(rdir, last["revision"])))
+    task = next((t for t in plan.get("tasks", []) if t.get("id") == task_id), None)
+    if task is None:
+        raise ValueError(f"El plan no tiene la tarea {task_id}.")
+    if objective is not None:
+        task["objective"] = objective.strip()
+    if criteria is not None:
+        task["acceptance_criteria"] = [c.strip() for c in criteria]
+    plan["revision"] = last["revision"] + 1
+    entry = planner.revisions.freeze(rdir, plan, source="owner-approved")
+    (rdir / planner.PLAN_JSON).write_text(planner.dumps(plan), encoding="utf-8")   # keep the working copy in step
+    messages = [f"{task_id}: plan revision r{entry['revision']} frozen as owner-approved"]
+    if adapter.authority(rdir) == "scheduler":
+        messages += ops.apply(project, req, rdir, "revise", "", params.get("reason") or f"edit-brief {task_id}")
+        messages.append(ops.resume(project, req, rdir))
+    return {"revision": entry["revision"], "source": "owner-approved", "messages": messages}
 
 
 def dispatch_plan_command(command: str, target: str, params: dict) -> Any:
@@ -210,6 +255,8 @@ def validate(req: Any) -> str | None:
     if not isinstance(pre, dict) or not pre or set(pre) - set(PRECONDITION_FIELDS) \
             or any(not isinstance(v, (str, int)) or isinstance(v, bool) for v in pre.values()):
         return "precondition debe fijar state, revision y/o updatedAt del objetivo."
+    if req["command"] == "edit-brief" and "revision" not in pre:
+        return "edit-brief debe fijar la revision del plan en la precondición."
     if not isinstance(req.get("params", {}), dict):
         return "params debe ser un objeto."
     if set(req) - {"idempotency_key", "command", "target", "origin", "params", "precondition", "confirmation"}:
@@ -326,7 +373,7 @@ class Ledger:
             except Exception as exc:
                 return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
                         "message": str(exc)[:300]}
-            if req["command"] in {"approve", "launch", "cancel-plan", "delete-plan"} and current:
+            if req["command"] in PLAN_PINNED and current:
                 current = {**current, "state": current.get("plan_state", current.get("state")),
                            "revision": current.get("plan_revision", current.get("revision")),
                            "updatedAt": current.get("plan_updatedAt", current.get("updatedAt"))}

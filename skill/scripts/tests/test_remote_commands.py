@@ -149,7 +149,7 @@ class EntryPointTests(LedgerBase):
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
-        status, body = self.post(req(command="edit-brief"))
+        status, body = self.post(req(command="note"))
         self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
         self.assertEqual(self.route_ledger().rows(), [])
 
