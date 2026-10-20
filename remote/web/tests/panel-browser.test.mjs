@@ -182,7 +182,7 @@ test("real panel entrypoint renders API contract runs, failure reviews and contr
     assert.deepEqual([gateway.commands[4]?.type, gateway.commands[4]?.target.roundId, gateway.commands[4]?.answer], ["answer-round", "round-02", { q1: { choice: "a" }, q2: { text: "Nada más" } }]);
 
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      if (await buttonState("Reintentar", "document.querySelector('[aria-label=\\"Decisión T2:2\\"]')") === false) break;
+      if (await buttonState("Reintentar", `document.querySelector('[aria-label="Decisión T2:2"]')`) === false) break;
       await delay(100);
     }
     const decisionText = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('[aria-label=\"Decisión T2:2\"]').innerText", returnByValue: true });

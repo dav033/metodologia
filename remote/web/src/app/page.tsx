@@ -13,13 +13,18 @@ type FailureReview = { attemptId: string; cause: string; verification: { command
 type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
 declare global { interface Window { FlowCore?: FlowCore } }
 
+// The gateway only accepts state-changing requests that carry this marker.
+const FLOW_HEADERS = { "content-type": "application/json", "x-flow-request": "1" };
+
 function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
   const target = record(event?.target);
   const data = record(event?.data);
-  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(target.project) || !text(target.req) || !text(event.occurredAt)) return null;
-  const project = target.project;
-  const req = target.req;
+  if (!event || event.schemaVersion !== 1 || !target || !data || !text(event.id) || !text(event.cursor) || !text(event.type) || !text(event.occurredAt)) return null;
+  // The laptop names the run `target.run` ("project/REQ"); older fixtures spell it as separate `project` and `req`.
+  const [runProject = "", runReq = ""] = text(target.run) ? target.run.split("/") : [];
+  const project = text(target.project) ? target.project : runProject;
+  const req = text(target.req) ? target.req : runReq;
   if (!project || !req) return null;
   const task = text(field(target, "taskId", "task")) ? String(field(target, "taskId", "task")) : "";
   const attempt = text(field(target, "attemptId", "attempt")) ? String(field(target, "attemptId", "attempt")) : "";
@@ -142,13 +147,13 @@ export default function HomePage() {
         const confirmationValue = record(command.confirmation);
         const target = record(command.target);
         if (!confirmationValue || !text(confirmationValue.typedReq) || !target || confirmationValue.typedReq !== target.req) throw new Error("Escribe el id de requerimiento para confirmar.");
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ target, typedReq: confirmationValue.typedReq }) });
+        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: FLOW_HEADERS, body: JSON.stringify({ target, typedReq: confirmationValue.typedReq }) });
         const challenge: unknown = await challengeResponse.json();
         const challengeRecord = record(challenge);
         if (!challengeResponse.ok || !challengeRecord || !text(challengeRecord.challengeId)) throw new Error(text(challengeRecord?.message) ? challengeRecord.message : "No se pudo confirmar el requerimiento.");
         payload = { ...command, confirmation: { challengeId: challengeRecord.challengeId, typedReq: confirmationValue.typedReq } };
       }
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: FLOW_HEADERS, body: JSON.stringify(payload) });
       const result: unknown = await response.json();
       const resultRecord = record(result);
       if (!response.ok) {

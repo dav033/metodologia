@@ -41,7 +41,7 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
   const eventBody = await events.text();
   assert.match(events.headers.get("content-type") ?? "", /text\/event-stream/);
   assert.match(eventBody, /event: flow/);
-  assert.match(eventBody, /"project":"lotm","req":"REQ-027","taskId":"T15a"/);
+  assert.match(eventBody, /"target":\{"run":"lotm\/REQ-027","task":"T15a"\}/);
   const history = await fetch(`${origin}/api/remote/v1/commands?after=&limit=100`);
   assert.equal((await history.json()).commands[0].origin, "telegram");
 
@@ -54,9 +54,14 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
 
 test("mock gateway accepts versioned, idempotent control commands", async () => {
   const response = await fetch(`${origin}/api/remote/v1/commands`, {
-    method: "POST", headers: { "content-type": "application/json" },
+    method: "POST", headers: { "content-type": "application/json", "x-flow-request": "1" },
     body: JSON.stringify({ schemaVersion: 1, idempotencyKey: "test-idempotency-key", type: "cancel-attempt", target: { kind: "attempt", project: "lotm", req: "REQ-027", attemptId: "att-0008" }, precondition: { state: "running" }, reason: "Stalled" }),
   });
   assert.equal(response.status, 202);
   assert.equal((await response.json()).idempotencyKey, "test-idempotency-key");
+});
+
+test("mock gateway refuses state-changing requests without the CSRF marker, like the real gateway", async () => {
+  const response = await fetch(`${origin}/api/remote/v1/commands`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+  assert.equal(response.status, 403);
 });

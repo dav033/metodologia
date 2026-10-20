@@ -31,13 +31,15 @@ export async function createMockGatewayServer() {
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events")) {
       response.writeHead(200, { "cache-control": "no-store", "content-type": "text/event-stream; charset=utf-8" });
       const events = [
-        { id: "mock-event-1", cursor: "1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { kind: "run", project: "lotm", req: "REQ-027", taskId: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-1" },
-        { id: "mock-event-2", cursor: "2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { kind: "run", project: "lotm", req: "REQ-027", taskId: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-2" },
+        { id: "mock-event-1", cursor: "1", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:01Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-1" },
+        { id: "mock-event-2", cursor: "2", schemaVersion: 1, type: "attempt.failed", occurredAt: "2026-10-19T12:00:02Z", target: { run: "lotm/REQ-027", task: "T15a" }, data: { summary: "La verificación terminó" }, dedupeKey: "mock-event-2" },
       ];
       for (const event of events) response.write(`id: ${event.cursor}\nevent: flow\ndata: ${JSON.stringify(event)}\n\n`);
       response.end();
       return;
     }
+    // Like the real gateway, refuse state-changing requests that lack the CSRF marker.
+    if (request.method === "POST" && request.headers["x-flow-request"] !== "1") { send(403, { error: "forbidden" }); return; }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
