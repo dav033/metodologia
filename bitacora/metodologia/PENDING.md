@@ -55,6 +55,7 @@ month summary._
   Move items between sections as they change; closed items keep 14 days in "Recently closed", then go to the
   month summary._
 - P-129 · [closed 2026-10-19: the tests follow the real contract (baseline order kept for non-docs), D-084] M2 semantics vs 3 tests · urgency: low · complexity: M · added 2026-10-19 · owner question after D-080
+- P-131 · [closed 2026-10-20: forward remediation built, `gates.rework_scope=named` by default, D-087] Root-task audit finding reset the whole plan · urgency: med · complexity: L · added 2026-10-19 · REQ-027 audit round 2
 - P-124 · [closed 2026-10-19: executed by SUPERRR in an isolated root, 2/2 tasks accepted with real Claude; repeat on a real plan whenever wanted] Owner-run bounded real-provider check of /now, /flow and /go (two trivial tasks, one account, low effort) · urgency: med · complexity: M · added 2026-10-19 · SUPERRR T8.3
 - P-018 · [paused by owner] REQ-008: T4 implementation verified; acceptance/default activation and T5–T8 remain; resume only on explicit request · urgency: med · complexity: L · added 2026-10-14 · owner pause; requirements/REQ-008-fresh-milestone-orchestration-and-bounde/REPORT.md
 - P-005 · Prune SKILL.md after a few weeks of real use (eval-driven no-op test) · urgency: low · complexity: S · added 2026-10-08 · research
@@ -80,7 +81,6 @@ month summary._
 - P-039 · Align the existing M4 monitor package with local Ruff 0.16.7 rules · urgency: low · complexity: M · added 2026-10-15 · REQ-018 broad lint audit
   - The broad `ruff check` reported 83 style findings, all within the pre-existing `bt_scheduler_monitor/` package; the focused lint on REQ-018 integration files passes. No M4 package code was changed for this follow-up.
 - P-123 · Authenticate `--proposed-by owner` for amendments that lower a classification (out-of-band confirmation) · urgency: low · complexity: M · added 2026-10-19 · SUPERRR proposal 3
-- P-131 · Forward remediation for audit findings: today a finding on a root task (T3 in REQ-027) resets every descendant (30 tasks). Instead create one remediation task per finding after the audit, on the integrated tree, then re-audit; keep reset-and-redo only for defects in a base the rest must rebuild (supersedes the optional `gates.rework_scope`) · urgency: med · complexity: L · added 2026-10-19 · REQ-027 audit round 2 (2026-10-20)
 - P-020 · Scheduler (future): consume PLAN.json (`bt_plan_contract.load` / `bt_plan_revisions.load_revision`), calibrate `estimated_minutes` against real durations, own concurrency · urgency: low · complexity: L · added 2026-10-14 · REQ-009 proposal
   - 2026-10-14 owner ruling: M1 must never touch agents, sessions or the methodology flow; being inert until the future modules plug into its ports is intended, not a defect. Do not wire M1 into `launch`/supervisor ahead of those modules.
   - 2026-10-14 REQ-011 delivered M1 of the Scheduler (`bt_scheduler_core`, D-022): modules M2 (decision), M3 (executor), M4 (monitor), M5 (recovery) remain, as implementations of the core's ports (`requirements/REQ-011-*/REPORT.md`).

@@ -1,18 +1,34 @@
 {
- "attention": [],
+ "attention": [
+  {
+   "kind": "blocked_task",
+   "reason": "m5:identity_unverified",
+   "task_id": "T10"
+  },
+  {
+   "kind": "blocked_task",
+   "reason": "m5:identity_unverified",
+   "task_id": "T15b"
+  },
+  {
+   "kind": "blocked_task",
+   "reason": "m5:identity_unverified",
+   "task_id": "T6"
+  }
+ ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-20T11:50:31+00:00",
+ "heartbeat_at": "2026-10-20T12:05:16+00:00",
  "plan_ref": {
   "plan_id": "REQ-027",
   "revision": 7,
   "sha256": "17522cd6ebedff79ca9fefa0550e06518996f2067cee9d3071f0f83e68cc675a"
  },
- "projected_at": "2026-10-20T11:50:31+00:00",
+ "projected_at": "2026-10-20T12:05:16+00:00",
  "projection": true,
  "req": "REQ-027",
- "scheduler_status": "running",
- "sessions": 117,
- "status": "running",
+ "scheduler_status": "blocked",
+ "sessions": 123,
+ "status": "blocked",
  "tasks": [
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -49,7 +65,7 @@
    "attempts": 4,
    "complexity": "extreme",
    "effort": "high",
-   "evidence": "",
+   "evidence": "m6://result/92aeeaee3515b9d9649c952fac9864c992bc29d718e91108ed5f199288162c98",
    "executor": "route:m2:v1:27aa77a8b7af8aa530d72819006dedd671d82b85165ffe0294ca0ccfc1e60515:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T3",
    "milestone": "M1",
@@ -64,38 +80,38 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
-   "status": "in_progress",
+   "status": "done",
    "title": "Remote API contract, command and event schemas, and the architecture note",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
    "after": [
     "T3"
    ],
-   "attempts": 2,
+   "attempts": 3,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/c604b2dae508b4724231279abc1185dfec5152623abbbd2823044f86cc3fd816",
-   "executor": "route:m2:v1:75d60c09ed7461b8a4a4941216540ec18d08865a26f8cad70a9290d57e565fea:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "",
+   "executor": "route:m2:v1:57efe2f88daf9af002b8fbfff2f70682016a1a719352e9ee992fef553af47403:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T4",
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792456701.5925446",
+   "quota_observed_at": "1792496378.3980856",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "25.0",
-   "quota_valid_until": "1792463901.5925446",
+   "quota_used_percent": "0.0",
+   "quota_valid_until": "1792503578.3980856",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "scheduler_state": "completed",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
+   "status": "done",
    "title": "Remote API skeleton behind the gateway key, with health",
    "unreachable": false
   },
@@ -122,9 +138,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "Snapshot endpoint over the shared live caches",
    "unreachable": false
   },
@@ -151,9 +167,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Command ledger store: idempotency keys, preconditions and audit rows",
    "unreachable": false
   },
@@ -180,9 +196,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "Ledger dispatch for run moves and decision answers",
    "unreachable": false
   },
@@ -209,38 +225,38 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "Ledger dispatch for plans and rounds with the confirmation challenge",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:fc491a4a265ed4debd1757631add7ef4b831614383543594cc84d90bee68c10c",
    "after": [
     "T5b"
    ],
-   "attempts": 6,
+   "attempts": 7,
    "complexity": "high",
-   "effort": "high",
-   "evidence": "m6://result/c6e0cd13341ca11b5973814c7e4783f415fa51136d0529b9d797a7cbb544b842",
-   "executor": "route:m2:v1:92895cce8862022b39f818b17fa8fc1365bdad902609a2cf8ddcc70fcbb7dd4a:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "effort": "medium",
+   "evidence": "",
+   "executor": "route:m2:v1:7d4ecd0aba0186084d06ba4d4281da84a5893fa25cb8a196849125c199cfd96d:a94f4974aee88b4233dee9c4b8cd1ec43689e8f1105644b77c4f04743a067a26",
    "id": "T6",
    "milestone": "M2",
-   "model": "gpt-6-luna",
-   "profile": "codex-luis",
-   "provider": "codex",
-   "quota_observed_at": "1792462576.687164",
+   "model": "sonnet",
+   "profile": "claude-personal",
+   "provider": "claude",
+   "quota_observed_at": "1792497907.4651878",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "39.0",
-   "quota_valid_until": "1792469776.687164",
+   "quota_used_percent": "60.0",
+   "quota_valid_until": "1792505107.4651878",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "scheduler_state": "blocked",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
+   "status": "blocked",
    "title": "Event feed with stable ids and a cursor, including decision requests",
    "unreachable": false
   },
@@ -267,9 +283,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "Failure review read model per attempt",
    "unreachable": false
   },
@@ -296,9 +312,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;estimated_duration;history_no_verified_samples;task_unambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Retry pinned to a route, model or account",
    "unreachable": false
   },
@@ -329,7 +345,7 @@
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
    "status": "todo",
    "title": "Brief or criteria edit as an owner-approved plan revision",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -354,9 +370,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "One owner of port 8765 and reloads that keep the listening socket",
    "unreachable": false
   },
@@ -365,27 +381,27 @@
    "after": [
     "T3"
    ],
-   "attempts": 4,
+   "attempts": 6,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/88720326a84d4a0673965dccc48a8f0ab4cf5eae72dc658a99628dd4e26c8ac0",
-   "executor": "route:m2:v1:19ac621b4f08f2c930970caa5848374b85a51dfbbededd9d2855e9230ee4baf4:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
+   "evidence": "",
+   "executor": "route:m2:v1:e5e8359b67c4125907a701acc61f33aaf0e6ebc89d45d9cbea0955b6b1922209:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T10",
    "milestone": "M3",
    "model": "gpt-6-luna",
    "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792461622.1111722",
+   "quota_observed_at": "1792497908.606387",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "52.0",
-   "quota_valid_until": "1792468822.1111722",
+   "quota_used_percent": "11.0",
+   "quota_valid_until": "1792505108.606387",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "scheduler_state": "blocked",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;verified_history",
+   "status": "blocked",
    "title": "Gateway skeleton: config, upstream client and liveness state",
    "unreachable": false
   },
@@ -412,9 +428,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "GitHub OAuth for dav033 and server-side sessions",
    "unreachable": false
   },
@@ -441,9 +457,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "CSRF header, Origin check, rate limits and request log",
    "unreachable": false
   },
@@ -471,9 +487,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Snapshot cache and SSE fan-out with Last-Event-ID",
    "unreachable": false
   },
@@ -501,9 +517,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME",
    "unreachable": false
   },
@@ -535,7 +551,7 @@
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
    "status": "todo",
    "title": "Deterministic notification rules with dedupe keys",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -560,9 +576,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Telegram delivery with retries, backoff and history",
    "unreachable": false
   },
@@ -589,38 +605,38 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Telegram bot: long polling, chat allowlist, safe buttons and /estado",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
    "after": [
     "T3"
    ],
-   "attempts": 12,
+   "attempts": 13,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/e1d776aca589f3a9994912baca1accfd9cc0714385a0bd8c2dfd9f1e7a0c0309",
-   "executor": "route:m2:v1:38467155a625a6dd9228f2b4b83b15174cb8af824cc66ce42d0b5e38be10f30e:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "",
+   "executor": "route:m2:v1:5de8f5c37619c6a245925e2d8d3a40d6504d061b12f9b04f48bc57a6d9544af8:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T15",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1792461623.5360827",
+   "quota_observed_at": "1792496378.3980856",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "38.0",
-   "quota_valid_until": "1792468823.5360827",
+   "quota_used_percent": "0.0",
+   "quota_valid_until": "1792503578.3980856",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "scheduler_state": "completed",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
+   "status": "done",
    "title": "Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway",
    "unreachable": false
   },
@@ -647,38 +663,38 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "status": "done",
    "title": "Login screen and runs list",
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T15a"
    ],
-   "attempts": 3,
+   "attempts": 4,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/daed2708fd3f01adc9cc36e79d9ed32c6c92dd983770ba789cb6a3da07e866be",
-   "executor": "route:m2:v1:0bff64473ec58cc122cfded1c648d6389715a1c6f096d079599dd8e0acbafb08:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "",
+   "executor": "route:m2:v1:77639b8da3bf1e82a1b9a35b3c23d45bd680c2dbeda3ec6d40fd27e36b405c5f:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T15b",
    "milestone": "M4",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792462576.687164",
+   "quota_observed_at": "1792497908.606387",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "39.0",
-   "quota_valid_until": "1792469776.687164",
+   "quota_used_percent": "11.0",
+   "quota_valid_until": "1792505108.606387",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "todo",
+   "scheduler_state": "blocked",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;verified_history",
+   "status": "blocked",
    "title": "Run view: activity strip, tasks and feed on flow-core.js",
    "unreachable": false
   },
@@ -706,9 +722,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Failure review screen",
    "unreachable": false
   },
@@ -736,9 +752,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Control sheet with typed confirmations and command history",
    "unreachable": false
   },
@@ -765,9 +781,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Plans, question rounds and decision requests screens",
    "unreachable": false
   },
@@ -799,7 +815,7 @@
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
    "status": "todo",
    "title": "Recovery forms and live quotas",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -826,9 +842,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook",
    "unreachable": false
   },
@@ -859,7 +875,7 @@
    "selection_reason": "baseline_route;duration_measured;estimated_duration;history_no_verified_samples;task_unambiguous",
    "status": "todo",
    "title": "Offline end-to-end: real laptop API, gateway and built web wired locally on loopback",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -884,9 +900,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "todo",
+   "status": "done",
    "title": "Independent security and spec audit by another provider",
    "unreachable": false
   },
@@ -918,7 +934,7 @@
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
    "status": "todo",
    "title": "Cross-check audit of T18: Independent security and spec audit by another provider",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -948,7 +964,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Documentation: remote README, references and TOOLS entries to copy at go-live",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:fc491a4a265ed4debd1757631add7ef4b831614383543594cc84d90bee68c10c",
@@ -977,7 +993,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the AdvIn production environment: service user, directories, units and Caddy block",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1006,7 +1022,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the Vercel project and deploy the frontend to production",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1035,7 +1051,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Create the identity and messaging prerequisites and place the secrets",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:fc491a4a265ed4debd1757631add7ef4b831614383543594cc84d90bee68c10c",
@@ -1064,7 +1080,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Release the gateway and the Telegram bot to AdvIn and switch them on",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1093,7 +1109,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Live smoke test of the production environment and handover",
-   "unreachable": false
+   "unreachable": true
   }
  ]
 }
