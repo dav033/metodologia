@@ -23,7 +23,7 @@ after(async () => {
 
 test("mock gateway returns the v1 snapshot and session contracts consumed by the panel", async () => {
   const session = await fetch(`${origin}/api/auth/session`);
-  assert.deepEqual(await session.json(), { authenticated: true });
+  assert.deepEqual(await session.json(), { login: "owner" });
 
   const response = await fetch(`${origin}/api/remote/v1/snapshot`);
   assert.equal(response.status, 200);
@@ -31,10 +31,12 @@ test("mock gateway returns the v1 snapshot and session contracts consumed by the
 
   const body = await response.json();
   assert.equal(body.schemaVersion, 1);
-  assert.equal(body.cursor, "mock-cursor-v1");
-  assert.deepEqual(body.runs.map((run) => run.req_id), ["REQ-027", "REQ-018"]);
-  assert.equal(body.runs[0].last_sign_of_life, "2026-10-19T11:59:45Z");
-  assert.equal(body.plans[0].acceptance_criteria[0], "Owner reviews and approves the plan");
+  assert.equal(body.cursor, "");
+  assert.deepEqual(body.runs.map((run) => run.reqId), ["REQ-027", "REQ-018"]);
+  assert.equal(body.runs[0].lastSignOfLife, "2026-10-19T11:59:45Z");
+  assert.equal(body.plans[0].planStatus, "review");
+  assert.equal(body.plans[0].rounds[0].questions.length, 2);
+  assert.match(body.plans[1].decisions[0].options[0].consequence, /Gasta un intento/);
   const events = await fetch(`${origin}/api/remote/v1/events`);
   const eventBody = await events.text();
   assert.match(events.headers.get("content-type") ?? "", /text\/event-stream/);

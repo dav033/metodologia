@@ -84,8 +84,23 @@ def _snapshot_runs() -> list[dict]:
 
 def _plans() -> list[dict]:
     import bt_plans_api as plans
+    import bt_rounds
     from bt_core import ROOT
-    return plans.plans_payload(ROOT)
+    rows = plans.plans_payload(ROOT)
+    for row in rows:
+        row["decisions"], row["rounds"] = [], []
+        try:
+            current = _target_state(f'{row["project"]}/{row["req_id"]}')
+            row["command_state"] = current.get("state") if current else None
+            rdir = plans.req_dir(ROOT, row["project"], row["req_id"])
+            row["decisions"] = plans.open_decisions(rdir)
+            for path in bt_rounds.list_rounds(rdir):
+                data = bt_rounds.load(path)
+                if data.get("status") == "open":
+                    row["rounds"].append({key: data.get(key) for key in ("round", "title", "intro", "questions")})
+        except (plans.PlanError, OSError, ValueError):
+            continue    # a plan whose files cannot be read asks nothing; the row itself still shows
+    return rows
 
 
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:

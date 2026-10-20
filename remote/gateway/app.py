@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
-                                "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note"})
+                                "launch", "answer-round", "answer-decision", "cancel-plan", "delete-plan", "edit-brief", "note"})
 
 
 def _camel_key(value: str) -> str:
@@ -57,6 +57,11 @@ def _laptop_command(payload: dict[str, Any]) -> dict[str, Any]:
         if digits:
             params["round"] = int(digits)
         params["answers"] = payload.get("answer")
+    if command == "answer-decision":
+        params["request_id"] = payload.get("requestId")
+        params["option"] = payload.get("option")
+    if command in {"cancel-plan", "delete-plan"} and isinstance(payload.get("confirmation"), dict):
+        params["typed_req"] = payload["confirmation"].get("typedReq")
     if command in {"edit-brief", "note"}:
         params["brief" if command == "edit-brief" else "note"] = payload.get("brief" if command == "edit-brief" else "note")
     if "reason" in payload:

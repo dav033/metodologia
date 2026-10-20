@@ -16,7 +16,7 @@ export async function createMockGatewayServer() {
       response.end(JSON.stringify(body));
     };
     if (request.method === "GET" && request.url === "/api/auth/session") {
-      send(200, { authenticated: true });
+      send(200, { login: "owner" });
       return;
     }
     if (request.method === "GET" && request.url === "/api/remote/v1/snapshot") {
@@ -41,7 +41,12 @@ export async function createMockGatewayServer() {
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
-      request.on("end", () => { server.challenges.push(JSON.parse(body)); send(201, { challengeId: "challenge-token-0123456789", target: "lotm/REQ-027", expiresIn: 120 }); });
+      request.on("end", () => {
+        const challenge = JSON.parse(body);
+        server.challenges.push(challenge);
+        if (challenge.typedReq !== challenge.target?.req) { send(409, { code: "INVALID_CHALLENGE", message: "El REQ escrito no coincide." }); return; }
+        send(201, { challengeId: "challenge-token-0123456789", target: "lotm/REQ-027", expiresIn: 120 });
+      });
       return;
     }
     const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
@@ -59,6 +64,11 @@ export async function createMockGatewayServer() {
           const command = JSON.parse(body);
           if (typeof command.idempotencyKey !== "string" || typeof command.type !== "string" || !command.target || typeof command.target.project !== "string") {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
+            return;
+          }
+          const challenged = ["revise", "approve", "launch", "cancel-plan", "delete-plan"].includes(command.type);
+          if (challenged && (typeof command.confirmation?.challengeId !== "string" || command.confirmation.typedReq !== command.target.req)) {
+            send(409, { code: "CONFIRMATION_REQUIRED", message: "Falta la confirmación." });
             return;
           }
           server.commands.push(command);

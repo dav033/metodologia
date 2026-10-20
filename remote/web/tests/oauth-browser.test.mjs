@@ -56,7 +56,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
 
     gateway = createServer((request, response) => {
       const requestUrl = new URL(request.url, "http://gateway.local");
-      if (requestUrl.pathname === "/api/auth/github") {
+      if (requestUrl.pathname === "/api/auth/login") {
         const state = "browser-state-check";
         const authorize = new URL(`http://localhost:${providerPort}/authorize`);
         authorize.searchParams.set("state", state);
@@ -85,8 +85,8 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
       }
       if (requestUrl.pathname === "/api/auth/session") {
         sawSessionAfterCallback = (request.headers.cookie ?? "").includes("flow_session=browser-session");
-        response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
-        response.end(JSON.stringify({ authenticated: sawSessionAfterCallback }));
+        response.writeHead(sawSessionAfterCallback ? 200 : 401, { "content-type": "application/json; charset=utf-8" });
+        response.end(JSON.stringify(sawSessionAfterCallback ? { login: "owner" } : { error: "unauthorized" }));
         return;
       }
       response.writeHead(404);
@@ -112,7 +112,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
     const browser = spawn(chromiumPath, [
       "--headless=new", "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage",
       "--disable-background-networking", "--no-first-run", `--user-data-dir=${profile}`,
-      "--dump-dom", `${frontendOrigin}/api/auth/github`,
+      "--dump-dom", `${frontendOrigin}/api/auth/login`,
     ], { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
@@ -123,7 +123,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
       once(browser, "error").then(([error]) => { throw error; }),
     ]);
     assert.equal(browserExit[0], 0, `Chromium failed: ${stderr}`);
-    assert.match(stdout, /authenticated.*true|true.*authenticated/i);
+    assert.match(stdout, /"login":\s*"owner"/);
     assert.equal(sawStateOnCallback, true, "frontend callback must receive the Lax state cookie");
     assert.equal(sawSessionAfterCallback, true, "same-origin API session request must receive the Strict session cookie");
   } catch (error) {

@@ -170,6 +170,31 @@ class StreamEntryPointTests(unittest.TestCase):
                                                  "target": "demo/REQ-001", "origin": "web", "params": {},
                                                  "precondition": {"state": "running"}}])
 
+    def test_decision_round_and_plan_commands_reach_the_laptop_with_ledger_params(self):
+        target = {"kind": "plan", "project": "demo", "req": "REQ-001"}
+        cases = [
+            ({"type": "answer-decision", "requestId": "T1:1", "option": "retry", "reason": "ok",
+              "target": {**target, "kind": "run"}},
+             "answer-decision", {"request_id": "T1:1", "option": "retry", "reason": "ok"}),
+            ({"type": "answer-round", "answer": {"q1": {"text": "x"}}, "target": {**target, "kind": "round", "roundId": "round-02"}},
+             "answer-round", {"round": 2, "answers": {"q1": {"text": "x"}}}),
+            ({"type": "cancel-plan", "target": target, "confirmation": {"challengeId": "c" * 16, "typedReq": "REQ-001"}},
+             "cancel-plan", {"typed_req": "REQ-001"}),
+        ]
+        for index, (extra, command, params) in enumerate(cases):
+            self.laptop.commands.clear()
+            body = {"schemaVersion": 1, "idempotencyKey": f"client-key-{index}-0123456789", "precondition": {"state": "x"}, **extra}
+            status, _ = self.request_command(body)
+            self.assertEqual(status, 202)
+            self.assertEqual((self.laptop.commands[0]["command"], self.laptop.commands[0]["params"]), (command, params))
+
+    def test_attempt_review_and_command_history_are_relayed_to_signed_in_browsers(self):
+        self.laptop.get_json = lambda path: {"path": path}
+        status, body = self.request_json("/api/remote/v1/attempts/att-1/review")
+        self.assertEqual((status, body), (200, {"path": "/api/remote/v1/attempts/att-1/review"}))
+        status, body = self.request_json("/api/remote/v1/commands?after=&limit=100")
+        self.assertEqual((status, body["path"]), (200, "/api/remote/v1/commands?after=&limit=100"))
+
 
 if __name__ == "__main__":
     unittest.main()

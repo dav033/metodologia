@@ -2,26 +2,16 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { PlansPanel } from "./plans-panel";
+import { field, parseSnapshot, record, text, type Run, type Snapshot, type Task } from "../lib/snapshot";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
-type Attempt = { id: string; state?: string; updatedAt?: string; failure?: string };
-type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: Attempt; tasks?: Task[] };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: Attempt; history?: Attempt[] };
-type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
-type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptopStatus?: string; };
 type Session = { authenticated: boolean };
 type FlowEvent = { id: string; cursor: string; run: string; seq: string; ord: number; task: string; attempt: string; from: string; to: string; kind: string; summary: string; at_epoch: number };
 type CommandRecord = { id: string; command: string; target: string; submittedAt: string; origin: string; result: string };
 type FailureReview = { attemptId: string; cause: string; verification: { command: string | null; output: string; checks: { command: string; exitCode: number | null; output: string }[] }; diff: { stat: string | null; files: string[] }; logTail: string };
 type FlowCore = { groupRows(events: FlowEvent[]): { ev: FlowEvent; n: number; first: number; last: number }[]; taskState(state: string): string };
 declare global { interface Window { FlowCore?: FlowCore } }
-
-function record(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-
-function text(value: unknown): value is string { return typeof value === "string"; }
-function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
 
 function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
@@ -48,62 +38,6 @@ function parseFlowEvent(value: unknown): FlowEvent | null {
   return { id: event.id, cursor: event.cursor, run: `${project}/${req}`, seq: event.cursor, ord: date.valueOf(), task,
     attempt, from, to, kind, summary: text(data.summary) ? data.summary : text(data.message) ? data.message : event.type,
     at_epoch: date.valueOf() / 1000 };
-}
-
-function parseSnapshot(value: unknown): Snapshot {
-  const raw = record(value);
-  const generatedAt = raw ? field(raw, "generatedAt", "generated_at") : undefined;
-  if (!raw || raw.schemaVersion !== 1 || !text(generatedAt) || !text(raw.cursor) || !Array.isArray(raw.runs) || !Array.isArray(raw.plans)) {
-    throw new Error("La respuesta del gateway no cumple el contrato de snapshot v1.");
-  }
-  const parseAttempt = (value: unknown): Attempt | undefined => {
-    const attempt = record(value);
-    const id = attempt && field(attempt, "id", "attempt_id");
-    if (!attempt || !text(id)) return undefined;
-    const state = attempt.state;
-    const updatedAt = field(attempt, "updatedAt", "last_activity_at");
-    const failure = attempt.failure;
-    return { id, state: text(state) ? state : undefined, updatedAt: text(updatedAt) ? updatedAt : undefined, failure: text(failure) ? failure : undefined };
-  };
-  const parseTask = (item: unknown): Task => {
-    const task = record(item);
-    if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
-    const criteria = field(task, "acceptanceCriteria", "acceptance_criteria");
-    const updatedAt = field(task, "updatedAt", "updated_at");
-    const history = Array.isArray(task.history) ? task.history.map(parseAttempt).filter((item): item is Attempt => Boolean(item)) : [];
-    return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
-      revision: typeof task.revision === "number" ? task.revision : undefined,
-      updatedAt: text(updatedAt) ? updatedAt : undefined,
-      acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "attempt")) ?? parseAttempt(field(task, "active_attempt", "activeAttempt")), history };
-  };
-  const runs = raw.runs.map((item): Run => {
-    const run = record(item);
-    const req = field(run ?? {}, "req", "req_id");
-    const state = field(run ?? {}, "state", "status");
-    if (!run || !text(run.project) || !text(req) || !text(state)) throw new Error("El snapshot contiene una ejecución inválida.");
-    const updatedAt = field(run, "updatedAt", "updated_at");
-    const lastSeenAt = field(run, "lastSeenAt", "last_sign_of_life");
-    return { project: run.project, req, state, revision: typeof run.revision === "number" ? run.revision : undefined,
-      updatedAt: text(updatedAt) ? updatedAt : undefined, lastSeenAt: text(lastSeenAt) ? lastSeenAt : undefined,
-      activeAttempt: parseAttempt(field(run, "activeAttempt", "active_attempt")), tasks: Array.isArray(run.tasks) ? run.tasks.map(parseTask) : [] };
-  });
-  const plans = raw.plans.map((item): Plan => {
-    const plan = record(item);
-    const req = field(plan ?? {}, "req", "req_id");
-    const state = field(plan ?? {}, "state", "status");
-    if (!plan || !text(plan.project) || !text(req) || !text(state)) throw new Error("El snapshot contiene un plan inválido.");
-    const criteria = field(plan, "acceptanceCriteria", "acceptance_criteria");
-    const updatedAt = field(plan, "updatedAt", "updated_at");
-    return { id: text(plan.id) ? plan.id : undefined, project: plan.project, req, state,
-      revision: typeof plan.revision === "number" ? plan.revision : undefined,
-      updatedAt: text(updatedAt) ? updatedAt : undefined,
-      acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      tasks: Array.isArray(plan.tasks) ? plan.tasks.map(parseTask) : [] };
-  });
-  const cursor = raw.cursor;
-  return { schemaVersion: 1, generatedAt: String(generatedAt), cursor: text(cursor) ? cursor : "", runs, plans,
-    laptopStatus: text(raw.laptopStatus) ? raw.laptopStatus : undefined };
 }
 
 function prettyTime(value?: string): string {
@@ -147,19 +81,16 @@ export default function HomePage() {
   const [error, setError] = useState("");
   const [working, setWorking] = useState("");
   const [reason, setReason] = useState("");
-  const [typedReq, setTypedReq] = useState("");
-  const [commands, setCommands] = useState<CommandRecord[]>([]);
+    const [commands, setCommands] = useState<CommandRecord[]>([]);
   const [historyError, setHistoryError] = useState("");
 
   const load = useCallback(async () => {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     if (sessionResponse.status === 401) { setSession({ authenticated: false }); return; }
     if (!sessionResponse.ok) throw new Error("No se pudo comprobar la sesión.");
-    const sessionValue: unknown = await sessionResponse.json();
-    const parsedSession = record(sessionValue);
-    if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
-    setSession({ authenticated: parsedSession.authenticated });
-    if (!parsedSession.authenticated) return;
+    const parsedSession = record(await sessionResponse.json() as unknown);
+    if (!parsedSession || !text(parsedSession.login)) throw new Error("Respuesta de sesión inválida.");
+    setSession({ authenticated: true });
     const response = await fetch("/api/remote/v1/snapshot", { cache: "no-store" });
     if (!response.ok) throw new Error(`No se pudo cargar el estado (${response.status}).`);
     setSnapshot(parseSnapshot(await response.json()));
@@ -201,9 +132,8 @@ export default function HomePage() {
     return () => source.close();
   }, [session?.authenticated, load]);
 
-  async function sendCommand(event: FormEvent<HTMLFormElement>, command: Record<string, unknown>, key: string) {
-    event.preventDefault();
-    if (!snapshot) return;
+  async function sendCommand(command: Record<string, unknown>, key: string): Promise<boolean> {
+    if (!snapshot) return false;
     setWorking(key); setError("");
     try {
       let payload = command;
@@ -211,7 +141,7 @@ export default function HomePage() {
       if (["revise", "approve", "launch", "cancel-plan", "delete-plan"].includes(String(commandType))) {
         const confirmationValue = record(command.confirmation);
         const target = record(command.target);
-        if (!confirmationValue || !text(confirmationValue.typedReq) || !target) throw new Error("Escribe el id de requerimiento para confirmar.");
+        if (!confirmationValue || !text(confirmationValue.typedReq) || !target || confirmationValue.typedReq !== target.req) throw new Error("Escribe el id de requerimiento para confirmar.");
         const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ target, typedReq: confirmationValue.typedReq }) });
         const challenge: unknown = await challengeResponse.json();
         const challengeRecord = record(challenge);
@@ -226,8 +156,9 @@ export default function HomePage() {
         throw new Error(text(resultRecord?.message) ? resultRecord.message : `El gateway rechazó el comando (${response.status}).`);
       }
       await load();
-      setReason(""); setTypedReq("");
-    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo enviar el comando."); }
+      setReason("");
+      return true;
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudo enviar el comando."); return false; }
     finally { setWorking(""); }
   }
 
@@ -247,13 +178,12 @@ export default function HomePage() {
     const params: Record<string, unknown> = { ...(extra ?? {}) };
     if (type === "cancel-attempt") params.attempt = target.attemptId;
     if (type === "reopen") params.task = target.taskId;
-    const command = (event: FormEvent<HTMLFormElement>) => sendCommand(event, {
+    const command = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); return void sendCommand({
       schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type, target,
       precondition: { state, ...(revision === undefined ? {} : { revision }) },
       ...(text(params.reason) ? { reason: params.reason } : {}),
       ...(type === "cancel-attempt" ? { reason: params.reason } : {}),
-      ...(type === "cancel-plan" || type === "delete-plan" ? { confirmation: params.confirmation } : {}),
-    }, key);
+    }, key); };
     return command;
   }
 
@@ -265,7 +195,7 @@ export default function HomePage() {
     return <main className="shell">
       <header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link><span className="environment">PANEL REMOTO</span></header>
       <section className="intro" aria-labelledby="welcome-title"><p className="eyebrow">OPERACIONES · EN VIVO</p><h1 id="welcome-title">Tus ejecuciones,<br /><span>siempre a mano.</span></h1><p className="lede">Inicia sesión para consultar y controlar tus ejecuciones.</p>
-        <a className="sign-in" href="/api/auth/github"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.68-3.76-1.32-3.76-1.32-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 .1.85 2.06 3.42 1.45.1-.72.4-1.2.71-1.48-2.47-.28-5.07-1.24-5.07-5.51 0-1.22.44-2.21 1.16-2.99-.12-.28-.5-1.42.11-2.95 0 0 .95-.3 3.06 1.14a10.66 10.66 0 0 1 5.57 0c2.12-1.44 3.06-1.14 3.06-1.14.61 1.53.23 2.67.11 2.95.72.78 1.16 1.77 1.16 2.99 0 4.28-2.6 5.23-5.08 5.5.4.35.76 1.02.76 2.07v3.06c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z" /></svg>Continuar con GitHub</a>
+        <a className="sign-in" href="/api/auth/login"><svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.68-3.76-1.32-3.76-1.32-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 .1.85 2.06 3.42 1.45.1-.72.4-1.2.71-1.48-2.47-.28-5.07-1.24-5.07-5.51 0-1.22.44-2.21 1.16-2.99-.12-.28-.5-1.42.11-2.95 0 0 .95-.3 3.06 1.14a10.66 10.66 0 0 1 5.57 0c2.12-1.44 3.06-1.14 3.06-1.14.61 1.53.23 2.67.11 2.95.72.78 1.16 1.77 1.16 2.99 0 4.28-2.6 5.23-5.08 5.5.4.35.76 1.02.76 2.07v3.06c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z" /></svg>Continuar con GitHub</a>
         <p className="security-note"><span aria-hidden="true">●</span> Acceso privado para el propietario</p>{error && <p className="error" role="alert">{error}</p>}
       </section><footer className="footer"><span>FLOW REMOTE</span><span>CONTROL PLANE · V1</span></footer>
     </main>;
@@ -295,7 +225,7 @@ export default function HomePage() {
   </article>;
 
   return <main className="dashboard shell">
-    <header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link><div className="header-meta"><span className="environment">{snapshot?.laptopStatus === "offline" ? "LAPTOP SIN CONEXIÓN" : "EN VIVO"}</span><a className="logout" href="/api/auth/logout">Salir</a></div></header>
+    <header className="topbar"><Link className="brand" href="/" aria-label="Flow Remote, inicio"><span className="brand-mark">F</span><span>flow<span className="brand-muted">/remote</span></span></Link><div className="header-meta"><span className="environment">{snapshot?.laptopStatus === "offline" ? "LAPTOP SIN CONEXIÓN" : "EN VIVO"}</span></div></header>
     <section className="runs" aria-labelledby="runs-title"><div className="section-heading"><div><p className="eyebrow">CONTROL PLANE · V1</p><h1 id="runs-title">Ejecuciones</h1></div><span className="run-count">{snapshot?.runs.length ?? 0} activas</span></div>
       {error && <p className="error" role="alert">{error}</p>}
       {!snapshot ? <p className="empty">Cargando estado…</p> : snapshot.runs.length === 0 ? <p className="empty">No hay ejecuciones.</p> : <div className="run-list">{snapshot.runs.map((run) => <article className="run-card" key={`${run.project}-${run.req}`}>
@@ -320,15 +250,7 @@ export default function HomePage() {
         })()}</section>
       </article>)}</div>}
     </section>
-    {!!snapshot?.plans.length && <section className="runs plans" aria-labelledby="plans-title"><div className="section-heading"><div><p className="eyebrow">REVISIÓN</p><h2 id="plans-title">Planes</h2></div></div><div className="run-list">{snapshot.plans.map((plan) => {
-      const target: Target = { kind: "plan", project: plan.project, req: plan.req };
-      return <article className="run-card" key={`${plan.project}-${plan.req}-${plan.id ?? "plan"}`}><div className="run-top"><div><p className="eyebrow">{plan.project}</p><h3>{plan.req} · Plan</h3></div><span className="state">{plan.state}</span></div>
-        <p className="last-seen">Última actividad · {prettyTime(plan.updatedAt)}</p>
-        {[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].length > 0 && <details><summary>Criterios de aceptación</summary><ul>{[...(plan.acceptanceCriteria ?? []), ...(plan.tasks ?? []).flatMap((task) => task.acceptanceCriteria ?? [])].map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-        <div className="actions"><label>Escribe {plan.req} para confirmar <input required aria-label={`Escribe ${plan.req} para confirmar`} value={typedReq} onChange={(event) => setTypedReq(event.target.value)} /></label><form onSubmit={commandForm("cancel-plan", target, plan.state, plan.revision, `${plan.req}-cancel-plan`, { confirmation: { typedReq } })}><button disabled={!!working || typedReq !== plan.req}>Cancelar plan</button></form>
-          <form onSubmit={commandForm("delete-plan", target, plan.state, plan.revision, `${plan.req}-delete-plan`, { confirmation: { typedReq } })}><button className="danger" disabled={!!working || typedReq !== plan.req}>Eliminar plan</button></form></div>
-      </article>;
-    })}</div></section>}
+    {snapshot && <PlansPanel plans={snapshot.plans} working={working} send={sendCommand} prettyTime={prettyTime} />}
     <section className="runs history" aria-labelledby="history-title"><div className="section-heading"><div><p className="eyebrow">TRAZABILIDAD</p><h2 id="history-title">Historial de comandos</h2></div></div>{historyError ? <p className="error" role="status">{historyError}</p> : commands.length ? <ol className="command-history">{commands.map((command) => <li key={command.id}><strong>{command.command}</strong><span>{command.target}</span><time>{prettyTime(command.submittedAt)}</time><span>Origen · {command.origin}</span><span>Resultado · {command.result}</span></li>)}</ol> : <p className="empty">No hay comandos registrados.</p>}</section>
     <footer className="footer"><span>FLOW REMOTE</span><span>Actualizado · {prettyTime(snapshot?.generatedAt)}</span></footer>
   </main>;
