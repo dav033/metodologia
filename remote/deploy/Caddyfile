@@ -1,0 +1,4 @@
+flow.example.com {
+	encode zstd gzip
+	reverse_proxy 172.20.0.1:8790
+}
