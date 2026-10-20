@@ -18,6 +18,7 @@ month summary._
   - Recurred during replan closeout: ae37a9c labelled session aa047071 end, origin/main update-by-push confirmed. Requested Planner hooks were disabled; global initiating process remains unattributed. Child-only mitigation is insufficient for the shared workspace; no rollback/config fix applied.
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remaining: Windows/macOS matrix (deferred by the owner), src/ move (deferred by D-014), commits (owner decision) · urgency: high · complexity: L · added 2026-10-13 · independent spec review
   - Context: see migracion/CONTINUE.md and the PLAN progress log. Committed locally 2026-10-14 (cdf9ea7, b3954d1, 89f2021); push is the owner's call.
+- P-135 · Share the live stream's per-client polling (`bt_live_api.flow_events`) like the plans stream (D-094); residual ~20 % panel CPU · urgency: low · complexity: S · added 2026-10-20 · D-094
 - P-003 · Visual review of the local web UI · urgency: med · complexity: S · added 2026-10-08 · session
 - P-109 · Pin exact accounts for the selected Sol/Sonnet REQ-024 reviewers · urgency: med · complexity: S · added 2026-10-16 · REQ-024 T17
   - Separate native Planner model pilot completed (9 calls): source-backed quality/first-draft/usage evidence is in `artifacts/planner-model-duel-20261017/REPORT.md`. This does not pin formal reviewer accounts, complete exact T17 isolation, change D-063 or select/configure a production Planner.
