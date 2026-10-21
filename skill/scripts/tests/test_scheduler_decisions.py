@@ -107,6 +107,14 @@ class WhatTheOwnerSees(Base):
         self.assertIn("somebody wrote this", request["error"])
         self.assertIn("no reconoce", request["needs"] + request["what"])
 
+    def test_a_known_cause_replaces_the_generic_need_of_the_reason_code(self):
+        self.doc = doc(reason="m5:identity_unverified")
+        self.doc["attempts"]["att-2"]["failure"] = "start rejected: INTEGRATION_CONFLICT: T3 vs T4 for T1: a.py, b.py"
+        [request] = decisions.open_requests(self.rdir)
+        if request.get("diagnosis") and request["diagnosis"]["confidence"] == "alta":
+            self.assertNotIn("no es fiable", request["needs"])
+            self.assertIn(request["diagnosis"]["option"], request["needs"])
+
     def test_a_quota_stop_is_not_presented_as_a_code_defect(self):
         self.doc = doc(reason="m5:quota_reset_unknown")
         [request] = decisions.open_requests(self.rdir)

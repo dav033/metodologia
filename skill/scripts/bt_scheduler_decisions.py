@@ -353,6 +353,9 @@ def _explain(rdir: Path, doc: dict, request: dict, plan) -> dict:
         request["options"] = [o for o in request["options"] if o["id"] != "stop"] + extra + stop
     if diagnosis and diagnosis["confidence"] == "alta" and diagnosis["option"] in {o["id"] for o in request["options"]}:
         request["recommended"] = diagnosis["option"]
+        # the reason code's generic guidance («look first, the evidence is not reliable») would contradict a known cause
+        if request.get("source") == "task":
+            request["needs"] = f"{diagnosis['headline']}. Elegir la opción recomendada ({diagnosis['option']}) o la que prefieras."
     request["diagnosis"] = diagnosis
     request["agent"] = bt_block_agent.cached(rdir, request["id"])
     return request
