@@ -1,0 +1,23 @@
+{
+ "request": "REQ-029:r5:att-0091:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El harness T6 falla 7 pruebas contra el código actual; pide revisión humana",
+ "origin": "El verificador ejecutó test_recovery_entrypoints.py y falló con 7 errores: el driver de tests/recovery_driver.py lee sealed['evidence_sha256'] (KeyError) porque bt_recovery_evidence devuelve otra forma, así que _tick no trae 'action' ni 'reason'. Las demás fallas son de expectativas desfasadas: rc -9 esperado y 3 obtenido, modo 'enabled' esperado y 'preview' obtenido, y RecoveryRevisionError esperado. Además aparecen marcadores de conflicto del carry sin resolver y timeouts (\"timed out waiting for the run to end or ask its owner\"), y la auditoría T8 reporta CHECK_TIMEOUT y los hallazgos F3, F4, F5, F6, F7, F8, F12 y F14 abiertos en req029-m1-audit.findings.json.",
+ "steps": [
+  "Lee la API actual de bt_recovery_evidence, bt_recovery_apply, bt_scheduler_recovery_adapter y la salida de `bt_scheduler_ops recovery-preview` y `recovery-status`, y resuelve los marcadores de conflicto del carry en los tests.",
+  "Adapta tests/recovery_driver.py a la forma real de la evidencia sellada y al retorno de _tick, y ajusta las aserciones de rc, modo y excepciones a lo que devuelve el código actual. No cambies los módulos de producción T2, T4 ni T5.",
+  "Ejecuta `cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y revisa si los timeouts persisten; si persisten, mide el tiempo de los procesos scheduler-watch y scheduler-run.",
+  "Corrige los hallazgos F3 a F14 del ledger M1 con gates.integration_line activo para que los arreglos lleguen al árbol auditado."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T12:26:00",
+ "seconds": 20.4
+}

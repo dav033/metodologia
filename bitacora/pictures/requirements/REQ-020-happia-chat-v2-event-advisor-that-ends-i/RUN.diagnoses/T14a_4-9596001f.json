@@ -1,0 +1,22 @@
+{
+ "request": "T14a:4",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Falla la comprobación de integración: runs[11] fallido y faltan evidencias live/deploy",
+ "origin": "La verificación ejecuta `--check-results docs/req-020/integration-results.json`, que exige que todas las entradas pasen. El resultado actual es overallOutcome partial, coverageOutcome incomplete, runs[11].outcome failed, y liveEntryPoint/deployedEntryPoint sin ejecutar. El modo `--check-results` ya existe en run.ts, así que la nota del dueño que decía que faltaba está desactualizada; el fallo ahora es de contenido, no de comando. Además, la verificación trata las dos entradas [manual] como comandos (exit code None), y el sandbox no puede ejecutarlas; la tarea solo registra resultados, así que el gate contradice su objetivo y reintentar daría el mismo fallo.",
+ "steps": [
+  "Abre docs/req-020/integration-results.json, identifica runs[11] y su tarea dueña, y corrige el fallo allí; no lo arregles dentro de T14a.",
+  "Ejecuta a mano los dos comandos live y deployed con .env.local y anota la evidencia redactada en el JSON (coordinatorEvidence).",
+  "Si el criterio de T14a es solo registrar resultados, sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige `revise` antes de volver a intentar."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T13:16:12",
+ "seconds": 24.9
+}

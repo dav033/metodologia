@@ -1,0 +1,23 @@
+{
+ "request": "T15:5",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T15 falla: check-findings.ts no interpreta los argumentos del plan",
+ "origin": "El script scripts/e2e/asesor/check-findings.ts ignora la ruta posicional docs/req-020/T15.findings.json y no reconoce --integration-results, así que busca reports/e2e/asesor/integration-results.json, que no existe en la copia limpia (ENOENT). El fallo de git ya se resolvió en el intento T15:3; lo que queda es esta interfaz del script. El segundo comando todavía devuelve 'Malformed audit-findings/1 header or findings list', así que también puede haber un ledger con cabecera o lista de hallazgos mal formada.",
+ "steps": [
+  "Ajusta parseArgs en scripts/e2e/asesor/check-findings.ts: el primer argumento sin flag es la ruta de hallazgos (--findings sigue ganando si se pasa); --integration-results es alias de --results; acepta --check-audit-diff, que activa la comprobación de frontera de edición (sigue omitida con su línea impresa si no hay git).",
+  "Añade una prueba enfocada para parseArgs y revisa que docs/req-020/T15.findings.json y docs/req-020/integration-results.json existen en el árbol y tienen una cabecera audit-findings/1 válida.",
+  "Ejecuta desde la raíz los dos comandos del plan tal cual, además de npm run gate y npm run happie:test-webhook.",
+  "Si el segundo comando sigue marcando 'Malformed', corrige el ledger docs/req-020/T15.findings.json (no el producto) y vuelve a ejecutarlo."
+ ],
+ "option": "retry_with_note",
+ "note": "Apply the owner's authorized parseArgs fix in scripts/e2e/asesor/check-findings.ts: first non-flag argument is the findings path (--findings wins if given); --integration-results is an alias of --results; accept --check-audit-diff to enable the audit edit-boundary check (still skipped with its printed line when git is unavailable). Keep the existing git-optional revision logic. Add a focused parseArgs test. Verify docs/req-020/T15.findings.json and docs/req-020/integration-results.json exist in the tree with a valid audit-findings/1 header and findings list; if the malformed error persists, fix the ledger (not product code). Then run both plan commands exactly as written from the repo root, plus npm run gate and npm run happie:test-webhook. Do not approve, edit or deploy any product artifact.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T16:09:13",
+ "seconds": 18.3
+}

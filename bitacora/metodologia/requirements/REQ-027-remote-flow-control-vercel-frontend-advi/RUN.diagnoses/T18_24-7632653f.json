@@ -1,0 +1,22 @@
+{
+ "request": "T18:24",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 da 3 hallazgos altos abiertos y agotó sus rondas de rework",
+ "origin": "La auditoría independiente de T18 (REQ-027) rechazó el árbol dos intentos seguidos por hallazgos bloqueantes de severidad alta: primero F2, F61, F62 y F63, y en el último intento F41, F42 y F72 (\"audit gate: 3 open blocking finding(s)\"). El sistema no reabre solo las tareas que señalan porque la auditoría ya usó sus rondas (gates.remediation_rounds), así que reintentar solo vuelve a auditar el mismo código. El informe con la evidencia de cada hallazgo está en el log de att-0352, que no aparece completo en la evidencia; por eso no se sabe qué tarea concreta señala F41, F42 y F72.",
+ "steps": [
+  "Abre el log de att-0352 (informe de la auditoría T18) y anota en qué tarea señala cada uno de F41, F42 y F72; escribe cada hallazgo con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea correspondiente.",
+  "Pulsa «Devolver T4a, T8a, T17, T24, T5, T5a, T5b, T6, T7, T8, T9, T12, T13, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen» (opción rework_findings). Por terminal: `scheduler-op REQ-027 rework T4a,T8a,T17,T24,T5,T5a,T5b,T6,T7,T8,T9,T12,T13,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazg",
+  "Si la auditoría vuelve a dar hallazgos altos distintos a los de hoy, para la tarea (stop) y revisa el informe antes de otra ronda: no reintentes sin cambios."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T14:17:42",
+ "seconds": 25.8
+}

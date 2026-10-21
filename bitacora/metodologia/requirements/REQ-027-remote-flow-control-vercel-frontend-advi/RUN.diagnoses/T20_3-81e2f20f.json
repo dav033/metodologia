@@ -1,0 +1,23 @@
+{
+ "request": "T20:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T20 agotó sus intentos: el último cambió remote/gateway/main.py a una versión antigua",
+ "origin": "La integración rechazó el resultado porque los archivos volvieron a una versión anterior, y el primero es remote/gateway/main.py (evidencia m6://result/46dda980ac88b2bc1dce292e6409e29daad757c64b508f3604efe828054fda1b). Esa revisión deshace una corrección de tareas anteriores y las tareas posteriores heredarían la regresión. Además, los intentos fallaron en el check `snapshot-before`; el detalle de ese fallo está cortado en la evidencia, así que no se sabe con certeza qué comprobación falló.",
+ "steps": [
+  "Restaura el archivo ajeno: `git checkout <inicio> -- remote/gateway/main.py`, donde `<inicio>` es el primer padre del HEAD del worktree, y no lo modifiques.",
+  "Crea primero `remote/deploy/verify_receipt.py` y sus pruebas, y ejecuta `cd remote/deploy && python -m unittest discover -s tests -p test_receipts.py`.",
+  "Escribe `remote/deploy/receipts/advin-provision.json` con el snapshot previo a los cambios de cada host de Caddy (status, sujeto TLS, tiempo al primer byte) y comprueba `cd remote/deploy && python verify_receipt.py advin-provision --check snapshot-before`.",
+  "Mantén las unidades detenidas hasta T23. Si falta un secreto o un sitio pide 2FA, captcha o desafío de Cloudflare, detente y di exactamente cuál."
+ ],
+ "option": "retry_with_note",
+ "note": "Restore remote/gateway/main.py to its version in the starting tree (git checkout <start> -- remote/gateway/main.py, where <start> is the first parent of the worktree HEAD) and do not modify it; this task does not own that file. Create remote/deploy/verify_receipt.py and tests/test_receipts.py first, then write remote/deploy/receipts/advin-provision.json with the pre-change snapshot of every Caddy host (status, TLS subject, first-byte time) so that `cd remote/deploy && python verify_receipt.py advin-provision --check snapshot-before` passes. The verifier must work offline and must not query live hosts. Keep the units stopped until T23 and read secrets only from ~/.config/flow/secrets.env.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T16:25:12",
+ "seconds": 19.6
+}

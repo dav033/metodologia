@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0026:verify",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "T14 necesita que una persona confirme la prueba en vivo con el modelo real.",
+ "origin": "Los criterios de aceptación piden escenarios ejecutados contra el modelo real, pero las únicas comprobaciones de tipo comando son `npm run asesor:test` y `prompt.test.ts`; la prueba en vivo (`run.ts --live`) figura como [manual] y aparece duplicada en la lista. Por eso el verificador marcó CRITERION_MANUAL y CHECK_UNMAPPED y dejó la decisión en manos de una persona. El intento anterior (att-0023) ya se aprobó a mano y luego volvió a revisión porque T10 cambió `scripts/test/asesor/run.ts`, `src/lib/asesor/agent.ts`, `src/lib/asesor/prompts/base.ts` y `src/lib/asesor/tools.ts`.",
+ "steps": [
+  "Ejecuta `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model` y comprueba que los escenarios pasan sobre el código nuevo de T10.",
+  "Ejecuta `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` con `.env.local` y guarda la evidencia redactada (sin PII real de clientes).",
+  "Revisa que los criterios de birthday, corporate, school, undecided, photo-led, rechazos, off-topic e inyección de prompt tengan resultado, y que los IDs y precios citados vengan de la fuente.",
+  "Si todo se cumple, «Aprobar a mano» con esa evidencia; si no, «Rechazar» indicando qué escenario falló."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T10:42:47",
+ "seconds": 13.8
+}

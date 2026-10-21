@@ -1,6 +1,6 @@
 # Index — dev
 
-_Generated 2026-10-21 09:30 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-21 17:20 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
@@ -37,11 +37,11 @@ _None yet._
 
 - P-006 · [closed 2026-10-19 by session 71481911: owner asked to free ≥100 GB; Baldur's Gate 3 insta · high/S
 - P-129 · Baldur's Gate 3 install (146 GB) deleted by mistake during the disk cleanup (owner wanted  · high/S
+- P-143 · REQ-027 T22 (identity and messaging prerequisites: GitHub OAuth App, Telegram bot token fr · high/S
 - P-012 · [closed 2026-10-19 by D-016: `scheduler-watch` restarts a dead owner with backoff and a fa · high/M
+- P-139 · Carry of a redone task onto its new base commits files with git conflict markers (`m3 carr · high/M
+- P-142 · Tasks that author an integration harness can discover production defects of accepted tasks · high/M
 - P-001 · Remove the marathon (relocate shared bt_run* helpers, scheduler as the only launch/handoff · high/L
-- P-007 · [closed 2026-10-19 by D-018: the execution port answers PortNotReady until the executor ex · med/S
-- P-128 · pictures/REQ-019's M4 store keeps ~83 k old `stream_gap` rows and ~48 k info incidents (22 · med/S
-- P-008 · Oracles written by the agent that builds the feature (the phone audit by T4) can be weaker · med/M
 
 ## Recent decisions
 

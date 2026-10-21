@@ -1,0 +1,23 @@
+{
+ "request": "T6:10",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La verificación de T6 falla porque el arnés de prueba usa una API antigua de recovery",
+ "origin": "La verificación independiente ejecuta tests/test_recovery_entrypoints.py en una copia limpia y falla en 7 casos, entre ellos setUpClass de GeneratedCorrection, NoProgress y RemediationInterruptedAtFreeze. El texto visible muestra timeouts ('timed out waiting for the run to end or ask its owner'), y las notas del dueño atribuyen el fallo a tests/recovery_driver.py, que espera claves y valores de bt_recovery_evidence que el código actual ya no devuelve tras rehacer T2, T4 y T5. Los intentos anteriores repitieron este mismo fallo, por eso se agotó el límite de causa repetida; el KeyError de sealed['evidence_sha256'] que citan las notas no aparece en el extracto, así que hay que confirmarlo con la salida completa.",
+ "steps": [
+  "Ejecuta `cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y guarda la salida completa para distinguir KeyError de timeout.",
+  "Lee la API actual en bt_recovery_evidence, bt_recovery_apply, bt_scheduler_recovery_adapter y los comandos recovery-preview y recovery-status de bt_scheduler_ops, sin reutilizar las claves de la versión antigua.",
+  "Ajusta tests/recovery_driver.py y sus aserciones a esa API, elimina los marcadores de conflicto de git de los archivos de test y no modifiques los módulos de T2, T4, T5 ni M1; si falta un comportamiento que el plan exige, repórtalo como ausente.",
+  "Haz el arnés autocontenido (directorios temporales para BITACORA_ROOT, config y home, sin .git ni variables de entorno) y verifica que termina muy por debajo de 25 minutos."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous attempts failed for the same reason: tests/recovery_driver.py targets an older bt_recovery_evidence API. Before editing, run the exact verification command with `env -i PATH=$PATH` and capture the full output. The visible failure is a timeout in setUpClass for GeneratedCorrection, NoProgress and RemediationInterruptedAtFreeze; the owner reports a KeyError on sealed['evidence_sha256'], which is not in the excerpt, so confirm it. Read the current API in bt_recovery_evidence, bt_recovery_apply, bt_scheduler_recovery_adapter and the recovery-preview/recovery-status commands in bt_scheduler_ops. Update tests/recovery_driver.py and the assertions: drop any evidence_sha256 dependency, use the real tick keys and the real lease-failure return code, expect mode 'preview' before authorisation. Remove git conflict markers from the test files. Do not modify production modules owned by T2, T4, T5 or M1; if a test needs behaviour that does not exist, report it as missing. The verifier runs without .git and without environment variables, so set BITACORA_ROOT, config and home explicitly in temporary directories, and close subprocess and file handles to clear the ResourceWarnings. Finish well under 25 minutes. Do not work on the M1 audit findings F3-F14: they are outside T6's scope.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T14:54:35",
+ "seconds": 26.4
+}

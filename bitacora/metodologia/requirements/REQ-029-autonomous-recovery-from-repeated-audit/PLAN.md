@@ -5,9 +5,9 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 6/35 · generado: 2026-10-21T09:30:08-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 11/35 · generado: 2026-10-21T16:32:13-05:00
 
-**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 6/25
+**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 11/25
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -16,13 +16,13 @@ execution_contract: requirements-v1
 | T3 | Add read-only structured diagnostic transport | alta | completada | sonnet | claude-work | 5 |
 | T3a | Define structural conflict envelope and bounded decision policy | alta | completada | sonnet | claude-work | 3 |
 | T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | completada | sonnet | claude-work | 5 |
-| T4 | Add one generic atomic plan-revision primitive to M1 | media | en curso | gpt-6-luna | codex-1 | 11 |
+| T4 | Add one generic atomic plan-revision primitive to M1 | media | completada | gpt-6-luna | codex-1 | 11 |
 | T4b | Compile constrained recovery revisions outside M1 | alta | completada | gpt-6-luna | codex-1 | 2 |
-| T4c | Authorize and apply recovery revisions through the M1 primitive | alta | pendiente | — | — | 0 |
-| T4a | Build provenance-preserving executable convergence strategy | alta | pendiente | gpt-6-luna | codex-2 | 4 |
-| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | pendiente | gpt-6-luna | codex-2 | 5 |
-| T5a | Implement pinned runtime staging and conditional host activation | alta | pendiente | gpt-6-luna | codex-2 | 6 |
-| T6 | Author offline real CLI recovery integration harness | alta | pendiente | gpt-6-luna | codex-2 | 6 |
+| T4c | Authorize and apply recovery revisions through the M1 primitive | alta | completada | gpt-6-luna | codex-1 | 1 |
+| T4a | Build provenance-preserving executable convergence strategy | alta | completada | gpt-6-luna | codex-luis | 6 |
+| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | completada | gpt-6-luna | codex-2 | 7 |
+| T5a | Implement pinned runtime staging and conditional host activation | alta | completada | gpt-6-luna | codex-2 | 8 |
+| T6 | Author offline real CLI recovery integration harness | alta | verificando | gpt-6-luna | codex-luis | 12 |
 | T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | pendiente | gpt-6-luna | codex-2 | 4 |
 | T7 | Run backend regression and entrypoint acceptance | media | pendiente | gpt-6-luna | codex-2 | 11 |
 | T8 | Audit backend recovery authority and evidence | alta | pendiente | gpt-6.1-sol | codex-1 | 9 |

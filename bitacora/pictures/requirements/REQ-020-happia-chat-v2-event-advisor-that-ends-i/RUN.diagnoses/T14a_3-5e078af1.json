@@ -1,0 +1,22 @@
+{
+ "request": "T14a:3",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "T14a agotó sus intentos: verificación imposible por pasos manuales y un fallo del runner",
+ "origin": "Los dos comandos marcados [manual] se pasan al verificador como comandos y fallan con \"exit code None\" en todos los intentos, así que el plan no es verificable tal como está escrito. El tercer comando, `run.ts --check-results docs/req-020/integration-results.json`, sale con código 1 en `scripts/e2e/asesor/run.ts:21`: \"Required flags: --start and exactly one of --fake-model or --live.\" El runner exige esos flags también para `--check-results`. Los mensajes de build (`tsc`, \"Types generated successfully\") no son la causa.",
+ "steps": [
+  "Corrige `scripts/e2e/asesor/run.ts` (línea 21, `parseArgs`) para que `--check-results` no exija `--start` ni `--fake-model`/`--live`.",
+  "Saca las dos entradas [manual] de la lista de comandos de verificación de T14a y regístralas como evidencia del coordinador en `docs/req-020/integration-results.json`.",
+  "Sube `revision` en PLAN.json en 1, ejecuta `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción `revise` en la terminal."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T12:37:42",
+ "seconds": 23.2
+}

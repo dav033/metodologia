@@ -1,0 +1,22 @@
+{
+ "request": "T18:25",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 sigue encontrando un hallazgo alto abierto (F72) y agotó sus rondas",
+ "origin": "El último fallo es \"audit gate: 1 open blocking finding(s): F72 (high)\". Los intentos anteriores fallaron por cinco hallazgos altos (F2, F36, F63, F66, F67), que ya se devolvieron a sus tareas en decisiones anteriores, y T4a ya fue devuelta dos veces. El texto de F72 no aparece en la evidencia, así que la tarea que lo causa no se puede identificar con certeza sin leer el informe de la auditoría.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento (att-0383) y busca F72: anota su evidencia y la tarea que señala en `RUN.notes/<tarea>.audit.md`.",
+  "Si F72 señala una sola tarea, devuelve solo esa tarea con `scheduler-op REQ-027 rework <tarea> --only --reason \"F72 (high)\"`, en lugar de las 28 de la lista.",
+  "Si no puedes acotarlo, pulsa «Devolver T4a, T17, … T18.6 para que los arreglen» o usa `scheduler-op REQ-027 rework T4a,T17,T24,T5,T5a,T5b,T6,T7,T8,T8a,T9,T12,T13,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F72 (high)\"`."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T15:02:54",
+ "seconds": 17.5
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T6:11",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T6 repite el mismo fallo: el arnés offline de recuperación no pasa sus pruebas",
+ "origin": "Las dos pruebas de RecoveryVerificationMap fallan porque el gate bt_scheduler_recovery_verification.recovery_verification_problem solo actúa si la tarea trae marca de recuperación en task.meta. El fixture recovery_task_fixture (tests/recovery_fixture_scenarios.py) pone esas marcas en Task.extra a nivel superior de PLAN.json, así que el gate devuelve '' y ambas filas salen 'accepted' en vez de rechazarse ('changed paths outside authorized scope: web/page.ts' y 'verification_replan/blocked'). Las pruebas NoProgress y RemediationInterruptedAtFreeze fallan en setUpClass con 'timed out waiting for the exhausted audit to ask its owner' y 'timed out waiting for the resumed run to settle'; la evidencia no incluye el log del watch, así que la causa de esos tiempos de espera no está confirmada. GeneratedCorrection y MixedBackendWeb caen en el mismo setUpClass o en errores sin traza útil en la evid",
+ "steps": [
+  "Ejecuta un run real del CLI y muestra `port.core.plan.task('T1').meta` para comprobar si las marcas de recuperación llegan a task.meta.",
+  "Si no llegan, cambia en tests/recovery_fixture_scenarios.py (recovery_task_fixture) la colocación de las marcas al mismo sitio que usa bt_recovery_convergence.py (~línea 395). Si producción descarta la marca, repórtalo como comportamiento faltante para T4c/T5 sin editar sus módulos.",
+  "Lee el log del watch que imprimen los fallos de setUpClass en NoProgress y RemediationInterruptedAtFreeze para ver por qué el run no termina ni pregunta al dueño; corrige el escenario o el arnés, o reporta el comportamiento que falta.",
+  "Ejecuta `cd skill/scripts && env -i PATH=$PATH HOME=$HOME python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y confirma que termina en menos de 25 minutos sin FAIL ni ERROR."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not rewrite the harness for an 'older evidence API'; the current failures are only the 7 listed. Step 1: print port.core.plan.task('T1').meta in a real CLI run to check whether the recovery flags (recovery_case_id / recovery_task / recovery_owner_tasks / kind startswith recovery) reach task.meta. If not, move the flags to where bt_recovery_convergence.py (~line 395) sets them in tests/recovery_fixture_scenarios.py recovery_task_fixture; if production drops them, report a missing production behavior for T4c/T5 and do not edit their modules. Step 2: for NoProgress and RemediationInterruptedAtFreeze, read the watch log printed in the setUpClass failure and find why the run neither finishes nor asks its owner; fix the scenario/harness or report the missing behavior. Do not edit bt_scheduler_recovery_verification, bt_scheduler_quality_adapter, M1, recovery, integration or verification modules. Finish the whole file in well under 25 minutes with the real discovery command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T16:12:30",
+ "seconds": 19.3
+}

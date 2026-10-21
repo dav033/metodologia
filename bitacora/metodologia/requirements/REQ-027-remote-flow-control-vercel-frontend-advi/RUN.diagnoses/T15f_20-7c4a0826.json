@@ -1,0 +1,22 @@
+{
+ "request": "T15f:20",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "La verificación de T15f falla: el panel de revisión no carga su intento en 30 s",
+ "origin": "El test \"real panel entrypoint renders every contract run...\" falla con \"fixture rejected task should load its reviewAttempt through the real review route within 30 seconds\" (39 s). La auditoría T18 ubica la causa en el árbol integrado: FailureReviewPanel perdió su prop target (T7 la añadió, pero bases obsoletas la quitaron), así que la ruta de revisión no carga el intento. T15f se construyó sobre un T8a ya rehecho, por lo que el fallo es de integración de código y no del entorno.",
+ "steps": [
+  "Rehace T15c y los intermedios obsoletos para que FailureReviewPanel recupere la prop target que se perdió en el árbol integrado (detalle en RUN.notes/T15c.audit.md).",
+  "Rehace T15e sobre el T8a actual, como ya decidiste en T15f:12, para que T15f arranque desde esa base.",
+  "Vuelve a ejecutar `cd remote/web && npm run verify`. Si persiste el timeout de 30 s, pide el diagnóstico al agente antes de otro reintento."
+ ],
+ "option": "retry_with_note",
+ "note": "Restore the target prop on FailureReviewPanel (lost in the integrated tree after T7 added it; see RUN.notes/T15c.audit.md) so the fixture's reviewAttempt loads through the real review route within 30 seconds. Rebase onto the current T8a and T15e results before rerunning `cd remote/web && npm run verify`. Do not change the verification commands, checks or acceptance criteria.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T13:21:43",
+ "seconds": 17.6
+}

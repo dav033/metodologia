@@ -1,0 +1,23 @@
+{
+ "request": "T18:23",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue encontrando 3 hallazgos altos abiertos (F2, F19, F62)",
+ "origin": "La puerta de auditoría de T18 bloquea la tarea porque F2, F19 y F62 siguen abiertos en el árbol actual (`audit gate: 3 open blocking finding(s)`). Los hallazgos cambian entre intentos (antes F41, F42 y F55), y F2 ya se devolvió en la ronda T18:20 sin cerrarse, lo que sugiere que los arreglos no llegan al árbol auditado: REQ-027 sigue sobre el merge del predecesor y la integration line solo aplica a runs nuevas. Las rondas de auditoría están agotadas (rework_limit), así que el sistema no reabre las tareas por sí solo.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento y copia F2, F19 y F62 con su evidencia.",
+  "Escribe cada hallazgo, con su evidencia, en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala; es lo que leerá el agente.",
+  "Pulsa «Devolver T15c, T17, T24, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen», o por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T15c,T17,T24,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F2 (high), F19 (high), F62 (high)\"`.",
+  "Si F2 vuelve a aparecer tras el rework, la run empezó sin integration line; en ese caso plantea al dueño parar REQ-027 o relanzarlo en una run nueva."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T12:53:20",
+ "seconds": 24.8
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T15:4",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "T15 bloqueada: el check de hallazgos no encuentra su ledger en la verificación",
+ "origin": "El verificador ejecuta check-findings.ts en una copia limpia, sin .git y sin variables de entorno. En las tres comprobaciones el error visible es \"ENOENT: no such file or directory, open '/workspace/reports/audit/audit-findings.json'\", y los tres intentos fallaron por esa misma causa, de ahí same_cause_limit. La nota del dueño (git rev-parse HEAD y git status fallan sin .git) es probable, pero el error mostrado no es de git: aparecerá después de resolver la ruta ausente. La tercera comprobación también ejecuta el texto del criterio manual como si fuera un comando (\"exit code None\").",
+ "steps": [
+  "En scripts/e2e/asesor/check-findings.ts localiza de dónde sale la ruta /workspace/reports/audit/audit-findings.json y haz que el check lea el archivo indicado en el argumento (docs/req-020/T15.findings.json) o que no dependa de un archivo ausente en la copia limpia.",
+  "Aplica solo el cambio mínimo autorizado por el dueño: revisión esperada = --revision, luego AUDIT_EXPECTED_REVISION, luego git rev-parse HEAD; sin git, usa findings.revision exigiendo que coincida con integration-results.revision y con cada revisión de ejecución, e imprime una línea que lo indique. Sin git de trabajo, omite el límite de edición de auditoría con una línea impresa; con git, mantén a",
+  "Añade una prueba focalizada en scripts/test/asesor y ejecuta npm run gate y npm run happie:test-webhook.",
+  "Registra la evidencia de la revisión manual de producción en docs/req-020/T15.md y T15.findings.json; el criterio manual no se da por cumplido con el cambio de código."
+ ],
+ "option": "retry_with_note",
+ "note": "The three check-findings.ts commands fail first with ENOENT: open '/workspace/reports/audit/audit-findings.json' in the clean verifier copy, before any git call. Find where that path is built in scripts/e2e/asesor/check-findings.ts and make the check read the file passed as argument (docs/req-020/T15.findings.json) so it does not depend on a missing file. Then apply only the owner-authorized minimal change: expected revision = --revision, else AUDIT_EXPECTED_REVISION, else git rev-parse HEAD; without git, use findings.revision and require it to equal integration-results.revision and every run revision, printing one line saying so; without a git work tree, skip the audit edit-boundary check with one printed line; keep both checks strict when git works. Add a focused test under scripts/test/asesor. The manual production phone review is not a shell command: it must be recorded as evidence in docs/req-020/T15.md and T15.findings.json, not executed by the verifier. Run npm run gate and npm run happie:test-webhook before finishing.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T15:42:35",
+ "seconds": 22.6
+}

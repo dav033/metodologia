@@ -1,0 +1,22 @@
+{
+ "request": "T18:22",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 sigue encontrando 7 hallazgos altos abiertos tras varias rondas.",
+ "origin": "El fallo está en el código del árbol actual: F2, F36, F41, F42, F63, F66 y F67 (high) aparecen en la auditoría de T18 una y otra vez (att-0322 y att-0331 ya fallaron por el mismo gate de auditoría). Como la auditoría agotó sus rondas de remediación y T5b ya fue devuelta dos veces, el sistema no reabre las tareas solo; reintentar sin arreglar dará los mismos hallazgos. El texto de cada hallazgo no aparece en la evidencia, así que hay que leerlo en el informe de la auditoría.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento y copia cada hallazgo F2, F36, F41, F42, F63, F66 y F67 con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala.",
+  "Pulsa «Devolver T5b, T6, T8a, T12, T17, T24, T7, T8, T9, T13, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen», o por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T5b,T6,T8a,T12,T17,T24,T7,T8,T9,T13,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason 'hallazgos F2, F36, F4",
+  "Si tras esa ronda la auditoría vuelve a dar los mismos IDs, para con `stop` y revisa esos hallazgos a mano: reintentar o devolver otra vez no está cambiando nada."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T11:56:11",
+ "seconds": 20.2
+}

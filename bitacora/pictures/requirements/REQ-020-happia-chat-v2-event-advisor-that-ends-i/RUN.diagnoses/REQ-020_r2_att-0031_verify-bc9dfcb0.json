@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0031:verify",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "T14a no pasa: el chequeo de resultados falla y faltan pruebas en vivo del coordinador",
+ "origin": "El chequeo `--check-results` de docs/req-020/integration-results.json sale con código 1 porque exige que todos los resultados pasen: overallOutcome 'partial', coverageOutcome 'incomplete', runs[11] 'failed' (es la propia ejecución del chequeo) y liveEntryPoint/deployedEntryPoint 'not run by T14a'. Eso es un defecto del verificador (run.ts, T10), no del producto; la nota del dueño ya lo reconoce, pero el cambio aún no está aplicado ni verificado. Además, las dos pruebas en vivo solo puede hacerlas el coordinador con .env.local, y los criterios manuales siguen sin mapear bien (CRITERION_MANUAL, CRITERION_AMBIGUOUS, CHECK_UNMAPPED).",
+ "steps": [
+  "En scripts/e2e/asesor/run.ts, cambia --check-results (y su prueba) para validar la integridad del informe, no el éxito del producto: schema integration-results/1, revisión presente, outcome en cada run, failedOwningTask o coordinator-pending en los runs no pasados y coverageGaps listados. Quita runs[11], marca liveEntryPoint y deployedEntryPoint como coordinator-pending y añade --strict para exigi",
+  "Regenera docs/req-020/integration-results.json y ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` sin --strict; debe salir con código 0.",
+  "Como cambian un chequeo y un criterio, sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción revise.",
+  "El coordinador ejecuta con .env.local `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone all` y `--live --deployed --milestone all`, y registra la evidencia redactada en el informe."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T14:03:23",
+ "seconds": 20.4
+}

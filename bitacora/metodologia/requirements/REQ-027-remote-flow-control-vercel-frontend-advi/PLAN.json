@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-027",
-  "revision": 9,
+  "revision": 11,
   "spec_ref": "SPEC.md",
   "milestones": [
     {
@@ -2852,7 +2852,9 @@
       "repository": "skill",
       "after": [
         "T17",
-        "T18"
+        "T18",
+        "T18.1b",
+        "T18.2b"
       ],
       "complexity": "high",
       "scope": "small_change",
@@ -4172,6 +4174,179 @@
       "covers": [
         "R18",
         "R3"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.1b",
+      "milestone_id": "M5",
+      "title": "Remediate T18b findings F31",
+      "objective": "Fix these confirmed audit findings of T18b (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F31 (high; owned by T5, T5a): A stale remote retry cancels a new running attempt after concurrent scheduler progress. Evidence from the audit: Report Probe R: exit 0. Actual SQLite-backed M1 task changes blocked -> active after real target_state reads blocked and before the ledger acts. Real dispatch/ops.retry returns OK and cancels the new attempt rather than STALE_PRECONDITION. Only process start/stop/kill seams are suppressed and retry wait bounded to zero; core/repository/dispatch are real. _EFFECT_LOCK is process-local and not held by the scheduler owner.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, T5a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F31 (high) is fixed: A stale remote retry cancels a new running attempt after concurrent scheduler progress."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "F31 (high) is fixed: A stale remote retry cancels a new running attempt after concurrent scheduler progress.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R15",
+        "R5",
+        "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T18.2b",
+      "milestone_id": "M5",
+      "title": "Remediate T18b findings F32",
+      "objective": "Fix these confirmed audit findings of T18b (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F32 (high; owned by T5, T5a): A stale cancel-attempt still cancels an attempt that progressed after the authoritative precondition read. Evidence from the audit: Embedded Probe E: exit 0. Actual SQLite-backed M1 attempt changes dispatched -> running after real target_state reads dispatched. Real native HTTP dispatcher/ops.cancel_attempts then returns HTTP 200 OK and records cancelled, instead of HTTP 409 STALE_PRECONDITION. Only process stop/kill/watch seams are suppressed. Retry's new expected_task_state protection is not passed by cancel-attempt.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T17",
+        "T18",
+        "T18.1b"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, T5a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_remote_commands.py",
+        "skill/scripts/tests/test_remote_commands.py"
+      ],
+      "shared_resources": [
+        "remote-api-contract"
+      ],
+      "acceptance_criteria": [
+        "F32 (high) is fixed: A stale cancel-attempt still cancels an attempt that progressed after the authoritative precondition read."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py",
+          "purpose": "F32 (high) is fixed: A stale cancel-attempt still cancels an attempt that progressed after the authoritative precondition read.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R15",
+        "R5",
+        "R6"
       ],
       "kind": "implement"
     }

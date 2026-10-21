@@ -1,0 +1,23 @@
+{
+ "request": "T6:9",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El arnés de T6 no coincide con la API actual de recovery y 7 tests fallan",
+ "origin": "La verificación independiente falla en test_recovery_entrypoints.py con 7 errores o fallos. El arnés (tests/recovery_driver.py) sigue escrito contra una versión anterior de bt_recovery_evidence: lee sealed['evidence_sha256'] (KeyError), espera las claves 'action', 'reason' y 'newly_escalated', rc -9 en un fallo de lease y modo 'enabled' en la preview, valores que el código actual no devuelve. El desajuste viene del rebase tras rehacer T2, T4 y T5, no de la producción; los timeouts de setUpClass podrían tener la misma causa, pero hay que confirmarlo al re-ejecutar, porque los tests que fallan citados no coinciden del todo con el módulo que describen las notas del dueño.",
+ "steps": [
+  "Lee la API vigente en bt_recovery_evidence, bt_recovery_apply, bt_scheduler_recovery_adapter y en los comandos recovery-preview y recovery-status de bt_scheduler_ops.",
+  "Adapta tests/recovery_driver.py y las aserciones: quita la dependencia de evidence_sha256, usa las claves de tick reales, el rc de fallo de lease y el modo 'preview' antes de la autorización; resuelve los marcadores de conflicto de merge.",
+  "No modifiques los módulos de producción de T2, T4 y T5; si un test muestra un comportamiento que el plan exige y falta, repórtalo como tal.",
+  "Ejecuta: cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s tests -p test_recovery_entrypoints.py"
+ ],
+ "option": "retry_with_note",
+ "note": "The harness in tests/recovery_driver.py and tests/test_recovery_entrypoints.py was written for an older recovery API and fails against the current code. Read the current bt_recovery_evidence, bt_recovery_apply, bt_scheduler_recovery_adapter and the recovery-preview/recovery-status commands in bt_scheduler_ops before editing. Adapt the driver: drop the sealed['evidence_sha256'] key, use the tick result keys the code really returns (action, reason, newly_escalated), expect the real lease-fault return code (not -9), and expect preview mode 'preview' before authorization. Resolve any merge conflict markers. Do not modify production modules (T2, T4, T5); if a test shows required behaviour is missing, report it instead of patching it. Do not touch the M1 audit findings. Verify with: cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s tests -p test_recovery_entrypoints.py",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T13:22:16",
+ "seconds": 17.6
+}

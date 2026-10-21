@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0024:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El build de Next.js se cayó (SIGABRT) y faltan las pruebas manuales en teléfono y en vivo",
+ "origin": "El último intento falló en la comprobación con modelo falso: `npm run build` de la M1 terminó con «Next.js build worker exited with code: null and signal: SIGABRT» (evidencia: /workspace/reports/e2e/asesor/integration-results.json). Esa caída es un fallo automático real, no solo un criterio manual, y la aprobación manual anterior de David no lo cubre. Además, los criterios de teléfono y de M2 en vivo solo tienen evidencia manual, y T14 cambió el mismo código (src/lib/asesor/agent.ts, tools.ts, prompts/base.ts) sin que T10 se rehiciera sobre él.",
+ "steps": [
+  "Rehace T10 sobre el código de T14, conservando lo que siga siendo válido, y reproduce el fallo con `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2` usando la base local de ASESOR_TEST_DATABASE_URL.",
+  "Revisa /workspace/reports/e2e/asesor/integration-results.json y corrige la causa del SIGABRT del worker de Next.js (memoria o versión) antes de otro intento; no lo apruebes a mano.",
+  "Registra la evidencia del teléfono (permisos, teclado, recarga, brief y admin, sin datos de clientes) y ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` con .env.local.",
+  "Si esos criterios no pueden ser automáticos, sube \"revision\" en PLAN.json, ejecuta `python bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción revise, porque aprobar a mano no cierra CHECK_UNMAPPED."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T09:34:23",
+ "seconds": 21.5
+}

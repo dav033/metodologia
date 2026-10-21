@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0025:verify",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "Build de Next.js abortado (SIGABRT) y criterios de teléfono sin evidencia automática",
+ "origin": "La última verificación falló en el comando fake-model: «Next.js build worker exited with code: null and signal: SIGABRT» durante «Collecting page data using 15 workers», y luego «[FAIL] asesor M1: npm run build exited 1». Es probablemente presión de memoria por demasiados workers en paralelo, como indicó el owner en att-0024, así que viene del entorno y no de la lógica de T10. Las comprobaciones en vivo y en teléfono son solo manuales, por eso el verificador pide una persona (CRITERION_MANUAL, CHECK_UNMAPPED).",
+ "steps": [
+  "Limita los workers de Next en el proyecto asesor (`experimental.cpus` o equivalente) y no lances otros builds a la vez.",
+  "Vuelve a ejecutar `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2` y confirma que M1 pasa en `/workspace/reports/e2e/asesor/integration-results.json`.",
+  "Haz la prueba en teléfono y el run live (`--live --milestone M2` con .env.local) y registra evidencia redactada de permisos, teclado, recarga y brief/admin; si esos criterios deben ser automáticos, sube la revisión de PLAN.json, congela con `plan-json freeze` y elige «revise»."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T10:23:36",
+ "seconds": 18.4
+}

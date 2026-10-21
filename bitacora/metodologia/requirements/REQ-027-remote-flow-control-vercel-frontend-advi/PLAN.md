@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/6 · tareas 29/43 · generado: 2026-10-21T09:28:07-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 5/6 · tareas 42/45 · generado: 2026-10-21T16:43:46-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -20,14 +20,14 @@ created: 2026-10-19
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T4 | Remote API skeleton behind the gateway key, with health | media | completada | gpt-6-luna | codex-2 | 4 |
-| T4a | Snapshot endpoint over the shared live caches | media | completada | gpt-6-luna | codex-1 | 10 |
+| T4a | Snapshot endpoint over the shared live caches | media | completada | gpt-6-luna | codex-luis | 11 |
 | T5 | Command ledger store: idempotency keys, preconditions and audit rows | alta | completada | gpt-6-luna | codex-1 | 8 |
 | T5a | Ledger dispatch for run moves and decision answers | media | completada | gpt-6-luna | codex-1 | 7 |
-| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | completada | sonnet | claude-work | 10 |
-| T6 | Event feed with stable ids and a cursor, including decision requests | alta | completada | sonnet | claude-work | 16 |
-| T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-1 | 7 |
+| T5b | Ledger dispatch for plans and rounds with the confirmation challenge | media | completada | gpt-6-luna | codex-luis | 11 |
+| T6 | Event feed with stable ids and a cursor, including decision requests | alta | completada | gpt-6-luna | codex-luis | 18 |
+| T7 | Failure review read model per attempt | media | completada | gpt-6-luna | codex-1 | 8 |
 | T8 | Retry pinned to a route, model or account | alta | completada | sonnet | claude-work | 7 |
-| T8a | Brief or criteria edit as an owner-approved plan revision | alta | completada | sonnet | claude-work | 11 |
+| T8a | Brief or criteria edit as an owner-approved plan revision | alta | completada | gpt-6-luna | codex-luis | 13 |
 | T9 | One owner of port 8765 and reloads that keep the listening socket | media | completada | gpt-6-luna | codex-1 | 9 |
 
 **M3 — Gateway (tested against a fake laptop)** · dificultad alta · 8/8
@@ -37,11 +37,11 @@ created: 2026-10-19
 | T10 | Gateway skeleton: config, upstream client and liveness state | media | completada | gpt-6-luna | codex-luis | 12 |
 | T11 | GitHub OAuth for dav033 and server-side sessions | media | completada | gpt-6-luna | codex-luis | 4 |
 | T11a | CSRF header, Origin check, rate limits and request log | baja | completada | gpt-6-luna | codex-luis | 4 |
-| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | completada | sonnet | claude-work | 13 |
-| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-1 | 10 |
+| T12 | Snapshot cache and SSE fan-out with Last-Event-ID | alta | completada | gpt-6-luna | codex-luis | 14 |
+| T13 | Command relay with challenge, LAPTOP_OFFLINE and UNKNOWN_OUTCOME | media | completada | gpt-6-luna | codex-luis | 11 |
 | T14 | Deterministic notification rules with dedupe keys | alta | completada | sonnet | claude-work | 11 |
 | T14a | Telegram delivery with retries, backoff and history | media | completada | gpt-6-luna | codex-1 | 6 |
-| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-1 | 9 |
+| T14b | Telegram bot: long polling, chat allowlist, safe buttons and /estado | media | completada | gpt-6-luna | codex-luis | 10 |
 
 **M4 — Mobile web (tested against a mock gateway)** · dificultad media · 7/7
 
@@ -50,34 +50,36 @@ created: 2026-10-19
 | T15 | Web scaffold: Next.js, theme tokens, local fonts, PWA manifest, rewrites, mock gateway | media | completada | gpt-6-luna | codex-1 | 14 |
 | T15a | Login screen and runs list | baja | completada | gpt-6-luna | codex-1 | 11 |
 | T15b | Run view: activity strip, tasks and feed on flow-core.js | media | completada | gpt-6-luna | codex-2 | 7 |
-| T15c | Failure review screen | baja | completada | gpt-6-luna | codex-1 | 14 |
-| T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-1 | 15 |
-| T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-1 | 14 |
-| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-1 | 18 |
+| T15c | Failure review screen | baja | completada | gpt-6-luna | codex-1 | 16 |
+| T15d | Control sheet with typed confirmations and command history | media | completada | gpt-6-luna | codex-1 | 16 |
+| T15e | Plans, question rounds and decision requests screens | media | completada | gpt-6-luna | codex-1 | 15 |
+| T15f | Recovery forms and live quotas | media | completada | gpt-6-luna | codex-1 | 21 |
 
-**M5 — Go-live kit and audit** · dificultad alta · 2/11
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-1 | 13 |
-| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | gpt-6-luna | codex-1 | 22 |
-| T18 | Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-luis | 20 |
-| T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | pendiente | gpt-6.1-sol | codex-1 | 3 |
-| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | pendiente | gemini-3.8-flash-low | antigravity | 2 |
-| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | en curso | gpt-6-luna | codex-1 | 11 |
-| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | pendiente | gpt-6-luna | codex-luis | 12 |
-| T18.3 | Remediate T18 findings F9, F10 | alta | pendiente | gpt-6-luna | codex-luis | 10 |
-| T18.4 | Remediate T18 findings F19 | alta | lista | gpt-6-luna | codex-2 | 4 |
-| T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | pendiente | gpt-6-luna | codex-luis | 10 |
-| T18.6 | Remediate T18 findings F14 | media | pendiente | gpt-6-luna | codex-luis | 9 |
-
-**M6 — Production environment** · dificultad alta · 0/5
+**M5 — Go-live kit and audit** · dificultad alta · 13/13
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T20 | Create the AdvIn production environment: service user, directories, units and Caddy block | alta | pendiente | — | — | 0 |
-| T21 | Create the Vercel project and deploy the frontend to production | media | pendiente | — | — | 0 |
-| T22 | Create the identity and messaging prerequisites and place the secrets | media | pendiente | — | — | 0 |
+| T16 | Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook | media | completada | gpt-6-luna | codex-1 | 15 |
+| T17 | Offline end-to-end: real laptop API, gateway and built web wired locally on loopback | alta | completada | gpt-6-luna | codex-1 | 27 |
+| T18 | Independent security and spec audit by another provider | alta | completada | gpt-6.1-sol | codex-2 | 26 |
+| T18b | Cross-check audit of T18: Independent security and spec audit by another provider | alta | completada | gpt-6.1-sol | codex-luis | 8 |
+| T19 | Documentation: remote README, references and TOOLS entries to copy at go-live | baja | completada | gemini-3.8-flash-low | antigravity | 3 |
+| T18.1 | Remediate T18 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-1 | 13 |
+| T18.2 | Remediate T18 findings F5, F6, F7, F8 | alta | completada | gpt-6-luna | codex-1 | 16 |
+| T18.3 | Remediate T18 findings F9, F10 | alta | completada | gpt-6-luna | codex-1 | 14 |
+| T18.4 | Remediate T18 findings F19 | alta | completada | gpt-6-luna | codex-1 | 6 |
+| T18.5 | Remediate T18 findings F1, F2, F3, F4 | alta | completada | gpt-6-luna | codex-1 | 15 |
+| T18.6 | Remediate T18 findings F14 | media | completada | gpt-6-luna | codex-2 | 15 |
+| T18.1b | Remediate T18b findings F31 | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T18.2b | Remediate T18b findings F32 | alta | completada | gpt-6-luna | codex-luis | 1 |
+
+**M6 — Production environment** · dificultad alta · 2/5
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T20 | Create the AdvIn production environment: service user, directories, units and Caddy block | alta | completada | gpt-6-luna | codex-2 | 4 |
+| T21 | Create the Vercel project and deploy the frontend to production | media | completada | gpt-6-luna | codex-2 | 1 |
+| T22 | Create the identity and messaging prerequisites and place the secrets | media | bloqueada | gpt-6-luna | codex-2 | 3 |
 | T23 | Release the gateway and the Telegram bot to AdvIn and switch them on | alta | pendiente | — | — | 0 |
 | T24 | Live smoke test of the production environment and handover | media | pendiente | — | — | 0 |
 <!-- bitacora:status:end -->

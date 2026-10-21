@@ -1,0 +1,23 @@
+{
+ "request": "T15:3",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "El check de hallazgos no puede leer la revisión git en la sandbox del verificador",
+ "origin": "El verificador ejecuta los comandos en una copia limpia sin `.git`. Los tres comandos de T15 fallan con `[FAIL] findings check: Unable to resolve expected git revision.` en el último intento y en el anterior (att-0032). El fallo viene de cómo el check obtiene la revisión esperada en ese entorno, no de un error de contenido en el informe. La evidencia no muestra el código de `check-findings.ts`, así que no sé si la lectura git es obligatoria o solo un valor por defecto.",
+ "steps": [
+  "Abre `scripts/e2e/asesor/check-findings.ts` y busca dónde resuelve la revisión git esperada.",
+  "Si la revisión puede venir del propio ledger, deja que `docs/req-020/T15.findings.json` la declare explícitamente, para que el check no necesite `.git`.",
+  "Si el check necesita git sin alternativa, no lo parchees a mano: sube `revision` en PLAN.json, ejecuta `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures plan-json freeze REQ-020` y elige `revise`.",
+  "Vuelve a ejecutar los tres comandos de verificación; el check manual de producción no cuenta como aceptado mientras no tenga evidencia."
+ ],
+ "option": "retry_with_note",
+ "note": "The verifier runs in a clean copy without .git, so check-findings.ts fails with 'Unable to resolve expected git revision' on every attempt. Do not change product code or any SPEC/acceptance check. Find where scripts/e2e/asesor/check-findings.ts resolves the expected git revision; if it can come from the audit ledger, record the expected revision explicitly in docs/req-020/T15.findings.json so the check does not need .git. Then run the three verification commands and report their output. Keep the audit read-only: change only the report and ledger, and leave unexecuted checks unaccepted.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T15:16:37",
+ "seconds": 22.6
+}

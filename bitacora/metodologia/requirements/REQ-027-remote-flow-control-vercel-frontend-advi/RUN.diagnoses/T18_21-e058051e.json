@@ -1,0 +1,22 @@
+{
+ "request": "T18:21",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue encontrando 7 hallazgos altos abiertos y ya no reabre sola las tareas.",
+ "origin": "El fallo es \"audit gate: 7 open blocking finding(s): F2 (high), F36 (high), F41 (high), F42 (high), F63 (high), F66 (high), F67 (high)\", y los intentos #16 y #17 dieron el mismo bloqueo con hallazgos distintos (F1, F41, F42 y luego F2). Los hallazgos están en el código del árbol que audita T18, y no se corrigieron aunque ya se devolvieron tareas con rework_findings en T18:20. El límite de rondas (rework_limit) impidió al sistema convertirlos en remediación, por lo que hace falta una decisión tuya.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento de T18 y copia cada hallazgo (F2, F36, F41, F42, F63, F66, F67) con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala.",
+  "Pulsa «Devolver T5b, T6, T8a, T12, T17, T24, T7, T8, T9, T13, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen», o por terminal: `scheduler-op REQ-027 rework T5b,T6,T8a,T12,T17,T24,T7,T8,T9,T13,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F2 (high), F36 (high), F41 (high), F42 (high)",
+  "Cuando termine el rework, revisa que T18 cumple sus criterios de aceptación; si la auditoría vuelve a marcar hallazgos altos, léelos antes de aprobar otra ronda, porque reauditar un árbol sin cambios repetirá los mismos."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T10:04:13",
+ "seconds": 18.2
+}

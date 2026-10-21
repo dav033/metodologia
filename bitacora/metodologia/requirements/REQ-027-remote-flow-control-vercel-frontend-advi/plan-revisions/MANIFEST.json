@@ -61,6 +61,18 @@
    "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c",
    "frozen_at": "2026-10-20T12:01:29",
    "source": "remediation"
+  },
+  {
+   "revision": 10,
+   "sha256": "2fe88573bc3cfbfbd63e2eda6ad629e8f704ac90870693fbaff085b90dca97af",
+   "frozen_at": "2026-10-21T15:33:02",
+   "source": "remediation"
+  },
+  {
+   "revision": 11,
+   "sha256": "1cc2c541d9310e97781e315b2855bb59bcc4d771eed6ddcb2b87f558086b33e7",
+   "frozen_at": "2026-10-21T15:43:37",
+   "source": "remediation"
   }
  ]
 }

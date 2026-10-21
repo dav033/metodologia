@@ -1,0 +1,23 @@
+{
+ "request": "T17:24",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T17 bloqueada: el agente devolvió remote/gateway/main.py a una versión anterior a la base",
+ "origin": "El integration gate rechaza el trabajo con el error \"files changed back to an older version than the base they started from: remote/gateway/main.py | M6\". Al reubicar el trabajo sobre la nueva base (att-0392), el agente conservó su copia antigua de remote/gateway/main.py y perdió 6 líneas de cambios de la base. Los intentos siguientes repitieron el mismo fallo, por eso se activó el límite de causa repetida; el arreglo EROFS de los tests (npm ci sobre node_modules de solo lectura) ya está aplicado y no es la causa actual.",
+ "steps": [
+  "Restaura el archivo a la versión de tu árbol de partida: `git checkout <primer padre de HEAD del worktree> -- remote/gateway/main.py`.",
+  "Compara cada archivo cambiado con la base (`git diff <base> -- <archivo>`) y deja la versión base salvo que esta tarea lo cambie a propósito. Antes de cerrar, confirma que ningún archivo tiene líneas eliminadas respecto a la base.",
+  "Mantén el arreglo EROFS en remote/e2e/tests/test_local_e2e.py: ejecuta npm ci solo si falta remote/web/node_modules/.bin/next y conserva npm run build.",
+  "Ejecuta `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` y los tests del módulo gateway antes de terminar."
+ ],
+ "option": "retry_with_note",
+ "note": "Your previous attempts failed the integration gate with 'files changed back to an older version than the base': remote/gateway/main.py is older than the base (6 lines lost). First run `git checkout <first parent of your worktree HEAD> -- remote/gateway/main.py`. Then run `git diff <base> -- <file>` for every changed file and keep the base version of each unless this task changes it on purpose; do not finish while any file removes lines that the base has. Keep the EROFS fix in remote/e2e/tests/test_local_e2e.py: run npm ci only when remote/web/node_modules/.bin/next is missing, keep npm run build. Finally run `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` and the gateway module tests, and report their output.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T11:18:09",
+ "seconds": 18.7
+}

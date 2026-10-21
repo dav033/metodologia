@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0041:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T7 espera tu decisión: sus criterios de aceptación solo tienen comprobación manual",
+ "origin": "La tarea T7 (acceptance del M1 del asesor) tiene criterios que solo se pueden comprobar a mano: la ejecución en vivo con Gemini/Supabase y la prueba en teléfono. El verificador marca CRITERION_MANUAL y CHECK_UNMAPPED porque no hay una comprobación automática que coincida exactamente con esos criterios. El fallo viene del plan y de la naturaleza de la prueba, no de un error de código.",
+ "steps": [
+  "Confirma que existe la evidencia de la ejecución en vivo: `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` con `.env.local`, con la salida redactada (Gemini real, Supabase, deploy).",
+  "Revisa las observaciones del asesor desplegado en un teléfono (permiso, teclado, recarga, brief y vista de admin), sin datos de clientes.",
+  "Si la evidencia y las observaciones cumplen el criterio, pulsa «Aprobar a mano» y anota lo que viste. Si falta la ejecución en vivo o algún paso, rechaza y di qué falló.",
+  "Si CHECK_UNMAPPED vuelve a aparecer en la siguiente ronda, cambia el plan: sube `revision` en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y luego elige la opción `revise`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T16:56:13",
+ "seconds": 19.2
+}

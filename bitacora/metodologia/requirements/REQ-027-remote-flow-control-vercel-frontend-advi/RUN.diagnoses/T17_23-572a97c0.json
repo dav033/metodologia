@@ -1,0 +1,22 @@
+{
+ "request": "T17:23",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T17 se bloqueó: los intentos devuelven remote/gateway/main.py a una versión anterior a su base",
+ "origin": "El integration gate rechazó el intento #18 (att-0328) con: \"files changed back to an older version than the base they started from: remote/gateway/main.py\". El intento #19 (att-0329) se aceptó y luego se devolvió por rework de auditoría, y la auditoría pide restaurar ese archivo a la versión de tu árbol inicial. El fallo EROFS de `npm ci` en remote/web/node_modules venía de intentos anteriores, que ya tienen indicación del dueño; el bloqueo actual es una regresión de código, no del entorno. Como no se muestran 17 intentos anteriores, no puedo confirmar si la indicación de EROFS ya se aplicó.",
+ "steps": [
+  "Restaura remote/gateway/main.py a la versión de tu árbol inicial con `git checkout <start> -- remote/gateway/main.py`, donde <start> es el primer padre del HEAD de tu worktree, y revisa que ningún otro archivo quede en una versión más antigua.",
+  "Mantén el arreglo de EROFS en remote/e2e/tests/test_local_e2e.py: no ejecutes `npm ci` si remote/web/node_modules/.bin/next ya existe, instálalo solo si falta, y conserva `npm run build`.",
+  "Ejecuta `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` y vuelve a probar el módulo gateway antes de terminar."
+ ],
+ "option": "retry_with_note",
+ "note": "Restore remote/gateway/main.py to its version in the starting tree (git checkout <start> -- remote/gateway/main.py, where <start> is the first parent of the worktree HEAD). Check that no other file ends up older than its starting version. Keep the EROFS fix in remote/e2e/tests/test_local_e2e.py: skip npm ci when remote/web/node_modules/.bin/next exists, install only when it is missing, and keep npm run build. Then run `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` and the gateway tests.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T11:04:34",
+ "seconds": 18.4
+}
