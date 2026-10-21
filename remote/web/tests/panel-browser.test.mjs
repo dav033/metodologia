@@ -117,7 +117,12 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
+    const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
+    const reviewPoint = reviewLink.result?.value;
+    assert.ok(reviewPoint, "review link should have a visible position");
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
+    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -246,6 +251,25 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
+    await waitForText("Historial de comandos");
+    await waitForText("Origen · Web");
+    await waitForText("Resultado · accepted");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.disabled === false", returnByValue: true });
+      if (ready.result?.value) break;
+      await delay(100);
+    }
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-028");
+    const destructiveDisabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
+    assert.equal(destructiveDisabled.result?.value, true, "destructive commands must stay disabled unless the exact REQ is typed");
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+    await fill('[aria-label="Id del reto de confirmación"]', "challenge-1");
+    const destructiveEnabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
+    assert.equal(destructiveEnabled.result?.value, false, "typing the exact REQ and challenge should enable destructive commands");
+    gateway.nextCommandResponse = { status: 409, body: { code: "STALE_PRECONDITION", message: "stale" } };
+    await click(".plans form button.danger");
+    await waitForText("El estado cambió");
+    await waitForText("Resultado · Rechazado: el estado cambió");
     socket.close();
   } catch (error) {
     if (error?.code === "ENOENT") assert.fail(`Chromium was not found at ${chromiumPath}; set CHROMIUM_PATH to a local Chromium binary`);
