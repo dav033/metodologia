@@ -85,28 +85,17 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
     """Resolve current run/member state for the ledger's optimistic precondition."""
     import bt_core
     import bt_plans_api
-    import bt_scheduler_decisions
-
     try:
         project, req, rdir = _run_target(target)
+        params = params or {}
+        if command in {"answer-round", "answer-decision"}:
+            import bt_remote_preconditions
+            return bt_remote_preconditions.answerable_state(rdir, command, params)
         status = bt_plans_api.status_of(bt_core.ROOT, project, req)
     except (ValueError, bt_plans_api.PlanError, OSError):
         return None
     run = status.get("run") or {}
     plan = status.get("plan") or {}
-    params = params or {}
-    if command == "answer-round":
-        round_number = params.get("round")
-        if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
-            return None
-        try:
-            import bt_rounds
-            round_data = bt_rounds.load(rdir / "rounds" / f"round-{round_number:02d}.json")
-        except (OSError, ValueError):
-            return None
-        if round_data.get("round") != round_number or round_data.get("status") != "open":
-            return None
-        return {"state": "open", "revision": round_data.get("revision")}
     if command in {"approve", "launch", "cancel-plan", "delete-plan"}:
         try:
             updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
@@ -123,16 +112,6 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         if member_state is None:
             return None
         state = member_state
-    elif command == "answer-decision":
-        request_id = params.get("request_id")
-        if not isinstance(request_id, str) or not request_id:
-            return None
-        request = next((item for item in bt_scheduler_decisions.open_requests(rdir)
-                        if item.get("id") == request_id), None)
-        if request is None:
-            return None
-        return {"state": "open", **({"revision": request["revision"]}
-                                     if isinstance(request.get("revision"), int) else {})}
     return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 

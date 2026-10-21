@@ -45,8 +45,14 @@ class LaptopClient:
                 payload = json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             try:
-                error_payload = json.loads(exc.read().decode("utf-8"))
+                error_body = exc.read()
             except (OSError, UnicodeError, json.JSONDecodeError):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            finally:
+                exc.close()
+            try:
+                error_payload = json.loads(error_body.decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
                 raise UpstreamError("laptop API returned an invalid error response") from exc
             if not isinstance(error_payload, dict):
                 raise UpstreamError("laptop API returned an invalid error response") from exc
