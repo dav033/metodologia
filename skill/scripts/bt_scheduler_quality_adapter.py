@@ -54,6 +54,7 @@ class QualityVerificationPort:
         read_changes: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
         integration_check: Callable[[str, str, str], str] | None = None,
         integration_retries: int = 0,
+        integration_rework_limit: int = 6,
         unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
     ):
@@ -67,6 +68,7 @@ class QualityVerificationPort:
         self._read_changes = read_changes or self._changes_from_snapshot
         self.integration_check = integration_check        # (task, attempt, snapshot) -> '' or why it cannot be combined
         self.integration_retries = integration_retries    # clash rejections of one task before the dependents give way
+        self.integration_rework_limit = integration_rework_limit  # times one task may be sent back to give way
         self.unresolved_check = unresolved_check          # (task, snapshot) -> files still holding merge conflict markers
         self.remediate = remediate                        # (audit, attempt, findings) -> True when they became remediation tasks
         self.executor = executor
@@ -415,7 +417,11 @@ class QualityVerificationPort:
         known = {spec.id for spec in self.core.plan.tasks}
         done = self.core.read(lambda ctx: {t for t, rec in ctx.state.tasks.items() if rec.state == "completed"})
         redo = tuple(t for t in others if t in known and t in done and t != task_id)
-        if not redo or self.core.rework_problem(redo, (), False):
+        # The give-way is not an audit verdict on those tasks, so `max_reworks` (a limit on audit rework) must not
+        # refuse it: it did, and the task that caused the clash was rejected again and again for a clash only the others
+        # could resolve (REQ-027 T4a vs T5a, seven attempts). Its own ceiling stops a ping-pong.
+        if not redo or self.core.rework_problem(redo, (), False, owner=True) \
+                or self.core.read(lambda ctx: any(ctx.state.tasks[t].reworks >= self.integration_rework_limit for t in redo)):
             return ()
         return redo
 

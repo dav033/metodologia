@@ -232,9 +232,11 @@ class SchedulerCore:
         """Every task `reject_and_rework(..., task_ids)` would send back with the rejected task `also`."""
         return self.read(lambda c: operations.rework_scope(c, (*task_ids, *also), cascade))
 
-    def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True) -> str:
-        """Why `reject_and_rework` would be refused right now ('' when it would not)."""
-        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), cascade=cascade))
+    def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True, *,
+                       owner: bool = False) -> str:
+        """Why `reject_and_rework` would be refused right now ('' when it would not). `owner` asks the same of an
+        operator-style `rework`, which is not held to `max_reworks`."""
+        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), owner=owner, cascade=cascade))
 
     def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "", cascade: bool = True) -> tuple[str, ...]:
         """Operator move: send accepted work back (see `operations.rework`)."""

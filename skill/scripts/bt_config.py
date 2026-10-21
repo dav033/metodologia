@@ -45,6 +45,9 @@ DEFAULTS: dict = {
               "integration_check": True,
               # clash rejections one task gets before the accepted tasks it clashes with are sent back to resolve the overlap on it
               "integration_retries": 0,
+              # times one task may be sent back to give way to a task that clashes with it (not audit rework: it is not
+              # held to `max_reworks`); past this the clash is rejected on the task that caused it
+              "integration_rework_limit": 6,
               # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)

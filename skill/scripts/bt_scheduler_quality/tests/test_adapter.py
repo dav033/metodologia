@@ -361,7 +361,7 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("T6+T10 vs T13 for T14", notes[0][1])
         self.assertIn("small change", notes[0][1])
 
-    def _give_way_system(self, prior_clashes, notes):
+    def _give_way_system(self, prior_clashes, notes, t3_reworks=0, ceiling=6):
         def spec(tid):
             task = _task(tid, "python3 build.py")
             task.update(kind="implement")
@@ -373,11 +373,13 @@ class M6M1AdapterTests(unittest.TestCase):
         root, core, _, executor, _, adapter = system
         adapter._prior_clashes = lambda task_id: prior_clashes
         adapter.integration_retries = 2
+        adapter.integration_rework_limit = ceiling
         adapter.integration_check = (lambda task_id, attempt, snapshot:
                                      "T1+T9 vs T3 for T4: remote/gateway/app.py" if task_id == "T1" else "")
         self._start_attempts(core, executor, root, ("T3",))
         core.step()
         self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] == "completed"))
+        core.write(lambda ctx: setattr(ctx.state.tasks["T3"], "reworks", t3_reworks))
         self._start_attempts(core, executor, root, ("T1",))
         core.step()
         return core
@@ -392,6 +394,17 @@ class M6M1AdapterTests(unittest.TestCase):
                          ("integration-gate", ["T3"], False))
         self.assertEqual([task_id for task_id, _ in notes], ["T3"])
         self.assertIn("Redo this task on top of it", notes[0][1])
+
+    def test_the_give_way_is_not_refused_by_the_audit_rework_limit_but_has_its_own_ceiling(self):
+        # REQ-027 T4a: the accepted task on the other side had been sent back by audits max_reworks times, the give-way
+        # was refused, and the task that caused the clash was rejected seven times for a clash only the others could fix
+        core = self._give_way_system(2, [], t3_reworks=2)
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] != "completed"))
+        core = self._give_way_system(2, [], t3_reworks=2, ceiling=2)             # sent back for it too often already
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(core.snapshot().tasks["T3"]["state"], "completed")
 
     def test_a_task_with_retries_left_is_rejected_instead_of_sending_the_others_back(self):
         notes = []
