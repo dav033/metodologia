@@ -4,10 +4,27 @@ from __future__ import annotations
 import os
 import re
 import shlex
+import socket
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+
+def systemd_listener(port: int) -> socket.socket | None:
+    """Return systemd's inherited listening socket for `port`, if this is its activated service."""
+    if not sys.platform.startswith("linux"):
+        return None
+    try:
+        if os.environ.get("LISTEN_PID") != str(os.getpid()) or os.environ.get("LISTEN_FDS") != "1":
+            return None
+        listener = socket.fromfd(3, socket.AF_INET, socket.SOCK_STREAM)
+    except (OSError, ValueError):
+        return None
+    if listener.getsockname() != ("127.0.0.1", port):
+        listener.close()
+        raise RuntimeError(f"systemd listener is not bound to 127.0.0.1:{port}")
+    return listener
 
 
 def platform() -> str:
