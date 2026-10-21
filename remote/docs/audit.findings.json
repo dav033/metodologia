@@ -9,7 +9,7 @@
         "T16"
       ],
       "summary": "The prior Caddy container-loopback upstream defect is corrected in the supplied prerequisite tree.",
-      "evidence": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py: exit 0, 4 tests in 0.110s; test_caddy_block_and_deploy_entrypoint_use_host_gateway_offline checks reverse_proxy 172.20.0.1:8790 and service Environment=GATEWAY_BIND=172.20.0.1. sh remote/deploy/deploy.sh --check: exit 0, deployment topology: 172.20.0.1:8790. Live Docker connectivity was not tested; separate env-example defect F22 remains."
+      "evidence": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py: exit 0, 4 tests in 0.157 s, including Caddy host-bridge upstream and unit bind assertions. sh remote/deploy/deploy.sh --check: exit 0, deployment topology: 172.20.0.1:8790. Real Docker connectivity was not exercised; F3/F22 remain separate."
     },
     {
       "id": "F2",
@@ -19,7 +19,7 @@
         "T17"
       ],
       "summary": "The E2E fixture still yields no failure event and its supposedly valid cancel command pins running against a reserved attempt; full E2E also stops at the web build.",
-      "evidence": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, Ran 0 tests, setUpClass build error (F19). Report probe C: real fixture feed events=[], nextCursor=''; fixture attempt state reserved; stale command 409 STALE_PRECONDITION; supposedly current cancel also 409 STALE_PRECONDITION; cancelled transitions 0."
+      "evidence": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, 0 tests in 7.724 s; setUpClass npm run build fails on duplicate refreshCommandHistory (F19). Fresh report probe C: production fixture events=[], nextCursor=''; att-0001 state reserved; stale and supposedly valid cancel both 409 STALE_PRECONDITION; cancelled transitions=0."
     },
     {
       "id": "F3",
@@ -133,8 +133,8 @@
         "T12",
         "T15b"
       ],
-      "summary": "Failed probes relabel cached data with the current time; offline start time is not exposed to the phone.",
-      "evidence": "Report probe B: repeated _publish_liveness calls change cachedAt without fetching data. app.py publishes cached_snapshot with datetime.now on health failure; page.tsx displays LAPTOP SIN CONEXIÓN with no outage-start timestamp."
+      "summary": "The cachedAt rewrite is corrected, but the gateway still exposes no stable outage-start timestamp and the phone omits sin conexión desde HH:MM.",
+      "evidence": "Fresh report probe B: failed-probe cachedAt changed=False after _update_laptop_status; that subdefect is corrected. stream.update_laptop_status replaces laptop with online/checkedAt for each probe; no offlineSince is serialized. page.tsx banner remains LAPTOP SIN CONEXIÓN without the outage-start time. Gateway stream tests pass, including offline status and checkedAt."
     },
     {
       "id": "F14",
@@ -155,7 +155,7 @@
         "T9"
       ],
       "summary": "The earlier absence of an inherited-listener path is corrected in the supplied prerequisite tree.",
-      "evidence": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py: exit 0, 25 tests in 2.001s, including test_web_server_reload_uses_the_inherited_listener and test_systemd_listener_requires_its_activation_environment. Source create_http_server adopts systemd_listener; ensure_server restarts the unit without spawning a loose process."
+      "evidence": "cd skill/scripts && python -m unittest discover -s tests -p test_platform.py: exit 0, 25 tests in 2.005 s, including test_web_server_reload_uses_the_inherited_listener and test_systemd_listener_requires_its_activation_environment. create_http_server adopts the inherited systemd descriptor; ensure_server uses the unit. No live service was restarted."
     },
     {
       "id": "F16",
@@ -185,18 +185,20 @@
         "T15",
         "T15e"
       ],
-      "summary": "Browser checks still share Next.js output/configuration, and serial execution now reveals a stale answer-round contract assertion.",
-      "evidence": "cd remote/web && node --test --test-concurrency=1 tests/*.test.mjs: exit 1, 8 tests, 7 passed, 1 failed in 36.428s; panel-browser.test.mjs:223 expects command.answer but current roundForm sends answers. Both browser tests spawn next dev in the same cwd/.next; default npm test remains concurrent."
+      "summary": "Default browser verification shares Next.js output and does not terminate successfully; the round assertion still expects answer while the phone sends answers.",
+      "evidence": "cd remote/web && npm test: stopped by the auditor's 180 s supervisor (180.098 s); before cutoff TAP reported two passing mock tests, OAuth failure at 16.003 s, panel timeout at 90.001 s; no complete totals. Both browser files spawn next dev in the same cwd/.next. panel-browser.test.mjs still asserts command.answer; page.tsx sends answers. Current compilation errors prevent attributing this run to an output race or claiming the old assertion was reached."
     },
     {
       "id": "F19",
       "severity": "high",
       "status": "open",
       "tasks": [
-        "T15a"
+        "T15a",
+        "T15c",
+        "T15d"
       ],
-      "summary": "The current run-history parser does not typecheck, preventing the production build and every built-web E2E scenario.",
-      "evidence": "cd remote/web && npm run verify: exit 2 at typecheck; TS2677 page.tsx:138 and TS2322 page.tsx:143. E2E invokes npm run build, which exits 1 on the same invalid Attempt type predicate; Ran 0 tests in 12.061s."
+      "summary": "The integrated web fails strict typechecking and production compilation: missing FailureReview type, invalid Attempt predicate and duplicate incompatible command-history implementations.",
+      "evidence": "cd remote/web && npm run verify: exit 2 after lint passes; tsc reports 9 diagnostics: TS2304 page.tsx:36/:57, TS7006 :83 twice, TS2677 :130, TS2322 :135, TS2451 :227/:251, TS2353 :260. T17 invokes the actual npm run build: exit 1, webpack Identifier 'refreshCommandHistory' has already been declared; 0 E2E tests run."
     },
     {
       "id": "F20",
@@ -206,7 +208,7 @@
         "T15a"
       ],
       "summary": "Successful real OAuth sessions cannot load the phone panel because the gateway and web disagree on the session response.",
-      "evidence": "Report probe B: authenticated GET /api/auth/session returns HTTP 200 {login:'dav033'}. page.tsx load requires typeof parsedSession.authenticated === 'boolean' and otherwise throws Respuesta de sesión inválida before setting session or fetching snapshot. Mock returns authenticated:true and conceals the mismatch."
+      "evidence": "Fresh report probe B: real authenticated GET /api/auth/session -> 200 {login:'dav033'}. page.tsx load still requires parsedSession.authenticated to be boolean and throws Respuesta de sesión inválida; its initial session===null branch does not render this error. The mock supplies authenticated:true. Runtime browser confirmation is blocked by F19; the real HTTP/consumer contract mismatch is independently reproduced."
     },
     {
       "id": "F21",
@@ -237,8 +239,49 @@
       "tasks": [
         "T15d"
       ],
-      "summary": "Phone command history drops the stored web/telegram origin and displays target/command in its place.",
-      "evidence": "Current page.tsx refreshCommandHistory constructs item.origin from item.target and item.command without reading item.origin; history rendering labels that constructed text Origen. Laptop Ledger.rows retains the real origin field."
+      "summary": "A new command-history normalizer preserves origin, but an incompatible duplicate old implementation remains and still substitutes target/command for origin.",
+      "evidence": "page.tsx:227 defines a commands-endpoint reader with real origin/type/target/submittedAt; :251 redeclares the same const with a history-endpoint reader constructing origin from target/command and an incompatible at field. npm run verify produces TS2451 at both declarations and TS2353 at :260. Neither a working integrated history nor a runtime provenance fix can be claimed until the overlap is resolved (F19)."
+    },
+    {
+      "id": "F24",
+      "severity": "high",
+      "status": "open",
+      "tasks": [
+        "T18.6"
+      ],
+      "summary": "Installed remote API still cannot answer decisions or rounds: the package manifest omits the new bt_remote_preconditions dependency.",
+      "evidence": "Fresh report probe D builds wheel and sdist with tests/migration/installed_wheel.py: bt_remote_preconditions.py absent in both. Isolated installed bt_remote_commands.target_state for answer-round and answer-decision each raises ModuleNotFoundError: No module named 'bt_remote_preconditions'. The five original remote modules import and installed health test passes; that partial fix does not include the sixth transitive module."
+    },
+    {
+      "id": "F25",
+      "severity": "medium",
+      "status": "open",
+      "tasks": [
+        "T15c"
+      ],
+      "summary": "The displayed Ver intento fallido link navigates to a static sample review rather than the selected attempt.",
+      "evidence": "page.tsx renderTask links every failed attempt to /review with no attempt identity. remote/web/src/app/review/page.tsx imports reviewFixture directly, never fetches an authenticated attempt review, and displays hardcoded att-0019. It now labels DATOS DE MUESTRA, which avoids presenting sample data as live but does not meet the selected-attempt review requirement; static fixture tests pass without exercising the real review endpoint."
+    },
+    {
+      "id": "F26",
+      "severity": "high",
+      "status": "open",
+      "tasks": [
+        "T4a",
+        "T15c"
+      ],
+      "summary": "The real rejected task state still hides failure review and recovery controls despite the added failed-state/history handling.",
+      "evidence": "Fresh report probe E: bt_planstatus._SCHEDULER_TASK['recovering']='rejected'; production bt_remote_api._mobile_run preserves that state and emits activeAttempt:null for a non-live rejected attempt, retaining its history. page.tsx review guard requires task.state==='failed'; retry/edit/reopen guards allow failed/blocked only, and no rejected branch exists. bt_remote_views.task_view now returns reviewAttempt, but production _mobile_run does not use it and the phone does not parse it. Current API regression fixture uses failed, not production rejected; F19 independently blocks browser execution."
+    },
+    {
+      "id": "F27",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T11a"
+      ],
+      "summary": "Command quota is deliberately shared by GitHub login across sessions, rather than maintained per session as R17 specifies.",
+      "evidence": "Fresh gateway suite: 36 tests pass, including test_command_quota_is_shared_by_owner_across_sessions: 30 commands in owner session A exhaust session B (429); another login remains independent (404 on the test runtime). server.py keys authenticated command/challenge limits by login. This is an aggregate restriction, not an authorization bypass; no owner-approved change to the per-session requirement was found."
     }
   ]
 }
