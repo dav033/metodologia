@@ -9,7 +9,7 @@
         "T16"
       ],
       "summary": "The Caddy upstream and gateway bind instructions match the frozen container-to-host topology.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 16 tests, one Caddy-unavailable skip. Probe B (`python -`): exit 0, both config parsers accept the documented 172.20.0.1:8790 bind. Caddyfile targets that bind. Actual container connectivity remains unrun."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy-unavailable skip. Probe B (`python -`): exit 0; both parsers accept the filled example with 172.20.0.1:8790, matching Caddyfile. Container connectivity unrun."
     },
     {
       "id": "F2",
@@ -19,7 +19,7 @@
         "T17"
       ],
       "summary": "The frozen built-web E2E still fails at the empty feed before OAuth/control/offline/Telegram assertions.",
-      "evidence": "`cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 1, one failure in 23.527 s at line 403: nextCursor is empty, events=[]. Production build passes. The redone fixture now truly makes three failures and expects stale HTTP 409; failure persists because current T6 producer fields do not satisfy exhaustion (F67). T17 still never GETs a production gateway snapshot or tests HTTP challenges, missing F36/F66; it also expects three alerts after one task exhausts its budget (F37). Restore end-to-end acceptance without fabricating producer fields or weakening notification semantics."
+      "evidence": "`cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 1, 1 test in 26.030 s (26.240 s wall), line 403: nextCursor is empty, events=[]. Optimized production build succeeds. The real T6 producer cannot satisfy exhaustion (F67). Later OAuth/control/offline/Telegram assertions are not reached. T17 also never GETs the production snapshot or issues a challenge, missing F36/F66; its three-alert expectation includes earlier retryable failures (F37). Do not fabricate producer fields or weaken notification semantics."
     },
     {
       "id": "F3",
@@ -29,7 +29,7 @@
         "T16"
       ],
       "summary": "The restored runbook deploys and restarts before installing the service on a fresh host.",
-      "evidence": "remote/docs/runbook.md steps 3/4 call deploy.sh before installing the unit; deploy.sh:27 unconditionally restarts under set -e. Fresh local synthetic missing-unit simulation: deploy exit 5 with current already switched; rollback --dry-run exit 2 without previous release; deploy --dry-run exit 0. Kit checks pass but do not check this order. Reorder first-install steps and document containerized Caddy reload/rollback rather than host systemctl reload caddy."
+      "evidence": "Probe J (`python -`), current mode-600 synthetic env: exit 0; fake missing-unit systemctl makes deploy exit 5 after current is switched, deploy --dry-run exits 0, rollback --dry-run exits 2 with no previous release. Initial probe with default env-file permissions correctly failed the new mode-600 guard before deployment; corrected only the synthetic fixture. Runbook still deploys/restarts in step 3 before unit installation in step 4, and reloads host caddy although Caddy is containerized. Preserve the new env permission check."
     },
     {
       "id": "F4",
@@ -49,8 +49,8 @@
         "T11a",
         "T15a"
       ],
-      "summary": "The mutation marker accepts arbitrary nonempty values; GET logout neither checks guards nor revokes its session.",
-      "evidence": "Fresh Probe A: exit 0; wrong X-Flow-Request yields HTTP 200, foreign-Origin GET logout yields 302/cookie removal and the original session token still resolves. server.py tests bool(marker). Origin checks on actual command POST remain effective; no command CSRF bypass is claimed."
+      "summary": "The mutation marker accepts arbitrary nonempty values and foreign-Origin GET logout bypasses mutation guards.",
+      "evidence": "Probe A (`python -`): exit 0; wrong X-Flow-Request yields HTTP 200, foreign-Origin GET logout yields 302 and clears the cookie. The new delete_session repair DOES revoke the session, independently checked; the previous nonrevocation subclaim is withdrawn. Actual command POST Origin checks remain effective; no command CSRF bypass alleged."
     },
     {
       "id": "F6",
@@ -71,7 +71,7 @@
         "T5a"
       ],
       "summary": "The public standalone note command has no laptop dispatcher.",
-      "evidence": "Fresh Probe B: exit 0; real Ledger.submit(note) with commands.dispatch_handlers() returns COMMAND_NOT_IMPLEMENTED. dispatch_handlers advertises no standalone note handler despite COMMANDS and schema listing it. Retry reason/RUN.notes is separate."
+      "evidence": "Rechecked in this attempt: Fresh Probe B: exit 0; real Ledger.submit(note) with commands.dispatch_handlers() returns COMMAND_NOT_IMPLEMENTED. dispatch_handlers advertises no standalone note handler despite COMMANDS and schema listing it. Retry reason/RUN.notes is separate."
     },
     {
       "id": "F8",
@@ -81,7 +81,7 @@
         "T15f"
       ],
       "summary": "The phone brief form cannot edit acceptance criteria.",
-      "evidence": "Fresh page.tsx editBriefForm still sends only objective/string, without an acceptance criteria editing control. Updated E: both backend field aliases create approved revisions correctly. The remaining criteria UI omission is separate from repaired F41."
+      "evidence": "Rechecked in this attempt: Fresh page.tsx editBriefForm still sends only objective/string, without an acceptance criteria editing control. Updated E: both backend field aliases create approved revisions correctly. The remaining criteria UI omission is separate from repaired F41."
     },
     {
       "id": "F9",
@@ -90,8 +90,8 @@
       "tasks": [
         "T15d"
       ],
-      "summary": "Run-level Reabrir ejecuci\u00f3n supplies no task identity to the task-scoped operation.",
-      "evidence": "page.tsx run-level commandForm(reopen) omits taskId; bt_remote_commands.TASK_SCOPED/_member_state and dispatch_run_command require params.task. Fresh Probe C confirms task-scoped reopen succeeds; that repair does not provide an identity for the run-level form."
+      "summary": "Run-level Reabrir ejecución supplies no task identity to the task-scoped operation.",
+      "evidence": "Rechecked in this attempt: page.tsx run-level commandForm(reopen) omits taskId; bt_remote_commands.TASK_SCOPED/_member_state and dispatch_run_command require params.task. Fresh Probe C confirms task-scoped reopen succeeds; that repair does not provide an identity for the run-level form."
     },
     {
       "id": "F10",
@@ -101,7 +101,7 @@
         "T6"
       ],
       "summary": "A plan waiting for approval emits plan.waiting without a scheduler decision.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe B (`python -`): exit 0, plan_status=review emits plan.waiting without a scheduler decision. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; plan_status=review emits plan.waiting without a scheduler decision. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
     },
     {
       "id": "F11",
@@ -110,8 +110,8 @@
       "tasks": [
         "T12"
       ],
-      "summary": "Gateway restart loses the last snapshot; the separately tested stream hub is not wired into production.",
-      "evidence": "Updated Probe B: exit 0; offline runtime returns its cached generatedAt using snapshot_cache, while a new runtime sharing the same database returns None, leading the actual snapshot route to HTTP 503. snapshot_cache is memory-only; main/server do not instantiate StreamHub. The previous newly timestamped empty-model behavior has been replaced, but last-state persistence is still absent. F21 separately records missing production streaming."
+      "summary": "Gateway restart still loses the last snapshot despite the newly wired production stream hub.",
+      "evidence": "Probe B (`python -`): exit 0; current runtime keeps old generatedAt offline, replacement runtime with same SQLite database returns None. StreamHub is now instantiated and passed by main, but its snapshot and snapshot_cache are memory-only. Production hub snapshot after restart is empty, not the last persisted state. Retain fan-out wiring while persisting the latest model."
     },
     {
       "id": "F12",
@@ -123,7 +123,7 @@
         "T5"
       ],
       "summary": "Expired sessions and Telegram outbox/history remain unbounded beyond the required 90 days.",
-      "evidence": "Probe B: exit 0; creating a session leaves an abandoned expired row. SessionStore prunes sessions only when presented. Current notifications.py now has telegram_history with timestamped rows (F43 fixed), but no 90-day prune of that table/outbox; Ledger.rows still reads all rows. No unbounded unwired SSE exposure is alleged."
+      "evidence": "Probe B: exit 0; creating a session leaves an abandoned expired row. SessionStore prunes sessions only when presented. Current notifications.py now has telegram_history with timestamped rows (F43 fixed), but no 90-day prune of that table/outbox; Ledger.rows still reads all rows. Retention is separate from the now-wired SSE hub and its revocation issue F31."
     },
     {
       "id": "F13",
@@ -134,7 +134,7 @@
         "T15b"
       ],
       "summary": "The phone receives no stable offline-start timestamp.",
-      "evidence": "Updated Probe B: exit 0; cached generatedAt is retained and laptop is only {online:false}, with no checkedAt or offline-start timestamp. GatewayRuntime.web_snapshot does not expose the persisted outage start or liveness offline_since. The phone still renders LAPTOP SIN CONEXI\u00d3N with no HH:MM. Actual T17 currently fails before offline checks, so no passing integrated timestamp assertion is claimed."
+      "evidence": "Rechecked in this attempt: Updated Probe B: exit 0; cached generatedAt is retained and laptop is only {online:false}, with no checkedAt or offline-start timestamp. GatewayRuntime.web_snapshot does not expose the persisted outage start or liveness offline_since. The phone still renders LAPTOP SIN CONEXIÓN with no HH:MM. Actual T17 currently fails before offline checks, so no passing integrated timestamp assertion is claimed."
     },
     {
       "id": "F14",
@@ -145,7 +145,7 @@
         "T6"
       ],
       "summary": "Laptop-side redaction handles the previously missed provider assignments and bearer authorization text.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe B (`python -`): exit 0; synthetic OPENAI_API_KEY assignment and Authorization: Bearer values are removed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Quoted credentials remain F56."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; synthetic plain OPENAI_API_KEY assignment and Authorization: Bearer values removed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Quoted values remain F56."
     },
     {
       "id": "F15",
@@ -155,7 +155,7 @@
         "T9"
       ],
       "summary": "The local panel implements inherited systemd listener activation/reload.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 27 tests, 2.011 s; inherited listener/reload/ownership tests pass. `test_page*.py` with the same discovery command: exit 0, 43 tests, 11.442 s. No host service touched. Systemctl-unavailable path remains separate F65."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including inherited listener/reload/ownership. Same discovery with test_page*.py: exit 0, 43 tests. No host service touched. Missing-systemctl case is independently repaired, F65."
     },
     {
       "id": "F16",
@@ -165,7 +165,7 @@
         "T15d"
       ],
       "summary": "The phone discards uncertain command envelopes and generates a new key on resubmission.",
-      "evidence": "Fresh page.tsx checks response.ok, labels UNKNOWN_OUTCOME HTTP 503 Rechazado, and retains history summaries rather than an exact replayable envelope/key; form submitters always call crypto.randomUUID(). Server at-most-once remains valid for a reused key; no duplicate effect through a specific ABA sequence was reproduced, so severity stays medium."
+      "evidence": "Rechecked in this attempt: Fresh page.tsx checks response.ok, labels UNKNOWN_OUTCOME HTTP 503 Rechazado, and retains history summaries rather than an exact replayable envelope/key; form submitters always call crypto.randomUUID(). Server at-most-once remains valid for a reused key; no duplicate effect through a specific ABA sequence was reproduced, so severity stays medium."
     },
     {
       "id": "F17",
@@ -175,7 +175,7 @@
         "T3"
       ],
       "summary": "The public command schema differs from production command families, fields and key limits.",
-      "evidence": "Fresh schema syntax commands exit 0 only. command.schema.json omits answer-decision, expects singular answer/route text/edit brief; actual phone sends answers/round, route object and field/value. Fresh Probe B rejects a 121-character ledger key despite schema maximum 128. This is contract mismatch, not proof of arbitrary execution."
+      "evidence": "Rechecked in this attempt: Fresh schema syntax commands exit 0 only. command.schema.json omits answer-decision, expects singular answer/route text/edit brief; actual phone sends answers/round, route object and field/value. Fresh Probe B rejects a 121-character ledger key despite schema maximum 128. contract.md also omits the required review target query and advertises command success/error shapes different from the actual synchronous HTTP responses. This is contract mismatch, not proof of arbitrary execution."
     },
     {
       "id": "F18",
@@ -185,7 +185,7 @@
         "T15"
       ],
       "summary": "The required web verification fails the 360 px browser assertion.",
-      "evidence": "`cd remote/web && npm run verify`: exit 1; lint/typecheck pass, node suite 13/14 pass, zero skips, 18.644 s; Chromium panel-browser.test.mjs:165 fails 366 !== 360. npm verify does not reach build; separate production build succeeds in T17. Preserve 360 px assertion."
+      "evidence": "`cd remote/web && npm run verify`: exit 1, lint/typecheck pass; node tests 13/14 pass, zero skips, 29.193 s (36.601 s wall). Chromium panel-browser.test.mjs:165 measures 366 !== 360. Build not reached in verify; separate exact E2E production build passes. Preserve the width assertion."
     },
     {
       "id": "F19",
@@ -197,7 +197,7 @@
         "T15d"
       ],
       "summary": "The integrated phone app compiles, typechecks and builds without the previous overlapping declarations.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd remote/web && npm run verify`: lint and strict typecheck pass, node tests fail only width F18. `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: optimized Next.js production build subprocess exit 0 before feed failure F2. No duplicate declarations remain."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/web && npm run verify`: lint and strict typecheck pass; node tests fail only width F18. `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: optimized Next.js production build succeeds before the feed failure. No duplicate declarations."
     },
     {
       "id": "F20",
@@ -207,7 +207,7 @@
         "T15a"
       ],
       "summary": "The phone accepts the real gateway login session dialect.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe A (`python -`): exit 0, real gateway returns HTTP 200 {login:dav033}. `cd remote/web && npm run verify`: browser passes sessionContractObserved and selected-review checks before width assertion F18. Production snapshot reads are independently broken, F36."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe A (`python -`): exit 0; actual authenticated gateway session returns HTTP 200 {login:dav033}. `cd remote/web && npm run verify`: browser sessionContractObserved and selected review assertions pass before width failure. Public snapshot is separately broken, F36."
     },
     {
       "id": "F21",
@@ -218,8 +218,8 @@
         "T6",
         "T15b"
       ],
-      "summary": "Production SSE remains absent; plain events is allowlisted but crashes in the current read dispatcher.",
-      "evidence": "Probe A (`python -`): exit 0, authenticated events/stream returns 404. Probe AG (`python -`): exit 0, plain events drops connection with AttributeError (F36). main/server do not instantiate StreamHub; the 8 passing stream tests exercise isolated hub or a Mock read_remote. Phone opens events/stream and polls snapshot every five seconds."
+      "summary": "The newly wired production SSE still disagrees with the phone path, event names and cursor.",
+      "evidence": "Probe AG (`python -`): exit 0; actual main-equivalent wiring returns 404 for phone /api/remote/v1/events/stream; actual /api/remote/v1/stream returns HTTP 200 named event frames. page.tsx:256-257 opens events/stream?after=<snapshot cursor> and only assigns onmessage; server.py:113-129 reads Last-Event-ID and emits event/resync. The source-time snapshot cursor also differs from hub epoch:sequence IDs. Plain events/read_remote are repaired; retain production hub/fan-out while aligning the public dialect and resync handling."
     },
     {
       "id": "F22",
@@ -229,7 +229,7 @@
         "T16"
       ],
       "summary": "A completely filled example configuration starts parsing; the prior mandatory-blank allegation is superseded.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe B (`python -`): exit 0, all example keys filled with synthetic values parse in both configs. `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 16 tests, one Caddy skip. Mandatory blanks still refused; optional blank overrides are not a demonstrated compliant-install failure."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; all example keys filled with synthetic values parse in GatewayConfig and OAuthConfig. `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy skip. Empty optional bind remains F54."
     },
     {
       "id": "F23",
@@ -240,7 +240,7 @@
         "T15d"
       ],
       "summary": "Native keyed command history and its web compilation are restored.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe C (`python -`): exit 0, real LaptopClient/read_model reaches the keyed laptop history endpoint and receives commands/nextCursor. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. Web lint/typecheck pass; public gateway dispatch is broken separately F36."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probes C/AG (`python -`): exit 0; actual keyed and authenticated public commands/history return commands/nextCursor without disconnect. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. Web lint/types pass."
     },
     {
       "id": "F24",
@@ -251,7 +251,7 @@
         "T8a"
       ],
       "summary": "Wheel and sdist include the actual edit and route-pin implementation modules.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe P (`python -`): exit 0, built wheel/sdist contain bt_remote_edit and bt_route_pins; wheel contains bt_remote_preconditions and bt_remote_snapshot; all four isolated -I imports exit 0. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py`: exit 0, 12 tests."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe P (`python -`): exit 0; fresh wheel and sdist include bt_remote_edit.py and bt_route_pins.py; isolated -I imports of bt_remote_api, bt_remote_commands, bt_remote_edit and bt_route_pins all exit 0. Removed inline-replaced snapshot/precondition helpers are not runtime imports; stale pyproject entries alone are not an installed execution failure."
     },
     {
       "id": "F25",
@@ -261,7 +261,7 @@
         "T15c"
       ],
       "summary": "The failed-task link consumes the selected real review attempt instead of only a static fixture.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd remote/web && npm run verify`: selected real rejected-attempt hash/content assertions pass in Chromium before width failure F18; all 3 `test_remote_review.py` tests pass. Probe AA (`python -`): exit 0, target-specific native causes. This confirms selection/renderer, not public gateway availability (F36)."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/web && npm run verify`: Chromium selected real rejected-attempt hash/content assertions pass before F18. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Probe AA (`python -`): exit 0, native target-specific causes; AG returns actual public review HTTP 200."
     },
     {
       "id": "F26",
@@ -272,7 +272,7 @@
         "T15d"
       ],
       "summary": "Reopen/retry now work in the same tab, but ready recovery controls disappear after reload or in another tab.",
-      "evidence": "Updated C: exit 0; real task reopen moves recovering -> ready and pinned ops.retry succeeds. Source page.tsx still gates recovery on recovering/reopenedForRecovery, with reopenedTasks only an in-memory useRef. Reload/new tab loses the ready task controls. The source-level ready-state fixture test passes before the browser-width failure, but it does not prove a reload of a real producer snapshot. F41/F42 are now independently fixed."
+      "evidence": "Rechecked in this attempt: Updated C: exit 0; real task reopen moves recovering -> ready and pinned ops.retry succeeds. Source page.tsx still gates recovery on recovering/reopenedForRecovery, with reopenedTasks only an in-memory useRef. Reload/new tab loses the ready task controls. The source-level ready-state fixture test passes before the browser-width failure, but it does not prove a reload of a real producer snapshot. F41/F42 separately regressed and are high/open in this tree."
     },
     {
       "id": "F27",
@@ -292,7 +292,7 @@
       "tasks": [
         "T5"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe D (`python -`): exit 0, two concurrent distinct-key pauses produce one effect, one OK, one STALE_PRECONDITION, two audit rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py`: exit 0, 29 tests."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe D (`python -`): exit 0; two distinct-key concurrent pauses produce one effect, one OK, one STALE_PRECONDITION and two audit rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py`: exit 0, 23 tests. Independent processes/local writers unrun."
     },
     {
       "id": "F29",
@@ -302,7 +302,7 @@
       "tasks": [
         "T4a"
       ],
-      "evidence": "Updated C: real snapshot contains one run and one plan. Updated E projects a real r3 task with nonempty frozen acceptance_criteria yet plan task acceptanceCriteria=[]: bt_planstatus stores criteria under task.detail, while bt_remote_snapshot reads task.acceptance_criteria. Runs expose lastActivityAt and attempts last_activity_at, while the phone reads lastSeenAt/updatedAt; run/task revision is absent, so run brief preview lacks the next revision. Plans, rounds and decisionRequests are now collected; the earlier blanket missing-model claim is withdrawn. State-only preconditions remain permitted; no new ABA exploit is asserted."
+      "evidence": "Probe C (`python -`): exit 0; actual seeded frozen task has nonempty acceptance_criteria, but actual snapshot plan task acceptanceCriteria=[] because serializer reads task.acceptance_criteria instead of task.detail. Runs expose lastActivityAt and attempts last_activity_at; exact phone parser reads lastSeenAt/updatedAt. Run/task revision remains absent. Plans/rounds/decisions now collected; no blanket missing-model claim or new ABA exploit."
     },
     {
       "id": "F30",
@@ -312,18 +312,18 @@
       "tasks": [
         "T6"
       ],
-      "evidence": "Fresh Probe B: exit 0; live attempt has no attempt.stalled at +660 s and does at +901 s. bt_remote_events.STALL_SECONDS=15*60 conflicts with SPEC R10. The emitted text says more than 10 minutes but the threshold does not."
+      "evidence": "Rechecked in this attempt: Fresh Probe B: exit 0; live attempt has no attempt.stalled at +660 s and does at +901 s. bt_remote_events.STALL_SECONDS=15*60 conflicts with SPEC R10. The emitted text says more than 10 minutes but the threshold does not."
     },
     {
       "id": "F31",
       "severity": "low",
-      "status": "fixed",
-      "summary": "The historical post-expiry SSE continuation is unreachable because production streaming was removed.",
+      "status": "open",
+      "summary": "The restored authenticated SSE connection continues after its session is revoked.",
       "tasks": [
         "T11",
         "T12"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe A (`python -`): exit 0, authenticated /api/remote/v1/events/stream is HTTP 404. `cd remote/gateway && python -m unittest discover -s tests -p test_stream.py`: exit 0, 8 tests; hub remains disconnected. The historical post-expiry SSE continuation is unreachable, not repaired streaming. Plain events now reaches broken F36 dispatch."
+      "evidence": "Probe AG (`python -`): exit 0; actual /api/remote/v1/stream accepts a valid synthetic session; SessionStore.delete_session revokes it; publishing a new synthetic event still sends its data frame over the same connection. server.py stream loop never rechecks the session. The prior fixed verdict depended on absent production streaming and is superseded. No stolen-cookie or process-wide denial claim; terminate or periodically revalidate revoked/expired sessions."
     },
     {
       "id": "F32",
@@ -333,7 +333,7 @@
       "tasks": [
         "T13"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe C (`python -`): exit 0, actual phone route_id/model/account becomes the laptop selectors; real keyed retry on ready stores the selected pin and returns OK with only candidate availability and agent start stubbed. `test_remote_recovery.py`: exit 0, 12 tests. Real selected agent launch unrun."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; phone route_id/model/account survive translation; actual keyed retry on ready stores selected pin and returns OK with only availability and process start stubbed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py`: exit 0, 10 tests. Actual agent execution unrun."
     },
     {
       "id": "F33",
@@ -343,7 +343,7 @@
       "tasks": [
         "T13"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probes C/E (`python -`): both exit 0; real keyed answer-round stores answers, field/value survive translation, both actual edit aliases freeze revisions/rebase. Challenges are seeded directly via real Ledger only to isolate dispatch: HTTP challenge issuance remains high/open F66."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; actual keyed answer-round stores answers; field/value survive gateway translation. This fixes the gateway forwarding defect only: current E demonstrates the separate downstream T8a regression F41. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests."
     },
     {
       "id": "F34",
@@ -354,7 +354,7 @@
         "T14",
         "T14a"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 0, 3 tests; same command with test_telegram_send.py: exit 0, 3 tests. Both frozen files exist and execute; no absent-file zero-test pass."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 0, 4 tests; same discovery with test_telegram_send.py: exit 0, 3 tests. Both frozen files exist and execute."
     },
     {
       "id": "F35",
@@ -364,18 +364,17 @@
       "tasks": [
         "T4a"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe C (`python -`): exit 0; real seeded laptop snapshot with nonempty runs and plans passes the exact TypeScript parseSnapshot extracted/transpiled from page.tsx. `test_remote_api.py`: exit 0, 5 tests. Public gateway reads are separate F36."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; exact TypeScript parseSnapshot from page.tsx accepts one actual laptop run and plans. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. This is the native serializer boundary; public gateway envelope regression is high F36."
     },
     {
       "id": "F36",
       "severity": "high",
       "status": "open",
-      "summary": "Every authenticated gateway data read drops its connection because the new dispatcher calls absent GatewayRuntime.read_remote.",
+      "summary": "The production gateway wraps its snapshot in a hub envelope that the real phone parser rejects.",
       "tasks": [
-        "T7",
         "T12"
       ],
-      "evidence": "Probe AG (`python -`): exit 0, seven real authenticated loopback GETs (snapshot/history/commands/quotas/routes/targeted review/events) each disconnect; server hook records seven AttributeError values. read_routes.py:55 calls runtime.read_remote; actual app.py defines only read_model. Current stream unit test passes by using an unrestricted Mock with the nonexistent method. Behind that mismatch, LaptopClient.read_model does not allow snapshot/events, and forwarding snapshot would bypass web_snapshot cache/liveness. A rename alone does not restore R4/R7/R9/R15; wire actual runtime/cache and actual producer integration tests."
+      "evidence": "Probe AG (`python -`): exit 0; real laptop seeded with one run, GatewayRuntime.poll_once and main-equivalent make_handler(service,hub=runtime.hub,runtime=runtime) yield authenticated snapshot HTTP 200 with keys cachedAt,lastEventId,online,snapshot and one nested run. Exact page.tsx parseSnapshot transpiled by installed TypeScript throws \"La respuesta del gateway no cumple el contrato de snapshot v1.\" server.py:98-107 shadows read_routes and never calls web_snapshot. Missing read_remote is repaired; public history/commands/events/targeted review now return HTTP 200. T12 must flatten/normalize the cached snapshot and liveness to the real phone contract; T17 must assert this actual boundary."
     },
     {
       "id": "F37",
@@ -396,7 +395,7 @@
         "T13",
         "T12"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe G (`python -`): exit 0, real loopback structured HTTP 400 INVALID_CURSOR reaches GatewayRuntime reset, event_cursor becomes empty. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 11 tests. Rebuild-from-now/backlog policy remains F57."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe G (`python -`): exit 0; real HTTP 400 structured INVALID_CURSOR resets GatewayRuntime.event_cursor to empty. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests. Rebuild-from-now policy remains F57."
     },
     {
       "id": "F39",
@@ -407,7 +406,7 @@
         "T13",
         "T15d"
       ],
-      "evidence": "Fresh updated Probe G: exit 0; authenticated gateway receives FAILED/ROUTE_UNAVAILABLE and returns HTTP 200. server.py status map omits ROUTE_UNAVAILABLE, EFFECT_FAILED, STATE_UNAVAILABLE and COMMAND_NOT_IMPLEMENTED. page.tsx checks response.ok before setting reopenedTasks and clearing forms."
+      "evidence": "Rechecked in this attempt: Fresh updated Probe G: exit 0; authenticated gateway receives FAILED/ROUTE_UNAVAILABLE and returns HTTP 200. server.py status map omits ROUTE_UNAVAILABLE, EFFECT_FAILED, STATE_UNAVAILABLE and COMMAND_NOT_IMPLEMENTED. page.tsx checks response.ok before setting reopenedTasks and clearing forms."
     },
     {
       "id": "F40",
@@ -422,22 +421,22 @@
     {
       "id": "F41",
       "severity": "high",
-      "status": "fixed",
-      "summary": "The edit dispatcher accepts the actual phone objective and acceptance_criteria field aliases.",
+      "status": "open",
+      "summary": "The redone edit dispatcher again rejects the actual phone objective and criteria field/value dialect.",
       "tasks": [
         "T8a"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe E (`python -`): exit 0, objective and acceptance_criteria aliases create approved/frozen r2/r3 and bind the run to r3 over real keyed command HTTP. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py`: exit 0, 12 tests. Challenges supplied via real Ledger directly; public issuance unavailable F66."
+      "evidence": "Current Probe E (`python -`): exit 0; real keyed HTTP command with real Ledger-issued challenge and phone field=objective/value returns FAILED/EFFECT_FAILED \"edit-brief requiere task y brief no vacíos.\", latest revision stays 1. page.tsx:378 sends field/value; app.py forwards them; bt_remote_edit.py:22-24 requires brief and has no acceptance_criteria branch. Exact recovery suite passes 10 tests but removed both field-alias/rollback integration regressions from earlier 12-test tree. Restore field aliases and criteria editing without losing legacy compatibility."
     },
     {
       "id": "F42",
       "severity": "high",
-      "status": "fixed",
-      "summary": "Working-plan drift is refused and a rejected approval restores the original working bytes.",
+      "status": "open",
+      "summary": "The redone editor freezes unrelated working-plan drift and leaves mutated revisions after failure.",
       "tasks": [
         "T8a"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe E (`python -`): exit 0, unrelated working-plan drift returns EFFECT_FAILED/PLAN_DRIFT with identical working bytes and unchanged latest revision; refused approval returns PLAN_NOT_APPROVED and restores working bytes/revision. Real keyed command HTTP and real Ledger challenge are used. `test_remote_recovery.py`: exit 0, 12 tests."
+      "evidence": "Current Probe E (`python -`): exit 0; actual approved frozen r1 and run binding, real native keyed HTTP and one-use Ledger challenges. Legacy brief command over a working copy with unrelated T2 objective change returns FAILED/PLAN_CONSUMER_INCOMPATIBLE, yet latest frozen revision is r2 containing the unrelated T2 change. A second edit with PLAN.md in review also fails but leaves changed PLAN.json and frozen r3. bt_remote_edit.py:28-47 reads working PLAN.json, writes and freezes before any guard; it neither checks the bound approved base nor restores bytes. plan_consumer_problem(rdir) receives no capability report and necessarily rejects schema >=1.2.0 after mutation. Preserve actual owner approval, bound-base drift checks, compatibility evidence and failure rollback; do not label this failed command as having successfully rebased."
     },
     {
       "id": "F43",
@@ -447,7 +446,7 @@
       "tasks": [
         "T14a"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe N (`python -`): exit 0, expiry drops before send at attempt 0, failed send records timestamped retry, later expiry drops with preserved count. Exact test_notify.py/test_telegram_send.py discoveries each exit 0 with 3 tests. No 90-day pruning claim (F12)."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe N (`python -`): exit 0; expiry drops at attempt 0, failed delivery records timestamped retry, later expiry preserves attempts and drops. `cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py`: exit 0, 3 tests. No 90-day retention claim."
     },
     {
       "id": "F44",
@@ -457,7 +456,7 @@
       "tasks": [
         "T4a"
       ],
-      "evidence": "Fresh Probe Q: exit 0; actual keyed route_get /quotas with one synthetic account/five_hour window returns windows=[{window,usedPercent,resetsAt}], observedAt string. Exact QuotasPanel parser transpiled with installed TypeScript calls record(account.windows), which rejects arrays: parsed account count is 0. Phone expects a windows object with used_percent/resets_at and numeric observedAt. Restore compatible projection or normalize both dialects; mock browser data currently hide the mismatch."
+      "evidence": "Rechecked in this attempt: Fresh Probe Q: exit 0; actual keyed route_get /quotas with one synthetic account/five_hour window returns windows=[{window,usedPercent,resetsAt}], observedAt string. Exact QuotasPanel parser transpiled with installed TypeScript calls record(account.windows), which rejects arrays: parsed account count is 0. Phone expects a windows object with used_percent/resets_at and numeric observedAt. Restore compatible projection or normalize both dialects; mock browser data currently hide the mismatch."
     },
     {
       "id": "F45",
@@ -467,7 +466,7 @@
       "tasks": [
         "T10"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py`: exit 0, 5 tests in 11.127 s, including complete OAuth-configured entrypoint. No real runtime or host service started."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py`: exit 0, 5 tests, including complete synthetic OAuth-configured entrypoint. No deployed provider/host service used."
     },
     {
       "id": "F46",
@@ -477,7 +476,7 @@
       "tasks": [
         "T15d"
       ],
-      "evidence": "Fresh source inspection page.tsx: buttons disabled unless confirmation text is nonempty and typedReq matches; user must enter Id del reto. sendCommand only auto-fetches a challenge when challengeId is absent, but these forms require it present. No UI requests/displays an ID for copying. Approve/launch auto-challenge behavior remains valid. ; normal forms need the same server-issued challenge flow."
+      "evidence": "Rechecked in this attempt: Fresh source inspection page.tsx: buttons disabled unless confirmation text is nonempty and typedReq matches; user must enter Id del reto. sendCommand only auto-fetches a challenge when challengeId is absent, but these forms require it present. No UI requests/displays an ID for copying. Approve/launch auto-challenge behavior remains valid. ; normal forms need the same server-issued challenge flow."
     },
     {
       "id": "F47",
@@ -487,17 +486,17 @@
       "tasks": [
         "T11a"
       ],
-      "evidence": "Fresh Probe L: exit 0; six synthetic forwarded client addresses reaching one proxy socket receive 302,302,302,302,302,429. server.py keys both login-start and callback buckets on client_address[0]; deployed Caddy is the common upstream peer. An unauthenticated requester can keep the shared five-per-minute start bucket full. Do not trust arbitrary public forwarded headers; derive identity only at the trusted proxy boundary."
+      "evidence": "Rechecked in this attempt: Fresh Probe L: exit 0; six synthetic forwarded client addresses reaching one proxy socket receive 302,302,302,302,302,429. server.py keys both login-start and callback buckets on client_address[0]; deployed Caddy is the common upstream peer. An unauthenticated requester can keep the shared five-per-minute start bucket full. Do not trust arbitrary public forwarded headers; derive identity only at the trusted proxy boundary."
     },
     {
       "id": "F48",
       "severity": "low",
       "status": "open",
-      "summary": "Runbook claims both gateway and laptop reject keys shorter than 24 characters, but current startup lacks that length guard.",
+      "summary": "The documented gateway minimum key length is not enforced by gateway or native listener startup.",
       "tasks": [
         "T16"
       ],
-      "evidence": "Source config.py checks nonempty gateway key; bt_server.serve_remote directly constructs loopback ThreadingHTTPServer without checking key length. Runbook steps 2/6 claim refusal below 24. All 5 test_remote_api.py tests pass but no longer test startup minimum length. Probe B parses the gateway with a synthetic key. Keyed requests still fail closed when expected key is empty; no authentication bypass is alleged."
+      "evidence": "Rechecked in this attempt: Source config.py checks nonempty gateway key; bt_server.serve_remote directly constructs loopback ThreadingHTTPServer without checking key length. Runbook steps 2/6 claim refusal below 24. All 5 test_remote_api.py tests pass but no longer test startup minimum length. Probe B parses the gateway with a synthetic key. Keyed requests still fail closed when expected key is empty; no authentication bypass is alleged."
     },
     {
       "id": "F49",
@@ -507,7 +506,7 @@
       "tasks": [
         "T5"
       ],
-      "evidence": "Fresh Probe V: exit 0 reproducer. A real loopback POST to bt_remote_api.route_post with synthetic valid gateway key and {idempotency_key:'synthetic-valid-key',command:'pause'} drops the connection with KeyError('target'); the same request without the key returns HTTP 401. bt_remote_commands.fingerprint:264 indexes required fields before validate:268, and Ledger.submit:385-387 catches TypeError/ValueError but not missing-field KeyError. Validate required envelope fields before fingerprinting and return HTTP 400/INVALID_COMMAND. The public gateway fills these keys, so this is native-boundary robustness, not an unauthenticated access bypass."
+      "evidence": "Rechecked in this attempt: Fresh Probe V: exit 0 reproducer. A real loopback POST to bt_remote_api.route_post with synthetic valid gateway key and {idempotency_key:'synthetic-valid-key',command:'pause'} drops the connection with KeyError('target'); the same request without the key returns HTTP 401. bt_remote_commands.fingerprint:264 indexes required fields before validate:268, and Ledger.submit:385-387 catches TypeError/ValueError but not missing-field KeyError. Validate required envelope fields before fingerprinting and return HTTP 400/INVALID_COMMAND. The public gateway fills these keys, so this is native-boundary robustness, not an unauthenticated access bypass."
     },
     {
       "id": "F50",
@@ -517,7 +516,7 @@
       "tasks": [
         "T14b"
       ],
-      "evidence": "Updated W: exit 0; actual bt_remote_snapshot.snapshot projects a synthetic active run with req/reqId; real TelegramBot._send_status sends only the Ejecuciones activas header and no run/keyboard because it reads req_id. Only the snapshot data provider is substituted; real serializer and bot parser execute."
+      "evidence": "Rechecked in this attempt: Updated W: exit 0; actual inlined bt_remote_api._snapshot projects a synthetic active run with req/reqId; real TelegramBot._send_status sends only the Ejecuciones activas header and no run/keyboard because it reads req_id. Only the snapshot data provider is substituted; real serializer and bot parser execute."
     },
     {
       "id": "F51",
@@ -528,7 +527,7 @@
         "T14a",
         "T10"
       ],
-      "evidence": "Fresh report Probe W/Y/Z/O: exit 0; GatewayRuntime.poll_once with 20 due messages and a deterministic sender advancing the clock by the default 5-second request timeout consumes 100 simulated seconds while making exactly one health probe. app.py calls deliver_due inline and notifications.py sends up to 20 sequential messages before returning. This is a deterministic scheduling reproduction, not a measured real Telegram outage; isolate delivery or give it a budget compatible with the five-second health cadence."
+      "evidence": "Rechecked in this attempt: Fresh report Probe W/Y/Z/O: exit 0; GatewayRuntime.poll_once with 20 due messages and a deterministic sender advancing the clock by the default 5-second request timeout consumes 100 simulated seconds while making exactly one health probe. app.py calls deliver_due inline and notifications.py sends up to 20 sequential messages before returning. This is a deterministic scheduling reproduction, not a measured real Telegram outage; isolate delivery or give it a budget compatible with the five-second health cadence."
     },
     {
       "id": "F52",
@@ -539,7 +538,7 @@
         "T10",
         "T13"
       ],
-      "evidence": "Fresh report Probe W/Y/Z/O: exit 0, GatewayConfig.from_env with required synthetic values and omitted optional overrides returns request_timeout=5.0. app.py passes that same timeout to LaptopClient and upstream.py applies it to command POST. SPEC edge case requires the gateway to time out after 15 seconds. Use a separate 15-second command deadline; the shorter timeout fails safely as UNKNOWN_OUTCOME and does not itself prove duplicate execution."
+      "evidence": "Rechecked in this attempt: Fresh report Probe W/Y/Z/O: exit 0, GatewayConfig.from_env with required synthetic values and omitted optional overrides returns request_timeout=5.0. app.py passes that same timeout to LaptopClient and upstream.py applies it to command POST. SPEC edge case requires the gateway to time out after 15 seconds. Use a separate 15-second command deadline; the shorter timeout fails safely as UNKNOWN_OUTCOME and does not itself prove duplicate execution."
     },
     {
       "id": "F53",
@@ -551,7 +550,7 @@
         "T13",
         "T14"
       ],
-      "evidence": "Fresh report Probe W/Y/Z/O: exit 0. With cached active-run state, three synthetic UpstreamError command failures mark the laptop offline but leave offline_generation=0; a subsequent health poll at offline_since+901 seconds emits no outbox row. Repeated through issue_challenge with the same result. app.py/180 discard the transition; only poll_once advances the generation, so _notify_long_offline_with_active_run returns early. Handle every transition through one owner and preserve one alert per outage."
+      "evidence": "Rechecked in this attempt: Fresh report Probe W/Y/Z/O: exit 0. With cached active-run state, three synthetic UpstreamError command failures mark the laptop offline but leave offline_generation=0; a subsequent health poll at offline_since+901 seconds emits no outbox row. Repeated through issue_challenge with the same result. app.py/180 discard the transition; only poll_once advances the generation, so _notify_long_offline_with_active_run returns early. Handle every transition through one owner and preserve one alert per outage."
     },
     {
       "id": "F54",
@@ -561,7 +560,7 @@
       "tasks": [
         "T10"
       ],
-      "evidence": "Fresh report Probe W/Y/Z/O: exit 0. GatewayConfig.from_env and OAuthConfig.from_env accept required synthetic configuration with GATEWAY_BIND=''; create_server passes ('',8790) to the mocked ThreadingHTTPServer constructor (Python IPv4 wildcard bind semantics). No wildcard listener was actually opened. config.py uses get without rejecting the empty value; deploy.sh required-key checks omit GATEWAY_BIND. The runbook correctly instructs 172.20.0.1 (F1 fixed), but malformed production config still fails open at this boundary. Reject empty/wildcard binds or normalize deliberately to the documented private interface. No unauthenticated command bypass is alleged."
+      "evidence": "Rechecked in this attempt: Fresh report Probe W/Y/Z/O: exit 0. GatewayConfig.from_env and OAuthConfig.from_env accept required synthetic configuration with GATEWAY_BIND=''; create_server passes ('',8790) to the mocked ThreadingHTTPServer constructor (Python IPv4 wildcard bind semantics). No wildcard listener was actually opened. config.py uses get without rejecting the empty value; deploy.sh required-key checks omit GATEWAY_BIND. The runbook correctly instructs 172.20.0.1 (F1 fixed), but malformed production config still fails open at this boundary. Reject empty/wildcard binds or normalize deliberately to the documented private interface. No unauthenticated command bypass is alleged."
     },
     {
       "id": "F55",
@@ -571,7 +570,7 @@
         "T6"
       ],
       "summary": "Persisted first-observation cursors deliver late-derived events after an earlier saved cursor.",
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe R (`python -`): exit 0, persisted _observe/build_events/page delivers late stall/round after older cursor and advances sequence. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests including production-route late observations."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe R (`python -`): exit 0; persisted observation cursor delivers late stall/round after an older saved cursor and advances sequence. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
     },
     {
       "id": "F56",
@@ -583,7 +582,7 @@
         "T15c"
       ],
       "summary": "Quoted JSON credentials and database connection passwords remain visible inside log and verification strings.",
-      "evidence": "Fresh Probe S: exit 0; feed.redact leaves synthetic password and refresh_token values in serialized JSON and the synthetic DATABASE_URL password unchanged. The exact phone redactReviewText also leaves the quoted JSON password; structured dict password is correctly redacted. bt_remote_events.py,34-42 requires an unquoted name adjacent to colon/equal inside strings; bt_remote_api.py passes logTail and verification text through it. F14 remains fixed only for its original plain provider assignment and bearer-text cases, both freshly rechecked. The observed gap is bounded to these synthetic known credential forms, not a claim that arbitrary secret detection is exhaustive."
+      "evidence": "Rechecked in this attempt: Fresh Probe S: exit 0; feed.redact leaves synthetic password and refresh_token values in serialized JSON and the synthetic DATABASE_URL password unchanged. The exact phone redactReviewText also leaves the quoted JSON password; structured dict password is correctly redacted. bt_remote_events.py,34-42 requires an unquoted name adjacent to colon/equal inside strings; bt_remote_api.py passes logTail and verification text through it. F14 remains fixed only for its original plain provider assignment and bearer-text cases, both freshly rechecked. The observed gap is bounded to these synthetic known credential forms, not a claim that arbitrary secret detection is exhaustive."
     },
     {
       "id": "F57",
@@ -593,7 +592,7 @@
         "T14"
       ],
       "summary": "Gateway cursor reconstruction starts from the beginning and lets old feed pages delay fresh notifications beyond 60 seconds.",
-      "evidence": "Updated Probe T: exit 0; a fresh runtime calls events with empty cursor and sends a run.finished that predates startup but is within the restored one-hour expiry. Gateway still keeps event_cursor only in memory and invalid-cursor reset also starts from beginning. The former continuous-outage generation-reset component is now repaired: with one durable database and simulated wall/monotonic clocks, outage generation stays 1 across replacement runtimes and total sends stays 1. Same-ID outbox dedupe also remains effective. Only rebuild-from-now remains open; no accepted risk. New Probe AF: exit 0; 3,000 older non-notifying command events precede a fresh round in the persisted feed. _poll_events consumes only one 200-event page per five-second poll and ignores hasMore: no alert after thirteen polls (t=60 s), new round queued on poll sixteen (t=75 s). This is deterministic page/cadence arithmetic, not a live latency measurement."
+      "evidence": "Rechecked in this attempt: Updated Probe T: exit 0; a fresh runtime calls events with empty cursor and sends a run.finished that predates startup but is within the restored one-hour expiry. Gateway still keeps event_cursor only in memory and invalid-cursor reset also starts from beginning. The former continuous-outage generation-reset component is now repaired: with one durable database and simulated wall/monotonic clocks, outage generation stays 1 across replacement runtimes and total sends stays 1. Same-ID outbox dedupe also remains effective. Only rebuild-from-now remains open; no accepted risk. New Probe AF: exit 0; 3,000 older non-notifying command events precede a fresh round in the persisted feed. _poll_events consumes only one 200-event page per five-second poll and ignores hasMore: no alert after thirteen polls (t=60 s), new round queued on poll sixteen (t=75 s). This is deterministic page/cadence arithmetic, not a live latency measurement."
     },
     {
       "id": "F58",
@@ -604,7 +603,7 @@
         "T14"
       ],
       "summary": "Quota notifications have per-account triggers without the frozen all-accounts-exhausted condition.",
-      "evidence": "Fresh Probe U: exit 0; build_events receives one exhausted account and one available account, yet notification_for_event creates a quota-exhaustion alert. bt_remote_events.py emits independently per profile and notifications.py renders each; neither checks whether every account is exhausted as required by R10. This is an alert-condition/spec gap, not proof that all-account exhaustion receives no messages. Preserve source freshness and dedupe when introducing the aggregate condition."
+      "evidence": "Rechecked in this attempt: Fresh Probe U: exit 0; build_events receives one exhausted account and one available account, yet notification_for_event creates a quota-exhaustion alert. bt_remote_events.py emits independently per profile and notifications.py renders each; neither checks whether every account is exhausted as required by R10. This is an alert-condition/spec gap, not proof that all-account exhaustion receives no messages. Preserve source freshness and dedupe when introducing the aggregate condition."
     },
     {
       "id": "F59",
@@ -614,7 +613,7 @@
         "T6"
       ],
       "summary": "The same failed attempt can enqueue two alerts when first observed in the flow bus and later in the run projection.",
-      "evidence": "Fresh Probe U: exit 0; failure of demo/REQ-001 T1/a1 is first represented by flow row flow-1, then by the run-state attempt with its ended_at one second later. Real build_events/page and NotificationOutbox store two different dedupe-key rows. bt_remote_events.py suppresses flow duplicates only inside one current projection; from_flow identity at 176-178 differs from the attempt identity at 79, so sequential observations bypass durable dedupe. These fixtures demonstrate one semantic failure under both producer forms, not a measured frequency in a deployed run. R11 requires a stable key for the same event."
+      "evidence": "Rechecked in this attempt: Fresh Probe U: exit 0; failure of demo/REQ-001 T1/a1 is first represented by flow row flow-1, then by the run-state attempt with its ended_at one second later. Real build_events/page and NotificationOutbox store two different dedupe-key rows. bt_remote_events.py suppresses flow duplicates only inside one current projection; from_flow identity at 176-178 differs from the attempt identity at 79, so sequential observations bypass durable dedupe. These fixtures demonstrate one semantic failure under both producer forms, not a measured frequency in a deployed run. R11 requires a stable key for the same event."
     },
     {
       "id": "F60",
@@ -624,7 +623,7 @@
         "T11"
       ],
       "summary": "An unauthenticated Unicode OAuth state drops the callback connection instead of returning a controlled invalid-state response.",
-      "evidence": "Fresh Probe X: exit 0; real loopback gateway GET callback with synthetic code, query state=%C3%A9 and cookie flow_oauth_state=\"\u00e9\" terminates its request with TypeError from hmac.compare_digest on non-ASCII strings. The handler error hook records TypeError and HTTP client gets RemoteDisconnected. server.py does not validate ASCII before comparison. No state bypass, session issuance or whole-process denial of service is demonstrated; the existing one-use/replay protections remain."
+      "evidence": "Rechecked in this attempt: Fresh Probe X: exit 0; real loopback gateway GET callback with synthetic code, query state=%C3%A9 and cookie flow_oauth_state=\"é\" terminates its request with TypeError from hmac.compare_digest on non-ASCII strings. The handler error hook records TypeError and HTTP client gets RemoteDisconnected. server.py does not validate ASCII before comparison. No state bypass, session issuance or whole-process denial of service is demonstrated; the existing one-use/replay protections remain."
     },
     {
       "id": "F61",
@@ -634,7 +633,7 @@
       "tasks": [
         "T6"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe AA (`python -`): exit 0; two real M1 runs allocate att-0001, two blocked events have distinct dedupeKey and NotificationOutbox retains two rows. Exact test_remote_events.py discovery: exit 0, 13 tests including cross-run identity regression."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AA (`python -`): exit 0; two actual M1 runs allocate att-0001, run-scoped blocked events have distinct dedupe keys and outbox keeps both rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
     },
     {
       "id": "F62",
@@ -644,7 +643,7 @@
       "tasks": [
         "T7"
       ],
-      "evidence": "Rechecked on d17ce292a39950fd735764d724ce3edb92542081: Probe AA (`python -`): exit 0, two real runs share att-0001 and _failure_review(demo/REQ-001, id)/REQ-002 return their respective distinct causes. Exact `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests; real HTTP selects second run and refuses missing/foreign target. Both phone callers include target. Gateway availability remains F36."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AA (`python -`): exit 0; actual runs sharing att-0001 return their respective distinct causes via target-specific native review. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests including actual HTTP second-run selection/missing/foreign target refusal. Both phone callers include target; AG confirms public review HTTP 200."
     },
     {
       "id": "F63",
@@ -664,17 +663,17 @@
       "tasks": [
         "T8"
       ],
-      "evidence": "New Probe AD: exit 0; one synthetic candidate with valid authorization/runtime/source and quota_status=unknown is listed available by actual bt_remote_recovery.route_options, but actual bt_route_pins.available with identical candidate/route returns []. The former checks quota != exhausted; the latter requires quota == available. No actual account/quota source was read. Use the same availability rule; refusal is safe but contradicts the selectable route list."
+      "evidence": "Rechecked in this attempt: New Probe AD: exit 0; one synthetic candidate with valid authorization/runtime/source and quota_status=unknown is listed available by actual bt_remote_recovery.route_options, but actual bt_route_pins.available with identical candidate/route returns []. The former checks quota != exhausted; the latter requires quota == available. No actual account/quota source was read. Use the same availability rule; refusal is safe but contradicts the selectable route list."
     },
     {
       "id": "F65",
       "severity": "medium",
-      "status": "open",
-      "summary": "The local panel cannot start on Linux without systemctl after the new ownership guard.",
+      "status": "fixed",
+      "summary": "Linux without systemctl retains the local panel startup path while uncertain systemd ownership fails closed.",
       "tasks": [
         "T9"
       ],
-      "evidence": "New Probe AE: exit 0; with Linux, no running panel and subprocess.run raising FileNotFoundError for missing systemctl, actual ensure_server treats _unit_enabled as true then tries systemctl --user restart and propagates FileNotFoundError, with zero detached starts. This changes the existing systemd-less startup path under R18. Only subprocess/platform boundaries are stubbed; no host service is started/stopped. Keep the enabled-unit ownership guard while distinguishing unavailable systemctl from an enabled service."
+      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AE (`python -`): exit 0; shutil.which(systemctl)=None causes one mocked detached startup and no systemctl call. Present-but-failing systemctl still fails closed without a competing server. `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including the missing-systemctl startup regression. Earlier AE stubbed subprocess failure while leaving discovery reporting an installed binary; that no longer models an absent binary."
     },
     {
       "id": "F66",
@@ -684,7 +683,7 @@
         "T5b"
       ],
       "summary": "The keyed laptop challenge endpoint was removed, making all challenged web operations unreachable.",
-      "evidence": "Probe AG (`python -`): exit 0; actual RemoteHandler POST /api/remote/v1/challenges with a valid synthetic bearer returns HTTP 404 NOT_FOUND; the authenticated public gateway returns HTTP 200 NOT_FOUND without challengeId. route_post handles only commands. Real Ledger.issue_challenge exists but has no HTTP entrypoint. Phone approve/launch/revise/edit-brief require this issuance; cancel/delete also have independent UI F46. Restore validated/authenticated issuance, 120-second target-bound one-use semantics, and real HTTP tests."
+      "evidence": "Current Probe AG (`python -`): exit 0; actual RemoteHandler POST /api/remote/v1/challenges with valid synthetic bearer returns HTTP 404 NOT_FOUND; main-equivalent authenticated public gateway returns HTTP 200 NOT_FOUND without challengeId. Actual route_post handles only commands; Ledger.issue_challenge exists without HTTP issuance. Approve/launch/revise/edit-brief cannot obtain required challenges. Restore validated/authenticated issuance and actual native/public HTTP lifecycle tests; do not weaken 120 s target-bound one-use checks."
     },
     {
       "id": "F67",
