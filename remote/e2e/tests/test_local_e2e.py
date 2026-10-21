@@ -20,6 +20,8 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlencode, urlsplit
 from urllib.request import Request, urlopen as real_urlopen
 
+from local_e2e_client import LocalE2EClient
+
 
 REPO = Path(__file__).resolve().parents[3]
 SCRIPTS = REPO / "skill" / "scripts"
@@ -78,7 +80,7 @@ class FakeProviderHandler(BaseHTTPRequestHandler):
         self._reply(404)
 
 
-class LocalEndToEndTests(unittest.TestCase):
+class LocalEndToEndTests(LocalE2EClient, unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory(prefix="flow-remote-e2e-")
@@ -169,24 +171,11 @@ for attempt_number in range(3):
         "execution_failed", payload={"reason": "fixture failure"}, token=token,
     ))
     assert result.status == "applied", result
-    if attempt_number < 2:
-        scheduler.step()
+    scheduler.step()
 adapter.write_projection(rdir, scheduler)
 """
         subprocess.run([sys.executable, "-c", seed_script, str(SCRIPTS), str(req)],
                        env={**os.environ, "BITACORA_ROOT": str(cls.root)}, check=True, timeout=30)
-
-        state = cls.root / ".state" / "scheduler"
-        m1 = state / "demo-REQ-001.db"
-        runtime_id = "a" * 32
-        m1.with_name(m1.stem + "-runtime.json").write_text(json.dumps({"runtime_id": runtime_id}), encoding="utf-8")
-        modules = m1.parent / f"{m1.stem}-{runtime_id}-modules"
-        modules.mkdir()
-        m5 = sqlite3.connect(modules / "m5-recovery.sqlite3")
-        m5.execute("CREATE TABLE decisions (seq INTEGER PRIMARY KEY, task_id TEXT, attempt_id TEXT, cause TEXT, action TEXT)")
-        m5.execute("INSERT INTO decisions VALUES (1, 'T1', 'attempt-forced-failure', 'fixture failure', 'retry')")
-        m5.commit()
-        m5.close()
 
     @classmethod
     def _seed_cancel_run_fixture(cls):
@@ -339,55 +328,6 @@ adapter.write_projection(rdir, scheduler)
             process.kill()
             process.wait(timeout=3)
 
-    def _request(self, path: str, *, cookie: str = ""):
-        connection = http.client.HTTPConnection("127.0.0.1", self.web_port, timeout=4)
-        headers = {"Cookie": cookie} if cookie else {}
-        connection.request("GET", path, headers=headers)
-        response = connection.getresponse()
-        body = response.read()
-        result = response.status, response.getheaders(), body
-        connection.close()
-        return result
-
-    def _post_command(self, command: dict, *, cookie: str):
-        connection = http.client.HTTPConnection("127.0.0.1", self.gateway_port, timeout=4)
-        body = json.dumps(command).encode()
-        connection.request("POST", "/api/remote/v1/commands", body=body, headers={
-            "Cookie": cookie,
-            "Content-Type": "application/json",
-            "Origin": f"http://127.0.0.1:{self.web_port}",
-            "X-Flow-Request": "1",
-        })
-        response = connection.getresponse()
-        result = response.status, json.loads(response.read())
-        connection.close()
-        return result
-
-    def _sign_in(self, login: str) -> tuple[int, str]:
-        status, headers, _ = self._request("/api/auth/login")
-        self.assertEqual(status, 302)
-        state_cookie = next(value.split(";", 1)[0] for name, value in headers if name.lower() == "set-cookie"
-                            and value.startswith("flow_oauth_state="))
-        authorize_url = next(value for name, value in headers if name.lower() == "location")
-        parsed = urlsplit(authorize_url)
-        query = parse_qs(parsed.query)
-        provider_path = parsed.path + "?" + urlencode({
-            "client_id": query["client_id"][0], "redirect_uri": query["redirect_uri"][0],
-            "state": query["state"][0], "login": login,
-        })
-        provider = http.client.HTTPConnection("127.0.0.1", self.provider.server_address[1], timeout=3)
-        provider.request("GET", provider_path)
-        authorized = provider.getresponse()
-        redirect = authorized.getheader("Location")
-        authorized.read()
-        provider.close()
-        callback = urlsplit(redirect)
-        callback_path = callback.path + "?" + callback.query
-        status, headers, _ = self._request(callback_path, cookie=state_cookie)
-        session = next((value.split(";", 1)[0] for name, value in headers if name.lower() == "set-cookie"
-                        and value.startswith("flow_session=")), "")
-        return status, session
-
     def test_local_e2e_oauth_offline_and_failure_notification(self):
         status, _, body = self._request("/")
         self.assertEqual(status, 200)
@@ -403,7 +343,9 @@ adapter.write_projection(rdir, scheduler)
         self.assertTrue(event_page["nextCursor"], event_page)
         failures = [event for event in feed if event["type"] == "attempt.failed"
                     and event["data"].get("failure") == "fixture failure"]
-        self.assertEqual(len(failures), 3, feed)
+        self.assertEqual(len(failures), 1, feed)
+        self.assertTrue(failures[0]["data"]["retryExhausted"])
+        self.assertEqual(failures[0]["data"]["attemptsUsed"], failures[0]["data"]["maxAttempts"])
         for failure in failures:
             self.assertEqual(failure["target"]["taskId"], "T1")
             self.assertEqual(failure["target"]["req"], "REQ-001")
@@ -414,6 +356,18 @@ adapter.write_projection(rdir, scheduler)
         self.assertTrue(session)
         status, _, body = self._request("/api/auth/session", cookie=session)
         self.assertEqual((status, json.loads(body)["login"]), (200, "dav033"))
+
+        status, _, body = self._request("/api/remote/v1/snapshot", cookie=session)
+        self.assertEqual(status, 200)
+        snapshot = json.loads(body)
+        self.assertEqual(snapshot["schemaVersion"], 1)
+        self.assertIn("demo/REQ-001", {run["id"] for run in snapshot["runs"]})
+
+        status, challenge = self._post_challenge(
+            {"kind": "run", "project": "demo", "req": "REQ-002"}, "REQ-002", cookie=session)
+        self.assertEqual(status, 201, challenge)
+        self.assertEqual(challenge["target"], "demo/REQ-002")
+        self.assertTrue(challenge["challengeId"])
 
         cancel_command = {
             "schemaVersion": 1,
@@ -448,12 +402,15 @@ adapter.write_projection(rdir, scheduler)
         self.assertEqual(status, 401)
 
         deadline = time.monotonic() + 8
-        while time.monotonic() < deadline and len(FakeProviderHandler.telegram_messages) < len(failures):
+        def failure_notifications():
+            return [message for message in FakeProviderHandler.telegram_messages
+                    if message["text"].startswith("Una tarea falló")]
+
+        while time.monotonic() < deadline and len(failure_notifications()) < len(failures):
             time.sleep(0.05)
         messages = FakeProviderHandler.telegram_messages
-        self.assertEqual(len(messages), len(failures), messages)
-        for message in messages:
-            self.assertIn("Una tarea falló", message["text"])
+        failure_messages = failure_notifications()
+        self.assertEqual(len(failure_messages), len(failures), messages)
 
         self._stop_process(self.laptop_process)
         deadline = time.monotonic() + 20
@@ -464,7 +421,7 @@ adapter.write_projection(rdir, scheduler)
                 break
             time.sleep(0.1)
         self.assertTrue(offline, "gateway did not detect laptop offline within 20 seconds")
-        self.assertEqual(len(FakeProviderHandler.telegram_messages), len(failures))
+        self.assertEqual(len(failure_notifications()), len(failures))
 
 
 if __name__ == "__main__":

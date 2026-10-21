@@ -22,14 +22,8 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
     runtime = create_runtime(config)
-<<<<<<< ed514be089eac10f1aa572cee6d60afabc049c92
-    auth_server = create_server(auth_config, (config.bind_host, config.bind_port), hub=runtime.hub, runtime=runtime)
-||||||| 384670ed11ac1c9929cb15659f494295e74b6bdf
-    auth_server = create_server(auth_config, (config.bind_host, config.bind_port), hub=runtime.hub)
-=======
     auth_server = create_server(auth_config, (config.bind_host, config.bind_port),
                                 hub=runtime.hub, runtime=runtime)
->>>>>>> 8ecfc9b9879654152f440aae4e87866fc2b072d9
     bot = TelegramBot(runtime, config.telegram_bot_token, config.telegram_chat_id)
     auth_thread = Thread(target=auth_server.serve_forever, name="gateway-http", daemon=True)
     telegram_thread = Thread(target=bot.run_forever, name="gateway-telegram", daemon=True)

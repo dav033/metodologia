@@ -101,9 +101,13 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         project, req = run.get("project", ""), run.get("req_id", "")
         for task in run.get("tasks", []):
             exhausted = _retry_exhausted(task)
+            terminal_attempt = task.get("attempt")
+            terminal_attempt_id = terminal_attempt.get("id") if isinstance(terminal_attempt, dict) else None
             attempts = [attempt for attempt in [task.get("attempt"), *(task.get("history") or [])]
                         if isinstance(attempt, dict) and attempt.get("id")]
             for attempt in {item["id"]: item for item in attempts}.values():
+                if exhausted and terminal_attempt_id and attempt["id"] != terminal_attempt_id:
+                    continue
                 target = _task_target(project, req, task.get("id"), attempt["id"])
                 identity = f"{project}/{req}:{task.get('id', '')}:{attempt['id']}"
                 occurred_at = attempt.get("ended_at") or attempt.get("last_activity_at") or run.get("updated_at") or ""
@@ -177,7 +181,7 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
     for row in state.get("flow", []):
         event = from_flow(row)
         if event is not None and not (
-            event["type"] == "attempt.failed"
+            event["type"] in {"attempt.failed", "attempt.blocked"}
             and (event["target"].get("project", ""), event["target"].get("req", ""),
                  event["target"].get("taskId", "")) in state_failure_targets
         ):

@@ -299,10 +299,10 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(handler.status, 200)
             payload = json.loads(handler.body)
             failed = [event for event in payload["events"] if event["type"] == "attempt.failed"]
-            self.assertEqual(len(failed), 3)
-            self.assertEqual(len({event["id"] for event in failed}), 3)
-            self.assertEqual({event["data"]["attemptsUsed"] for event in failed}, {3})
-            self.assertEqual({event["data"]["maxAttempts"] for event in failed}, {3})
+            self.assertEqual(len(failed), 1)
+            self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
+            self.assertTrue(failed[0]["data"]["retryExhausted"])
+            self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.
