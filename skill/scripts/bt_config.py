@@ -58,6 +58,9 @@ DEFAULTS: dict = {
               # instead of sending the tasks it names back; after `remediation_rounds` rounds of one audit the named
               # tasks are sent back as before
               "audit_remediation": True, "remediation_rounds": 2,
+              # remediation tasks of one round run one after another (False) or side by side when their findings sit in
+              # different components (True); side by side they kept sending each other back over shared files
+              "remediation_parallel": False,
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
               "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit

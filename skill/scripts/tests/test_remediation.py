@@ -84,12 +84,14 @@ class Build(unittest.TestCase):
         new = [t for t in revised["tasks"] if t["id"].startswith("T4.")]
         self.assertEqual([len(t["acceptance_criteria"]) for t in new], [4, 2])
         self.assertEqual(new[1]["after"], ["T3", "T4.1"])                              # the second piece sees the first
-        apart = rem.build_revision(plan(task("T1", kind="test", category="integration"), task("T2"),
-                                        task("T3", ["T1", "T2"], kind="audit",
-                                                                      paths=["a.md", "a.findings.json"])),
-                                   "T3", [finding("F1", ["T1"]), finding("F2", ["T2"])])
-        parallel = {t["id"]: t["after"] for t in apart["tasks"] if t["id"].startswith("T3.")}
-        self.assertEqual(parallel, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2"]})       # independent areas run side by side
+        areas = plan(task("T1", kind="test", category="integration"), task("T2"),
+                     task("T3", ["T1", "T2"], kind="audit", paths=["a.md", "a.findings.json"]))
+        two = [finding("F1", ["T1"]), finding("F2", ["T2"])]
+        serial = {t["id"]: t["after"] for t in rem.build_revision(areas, "T3", two)["tasks"] if t["id"].startswith("T3.")}
+        self.assertEqual(serial, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2", "T3.1"]})   # one after another by default
+        side = rem.build_revision(areas, "T3", two, parallel=True)
+        parallel = {t["id"]: t["after"] for t in side["tasks"] if t["id"].startswith("T3.")}
+        self.assertEqual(parallel, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2"]})       # independent areas side by side if allowed
 
     def test_a_second_auditor_gets_its_own_numbering(self):
         spec = plan(task("T1", kind="test", category="integration"),

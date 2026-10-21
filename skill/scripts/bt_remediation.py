@@ -225,7 +225,14 @@ def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, di
     }
 
 
-def build_revision(plan: dict, audit: str, findings: list[dict], *, round_no: int = 1) -> dict | None:
+def _parallel() -> bool:
+    import bt_config
+
+    return bt_config.get("gates.remediation_parallel", False) is True
+
+
+def build_revision(plan: dict, audit: str, findings: list[dict], *, round_no: int = 1,
+                   parallel: bool | None = None) -> dict | None:
     """The next revision of `plan`: remediation tasks for `findings`, `audit` moved after them. None when a task cannot be
     built soundly (a finding names no task with a command that checks its area) or the result is not a valid plan."""
     import bt_plan_adapter
@@ -242,8 +249,11 @@ def build_revision(plan: dict, audit: str, findings: list[dict], *, round_no: in
     new_ids = _next_ids(set(by_id), audit, sum(len(chain) for chain in chains))
     created, last_ids = [], []
     cursor = iter(new_ids)
+    # One after another unless the owner allows parallel areas: remediation tasks of different components still edit the
+    # same files in practice (REQ-027 T18.1/.2/.3/.5 each sent each other back six times over server.py)
+    serial = not (_parallel() if parallel is None else parallel)
     for chain in chains:
-        previous: str | None = None
+        previous: str | None = last_ids[-1] if serial and last_ids else None
         for chunk in chain:
             task_id = next(cursor)
             task = _task(task_id, spec, chunk, by_id, [*base_after, *([previous] if previous else [])], round_no,
