@@ -1,0 +1,22 @@
+{
+ "request": "T18:15",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T18 bloqueada: la auditoría sigue marcando 5 hallazgos altos y se agotaron las devoluciones",
+ "origin": "La auditoría independiente de T18 encuentra en el árbol actual los hallazgos F1, F24, F26, F35 y F36 (high). Señalan tareas que ya se devolvieron el máximo de veces (T4a, T5a, T8, T8a, T15f, T16, T17, T24, T18.6), así que el sistema no las reabre solo. Los hallazgos han pasado de 2 a 3 y luego a 5, por lo que las correcciones previas no los están cerrando; el texto de cada hallazgo no aparece en la evidencia.",
+ "steps": [
+  "Lee en el informe de la auditoría (último intento, att-0202) el texto completo de F1, F24, F26, F35 y F36 y anótalo con su evidencia en `RUN.notes/<tarea>.audit.md` de cada tarea que señala.",
+  "Pulsa «Devolver T4a, T5a, T8, T8a, T15f, T16, T17, T24, T18.6 para que los arreglen» o, por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T4a,T5a,T8,T8a,T15f,T16,T17,T24,T18.6 --only --reason \"hallazgos F1 (high), F24 (high), F26 (high), F35 (high), F36 (high)\"`.",
+  "Si el sistema rechaza la devolución por el tope de reintentos, revisa `bitacora.py --project metodologia scheduler-op REQ-027 decisions` y decide ahí; no reintentes T18 sin cambios en el código."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T02:25:41",
+ "seconds": 19.7
+}

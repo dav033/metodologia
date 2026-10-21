@@ -1,0 +1,23 @@
+{
+ "request": "T18:16",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría independiente sigue encontrando 3 hallazgos altos abiertos (F1, F41, F42)",
+ "origin": "La auditoría independiente de T18 (seguridad y cumplimiento de spec, hecha por otro proveedor) bloquea la tarea por tres hallazgos de severidad alta en el árbol actual: F1, F41 y F42. Los intentos anteriores tuvieron otros hallazgos (F2, F19, F20 en el intento #11), así que el trabajo avanza, pero los nuevos siguen abiertos. Reintentar T18 sin tocar el código daría los mismos hallazgos, y el sistema no reabre solo las tareas T8a, T16, T17 y T24 porque ya agotaron sus rondas de rework.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento de T18 (log del intento) y copia F1, F41 y F42 con su evidencia y el veredicto.",
+  "Escribe cada hallazgo, con su evidencia, en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala (T8a, T16, T17 o T24). Es lo que leerá el agente al rehacer el trabajo.",
+  "Pulsa «Devolver T8a, T16, T17, T24 para que los arreglen» o ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 rework T8a,T16,T17,T24 --only --reason \"hallazgos F1 (high), F41 (high), F42 (high)\"`.",
+  "Cuando esas tareas terminen, deja que T18 se reaudite sobre el árbol nuevo. Si los hallazgos vuelven, revisa cuáles son antes de reintentar otra vez."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T04:05:34",
+ "seconds": 16.4
+}

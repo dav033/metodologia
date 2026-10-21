@@ -1,0 +1,22 @@
+{
+ "request": "T18:17",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 sigue encontrando F41 y F42 (high) en el árbol actual",
+ "origin": "La auditoría independiente de T18 bloquea la tarea porque mantiene dos hallazgos high abiertos, F41 y F42, en el resultado actual. Antes eran cinco (F2, F19, F20, F24, F26), así que el trabajo avanza, pero la auditoría ya no puede devolver T8a más veces: el sistema indica que T8a fue devuelta 2 veces y alcanzó el límite (gates.max_reworks). Reintentar la auditoría sin cambiar nada repetiría los mismos hallazgos. El texto de F41 y F42 no aparece en la evidencia, así que hay que leerlo en el log del último intento.",
+ "steps": [
+  "Abre el log del último intento de T18 y copia F41 y F42 con su evidencia en `RUN.notes/<tarea>.audit.md` de cada tarea que señalen (T8a, T17, T24).",
+  "Pulsa «Devolver T8a, T17, T24 para que los arreglen». Por terminal: `scheduler-op REQ-027 rework T8a,T17,T24 --only --reason \"hallazgos F41 (high), F42 (high)\"`.",
+  "Si T8a vuelve a agotar sus rondas y el bloqueo se repite, revisa F41 y F42 a mano antes de reauditar, porque reintentar sin cambios dará el mismo resultado."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T04:33:18",
+ "seconds": 15.5
+}

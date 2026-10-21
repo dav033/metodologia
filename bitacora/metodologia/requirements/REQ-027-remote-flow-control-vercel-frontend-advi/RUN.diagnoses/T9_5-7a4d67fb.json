@@ -1,0 +1,22 @@
+{
+ "request": "T9:5",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T9 bloqueada: choca con T8a en test_remote_commands.py tras rehacer T5b",
+ "origin": "T9 necesita combinar el trabajo de T5b y T8a, y los dos cambiaron las mismas líneas de skill/scripts/tests/test_remote_commands.py (INTEGRATION_CONFLICT: T5b vs T8a for T9). T8a se construyó sobre un resultado anterior de T5b que después se rehízo, así que no se puede resolver combinándolos sobre esa versión. La auditoría indica además que el código cambió (T15f) y que T9 debe rehacerse sobre él; identity_unverified es la protección que saltó al no poder atribuir el resultado a un proceso, pero el conflicto es la causa visible.",
+ "steps": [
+  "Pulsa «Rehacer T8a sobre el trabajo actual» en la tarjeta de T9; el sistema devuelve solo T8a para rehacerla.",
+  "Espera a que T8a se acepte; T9 arranca sola sobre la base combinada con T5b.",
+  "Si prefieres terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T8a --only --reason \"conflicto con T5b\"`."
+ ],
+ "option": "rework_conflict",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T23:54:29",
+ "seconds": 12.9
+}

@@ -1,0 +1,22 @@
+{
+ "request": "T17:18",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T17 agotó 3 verificaciones: el test ejecuta npm ci sobre node_modules de solo lectura",
+ "origin": "El test test_local_e2e.py (setUpClass) ejecuta 'npm ci --offline' en remote/web. En la sandbox de verificación remote/web/node_modules es de solo lectura, así que npm falla con EROFS (rmdir node_modules/.bin) antes de correr ninguna prueba, y las tres verificaciones fallaron igual. La puerta de integración también bloqueó el resultado porque choca con T18.3 en remote/gateway/server.py, así que el reintento debe corregir ambas cosas.",
+ "steps": [
+  "En remote/e2e/tests/test_local_e2e.py, setUpClass: ejecuta 'npm ci --offline' en remote/web solo si falta remote/web/node_modules/.bin/next; si existe, sáltalo. Mantén 'npm run build'.",
+  "Parte del resultado de T17 ya aceptado y cambia en remote/gateway/server.py solo lo mínimo que pide la auditoría para combinarse con T18.3, sin borrar funciones existentes.",
+  "Ejecuta 'cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py' y revisa que pase antes de cerrar."
+ ],
+ "option": "retry_with_note",
+ "note": "In remote/e2e/tests/test_local_e2e.py setUpClass, run 'npm ci --offline' in remote/web only when remote/web/node_modules/.bin/next does not exist; skip it otherwise. Never run an install inside the test. Keep 'npm run build' (it writes .next). Start from the currently accepted T17 result and keep every file and function it already has; in remote/gateway/server.py make only the minimal change the audit requires so it combines with T18.3, and do not rewrite or delete working code. Finish by running 'cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py' and make it pass.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T04:59:20",
+ "seconds": 17.3
+}

@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-20 16:50 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-21 06:58 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -50,17 +50,17 @@ _Generated 2026-10-20 16:50 by `bitacora.py index`. Do not edit by hand._
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
+- P-138 · Failure analyst (owner rule 2026-10-21): a task that fails more than twice goes to an anal · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
 - P-003 · Visual review of the local web UI · med/S
-- P-109 · Pin exact accounts for the selected Sol/Sonnet REQ-024 reviewers · med/S
 
 ## Recent decisions
 
-- D-103 — Approve structural recovery r2 and temporarily unblock REQ-027
-- D-102 — Ignore Scheduler-generated plan status in requirements fingerprints
-- D-101 — Fingerprint central decisions without treating them as evidence payload
-- D-100 — A retry of a failed attempt is carried onto its prerequisites' new work, never continued on a stale tree
-- D-099 — A retry reads the history of the task's earlier attempts, and is warned when they keep failing the same way
+- D-115 — The scheduler answers plain integration clashes itself (at most three times per task)
+- D-114 — Remediation tasks of one round run one after another
+- D-113 — A result that puts undeclared files back to an older version is rejected
+- D-112 — The give-way ceiling counts only the integration gate's own give-ways
+- D-111 — A fix reaches the audit only through the tasks between it and the audit
 
 ## Artifacts
 

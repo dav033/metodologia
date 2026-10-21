@@ -1,0 +1,22 @@
+{
+ "request": "T18:13",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue encontrando 4 hallazgos altos abiertos (F2, F26, F28, F32)",
+ "origin": "La auditoría independiente de T18 encontró cuatro hallazgos bloqueantes de severidad alta en el árbol actual: F2, F26, F28 y F32 (evidencia m6://result/fffa3486…). F2 ya aparecía en los intentos #8 y #9, y el #9 repitió el mismo fallo sin corregir nada; el texto de cada hallazgo no está en esta evidencia, sino en el informe de la auditoría. El origen está en el código de las tareas que señalan los hallazgos (T4a, T5, T13, T15f, T17, T24), no en T18, que solo los detecta; reintentar sin corregir dará el mismo bloqueo, y el límite de rework (T5 ya devuelta 2 veces) impide que el sistema reabra esas tareas solo.",
+ "steps": [
+  "Lee el informe de la auditoría de T18 (último intento) y escribe cada hallazgo F2, F26, F28 y F32, con su evidencia, en RUN.notes/<tarea>.audit.md de la tarea que lo señala.",
+  "Pulsa «Devolver T4a, T5, T13, T15f, T17, T24 para que los arreglen». Por terminal: scheduler-op REQ-027 rework T4a,T5,T13,T15f,T17,T24 --only --reason \"hallazgos F2 (high), F26 (high), F28 (high), F32 (high)\".",
+  "Cuando esas tareas terminen, vuelve a lanzar T18 sobre el árbol corregido; no reintentes T18 sin cambios porque repetirá los mismos hallazgos."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T22:58:09",
+ "seconds": 17.1
+}

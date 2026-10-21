@@ -1,0 +1,23 @@
+{
+ "request": "T7:7",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7 falla: falta la acción recovery-preview y el mapa de verificación acepta rutas no cubiertas",
+ "origin": "El fallo está en el código, no en el entorno. La prueba test_recovery_entrypoints llama a `scheduler-op REQ-001 recovery-preview`, y bitacora.py responde «invalid choice: 'recovery-preview'», así que falla el setUpClass de DiagnosticRecovery. Además, test_a_changed_path_omitted_from_the_map_is_rejected_although_every_command_passes y test_an_uncovered_authorized_surface_blocks_for_verification_replanning fallan con 'accepted' == 'accepted': el mapa de verificación deja pasar cambios que no cubre. Los intentos anteriores repitieron el mismo fallo. La otra prueba roja (test_codex_structured, TZ) es ajena al recovery, según las notas del dueño.",
+ "steps": [
+  "Añadir la acción recovery-preview a las opciones de `scheduler-op` en bitacora.py, o corregir la prueba si el nombre correcto es otro (comprobar antes el nombre real).",
+  "Hacer que una ruta cambiada y omitida del mapa de verificación deje la fila en estado distinto de 'accepted', y que una superficie autorizada sin cobertura bloquee para replanificar la verificación.",
+  "Corregir tests/test_codex_structured.py según las notas del dueño: fijar TZ y time.time dentro de la prueba, sin tocar el parser.",
+  "Ejecutar de nuevo la lista completa de verificación, incluido `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py`, y registrar los códigos de salida."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix the three failing tests in tests/test_recovery_entrypoints.py before anything else. (1) Add the 'recovery-preview' action to the scheduler-op choices in bitacora.py (the setUpClass calls it and gets 'invalid choice'), wired to the real recovery preview logic; if the intended name differs, align the test with the real name and say which one you chose. (2) Make a changed path omitted from the verification map block acceptance: the row state must not be 'accepted' when every command passes but a changed path is not covered. (3) Make an uncovered authorized surface block for verification replanning (row state not 'accepted'). Also apply the owner's fix to tests/test_codex_structured.py: pin TZ=America/Bogota and patch bt_runsettle.time.time around the codex(...) call, keeping expected 1792562880, and restore TZ in a finally. Verify with TZ=UTC, TZ=America/Bogota and TZ=Asia/Tokyo, then rerun every command in the verification list and record the exit codes. Address audit finding F14 with real entry-point tests for the structural replay, not only module tests.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T23:20:44",
+ "seconds": 13.7
+}

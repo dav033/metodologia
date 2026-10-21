@@ -1,0 +1,22 @@
+{
+ "request": "T18:19",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue marcando 4 hallazgos bloqueantes de severidad alta sin resolver.",
+ "origin": "La última auditoría dejó abiertos F2, F61, F62 y F63 (high) en el árbol actual; en el intento #14 también aparecían F2, F26, F32 y F33. Como F2 se repite, el hallazgo no quedó corregido en las tareas que lo señalan. El sistema no convierte los hallazgos en remediación porque ya se agotaron las rondas (gates.remediation_rounds), así que solo queda devolver las tareas. El texto de los hallazgos no aparece en la evidencia, así que hay que leerlo en el informe de la auditoría.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento de T18 y copia F2, F61, F62 y F63 con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea que cada uno señala.",
+  "Pulsa «Devolver T6, T7, T17, T24, T8, T8a, T9, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen». Por terminal: `scheduler-op REQ-027 rework T6,T7,T17,T24,T8,T8a,T9,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F2 (high), F61 (high), F62 (high), F63 (high)\"`.",
+  "Cuando termine el rework, comprueba que F2 ya no aparece; si un hallazgo es falso positivo, anota en el informe por qué queda rechazado."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T06:49:57",
+ "seconds": 14.4
+}

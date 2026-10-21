@@ -1,0 +1,23 @@
+{
+ "request": "T18:14",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 sigue encontrando 4 hallazgos bloqueantes de severidad alta en el código actual",
+ "origin": "El fallo viene del código, no del sistema: la auditoría independiente sigue marcando como abiertos F2, F26, F32 y F33 (high) en el árbol actual, y F2 ya aparecía en los intentos #9 y #10 sin corregirse. Los hallazgos no se han resuelto y el límite de rondas de rework (gates.max_reworks) ya está agotado en T5, así que el sistema no los devuelve solo. Reintentar sin cambios repetiría el mismo resultado; devolver de nuevo las tareas tampoco ha funcionado, porque T18:11 ya se eligió con ese fin.",
+ "steps": [
+  "Abre el informe de auditoría del último intento (el log de att-0201 o el último) y copia F2, F26, F32 y F33 con su evidencia. Esa evidencia no aparece en el resumen.",
+  "Escribe cada hallazgo en `RUN.notes/T18.audit.md` (y en la tarea que señala) con la corrección necesaria o la razón por la que se rechaza.",
+  "Elige `retry_with_note` con la nota de la siguiente línea, para que T18 corrija esos cuatro hallazgos antes de volver a auditar.",
+  "Comprueba que `remote/docs/audit.md` existe y no está vacío; es la verificación que el sistema ejecuta."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix the four blocking high findings still open in the current tree (F2, F26, F32, F33) before anything else: read each one's evidence in the last audit report and either fix it or record in remote/docs/audit.md why it is rejected. Do not just regenerate the audit. Make sure remote/docs/audit.md is non-empty.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T01:07:59",
+ "seconds": 14.8
+}

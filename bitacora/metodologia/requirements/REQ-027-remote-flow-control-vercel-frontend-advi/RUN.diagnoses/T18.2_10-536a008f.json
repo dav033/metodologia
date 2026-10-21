@@ -1,0 +1,22 @@
+{
+ "request": "T18.2:10",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T18.2 bloqueada: choca con T18.3 en server.py y bt_remote_api.py al integrar",
+ "origin": "Las comprobaciones de T18.2 pasan, pero el puerta de integración rechaza el resultado porque tocó los mismos archivos que ya aceptó T18.3: remote/gateway/server.py y skill/scripts/bt_remote_api.py. Los últimos tres intentos fallaron igual, así que el problema es cómo se combinó el código, no un comando de verificación imposible. El auditor pide rehacer la tarea como un cambio pequeño sobre el árbol ya integrado, sin reescribir lo de T18.3.",
+ "steps": [
+  "Reintenta T18.2 con la indicación de la columna note: parte del árbol integrado con T18.3 y añade solo los cambios de F5 a F8.",
+  "Si el mismo bloqueo vuelve, revisa con `bitacora.py --project metodologia scheduler-op REQ-027 status` qué cambió T18.3 en remote/gateway/server.py y skill/scripts/bt_remote_api.py antes de reintentar.",
+  "Ejecuta las cuatro comandos de verificación de T18.2 antes de cerrar el reintento."
+ ],
+ "option": "retry_with_note",
+ "note": "Start from the current integrated tree, which already contains T18.3's changes. In remote/gateway/server.py and skill/scripts/bt_remote_api.py, keep every file, class and function that T18.3 added or changed, and do not rewrite or delete working code. Add only the F5-F8 fixes: run/plan snapshot dialect and round/decision detail; the review/quotas/history/routes read paths; the Telegram owner-only bot with safe callbacks and /estado; and the production alert producers, with a retry-exhaustion check before notifying. Add a regression test for each finding through the real entry point, in the test files the verification commands run. Then run all four verification commands.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T06:10:47",
+ "seconds": 14.0
+}

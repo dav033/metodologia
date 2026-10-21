@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0018:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Faltan pruebas manuales en el teléfono y el build de M2 abortó (SIGABRT)",
+ "origin": "El plan lista como comandos comprobaciones [manual] (el uso en el teléfono y la ejecución live del coordinador) y una aparece duplicada, así que el verificador no puede ejecutarlas ni relacionarlas con un criterio (CRITERION_MANUAL, CHECK_UNMAPPED). Además, la comprobación con --fake-model salió con exit code 1 porque el build de Next.js abortó: «Next.js build worker exited with code: null and signal: SIGABRT»; el log dice «asesor M1» aunque se pidió M2. La regla sugerida de aprobar a mano no basta: no hay evidencia registrada del teléfono ni del run live.",
+ "steps": [
+  "Repite `npm run build` en local (fuera de la sandbox) y, si vuelve a abortar con SIGABRT, revisa la memoria del worker de Next.js antes de seguir.",
+  "Ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` con .env.local y en el teléfono anota permisos, teclado, recarga y brief/admin, sin datos de clientes; guarda la evidencia redactada.",
+  "En PLAN.json de T10 quita la comprobación manual duplicada, marca las [manual] como evidencia manual, sube revision en 1 y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`; luego elige «revise»."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T22:25:36",
+ "seconds": 19.7
+}

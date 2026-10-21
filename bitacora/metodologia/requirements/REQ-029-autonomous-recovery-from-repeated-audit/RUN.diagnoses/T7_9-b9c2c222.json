@@ -1,0 +1,23 @@
+{
+ "request": "T7:9",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7 agotó sus intentos: 4 tests del adaptador M6→M1 fallan en la verificación",
+ "origin": "Los intentos fallaron en `skill/scripts/bt_scheduler_quality/tests` (`test_adapter.M6M1AdapterTests`). En la última verificación, los tests de evidencia vacía y de reintento del outbox dan `AssertionError: 0 != 1`, y el de reinicio devuelve una tupla distinta de la esperada. Además, el dueño pidió un arreglo de TZ en `tests/test_codex_structured.py` y la auditoría abrió el hallazgo F14 (el replay estructural solo tiene tres pruebas primitivas). El error de npm del log no aparece como causa en la evidencia, así que no lo tomo como origen.",
+ "steps": [
+  "Ejecuta `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests` y lee el traceback completo de los cuatro tests de `M6M1AdapterTests` antes de editar; el resumen no muestra la línea que falla.",
+  "Corrige el adaptador M6→M1 para que la evidencia vacía nunca se envíe como veredicto, el reintento del outbox reutilice el mismo verdict id, el reinicio reproduzca el veredicto persistido sin repetir el check y una respuesta M1 obsoleta marque el resultado guardado y detenga la entrega.",
+  "Aplica el arreglo de TZ indicado por el dueño en `tests/test_codex_structured.py` (fijar TZ y `time.tzset()`, parchear `bt_runsettle.time.time`, mantener 1792562880) y verifica con `TZ=UTC`, `TZ=America/Bogota` y `TZ=Asia/Tokyo`.",
+  "Cierra F14 con pruebas del replay estructural que pasen por el entry point real, y reejecuta los siete comandos de verificación de T7."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix the four failing M6M1AdapterTests in skill/scripts/bt_scheduler_quality/tests/test_adapter.py first, reading the full traceback of each before editing: empty evidence must never be submitted as an M1 verdict; an outbox retry after M1 applied but ack lost must reuse the same verdict_id; a restart must replay the persisted verdict without rerunning the check; a stale M1 reply must mark the stored result and stop delivery. Do not repeat an approach that already failed (attempt #4 att-0022). Then apply the owner's TZ fix in tests/test_codex_structured.py without touching the parser, then close audit finding F14 with replay tests that run through the real entry point, and rerun all verification commands.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T02:53:36",
+ "seconds": 19.1
+}

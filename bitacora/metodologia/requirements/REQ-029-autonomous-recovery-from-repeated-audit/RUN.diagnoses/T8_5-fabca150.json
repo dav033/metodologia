@@ -1,0 +1,23 @@
+{
+ "request": "T8:5",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T8 de REQ-029 sigue con 11 hallazgos bloqueantes abiertos (F5–F16)",
+ "origin": "La auditoría independiente de T8 encontró 11 hallazgos de severidad alta sin cerrar (F5, F6, F7, F8, F10, F11, F12, F13, F14, F15, F16). El script de aceptación falla con «audit gate: 11 open blocking finding(s)», así que el fallo está en el código integrado que auditó T8, no en el entorno del verificador. Los hallazgos señalan tareas de implementación concretas, y T3b ya agotó sus devoluciones (rework_limit), por eso el sistema pide tu decisión. Reintentar sin tocar nada devolverá los mismos hallazgos: ya van 5 intentos iguales.",
+ "steps": [
+  "Abre `skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json` y copia cada hallazgo abierto (F5 a F16) con su evidencia.",
+  "Escribe cada hallazgo en `RUN.notes/<tarea>.audit.md` de la tarea responsable que indica el ledger (T2, T3b, T4, T4a, T5, T6a, T7, T13, T17).",
+  "Pulsa «Devolver T2, T3b, T4, T4a, T5, T6a, T7, T13, T17 para que los arreglen», o por terminal: `bitacora.py --project metodologia scheduler-op REQ-029 rework T2,T3b,T4,T4a,T5,T6a,T7,T13,T17 --only --reason \"hallazgos F5–F16\"`.",
+  "Cuando esas tareas terminen, deja que T8 vuelva a auditar; si T3b vuelve a quedar bloqueada por rework_limit, decide ahí si la reabres o paras."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T04:21:33",
+ "seconds": 14.0
+}

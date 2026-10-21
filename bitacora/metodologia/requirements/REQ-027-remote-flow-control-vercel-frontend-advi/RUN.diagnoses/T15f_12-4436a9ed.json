@@ -1,0 +1,23 @@
+{
+ "request": "T15f:12",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15f no arranca: conflicto de código entre T8a y T15e en test_remote_commands.py",
+ "origin": "El arranque de T15f fue rechazado con `INTEGRATION_CONFLICT: T8a vs T15e for T15f: skill/scripts/tests/test_remote_commands.py`, y el intento #7 también marca remote/gateway/app.py y server.py. T15e se construyó sobre un resultado anterior de T8a que después se rehízo, así que sus cambios chocan con la base actual y no se combinan. `identity_unverified` no es la causa: T15f nunca llegó a ejecutarse, por eso el sistema no pudo comprobar qué proceso produjo el resultado.",
+ "steps": [
+  "Pulsa «Rehacer T15e sobre el trabajo actual»; el sistema rehace solo T15e sobre el trabajo actual de T8a.",
+  "Cuando T15e se acepte, T15f arrancará sola sobre la base combinada; no hace falta tocar nada más.",
+  "Por terminal, si prefieres: `bitacora.py --project metodologia scheduler-op REQ-027 rework T15e --only --reason \"conflicto con T8a\"`.",
+  "Al arrancar T15f, corrige el hallazgo F26 de la auditoría (recuperar desde el teléfono tareas rechazadas) con una prueba que use el punto de entrada real."
+ ],
+ "option": "rework_conflict",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T23:42:29",
+ "seconds": 14.9
+}

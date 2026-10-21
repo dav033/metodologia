@@ -1,0 +1,22 @@
+{
+ "request": "T18:18",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de seguridad sigue encontrando 3 hallazgos altos y T18 quedó bloqueada",
+ "origin": "T18 (auditoría independiente) sigue reportando hallazgos bloqueantes altos en el árbol actual: F41, F42 y F55, con el error \"audit gate: 3 open blocking finding(s)\". Los hallazgos cambian de una ronda a otra (antes F2, F26, F28, F32; F1 y F2 ya estaban corregidos), así que el código avanza, pero aún no está limpio. El bloqueo viene de T6, que ya fue devuelta dos veces (límite gates.max_reworks), por eso el sistema no la reabre solo. Reintentar sin tocar nada daría los mismos hallazgos.",
+ "steps": [
+  "Abre el informe de la última auditoría de T18 y anota F41, F42 y F55 con su evidencia en RUN.notes/<tarea>.audit.md de cada tarea que señalan. El contenido de esos hallazgos no está en la evidencia, así que léelo en el informe antes de devolver las tareas.",
+  "Pulsa «Devolver T6, T8a, T17, T24, T7, T8, T9, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen». Por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T6,T8a,T17,T24,T7,T8,T9,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F41 (high), F42 (high), F55 (high)\"`.",
+  "Cuando las tareas terminen, comprueba que T18 ya no lista F41, F42 ni F55 como abiertos. Si la auditoría vuelve a fallar con hallazgos nuevos, repite el mismo paso con esos."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T05:32:08",
+ "seconds": 13.6
+}

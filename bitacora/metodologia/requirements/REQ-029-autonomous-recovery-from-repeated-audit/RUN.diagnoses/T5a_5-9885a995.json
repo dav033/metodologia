@@ -1,0 +1,23 @@
+{
+ "request": "T5a:5",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El test de staging falla en la verificación porque la copia limpia no tiene .git",
+ "origin": "El test `test_current_repository_snapshot_passes_isolated_startup_and_import_smoke` (test_recovery_rollout.py:118) llama a `prepare_recovery_runtime`, que ejecuta `git archive` sobre el repositorio. El verificador ejecuta el comando en una copia limpia SIN .git, así que `git archive` falla (`archive_failed: SNAPSHOT_INVALID: git archive failed (OSError)`, bt_recovery_rollout.py:163). Es el mismo error en los dos últimos intentos porque el código no cambió: el test depende de un repositorio que el verificador elimina por diseño.",
+ "steps": [
+  "Abre skill/scripts/tests/test_recovery_rollout.py, clase Staging, y reemplaza el snapshot del repositorio actual por un repositorio git temporal creado dentro de un directorio temporal (git init, commit de ficheros de prueba).",
+  "Si git no está disponible o no hay repositorio, marca el test con skipTest y un motivo explícito; no lo dejes fallar con OSError.",
+  "No cambies el comando de verificación ni los criterios: esto es código del test, no una revisión del plan.",
+  "Vuelve a ejecutar: cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_rollout.py"
+ ],
+ "option": "retry_with_note",
+ "note": "The verifier runs in a clean copy WITHOUT .git (and possibly without the git binary). Do not rely on the working repository for test_current_repository_snapshot_passes_isolated_startup_and_import_smoke (tests/test_recovery_rollout.py:118). Build a self-contained fixture: create a temporary directory, run git init and commit the fixture files there, then call prepare_recovery_runtime on that snapshot. If git is unavailable, skip the test with an explicit reason instead of erroring. Do not change the verification command or the acceptance criteria. Also rebase your work on the newest T8 results first, as the audit requires.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T05:25:55",
+ "seconds": 14.3
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T7:8",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7: 4 pruebas del adaptador M6-M1 fallan igual en cada intento de verificación",
+ "origin": "El verificador independiente ejecuta bt_scheduler_quality/tests en un sandbox sin .git y sin variables de entorno. Fallan test_adapter.M6M1AdapterTests (empty_evidence, outbox_retries, restart_replays y stale_m1_reply) con 'AssertionError: 0 != 1' y tuplas distintas, el mismo fallo en los intentos. El motivo same_cause_limit solo indica que el límite de repeticiones se activó; la causa concreta no aparece en la evidencia, así que probablemente depende del entorno de la copia limpia o de estado fuera de los archivos. El fallo de zona horaria en test_codex_structured y el hallazgo F14 son trabajo pendiente, pero no bloquean esta verificación.",
+ "steps": [
+  "Reproduce el fallo en condiciones de la verificación: copia sin .git y entorno vacío, con `cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s bt_scheduler_quality/tests`.",
+  "Corrige las 4 pruebas de M6M1AdapterTests en bt_scheduler_quality/tests/test_adapter.py buscando dependencias de estado fuera de los archivos (git, variables de entorno, reloj o TZ) y no cambies la lógica del adaptador sin prueba que lo justifique.",
+  "Aplica la corrección de zona horaria pedida por el dueño en tests/test_codex_structured.py y verifícala con TZ=UTC, TZ=America/Bogota y TZ=Asia/Tokyo.",
+  "Añade pruebas del replay estructural (F14) que pasen por el entrypoint real, luego vuelve a ejecutar las cuatro suites de regresión y registra los códigos de salida."
+ ],
+ "option": "retry_with_note",
+ "note": "Same 4 test_adapter.M6M1AdapterTests failures repeat across attempts in the verifier sandbox (clean copy without .git, empty env). Reproduce first with `cd skill/scripts && env -i PATH=$PATH python3 -m unittest discover -s bt_scheduler_quality/tests`, find the environment or state dependency (git metadata, env vars, clock/TZ, file ordering) instead of editing assertions, and fix it in the code or test fixtures. Then apply the owner's TZ fix in tests/test_codex_structured.py, and add real-entrypoint tests for the structural replay (F14). Rerun all four suites and record exit codes.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T02:02:23",
+ "seconds": 20.3
+}
