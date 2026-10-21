@@ -129,208 +129,60 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-<<<<<<< 7bab8d3fc65eb4681168829156ff0d7510a656a6
-            if route.path in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-||||||| 194da776c0e1544e07a5ba6f7ad2b3a8a215b287
-            if route.path == "/api/remote/v1/challenges":
-<<<<<<< ede87253b5f40c74d13b25da89f0c8ea70ac0e63
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-||||||| c0af0bd65e6b3d72daaee036a0c60fb962d41ec6
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-=======
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                login = service.store.get_session(token) if token else None
-                if login is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
->>>>>>> cb44d05b7dd50284f6561c3aa1724df1536dd260
-=======
-            if route.path == "/api/remote/v1/challenges":
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                login = service.store.get_session(token) if token else None
-                if login is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
->>>>>>> 7f1c20f62aa58583d40c3157b63a1f7f05b22ad3
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._json(400, {"code": "INVALID_COMMAND"})
-                    return
-                if length < 0:
-                    self._json(400, {"code": "INVALID_COMMAND"})
-                    return
-                if length > 256 * 1024:
-                    self._json(413, {"code": "BODY_TOO_LARGE"})
-                    return
-                try:
-<<<<<<< 7bab8d3fc65eb4681168829156ff0d7510a656a6
-                    request = json.loads(self.rfile.read(length) or b"null")
-                except (ValueError, OSError):
-                    self._json(400, {"code": "INVALID_COMMAND"})
-||||||| 194da776c0e1544e07a5ba6f7ad2b3a8a215b287
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body must be valid JSON")
-                    return
-                if (not isinstance(value, dict) or set(value) not in ({"target", "typedReq"}, {"target", "typed_req"})
-                        or not isinstance(value.get("target"), str)
-                        or not isinstance(value.get("typedReq", value.get("typed_req")), str)):
-                    self._problem(400, "INVALID_CHALLENGE", "Target and typedReq are required")
-                    return
-                try:
-                    result = runtime.issue_challenge(value["target"], value.get("typedReq", value.get("typed_req")))
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                self._json(201, result)
+            if route.path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
+                self._json(404, {"error": "not found"})
                 return
-            if route.path == "/api/remote/v1/commands":
-<<<<<<< ede87253b5f40c74d13b25da89f0c8ea70ac0e63
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-||||||| c0af0bd65e6b3d72daaee036a0c60fb962d41ec6
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-=======
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                login = service.store.get_session(token) if token else None
-                if login is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
->>>>>>> cb44d05b7dd50284f6561c3aa1724df1536dd260
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._problem(400, "INVALID_COMMAND", "Content-Length is invalid")
-                    return
-                if length <= 0:
-                    self._problem(400, "INVALID_COMMAND", "Command body is required")
-                    return
-                if length > 65536:
-                    self._problem(413, "BODY_TOO_LARGE", "Command body is too large")
-                    return
-                try:
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_COMMAND", "Command body must be valid JSON")
-                    return
-                try:
-                    status, result = runtime.submit_command(value)
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc), idempotency_key=exc.idempotency_key)
-=======
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body must be valid JSON")
-                    return
-                if (not isinstance(value, dict) or set(value) not in ({"target", "typedReq"}, {"target", "typed_req"})
-                        or not isinstance(value.get("target"), str)
-                        or not isinstance(value.get("typedReq", value.get("typed_req")), str)):
-                    self._problem(400, "INVALID_CHALLENGE", "Target and typedReq are required")
-                    return
-                try:
-                    result = runtime.issue_challenge(value["target"], value.get("typedReq", value.get("typed_req")))
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                self._json(201, result)
+
+            token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+            login = service.store.get_session(token) if token else None
+            if login is None:
+                self._json(401, {"error": "unauthorized"})
                 return
-            if route.path == "/api/remote/v1/commands":
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                login = service.store.get_session(token) if token else None
-                if login is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._problem(400, "INVALID_COMMAND", "Content-Length is invalid")
-                    return
-                if length <= 0:
-                    self._problem(400, "INVALID_COMMAND", "Command body is required")
-                    return
-                if length > 65536:
-                    self._problem(413, "BODY_TOO_LARGE", "Command body is too large")
-                    return
-                try:
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_COMMAND", "Command body must be valid JSON")
-                    return
-                try:
-                    status, result = runtime.submit_command(value)
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc), idempotency_key=exc.idempotency_key)
->>>>>>> 7f1c20f62aa58583d40c3157b63a1f7f05b22ad3
-                    return
-                if route.path.endswith("/challenges"):
-                    result = runtime.issue_challenge(request)
-                else:
-                    result = runtime.submit_command(request)
-                status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
-                          "CONFIRMATION_REQUIRED": 409, "STALE_PRECONDITION": 409,
-                          "IDEMPOTENCY_CONFLICT": 409, "CONFIRMATION_EXPIRED": 409,
-                          "COMMAND_NOT_APPLICABLE": 409, "INVALID_COMMAND": 400,
-                          "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
-                self._json(status, result)
+            if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                self._rate_limited()
                 return
-            self._json(404, {"error": "not found"})
+            if runtime is None:
+                self._json(404, {"error": "not found"})
+                return
+
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                self._json(400, {"code": "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"})
+                return
+            if length <= 0:
+                self._json(400, {"code": "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"})
+                return
+            if length > 256 * 1024:
+                self._json(413, {"code": "BODY_TOO_LARGE"})
+                return
+            try:
+                request = json.loads(self.rfile.read(length).decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError):
+                self._json(400, {"code": "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"})
+                return
+            if not isinstance(request, dict):
+                code = "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"
+                self._json(400, {"code": code})
+                return
+
+            if route.path.endswith("/challenges"):
+                typed_req = request.get("typedReq", request.get("typed_req"))
+                if (set(request) not in ({"target", "typedReq"}, {"target", "typed_req"})
+                        or not isinstance(request.get("target"), str) or not isinstance(typed_req, str)):
+                    self._json(400, {"code": "INVALID_CHALLENGE"})
+                    return
+                result = runtime.issue_challenge({"target": request["target"], "typedReq": typed_req})
+            else:
+                result = runtime.submit_command(request)
+
+            status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
+                      "CONFIRMATION_REQUIRED": 409, "STALE_PRECONDITION": 409,
+                      "IDEMPOTENCY_CONFLICT": 409, "CONFIRMATION_EXPIRED": 409,
+                      "COMMAND_NOT_APPLICABLE": 409, "INVALID_COMMAND": 400,
+                      "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
+            self._json(status, result)
+            return
 
         def _valid_state_changing_request(self) -> bool:
             request_marker = self.headers.get("X-Flow-Request", "").strip()
