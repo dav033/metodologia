@@ -1000,3 +1000,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + findings stop returning for tasks that were fixed but never integrated into the audited tree. − a rework of an upstream task rebuilds more tasks (the cost of correctness); the rebuilt ones can resolve conflicts badly (REQ-029 T2's mid-function splice came from that). P-134 is now the main structural debt of the Scheduler.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18, REQ-029 T8
 
+## D-112 — The give-way ceiling counts only the integration gate's own give-ways
+
+- **Date:** 2026-10-21 · **Status:** Accepted · **Refines:** D-104
+- **Context:** REQ-027 T17 was rejected 18 times by «integration gate: T17 vs T18.3 for T18: remote/gateway/server.py» and blocked. D-104 lets the gate accept the redone task and send the accepted one it clashes with back, up to `gates.integration_rework_limit` (6). The limit was checked against the task's total `reworks`, which also counts audit rounds and operator reworks: T18.3 (a remediation task reworked every audit round) had six, so the give-way was refused and T17 was rejected on a clash only T18.3 could resolve.
+- **Decision:** the ceiling counts only the gate's own `rework_requested` entries naming the task (`QualityVerificationPort._give_ways_of`, from the audit log); audit and operator reworks no longer count. The tests set six ordinary reworks (allowed) and two prior give-ways with ceiling two (refused). T17 retried on it (att-0329).
+- **Consequences:** + the ceiling measures what it was made for, a ping-pong between two tasks. − it reads the audit log on each clash (small).
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T17
+
