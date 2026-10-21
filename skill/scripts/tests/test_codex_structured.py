@@ -1,6 +1,9 @@
 """Codex runs under the scheduler in `--json` mode: the events carry tool activity and the token split."""
+import os
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import bt_driver
 import bt_runprompt
@@ -63,8 +66,21 @@ class CodexEvents(unittest.TestCase):
     def test_a_failed_turn_is_a_failure_and_a_usage_limit_is_a_limit_with_its_reset(self):
         failed = codex(START + '{"type":"turn.failed","error":{"message":"model unavailable"}}\n', 1)
         self.assertEqual((failed.status, failed.text), ("failed", "model unavailable"))
-        limited = codex(START + '{"type":"error","message":"%s"}\n{"type":"turn.failed","error":{"message":"%s"}}\n'
-                        % (LIMIT, LIMIT), 1)
+        # «Oct 21st, 2026 1:08 AM» is local time and only counts while it is in the future: pin both the zone and the
+        # clock, or the verifier (TZ=UTC) and the days after the date see no reset at all
+        before_zone = os.environ.get("TZ")
+        os.environ["TZ"] = "America/Bogota"
+        time.tzset()
+        try:
+            with patch.object(bt_runsettle.time, "time", return_value=1792540000.0):      # 2026-10-20 23:46 UTC
+                limited = codex(START + '{"type":"error","message":"%s"}\n{"type":"turn.failed","error":{"message":"%s"}}\n'
+                                % (LIMIT, LIMIT), 1)
+        finally:
+            if before_zone is None:
+                os.environ.pop("TZ", None)
+            else:
+                os.environ["TZ"] = before_zone
+            time.tzset()
         self.assertEqual(limited.status, "limit")
         self.assertEqual(limited.reset_epoch, 1792562880)
 
