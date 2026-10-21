@@ -1,5 +1,4 @@
 from __future__ import annotations
-<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
 
 import http.client
 import json
@@ -7,54 +6,13 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-import unittest
-=======
-import unittest
-import http.client
-import json
-import tempfile
-import threading
-from pathlib import Path
 from unittest.mock import Mock
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
-
-<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
-import http.client
-import json
-import tempfile
-import threading
-import unittest
-from pathlib import Path
-=======
-import unittest
-import http.client
-import json
-import tempfile
-import threading
-from pathlib import Path
-from unittest.mock import Mock
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
 
 from app import GatewayRuntime
 from auth import SESSION_COOKIE, OAuthConfig, SessionStore
 from config import GatewayConfig
 from server import create_server
-<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
-from stream import StreamHub
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-from stream import StreamHub
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-from stream import StreamHub, format_sse, parse_last_event_id
-=======
-from auth import OAuthConfig, SessionStore
-from server import create_server
-from stream import StreamHub, format_sse, parse_last_event_id
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
-=======
 from stream import StreamHub, format_sse
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
 from upstream import UpstreamError
 
 
@@ -251,49 +209,6 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(got[0][1], "resync")
         self.assertEqual(got[0][2]["snapshot"], {"runs": ["x"]})
 
-<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-    def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
-        with tempfile.TemporaryDirectory() as directory:
-            database = str(Path(directory) / "gateway.sqlite")
-            secret = "test-session-secret-with-at-least-32-characters"
-            session = SessionStore(database, secret).create_session("dav033")
-            config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
-            runtime = Mock()
-            runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            self.addCleanup(server.server_close)
-            self.addCleanup(server.shutdown)
-            self.addCleanup(thread.join, 2)
-
-            paths = (
-                "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
-                "/api/remote/v1/quotas",
-                "/api/remote/v1/commands?after=&limit=10",
-                "/api/remote/v1/history?after=&limit=10",
-                "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
-            )
-            for path in paths:
-                with self.subTest(path=path):
-                    connection = http.client.HTTPConnection(*server.server_address, timeout=2)
-                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
-                    response = connection.getresponse()
-                    body = json.loads(response.read())
-                    connection.close()
-                    self.assertEqual(response.status, 200)
-                    self.assertEqual(body["path"], path)
-
-            runtime.read_remote.assert_any_call("/api/remote/v1/quotas")
-            unauthenticated = http.client.HTTPConnection(*server.server_address, timeout=2)
-            unauthenticated.request("GET", "/api/remote/v1/quotas")
-            response = unauthenticated.getresponse()
-            response.read()
-            unauthenticated.close()
-            self.assertEqual(response.status, 401)
-
-=======
     def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
         with tempfile.TemporaryDirectory() as directory:
             database = str(Path(directory) / "gateway.sqlite")
@@ -333,8 +248,6 @@ class HttpTests(unittest.TestCase):
             response.read()
             unauthenticated.close()
             self.assertEqual(response.status, 401)
-
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
 
 if __name__ == "__main__":
     unittest.main()
