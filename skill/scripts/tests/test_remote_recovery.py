@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -25,6 +26,9 @@ from bt_scheduler_decision import TaskFacts
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bt_scheduler_core" / "tests"))
 from support import Harness, indep
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tests" / "migration"))
+from installed_wheel import get as installed_wheel
 
 
 def candidate(route_id="route-a", provider="claude", model="sonnet", profile="claude-work",
@@ -236,6 +240,99 @@ class RemoteRecoveryTests(unittest.TestCase):
     def test_pin_parameters_are_retry_only(self):
         request = {**self.request(), "command": "resume", "params": {"route": "claude"}}
         self.assertIn("solo se admiten en retry", commands.validate(request))
+
+    def test_installed_distribution_includes_and_loads_retry_edit_dispatch_modules(self):
+        installed = installed_wheel()
+        script = (
+            "import bt_remote_commands as commands, bt_remote_edit, bt_route_pins\n"
+            "handlers = commands.dispatch_handlers()\n"
+            "assert {'retry', 'edit-brief'} <= handlers.keys()\n"
+            "for name in ('retry', 'edit-brief'):\n"
+            " try: handlers[name]('invalid-target', {})\n"
+            " except ValueError: pass\n"
+            " else: raise AssertionError(name + ' dispatch accepted an invalid target')"
+        )
+        result = subprocess.run([str(installed.python), "-I", "-c", script], capture_output=True,
+                                text=True, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_http_owner_edit_freezes_approved_revision_and_rebases_real_run(self):
+        from bt_planner import contract, revisions, sync
+        from bt_planner.tests.support import PLAN_MD, classify
+        import bt_core
+
+        rdir = self.root / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "SPEC.md").write_text("# Spec\n## Requirements\n- R1. Demo\n", encoding="utf-8")
+        (rdir / "PLAN.md").write_text(PLAN_MD.replace("REQ-042", "REQ-001").format(status="approved"),
+                                     encoding="utf-8")
+        plan = classify(sync.skeleton(rdir, plan_id="REQ-001"))
+        (rdir / "PLAN.json").write_text(contract.dumps(plan), encoding="utf-8")
+        sync.approve_freeze(rdir, "REQ-001", ("approved",))
+        with patch.object(bt_core, "ROOT", self.root):
+            run = scheduler.open_scheduler(rdir)
+            run.step()
+            scheduler.write_projection(rdir, run)
+            import bt_scheduler_run
+            bt_scheduler_run._runtime_binding(rdir, resume=False)
+
+        class Handler:
+            def __init__(self, body):
+                raw = json.dumps(body).encode()
+                self.path = f"{api.PREFIX}/commands"
+                self.headers = {"Authorization": "Bearer test-key", "Content-Length": str(len(raw))}
+                self.rfile = io.BytesIO(raw)
+                self.sent = None
+
+            def send(self, payload, status=200, content_type=""):
+                self.sent = (status, json.loads(payload))
+
+        request_ledger = commands.Ledger(self.root / ".state" / "remote" / "commands.db")
+        challenge = request_ledger.issue_challenge("demo/REQ-001", "REQ-001")
+        current_revision = 1
+        body = {"idempotency_key": "owner-edit-brief-0001", "command": "edit-brief",
+                "target": "demo/REQ-001", "origin": "telegram",
+                "params": {"task": "T1", "field": "brief", "value": "Updated owner-approved brief"},
+                "precondition": {"state": "running", "revision": 1},
+                "confirmation": {"challengeId": challenge["challengeId"], "typedReq": "REQ-001"}}
+        handler = Handler(body)
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), \
+                patch.object(api, "_target_state",
+                             side_effect=lambda *_args: {"state": "running", "revision": current_revision}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"), \
+                patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(response["outcome"]["revision"], 2, response)
+        self.assertEqual(revisions.latest(rdir)["source"], "approval")
+        self.assertEqual(revisions.load_revision(rdir, 2)["tasks"][0]["objective"],
+                         "Updated owner-approved brief")
+        current_revision = 2
+        criteria_challenge = request_ledger.issue_challenge("demo/REQ-001", "REQ-001")
+        criteria_body = {"idempotency_key": "owner-edit-criteria-0002", "command": "edit-brief",
+                         "target": "demo/REQ-001", "origin": "telegram",
+                         "params": {"task": "T1", "field": "criteria", "value": ["Verify revised acceptance"]},
+                         "precondition": {"state": "running", "revision": 2},
+                         "confirmation": {"challengeId": criteria_challenge["challengeId"],
+                                          "typedReq": "REQ-001"}}
+        criteria_handler = Handler(criteria_body)
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), \
+                patch.object(api, "_target_state", return_value={"state": "running", "revision": 2}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"), \
+                patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            api.route_post(criteria_handler)
+        criteria_status, criteria_response = criteria_handler.sent
+        self.assertEqual((criteria_status, criteria_response["status"], criteria_response["outcome"]["revision"]),
+                         (200, "OK", 3), criteria_response)
+        self.assertEqual(revisions.load_revision(rdir, 3)["tasks"][0]["acceptance_criteria"],
+                         ["Verify revised acceptance"])
+        self.assertEqual(ops.bound_plan(rdir).revision, 3)
 
 
 if __name__ == "__main__":
