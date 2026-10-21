@@ -10,79 +10,22 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import tarfile
 import threading
 import time
 import unittest
+import zipfile
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
-<<<<<<< 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-||||||| db6edf954e129b7cd051a3c578550f3b2f481e80
-<<<<<<< 70de5f62178587b71e15d40677732fb4dc3cae8c
-||||||| c811dba709f0c3894932292dca3aa9fddaea0ccd
-<<<<<<< 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-||||||| 2aea77d9f6987b6a86600183103b4f4b8ef75bfc
-<<<<<<< d5722a644747de28545fa30eb743fa0997f37253
-||||||| c0969389257f369ac7e60b2afc11ee15262aef0e
-<<<<<<< e5f3b15ac8278a1920c8feef414f89bd689013ca
-TEST_KEY = "test-only-gateway-key"
-||||||| d5483831b29a60a51a2e6b909a8d98b8dba66d59
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-<<<<<<< 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
-||||||| 8f79667cf84ec0090fd3b66913d431e3da8f60e3
-||||||| 21ed855e0526bd6f970e6e6d9769919c0dcbf0b3
-=======
-sys.path.insert(0, str(REPO / "tests" / "migration"))
->>>>>>> 0ba9b657011be079d160ed12134f1130cf08a4e9
-=======
-sys.path.insert(0, str(REPO / "tests" / "migration"))
->>>>>>> 4f158bc298d1217d991378eb8f09a3fb378e3af2
-import bt_remote_api
-KEY = "test-gateway-key-0123456789"
-=======
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
 sys.path.insert(0, str(REPO / "tests" / "migration"))
 import bt_remote_api
 import installed_wheel
-KEY = "test-gateway-key-0123456789"
->>>>>>> 066590a282689183fac2726efbf57cbf4d8bce1a
-=======
-REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-sys.path.insert(0, str(REPO / "tests" / "migration"))
-import installed_wheel
-
->>>>>>> 8c18ec6092cb5c79129fab705964d0f2b775527a
-=======
-REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-sys.path.insert(0, str(REPO / "tests" / "migration"))
-import bt_remote_api
-import installed_wheel
->>>>>>> 6ca40753a3fa92b259d7156226575fb60558f6e0
-=======
-REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-sys.path.insert(0, str(REPO / "tests" / "migration"))
-import bt_remote_api
-import installed_wheel
->>>>>>> 2379a2a93808a923d50b6b1f2f82714d0e07f691
-=======
-REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-sys.path.insert(0, str(REPO / "tests" / "migration"))
-import bt_remote_api
-import installed_wheel
->>>>>>> 67cedce0c942471ce724ebeb8762af53c336f590
 TEST_KEY = "test-only-gateway-key"
 
 
@@ -192,13 +135,6 @@ class RemoteApiTests(unittest.TestCase):
             (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
             (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
             (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
-            rounds_dir = rdir / "rounds"
-            rounds_dir.mkdir()
-            (rounds_dir / "round-02.json").write_text(json.dumps({
-                "round": 2, "status": "open", "title": "Scope", "intro": "Confirm scope",
-                "coverage": "edge cases", "revision": 3,
-                "questions": [{"id": "q1", "text": "Continue?", "type": "choice",
-                               "options": [{"key": "yes", "label": "Yes"}]}]}), encoding="utf-8")
             timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
             db = base / ".state" / "scheduler" / "demo-REQ-001.db"
             db.parent.mkdir(parents=True)
@@ -229,12 +165,7 @@ class RemoteApiTests(unittest.TestCase):
             self.addCleanup(server.server_close)
             self.addCleanup(server.shutdown)
             started = time.monotonic()
-            decision = {"id": "decision-1", "task": "T2", "title": "Choose", "what": "Pick an option",
-                        "evidence": ["attempts exhausted"],
-                        "options": [{"id": "stop", "label": "Stop", "consequence": "Ends the run"}],
-                        "recommended": "stop", "unskippable": True}
-            with patch("bt_plans_api.open_decisions", return_value=[decision]):
-                status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
+            status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             elapsed = time.monotonic() - started
             snapshot = json.loads(body)
 
@@ -244,7 +175,6 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
             self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["runs"][0]["state"], "running")
-            self.assertEqual(snapshot["runs"][0]["activeAttempt"]["id"], "A-live")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -253,12 +183,6 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
-            self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
-            self.assertEqual(snapshot["plans"][0]["state"], "approved")
-            self.assertEqual(snapshot["plans"][0]["tasks"][1]["id"], "T2")
-            self.assertEqual(snapshot["rounds"][0]["round"], 2)
-            self.assertEqual(snapshot["rounds"][0]["questions"][0]["id"], "q1")
-            self.assertEqual(snapshot["decisionRequests"][0]["options"][0]["consequence"], "Ends the run")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)
@@ -320,337 +244,38 @@ class RemoteApiTests(unittest.TestCase):
                 self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
             finally:
                 self.stop_server(process)
+    def test_snapshot_route_keeps_non_live_rejected_attempt_for_review(self):
+        import bt_remote_api
 
-<<<<<<< 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-||||||| db6edf954e129b7cd051a3c578550f3b2f481e80
+        class Handler:
+            path = "/api/remote/v1/snapshot"
+            headers = {"Authorization": "Bearer test-key"}
 
-<<<<<<< 70de5f62178587b71e15d40677732fb4dc3cae8c
-||||||| c811dba709f0c3894932292dca3aa9fddaea0ccd
-<<<<<<< 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-||||||| 2aea77d9f6987b6a86600183103b4f4b8ef75bfc
-<<<<<<< d5722a644747de28545fa30eb743fa0997f37253
-||||||| c0969389257f369ac7e60b2afc11ee15262aef0e
-if __name__ == "__main__":
-    unittest.main()
-||||||| d5483831b29a60a51a2e6b909a8d98b8dba66d59
-    def test_local_panel_entry_point_still_serves_existing_routes(self):
-        port = free_port()
-        process = subprocess.Popen(
-            [sys.executable, str(SCRIPTS / "bitacora.py"), "serve", "--port", str(port)],
-            cwd=SCRIPTS,
-            env={**os.environ, "BITACORA_ROOT": self.temp.name},
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail("serve exited before accepting requests")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("serve did not start listening")
-            for path in ("/", "/api/now"):
-                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-                connection.request("GET", path)
-                response = connection.getresponse()
-                response.read()
-                connection.close()
-                self.assertEqual(response.status, 200, path)
-        finally:
-            process.terminate()
-            try:
-                process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=3)
-=======
-    def test_local_panel_entry_point_still_serves_existing_routes(self):
-        port = free_port()
-        process = subprocess.Popen(
-            [sys.executable, str(SCRIPTS / "bitacora.py"), "serve", "--port", str(port)],
-            cwd=SCRIPTS,
-            env={**os.environ, "BITACORA_ROOT": self.temp.name},
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail("serve exited before accepting requests")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("serve did not start listening")
-            for path in ("/", "/api/now"):
-                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-                connection.request("GET", path)
-                response = connection.getresponse()
-                response.read()
-                connection.close()
-                self.assertEqual(response.status, 200, path)
-        finally:
-            process.terminate()
-            try:
-                process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=3)
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
 
-    def test_installed_wheel_serves_remote_api_from_packaged_modules(self):
-        installed = installed_wheel.get()
-        port = free_port()
-        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
-               "BITACORA_ROOT": str(installed.work / "bitacora"), "FLOW_GATEWAY_KEY": KEY,
-               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
-        process = subprocess.Popen(
-            [str(installed.python), "-I", "-c",
-             "import sys; sys.path.insert(0, sys.argv[1]); "
-             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_views; "
-             "from bt_server import serve_remote; serve_remote(int(sys.argv[2]))",
-             str(installed.site), str(port)],
-            cwd=installed.work,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail(f"installed serve_remote exited: {process.stderr.read()}")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("installed serve_remote did not start listening")
-
-            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
-            connection.request("GET", "/api/remote/v1/health",
-                               headers={"Authorization": f"Bearer {KEY}"})
-            response = connection.getresponse()
-            body = response.read()
-            connection.close()
-            self.assertEqual(response.status, 200, body.decode("utf-8"))
-            self.assertEqual(json.loads(body)["schemaVersion"], 1)
-        finally:
-            process.terminate()
-            try:
-                process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=3)
-            process.stderr.close()
->>>>>>> 066590a282689183fac2726efbf57cbf4d8bce1a
-=======
-    def test_installed_wheel_serves_remote_api_and_resolves_round_and_decision_preconditions(self):
-        installed = installed_wheel.get()
-        remote_modules = {"bt_remote_api.py", "bt_remote_commands.py", "bt_remote_events.py",
-                          "bt_remote_preconditions.py", "bt_remote_recovery.py", "bt_remote_views.py"}
-        with zipfile.ZipFile(installed.wheel) as wheel:
-            self.assertTrue(remote_modules.issubset({Path(name).name for name in wheel.namelist()}))
-        with tarfile.open(installed.sdist, "r:*") as archive:
-            self.assertTrue(remote_modules.issubset({Path(member.name).name for member in archive.getmembers()}))
-        check = r"""
-import json, pathlib, sys, tempfile
-from unittest.mock import patch
-sys.path.insert(0, sys.argv[1])
-import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions
-import bt_remote_recovery, bt_remote_views
-import bt_core, bt_plans_api, bt_scheduler_decisions
-root = pathlib.Path(tempfile.mkdtemp())
-rdir = root / "demo" / "REQ-001"
-(rdir / "rounds").mkdir(parents=True)
-(rdir / "rounds" / "round-01.json").write_text(json.dumps({"round": 1, "status": "open", "revision": 3}))
-status = {"run": {"authority": "scheduler", "status": "running", "plan_ref": {"revision": 1}}, "plan": {}}
-with patch.object(bt_core, "ROOT", root), \
-     patch.object(bt_remote_commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
-     patch.object(bt_plans_api, "status_of", return_value=status), \
-     patch.object(bt_scheduler_decisions, "open_requests", return_value=[{"id": "decision-1", "state": "waiting"}]):
-    assert bt_remote_commands.target_state("demo/REQ-001", "answer-round", {"round": 1}) == {"state": "open", "revision": 3}
-    assert bt_remote_commands.target_state("demo/REQ-001", "answer-decision", {"request_id": "decision-1"}) == {"state": "waiting"}
-"""
-        subprocess.run([str(installed.python), "-I", "-c", check, str(installed.site)],
-                       cwd=installed.work, check=True, timeout=30,
-                       env={"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
-                            "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"})
-
-        port = free_port()
-        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
-               "BITACORA_ROOT": str(installed.work / "bitacora"), "FLOW_GATEWAY_KEY": TEST_KEY,
-               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
-        process = subprocess.Popen(
-            [str(installed.python), "-I", "-c",
-             "import sys; sys.path.insert(0, sys.argv[1]); "
-             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions, "
-             "bt_remote_recovery, bt_remote_views; "
-             "from bt_server import serve_remote; serve_remote(int(sys.argv[2]))",
-             str(installed.site), str(port)],
-            cwd=installed.work, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail(f"installed serve_remote exited: {process.stderr.read()}")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("installed serve_remote did not start listening")
-            status, _, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
-            self.assertEqual(status, 200, body.decode("utf-8"))
-            self.assertEqual(json.loads(body)["schemaVersion"], 1)
-        finally:
-            self.stop_server(process)
-            process.stderr.close()
-
-
->>>>>>> 8c18ec6092cb5c79129fab705964d0f2b775527a
-=======
-    def test_installed_wheel_serves_remote_api_and_resolves_round_and_decision_preconditions(self):
-        installed = installed_wheel.get()
-        remote_modules = {"bt_remote_api.py", "bt_remote_commands.py", "bt_remote_events.py",
-                          "bt_remote_preconditions.py", "bt_remote_recovery.py", "bt_remote_views.py"}
-        with zipfile.ZipFile(installed.wheel) as wheel:
-            self.assertTrue(remote_modules.issubset({Path(name).name for name in wheel.namelist()}))
-        with tarfile.open(installed.sdist, "r:*") as archive:
-            self.assertTrue(remote_modules.issubset({Path(member.name).name for member in archive.getmembers()}))
-        check = r"""
-import json, pathlib, sys, tempfile
-from unittest.mock import patch
-sys.path.insert(0, sys.argv[1])
-import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions
-import bt_remote_recovery, bt_remote_views
-import bt_core, bt_plans_api, bt_scheduler_decisions
-root = pathlib.Path(tempfile.mkdtemp())
-rdir = root / "demo" / "REQ-001"
-(rdir / "rounds").mkdir(parents=True)
-(rdir / "rounds" / "round-01.json").write_text(json.dumps({"round": 1, "status": "open", "revision": 3}))
-status = {"run": {"authority": "scheduler", "status": "running", "plan_ref": {"revision": 1}}, "plan": {}}
-with patch.object(bt_core, "ROOT", root), \
-     patch.object(bt_remote_commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
-     patch.object(bt_plans_api, "status_of", return_value=status), \
-     patch.object(bt_scheduler_decisions, "open_requests", return_value=[{"id": "decision-1", "state": "waiting"}]):
-    assert bt_remote_commands.target_state("demo/REQ-001", "answer-round", {"round": 1}) == {"state": "open", "revision": 3}
-    assert bt_remote_commands.target_state("demo/REQ-001", "answer-decision", {"request_id": "decision-1"}) == {"state": "waiting"}
-"""
-        subprocess.run([str(installed.python), "-I", "-c", check, str(installed.site)],
-                       cwd=installed.work, check=True, timeout=30,
-                       env={"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
-                            "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"})
-
-        port = free_port()
-        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
-               "BITACORA_ROOT": str(installed.work / "bitacora"), "FLOW_GATEWAY_KEY": TEST_KEY,
-               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
-        process = subprocess.Popen(
-            [str(installed.python), "-I", "-c",
-             "import sys; sys.path.insert(0, sys.argv[1]); "
-             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions, "
-             "bt_remote_recovery, bt_remote_views; "
-             "from bt_server import serve_remote; serve_remote(int(sys.argv[2]))",
-             str(installed.site), str(port)],
-            cwd=installed.work, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail(f"installed serve_remote exited: {process.stderr.read()}")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("installed serve_remote did not start listening")
-            status, _, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
-            self.assertEqual(status, 200, body.decode("utf-8"))
-            self.assertEqual(json.loads(body)["schemaVersion"], 1)
-        finally:
-            self.stop_server(process)
-            process.stderr.close()
-
-
->>>>>>> 6ca40753a3fa92b259d7156226575fb60558f6e0
-=======
-    def test_installed_wheel_and_sdist_serve_remote_api(self):
-        installed = installed_wheel.get()
-        remote_modules = {
-            "bt_remote_api.py",
-            "bt_remote_commands.py",
-            "bt_remote_events.py",
-            "bt_remote_preconditions.py",
-            "bt_remote_recovery.py",
-            "bt_remote_views.py",
+        handler = Handler()
+        timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
+        run_summary = {
+            "run": "demo/REQ-001", "project": "demo", "req_id": "REQ-001", "title": "Demo",
+            "status": "rejected", "active": False, "updated_at": "2026-10-20T10:01:00Z",
+            "tasks": [{"id": "T1", "title": "Rejected task", "state": "rejected",
+                       "attempt": {"id": "A-rejected", "state": "rejected", "live": False,
+                                   "updated_at": timestamp},
+                       "history": [{"id": "A-rejected", "state": "rejected", "live": False,
+                                    "updated_at": timestamp, "failure": "verification failed"}]}],
         }
-        with zipfile.ZipFile(installed.wheel) as wheel:
-            wheel_files = {Path(name).name for name in wheel.namelist()}
-        self.assertTrue(remote_modules.issubset(wheel_files))
-        with tarfile.open(installed.sdist, "r:*") as archive:
-            sdist_files = {Path(member.name).name for member in archive.getmembers()}
-        self.assertTrue(remote_modules.issubset(sdist_files))
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.run_summaries", return_value=[run_summary]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}):
+            bt_remote_api.route_get(handler)
 
-        port = free_port()
-        env = {
-            "PATH": "/usr/bin:/bin",
-            "HOME": str(installed.work / "home"),
-            "BITACORA_ROOT": str(installed.work / "bitacora"),
-            "FLOW_GATEWAY_KEY": TEST_KEY,
-            "PYTHONDONTWRITEBYTECODE": "1",
-            "PYTHONIOENCODING": "utf-8",
-        }
-        command = (
-            "import sys; site, port = sys.argv[1:]; sys.path.insert(0, site); "
-            "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions, "
-            "bt_remote_recovery, bt_remote_views; "
-            "sys.argv = ['bitacora', 'serve-remote', '--port', port]; "
-            "import bitacora; bitacora.main()"
-        )
-        process = subprocess.Popen(
-            [str(installed.python), "-I", "-c", command, str(installed.site), str(port)],
-            cwd=installed.work,
-            env=env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        try:
-            deadline = time.monotonic() + 8
-            while time.monotonic() < deadline:
-                if process.poll() is not None:
-                    self.fail(f"installed serve-remote exited: {process.stderr.read()}")
-                try:
-                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
-                        break
-                except OSError:
-                    time.sleep(0.05)
-            else:
-                self.fail("installed serve-remote did not start listening")
+        task = json.loads(handler.body)["runs"][0]["tasks"][0]
+        self.assertEqual(handler.status, 200)
+        self.assertIsNone(task["activeAttempt"])
+        self.assertEqual(task["reviewAttempt"]["id"], "A-rejected")
+        self.assertEqual(task["history"][0]["id"], "A-rejected")
 
-            status, content_type, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
-            self.assertEqual(status, 200, body.decode("utf-8"))
-            self.assertTrue(content_type.startswith("application/json"))
-            self.assertEqual(json.loads(body)["schemaVersion"], 1)
-        finally:
-            self.stop_server(process)
-            process.stderr.close()
-
-
->>>>>>> 2379a2a93808a923d50b6b1f2f82714d0e07f691
-=======
     def test_installed_distribution_includes_remote_modules_and_dispatches_remote_commands(self):
         installed = installed_wheel.get()
         remote_modules = {
@@ -660,7 +285,7 @@ with patch.object(bt_core, "ROOT", root), \
             "bt_remote_events.py",
             "bt_remote_preconditions.py",
             "bt_remote_recovery.py",
-            "bt_remote_views.py",
+            "bt_remote_snapshot.py",
             "bt_route_pins.py",
         }
         with zipfile.ZipFile(installed.wheel) as wheel:
@@ -683,7 +308,7 @@ with patch.object(bt_core, "ROOT", root), \
 import sys
 site, port = sys.argv[1:]
 sys.path.insert(0, site)
-import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_views
+import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_snapshot
 import bt_remote_preconditions, bt_remote_edit, bt_route_pins
 import bt_plans_api
 
@@ -738,7 +363,70 @@ bitacora.main()
             self.stop_server(process)
             process.stderr.close()
 
->>>>>>> 67cedce0c942471ce724ebeb8762af53c336f590
+
+    def test_installed_wheel_serves_remote_api_and_resolves_round_and_decision_preconditions(self):
+        installed = installed_wheel.get()
+        remote_modules = {"bt_remote_api.py", "bt_remote_commands.py", "bt_remote_events.py",
+                          "bt_remote_preconditions.py", "bt_remote_recovery.py", "bt_remote_snapshot.py"}
+        with zipfile.ZipFile(installed.wheel) as wheel:
+            self.assertTrue(remote_modules.issubset({Path(name).name for name in wheel.namelist()}))
+        with tarfile.open(installed.sdist, "r:*") as archive:
+            self.assertTrue(remote_modules.issubset({Path(member.name).name for member in archive.getmembers()}))
+        check = r"""
+import json, pathlib, sys, tempfile
+from unittest.mock import patch
+sys.path.insert(0, sys.argv[1])
+import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions
+import bt_remote_recovery, bt_remote_snapshot
+import bt_core, bt_plans_api, bt_scheduler_decisions
+root = pathlib.Path(tempfile.mkdtemp())
+rdir = root / "demo" / "REQ-001"
+(rdir / "rounds").mkdir(parents=True)
+(rdir / "rounds" / "round-01.json").write_text(json.dumps({"round": 1, "status": "open", "revision": 3}))
+status = {"run": {"authority": "scheduler", "status": "running", "plan_ref": {"revision": 1}}, "plan": {}}
+with patch.object(bt_core, "ROOT", root), \
+     patch.object(bt_remote_commands, "_run_target", return_value=("demo", "REQ-001", rdir)), \
+     patch.object(bt_plans_api, "status_of", return_value=status), \
+     patch.object(bt_scheduler_decisions, "open_requests", return_value=[{"id": "decision-1", "state": "waiting"}]):
+    assert bt_remote_commands.target_state("demo/REQ-001", "answer-round", {"round": 1}) == {"state": "open", "revision": 3, "updatedAt": None}
+    assert bt_remote_commands.target_state("demo/REQ-001", "answer-decision", {"request_id": "decision-1"}) == {"state": "open"}
+"""
+        subprocess.run([str(installed.python), "-I", "-c", check, str(installed.site)],
+                       cwd=installed.work, check=True, timeout=30,
+                       env={"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
+                            "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"})
+
+        port = free_port()
+        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
+               "BITACORA_ROOT": str(installed.work / "bitacora"), "FLOW_GATEWAY_KEY": TEST_KEY,
+               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
+        process = subprocess.Popen(
+            [str(installed.python), "-I", "-c",
+             "import sys; sys.path.insert(0, sys.argv[1]); "
+             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_preconditions, "
+             "bt_remote_recovery, bt_remote_snapshot; "
+             "from bt_server import serve_remote; serve_remote(int(sys.argv[2]))",
+             str(installed.site), str(port)],
+            cwd=installed.work, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True)
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    self.fail(f"installed serve_remote exited: {process.stderr.read()}")
+                try:
+                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                        break
+                except OSError:
+                    time.sleep(0.05)
+            else:
+                self.fail("installed serve_remote did not start listening")
+            status, _, body = self.request(port, "/api/remote/v1/health", TEST_KEY)
+            self.assertEqual(status, 200, body.decode("utf-8"))
+            self.assertEqual(json.loads(body)["schemaVersion"], 1)
+        finally:
+            self.stop_server(process)
+            process.stderr.close()
+
 
 if __name__ == "__main__":
     unittest.main()

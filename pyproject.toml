@@ -152,53 +152,15 @@ py-modules = [
   "bt_profiles",
   "bt_quality",
   "bt_quota_live",
-<<<<<<< 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-||||||| db6edf954e129b7cd051a3c578550f3b2f481e80
-<<<<<<< 70de5f62178587b71e15d40677732fb4dc3cae8c
-||||||| c811dba709f0c3894932292dca3aa9fddaea0ccd
-<<<<<<< 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-||||||| 2aea77d9f6987b6a86600183103b4f4b8ef75bfc
-<<<<<<< d5722a644747de28545fa30eb743fa0997f37253
-||||||| c0969389257f369ac7e60b2afc11ee15262aef0e
-  "bt_remote_api",
-  "bt_remote_commands",
-  "bt_remote_events",
-  "bt_remote_recovery",
-  "bt_remote_views",
-=======
-  "bt_remote_api",
-  "bt_remote_commands",
-  "bt_remote_events",
-  "bt_remote_preconditions",
-  "bt_remote_recovery",
-  "bt_remote_views",
->>>>>>> 8c18ec6092cb5c79129fab705964d0f2b775527a
-=======
-  "bt_remote_api",
-  "bt_remote_commands",
-  "bt_remote_events",
-  "bt_remote_preconditions",
-  "bt_remote_recovery",
-  "bt_remote_views",
->>>>>>> 6ca40753a3fa92b259d7156226575fb60558f6e0
-=======
-  "bt_remote_api",
-  "bt_remote_commands",
-  "bt_remote_events",
-  "bt_remote_preconditions",
-  "bt_remote_recovery",
-  "bt_remote_views",
->>>>>>> 2379a2a93808a923d50b6b1f2f82714d0e07f691
-=======
   "bt_remote_api",
   "bt_remote_commands",
   "bt_remote_edit",
   "bt_remote_events",
   "bt_remote_preconditions",
   "bt_remote_recovery",
+  "bt_remote_snapshot",
   "bt_remote_views",
   "bt_route_pins",
->>>>>>> 67cedce0c942471ce724ebeb8762af53c336f590
   "bt_relay",
   "bt_relay_cli",
   "bt_relay_client",
