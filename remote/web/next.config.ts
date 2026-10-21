@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const gatewayOrigin = process.env.FLOW_GATEWAY_ORIGIN ?? "http://127.0.0.1:8790";
+const gatewayOrigin = process.env.GATEWAY_ORIGIN ?? "http://127.0.0.1:8790";
 
 const nextConfig: NextConfig = {
   async rewrites() {

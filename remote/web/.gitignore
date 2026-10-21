@@ -5,3 +5,5 @@ coverage/
 *.tsbuildinfo
 npm-debug.log*
 .env*.local
+.vercel
+.env*
