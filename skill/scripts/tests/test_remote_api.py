@@ -12,10 +12,11 @@ import sys
 import tempfile
 import threading
 import time
+import tomllib
 import unittest
 from http.server import ThreadingHTTPServer
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 TEST_KEY = "test-only-gateway-key"
@@ -28,6 +29,25 @@ def free_port() -> int:
 
 
 class RemoteApiTests(unittest.TestCase):
+    def test_snapshot_module_is_declared_for_wheel_packaging(self):
+        pyproject = SCRIPTS.parents[1] / "pyproject.toml"
+        config = tomllib.loads(pyproject.read_text(encoding="utf-8"))
+        self.assertIn("bt_remote_snapshot", config["tool"]["setuptools"]["py-modules"])
+        self.assertTrue((SCRIPTS / "bt_remote_snapshot.py").is_file())
+
+    def test_snapshot_module_import_failure_returns_unavailable_problem(self):
+        import bt_remote_api
+
+        handler = Mock()
+        with patch.dict(sys.modules, {"bt_remote_snapshot": None}):
+            bt_remote_api._snapshot(handler)
+
+        handler.send.assert_called_once()
+        body, status, content_type = handler.send.call_args.args
+        self.assertEqual(status, 503)
+        self.assertTrue(content_type.startswith("application/problem+json"))
+        self.assertEqual(json.loads(body)["code"], "SNAPSHOT_UNAVAILABLE")
+
     def start_server(self, command: str, port: int, env: dict[str, str]) -> subprocess.Popen:
         process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "bitacora.py"), command, "--port", str(port)],

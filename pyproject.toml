@@ -130,6 +130,7 @@ py-modules = [
   "bt_go",
   "bt_links",
   "bt_live_api",
+  "bt_remote_snapshot",
   "bt_page_attempts",
   "bt_page_flow",
   "bt_page_model",
