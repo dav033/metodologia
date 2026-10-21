@@ -20,11 +20,12 @@ def main() -> int:
     except (ConfigurationError, AuthenticationError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
-    auth_server = create_server(auth_config, (config.bind_host, config.bind_port))
+    runtime = create_runtime(config)
+    auth_server = create_server(auth_config, (config.bind_host, config.bind_port), runtime)
     auth_thread = Thread(target=auth_server.serve_forever, name="gateway-http", daemon=True)
     auth_thread.start()
     try:
-        create_runtime(config).run_forever()
+        runtime.run_forever()
     finally:
         auth_server.shutdown()
         auth_server.server_close()

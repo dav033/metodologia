@@ -18,6 +18,7 @@ from auth import (
     cookie_values,
 )
 from security import RateLimiter, origin_matches
+from typing import Any
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
@@ -25,7 +26,7 @@ LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 
 
-def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
+def make_handler(service: OAuthService, runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -84,11 +85,39 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-            if route.path == "/api/remote/v1/commands":
+            if route.path in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
+                if runtime is None:
+                    self._json(404, {"error": "not found"})
+                    return
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                except ValueError:
+                    self._json(400, {"code": "INVALID_COMMAND"})
+                    return
+                if length < 0:
+                    self._json(400, {"code": "INVALID_COMMAND"})
+                    return
+                if length > 256 * 1024:
+                    self._json(413, {"code": "BODY_TOO_LARGE"})
+                    return
+                try:
+                    request = json.loads(self.rfile.read(length) or b"null")
+                except (ValueError, OSError):
+                    self._json(400, {"code": "INVALID_COMMAND"})
+                    return
+                if route.path.endswith("/challenges"):
+                    result = runtime.issue_challenge(request)
+                else:
+                    result = runtime.submit_command(request)
+                status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
+                          "CONFIRMATION_REQUIRED": 409, "INVALID_COMMAND": 400,
+                          "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
+                self._json(status, result)
+                return
             self._json(404, {"error": "not found"})
 
         def _valid_state_changing_request(self) -> bool:
@@ -130,8 +159,9 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
     return GatewayHandler
 
 
-def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None) -> ThreadingHTTPServer:
+def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None,
+                  runtime: Any | None = None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service))
+    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, runtime))
 
 
