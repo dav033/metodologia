@@ -18,10 +18,9 @@ Rollback: `sudo rm -r /etc/bitacora-gateway /opt/bitacora-gateway` (empty at thi
 
 ## Step 2: Fill the environment file
 
-`sudo install -m 0600 -o root -g root remote/deploy/gateway.env.example /etc/bitacora-gateway/gateway.env`, then fill every key.
+`sudo install -m 0600 -o root -g root remote/deploy/gateway.env.example /etc/bitacora-gateway/gateway.env`, then fill every uncommented key.
 `FLOW_GATEWAY_KEY` must be random and at least 24 characters (`openssl rand -hex 32`); the gateway refuses shorter ones.
-`FLOW_FRONTEND_ORIGIN` is the Vercel origin; `LAPTOP_ORIGIN` is `http://127.0.0.1:18765` (the reverse tunnel).
-Set `GATEWAY_BIND=172.20.0.1`: Caddy runs in Docker and reaches the host gateway interface at that address.
+`FLOW_FRONTEND_ORIGIN` is the Vercel origin; `LAPTOP_ORIGIN` is `http://127.0.0.1:18765` (the reverse tunnel). Set `GATEWAY_BIND=172.20.0.1` so Docker-hosted Caddy can reach the gateway on the host bridge.
 
 Rollback: `sudo rm /etc/bitacora-gateway/gateway.env` (keep a copy of the previous file as `gateway.env.bak` before editing an existing one and restore it).
 
@@ -40,20 +39,19 @@ Rollback: `sudo systemctl disable --now bitacora-gateway; sudo rm /etc/systemd/s
 
 ## Step 5: Publish the API host through Caddy
 
-Set `GATEWAY_API_HOST` for Caddy, install `remote/deploy/Caddyfile` as a site block, `caddy validate`, then `sudo systemctl reload caddy`.
-The Caddy container proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2.
+Set `GATEWAY_API_HOST` for Caddy, install `remote/deploy/Caddyfile` as a site block, `caddy validate`, then `sudo systemctl reload caddy`. Caddy runs in Docker and proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2.
 Point the Vercel `FLOW_GATEWAY_ORIGIN` at `https://<api host>` and redeploy the frontend. Register the GitHub callback per the rule above.
 
 Rollback: restore the previous Caddyfile, `sudo systemctl reload caddy`; restore the previous Vercel `FLOW_GATEWAY_ORIGIN` and redeploy it.
 
 ## Step 6: Start the laptop listener and tunnel
 
-On the laptop: `install -d -m 0700 ~/.config/bitacora-remote; install -m 0600 remote/deploy/remote.env.example ~/.config/bitacora-remote/remote.env`,
-fill `FLOW_GATEWAY_KEY` with the same value as the gateway's (never print it), then
-`install -m 0644 remote/deploy/bitacora-remote.service remote/deploy/advin-bitacora-tunnel.service ~/.config/systemd/user/; systemctl --user daemon-reload; systemctl --user enable --now bitacora-remote.service advin-bitacora-tunnel.service`.
-The listener refuses to start without a key of at least 24 characters. Check the script path in the unit's `ExecStart`.
+Create `~/.config/bitacora/remote.env` with mode `0600` holding the same `FLOW_GATEWAY_KEY` as the gateway (`install -m 600 /dev/null ~/.config/bitacora/remote.env`, then edit; never `cat` it). Install `remote/deploy/bitacora-remote-api.service` into `~/.config/systemd/user/` and start it before the tunnel so the forward never points at a closed port; without the key the listener answers 401 to everything.
+Check `stat -c %a ~/.config/bitacora/remote.env` prints `600`.
 
-Rollback: `systemctl --user disable --now advin-bitacora-tunnel.service bitacora-remote.service`; the gateway then reports the laptop as offline.
+`systemctl --user enable --now bitacora-remote-api.service advin-bitacora-tunnel.service` (units in `remote/deploy/`).
+
+Rollback: `systemctl --user disable --now advin-bitacora-tunnel.service bitacora-remote-api.service`; the gateway then reports the laptop as offline.
 
 ## Step 7: Smoke test
 

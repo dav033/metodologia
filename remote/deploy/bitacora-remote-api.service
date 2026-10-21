@@ -1,0 +1,15 @@
+[Unit]
+Description=Bitacora remote API listener (127.0.0.1:8766, gateway key required)
+After=network.target
+
+[Service]
+Type=simple
+# FLOW_GATEWAY_KEY lives only in this mode-600 file; the listener refuses every request when it is unset.
+EnvironmentFile=%h/.config/bitacora/remote.env
+ExecStart=/usr/bin/python3 %h/.claude/skills/metodologia/scripts/bitacora.py serve-remote
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
