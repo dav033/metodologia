@@ -220,19 +220,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
-<<<<<<< 662ec50eedec3dccee3b4f7f940a648cfadd1c18
     assert.equal(gateway.challenges.at(-1)?.typedReq, "REQ-027", "approval should issue a challenge for the exact REQ id");
-    assert.equal(gateway.commands.at(-1)?.type, "approve");
-    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
-    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
-||||||| b80e38cf6c5c691122c401f289f9072c565b0841
-    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
-    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.type, "approve");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
-=======
     assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
     assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
     assert.equal(gateway.challenges[0]?.requestMarker, "1", "challenge mutations must include the gateway request marker");
@@ -240,8 +228,8 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
     assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
     assert.equal(gateway.commands[2]?.requestMarker, "1", "command mutations must include the gateway request marker");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
->>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027", "approval must preserve the typed request id after issuing a challenge");
+    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('.answer-form input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('.answer-form textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
     assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
     assert.equal(gateway.commands.at(-1)?.round, 2);

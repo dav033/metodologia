@@ -258,38 +258,18 @@ export default function HomePage() {
     const submittedAt = new Date().toISOString();
     let result = "Resultado desconocido";
     try {
-<<<<<<< 662ec50eedec3dccee3b4f7f940a648cfadd1c18
       const confirmationValue = record(command.confirmation);
       if (confirmationValue && (!text(confirmationValue.challengeId) || !confirmationValue.challengeId.trim()) && text(confirmationValue.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
-||||||| b80e38cf6c5c691122c401f289f9072c565b0841
-      const confirmation = record(command.confirmation);
-      if (confirmation && text(confirmation.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
-=======
-      const confirmation = record(command.confirmation);
-      if (confirmation && text(confirmation.typedReq)) {
         const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: mutationHeaders,
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
->>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
+          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
         const challengeBody: unknown = await challengeResponse.json().catch(() => null);
         const challenge = record(challengeBody);
         if (!challengeResponse.ok || !text(challenge?.challengeId)) throw new Error(text(record(challengeBody)?.message) ? String(record(challengeBody)?.message) : "No se pudo obtener la confirmación del gateway.");
         command.confirmation = { challengeId: challenge.challengeId, typedReq: confirmationValue.typedReq };
       }
-<<<<<<< 662ec50eedec3dccee3b4f7f940a648cfadd1c18
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
+      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: mutationHeaders, body: JSON.stringify(command) });
       const payload: unknown = await response.json().catch(() => null);
       const responseRecord = record(payload);
-||||||| b80e38cf6c5c691122c401f289f9072c565b0841
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(command) });
-      const responseBody: unknown = await response.json().catch(() => null);
-=======
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: mutationHeaders, body: JSON.stringify(command) });
-      const responseBody: unknown = await response.json().catch(() => null);
->>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
       if (!response.ok) {
         if (responseRecord?.code === "STALE_PRECONDITION") {
           result = "Rechazado: el estado cambió";
