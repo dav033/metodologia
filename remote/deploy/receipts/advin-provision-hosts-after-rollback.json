@@ -1,0 +1,79 @@
+{
+  "captured_at_utc": "2026-10-21T21:23:20+00:00",
+  "hosts": [
+    {
+      "host": "api.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=api.marosconstruction.com",
+      "first_byte_seconds": 0.208756
+    },
+    {
+      "host": "marketplace.185-147-157-25.sslip.io",
+      "status": 401,
+      "tls_subject": "commonName=marketplace.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.412892
+    },
+    {
+      "host": "lotm.185-147-157-25.sslip.io",
+      "status": 200,
+      "tls_subject": "commonName=lotm.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.419654
+    },
+    {
+      "host": "lotm.marosconstruction.com",
+      "status": 200,
+      "tls_subject": "commonName=lotm.marosconstruction.com",
+      "first_byte_seconds": 0.189556
+    },
+    {
+      "host": "185-147-157-25.sslip.io",
+      "status": 307,
+      "tls_subject": "commonName=185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.180979
+    },
+    {
+      "host": "fichas-fotos.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=fichas-fotos.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.298911
+    },
+    {
+      "host": "training-api.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=training-api.marosconstruction.com",
+      "first_byte_seconds": 0.174722
+    },
+    {
+      "host": "training-mcp.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=training-mcp.marosconstruction.com",
+      "first_byte_seconds": 0.199628
+    },
+    {
+      "host": "files.marosconstruction.com",
+      "status": 403,
+      "tls_subject": "commonName=files.marosconstruction.com",
+      "first_byte_seconds": 0.188156
+    },
+    {
+      "host": "api-decoracion.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=api-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.288522
+    },
+    {
+      "host": "voz-decoracion.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=voz-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.397051
+    },
+    {
+      "host": "almacen-decoracion.185-147-157-25.sslip.io",
+      "status": 403,
+      "tls_subject": "commonName=almacen-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.398181
+    }
+  ],
+  "changed_status_or_tls": [],
+  "comparison": "Compared every pre-change host status and TLS subject after rollback; first-byte timings recorded."
+}

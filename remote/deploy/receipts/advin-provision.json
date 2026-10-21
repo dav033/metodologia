@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "name": "advin-provision",
+  "deployed_git_sha": "4291ae2867f496d71a64b1b6a87823c55549f639",
+  "steps": [
+    {
+      "name": "snapshot-before",
+      "command": "HTTPS GET / probes for each pre-change Caddy host; record status, TLS subject, and first-byte time",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-backup",
+      "command": "cp -a /opt/edge-proxy/Caddyfile /opt/edge-proxy/Caddyfile.bak.20261021T2130Z",
+      "exit_code": 0
+    },
+    {
+      "name": "service-layout",
+      "command": "create flow system user and directories; install empty env skeleton and stopped units",
+      "exit_code": 0
+    },
+    {
+      "name": "systemd-verify",
+      "command": "systemd-analyze verify /etc/systemd/system/flow-gateway.service /etc/systemd/system/flow-bot.service",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-validate",
+      "command": "docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-reload",
+      "command": "docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile",
+      "exit_code": 0
+    },
+    {
+      "name": "other-hosts-check",
+      "command": "HTTPS GET / probes; compare all 12 pre-change hosts status and TLS subject",
+      "exit_code": 0
+    },
+    {
+      "name": "rollback-rehearsal",
+      "command": "restore timestamped Caddyfile backup, remove both units, reload and compare hosts; reinstall units stopped for final state",
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "snapshot-before": {
+      "ok": true,
+      "detail": "12 existing non-target hosts recorded with HTTP status, TLS subject, and first-byte seconds in advin-provision-snapshot-before.json."
+    },
+    "service-layout": {
+      "ok": true,
+      "detail": "flow is a no-login system user; release/current, SQLite state, and mode-600 env skeleton exist; both hardened units pass systemd-analyze verify and remain inactive until T23."
+    },
+    "other-hosts-unchanged": {
+      "ok": true,
+      "detail": "All 12 pre-change hosts retained their HTTP status and TLS subject after Caddy reload and rollback reload; first-byte timings are recorded in the before/after evidence files."
+    },
+    "rollback-rehearsed": {
+      "ok": true,
+      "detail": "Timestamped backup restored, both units removed, Caddy validated/reloaded, and all 12 host checks matched; units were then reinstalled stopped as required for the final T20 state."
+    }
+  },
+  "evidence_files": [
+    "advin-provision-snapshot-before.json",
+    "advin-provision-hosts-after.json",
+    "advin-provision-hosts-after-rollback.json"
+  ],
+  "operational_notes": [
+    "A duplicate flow-api site append was rejected by Caddy with an ambiguous-site error; the timestamped backup was immediately restored, then validated and reloaded. The backed-up Caddyfile already contained the required single flow-api block with upstream 172.20.0.1:8790 and flush_interval -1.",
+    "The Caddyfile SHA-256 recorded during read-only preflight differs from the timestamped backup SHA-256. The cause was not established. Existing-host probes matched before and after reload/rollback; the timestamped backup was retained and used for rollback."
+  ]
+}
