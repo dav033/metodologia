@@ -173,6 +173,10 @@ class LivenessTests(unittest.TestCase):
                 "TELEGRAM_BOT_TOKEN": config.telegram_bot_token,
                 "TELEGRAM_CHAT_ID": config.telegram_chat_id,
                 "GATEWAY_DATABASE": str(config.database_path),
+                "GITHUB_CLIENT_ID": "test-client",
+                "GITHUB_CLIENT_SECRET": "test-client-secret",
+                "SESSION_SECRET": "test-session-secret-with-more-than-32-bytes",
+                "FLOW_FRONTEND_ORIGIN": "http://127.0.0.1:3000",
             }
             with patch.dict(os.environ, env, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \
