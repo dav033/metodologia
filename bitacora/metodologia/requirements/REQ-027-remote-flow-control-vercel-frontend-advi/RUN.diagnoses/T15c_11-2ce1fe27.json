@@ -1,0 +1,23 @@
+{
+ "request": "T15c:11",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T15c falla: la tarea 'rejected' no muestra la revisión del fallo y npm run verify no pasa",
+ "origin": "El fallo está en la interfaz del teléfono (remote/web, page.tsx), no en la verificación. La guarda de la revisión exige task.state === 'failed', así que una tarea 'rejected' no abre la ruta de revisión ni sus controles de reintento o reapertura. El test tests/panel-browser.test.mjs:65 lo confirma con 'fixture rejected task should load its reviewAttempt through the real review route'. Además, la auditoría (F19) indica errores de tsc y una declaración duplicada de 'refreshCommandHistory' que también bloquean el build.",
+ "steps": [
+  "En remote/web/app/page.tsx, trata el estado 'rejected' igual que 'failed': ruta de revisión, parseo de reviewAttempt y controles de reintentar y reabrir.",
+  "Corrige los diagnósticos de tsc del audit F19 (TS2304, TS7006, TS2677, TS2322, TS2451, TS2353) y la declaración duplicada de refreshCommandHistory para que npm run build compile.",
+  "Ejecuta 'cd remote/web && npm run verify' y 'cd remote/web && npm run build' localmente; confirma que los 12 tests pasan.",
+  "Reintenta con la nota; si vuelve a fallar, revisa la primera línea real de error del test, no solo las notas de npm."
+ ],
+ "option": "retry_with_note",
+ "note": "Treat task state 'rejected' exactly like 'failed' in remote/web/app/page.tsx: show the failure review route, parse reviewAttempt from the API response, and enable the retry and reopen controls for rejected tasks. Also fix the audit F19 blockers so the build compiles: the tsc diagnostics (TS2304, TS7006, TS2677, TS2322, TS2451, TS2353 in page.tsx) and the duplicate 'refreshCommandHistory' declaration (keep one implementation). Keep the four review sections, the bounded log scroll and the redaction that already pass. Before finishing, run 'cd remote/web && npm run verify' and 'cd remote/web && npm run build' and make both pass. The verifier sandbox has no environment variables, so do not depend on any. Previous attempts retried without a real cause, so if a check still fails, report the first real assertion or compiler error line, not npm notices.",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:59:50",
+ "seconds": 15.8
+}

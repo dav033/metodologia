@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0014:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "T8 cumple los 3 criterios, pero un check sin criterio detiene al verificador",
+ "origin": "El verificador ejecutó los checks de T8 y los 3 criterios de aceptación salieron PASS. Lo que lo detiene es CHECK_UNMAPPED: el comando genérico `npm run asesor:test` no corresponde literalmente a ningún criterio, y en la lista de verificación del plan aparecen tres veces los mismos `npx tsx --conditions=react-server --test scripts/test/asesor/photos.test.ts`. Es un defecto de la redacción del plan, no del código de la tarea.",
+ "steps": [
+  "Consulta el id de la tarjeta de T8 con `bitacora.py --project pictures scheduler-op REQ-020 decisions`.",
+  "Decide `review_pass` con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"Los 3 criterios de T8 pasaron; solo CHECK_UNMAPPED\"`.",
+  "Después, en el PLAN.json de REQ-020, quita las dos repeticiones de los comandos de T8 y asocia `npm run asesor:test` a un criterio o elimínalo; ese cambio es una nueva revisión (revision + 1, `bitacora.py --project pictures plan-json freeze REQ-020`, y la opción `revise`)."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T19:37:17",
+ "seconds": 17.1
+}

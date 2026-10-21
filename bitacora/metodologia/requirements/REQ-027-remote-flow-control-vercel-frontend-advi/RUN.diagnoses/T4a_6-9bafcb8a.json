@@ -1,0 +1,22 @@
+{
+ "request": "T4a:6",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T4a choca con T5a en tres archivos de la API remota y el conflicto se repite en cada intento",
+ "origin": "El fallo es de integración, no de un error de código: el verificador pasó T4a, pero el gate de integración la rechaza por solapar con T5a, ya aceptada, en skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py y skill/scripts/tests/test_remote_api.py. El intento #3 (att-0227) fue rechazado al arrancar con INTEGRATION_CONFLICT (T3 vs T4 para T4a; el mensaje está cortado en remote/contract/command.schema.json). Eso indica que T4 se construyó sobre un T3 anterior, que ya decidiste rehacer (rework_conflict).",
+ "steps": [
+  "Elige la opción retry_with_note con la indicación de la columna note.",
+  "Confirma en el historial que T4a parte del T4 rehecho sobre el T3 actual; si el intento vuelve a dar INTEGRATION_CONFLICT, revisa si T5a también necesita rework_conflict sobre el resultado nuevo de T4a.",
+  "Si T5a sigue bloqueando tras dos intentos, usa stop y pide revisión del plan para separar los cambios en esos tres archivos."
+ ],
+ "option": "retry_with_note",
+ "note": "Redo T4a as a small change on top of the current T4 result (which is on the current T3). Keep every file and function already present in skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py and skill/scripts/tests/test_remote_api.py, including the code T5a depends on; only add the snapshot endpoint (runs with active task and last sign of life, reusing the shared now frame, under 1 s on fixtures) and the tests the task needs. Do not rewrite or delete working code. Before finishing, check that remote/contract/command.schema.json matches the T3 contract, so the start is not rejected by INTEGRATION_CONFLICT.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:00:13",
+ "seconds": 24.3
+}

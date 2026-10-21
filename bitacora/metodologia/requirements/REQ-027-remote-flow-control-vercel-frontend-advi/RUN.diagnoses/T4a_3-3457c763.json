@@ -1,0 +1,23 @@
+{
+ "request": "T4a:3",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T4a no puede arrancar: choca con T3 y T4 en los mismos archivos del contrato remoto",
+ "origin": "El arranque de T4a fue rechazado por `INTEGRATION_CONFLICT: T3 vs T4 for T4a`: T3 y T4 cambiaron las mismas líneas de remote/contract/command.schema.json, remote/contract/event.schema.json, remote/docs/architecture.md y remote/docs/contract.md. T4 se construyó sobre un resultado anterior de T3 que después se rehízo, por eso las dos versiones chocan. El código identity_unverified no es la causa: el intento nunca llegó a ejecutarse.",
+ "steps": [
+  "Abre la decisión de T4a en el panel o ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 decisions` para ver su id.",
+  "Elige «Rehacer T4 sobre el trabajo actual» (opción rework_conflict) con `scheduler-op REQ-027 decide <id> rework_conflict --reason \"conflicto con T3\"`.",
+  "Espera a que T4 se acepte: T4a arranca sola sobre la base combinada con T3.",
+  "Cuando T4a arranque, comprueba que corrige el hallazgo F26 de la auditoría (estado `rejected` en la tarjeta de revisión y controles de reintento y edición), porque la auditoría lo exige para esta tarea."
+ ],
+ "option": "rework_conflict",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T19:49:54",
+ "seconds": 23.0
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T15a:10",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T15a bloqueada: choca con T15b y T16 en archivos compartidos y falló 5 veces igual",
+ "origin": "La misma tarea falló en varios intentos por el mismo motivo: su cambio se solapa con trabajo ya aceptado. La auditoría de integración marca conflicto con T16 en remote/web/mocks/fixtures/snapshot.json, mocks/gateway.mjs, src/app/globals.css, src/app/page.tsx y tests/. Las indicaciones del dueño dicen que T15b está desactualizada y se envió a reconstrucción. El texto del error de verificación del intento att-0205 está cortado en la evidencia, así que no se sabe qué comprobación de `npm run verify` falló.",
+ "steps": [
+  "Consulta la decisión abierta: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-027 decisions`.",
+  "Antes de editar, compara remote/web con los archivos aceptados de T3, T6, T7, T15 y T15b, y rehaz T15a encima de ellos sin reescribir nada.",
+  "Cambia solo la redirección del login al inicio OAuth del gateway y la lista de runs (estado y última señal de vida, sin scroll horizontal a 360 px). No toques snapshot.json, gateway.mjs, globals.css, page.tsx ni tests/ más allá de lo que exijan esos criterios.",
+  "Ejecuta `cd remote/web && npm run verify` y revisa primero la salida del intento att-0205 para confirmar que la causa del fallo quedó resuelta."
+ ],
+ "option": "retry_with_note",
+ "note": "Before editing, reconcile remote/web with the accepted T3, T6, T7, T15 and T15b files and with the T16 integration. Keep every existing file and function (README.md, mocks/fixtures/snapshot.json, mocks/gateway.mjs, src/app/globals.css, src/app/page.tsx, tests/). Change only the login redirect to the gateway OAuth start and the runs list (state and last sign of life, no horizontal scroll at 360 px). Read the failing output of attempt att-0205 of npm run verify first, and fix that cause before finishing.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T19:54:34",
+ "seconds": 22.6
+}

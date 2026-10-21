@@ -1,0 +1,23 @@
+{
+ "request": "T18:12",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T18 sigue encontrando 5 hallazgos bloqueantes de alta severidad",
+ "origin": "La auditoría independiente de T18, sobre el árbol actual, dejó abiertos F2, F19, F20, F24 y F26 (high). El gate lo registra como \"audit gate: 5 open blocking finding(s)\". Los intentos previos (att-0185 con F1 y F2) ya habían sido reauditados, y T15c ya se devolvió 2 veces, así que el sistema no reabre las tareas solo y espera tu decisión. La causa está en el código que esos hallazgos señalan, no en el reintento: reintentar la auditoría sin arreglarlo repetirá los mismos hallazgos.",
+ "steps": [
+  "Abre el informe de la auditoría (log del último intento de T18) y copia cada hallazgo F2, F19, F20, F24 y F26 con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala.",
+  "Pulsa «Devolver T4a, T15a, T15c, T15d, T17, T24, T18.6 para que los arreglen». Por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T4a,T15a,T15c,T15d,T17,T24,T18.6 --only --reason \"hallazgos F2 (high), F19 (high), F20 (high), F24 (high), F26 (high)\"`.",
+  "Cuando esas tareas terminen, comprueba que T18 se reaudita sobre el árbol nuevo y que F2, F19, F20, F24 y F26 aparecen cerrados o rechazados con motivo en docs/audit.md.",
+  "Si la misma auditoría vuelve a reportar alguno de estos hallazgos tras el rework, elige stop y revisa el hallazgo a mano antes de seguir."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T19:31:49",
+ "seconds": 17.6
+}

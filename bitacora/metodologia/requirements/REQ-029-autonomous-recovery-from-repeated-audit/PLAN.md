@@ -5,9 +5,9 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 9/24 · generado: 2026-10-20T17:41:33-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 12/24 · generado: 2026-10-20T21:45:09-05:00
 
-**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 9/14
+**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 12/14
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -15,15 +15,15 @@ execution_contract: requirements-v1
 | T2 | Capture immutable full audit evidence and source identities | alta | completada | gpt-6-luna | codex-1 | 1 |
 | T3 | Add read-only structured diagnostic transport | alta | completada | gpt-6-luna | codex-1 | 1 |
 | T3a | Define structural conflict envelope and bounded decision policy | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T4 | Compile and apply constrained recovery revisions through M1 | alta | completada | gpt-6-luna | codex-2 | 2 |
-| T4a | Build provenance-preserving executable convergence strategy | alta | completada | gpt-6-luna | codex-1 | 1 |
-| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | completada | sonnet | claude-work | 1 |
+| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | completada | gpt-6-luna | codex-1 | 2 |
+| T4 | Compile and apply constrained recovery revisions through M1 | alta | completada | gpt-6-luna | codex-luis | 3 |
+| T4a | Build provenance-preserving executable convergence strategy | alta | completada | gpt-6-luna | codex-2 | 2 |
+| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T5a | Implement pinned runtime staging and conditional host activation | alta | completada | sonnet | claude-work | 2 |
-| T6 | Author offline real CLI recovery integration harness | alta | en curso | sonnet | claude-work | 1 |
-| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | pendiente | — | — | 0 |
-| T7 | Run backend regression and entrypoint acceptance | media | pendiente | — | — | 0 |
-| T8 | Audit backend recovery authority and evidence | alta | pendiente | — | — | 0 |
+| T6 | Author offline real CLI recovery integration harness | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | completada | gpt-6-luna | codex-2 | 2 |
+| T7 | Run backend regression and entrypoint acceptance | media | completada | gpt-6-luna | codex-2 | 6 |
+| T8 | Audit backend recovery authority and evidence | alta | en curso | gpt-6.1-sol | codex-1 | 2 |
 | T9 | Cross-check backend recovery independently | alta | pendiente | — | — | 0 |
 
 **M2 — Visual supervision and read-only rollout preview** · dificultad alta · 0/6

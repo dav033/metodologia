@@ -1,0 +1,23 @@
+{
+ "request": "T15d:11",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La verificación de T15d falla: errores de TypeScript, build roto y una prueba de revisión que no carga",
+ "origin": "El código de T15d en remote/web no compila: tsc reporta 9 errores (falta el tipo FailureReview, predicado Attempt inválido en page.tsx:130 y historial de comandos duplicado) y el build falla con \"Identifier 'refreshCommandHistory' has already been declared\". Además, la prueba tests/panel-browser.test.mjs:128 falla porque la fixture rechazada no carga su reviewAttempt por la ruta real de revisión dentro de 30 s. Al arrancar el intento att-0211 hubo INTEGRATION_CONFLICT entre T13+T15b y T15c en remote/web/mocks/fixtures/snapshot.json y remote/web/mocks/gateway.mjs.",
+ "steps": [
+  "Corrige los errores de tipos y de build en remote/web: define el tipo FailureReview, corrige el predicado Attempt (page.tsx:130) y deja una sola implementación de historial de comandos, eliminando la declaración duplicada de refreshCommandHistory.",
+  "Resuelve los conflictos en remote/web/mocks/fixtures/snapshot.json y remote/web/mocks/gateway.mjs conservando los arreglos de T15b (att-0210) y T15c (att-0214). No toques remote/gateway ni remote/contract.",
+  "Haz que la fixture rechazada cargue su reviewAttempt por la ruta real de revisión en menos de 30 s (tests/panel-browser.test.mjs:128) y mantén la confirmación tecleando el REQ, el mensaje «el estado cambió» y el historial con origen y resultado.",
+  "Ejecuta cd remote/web && npm run verify y npm run build hasta que pasen; después deja que T15f y T15e se reconstruyan sobre este T15d."
+ ],
+ "option": "retry_with_note",
+ "note": "Work only in remote/web. (1) Add the missing FailureReview type and fix the invalid Attempt predicate at page.tsx:130 (TS2677); fix the other tsc diagnostics (TS2304, TS7006, TS2322, TS2451, TS2353). (2) Keep exactly one command-history implementation: remove the duplicate refreshCommandHistory declaration that breaks webpack. (3) Resolve conflicts in mocks/fixtures/snapshot.json and mocks/gateway.mjs, preserving T15b att-0210 and T15c att-0214. Do not touch remote/gateway or remote/contract. (4) Make the fixture-rejected task load its reviewAttempt through the real review route within 30 s (tests/panel-browser.test.mjs:128). Keep the typed REQ confirmation for destructive actions, the stale-state message, and command history with origin and result. Finish with npm run build and cd remote/web && npm run verify, all passing.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T21:21:13",
+ "seconds": 20.4
+}

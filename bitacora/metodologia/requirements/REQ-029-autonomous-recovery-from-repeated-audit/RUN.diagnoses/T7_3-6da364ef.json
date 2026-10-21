@@ -1,0 +1,22 @@
+{
+ "request": "T7:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Fallan 5 tests de frontera: módulos importan el paquete M5 fuera de su adaptador",
+ "origin": "La regresión `cd skill/scripts && python3 -m unittest discover -s tests` termina con exit code 1 y 5 fallos. El decisivo es test_only_the_recovery_adapter_imports_the_m5_package_in_production, que exige que solo bt_scheduler_adapter importe el paquete de recuperación M5, y encuentra imports en bt_scheduler_quality_adapter.py (líneas 462-463), bt_recovery_convergence.py (línea 13) y bt_recovery_conflicts.py (líneas 18-19). Es un defecto del código, no del entorno ni del plan, y T7 no puede repararlo; reintentar sin cambios repetirá el mismo fallo.",
+ "steps": [
+  "Mueve los imports de bt_scheduler_recovery a bt_scheduler_adapter en bt_scheduler_quality_adapter.py (líneas 462-463), bt_recovery_convergence.py (línea 13) y bt_recovery_conflicts.py (líneas 18-19), y corrige también el fallo 'only bt_scheduler_adapter may reach the scheduler core'.",
+  "Ejecuta localmente `cd skill/scripts && python3 -m unittest discover -s tests` y comprueba que termina con exit code 0 antes de seguir.",
+  "Cuando pase, relanza T7 desde cero para que registre los comandos y códigos de salida de la regresión."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:13:57",
+ "seconds": 28.5
+}

@@ -1,0 +1,22 @@
+{
+ "request": "T4a:7",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T4a bloqueada: choca con T3 y T5a por archivos compartidos, no por sus pruebas",
+ "origin": "El arranque de T4a fue rechazado con \"INTEGRATION_CONFLICT: T3 vs T4 for T4a\" sobre remote/contract/command.schema.json, remote/contract/event.schema.json y remote/docs. Después, la auditoría devolvió el resultado con \"integration gate: T4a vs T5a\" por los mismos archivos de skill/scripts/bt_remote_api.py, bt_server.py y tests/test_remote_api.py. El error no está en las pruebas, que pasan; el problema es que T4a modifica contratos y archivos que T3 y T5a ya usan. La regla de que el fallo es de código no encaja con esta evidencia.",
+ "steps": [
+  "Antes de reintentar, restaura remote/contract/command.schema.json, remote/contract/event.schema.json y remote/docs a la versión del resultado aceptado de T3.",
+  "Edita solo skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py y skill/scripts/tests/test_remote_api.py: añade el endpoint de snapshot y sus pruebas, sin renombrar ni borrar funciones existentes.",
+  "Ejecuta cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py y revisa que el arranque no vuelva a dar INTEGRATION_CONFLICT. Si vuelve a fallar con T5a, revisa la revisión del plan."
+ ],
+ "option": "retry_with_note",
+ "note": "Redo T4a as a small change on top of the accepted T4 result, which is on the accepted T3 result. Before editing, restore remote/contract/command.schema.json, remote/contract/event.schema.json and remote/docs to exactly the versions in the accepted T3 result, so the start is not rejected with INTEGRATION_CONFLICT. Touch only skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py and skill/scripts/tests/test_remote_api.py: add the snapshot endpoint (runs with active task and last sign of life, reusing the shared now frame, under 1 s on fixtures) and its tests. Keep every existing file, function and name unchanged, because T5a depends on them. Do not rewrite or delete working code. Run cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py and report the output.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:02:49",
+ "seconds": 20.1
+}

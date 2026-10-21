@@ -1,0 +1,23 @@
+{
+ "request": "T4a:5",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T4a choca con T5a en tres archivos y el gate de integración rechaza el resultado repetidas veces.",
+ "origin": "El verificador aprobó los tests de T4a, pero el gate de integración detectó que T4a no puede combinarse con T5a, que ya estaba aceptada: ambos tocan skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py y skill/scripts/tests/test_remote_api.py. T5a se construyó sobre un resultado anterior de T4a, así que los cambios se pisan. Los dos últimos intentos fallaron con el mismo error, y el intento #3 también había arrancado con un INTEGRATION_CONFLICT entre T3 y T4.",
+ "steps": [
+  "Parte del estado actual de T4a y de T5a aceptada, sin rehacer desde cero ni borrar funciones existentes en bt_remote_api.py, bt_server.py y tests/test_remote_api.py.",
+  "Añade solo el snapshot de runs (tarea activa y última señal de vida, usando el frame 'now' compartido) y edita únicamente lo que pida el criterio de T4a.",
+  "Ejecuta cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py antes de entregar; la respuesta del snapshot debe tardar menos de 1 s con los fixtures.",
+  "Si el gate vuelve a marcar conflicto, revisa en PLAN.json si T4a y T5a deben compartir esos archivos u ordenarse por dependencia, y abre una revisión nueva."
+ ],
+ "option": "retry_with_note",
+ "note": "Rebase T4a on the current accepted T5a state, not on the earlier T4a result. Keep every function and file it already has in bt_remote_api.py, bt_server.py and tests/test_remote_api.py; do not rewrite or delete working code. Add only the snapshot endpoint (runs with active task and last sign of life, reusing the shared 'now' frame) and edit only what the acceptance criteria require. Run the test suite before finishing and confirm the snapshot answers within one second on fixtures.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T19:56:50",
+ "seconds": 21.8
+}

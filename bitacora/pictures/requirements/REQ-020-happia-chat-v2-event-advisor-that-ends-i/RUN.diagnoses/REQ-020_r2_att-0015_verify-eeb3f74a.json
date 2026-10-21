@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0015:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador no cierra T9: un check no corresponde a ningún criterio de aceptación",
+ "origin": "El fallo está en el plan, no en el código: el check `npm run asesor:test` no tiene un criterio de aceptación equivalente, y `npx tsx --conditions=react-server --test scripts/test/asesor/voice.test.ts` aparece tres veces en la lista de comprobaciones de T9. Sin intentos fallidos registrados, la regla automática indica que los tres criterios salieron PASS; el verificador se detuvo por CHECK_UNMAPPED y no por un error de ejecución. Esa afirmación de PASS viene de la regla automática y no la he podido comprobar con la salida de los comandos.",
+ "steps": [
+  "Pulsa «Aprobar a mano» (review_pass) con la razón «criterios PASS; solo CHECK_UNMAPPED por el check npm run asesor:test»; así T9 avanza.",
+  "Revisa en el PLAN.json de REQ-020 la lista de verificación de T9 y deja una sola línea de `npx tsx --conditions=react-server --test scripts/test/asesor/voice.test.ts`, que aparece tres veces.",
+  "Asigna a `npm run asesor:test` el propósito de un criterio de aceptación de T9 o quítalo de la lista. Si cambias un check, sube \"revision\" en 1 y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`, y después elige la opción revise.",
+  "Antes de dar por cerrada la tarea, confirma en la salida del verificador que los tres criterios pasan con el test de voz."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:06:47",
+ "seconds": 13.8
+}

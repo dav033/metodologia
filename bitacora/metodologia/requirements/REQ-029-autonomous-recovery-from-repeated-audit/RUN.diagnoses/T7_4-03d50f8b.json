@@ -1,0 +1,23 @@
+{
+ "request": "T7:4",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7 agotó intentos: el test de contrato de flujo falla por tablas y auditorías sin mapear",
+ "origin": "La verificación independiente ejecuta `cd skill/scripts && python3 -m unittest discover -s tests` y sale con exit code 1 (failures=3). El fallo decisivo está en test_flow_contract.py:42: bt_scheduler_recovery tiene las tablas application_checkpoints, recovery_cases, recovery_events y recovery_leases que el bus ni lee ni explica, y además aparece 'M1 audit kinds the bus cannot map' (salida cortada, no se ve el detalle). Es un defecto del código de las tareas de implementación, no de T7, que por contrato no repara código; reintentar T7 sin tocar eso repetirá el mismo fallo.",
+ "steps": [
+  "Ejecuta localmente `cd skill/scripts && python3 -m unittest discover -s tests -p test_flow_contract.py` para ver el detalle completo del fallo 'M1 audit kinds the bus cannot map', que quedó cortado.",
+  "Identifica la tarea implement que añadió las tablas de bt_scheduler_recovery y los kinds de auditoría M1, y regístralos en el contrato del bus (lectura o explicación explícita) o corrige el código que los genera.",
+  "Si cambias un check, criterio o tarea del test, sube 'revision' en PLAN.json, ejecuta `bitacora.py --project metodologia plan-json freeze REQ-029` y elige la opción revise.",
+  "Cuando la tarea dueña esté corregida y la suite local pase, relanza T7 con `bitacora.py --project metodologia scheduler-op REQ-029 decide <id> retry`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T20:48:43",
+ "seconds": 21.9
+}

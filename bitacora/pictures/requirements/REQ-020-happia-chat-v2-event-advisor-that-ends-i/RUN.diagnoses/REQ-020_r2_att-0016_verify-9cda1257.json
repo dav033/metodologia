@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0016:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador no da veredicto: un check (npm run asesor:test) no mapea a ningún criterio",
+ "origin": "El error del verificador es CHECK_UNMAPPED: el check genérico `npm run asesor:test` no corresponde literalmente a ningún criterio de T8, así que el verificador se detiene y pide una persona. Es un defecto de la definición del plan, no un fallo de código: los tres criterios tienen cobertura y el check `photos.test.ts` aparece tres veces en la lista. La auditoría pidió rehacer T8 sobre el nuevo T9 (Composer.tsx y useConversation.ts), y este intento es esa rehacha.",
+ "steps": [
+  "Revisa que el intento att-0016 conserve el código de T9 en src/components/asesor/Composer.tsx y src/components/asesor/useConversation.ts, y que los tres criterios salgan PASS en el log del verificador.",
+  "Ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-020 decisions` para obtener el id de la decisión pendiente.",
+  "Si todo está bien, aprueba con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"todos los criterios PASS; solo CHECK_UNMAPPED\"`.",
+  "Para que no vuelva a pasar, sube \"revision\" en PLAN.json, quita el check genérico `npm run asesor:test` o dale el propósito de un criterio, quita los duplicados de `photos.test.ts`, y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T21:01:24",
+ "seconds": 18.1
+}
