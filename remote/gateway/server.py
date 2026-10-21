@@ -115,7 +115,8 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                     result = runtime.submit_command(request)
                 status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
                           "CONFIRMATION_REQUIRED": 409, "INVALID_COMMAND": 400,
-                          "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
+                          "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503,
+                          "STALE_PRECONDITION": 409}.get(result.get("code"), 200)
                 self._json(status, result)
                 return
             self._json(404, {"error": "not found"})

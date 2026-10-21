@@ -152,23 +152,25 @@ import bt_scheduler_core as core
 rdir = Path(sys.argv[2])
 scheduler = adapter.open_scheduler(
     rdir, ports=core.Ports(execution=core.FakeExecutor()),
-    config=core.Config(max_parallel_tasks=1),
+    config=core.Config(max_parallel_tasks=1, max_attempts=3),
 )
 scheduler.step()
 scheduler.step()
-snapshot = scheduler.snapshot()
-attempt_id = snapshot.tasks["T1"]["attempt"]
-token = scheduler.read(lambda ctx: ctx.state.attempts[attempt_id].token)
-started = scheduler.ingest(core.Event(
-    "fixture-execution-started", "REQ-001", 1, "T1", attempt_id, "executor",
-    "execution_started", token=token,
-))
-assert started.status == "applied", started
-result = scheduler.ingest(core.Event(
-    "fixture-forced-failure", "REQ-001", 1, "T1", attempt_id, "executor",
-    "execution_failed", payload={"reason": "fixture failure"}, token=token,
-))
-assert result.status == "applied", result
+for attempt_number in range(3):
+    attempt_id = scheduler.snapshot().tasks["T1"]["attempt"]
+    token = scheduler.read(lambda ctx: ctx.state.attempts[attempt_id].token)
+    started = scheduler.ingest(core.Event(
+        f"fixture-execution-started-{attempt_number}", "REQ-001", 1, "T1", attempt_id, "executor",
+        "execution_started", token=token,
+    ))
+    assert started.status == "applied", started
+    result = scheduler.ingest(core.Event(
+        f"fixture-forced-failure-{attempt_number}", "REQ-001", 1, "T1", attempt_id, "executor",
+        "execution_failed", payload={"reason": "fixture failure"}, token=token,
+    ))
+    assert result.status == "applied", result
+    if attempt_number < 2:
+        scheduler.step()
 adapter.write_projection(rdir, scheduler)
 """
         subprocess.run([sys.executable, "-c", seed_script, str(SCRIPTS), str(req)],
@@ -400,11 +402,11 @@ adapter.write_projection(rdir, scheduler)
         feed = event_page["events"]
         self.assertTrue(event_page["nextCursor"], event_page)
         failures = [event for event in feed if event["type"] == "attempt.failed"]
-        self.assertEqual(len(failures), 1, feed)
-        failure = failures[0]
-        self.assertEqual(failure["target"]["taskId"], "T1")
-        self.assertEqual(failure["target"]["req"], "REQ-001")
-        self.assertEqual(failure["data"]["failure"], "fixture failure")
+        self.assertEqual(len(failures), 3, feed)
+        for failure in failures:
+            self.assertEqual(failure["target"]["taskId"], "T1")
+            self.assertEqual(failure["target"]["req"], "REQ-001")
+            self.assertEqual(failure["data"]["failure"], "fixture failure")
 
         status, session = self._sign_in("dav033")
         self.assertEqual(status, 302)
@@ -423,7 +425,7 @@ adapter.write_projection(rdir, scheduler)
         stale = {**cancel_command, "idempotencyKey": "e2e-cancel-stale-0001",
                  "precondition": {"state": "reserved"}}
         status, body = self._post_command(stale, cookie=session)
-        self.assertEqual((status, body.get("code")), (200, "STALE_PRECONDITION"), body)
+        self.assertEqual((status, body.get("code")), (409, "STALE_PRECONDITION"), body)
 
         status, body = self._post_command(cancel_command, cookie=session)
         self.assertEqual((status, body.get("status")), (200, "OK"), body)
@@ -445,11 +447,12 @@ adapter.write_projection(rdir, scheduler)
         self.assertEqual(status, 401)
 
         deadline = time.monotonic() + 8
-        while time.monotonic() < deadline and not FakeProviderHandler.telegram_messages:
+        while time.monotonic() < deadline and len(FakeProviderHandler.telegram_messages) < len(failures):
             time.sleep(0.05)
         messages = FakeProviderHandler.telegram_messages
-        self.assertEqual(len(messages), 1, messages)
-        self.assertIn("Una tarea falló", messages[0]["text"])
+        self.assertEqual(len(messages), len(failures), messages)
+        for message in messages:
+            self.assertIn("Una tarea falló", message["text"])
 
         self._stop_process(self.laptop_process)
         deadline = time.monotonic() + 20
@@ -460,7 +463,7 @@ adapter.write_projection(rdir, scheduler)
                 break
             time.sleep(0.1)
         self.assertTrue(offline, "gateway did not detect laptop offline within 20 seconds")
-        self.assertEqual(len(FakeProviderHandler.telegram_messages), 1)
+        self.assertEqual(len(FakeProviderHandler.telegram_messages), len(failures))
 
 
 if __name__ == "__main__":
