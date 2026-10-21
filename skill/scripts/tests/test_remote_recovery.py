@@ -1,7 +1,10 @@
 """Pinned Scheduler retries validate route availability before reopening."""
 from __future__ import annotations
 
+import hashlib
+import io
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -12,10 +15,16 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import bt_remote_commands as commands
+import bt_remote_api as api
 import bt_route_pins as pins
 import bt_scheduler_adapter as scheduler
+import bt_scheduler_core as scheduler_core
+import bt_scheduler_ops as ops
 from bt_scheduler_core import AssignmentRequest, TaskView
 from bt_scheduler_decision import TaskFacts
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bt_scheduler_core" / "tests"))
+from support import Harness, indep
 
 
 def candidate(route_id="route-a", provider="claude", model="sonnet", profile="claude-work",
@@ -63,6 +72,80 @@ class RemoteRecoveryTests(unittest.TestCase):
             result = self.ledger.submit(request, commands.dispatch_handlers(),
                                         lambda _target, _command, _params: {"state": "blocked"})
         return result, retry
+
+    def real_blocked_run(self):
+        import bt_core
+
+        rdir = self.root / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan\n", encoding="utf-8")
+        revisions = rdir / scheduler.REVISIONS
+        revisions.mkdir()
+        db_path = scheduler.run_db_path(rdir)
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        harness = Harness([indep("T1")], repository=scheduler_core.SqliteRepository(db_path), plan_id="REQ-001")
+        digest = hashlib.sha256(harness.text.encode()).hexdigest()
+        (revisions / "PLAN.r1.json").write_text(harness.text, encoding="utf-8")
+        (revisions / "MANIFEST.json").write_text(json.dumps({"schema": 1, "revisions": [
+            {"revision": 1, "sha256": digest, "frozen_at": "2026-10-20T00:00:00+00:00"}
+        ]}), encoding="utf-8")
+        harness.core.step()
+        harness.send("T1", "execution_failed", reason="boom")
+        harness.core.step()
+        scheduler.write_projection(rdir, harness.core)
+        return bt_core, rdir, harness
+
+    def post_real(self, body, bt_core):
+        class Handler:
+            path = f"{api.PREFIX}/commands"
+
+            def __init__(self):
+                raw = json.dumps(body).encode()
+                self.rfile = io.BytesIO(raw)
+                self.headers = {"Authorization": "Bearer test-key", "Content-Length": str(len(raw))}
+                self.sent = None
+
+            def send(self, payload, status=200, content_type=""):
+                self.sent = (status, json.loads(payload))
+
+        handler = Handler()
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), \
+                patch.object(ops, "stop_owner", return_value=0), \
+                patch.object(ops, "resume", return_value="watchdog started"):
+            api.route_post(handler)
+        return handler.sent
+
+    def test_http_retry_reopens_real_blocked_task_and_records_the_pin(self):
+        bt_core, rdir, harness = self.real_blocked_run()
+        selected = candidate(route_id="route-b", model="opus", account_ref="acct:stable-b")
+        body = {"idempotency_key": "real-retry-route-01", "command": "retry", "target": "demo/REQ-001",
+                "origin": "web", "params": {"task": "T1", "route": "route-b", "reason": "use selected"},
+                "precondition": {"state": "blocked", "revision": 1}}
+        with patch("bt_route_pins.candidates_for", return_value=(candidate(), selected)):
+            status, response = self.post_real(body, bt_core)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(harness.state("T1"), "ready")
+        self.assertEqual(pins.get(rdir, "T1"), {"route": "route-b"})
+        ledger_row = commands.Ledger(self.root / ".state" / "remote" / "commands.db").rows()[-1]
+        self.assertEqual(json.loads(ledger_row["params"])["route"], "route-b")
+
+    def test_http_retry_refuses_unavailable_route_before_real_reopen(self):
+        bt_core, _rdir, harness = self.real_blocked_run()
+        body = {"idempotency_key": "real-retry-route-02", "command": "retry", "target": "demo/REQ-001",
+                "origin": "web", "params": {"task": "T1", "route": "route-missing"},
+                "precondition": {"state": "blocked", "revision": 1}}
+        with patch("bt_route_pins.candidates_for", return_value=(candidate(),)):
+            status, response = self.post_real(body, bt_core)
+        self.assertEqual((status, response["code"]), (422, "ROUTE_UNAVAILABLE"), response)
+        self.assertEqual(harness.state("T1"), "blocked")
+        self.assertEqual(commands.Ledger(self.root / ".state" / "remote" / "commands.db").rows()[-1]["status"],
+                         "FAILED")
+
+    def test_web_route_object_normalizes_to_the_chosen_route_id(self):
+        self.assertEqual(pins.normalize({"route": {"route_id": "route-b", "provider": "claude",
+                                                      "model": "opus", "account": "work"}}),
+                         {"route": "route-b"})
 
     def test_pinned_retry_routes_only_to_the_chosen_candidate(self):
         rows = (candidate(), candidate("route-b", model="opus", profile="claude-work"))
