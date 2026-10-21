@@ -5,7 +5,8 @@ import datetime as dt
 import hmac
 import json
 import os
-from urllib.parse import urlparse
+import sqlite3
+from urllib.parse import parse_qs, urlparse
 
 PREFIX = "/api/remote/v1"
 
@@ -39,6 +40,12 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
+    if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
+        return _command_history(handler)
+    if path == f"{PREFIX}/quotas":
+        return _quotas(handler)
+    if path == f"{PREFIX}/routes":
+        return _routes(handler)
     if path != f"{PREFIX}/health":
         return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
 
@@ -80,7 +87,9 @@ def _snapshot(handler) -> None:
                           "activeAttempt": live._attempt(current) if current and current.get("live") else None,
                           "reviewAttempt": live._attempt(review),
                           "history": [live._attempt(a) for a in task["history"]]})
-        runs.append({"id": run["run"], "project": run["project"], "reqId": run["req_id"],
+        runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"],
+                     "reqId": run["req_id"],
+                     "state": run.get("status") or ("running" if run.get("active") else "idle"),
                      "title": run["title"], "status": run["status"], "active": run["active"],
                      "activeTask": ({"id": active["task"], "title": active["task_title"],
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
@@ -89,6 +98,72 @@ def _snapshot(handler) -> None:
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                                 "runs": runs}, 200)
+
+
+def _query(handler) -> dict[str, str]:
+    return {key: values[0] for key, values in parse_qs(urlparse(handler.path).query).items()}
+
+
+def _command_history(handler) -> None:
+    query = _query(handler)
+    try:
+        limit = int(query.get("limit", "200"))
+    except ValueError:
+        limit = 0
+    if not 1 <= limit <= 1000:
+        return _problem(handler, 400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.")
+    try:
+        import bt_remote_commands as commands
+        items, cursor = commands.Ledger().history(query.get("after", ""), limit)
+    except ValueError:
+        return _problem(handler, 400, "INVALID_CURSOR", "El cursor no es válido.")
+    return _send_json(handler, {"commands": items, "nextCursor": cursor}, 200)
+
+
+def _quotas(handler) -> None:
+    import bt_quota_live
+
+    try:
+        rows = bt_quota_live.read_all_live()
+    except Exception:
+        rows = []
+    accounts = []
+    for row in rows:
+        windows = []
+        for name, window in sorted((row.get("windows") or {}).items()):
+            if not isinstance(window, dict) or window.get("used_percent") is None:
+                continue
+            reset = window.get("resets_at")
+            windows.append({"window": name, "usedPercent": window["used_percent"],
+                            "resetsAt": dt.datetime.fromtimestamp(reset, dt.UTC).isoformat()
+                            if isinstance(reset, (int, float)) else None})
+        observed = row.get("observed_at")
+        accounts.append({"account": row.get("profile"), "provider": row.get("provider"),
+                         "status": row.get("status"),
+                         "observedAt": dt.datetime.fromtimestamp(observed, dt.UTC).isoformat()
+                         if isinstance(observed, (int, float)) else None, "windows": windows})
+    if not accounts:
+        return _problem(handler, 503, "QUOTAS_UNAVAILABLE", "Las cuotas aún no están disponibles.")
+    checked_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
+    return _send_json(handler, {"accounts": accounts, "checkedAt": checked_at}, 200)
+
+
+def _routes(handler) -> None:
+    query = _query(handler)
+    target, task = query.get("target", ""), query.get("task", "")
+    import re
+    if not re.fullmatch(r"[A-Za-z0-9_-]+/REQ-[0-9]+", target) or \
+            not re.fullmatch(r"T[0-9A-Za-z_-]{1,79}", task):
+        return _problem(handler, 400, "INVALID_ROUTE_QUERY", "Se requieren target y task válidos.")
+    try:
+        import bt_plans_api
+        import bt_remote_commands as commands
+        import bt_remote_recovery as recovery
+        project, _, rdir = commands._run_target(target)
+        routes = recovery.route_options(project, rdir, task)
+    except (ValueError, OSError, sqlite3.Error, bt_plans_api.PlanError):
+        return _problem(handler, 404, "ROUTES_UNAVAILABLE", "Las rutas no están disponibles para esta ejecución.")
+    return _send_json(handler, {"routes": routes}, 200)
 
 
 def route_post(handler) -> None:
