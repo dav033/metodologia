@@ -1008,3 +1008,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + the ceiling measures what it was made for, a ping-pong between two tasks. − it reads the audit log on each clash (small).
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T17
 
+## D-113 — A result that puts undeclared files back to an older version is rejected
+
+- **Date:** 2026-10-21 · **Status:** Accepted · **Refines:** D-089, D-111
+- **Context:** after D-111 the REQ-027 audit still found F41/F42 (T8a's edit module): T9's tree had the 103-line fix but T16's, built from T9 + T14 + T14b + T15f, had the old 57-line file. The integration of T9+T14+T14b kept 103; adding T15f's snapshot (which carries the older T8a lineage) made the merge return 57. A result that holds an older version of a file a predecessor fixed hands the regression to every merge after it. Whether it came from an agent resolving a conflict with the stale side or from the integrator's fallback merge over earlier results was not established (the T15f snapshot itself shows no revert against its first parent).
+- **Decision:** `PredecessorIntegrator.reverted(task, snapshot)` finds files changed to a blob that an earlier commit of the base's history had (and not the base's own), outside the paths the task declares; the quality adapter rejects such a result at acceptance with a note to restore them (`revert_check`, wired like the markers check). It catches agent-made reverts; it does not catch the integrator picking an old side, which stays open. Also done by hand for REQ-027: T6 (new finding F55, timestamp cursor), T15f, T16, T17 sent back with the instruction to keep T8a's newest `bt_remote_edit.py` (a targeted rework instead of the 21-task cascade the card offered). REQ-029 T5a retried with the fix for its `.git`-dependent test (a disposable repository).
+- **Consequences:** + a stale-file regression is rejected where it is made. − heuristic by blob history (40 commits deep), false positive when a task deliberately restores an older version of a file it does not declare. The true fix is still one integration line per run (P-134).
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18
+
