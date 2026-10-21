@@ -165,6 +165,9 @@ class GatewayRuntime:
             raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Laptop returned an invalid confirmation challenge", None)
         return challenge
 
+    def read_model(self, path: str) -> dict[str, Any]:
+        return self.laptop.read_model(path)
+
     def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
         if command["type"] not in {"pause", "resume"} or command["target"]["kind"] != "run":

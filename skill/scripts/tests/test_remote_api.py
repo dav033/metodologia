@@ -109,14 +109,80 @@ class RemoteApiTests(unittest.TestCase):
             finally:
                 self.stop_server(process)
 
+    def test_read_models_route_to_command_ledger_quotas_and_eligible_routes(self):
+        import bt_remote_api
+        import bt_core
+        import bt_plans_api
+        import bt_remote_commands
+        import bt_route_pins
+        import bt_subscriptions
+
+        class Handler:
+            headers = {"Authorization": f"Bearer {TEST_KEY}"}
+            path = ""
+
+            def send(self, body, status, content_type):
+                self.body, self.status, self.content_type = body, status, content_type
+
+        class Candidate:
+            route_id = "claude-sonnet"
+            provider = "claude"
+            model = "sonnet"
+            profile = "work"
+
+        calls = []
+        ledger_row = {"idempotency_key": "command-1", "command": "retry", "target": "demo/REQ-001",
+                      "origin": "web", "status": "OK", "outcome": '{"status":"accepted"}',
+                      "code": None, "received_at": "2026-10-20T10:00:00Z"}
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
+                patch("bt_remote_commands.Ledger", return_value=type("LedgerStub", (), {
+                    "rows": lambda self: [ledger_row]})()), \
+                patch.object(bt_subscriptions, "summary", return_value=[{"profile": "work", "provider": "claude",
+                    "status": "ok", "observed_at": 1792490400, "windows": {}}]), \
+                patch.object(bt_core, "ROOT", Path("/tmp")), \
+                patch.object(bt_plans_api, "req_dir", return_value=Path("/tmp/demo/REQ-001")), \
+                patch.object(bt_route_pins, "available", side_effect=lambda project, rdir, task, _pin: (
+                    calls.append((project, task)) or (Candidate(),))):
+            handler = Handler()
+            handler.path = "/api/remote/v1/commands?after=&limit=100"
+            bt_remote_api.route_get(handler)
+            commands = json.loads(handler.body)
+            self.assertEqual(handler.status, 200)
+            self.assertEqual(commands["commands"][0]["id"], "command-1")
+
+            handler = Handler()
+            handler.path = "/api/remote/v1/quotas"
+            bt_remote_api.route_get(handler)
+            self.assertEqual(json.loads(handler.body)["accounts"][0]["profile"], "work")
+
+            handler = Handler()
+            handler.path = "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1"
+            bt_remote_api.route_get(handler)
+            routes = json.loads(handler.body)
+            self.assertEqual(routes["routes"][0]["routeId"], "claude-sonnet")
+            self.assertTrue(routes["routes"][0]["available"])
+            self.assertEqual(calls, [("demo", "T1")])
+
     def test_snapshot_uses_shared_now_frame_and_exposes_rejected_review_attempt(self):
         import bt_core
         import bt_live_api as live
         import bt_server
+        import bt_plans_api as plans_api
+        import bt_rounds
 
         with tempfile.TemporaryDirectory() as root, patch.dict(os.environ, {"FLOW_GATEWAY_KEY": TEST_KEY}), \
                 patch.object(bt_core, "ROOT", Path(root)), \
-                patch.object(live, "now_items", wraps=live.now_items) as read_now:
+                patch.object(live, "now_items", wraps=live.now_items) as read_now, \
+                patch.object(plans_api, "plans_payload", return_value=[{"project": "demo", "req_id": "REQ-001",
+                              "plan_status": "approved", "run_status": "running", "updated_at": "2026-10-20T10:01:00Z"}]), \
+                patch.object(bt_rounds, "load", return_value={"round": 2, "title": "Coverage", "intro": "Context",
+                              "coverage": "2/5", "status": "open", "questions": [{"id": "q1", "text": "Scope?",
+                              "type": "choice", "options": [{"key": "a", "label": "Option A"}]}]}), \
+                patch.object(bt_rounds, "list_rounds", return_value=[Path("/tmp/round-02.json")]), \
+                patch.object(plans_api, "open_decisions", return_value=[{"id": "decision-1", "title": "Choose",
+                              "what": "Select", "options": [{"id": "continue", "label": "Continue",
+                              "consequence": "Run continues"}]}]), \
+                patch.object(plans_api, "req_dir", return_value=Path("/tmp/REQ-001")):
             base = Path(root).resolve()
             rdir = base / "demo" / "requirements" / "REQ-001-fixture"
             rdir.mkdir(parents=True)
@@ -165,6 +231,11 @@ class RemoteApiTests(unittest.TestCase):
             self.assertTrue(content_type.startswith("application/json"))
             self.assertLess(elapsed, 1.0)
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
+            self.assertEqual((snapshot["runs"][0]["req"], snapshot["runs"][0]["state"]), ("REQ-001", "running"))
+            self.assertEqual((snapshot["plans"][0]["req"], snapshot["plans"][0]["state"]), ("REQ-001", "approved"))
+            self.assertEqual(snapshot["rounds"][0]["round"], 2)
+            self.assertEqual(snapshot["rounds"][0]["questions"][0]["options"][0]["label"], "Option A")
+            self.assertEqual(snapshot["decisionRequests"][0]["id"], "decision-1")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]

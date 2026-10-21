@@ -24,7 +24,7 @@ def attempt(attempt_id: str, **values):
 
 
 def run(tasks, **values):
-    return {"project": "demo", "req_id": "REQ-001", "title": "Demo", "updated_at": AT,
+    return {"project": "demo", "req_id": "REQ-001", "title": "Demo", "updated_at": AT, "max_attempts": 3,
             "active": False, "status": "running", "tasks": tasks, **values}
 
 
@@ -35,7 +35,7 @@ def events_for(state, now=None):
 class FixtureTests(unittest.TestCase):
     def test_each_notification_kind_has_a_fixture(self):
         fixtures = {
-            "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
+            "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build", "attempts": 3,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -130,6 +130,35 @@ class RouteTests(unittest.TestCase):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
+
+    def test_production_events_route_waits_for_retry_budget_exhaustion(self):
+        import bt_live_api as live
+
+        flow_row = {"id": "transition-1", "kind": "attempt_transition", "remote_type": "attempt.failed",
+                    "project": "demo", "req": "REQ-001", "task": "T1", "attempt": "a1", "at": AT,
+                    "data": {"state": "failed"}}
+        run_row = run([{"id": "T1", "attempts": 1,
+                        "attempt": attempt("a1", state="failed", failure="transient")}])
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_live_api.run_summaries", return_value=[run_row]), \
+                patch("bt_plans_api.plans_payload", return_value=[]), \
+                patch("bt_subscriptions.summary", return_value=[]), \
+                patch("bt_remote_commands.Ledger", return_value=type("LedgerStub", (), {"rows": lambda self: []})()), \
+                patch("bt_live_api.flow_events", return_value=([flow_row], [], {})):
+            handler = Handler()
+            bt_remote_api.route_get(handler)
+            payload = json.loads(handler.body)
+            self.assertEqual(handler.status, 200)
+            self.assertFalse(any(event["type"] == "attempt.failed" for event in payload["events"]))
+
+            run_row["tasks"][0]["attempts"] = 3
+            flow_row["data"].update({"attempts_used": 3, "max_attempts": 3})
+            handler = Handler()
+            bt_remote_api.route_get(handler)
+            payload = json.loads(handler.body)
+            failed = [event for event in payload["events"] if event["type"] == "attempt.failed"]
+            self.assertTrue(failed)
+            self.assertEqual(failed[0]["target"]["attemptId"], "a1")
 
 
 if __name__ == "__main__":
