@@ -142,16 +142,16 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
             if route.path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
                 self._json(404, {"error": "not found"})
                 return
-            client_key = self.client_address[0]
-            if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+            token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+            login = service.store.get_session(token) if token else None
+            if login is None:
+                self._json(401, {"error": "unauthorized"})
+                return
+            if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                 self._rate_limited()
                 return
             if runtime is None:
                 self._json(404, {"error": "not found"})
-                return
-            token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-            if not token or service.store.get_session(token) is None:
-                self._json(401, {"error": "unauthorized"})
                 return
             error_code = "INVALID_CHALLENGE" if route.path.endswith("/challenges") else "INVALID_COMMAND"
             try:
