@@ -227,7 +227,7 @@ class RouteTests(unittest.TestCase):
         handler = Handler()
         source = run([{"id": "T1", "state": "recovering", "attempts_used": 1, "max_attempts": 3,
                        "attempt": attempt("a1", state="failed", failure="agent exited") }])
-        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
+        transition = {"kind": "attempt_transition", "project": "demo", "req": "REQ-001", "task": "T1",
                       "id": "transition-1", "at": AT, "data": {"state": "failed", "failure": "agent exited"}}
         class LedgerStub:
             def rows(self):
@@ -250,17 +250,17 @@ class RouteTests(unittest.TestCase):
             failed = next(event for event in json.loads(handler.body)["events"] if event["type"] == "attempt.failed")
             self.assertTrue(failed["data"]["retryExhausted"])
             self.assertEqual((failed["data"]["attemptsUsed"], failed["data"]["maxAttempts"]), (3, 3))
+            self.assertEqual(failed["data"]["retriesRemaining"], 0)
 
-    def test_attempt_transition_route_requires_and_reports_retry_exhaustion(self):
-        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
+    def test_attempt_transition_requires_and_reports_retry_exhaustion(self):
+        transition = {"kind": "attempt_transition", "project": "demo", "req": "REQ-001", "task": "T1",
                       "attempt": "a1", "id": "transition-1", "at": AT,
                       "data": {"state": "failed", "failure": "agent exited"}}
         exhausted = {**transition, "data": {"state": "failed", "failure": "agent exited",
                                               "attempts_used": 3, "max_attempts": 3,
                                               "retries_remaining": 0}}
 
-        event = feed.from_flow(transition)
-        self.assertIsNone(event)
+        self.assertIsNone(feed.from_flow(transition))
         event = feed.from_flow(exhausted)
         self.assertIsNotNone(event)
         self.assertEqual(event["type"], "attempt.failed")
@@ -316,57 +316,10 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(handler.status, 200)
             payload = json.loads(handler.body)
             failed = [event for event in payload["events"] if event["type"] == "attempt.failed"]
-<<<<<<< 994fd1e9ee28e03cae2f7c757218ab60ae7fe2e1
             self.assertEqual(len(failed), 3)
             self.assertEqual(len({event["id"] for event in failed}), 3)
             self.assertEqual({event["data"]["attemptsUsed"] for event in failed}, {3})
             self.assertEqual({event["data"]["maxAttempts"] for event in failed}, {3})
-||||||| a4936d53d3e29e51d1bd14e4f17968ee51c77dfa
-            self.assertEqual(len(failed), 1)
-            self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
-            self.assertTrue(failed[0]["data"]["retryExhausted"])
-            self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-=======
-    def test_events_route_requires_exhaustion_for_failed_attempt_transition(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            transition = {"id": "transition-1", "kind": "attempt_transition", "state": "failed",
-                          "project": "demo", "req": "REQ-001", "task": "T1", "attempt": "a1",
-                          "at": AT, "data": {"failure": "tests"}}
-            exhausted = {**transition, "data": {"failure": "tests", "attemptsUsed": 3,
-                                                 "maxAttempts": 3, "retriesRemaining": 0}}
-
-            class LedgerStub:
-                def rows(self):
-                    return []
-
-            def poll():
-                handler = Handler()
-                with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
-                    bt_remote_api.route_get(handler)
-                self.assertEqual(handler.status, 200)
-                return json.loads(handler.body)
-
-            with patch("bt_core.ROOT", root), \
-                    patch("bt_live_api.run_summaries", return_value=[]), \
-                    patch("bt_plans_api.plans_payload", return_value=[]), \
-                    patch("bt_live_api.flow_events", side_effect=[([transition], [], {}), ([exhausted], [], {})]), \
-                    patch("bt_subscriptions.summary", return_value=[]), \
-                    patch("bt_remote_commands.Ledger", LedgerStub):
-                self.assertEqual(poll()["events"], [])
-                events = poll()["events"]
-                self.assertEqual(len(events), 1)
-                self.assertEqual(events[0]["type"], "attempt.failed")
-                self.assertTrue(events[0]["data"]["retryExhausted"])
-                self.assertEqual(events[0]["data"]["attemptsUsed"], 3)
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
-=======
-            self.assertEqual(len(failed), 1)
-            self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
-            self.assertTrue(failed[0]["data"]["retryExhausted"])
-            self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
->>>>>>> 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

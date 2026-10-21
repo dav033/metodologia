@@ -52,7 +52,7 @@ def handle_remote_get(handler, service, runtime, route) -> bool:
     if route.query:
         path += "?" + urlencode([(key, value) for key, values in query.items() for value in values])
     try:
-        payload = runtime.read_remote(path)
+        payload = runtime.laptop.get_json(path)
     except UpstreamError:
         handler._json(503, {"code": "LAPTOP_UNAVAILABLE"})
         return True

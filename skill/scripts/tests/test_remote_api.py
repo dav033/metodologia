@@ -120,7 +120,8 @@ class RemoteApiTests(unittest.TestCase):
             base = Path(root).resolve()
             rdir = base / "demo" / "requirements" / "REQ-001-fixture"
             rdir.mkdir(parents=True)
-            tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low"},
+            tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low",
+                      "acceptance_criteria": ["Active work is visible"]},
                      {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"}]
             plan = {"schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
                     "milestones": [{"id": "M1", "title": "First"}], "tasks": tasks}
@@ -167,6 +168,11 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
             self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["runs"][0]["state"], "running")
+            self.assertIn("activeAttempt", snapshot["runs"][0])
+            self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
+            self.assertEqual(snapshot["plans"][0]["tasks"][0]["acceptanceCriteria"],
+                             ["Active work is visible"])
+            self.assertEqual(snapshot["plans"][0]["acceptanceCriteria"], ["Active work is visible"])
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]

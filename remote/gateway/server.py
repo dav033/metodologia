@@ -19,26 +19,7 @@ from auth import (
     cookie_values,
 )
 from stream import SnapshotUnavailable, StreamHub, format_sse
-<<<<<<< 994fd1e9ee28e03cae2f7c757218ab60ae7fe2e1
-||||||| a4936d53d3e29e51d1bd14e4f17968ee51c77dfa
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-from stream import StreamHub, format_sse
-<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-=======
 from read_routes import handle_remote_get
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
-=======
-from read_routes import handle_remote_get
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
-=======
-from stream import StreamHub, format_sse
-from read_routes import handle_remote_get
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
-=======
-from read_routes import handle_remote_get
->>>>>>> 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)

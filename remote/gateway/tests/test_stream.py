@@ -6,45 +6,7 @@ import tempfile
 import threading
 import unittest
 from pathlib import Path
-<<<<<<< 994fd1e9ee28e03cae2f7c757218ab60ae7fe2e1
-||||||| a4936d53d3e29e51d1bd14e4f17968ee51c77dfa
-<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-import unittest
-=======
-import unittest
-import http.client
-import json
-import tempfile
-import threading
-from pathlib import Path
 from unittest.mock import Mock
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
-
-<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
-import http.client
-import json
-import tempfile
-import threading
-import unittest
-from pathlib import Path
-=======
-import unittest
-import http.client
-import json
-import tempfile
-import threading
-from pathlib import Path
-from unittest.mock import Mock
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
-=======
-from unittest.mock import Mock
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
-=======
-from unittest.mock import Mock
->>>>>>> 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
 
 from app import GatewayRuntime
 from auth import SESSION_COOKIE, OAuthConfig, SessionStore
@@ -198,7 +160,7 @@ class HttpTests(unittest.TestCase):
         self.server = create_server(
             OAuthConfig(client_id="i", client_secret="s", session_secret=secret,
                         frontend_origin="https://flow.example.test", database_path=db),
-            ("127.0.0.1", 0), hub=self.hub)
+            ("127.0.0.1", 0), hub=self.hub, runtime=self.runtime)
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.server.server_close)
         self.addCleanup(self.server.shutdown)
@@ -249,6 +211,28 @@ class HttpTests(unittest.TestCase):
         self.assertIn("generatedAt", body)
         self.assertIn("cursor", body)
 
+    def test_authenticated_gateway_read_routes_reach_laptop_api(self):
+        self.runtime.laptop.get_json = Mock(side_effect=lambda path: {"path": path})
+        paths = (
+            "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
+            "/api/remote/v1/quotas",
+            "/api/remote/v1/commands?after=&limit=10",
+            "/api/remote/v1/history?after=&limit=10",
+            "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                conn, response = self.get(path)
+                payload = json.loads(response.read())
+                conn.close()
+                self.assertEqual(response.status, 200)
+                self.assertEqual(payload["path"], path)
+        self.runtime.laptop.get_json.assert_any_call("/api/remote/v1/quotas")
+        conn, response = self.get("/api/remote/v1/quotas", auth=False)
+        response.read()
+        conn.close()
+        self.assertEqual(response.status, 401)
+
     def test_reconnect_with_last_event_id_loses_no_events(self):
         first = self.hub.publish({"n": 0})
         for n in range(1, 6):
@@ -276,179 +260,6 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(got[0][2]["runs"], ["x"])
         self.assertNotIn("snapshot", got[0][2])
 
-<<<<<<< 994fd1e9ee28e03cae2f7c757218ab60ae7fe2e1
-||||||| a4936d53d3e29e51d1bd14e4f17968ee51c77dfa
-<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-<<<<<<< df0c3380ae4eade2520bfd7c3fd1edb9a7ce2595
-||||||| be7c0f732ccaf1b2b6139dc222cbf0fb0cd9c8fa
-    def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
-        with tempfile.TemporaryDirectory() as directory:
-            database = str(Path(directory) / "gateway.sqlite")
-            secret = "test-session-secret-with-at-least-32-characters"
-            session = SessionStore(database, secret).create_session("dav033")
-            config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
-            runtime = Mock()
-            runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            self.addCleanup(server.server_close)
-            self.addCleanup(server.shutdown)
-            self.addCleanup(thread.join, 2)
-
-            paths = (
-                "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
-                "/api/remote/v1/quotas",
-                "/api/remote/v1/commands?after=&limit=10",
-                "/api/remote/v1/history?after=&limit=10",
-                "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
-            )
-            for path in paths:
-                with self.subTest(path=path):
-                    connection = http.client.HTTPConnection(*server.server_address, timeout=2)
-                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
-                    response = connection.getresponse()
-                    body = json.loads(response.read())
-                    connection.close()
-                    self.assertEqual(response.status, 200)
-                    self.assertEqual(body["path"], path)
-
-            runtime.read_remote.assert_any_call("/api/remote/v1/quotas")
-            unauthenticated = http.client.HTTPConnection(*server.server_address, timeout=2)
-            unauthenticated.request("GET", "/api/remote/v1/quotas")
-            response = unauthenticated.getresponse()
-            response.read()
-            unauthenticated.close()
-            self.assertEqual(response.status, 401)
-
-=======
-    def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
-        with tempfile.TemporaryDirectory() as directory:
-            database = str(Path(directory) / "gateway.sqlite")
-            secret = "test-session-secret-with-at-least-32-characters"
-            session = SessionStore(database, secret).create_session("dav033")
-            config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
-            runtime = Mock()
-            runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime=runtime)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            self.addCleanup(server.server_close)
-            self.addCleanup(server.shutdown)
-            self.addCleanup(thread.join, 2)
-
-            paths = (
-                "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
-                "/api/remote/v1/quotas",
-                "/api/remote/v1/commands?after=&limit=10",
-                "/api/remote/v1/history?after=&limit=10",
-                "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
-            )
-            for path in paths:
-                with self.subTest(path=path):
-                    connection = http.client.HTTPConnection(*server.server_address, timeout=2)
-                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
-                    response = connection.getresponse()
-                    body = json.loads(response.read())
-                    connection.close()
-                    self.assertEqual(response.status, 200)
-                    self.assertEqual(body["path"], path)
-
-            runtime.read_remote.assert_any_call("/api/remote/v1/quotas")
-            unauthenticated = http.client.HTTPConnection(*server.server_address, timeout=2)
-            unauthenticated.request("GET", "/api/remote/v1/quotas")
-            response = unauthenticated.getresponse()
-            response.read()
-            unauthenticated.close()
-            self.assertEqual(response.status, 401)
-
->>>>>>> 3f2cfc39914a25e7888c2fc9a4d34485f8cd0bed
-
-=======
-    def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
-        with tempfile.TemporaryDirectory() as directory:
-            database = str(Path(directory) / "gateway.sqlite")
-            secret = "test-session-secret-with-at-least-32-characters"
-            session = SessionStore(database, secret).create_session("dav033")
-            config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
-            runtime = Mock()
-            runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime=runtime)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            self.addCleanup(server.server_close)
-            self.addCleanup(server.shutdown)
-            self.addCleanup(thread.join, 2)
-
-            paths = (
-                "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
-                "/api/remote/v1/quotas",
-                "/api/remote/v1/commands?after=&limit=10",
-                "/api/remote/v1/history?after=&limit=10",
-                "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
-            )
-            for path in paths:
-                with self.subTest(path=path):
-                    connection = http.client.HTTPConnection(*server.server_address, timeout=2)
-                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
-                    response = connection.getresponse()
-                    body = json.loads(response.read())
-                    connection.close()
-                    self.assertEqual(response.status, 200)
-                    self.assertEqual(body["path"], path)
-
-            runtime.read_remote.assert_any_call("/api/remote/v1/quotas")
-            unauthenticated = http.client.HTTPConnection(*server.server_address, timeout=2)
-            unauthenticated.request("GET", "/api/remote/v1/quotas")
-            response = unauthenticated.getresponse()
-            response.read()
-            unauthenticated.close()
-            self.assertEqual(response.status, 401)
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
-=======
-
-    def test_authenticated_gateway_reads_are_forwarded_to_laptop(self):
-        with tempfile.TemporaryDirectory() as directory:
-            database = str(Path(directory) / "gateway.sqlite")
-            secret = "test-session-secret-with-at-least-32-characters"
-            session = SessionStore(database, secret).create_session("dav033")
-            config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
-            runtime = Mock()
-            runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime=runtime)
-            thread = threading.Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            self.addCleanup(server.server_close)
-            self.addCleanup(server.shutdown)
-            self.addCleanup(thread.join, 2)
-
-            paths = (
-                "/api/remote/v1/attempts/a-1/review?target=demo%2FREQ-001",
-                "/api/remote/v1/quotas",
-                "/api/remote/v1/commands?after=&limit=10",
-                "/api/remote/v1/history?after=&limit=10",
-                "/api/remote/v1/routes?target=demo%2FREQ-001&task=T1",
-            )
-            for path in paths:
-                with self.subTest(path=path):
-                    connection = http.client.HTTPConnection(*server.server_address, timeout=2)
-                    connection.request("GET", path, headers={"Cookie": f"flow_session={session}"})
-                    response = connection.getresponse()
-                    body = json.loads(response.read())
-                    connection.close()
-                    self.assertEqual(response.status, 200)
-                    self.assertEqual(body["path"], path)
-
-            runtime.read_remote.assert_any_call("/api/remote/v1/quotas")
-            unauthenticated = http.client.HTTPConnection(*server.server_address, timeout=2)
-            unauthenticated.request("GET", "/api/remote/v1/quotas")
-            response = unauthenticated.getresponse()
-            response.read()
-            unauthenticated.close()
-            self.assertEqual(response.status, 401)
-
->>>>>>> 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
 
 if __name__ == "__main__":
     unittest.main()
