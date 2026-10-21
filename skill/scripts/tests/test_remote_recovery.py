@@ -292,7 +292,8 @@ class RemoteRecoveryTests(unittest.TestCase):
         current_revision = 1
         body = {"idempotency_key": "owner-edit-brief-0001", "command": "edit-brief",
                 "target": "demo/REQ-001", "origin": "telegram",
-                "params": {"task": "T1", "field": "brief", "value": "Updated owner-approved brief"},
+                # Match the phone producer's objective dialect, through HTTP, ledger and the real dispatcher.
+                "params": {"task": "T1", "field": "objective", "value": "Updated owner-approved brief"},
                 "precondition": {"state": "running", "revision": 1},
                 "confirmation": {"challengeId": challenge["challengeId"], "typedReq": "REQ-001"}}
         handler = Handler(body)
@@ -315,7 +316,8 @@ class RemoteRecoveryTests(unittest.TestCase):
         criteria_challenge = request_ledger.issue_challenge("demo/REQ-001", "REQ-001")
         criteria_body = {"idempotency_key": "owner-edit-criteria-0002", "command": "edit-brief",
                          "target": "demo/REQ-001", "origin": "telegram",
-                         "params": {"task": "T1", "field": "criteria", "value": ["Verify revised acceptance"]},
+                         "params": {"task": "T1", "field": "acceptance_criteria",
+                                    "value": ["Verify revised acceptance"]},
                          "precondition": {"state": "running", "revision": 2},
                          "confirmation": {"challengeId": criteria_challenge["challengeId"],
                                           "typedReq": "REQ-001"}}
@@ -333,6 +335,50 @@ class RemoteRecoveryTests(unittest.TestCase):
         self.assertEqual(revisions.load_revision(rdir, 3)["tasks"][0]["acceptance_criteria"],
                          ["Verify revised acceptance"])
         self.assertEqual(ops.bound_plan(rdir).revision, 3)
+
+        # Working-plan drift outside the requested edit must never be silently approved.
+        plan_path = rdir / "PLAN.json"
+        drifted = json.loads(plan_path.read_text(encoding="utf-8"))
+        drifted["tasks"][0]["objective"] = "Unapproved local change"
+        plan_path.write_text(contract.dumps(drifted), encoding="utf-8")
+        drifted_bytes = plan_path.read_bytes()
+        drift_challenge = request_ledger.issue_challenge("demo/REQ-001", "REQ-001")
+        drift_body = {**body, "idempotency_key": "owner-edit-drift-0003",
+                      "params": {"task": "T1", "field": "objective", "value": "Phone edit"},
+                      "precondition": {"state": "running", "revision": 3},
+                      "confirmation": {"challengeId": drift_challenge["challengeId"], "typedReq": "REQ-001"}}
+        drift_handler = Handler(drift_body)
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), \
+                patch.object(api, "_target_state", return_value={"state": "running", "revision": 3}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"):
+            api.route_post(drift_handler)
+        self.assertEqual(drift_handler.sent[1]["status"], "FAILED")
+        self.assertIn("PLAN_DRIFT", drift_handler.sent[1]["outcome"]["error"])
+        self.assertEqual(plan_path.read_bytes(), drifted_bytes)
+        self.assertEqual(revisions.latest(rdir)["revision"], 3)
+
+        # A refused owner-approval gate must roll back the tentative PLAN.json publication.
+        (rdir / "PLAN.md").write_text(PLAN_MD.replace("REQ-042", "REQ-001").format(status="review"),
+                                     encoding="utf-8")
+        (rdir / "PLAN.json").write_bytes(revisions.revision_path(rdir, 3).read_bytes())
+        pre_edit = plan_path.read_bytes()
+        refused_challenge = request_ledger.issue_challenge("demo/REQ-001", "REQ-001")
+        refused_body = {**body, "idempotency_key": "owner-edit-unapproved-0004",
+                        "params": {"task": "T1", "field": "objective", "value": "Must roll back"},
+                        "precondition": {"state": "running", "revision": 3},
+                        "confirmation": {"challengeId": refused_challenge["challengeId"],
+                                         "typedReq": "REQ-001"}}
+        refused_handler = Handler(refused_body)
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": str(self.root)}), \
+                patch.object(bt_core, "ROOT", self.root), \
+                patch.object(api, "_target_state", return_value={"state": "running", "revision": 3}), \
+                patch("bt_lock._lock_dir", return_value=self.root / ".state" / "locks"):
+            api.route_post(refused_handler)
+        self.assertEqual(refused_handler.sent[1]["status"], "FAILED")
+        self.assertIn("PLAN_NOT_APPROVED", refused_handler.sent[1]["outcome"]["error"])
+        self.assertEqual(plan_path.read_bytes(), pre_edit)
+        self.assertEqual(revisions.latest(rdir)["revision"], 3)
 
 
 if __name__ == "__main__":
