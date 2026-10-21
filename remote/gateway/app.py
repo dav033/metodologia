@@ -73,6 +73,7 @@ class GatewayRuntime:
         self.outbox = NotificationOutbox(str(config.database_path))
         self.liveness = LivenessMonitor()
         self.event_cursor = ""
+        self.snapshot_cache: dict[str, Any] | None = None
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
@@ -210,6 +211,7 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
+        self.snapshot_cache = snapshot
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
@@ -217,28 +219,6 @@ class GatewayRuntime:
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 
-<<<<<<< 0c2b75045d1c088b366d290e1236f82a6204b982
-||||||| dc60481f471192cacb7e098604adb9e83f6ca85a
-    def web_snapshot(self) -> dict[str, Any] | None:
-        """Return the last laptop snapshot with gateway liveness for authenticated web clients."""
-        snapshot = self.snapshot_cache
-        if snapshot is None and self.liveness.status is LaptopStatus.ONLINE:
-            try:
-                snapshot = self.laptop.snapshot()
-            except UpstreamError:
-                return None
-            if not isinstance(snapshot, dict) or not isinstance(snapshot.get("runs"), list):
-                return None
-            self.snapshot_cache = snapshot
-        if snapshot is None:
-            return None
-        result = dict(snapshot)
-        result.setdefault("schemaVersion", 1)
-        result.setdefault("plans", [])
-        result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
-        return result
-
-=======
     def web_snapshot(self) -> dict[str, Any] | None:
         """Return the last laptop snapshot with gateway liveness for authenticated web clients."""
         snapshot = self.snapshot_cache
@@ -262,7 +242,6 @@ class GatewayRuntime:
         """Relay an authenticated gateway read route to the laptop's v1 API."""
         return self.laptop.read_model(path)
 
->>>>>>> 4714cf64fe4c866730eb7ff2dc4f69bf7c4a5603
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)

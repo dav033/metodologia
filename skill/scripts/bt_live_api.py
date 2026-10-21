@@ -273,6 +273,11 @@ def agent_activity(root: Path | None, run: str) -> dict[str, dict[str, Any]]:
 def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
     """Each run of the scope as the plan sees it (`bt_planstatus`, the authority on task state), newest change first."""
     out = []
+    try:
+        import bt_scheduler_run
+        max_attempts = bt_scheduler_run._run_config().max_attempts
+    except Exception:
+        max_attempts = 3
     for project, rdir in runs_in_scope(root, scope):
         try:
             status = ps.plan_status(project, rdir)
@@ -280,7 +285,10 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
             continue
         tasks = [{"id": t["id"], "title": t["title"], "objective": (t.get("detail") or {}).get("objective"),
                   "milestone_id": t.get("milestone_id"), "state": t["state"],
-                  "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
+                  "attempts": t["attempts"], "attempts_used": t["attempts"],
+                  "max_attempts": max_attempts,
+                  "retry_budget_remaining": max(0, max_attempts - t["attempts"]),
+                  "attempt": _attempt(t.get("attempt")),
                   "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],

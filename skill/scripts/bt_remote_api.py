@@ -116,6 +116,8 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
+    import bt_plans_api
+    import bt_rounds
 
     root = bt_core.ROOT
     try:
@@ -150,10 +152,56 @@ def _snapshot(handler) -> None:
                      "activeTask": ({"id": active["task"], "title": active["task_title"],
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
                                     if active else None),
+                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
                      "lastActivityAt": last_activity, "tasks": tasks})
+    plans, rounds, decisions = [], [], []
+    try:
+        for summary in bt_plans_api.plans_payload(root):
+            project, req = summary["project"], summary["req_id"]
+            try:
+                status = bt_plans_api.status_of(root, project, req)
+            except (OSError, ValueError, bt_plans_api.PlanError):
+                continue
+            plan = status.get("plan") if isinstance(status.get("plan"), dict) else {}
+            plan_tasks = []
+            for milestone in status.get("milestones", []):
+                for task in milestone.get("tasks", []):
+                    current = task.get("attempt")
+                    plan_tasks.append({"id": task["id"], "title": task.get("title"),
+                                       "state": task.get("state", "pending"),
+                                       "acceptanceCriteria": task.get("acceptance_criteria", []),
+                                       "activeAttempt": live._attempt(current) if current and current.get("live") else None,
+                                       "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
+            plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
+                          "title": summary.get("title"),
+                          "state": plan.get("status") or summary.get("run_status") or "unknown",
+                          "revision": plan.get("revision"), "updatedAt": summary.get("updated_at"),
+                          "tasks": plan_tasks})
+            decisions.extend({"id": item["id"], "project": project, "req": req,
+                              "task": item.get("task"), "title": item.get("title"),
+                              "what": item.get("what"), "evidence": item.get("evidence", []),
+                              "options": item.get("options", []), "recommended": item.get("recommended"),
+                              "unskippable": item.get("unskippable"), "state": item.get("state", "open"),
+                              "revision": item.get("revision")}
+                             for item in status.get("decisions", []) if isinstance(item, dict))
+            rdir = bt_plans_api.req_dir(root, project, req)
+            for round_path in bt_rounds.list_rounds(rdir):
+                try:
+                    item = bt_rounds.load(round_path)
+                except (OSError, ValueError):
+                    continue
+                rounds.append({"project": project, "req": req, "round": item.get("round"),
+                               "id": item.get("id") or round_path.stem,
+                               "title": item.get("title"), "intro": item.get("intro"),
+                               "coverage": item.get("coverage"), "status": item.get("status"),
+                               "revision": item.get("revision"), "questions": item.get("questions", [])})
+    except (OSError, ValueError, bt_plans_api.PlanError):
+        # A malformed plan must not make the independent run list unavailable.
+        pass
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
+                                "runs": runs, "plans": plans, "rounds": rounds,
+                                "decisionRequests": decisions}, 200)
 
 
 def _command_history(handler) -> None:

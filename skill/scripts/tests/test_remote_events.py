@@ -38,6 +38,7 @@ class FixtureTests(unittest.TestCase):
     def test_each_notification_kind_has_a_fixture(self):
         fixtures = {
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
+                                               "retry_budget_remaining": 0,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -75,6 +76,23 @@ class FixtureTests(unittest.TestCase):
         replay = events_for({"decisions": [{"project": "demo", "req": "REQ-001",
                                              "request": request, "at": AT}]})["plan.waiting"]
         self.assertEqual(event["id"], replay["id"])
+
+    def test_failure_alert_requires_retry_exhaustion_facts(self):
+        failed = run([{"id": "T1", "attempt": attempt("a1", state="failed", failure="tests")}])
+        self.assertNotIn("attempt.failed", events_for({"runs": [failed]}))
+
+        failed["tasks"][0].update(attempts_used=3, max_attempts=3, retry_budget_remaining=0)
+        event = events_for({"runs": [failed]})["attempt.failed"]
+        self.assertEqual(event["data"]["retryBudgetRemaining"], 0)
+        self.assertEqual(event["data"]["attemptsUsed"], 3)
+        self.assertEqual(event["data"]["maxAttempts"], 3)
+
+        self.assertIsNone(feed.from_flow({"kind": "attempt_transition", "remote_type": "attempt.failed",
+                                          "project": "demo", "req": "REQ-001", "data": {"failure": "tests"}}))
+        flow_event = feed.from_flow({"kind": "attempt_transition", "remote_type": "attempt.failed",
+                                     "project": "demo", "req": "REQ-001",
+                                     "data": {"failure": "tests", "retry_budget_remaining": 0}})
+        self.assertEqual(flow_event["data"]["retryBudgetRemaining"], 0)
 
     def test_cursor_pages_replay_the_same_ids(self):
         state = {"rounds": [{"project": "demo", "req": "REQ-001", "round": n,
@@ -138,6 +156,36 @@ class RouteTests(unittest.TestCase):
                 bt_remote_api.route_get(handler)
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
+
+    def test_real_events_route_notifies_failure_only_after_retry_budget_is_exhausted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            failed = run([{"id": "T1", "title": "Build",
+                           "attempt": attempt("a1", state="failed", failure="tests")}])
+
+            class LedgerStub:
+                def rows(self):
+                    return []
+
+            def poll():
+                handler = Handler()
+                bt_remote_api.route_get(handler)
+                self.assertEqual(handler.status, 200)
+                return json.loads(handler.body)["events"]
+
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_core.ROOT", root), \
+                    patch("bt_live_api.run_summaries", return_value=[failed]), \
+                    patch("bt_plans_api.plans_payload", return_value=[]), \
+                    patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                    patch("bt_subscriptions.summary", return_value=[]), \
+                    patch("bt_remote_commands.Ledger", LedgerStub):
+                self.assertNotIn("attempt.failed", [event["type"] for event in poll()])
+                failed["tasks"][0].update(attempts_used=3, max_attempts=3, retry_budget_remaining=0)
+                events = poll()
+                failure = next(event for event in events if event["type"] == "attempt.failed")
+                self.assertEqual(failure["data"]["retryBudgetRemaining"], 0)
+                self.assertEqual(failure["data"]["maxAttempts"], 3)
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

@@ -82,7 +82,15 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 occurred_at = attempt.get("ended_at") or attempt.get("last_activity_at") or run.get("updated_at") or ""
                 data = {"title": task.get("title"), "failure": attempt.get("failure"),
                         "verdict": attempt.get("verdict")}
-                if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
+                remaining = task.get("retry_budget_remaining", attempt.get("retry_budget_remaining"))
+                used = task.get("attempts_used", attempt.get("attempts_used"))
+                maximum = task.get("max_attempts", attempt.get("max_attempts"))
+                exhausted = (isinstance(remaining, int) and not isinstance(remaining, bool) and remaining <= 0)
+                if (isinstance(used, int) and not isinstance(used, bool)
+                        and isinstance(maximum, int) and not isinstance(maximum, bool)):
+                    exhausted = exhausted or maximum > 0 and used >= maximum
+                if (attempt.get("state") in {"rejected", "failed"} or attempt.get("failure")) and exhausted:
+                    data.update({"retryBudgetRemaining": 0, "attemptsUsed": used, "maxAttempts": maximum})
                     out.append(_event("attempt.failed", identity, occurred_at, target, data))
                     state_failure_targets.add((project, req, str(task.get("id", ""))))
                 elif attempt.get("state") == "blocked":
@@ -168,6 +176,16 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
                 ("verdict", "rejected"): "attempt.failed"}.get((row.get("kind"), data.get("state")))
     if kind not in NOTIFICATION_KINDS:
         return None
+    if kind == "attempt.failed":
+        remaining = data.get("retry_budget_remaining", data.get("retryBudgetRemaining"))
+        used, maximum = data.get("attempts_used", data.get("attemptsUsed")), data.get("max_attempts", data.get("maxAttempts"))
+        exhausted = isinstance(remaining, int) and not isinstance(remaining, bool) and remaining <= 0
+        exhausted = exhausted or (isinstance(used, int) and not isinstance(used, bool)
+                                  and isinstance(maximum, int) and not isinstance(maximum, bool)
+                                  and maximum > 0 and used >= maximum)
+        if not exhausted:
+            return None
+        data = {**data, "retryBudgetRemaining": 0, "attemptsUsed": used, "maxAttempts": maximum}
     target = _run_target(str(row.get("project", "unknown")), str(row.get("req", "REQ-000")))
     if row.get("run"):
         project, _, req = str(row["run"]).partition("/")

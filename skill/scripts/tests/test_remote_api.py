@@ -127,6 +127,13 @@ class RemoteApiTests(unittest.TestCase):
             (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
             (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
             (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
+            rounds_dir = rdir / "rounds"
+            rounds_dir.mkdir()
+            (rounds_dir / "round-02.json").write_text(json.dumps({
+                "round": 2, "status": "open", "title": "Scope", "intro": "Confirm scope",
+                "coverage": "edge cases", "revision": 3,
+                "questions": [{"id": "q1", "text": "Continue?", "type": "choice",
+                               "options": [{"key": "yes", "label": "Yes"}]}]}), encoding="utf-8")
             timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
             db = base / ".state" / "scheduler" / "demo-REQ-001.db"
             db.parent.mkdir(parents=True)
@@ -157,7 +164,12 @@ class RemoteApiTests(unittest.TestCase):
             self.addCleanup(server.server_close)
             self.addCleanup(server.shutdown)
             started = time.monotonic()
-            status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
+            decision = {"id": "decision-1", "task": "T2", "title": "Choose", "what": "Pick an option",
+                        "evidence": ["attempts exhausted"],
+                        "options": [{"id": "stop", "label": "Stop", "consequence": "Ends the run"}],
+                        "recommended": "stop", "unskippable": True}
+            with patch("bt_plans_api.open_decisions", return_value=[decision]):
+                status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             elapsed = time.monotonic() - started
             snapshot = json.loads(body)
 
@@ -167,6 +179,7 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["runs"][0]["activeTask"]["id"], "T1")
             self.assertEqual(snapshot["runs"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["runs"][0]["state"], "running")
+            self.assertEqual(snapshot["runs"][0]["activeAttempt"]["id"], "A-live")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -175,6 +188,12 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+            self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
+            self.assertEqual(snapshot["plans"][0]["state"], "approved")
+            self.assertEqual(snapshot["plans"][0]["tasks"][1]["id"], "T2")
+            self.assertEqual(snapshot["rounds"][0]["round"], 2)
+            self.assertEqual(snapshot["rounds"][0]["questions"][0]["id"], "q1")
+            self.assertEqual(snapshot["decisionRequests"][0]["options"][0]["consequence"], "Ends the run")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)
