@@ -9,7 +9,7 @@
         "T16"
       ],
       "summary": "The Caddy upstream and gateway bind instructions match the frozen container-to-host topology.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy-unavailable skip. Probe B (`python -`): exit 0; both parsers accept the filled example with 172.20.0.1:8790, matching Caddyfile. Container connectivity unrun."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy-unavailable skip. Probe B (`python -`): exit 0; both parsers accept the filled example with 172.20.0.1:8790, matching Caddyfile. Container connectivity unrun."
     },
     {
       "id": "F2",
@@ -19,7 +19,7 @@
         "T17"
       ],
       "summary": "The frozen built-web E2E still fails at the empty feed before OAuth/control/offline/Telegram assertions.",
-      "evidence": "`cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 1, 1 test in 26.030 s (26.240 s wall), line 403: nextCursor is empty, events=[]. Optimized production build succeeds. The real T6 producer cannot satisfy exhaustion (F67). Later OAuth/control/offline/Telegram assertions are not reached. T17 also never GETs the production snapshot or issues a challenge, missing F36/F66; its three-alert expectation includes earlier retryable failures (F37). Do not fabricate producer fields or weaken notification semantics."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 1, 1 test in 24.527 s (24.696 s wall), line 403: nextCursor is empty, events=[]. Optimized production build succeeds. Current AH confirms the real T6 producer cannot satisfy exhaustion (F67). OAuth/control/offline/Telegram assertions after line 403 are not reached. T17 never GETs the production snapshot or issues a challenge, missing F36/F66; its three-alert expectation includes earlier retryable failures (F37). Preserve real producer semantics and the no-alert-with-retries invariant."
     },
     {
       "id": "F3",
@@ -60,8 +60,8 @@
         "T14a",
         "T14b"
       ],
-      "summary": "Telegram alerts omit review links, task/cause details and safe inline actions; retry callbacks are unsupported.",
-      "evidence": "Probe B: exit 0, Telegram retry returns INVALID_COMMAND. Current TelegramSender posts chat_id/text only, notification_for_event appends only REQ; app.py accepts Telegram pause/resume only. The current five bot tests pass, but use their own fixtures. Alert review/task/cause/buttons remain missing, while /estado pause/resume keyboard is separate."
+      "summary": "Telegram failure alerts now include a relative review path but still lack an actionable absolute link, cause and safe inline actions; retry callbacks are unsupported.",
+      "evidence": "Fresh Probes B/AI (`python -`, report): exit 0. The new notification_for_event appends /review?project=demo&req=REQ-001&taskId=T1#attempt-a1 and retains run-scoped failure dedupe. Preserve that repair. TelegramSender still sends only chat_id/text; there is no absolute frontend URL, cause, readable task/run context or reply_markup. GatewayRuntime.submit_telegram_command accepts pause/resume only; retry returns INVALID_COMMAND. The current four bot tests pass, but cover their own fixtures. /estado keyboard is separate."
     },
     {
       "id": "F7",
@@ -81,7 +81,7 @@
         "T15f"
       ],
       "summary": "The phone brief form cannot edit acceptance criteria.",
-      "evidence": "Rechecked in this attempt: Fresh page.tsx editBriefForm still sends only objective/string, without an acceptance criteria editing control. Updated E: both backend field aliases create approved revisions correctly. The remaining criteria UI omission is separate from repaired F41."
+      "evidence": "Fresh page.tsx:371-380/410-415 still offers only a brief text area and sends field=objective with a string value; there is no acceptance-criteria control. Extended Probe E (`python -`, report): exit 0; actual gateway/native ledger reject objective, acceptanceCriteria and acceptance_criteria field/value requests as EFFECT_FAILED. The criteria UI omission remains distinct from downstream F41."
     },
     {
       "id": "F9",
@@ -101,7 +101,7 @@
         "T6"
       ],
       "summary": "A plan waiting for approval emits plan.waiting without a scheduler decision.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; plan_status=review emits plan.waiting without a scheduler decision. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe B (`python -`): exit 0; plan_status=review emits plan.waiting without a scheduler decision. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 14 tests."
     },
     {
       "id": "F11",
@@ -145,7 +145,7 @@
         "T6"
       ],
       "summary": "Laptop-side redaction handles the previously missed provider assignments and bearer authorization text.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; synthetic plain OPENAI_API_KEY assignment and Authorization: Bearer values removed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Quoted values remain F56."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe B (`python -`): exit 0; synthetic plain OPENAI_API_KEY assignment and Authorization: Bearer values removed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Quoted values remain F56."
     },
     {
       "id": "F15",
@@ -155,7 +155,7 @@
         "T9"
       ],
       "summary": "The local panel implements inherited systemd listener activation/reload.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including inherited listener/reload/ownership. Same discovery with test_page*.py: exit 0, 43 tests. No host service touched. Missing-systemctl case is independently repaired, F65."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including inherited listener/reload/ownership. Same discovery with test_page*.py: exit 0, 43 tests. No host service touched. Missing-systemctl case is independently repaired, F65."
     },
     {
       "id": "F16",
@@ -185,7 +185,7 @@
         "T15"
       ],
       "summary": "The required web verification fails the 360 px browser assertion.",
-      "evidence": "`cd remote/web && npm run verify`: exit 1, lint/typecheck pass; node tests 13/14 pass, zero skips, 29.193 s (36.601 s wall). Chromium panel-browser.test.mjs:165 measures 366 !== 360. Build not reached in verify; separate exact E2E production build passes. Preserve the width assertion."
+      "evidence": "`cd remote/web && npm run verify`: exit 1, 20.589 s wall; lint/typecheck pass; node tests 13/14 pass, zero skips, 14.837 s. Chromium panel-browser.test.mjs:165 measures 366 !== 360. Build is not reached in verify; the separate exact E2E production build succeeds. This result uses the corrected short workspace-backed TMPDIR; earlier long-path Chromium failures were audit harness artifacts. Preserve the width assertion."
     },
     {
       "id": "F19",
@@ -197,7 +197,7 @@
         "T15d"
       ],
       "summary": "The integrated phone app compiles, typechecks and builds without the previous overlapping declarations.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/web && npm run verify`: lint and strict typecheck pass; node tests fail only width F18. `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: optimized Next.js production build succeeds before the feed failure. No duplicate declarations."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/web && npm run verify`: lint and strict typecheck pass; 13/14 node tests pass, only the 366 !== 360 width assertion fails. `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: optimized Next.js production build succeeds before the empty-feed failure. No overlapping declarations remain."
     },
     {
       "id": "F20",
@@ -207,7 +207,7 @@
         "T15a"
       ],
       "summary": "The phone accepts the real gateway login session dialect.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe A (`python -`): exit 0; actual authenticated gateway session returns HTTP 200 {login:dav033}. `cd remote/web && npm run verify`: browser sessionContractObserved and selected review assertions pass before width failure. Public snapshot is separately broken, F36."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe A (`python -`): exit 0; actual authenticated gateway session returns HTTP 200 {login:dav033}. `cd remote/web && npm run verify`: browser sessionContractObserved and selected review assertions pass before width failure. Public snapshot is separately broken, F36."
     },
     {
       "id": "F21",
@@ -229,7 +229,7 @@
         "T16"
       ],
       "summary": "A completely filled example configuration starts parsing; the prior mandatory-blank allegation is superseded.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe B (`python -`): exit 0; all example keys filled with synthetic values parse in GatewayConfig and OAuthConfig. `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy skip. Empty optional bind remains F54."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe B (`python -`): exit 0; all example keys filled with synthetic values parse in GatewayConfig and OAuthConfig. `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 0, 14 tests, one Caddy skip. Empty optional bind remains F54."
     },
     {
       "id": "F23",
@@ -240,7 +240,7 @@
         "T15d"
       ],
       "summary": "Native keyed command history and its web compilation are restored.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probes C/AG (`python -`): exit 0; actual keyed and authenticated public commands/history return commands/nextCursor without disconnect. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. Web lint/types pass."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probes C/AG (`python -`): exit 0; actual keyed and authenticated public commands/history return commands/nextCursor without disconnect. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. Web lint/types pass."
     },
     {
       "id": "F24",
@@ -251,7 +251,7 @@
         "T8a"
       ],
       "summary": "Wheel and sdist include the actual edit and route-pin implementation modules.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe P (`python -`): exit 0; fresh wheel and sdist include bt_remote_edit.py and bt_route_pins.py; isolated -I imports of bt_remote_api, bt_remote_commands, bt_remote_edit and bt_route_pins all exit 0. Removed inline-replaced snapshot/precondition helpers are not runtime imports; stale pyproject entries alone are not an installed execution failure."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe P (`python -`, report): exit 0; fresh wheel and sdist include bt_remote_edit.py and bt_route_pins.py; isolated -I imports of bt_remote_api, bt_remote_commands, bt_remote_edit and bt_route_pins all exit 0. The obsolete bt_remote_snapshot/bt_remote_preconditions pyproject entries are now removed; the running implementation is inlined. Packaging remains repaired."
     },
     {
       "id": "F25",
@@ -261,7 +261,7 @@
         "T15c"
       ],
       "summary": "The failed-task link consumes the selected real review attempt instead of only a static fixture.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/web && npm run verify`: Chromium selected real rejected-attempt hash/content assertions pass before F18. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Probe AA (`python -`): exit 0, native target-specific causes; AG returns actual public review HTTP 200."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/web && npm run verify`: Chromium selected real rejected-attempt hash/content assertions pass before F18. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests. Probe AA (`python -`): exit 0, native target-specific causes; AG returns actual public review HTTP 200."
     },
     {
       "id": "F26",
@@ -292,7 +292,7 @@
       "tasks": [
         "T5"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe D (`python -`): exit 0; two distinct-key concurrent pauses produce one effect, one OK, one STALE_PRECONDITION and two audit rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py`: exit 0, 23 tests. Independent processes/local writers unrun."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe D (`python -`): exit 0; two distinct-key concurrent pauses produce one effect, one OK, one STALE_PRECONDITION and two audit rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py`: exit 0, 23 tests. Independent processes/local writers unrun."
     },
     {
       "id": "F29",
@@ -333,7 +333,7 @@
       "tasks": [
         "T13"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; phone route_id/model/account survive translation; actual keyed retry on ready stores selected pin and returns OK with only availability and process start stubbed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py`: exit 0, 10 tests. Actual agent execution unrun."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe C (`python -`): exit 0; phone route_id/model/account survive translation; actual keyed retry on ready stores selected pin and returns OK with only availability and process start stubbed. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_recovery.py`: exit 0, 10 tests. Actual agent execution unrun."
     },
     {
       "id": "F33",
@@ -343,7 +343,7 @@
       "tasks": [
         "T13"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; actual keyed answer-round stores answers; field/value survive gateway translation. This fixes the gateway forwarding defect only: current E demonstrates the separate downstream T8a regression F41. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe C (`python -`): exit 0; actual keyed answer-round stores answers; field/value survive gateway translation. This fixes the gateway forwarding defect only: current E demonstrates the separate downstream T8a regression F41. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests."
     },
     {
       "id": "F34",
@@ -354,7 +354,7 @@
         "T14",
         "T14a"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 0, 4 tests; same discovery with test_telegram_send.py: exit 0, 3 tests. Both frozen files exist and execute."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 0, 4 tests; same discovery with test_telegram_send.py: exit 0, 3 tests. Both frozen test files exist and execute. Bot discovery also exits 0 with 4 tests; passing test presence does not resolve the production gaps."
     },
     {
       "id": "F35",
@@ -364,7 +364,7 @@
       "tasks": [
         "T4a"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe C (`python -`): exit 0; exact TypeScript parseSnapshot from page.tsx accepts one actual laptop run and plans. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. This is the native serializer boundary; public gateway envelope regression is high F36."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe C (`python -`): exit 0; exact TypeScript parseSnapshot from page.tsx accepts one actual laptop run and plans. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py`: exit 0, 5 tests. This is the native serializer boundary; public gateway envelope regression is high F36."
     },
     {
       "id": "F36",
@@ -395,7 +395,7 @@
         "T13",
         "T12"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe G (`python -`): exit 0; real HTTP 400 structured INVALID_CURSOR resets GatewayRuntime.event_cursor to empty. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests. Rebuild-from-now policy remains F57."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe G (`python -`): exit 0; real HTTP 400 structured INVALID_CURSOR resets GatewayRuntime.event_cursor to empty. `cd remote/gateway && python -m unittest discover -s tests -p test_commands.py`: exit 0, 12 tests. Rebuild-from-now policy remains F57."
     },
     {
       "id": "F39",
@@ -426,7 +426,7 @@
       "tasks": [
         "T8a"
       ],
-      "evidence": "Current Probe E (`python -`): exit 0; real keyed HTTP command with real Ledger-issued challenge and phone field=objective/value returns FAILED/EFFECT_FAILED \"edit-brief requiere task y brief no vacíos.\", latest revision stays 1. page.tsx:378 sends field/value; app.py forwards them; bt_remote_edit.py:22-24 requires brief and has no acceptance_criteria branch. Exact recovery suite passes 10 tests but removed both field-alias/rollback integration regressions from earlier 12-test tree. Restore field aliases and criteria editing without losing legacy compatibility."
+      "evidence": "Extended Probe E (`python -`, report): exit 0. Real keyed HTTP through GatewayRuntime returns FAILED/EFFECT_FAILED for the actual phone objective field/value and both acceptanceCriteria/acceptance_criteria array aliases, with edit-brief requiere task y brief no vacíos; latest revision stays 1. app.py preserves field/value (C/AI), but bt_remote_edit.py:24 requires brief. No criteria edit implementation exists. Exact recovery suite still passes its legacy brief fixtures (10 tests)."
     },
     {
       "id": "F42",
@@ -436,7 +436,7 @@
       "tasks": [
         "T8a"
       ],
-      "evidence": "Current Probe E (`python -`): exit 0; actual approved frozen r1 and run binding, real native keyed HTTP and one-use Ledger challenges. Legacy brief command over a working copy with unrelated T2 objective change returns FAILED/PLAN_CONSUMER_INCOMPATIBLE, yet latest frozen revision is r2 containing the unrelated T2 change. A second edit with PLAN.md in review also fails but leaves changed PLAN.json and frozen r3. bt_remote_edit.py:28-47 reads working PLAN.json, writes and freezes before any guard; it neither checks the bound approved base nor restores bytes. plan_consumer_problem(rdir) receives no capability report and necessarily rejects schema >=1.2.0 after mutation. Preserve actual owner approval, bound-base drift checks, compatibility evidence and failure rollback; do not label this failed command as having successfully rebased."
+      "evidence": "Fresh extended Probe E (`python -`, report): exit 0. With the existing legacy brief dialect, unrelated unapproved T2 working-plan drift is frozen into revision 2 before PLAN_CONSUMER_INCOMPATIBLE returns FAILED. A subsequent refused edit publishes revision 3 and leaves changed working bytes (before != after). bt_remote_edit.py:35-48 loads mutable PLAN.json, writes/freezes before the publication gate and has no rollback. Owner-approved-base and atomicity safeguards remain absent; no successful rebase is claimed."
     },
     {
       "id": "F43",
@@ -446,7 +446,7 @@
       "tasks": [
         "T14a"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe N (`python -`): exit 0; expiry drops at attempt 0, failed delivery records timestamped retry, later expiry preserves attempts and drops. `cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py`: exit 0, 3 tests. No 90-day retention claim."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe N (`python -`): exit 0; expiry drops at attempt 0, failed delivery records timestamped retry, later expiry preserves attempts and drops. `cd remote/gateway && python -m unittest discover -s tests -p test_telegram_send.py`: exit 0, 3 tests. No 90-day retention claim."
     },
     {
       "id": "F44",
@@ -466,7 +466,7 @@
       "tasks": [
         "T10"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py`: exit 0, 5 tests, including complete synthetic OAuth-configured entrypoint. No deployed provider/host service used."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: `cd remote/gateway && python -m unittest discover -s tests -p test_liveness.py`: exit 0, 5 tests, including complete synthetic OAuth-configured entrypoint. No deployed provider/host service used."
     },
     {
       "id": "F46",
@@ -570,7 +570,7 @@
         "T6"
       ],
       "summary": "Persisted first-observation cursors deliver late-derived events after an earlier saved cursor.",
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe R (`python -`): exit 0; persisted observation cursor delivers late stall/round after an older saved cursor and advances sequence. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe R (`python -`): exit 0; persisted observation cursor delivers late stall/round after an older saved cursor and advances sequence. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 14 tests."
     },
     {
       "id": "F56",
@@ -633,7 +633,7 @@
       "tasks": [
         "T6"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AA (`python -`): exit 0; two actual M1 runs allocate att-0001, run-scoped blocked events have distinct dedupe keys and outbox keeps both rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 13 tests."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe AA (`python -`): exit 0; two actual M1 runs allocate att-0001, run-scoped blocked events have distinct dedupe keys and outbox keeps both rows. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py`: exit 0, 14 tests."
     },
     {
       "id": "F62",
@@ -643,7 +643,7 @@
       "tasks": [
         "T7"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AA (`python -`): exit 0; actual runs sharing att-0001 return their respective distinct causes via target-specific native review. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests including actual HTTP second-run selection/missing/foreign target refusal. Both phone callers include target; AG confirms public review HTTP 200."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe AA (`python -`): exit 0; actual runs sharing att-0001 return their respective distinct causes via target-specific native review. `cd skill/scripts && python -m unittest discover -s tests -p test_remote_review.py`: exit 0, 3 tests including actual HTTP second-run selection/missing/foreign target refusal. Both phone callers include target; AG confirms public review HTTP 200."
     },
     {
       "id": "F63",
@@ -673,7 +673,7 @@
       "tasks": [
         "T9"
       ],
-      "evidence": "Rechecked on 578cdda9c563ac4bf33cb859fb1e898574a202f4: Probe AE (`python -`): exit 0; shutil.which(systemctl)=None causes one mocked detached startup and no systemctl call. Present-but-failing systemctl still fails closed without a competing server. `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including the missing-systemctl startup regression. Earlier AE stubbed subprocess failure while leaving discovery reporting an installed binary; that no longer models an absent binary."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe AE (`python -`): exit 0; shutil.which(systemctl)=None causes one mocked detached startup and no systemctl call. Present-but-failing systemctl still fails closed without a competing server. `cd skill/scripts && python -m unittest discover -s tests -p test_platform.py`: exit 0, 28 tests, including the missing-systemctl startup regression. Earlier AE stubbed subprocess failure while leaving discovery reporting an installed binary; that no longer models an absent binary."
     },
     {
       "id": "F66",
@@ -683,7 +683,7 @@
         "T5b"
       ],
       "summary": "The keyed laptop challenge endpoint was removed, making all challenged web operations unreachable.",
-      "evidence": "Current Probe AG (`python -`): exit 0; actual RemoteHandler POST /api/remote/v1/challenges with valid synthetic bearer returns HTTP 404 NOT_FOUND; main-equivalent authenticated public gateway returns HTTP 200 NOT_FOUND without challengeId. Actual route_post handles only commands; Ledger.issue_challenge exists without HTTP issuance. Approve/launch/revise/edit-brief cannot obtain required challenges. Restore validated/authenticated issuance and actual native/public HTTP lifecycle tests; do not weaken 120 s target-bound one-use checks."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe AG (`python -`, report): exit 0; actual bt_server.RemoteHandler POST /api/remote/v1/challenges with valid synthetic bearer returns HTTP 404 NOT_FOUND; main-equivalent authenticated public gateway returns HTTP 200 NOT_FOUND without challengeId. route_post handles commands only; Ledger.issue_challenge is not exposed over HTTP. Approve/launch/revise/edit-brief cannot obtain required challenges. Preserve target-bound one-use 120 s enforcement when restoring issuance."
     },
     {
       "id": "F67",
@@ -693,7 +693,17 @@
         "T6"
       ],
       "summary": "The actual laptop run projection cannot satisfy the new exhaustion predicate, so exhausted failures never notify.",
-      "evidence": "Probe AH (`python -`): exit 0; real T17 scheduler fixture exhausts max_attempts=3 and projects attempts=3 with three failed history records, but lacks attempts_used/max_attempts/retries_remaining/retry_exhausted required by _retry_exhausted. Real build_events returns no attempt.failed. Exact T17 also fails with empty real keyed events. The redone bt_live_api removed budget fields while feed tightened their requirement. Expose authoritative per-run/per-task budget state (not guessed global defaults), preserve no-alert-with-retries invariant, and test the real producer/feed/outbox boundary."
+      "evidence": "Rechecked on 212abc5a76f2f852b06d45763b9640b0babc67b6: Probe AH (`python -`, report): exit 0. Real T17/M1 scheduler fixture exhausts max_attempts=3 and actual live projection has attempts=3 and three failed history records, but omits attempts_used/max_attempts/retries_remaining/retry_exhausted required by _retry_exhausted. Actual build_events returns []. The exact T17 test also fails with empty real keyed events. Current from_flow expansion still requires the same absent budget evidence; no fabricated producer fields or relaxed retry filtering are a repair."
+    },
+    {
+      "id": "F68",
+      "severity": "low",
+      "status": "open",
+      "tasks": [
+        "T5"
+      ],
+      "summary": "Immediate command error responses forward handler exception text without redaction.",
+      "evidence": "Fresh Probe AJ (`python -`, report): exit 0. Injecting a handler ValueError with a synthetic FLOW_GATEWAY_KEY assignment into the real native HTTP command path produces FAILED/EFFECT_FAILED with that text unchanged through GatewayRuntime; the existing redactor removes it when explicitly called. Ledger.submit catches str(exc)[:300] without sanitizing. Public command history correctly excludes the exception value. This confirms the error boundary with an injected failure, not a built-in secret-bearing exception, live credential leak or theft; severity stays low."
     }
   ]
 }
