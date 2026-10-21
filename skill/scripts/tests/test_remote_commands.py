@@ -1,6 +1,7 @@
 """Command ledger: idempotency, preconditions, audit rows; exercised also through bt_remote_api.route_post."""
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import os
@@ -13,8 +14,13 @@ from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
+sys.path.insert(0, str(SCRIPTS / "bt_scheduler_core" / "tests"))
 import bt_remote_api
 import bt_remote_commands as rc
+import bt_scheduler_adapter as scheduler_adapter
+import bt_scheduler_core as scheduler_core
+import bt_scheduler_ops
+from support import Harness, indep
 
 KEY = "test-gateway-key-0123456789"
 
@@ -170,15 +176,55 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(command="nope"))[0], 400)
         self.assertEqual(self.post(b"{not json")[0], 400)
 
-    def test_route_post_reopens_authoritative_recovering_task_from_rejected_review(self):
-        self.state = {"state": "recovering", "revision": 3, "updatedAt": "t1"}
-        self.handlers["reopen"] = self._pause
-        status, body = self.post(req(command="reopen", precondition={"state": "rejected", "revision": 3}))
+    def test_route_post_reopens_rejected_work_through_real_scheduler_operations(self):
+        rdir = Path(self.temp.name) / "REQ-001-demo"
+        rdir.mkdir()
+        plan_folder = rdir / scheduler_adapter.REVISIONS
+        plan_folder.mkdir()
+        harness = Harness(
+            [indep("T1")], repository=scheduler_core.SqliteRepository(rdir / scheduler_adapter.RUN_DB),
+            plan_id="REQ-001",
+        )
+        digest = hashlib.sha256(harness.text.encode()).hexdigest()
+        (plan_folder / "PLAN.r1.json").write_text(harness.text, encoding="utf-8")
+        manifest = {"schema": 1, "revisions": [
+            {"revision": 1, "sha256": digest, "frozen_at": "2026-10-20T00:00:00+00:00"}
+        ]}
+        (plan_folder / "MANIFEST.json").write_text(json.dumps(manifest), encoding="utf-8")
+        harness.core.step()
+        harness.send("T1", "execution_finished")
+        harness.verdict("T1", accepted=False)
+        self.assertEqual(harness.state("T1"), "recovering")
 
-        self.assertEqual((status, body["status"]), (200, "OK"))
-        self.assertEqual(len(self.calls), 1)
+        def reopen(target, params):
+            project, req_id = target.split("/", 1)
+            return bt_scheduler_ops.apply(
+                project, req_id, rdir, "reopen", params["task_id"], params["reason"]
+            )
+
+        def current_state(_target):
+            return {"state": harness.state("T1"), "revision": 1}
+
+        body = req(command="reopen", target="demo/REQ-001", params={"task_id": "T1", "reason": "fixed"},
+                   precondition={"state": "rejected", "revision": 1})
+        handler = FakeHandler(json.dumps(body).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.dict(bt_remote_api.HANDLERS, {"reopen": reopen}, clear=True), \
+                patch.object(bt_remote_api, "_target_state", current_state), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0):
+            bt_remote_api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["status"]), (200, "OK"))
+        self.assertEqual(harness.state("T1"), "ready")
+        transitions = [event for event in harness.core.audit_log() if event.kind == "task_transition"]
+        self.assertTrue(any(
+            event.detail.get("from") == "recovering" and event.detail.get("to") == "ready"
+            for event in transitions
+        ))
         row = self.route_ledger().rows()[0]
-        self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 3})
+        self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 1})
+        self.assertEqual(json.loads(row["outcome"]), ["owner stopped: 0 process(es)", "T1: reopened"])
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
