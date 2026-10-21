@@ -7,6 +7,7 @@ import json
 import os
 import sqlite3
 import threading
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Callable
 
@@ -14,7 +15,8 @@ COMMANDS = ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "a
             "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note")
 ORIGINS = ("web", "telegram")
 PRECONDITION_FIELDS = ("state", "revision", "updatedAt")   # what a precondition may pin on the target
-_LOCK = threading.Lock()
+# Covers key reservation, state precondition, effect, and outcome write as one process-local critical section.
+_EFFECT_LOCK = threading.Lock()
 _SCHEMA = """CREATE TABLE IF NOT EXISTS commands (
     idempotency_key TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, command TEXT NOT NULL, target TEXT NOT NULL,
     origin TEXT NOT NULL, params TEXT NOT NULL, precondition TEXT NOT NULL,
@@ -67,10 +69,18 @@ class Ledger:
         with self._db() as db:
             db.execute(_SCHEMA)
 
-    def _db(self) -> sqlite3.Connection:
+    @contextmanager
+    def _db(self):
         db = sqlite3.connect(self.path, timeout=10)
         db.row_factory = sqlite3.Row
-        return db
+        try:
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+        finally:
+            db.close()
 
     def rows(self) -> list[dict]:
         with self._db() as db:
@@ -98,7 +108,7 @@ class Ledger:
             return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
                     "message": "El comando aún no tiene ejecutor."}
         fp, key = fingerprint(req), req["idempotency_key"]
-        with _LOCK:
+        with _EFFECT_LOCK:
             with self._db() as db:
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
                 if row is not None:
@@ -126,7 +136,7 @@ class Ledger:
             current = state_of(req["target"])
         except Exception as exc:
             return "FAILED", "STATE_UNAVAILABLE", {"error": str(exc)[:300]}
-        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
+        if not current or not _matches_precondition(req, current):
             return "REJECTED", "STALE_PRECONDITION", {"expected": req["precondition"],
                                                        "actual": {k: (current or {}).get(k) for k in PRECONDITION_FIELDS}}
         try:
@@ -134,3 +144,13 @@ class Ledger:
         except Exception as exc:
             return "FAILED", "EFFECT_FAILED", {"error": str(exc)[:300]}
         return "OK", None, result
+
+
+def _matches_precondition(req: dict, current: dict) -> bool:
+    """Treat the review label as the public equivalent of the scheduler's recoverable state for reopen."""
+    expected = req["precondition"]
+    if all(current.get(field) == value for field, value in expected.items()):
+        return True
+    return (req["command"] == "reopen" and expected.get("state") == "rejected"
+            and current.get("state") == "recovering"
+            and all(current.get(field) == value for field, value in expected.items() if field != "state"))
