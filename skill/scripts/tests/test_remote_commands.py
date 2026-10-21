@@ -184,12 +184,15 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(b"{not json")[0], 400)
 
     def test_route_post_reopens_rejected_work_through_real_scheduler_operations(self):
-        rdir = Path(self.temp.name) / "REQ-001-demo"
-        rdir.mkdir()
+        import bt_core
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
         plan_folder = rdir / scheduler_adapter.REVISIONS
         plan_folder.mkdir()
+        scheduler_adapter.run_db_path(rdir).parent.mkdir(parents=True)
         harness = Harness(
-            [indep("T1")], repository=scheduler_core.SqliteRepository(rdir / scheduler_adapter.RUN_DB),
+            [indep("T1")], repository=scheduler_core.SqliteRepository(scheduler_adapter.run_db_path(rdir)),
             plan_id="REQ-001",
         )
         digest = hashlib.sha256(harness.text.encode()).hexdigest()
@@ -203,26 +206,22 @@ class EntryPointTests(LedgerBase):
         harness.verdict("T1", accepted=False)
         self.assertEqual(harness.state("T1"), "recovering")
 
-        def reopen(target, params):
-            project, req_id = target.split("/", 1)
-            return bt_scheduler_ops.apply(
-                project, req_id, rdir, "reopen", params["task_id"], params["reason"]
-            )
-
         def current_state(_target):
             return {"state": harness.state("T1"), "revision": 1}
 
-        body = req(command="reopen", target="demo/REQ-001", params={"task_id": "T1", "reason": "fixed"},
+        body = req(command="reopen", target="demo/REQ-001", params={"task": "T1", "reason": "fixed"},
                    precondition={"state": "rejected", "revision": 1})
         handler = FakeHandler(json.dumps(body).encode())
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {"reopen": reopen}, clear=True), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
                 patch.object(bt_remote_api, "_target_state", current_state), \
-                patch.object(bt_scheduler_ops, "stop_owner", return_value=0):
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
             bt_remote_api.route_post(handler)
 
         status, response = handler.sent
-        self.assertEqual((status, response["status"]), (200, "OK"))
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
         self.assertEqual(harness.state("T1"), "ready")
         transitions = [event for event in harness.core.audit_log() if event.kind == "task_transition"]
         self.assertTrue(any(
@@ -231,7 +230,8 @@ class EntryPointTests(LedgerBase):
         ))
         row = self.route_ledger().rows()[0]
         self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 1})
-        self.assertEqual(json.loads(row["outcome"]), ["owner stopped: 0 process(es)", "T1: reopened"])
+        self.assertEqual(json.loads(row["outcome"]),
+                         {"messages": ["owner stopped: 0 process(es)", "T1: reopened", "watchdog started"]})
 
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
