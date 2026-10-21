@@ -34,11 +34,23 @@ def close(wiring: api.Wiring) -> None:
                     wiring.executor.close()
 
 
-def _line_enabled() -> bool:
-    """`gates.integration_line` (REQ-028); an unreadable configuration means off, the behaviour of every run before it."""
+LINE_MARKER = "RUN.integration-line"
+
+
+def _line_enabled(rdir: Path, accepted: Mapping[str, str]) -> bool:
+    """`gates.integration_line` (REQ-028) applies to a run that BEGAN with it. A run that already accepted tasks without it
+    never integrated them with each other (their snapshots overlap), so switching the line on mid-run would mark most of
+    them as not fitting and strand the run: it stays on the predecessor merge. The run records the choice in `RUN.integration-line`
+    when it starts with the flag on. An unreadable configuration means off."""
+    marker = Path(rdir) / LINE_MARKER
     try:
+        if marker.exists():
+            return True
         import bt_config
-        return bt_config.get("gates.integration_line", False) is True
+        if bt_config.get("gates.integration_line", False) is not True or accepted:
+            return False
+        marker.write_text("integration line on since the run began\n", encoding="utf-8")
+        return True
     except Exception:  # noqa: BLE001 - configuration trouble must not stop a run from starting
         return False
 
@@ -162,7 +174,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                            snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                            earlier_of=lambda task: api._earlier_attempts(scheduler, task))
             port.base_ref = integrate.base_ref
-            if _line_enabled():
+            if _line_enabled(rdir, api._accepted_attempts(scheduler)):
                 import bt_integration_line
                 integrate.attach_line(bt_integration_line.Line(
                     plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,

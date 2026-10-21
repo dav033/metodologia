@@ -51,14 +51,14 @@ class WithLine(base_tests.Unit):
         self.assertIn("README.md", clash)
         self.assertEqual(i.would_conflict("T3", "att-T3", snapshot(self.app, self.head, {"other.txt": "x\n"})), "")
 
-    def test_a_task_waits_when_a_prerequisite_is_accepted_but_does_not_fit(self):
+    def test_a_task_is_rejected_with_its_cause_when_a_prerequisite_is_accepted_but_does_not_fit(self):
         self.accept("T3", snapshot(self.app, self.head, {"README.md": "left\n"}))
         self.accept("T1", snapshot(self.app, self.head, {"README.md": "right\n"}))
         i = self.lined({"T3": ([], "app"), "T1": ([], "app"), "T2": (["T1"], "app")})      # T3 comes first in plan order
         with self.assertRaises(integ.IntegrationError) as caught:
             i.base_ref("T2")
         self.assertEqual(caught.exception.code, "PREDECESSOR_NEEDS_RESOLUTION")
-        self.assertFalse(caught.exception.permanent)          # it waits; it does not burn an attempt
+        self.assertTrue(caught.exception.permanent)           # a transient error would leave the attempt `uncertain`
 
     def test_an_unaccepted_prerequisite_is_still_stated(self):
         with self.assertRaises(integ.IntegrationError) as caught:
@@ -72,6 +72,24 @@ class WithLine(base_tests.Unit):
         self.assertEqual(i.base_ref("T2"), s1)                               # the old behaviour, not an error
         self.assertEqual(i.would_conflict("T3", "att-T3", snapshot(self.app, self.head, {"x.txt": "x\n"})), "")
         i.recompute_line()                                                   # never raises
+
+
+class Marker(unittest.TestCase):
+    def test_the_line_belongs_to_a_run_that_began_with_it(self):
+        import tempfile
+        from unittest import mock
+        import bt_config
+        import bt_scheduler_executor_wiring as wiring
+        flag = lambda key, default=None: True if key == "gates.integration_line" else default   # noqa: E731
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(bt_config, "get", flag):
+            started, midway = Path(tmp) / "a", Path(tmp) / "b"
+            started.mkdir(), midway.mkdir()
+            self.assertTrue(wiring._line_enabled(started, {}))                       # fresh: on, and remembered
+            self.assertTrue(wiring._line_enabled(started, {"T1": "att-1"}))          # restarts keep it
+            self.assertFalse(wiring._line_enabled(midway, {"T1": "att-1"}))          # tasks accepted without it: off
+            self.assertFalse((midway / wiring.LINE_MARKER).exists())
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(bt_config, "get", lambda k, d=None: d):
+            self.assertFalse(wiring._line_enabled(Path(tmp), {}))                    # flag off: off
 
 
 class ThroughLine(base_tests.Through):

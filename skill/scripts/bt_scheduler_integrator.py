@@ -40,9 +40,11 @@ SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 # Causes that say something about the PLAN'S work (retrying cannot change them): the order is rejected with the cause.
 # Anything else (git timeout, ref lock, signal, an unbound integrator) is transient and must be retried, not burn an attempt.
-# PREDECESSOR_NEEDS_RESOLUTION (integration line) is deliberately NOT permanent: the task waits, it does not fail.
+# PREDECESSOR_NEEDS_RESOLUTION (integration line) is permanent too: the scheduler has no "wait" for an order, and a transient
+# error there leaves the attempt `uncertain` (a human decision about identity). Rejected with its cause, the task blocks
+# and says which prerequisites do not fit the integrated tree.
 PERMANENT = frozenset({"INTEGRATION_CONFLICT", "PREDECESSOR_NOT_ACCEPTED", "PREDECESSOR_HANDOFF_MISSING",
-                       "INTEGRATION_REPOSITORY"})
+                       "INTEGRATION_REPOSITORY", "PREDECESSOR_NEEDS_RESOLUTION"})
 
 
 class IntegrationError(Exception):
