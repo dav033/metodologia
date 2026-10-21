@@ -29,10 +29,12 @@ HEARTBEAT_SECONDS = 15.0
 MAX_COMMAND_BODY = 256 * 1024
 COMMAND_STATUS = {
     "INVALID_COMMAND": 400,
+    "INVALID_CHALLENGE": 400,
     "CONFIRMATION_REQUIRED": 400,
     "LAPTOP_OFFLINE": 410,
     "LAPTOP_UNAVAILABLE": 503,
     "UNKNOWN_OUTCOME": 503,
+    "STALE_PRECONDITION": 409,
 }
 
 
@@ -65,12 +67,21 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
-            if route.path == "/api/auth/login":
+            if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
                     ("Location", service.authorization_url(state)),
                     ("Set-Cookie", f"{STATE_COOKIE}={state}; Path=/api/auth/callback; Max-Age=600; HttpOnly; Secure; SameSite=Lax"),
+                ))
+                return
+            if route.path == "/api/auth/logout":
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if token:
+                    service.store.delete_session(token)
+                self._send(302, headers=(
+                    ("Location", service.config.frontend_origin + "/"),
+                    ("Set-Cookie", f"{SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Strict"),
                 ))
                 return
             if route.path == "/api/auth/callback":
