@@ -180,7 +180,6 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(command="nope"))[0], 400)
         self.assertEqual(self.post(b"{not json")[0], 400)
 
-<<<<<<< eba376f5e3a9740771c24c8f33807317dc6aff00
     def test_route_post_reopens_authoritative_recovering_task_from_rejected_review(self):
         self.state = {"state": "recovering", "revision": 3, "updatedAt": "t1"}
         self.handlers["reopen"] = self._pause
@@ -191,12 +190,7 @@ class EntryPointTests(LedgerBase):
         row = self.route_ledger().rows()[0]
         self.assertEqual(json.loads(row["precondition"]), {"state": "rejected", "revision": 3})
 
-    def test_route_post_without_executor_is_not_ok(self):
-||||||| a4245bf3b6724c383d8688fa8c53968398965709
-    def test_route_post_without_executor_is_not_ok(self):
-=======
     def test_route_post_requires_confirmation_for_edit_brief(self):
->>>>>>> 74406204c51381216934219905ce80fda449c5cb
         self.handlers.clear()
         status, body = self.post(req(command="edit-brief"))
         self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
