@@ -193,6 +193,29 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await waitForTaskState("T15a", "rejected");
     const rejectedState = await waitForText("Reabrir ejecución");
     assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and runs should expose recovery controls");
+    const rejectedTaskCard = "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T15a'))";
+    const rejectedForms = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return { retry: [...card.querySelectorAll('.recovery-form')].some((form) => form.querySelector('select[name="route"]')), edit: [...card.querySelectorAll('.recovery-form')].some((form) => form.querySelector('textarea[name="brief"]')) }; })()`, returnByValue: true });
+    assert.deepEqual(rejectedForms.result?.value, { retry: true, edit: true }, "rejected tasks should expose retry and brief-edit forms on the real panel");
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const availableRoute = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return [...card.querySelectorAll('select[name="route"] option')].some((option) => option.value === 'route-codex-work'); })()`, returnByValue: true });
+      if (availableRoute.result?.value) break;
+      await delay(100);
+    }
+    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('select[name="route"]')); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
+    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "retry" && command.target.taskId === "T15a"); attempt += 1) await delay(100);
+    const rejectedRetry = gateway.receivedCommands.find((command) => command.type === "retry" && command.target.taskId === "T15a");
+    assert.equal(rejectedRetry?.precondition.state, "rejected", "retry must submit the authoritative rejected task state");
+    assert.equal(rejectedRetry?.route?.route_id, "route-codex-work");
+    const rejectedEdit = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the rejected task'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-027'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return valid; })()`, returnByValue: true });
+    assert.equal(rejectedEdit.result?.value, true, "rejected task brief edit should pass browser validation");
+    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "edit-brief" && command.task === "T15a"); attempt += 1) await delay(100);
+    const rejectedEditCommand = gateway.receivedCommands.find((command) => command.type === "edit-brief" && command.task === "T15a");
+    assert.equal(rejectedEditCommand?.precondition.state, "rejected", "brief edit must submit the authoritative rejected run state");
+    assert.equal(rejectedEditCommand?.value, "Recover the rejected task");
+    gateway.commands = [];
+    gateway.receivedCommands = [];
+    gateway.challenges = [];
+    gateway.history = [];
     await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15a") + "]').click()", returnByValue: true });
     const waitForReview = async () => {
       let lastText = "";

@@ -379,9 +379,9 @@ export default function HomePage() {
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
-    {(task.state === "failed" || task.state === "blocked") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
+    {(task.state === "failed" || task.state === "blocked" || task.state === "rejected") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}
-    {(task.state === "failed" || task.state === "blocked") && <form className="recovery-form" onSubmit={editBriefForm(task, run, plan)}>
+    {(task.state === "failed" || task.state === "blocked" || task.state === "rejected") && <form className="recovery-form" onSubmit={editBriefForm(task, run, plan)}>
       <h4>Editar brief de {task.id}</h4><p className="last-seen">Creará la revisión {nextRevision}.</p>
       <label>Brief de la tarea<textarea name="brief" required maxLength={4000} defaultValue={task.title ?? ""} /></label>
       <label>Escribe {run.req} para confirmar<input name="typedReq" required autoCapitalize="characters" aria-label={`Escribe ${run.req} para confirmar la edición del brief`} /></label>
