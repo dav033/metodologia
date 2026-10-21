@@ -436,20 +436,24 @@ class QualityVerificationPort:
             if key in seen:
                 continue
             seen.add(key)
-            output = b""
+            streams = []
             for ref in (check.get("stderr_ref"), check.get("stdout_ref")):
                 try:
-                    output = self.store.get_artifact(ref) or b"" if isinstance(ref, str) else b""
+                    raw = self.store.get_artifact(ref) or b"" if isinstance(ref, str) else b""
                 except Exception:  # noqa: BLE001 - a missing artifact only shortens the note
-                    output = b""
-                if output.strip():
-                    break
-            full = output.decode("utf-8", "replace").strip()
+                    raw = b""
+                text = _without_noise(raw.decode("utf-8", "replace"))
+                if text:
+                    streams.append(text)
+            full = "\n".join(streams)          # both streams: a build prints its errors on stdout, its notices on stderr
             tail = full[-1500:]
-            # a long run buries the first failures above the tail: name every failing test before it
+            # a long run buries the first failures above the tail: name every failing test, then the error lines, before it
             names = [m.group(0)[:200] for m in re.finditer(r"(?m)^(?:FAIL|ERROR): .+|^FAILED \S+::.+", full)][:12]
             listing = ("Failing tests (" + str(len(names)) + (" shown" if len(names) == 12 else "") + "):\n"
                        + "\n".join(names) + "\n\n") if names else ""
+            if len(full) > len(tail):
+                lines = [line.strip()[:200] for line in full[:-len(tail)].splitlines() if _ERROR_LINE.search(line)][:20]
+                listing += ("Earlier error lines:\n" + "\n".join(lines) + "\n\n") if lines else ""
             blocks.append(f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n{listing}{tail}")
             if len(blocks) == 3:
                 break
@@ -629,6 +633,17 @@ def _unresolved_note(clash: str) -> str:
     return (f"Your result still contains unresolved merge conflict markers ({clash.removeprefix(UNRESOLVED)}). Your tree "
             "started as a merge in progress: open every file with `<<<<<<<` / `=======` / `>>>>>>>` lines, combine both "
             "sides' behaviour, delete the markers, and run the tests again.")
+
+
+_NOISE_LINE = re.compile(r"^\s*npm (?:notice|warn(?:ing)?)\b", re.IGNORECASE)
+_ERROR_LINE = re.compile(r"\b(?:error|TS\d{4}|Traceback|AssertionError|Cannot find|not defined|is not a function)\b|✖|\bFAIL", re.IGNORECASE)
+
+
+def _without_noise(text: str) -> str:
+    """The output without lines that never explain a failure (`npm notice ...`, `npm warn ...`) and blank runs."""
+    kept = [line for line in text.splitlines() if not _NOISE_LINE.match(line)]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+
 
 
 def _integration_note(clash: str) -> str:

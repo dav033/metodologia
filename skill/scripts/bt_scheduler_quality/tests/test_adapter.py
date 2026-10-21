@@ -496,6 +496,29 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("Failing tests (3):", notes[0])
         self.assertIn("FAILED (failures=2, errors=1)", notes[0])
 
+    def test_the_real_error_on_stdout_is_not_hidden_by_notices_on_stderr(self):
+        # REQ-027 T15c: `npm run verify` printed `npm notice` lines on stderr and the failing test on stdout; the note
+        # showed only the notices and the agent kept retrying blind
+        class Split(ScriptedRunner):
+            def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
+                stdout = (b"> tsc --noEmit\npage.tsx(36,5): error TS2304: Cannot find name 'FailureReview'.\n"
+                          + b"ok line\n" * 400 + b"not ok 3 - panel entrypoint\n")
+                return CommandOutcome("fail", 1, 2, stdout, b"npm notice New major version of npm available!\nnpm notice\n",
+                                      None, True)
+
+        notes = []
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, runner=Split(),
+                                                     verify_notes=lambda task_id, text: text and notes.append(text))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: bool(notes)))
+        self.assertIn("not ok 3 - panel entrypoint", notes[0])
+        self.assertIn("TS2304: Cannot find name 'FailureReview'", notes[0])          # an early error line survives the clip
+        self.assertNotIn("npm notice", notes[0])
+
     def test_a_missing_module_tells_the_agent_to_install_its_dependencies(self):
         class Missing(ScriptedRunner):
             def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
