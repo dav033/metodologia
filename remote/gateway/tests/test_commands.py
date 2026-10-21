@@ -33,7 +33,8 @@ class FakeLaptop:
         self.command_calls.append(command)
         if self.command_error:
             raise self.command_error
-        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": command["idempotencyKey"]}
+        key = command.get("idempotencyKey", command.get("idempotency_key"))
+        return 202, {"commandId": "command-1", "status": "accepted", "idempotencyKey": key}
 
 
 class CommandRelayTests(unittest.TestCase):
@@ -107,7 +108,14 @@ class CommandRelayTests(unittest.TestCase):
 
         self.assertEqual(status, 202)
         self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [command])
+        self.assertEqual(self.laptop.command_calls, [{
+            "idempotency_key": command["idempotencyKey"],
+            "command": "approve",
+            "target": "demo/REQ-027",
+            "origin": "web",
+            "params": {"confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"}},
+            "precondition": {"state": "running"},
+        }])
 
     def test_offline_laptop_refuses_command_without_queueing(self) -> None:
         for _ in range(3):

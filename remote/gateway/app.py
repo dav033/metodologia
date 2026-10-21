@@ -118,7 +118,34 @@ class GatewayRuntime:
 
     def submit_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)
-        return self._relay_command(command)
+        target = command["target"]
+        params = {key: item for key, item in command.items()
+                  if key not in {"schemaVersion", "idempotencyKey", "type", "target", "precondition"}}
+        if "taskId" in target:
+            params["task"] = target["taskId"]
+        if "attemptId" in target:
+            params["attempt"] = target["attemptId"]
+        if "requestId" in params:
+            params["request_id"] = params.pop("requestId")
+        if "typedReq" in params:
+            params["typed_req"] = params.pop("typedReq")
+        if "answer" in params and command["type"] == "answer-round":
+            params["answers"] = params.pop("answer")
+        if "confirmation" in params and isinstance(params["confirmation"], dict):
+            confirmation = params["confirmation"]
+            params["confirmation"] = {
+                "challenge_id": confirmation.get("challengeId", confirmation.get("challenge_id")),
+                "typed_req": confirmation.get("typedReq", confirmation.get("typed_req")),
+            }
+        ledger_command = {
+            "idempotency_key": command["idempotencyKey"],
+            "command": command["type"],
+            "target": f'{target["project"]}/{target["req"]}',
+            "origin": "web",
+            "params": params,
+            "precondition": command["precondition"],
+        }
+        return self._relay_command(ledger_command)
 
     def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)

@@ -145,6 +145,21 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         if event is not None:
             out.append(event)
 
+    unique: list[dict[str, Any]] = []
+    seen_attempt_events: set[tuple[str, str, str, str, str]] = set()
+    for event in out:
+        if event["type"] == "attempt.failed":
+            target = event["target"]
+            attempt_id = target.get("attemptId")
+            if attempt_id:
+                key = (event["type"], target.get("project", ""), target.get("req", ""),
+                       target.get("taskId", ""), attempt_id)
+                if key in seen_attempt_events:
+                    continue
+                seen_attempt_events.add(key)
+        unique.append(event)
+    out = unique
+
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
     for event in out:
         event["cursor"] = json.dumps([event["occurredAt"], event["id"]], ensure_ascii=False)
@@ -166,7 +181,8 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
         project, _, req = str(row["run"]).partition("/")
         target = _run_target(project, req or "REQ-000")
     if row.get("task"):
-        target = _task_target(target["project"], target["req"], str(row["task"]))
+        target = _task_target(target["project"], target["req"], str(row["task"]),
+                              str(row["attempt"]) if row.get("attempt") else None)
     source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     identity = f'{target["project"]}/{target["req"]}:{source_id}'
     payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}
