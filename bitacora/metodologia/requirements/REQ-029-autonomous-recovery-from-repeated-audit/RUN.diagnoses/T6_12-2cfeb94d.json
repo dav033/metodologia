@@ -1,0 +1,23 @@
+{
+ "request": "T6:12",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T6 falla: escenarios de recuperación agotan el tiempo y el mapa de verificación acepta cambios",
+ "origin": "El arnés `recovery_entrypoint_execution.py` espera a que el run pida dueño o se estabilice y nunca llega: 'timed out waiting for the exhausted audit to ask its owner' y 'timed out waiting for the run to end or ask its owner'. Los tests `map_omits` y `map_uncovered` reciben 'accepted' en lugar de rechazo, porque el fixture pone las marcas de recuperación en `Task.extra` de nivel superior y la puerta de `bt_scheduler_recovery_verification` solo mira `task.meta`. Como el mismo fallo se repite en los 7 intentos, el límite de causa repetida se activó; la causa está en el arnés y el fixture, pero si producción descarta esas marcas, faltaría un comportamiento de producción en T4c/T5.",
+ "steps": [
+  "En una ejecución real de la CLI, imprime `port.core.plan.task('T1').meta` y comprueba si llegan `recovery_case_id` o `recovery_task`.",
+  "Si no llegan, marca la tarea como lo hace `bt_recovery_convergence.py` (~línea 395) en `tests/recovery_fixture_scenarios.py` (`recovery_task_fixture`), no en `Task.extra` de nivel superior. Si producción las descarta, repórtalo como comportamiento que falta en T4c/T5 sin editar esos módulos.",
+  "Para los timeouts de GeneratedCorrection, NoProgress y RemediationInterruptedAtFreeze, lee el log del watch que imprime el fallo, identifica el estado real del scheduler y haz que cada espera coincida con ese estado. No subas los timeouts.",
+  "Ejecuta fuera del sandbox `cd skill/scripts && env -i PATH=$PATH HOME=$HOME python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y confirma que termina en menos de 25 minutos."
+ ],
+ "option": "retry_with_note",
+ "note": "Previous attempts failed for the same reason; do not change test expectations. (1) In a real CLI run, print port.core.plan.task('T1').meta and check whether recovery_case_id / recovery_task reach it. If not, set the flags the way bt_recovery_convergence.py does (~line 395) in tests/recovery_fixture_scenarios.py recovery_task_fixture, not as top-level Task.extra. If production drops them, report a missing production behavior for T4c/T5 and do not edit their modules. (2) For the setUpClass timeouts (GeneratedCorrection, NoProgress, RemediationInterruptedAtFreeze), read the watch log printed in the failure, find the scheduler state the run is actually in, and make each wait match a real state. Do not raise timeouts. (3) Run the real discovery command outside the sandbox, report the total time, and make sure the file finishes under 25 minutes.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T17:41:59",
+ "seconds": 23.4
+}

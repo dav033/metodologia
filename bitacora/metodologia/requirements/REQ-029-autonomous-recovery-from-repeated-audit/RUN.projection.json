@@ -1,18 +1,24 @@
 {
- "attention": [],
+ "attention": [
+  {
+   "kind": "blocked_task",
+   "reason": "m5:same_cause_limit",
+   "task_id": "T6"
+  }
+ ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-21T22:20:13+00:00",
+ "heartbeat_at": "2026-10-21T22:41:32+00:00",
  "plan_ref": {
   "plan_id": "REQ-029",
   "revision": 5,
   "sha256": "bfaeb557c8521467a8faad8ebaac98ece3799ff34abcad34a931d82ba7651cd2"
  },
- "projected_at": "2026-10-21T22:20:13+00:00",
+ "projected_at": "2026-10-21T22:41:32+00:00",
  "projection": true,
  "req": "REQ-029",
- "scheduler_status": "running",
+ "scheduler_status": "blocked",
  "sessions": 98,
- "status": "running",
+ "status": "blocked",
  "tasks": [
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -340,7 +346,7 @@
    "attempts": 12,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
+   "evidence": "m6://result/fc32c87a745a04e46c8b373093e244f816544c59cf79cd0b56821c7d79501b2a",
    "executor": "route:m2:v1:426a924be4b2183df6a5a7ac995b083267f6857d22c37e08704ee72f5b88f099:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T6",
    "milestone": "M1",
@@ -355,9 +361,9 @@
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "blocked",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "blocked",
    "title": "Author offline real CLI recovery integration harness",
    "unreachable": false
   },
@@ -388,7 +394,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Author REQ027 structural conflict replay through shipped entrypoints",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -417,7 +423,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Run backend regression and entrypoint acceptance",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -455,7 +461,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Audit backend recovery authority and evidence",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -484,7 +490,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check backend recovery independently",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -513,7 +519,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Show and control recovery from flow and plan views",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -542,7 +548,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Author visual integration and historical recovery preview checks",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:db655fd0c084acbe5eac49a5f7ef3d4e6de52c4d8d8dda226de8d9f23f0aca42",
@@ -571,7 +577,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Document approved recovery boundary and rollout rollback",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -600,7 +606,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Run full recovery supervision and preview acceptance",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -629,7 +635,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Audit complete autonomous recovery and rollout",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -658,7 +664,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check final acceptance independently",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -687,7 +693,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Activate the tested runtime and observe bounded REQ027 recovery",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -716,7 +722,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Verify rollout receipts and staged runtime integration",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -745,7 +751,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Audit conditional rollout and real outcome",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -774,7 +780,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check conditional rollout independently",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -803,7 +809,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F1, F2, F3, F4",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -832,7 +838,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F5",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -861,7 +867,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F6, F7, F8",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -890,7 +896,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F14",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -923,7 +929,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F3, F4",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -957,7 +963,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F5, F12",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -991,7 +997,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F6, F8, F18",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1025,7 +1031,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F14",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
@@ -1059,7 +1065,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T8 findings F17",
-   "unreachable": false
+   "unreachable": true
   }
  ]
 }
