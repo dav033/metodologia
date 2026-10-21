@@ -960,3 +960,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + retries see what failed. − a failure that is only on stdout and only noise-like lines is still shown whole; the clipping remains 1500 characters of tail. The plan-level cause (a regression task before the owner of a coupled registry) is not detected by a lint yet.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T15c, REQ-029 T7
 
+## D-107 — A test must not depend on the zone or the date it runs on
+
+- **Date:** 2026-10-20 · **Status:** Accepted
+- **Context:** REQ-029 T7 failed again, now on `test_codex_structured` (`None != 1792562880`), unrelated to the recovery work. The limit text «Try again at Oct 21st, 2026 1:08 AM» is parsed as local time and counted only while in the future. M6 runs with `TZ=UTC` (empty environment), where 01:08 UTC had already passed, so the reset was unknown; on this machine (UTC-5) the same test would have started failing at 01:08 tonight. The task could not have fixed it and every retry repeated the failure.
+- **Decision:** the test pins the zone (`America/Bogota`) and the clock (`1792540000`) around the call and keeps its expected value; it passes under UTC, Bogotá and Tokyo. The running T7 was retried with this exact change as the owner's note (the test file is T7's to change; the parser is right). A plain retry would have failed identically.
+- **Consequences:** + the suite no longer depends on the zone or on today's date for this case. − other tests may hide the same dependency; the full suite has not been run under `TZ=UTC` (it takes about nine minutes and loads the machine while runs verify), so that sweep is pending.
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-029 T7
+
