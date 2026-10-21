@@ -31,7 +31,8 @@ class CountingLaptop:
         self.calls["snapshot"] += 1
         if not self.online:
             raise UpstreamError("offline")
-        return {"runs": [{"status": "idle"}]}
+        return {"schemaVersion": 1, "generatedAt": "2026-10-21T12:00:00Z", "cursor": "laptop-cursor",
+                "runs": [{"status": "idle"}]}
 
     def events(self, after):
         self.calls["events"] += 1
@@ -87,6 +88,22 @@ class HubTests(unittest.TestCase):
         self.assertEqual(state["cachedAt"], 1000.0)
         self.assertFalse(state["online"])
 
+    def test_phone_snapshot_response_flattens_cache_and_liveness(self):
+        hub = StreamHub(clock=lambda: 1000.0)
+        laptop_snapshot = {"schemaVersion": 1, "generatedAt": "2026-10-21T12:00:00Z",
+                           "cursor": "laptop-cursor", "runs": [{"id": "run-1"}]}
+        hub.update_snapshot(laptop_snapshot)
+        hub.set_online(False)
+
+        response = hub.read_snapshot_response()
+
+        self.assertEqual(response["schemaVersion"], 1)
+        self.assertEqual(response["runs"], [{"id": "run-1"}])
+        self.assertEqual(response["cachedAt"], 1000.0)
+        self.assertFalse(response["online"])
+        self.assertIn("lastEventId", response)
+        self.assertNotIn("snapshot", response)
+
     def test_wait_wakes_on_publish(self):
         hub = StreamHub()
         cursor = hub.live_cursor()
@@ -124,7 +141,7 @@ class RuntimeTests(unittest.TestCase):
             self.runtime.poll_once()
         state = self.runtime.hub.read_snapshot()
         self.assertFalse(state["online"])
-        self.assertEqual(state["snapshot"], {"runs": [{"status": "idle"}]})
+        self.assertEqual(state["snapshot"]["runs"], [{"status": "idle"}])
         self.assertIsNotNone(state["cachedAt"])
 
 
@@ -134,7 +151,10 @@ class HttpTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         db = str(Path(self.temp.name) / "g.sqlite")
         secret = "test-session-secret-with-more-than-32-bytes"
-        self.hub = StreamHub()
+        self.runtime = GatewayRuntime(
+            GatewayConfig("http://laptop.test", "k", "t", "c", Path(self.temp.name) / "runtime.sqlite"),
+            laptop=CountingLaptop(), sender=lambda *_: None)
+        self.hub = self.runtime.hub
         self.server = create_server(
             OAuthConfig(client_id="i", client_secret="s", session_secret=secret,
                         frontend_origin="https://flow.example.test", database_path=db),
@@ -174,14 +194,19 @@ class HttpTests(unittest.TestCase):
             conn.close()
 
     def test_snapshot_endpoint_serves_cache(self):
-        self.hub.update_snapshot({"runs": []})
+        self.runtime.poll_once()
         self.hub.set_online(False)
         conn, resp = self.get("/api/remote/v1/snapshot")
         body = json.loads(resp.read())
         conn.close()
-        self.assertEqual(body["snapshot"], {"runs": []})
+        self.assertEqual(body["schemaVersion"], 1)
+        self.assertEqual(body["runs"], [{"status": "idle"}])
         self.assertFalse(body["online"])
         self.assertIsNotNone(body["cachedAt"])
+        self.assertIn("lastEventId", body)
+        self.assertNotIn("snapshot", body)
+        self.assertIn("generatedAt", body)
+        self.assertIn("cursor", body)
 
     def test_reconnect_with_last_event_id_loses_no_events(self):
         first = self.hub.publish({"n": 0})
@@ -203,10 +228,12 @@ class HttpTests(unittest.TestCase):
         self.assertEqual([d["n"] for _, _, d in got], [1])
 
     def test_unknown_event_id_triggers_resync_with_snapshot(self):
-        self.hub.update_snapshot({"runs": ["x"]})
+        self.hub.update_snapshot({"schemaVersion": 1, "generatedAt": "2026-10-21T12:00:00Z",
+                                  "cursor": "cursor", "runs": ["x"]})
         got = self.read_stream({"Last-Event-ID": "stale:9"}, 1)
         self.assertEqual(got[0][1], "resync")
-        self.assertEqual(got[0][2]["snapshot"], {"runs": ["x"]})
+        self.assertEqual(got[0][2]["runs"], ["x"])
+        self.assertNotIn("snapshot", got[0][2])
 
 
 if __name__ == "__main__":

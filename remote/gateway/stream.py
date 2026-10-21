@@ -16,6 +16,10 @@ from typing import Any
 BACKLOG_LIMIT = 1000
 
 
+class SnapshotUnavailable(RuntimeError):
+    """Raised when the gateway has not yet received a snapshot from the laptop."""
+
+
 class StreamHub:
     def __init__(self, backlog_limit: int = BACKLOG_LIMIT, clock: Any = time.time):
         self._cond = Condition()
@@ -46,7 +50,7 @@ class StreamHub:
             self._cond.notify_all()
 
     def read_snapshot(self) -> dict[str, Any]:
-        """Cached snapshot with the time it was taken; served as-is while the laptop is offline."""
+        """Return the cached snapshot and gateway metadata without changing its source data."""
         with self._cond:
             return {
                 "snapshot": self._snapshot,
@@ -54,6 +58,19 @@ class StreamHub:
                 "online": self._online,
                 "lastEventId": f"{self._epoch}:{self._last_seq}",
             }
+
+    def read_snapshot_response(self) -> dict[str, Any]:
+        """Flatten the cache envelope into the snapshot v1 response consumed by the phone."""
+        state = self.read_snapshot()
+        snapshot = state["snapshot"]
+        if not isinstance(snapshot, dict):
+            raise SnapshotUnavailable("no laptop snapshot has been cached")
+        return {
+            **snapshot,
+            "online": state["online"],
+            "cachedAt": state["cachedAt"],
+            "lastEventId": state["lastEventId"],
+        }
 
     def close(self) -> None:
         with self._cond:

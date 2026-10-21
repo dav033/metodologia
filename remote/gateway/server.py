@@ -17,7 +17,7 @@ from auth import (
     SessionStore,
     cookie_values,
 )
-from stream import StreamHub, format_sse
+from stream import SnapshotUnavailable, StreamHub, format_sse
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,10 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
                     self._json(401, {"error": "unauthorized"})
                     return
                 if route.path.endswith("/snapshot"):
-                    self._json(200, hub.read_snapshot())
+                    try:
+                        self._json(200, hub.read_snapshot_response())
+                    except SnapshotUnavailable:
+                        self._json(503, {"error": "snapshot unavailable"})
                 else:
                     self._stream(hub)
                 return
@@ -103,10 +106,16 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
                 while not hub.closed:
                     events, resync = hub.wait_for_events(cursor, HEARTBEAT_SECONDS)
                     if resync:
-                        state = hub.read_snapshot()
-                        self.wfile.write(format_sse(None, "resync", state))
-                        if not events:
-                            cursor = state["lastEventId"]
+                        try:
+                            state = hub.read_snapshot_response()
+                        except SnapshotUnavailable:
+                            state = None
+                        if state is not None:
+                            self.wfile.write(format_sse(None, "resync", state))
+                            if not events:
+                                cursor = state["lastEventId"]
+                        elif not events:
+                            cursor = hub.live_cursor()
                     for event_id, event in events:
                         self.wfile.write(format_sse(event_id, "event", event))
                         cursor = event_id
