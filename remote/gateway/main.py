@@ -21,7 +21,7 @@ def main() -> int:
         print(str(exc), file=sys.stderr)
         return 2
     runtime = create_runtime(config)
-    auth_server = create_server(auth_config, (config.bind_host, config.bind_port), hub=runtime.hub)
+    auth_server = create_server(auth_config, (config.bind_host, config.bind_port), hub=runtime.hub, runtime=runtime)
     auth_thread = Thread(target=auth_server.serve_forever, name="gateway-http", daemon=True)
     auth_thread.start()
     try:

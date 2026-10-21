@@ -1,4 +1,5 @@
 import json
+import http.client
 import threading
 import tempfile
 import unittest
@@ -7,8 +8,10 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from app import GatewayRuntime, _ledger_command
+from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
 from liveness import LaptopStatus
+from server import create_server
 from upstream import UpstreamTimeout
 
 
@@ -140,6 +143,52 @@ class CommandRelayTests(unittest.TestCase):
             "task": "T1", "field": "acceptance_criteria", "value": "Keep the chosen route."})
         self.assertEqual(sent[2]["confirmation"], {
             "challenge_id": "challenge-token", "typed_req": "REQ-027"})
+
+    def test_authenticated_http_routes_forward_commands_and_challenges(self):
+        database = Path(self.temp.name) / "gateway-http.sqlite"
+        runtime = GatewayRuntime(config(database), laptop=self.laptop, sender=lambda _: None)
+        auth = OAuthConfig("client", "secret", "test-session-secret-with-more-than-32-bytes",
+                           "https://flow.example.test", str(database))
+        token = SessionStore(str(database), auth.session_secret).create_session("owner")
+        server = create_server(auth, ("127.0.0.1", 0), runtime=runtime)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port)
+        headers = {"Origin": auth.frontend_origin, "X-Flow-Request": "1",
+                   "Cookie": f"flow_session={token}", "Content-Type": "application/json"}
+        self.addCleanup(connection.close)
+        self.addCleanup(server.shutdown)
+        self.addCleanup(server.server_close)
+        self.addCleanup(thread.join, 2)
+
+        challenge = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
+        self.laptop.post_json.return_value = {"challengeId": "challenge-token", "expiresIn": 120}
+        connection.request("POST", "/api/remote/v1/challenges", json.dumps(challenge), headers)
+        challenge_response = connection.getresponse()
+        self.assertEqual(challenge_response.status, 200)
+        self.assertEqual(json.loads(challenge_response.read())["challengeId"], "challenge-token")
+
+        self.laptop.post_json.return_value = {"status": "OK", "code": None}
+        connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
+        command_response = connection.getresponse()
+        self.assertEqual(command_response.status, 200)
+        self.assertEqual(json.loads(command_response.read())["status"], "OK")
+        self.assertEqual([call.args[0] for call in self.laptop.post_json.call_args_list], [
+            "/api/remote/v1/challenges", "/api/remote/v1/commands"])
+
+        self.laptop.post_json.side_effect = UpstreamTimeout("late response")
+        connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
+        timeout_response = connection.getresponse()
+        timeout_body = json.loads(timeout_response.read())
+        self.assertEqual(timeout_response.status, 409)
+        self.assertEqual(timeout_body["code"], "UNKNOWN_OUTCOME")
+        self.assertEqual(timeout_body["idempotency_key"], "retry-key-00000001")
+
+        runtime.liveness.status = LaptopStatus.OFFLINE
+        connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
+        offline_response = connection.getresponse()
+        self.assertEqual(offline_response.status, 503)
+        self.assertEqual(json.loads(offline_response.read())["code"], "LAPTOP_OFFLINE")
 
 
 if __name__ == "__main__":

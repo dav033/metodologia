@@ -6,6 +6,7 @@ import hmac
 import json
 import logging
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from auth import (
@@ -25,9 +26,18 @@ RATE_WINDOW_SECONDS = 60
 LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 HEARTBEAT_SECONDS = 15.0
+MAX_COMMAND_BODY = 256 * 1024
+COMMAND_STATUS = {
+    "INVALID_COMMAND": 400,
+    "CONFIRMATION_REQUIRED": 400,
+    "LAPTOP_OFFLINE": 503,
+    "LAPTOP_UNAVAILABLE": 503,
+    "UNKNOWN_OUTCOME": 409,
+}
 
 
-def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[BaseHTTPRequestHandler]:
+def make_handler(service: OAuthService, hub: StreamHub | None = None,
+                 runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -121,12 +131,43 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-            if route.path == "/api/remote/v1/commands":
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
-            self._json(404, {"error": "not found"})
+            if route.path not in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
+                self._json(404, {"error": "not found"})
+                return
+            token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+            if not token or service.store.get_session(token) is None:
+                self._json(401, {"error": "unauthorized"})
+                return
+            endpoint = "challenges" if route.path.endswith("/challenges") else "commands"
+            client_key = self.client_address[0]
+            if not rate_limiter.acquire(endpoint, client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                self._rate_limited()
+                return
+            if runtime is None:
+                self._json(503, {"code": "COMMAND_NOT_AVAILABLE"})
+                return
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+            except ValueError:
+                length = -1
+            if length < 0:
+                self._json(400, {"code": "INVALID_COMMAND"})
+                return
+            if length > MAX_COMMAND_BODY:
+                self._json(413, {"code": "BODY_TOO_LARGE"})
+                return
+            try:
+                payload = json.loads(self.rfile.read(length) or b"null")
+            except (ValueError, OSError):
+                self._json(400, {"code": "INVALID_COMMAND"})
+                return
+            if endpoint == "challenges":
+                result = runtime.issue_challenge(payload)
+            else:
+                result = runtime.submit_command(payload)
+            code = result.get("code")
+            status = COMMAND_STATUS.get(code, 400 if endpoint == "challenges" and code else 200)
+            self._json(status, result)
 
         def _valid_state_changing_request(self) -> bool:
             request_marker = self.headers.get("X-Flow-Request", "").strip()
@@ -168,9 +209,10 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
 
 
 def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None,
-                  hub: StreamHub | None = None) -> ThreadingHTTPServer:
+                  hub: StreamHub | None = None, runtime: Any | None = None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    server = ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, hub))
+    server = ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port),
+                                 make_handler(service, hub, runtime))
     server.daemon_threads = True
     return server
 

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from urllib.parse import urlencode
 
-from auth import OAuthConfig
+from auth import OAuthConfig, SessionStore
 from server import create_server
 
 
@@ -28,6 +28,8 @@ class RequestGuardTests(unittest.TestCase):
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port)
+        self.session = SessionStore(str(Path(self.temp_dir.name) / "gateway.sqlite"),
+                                    "test-session-secret-with-more-than-32-bytes").create_session("owner")
 
     def tearDown(self) -> None:
         self.connection.close()
@@ -62,9 +64,10 @@ class RequestGuardTests(unittest.TestCase):
         self.assertEqual(statuses, [400, 400, 400, 400, 400, 429])
 
     def test_command_rate_limit_rejects_the_thirty_first_request(self) -> None:
-        headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
+        headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1",
+                   "Cookie": f"flow_session={self.session}"}
         statuses = [self.request("POST", "/api/remote/v1/commands", headers)[0] for _ in range(31)]
-        self.assertEqual(statuses[:30], [404] * 30)
+        self.assertEqual(statuses[:30], [503] * 30)
         self.assertEqual(statuses[30], 429)
 
 
