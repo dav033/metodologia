@@ -138,38 +138,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     }
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
-<<<<<<< 14d58bc9524f2bf106fdced44f4911eaa5c56677
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-||||||| 7bba8ac713838352e950bd4df154258000ccecdb
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-<<<<<<< e6088af660026d2e861b496d907f514eef10722f
-=======
     assert.ok(reviewUrl.result?.value?.includes("#attempt-att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-    assert.ok(reviewUrl.result?.value?.includes("#attempt-att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-    assert.ok(reviewUrl.result?.value?.includes("#attempt-att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
-=======
-    assert.ok(reviewUrl.result?.value?.includes("#attempt-att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
-=======
-    assert.ok(reviewUrl.result?.value?.includes("#attempt-att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
->>>>>>> fbac3dfc2e7826e15e9d91fb2d7f58b33d3b5c1f
     await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {

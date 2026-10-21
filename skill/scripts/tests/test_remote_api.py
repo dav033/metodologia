@@ -122,32 +122,40 @@ class RemoteApiTests(unittest.TestCase):
             rdir.mkdir(parents=True)
             tasks = [{"id": "T1", "milestone_id": "M1", "title": "Active task", "after": [], "complexity": "low",
                       "acceptance_criteria": ["Active work is visible"]},
-                     {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"}]
+                     {"id": "T2", "milestone_id": "M1", "title": "Rejected task", "after": [], "complexity": "low"},
+                     {"id": "T3", "milestone_id": "M1", "title": "Failed task", "after": [], "complexity": "low"}]
             plan = {"schema_version": "1.0.0", "plan_id": "REQ-001", "revision": 1,
                     "milestones": [{"id": "M1", "title": "First"}], "tasks": tasks}
             (rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
             (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-001 — Fixture\n", encoding="utf-8")
             (rdir / "SPEC.md").write_text("# Spec — REQ-001 — Fixture\n", encoding="utf-8")
             timestamp = dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc).timestamp()
-            db = base / ".state" / "scheduler" / "demo-REQ-001.db"
+            import bt_scheduler_adapter as scheduler_adapter
+            db = scheduler_adapter.run_db_path(rdir)
             db.parent.mkdir(parents=True)
             doc = {"tasks": {"T1": {"state": "active", "attempts": ["A-live"]},
-                             "T2": {"state": "recovering", "attempts": ["A-rejected"]}},
+                             "T2": {"state": "recovering", "attempts": ["A-rejected"]},
+                             "T3": {"state": "failed", "attempts": ["A-failed"]}},
                    "attempts": {"A-live": {"id": "A-live", "task_id": "T1", "number": 1, "state": "running",
                                             "created_at": timestamp - 60, "updated_at": timestamp,
                                             "last_event_at": timestamp},
                                 "A-rejected": {"id": "A-rejected", "task_id": "T2", "number": 1,
                                                "state": "rejected", "created_at": timestamp - 120,
-                                               "updated_at": timestamp - 30, "failure": "review required"}}}
+                                               "updated_at": timestamp - 30, "failure": "review required"},
+                                "A-failed": {"id": "A-failed", "task_id": "T3", "number": 1,
+                                             "state": "failed", "created_at": timestamp - 120,
+                                             "updated_at": timestamp - 30, "failure": "tests failed"}}}
             with sqlite3.connect(db) as connection:
                 connection.execute("CREATE TABLE state (id INTEGER PRIMARY KEY, version INTEGER NOT NULL, doc TEXT NOT NULL)")
                 connection.execute("INSERT INTO state VALUES (1, 1, ?)", (json.dumps(doc),))
             projection = {"authority": "scheduler", "projection": True, "req": "REQ-001", "status": "running",
-                          "heartbeat_at": "2026-10-20T10:01:00+00:00",
+                          "heartbeat_at": dt.datetime.now(dt.timezone.utc).isoformat(),
                           "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "a" * 64},
                           "tasks": [{"id": "T1", "title": "Active task", "status": "in_progress",
                                      "scheduler_state": "active", "attempts": 1},
                                     {"id": "T2", "title": "Rejected task", "status": "in_progress",
+                                     "scheduler_state": "recovering", "attempts": 1},
+                                    {"id": "T3", "title": "Failed task", "status": "in_progress",
                                      "scheduler_state": "recovering", "attempts": 1}]}
             (rdir / "RUN.projection.json").write_text(json.dumps(projection), encoding="utf-8")
             live._now_data_cache.pop(base, None)
@@ -181,6 +189,12 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+            failed_task = snapshot["runs"][0]["tasks"][2]
+            self.assertEqual(failed_task["state"], "rejected")
+            self.assertIsNone(failed_task["activeAttempt"])
+            self.assertEqual(failed_task["reviewAttempt"]["id"], "A-failed")
+            self.assertFalse(failed_task["reviewAttempt"]["live"])
+            self.assertEqual(failed_task["history"][0]["id"], "A-failed")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)

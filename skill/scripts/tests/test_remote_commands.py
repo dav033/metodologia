@@ -370,6 +370,72 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
         self.assertEqual(self.calls, [])
 
+    def test_f19_retry_precondition_uses_failed_task_while_run_is_running(self):
+        _, patches = self._create_scheduler_state({"T1": "failed"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
+
+    def test_f19_retry_rejects_task_state_change_before_handler(self):
+        _, patches = self._create_scheduler_state({"T1": "done"})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", idempotency_key="key-00000002", params={"task": "T1"},
+                precondition={"state": "failed", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_retry_does_not_fall_back_to_running_run_for_missing_task(self):
+        _, patches = self._create_scheduler_state({})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T-missing"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
+    def test_f19_reopen_precondition_uses_task_state_while_run_is_running(self):
+        _, patches = self._create_scheduler_state({"T1": "recovering"})
+        self.handlers["reopen"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="reopen", params={"task": "T1"},
+                precondition={"state": "rejected", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"task": "T1"})])
+
+    def test_f19_cancel_attempt_precondition_uses_attempt_state(self):
+        _, patches = self._create_scheduler_state({"T1": "done"}, {"att-7": "running"})
+        self.handlers["cancel-attempt"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="cancel-attempt", idempotency_key="key-00000003", params={"attempt": "att-7"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["status"]), (200, "OK"))
+        self.assertEqual(self.calls, [("demo/REQ-001", {"attempt": "att-7"})])
+
+    def test_f19_cancel_attempt_does_not_fall_back_to_running_run_for_missing_attempt(self):
+        _, patches = self._create_scheduler_state({"T1": "done"})
+        self.handlers["cancel-attempt"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="cancel-attempt", params={"attempt": "att-missing"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
     def test_route_post_stale_changed_and_invalid(self):
         self.assertEqual(self.post(req(precondition={"revision": 1}))[0], 409)
         self.assertEqual(self.post(req(idempotency_key="key-00000002", precondition={"revision": 1}))[1]["code"],
@@ -468,44 +534,6 @@ class EntryPointTests(LedgerBase):
         body = req(command="answer-round", params=params, precondition=state)
         with patch.object(bt_core, "ROOT", Path(self.temp.name)):
             status, response = self.post_real(body)
-<<<<<<< 14d58bc9524f2bf106fdced44f4911eaa5c56677
-||||||| 7bba8ac713838352e950bd4df154258000ccecdb
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-        _bt_core, rdir, _harness = self.real_run()
-        round_path = bt_rounds.new_round(rdir, {
-            "title": "Scope choice",
-            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
-                           "options": [{"key": "yes", "label": "Yes"}]}],
-        })
-        round_data = bt_rounds.load(round_path)
-        actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
-        self.assertEqual(actual, {"state": "open", "revision": None})
-        body = req(command="answer-round", params={"round": round_data["round"],
-                                                    "answers": {"q1": {"text": "yes"}}},
-                   precondition={"state": actual["state"]})
-=======
-        _bt_core, rdir, _harness = self.real_run()
-        round_path = bt_rounds.new_round(rdir, {
-            "title": "Scope choice",
-            "questions": [{"id": "q1", "text": "Keep scope?", "type": "choice",
-                           "options": [{"key": "yes", "label": "Yes"}]}],
-        })
-        round_data = bt_rounds.load(round_path)
-        original_status_of = bt_plans_api.status_of
-
-        def waiting_scheduler_status(*args, **kwargs):
-            status = original_status_of(*args, **kwargs)
-            status["run"]["status"] = "waiting"
-            return status
-
-        with patch.object(bt_plans_api, "status_of", side_effect=waiting_scheduler_status):
-            actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
-        self.assertEqual(actual, {"state": "open", "revision": None})
-        body = req(command="answer-round", params={"round": round_data["round"],
-                                                    "answers": {"q1": {"text": "yes"}}},
-                   precondition={"state": actual["state"]})
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
-=======
 
         saved = bt_rounds.load(round_path)
         self.assertEqual((status, response["status"]), (200, "OK"), response)
@@ -535,7 +563,6 @@ class EntryPointTests(LedgerBase):
         body = req(command="answer-round", params={"round": round_data["round"],
                                                     "answers": {"q1": {"text": "yes"}}},
                    precondition={"state": actual["state"]})
->>>>>>> fbac3dfc2e7826e15e9d91fb2d7f58b33d3b5c1f
 
         status, response = self.post_real(body)
 
