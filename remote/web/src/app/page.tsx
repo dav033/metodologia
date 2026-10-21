@@ -273,54 +273,16 @@ export default function HomePage() {
     const commandId = text(command.idempotencyKey) ? command.idempotencyKey : `${key}-${submittedAt}`;
     let result = "Resultado desconocido";
     try {
-      const mutationHeaders = { "content-type": "application/json", "X-Flow-Request": "1" };
       const confirmationValue = record(command.confirmation);
       if (confirmationValue && (!text(confirmationValue.challengeId) || !confirmationValue.challengeId.trim()) && text(confirmationValue.typedReq)) {
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
         const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-<<<<<<< 810c665590f52068f21a3721a13f80c47bdb0710
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
-||||||| 0bd8415e02df388b9d77ca3f2174cec84cb6dd4b
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" },
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
-||||||| b80e38cf6c5c691122c401f289f9072c565b0841
-      const confirmation = record(command.confirmation);
-      if (confirmation && text(confirmation.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
-=======
-      const confirmation = record(command.confirmation);
-      if (confirmation && text(confirmation.typedReq)) {
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: mutationHeaders,
-          body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmation.typedReq }) });
->>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
-=======
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: mutationHeaders,
->>>>>>> 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
-=======
-        const challengeResponse = await fetch("/api/remote/v1/challenges", { method: "POST", headers: mutationHeaders,
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
           body: JSON.stringify({ target: `${text(target?.project) ? target.project : ""}/${text(target?.req) ? target.req : ""}`, typedReq: confirmationValue.typedReq }) });
         const challengeBody: unknown = await challengeResponse.json().catch(() => null);
         const challenge = record(challengeBody);
         if (!challengeResponse.ok || !text(challenge?.challengeId)) throw new Error(text(record(challengeBody)?.message) ? String(record(challengeBody)?.message) : "No se pudo obtener la confirmación del gateway.");
         command.confirmation = { challengeId: challenge.challengeId, typedReq: confirmationValue.typedReq };
       }
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
       const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-<<<<<<< 810c665590f52068f21a3721a13f80c47bdb0710
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
-||||||| 0bd8415e02df388b9d77ca3f2174cec84cb6dd4b
-<<<<<<< 662ec50eedec3dccee3b4f7f940a648cfadd1c18
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: { "content-type": "application/json", "X-Flow-Request": "1" }, body: JSON.stringify(command) });
-=======
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: mutationHeaders, body: JSON.stringify(command) });
->>>>>>> 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
-=======
-      const response = await fetch("/api/remote/v1/commands", { method: "POST", headers: mutationHeaders, body: JSON.stringify(command) });
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
       const payload: unknown = await response.json().catch(() => null);
       const responseRecord = record(payload);
       if (!response.ok) {

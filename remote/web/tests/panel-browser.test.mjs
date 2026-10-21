@@ -155,12 +155,14 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(browserState.viewport, 360);
     assert.equal(browserState.width, 360, `page overflowed horizontally at 360 px: ${browserState.width}px`);
     const waitForText = async (expected) => {
+      let lastText = "";
       for (let attempt = 0; attempt < 70; attempt += 1) {
         const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
-        if (evaluated.result?.value?.includes(expected)) return evaluated.result.value;
+        lastText = evaluated.result?.value ?? "";
+        if (lastText.includes(expected)) return lastText;
         await delay(100);
       }
-      assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds`);
+      assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds; visible text: ${lastText.slice(-1200)}`);
     };
     const waitForTaskState = async (taskId, expected) => {
       for (let attempt = 0; attempt < 70; attempt += 1) {
@@ -235,6 +237,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(rejectedEditCommand?.value, "Recover the rejected task");
     gateway.commands = [];
     gateway.receivedCommands = [];
+    gateway.commandMarkers = [];
     gateway.challenges = [];
     gateway.history = [];
     await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15a") + "]').click()", returnByValue: true });
@@ -267,6 +270,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; });
     await waitForText("LAPTOP SIN CONEXIÓN");
     gateway.snapshot = originalSnapshot;
+    updateSnapshot((nextSnapshot) => { nextSnapshot.runs[0].tasks[0].state = "recovering"; });
     await waitForText("Intento att-0008");
     const initialPanel = await waitForText("Rondas abiertas");
     assert.ok(initialPanel.includes("Seguridad"), "open rounds should show their available answers");
@@ -277,7 +281,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.ok(livePanel.includes("Seven day") && livePanel.includes("64% usado"), "the seven-day account window should be shown");
     const recoveryPanel = await waitForText("gpt-6.1-sol · codex-work");
     assert.ok(recoveryPanel.includes("codex · gpt-6.1-sol · codex-work"), "available recovery routes should be selectable");
-    assert.ok(recoveryPanel.includes("Creará la revisión 8."), "brief edit should preview the next run revision");
+    assert.ok(recoveryPanel.includes("Creará la revisión 3."), "brief edit should preview the next plan revision");
     const fill = async (selector, value) => cdp(socket, "Runtime.evaluate", {
       expression: `(() => { const input = document.querySelector(${JSON.stringify(selector)}); if (!input) throw new Error('Missing input ${selector}'); input.focus(); input.select(); return true; })()`,
       returnByValue: true,
@@ -290,6 +294,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await click(".cancel-form button");
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 1; attempt += 1) await delay(100);
     assert.equal(gateway.commands[0]?.type, "cancel-attempt");
+    assert.equal(gateway.commandMarkers[0], "1", "web command mutations must include the gateway request marker");
     assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
     assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
     for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -322,68 +327,21 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     const typedValue = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('input')].find((input) => input.getAttribute('aria-label') === 'Escribe REQ-027')?.value", returnByValue: true });
     assert.equal(destructiveEnabled.result?.value, false, `typing the exact REQ should enable destructive commands (input: ${typedValue.result?.value})`);
     gateway.nextCommandResponse = { status: 409, body: { code: "STALE_PRECONDITION", message: "stale" } };
-    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·')) && [...document.querySelectorAll('.task-card')].find((card) => card.querySelector('strong')?.innerText.startsWith('T2 ·')).querySelector('.actions button')?.click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Cancelar plan')?.click()", returnByValue: true });
     await waitForText("El estado cambió");
     await waitForText("Resultado · Rechazado: el estado cambió");
+    const challengesBeforeMismatchedApproval = gateway.challenges.length;
     await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-028");
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
-    assert.equal(gateway.challenges.length, 0, "a mismatched REQ id must not request an approval challenge");
+    assert.equal(gateway.challenges.length, challengesBeforeMismatchedApproval, "a mismatched REQ id must not request an approval challenge");
     await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
     await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
     assert.equal(gateway.challenges.at(-1)?.typedReq, "REQ-027", "approval should issue a challenge for the exact REQ id");
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
+    assert.equal(gateway.challenges.at(-1)?.requestMarker, "1", "web challenge mutations must include the gateway request marker");
     assert.equal(gateway.commands.at(-1)?.type, "approve");
     assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
     await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-<<<<<<< 810c665590f52068f21a3721a13f80c47bdb0710
-    assert.equal(gateway.commands.at(-1)?.type, "approve");
-    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
-    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
-||||||| 0bd8415e02df388b9d77ca3f2174cec84cb6dd4b
-    assert.equal(gateway.commands.at(-1)?.type, "approve");
-    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
-    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
-||||||| b80e38cf6c5c691122c401f289f9072c565b0841
-    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
-    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.type, "approve");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
-=======
-    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
-    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
-    assert.equal(gateway.challenges[0]?.requestMarker, "1", "challenge mutations must include the gateway request marker");
-    assert.equal(gateway.commands[2]?.type, "approve");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
-    assert.equal(gateway.commands[2]?.requestMarker, "1", "command mutations must include the gateway request marker");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.answer-form input[name=\"q1\"][value=\"safe\"]').click(); document.querySelector('.answer-form textarea[name=\"q2\"]').value='Keep a review step'; document.querySelector('.answer-form textarea[name=\"q2\"]').dispatchEvent(new Event('input',{bubbles:true})); document.querySelector('.answer-form').requestSubmit()", returnByValue: true });
->>>>>>> b1e85c0c7e2437ff04b9fc4728f1ce154e8283d0
-=======
-    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
-    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
-    assert.equal(gateway.challenges[0]?.requestMarker, "1", "challenge mutations must include the gateway request marker");
-    assert.equal(gateway.commands[2]?.type, "approve");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
-    assert.equal(gateway.commands[2]?.requestMarker, "1", "command mutations must include the gateway request marker");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027", "approval must preserve the typed request id after issuing a challenge");
-    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('.answer-form input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('.answer-form textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
->>>>>>> 5ed5f3b725e5b0588cb6bc2c6475b750e0ada23b
-=======
-    assert.equal(gateway.challenges[0]?.target, "lotm/REQ-027");
-    assert.equal(gateway.challenges[0]?.typedReq, "REQ-027");
-    assert.equal(gateway.challenges[0]?.requestMarker, "1", "challenge mutations must include the gateway request marker");
-    assert.equal(gateway.commands[2]?.type, "approve");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027");
-    assert.equal(gateway.commands[2]?.confirmation?.challengeId, "mock-server-challenge-0001");
-    assert.equal(gateway.commands[2]?.requestMarker, "1", "command mutations must include the gateway request marker");
-    assert.equal(gateway.commands[2]?.confirmation?.typedReq, "REQ-027", "approval must preserve the typed request id after issuing a challenge");
-    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('.answer-form input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('.answer-form textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
     assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
     assert.equal(gateway.commands.at(-1)?.round, 2);
@@ -433,7 +391,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     const editSubmitted = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = [...document.querySelectorAll('.task-card')].find((item) => item.querySelector('strong')?.innerText.startsWith('T2 ·')); const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the task with a review'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-018'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return { valid, invalid: [...form.elements].filter((element) => !element.validity.valid).map((element) => ({ name: element.name, value: element.value, message: element.validationMessage })) }; })()`, returnByValue: true });
     assert.equal(editSubmitted.result?.value?.valid, true, `brief edit fields should pass browser validation: ${JSON.stringify(editSubmitted.result?.value?.invalid)}`);
     for (let attempt = 0; attempt < 40 && !gateway.commands.some((command) => command.type === "edit-brief"); attempt += 1) await delay(100);
-    assert.equal(gateway.challenges[2]?.target, "pictures/REQ-018");
+    assert.equal(gateway.challenges.find((challenge) => challenge.target === "pictures/REQ-018")?.requestMarker, "1");
     const editCommand = gateway.commands.find((command) => command.type === "edit-brief");
     assert.equal(editCommand?.value, "Recover the task with a review");
     assert.equal(editCommand?.confirmation?.typedReq, "REQ-018");

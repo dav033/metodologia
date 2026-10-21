@@ -97,6 +97,7 @@ export async function createMockGatewayServer() {
             return;
           }
           server.receivedCommands.push(command);
+          server.commandMarkers.push(request.headers["x-flow-request"]);
           const queuedResponse = server.commandResponses.shift();
           const nextResponse = queuedResponse ?? server.nextCommandResponse;
           if (nextResponse) {
@@ -120,6 +121,7 @@ export async function createMockGatewayServer() {
   server.snapshotReads = [];
   server.commands = [];
   server.receivedCommands = [];
+  server.commandMarkers = [];
   server.challenges = [];
   server.history = [];
   server.commandResponses = [];

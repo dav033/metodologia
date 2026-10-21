@@ -26,27 +26,7 @@ LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
 
 
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
 def make_handler(service: OAuthService, runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-class StreamRuntime(Protocol):
-    stream: SnapshotEventStream
-
-    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
-
-
-def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
-=======
-class StreamRuntime(Protocol):
-    stream: SnapshotEventStream
-
-    def submit_command(self, value: object) -> tuple[int, dict[str, Any]]: ...
-
-    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]: ...
-
-
-def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) -> type[BaseHTTPRequestHandler]:
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -125,12 +105,7 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(403, {"error": "forbidden"})
                 return
             route = urlsplit(self.path)
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
             if route.path in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-            if route.path == "/api/remote/v1/commands":
-=======
-            if route.path == "/api/remote/v1/challenges":
                 client_key = self.client_address[0]
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
@@ -141,46 +116,6 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 if not token or service.store.get_session(token) is None:
                     self._json(401, {"error": "unauthorized"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._problem(400, "INVALID_CHALLENGE", "Content-Length is invalid")
-                    return
-                if length <= 0:
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body is required")
-                    return
-                if length > 65536:
-                    self._problem(413, "BODY_TOO_LARGE", "Challenge body is too large")
-                    return
-                try:
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body must be valid JSON")
-                    return
-                if (not isinstance(value, dict) or set(value) not in ({"target", "typedReq"}, {"target", "typed_req"})
-                        or not isinstance(value.get("target"), str)
-                        or not isinstance(value.get("typedReq", value.get("typed_req")), str)):
-                    self._problem(400, "INVALID_CHALLENGE", "Target and typedReq are required")
-                    return
-                try:
-                    result = runtime.issue_challenge(value["target"], value.get("typedReq", value.get("typed_req")))
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                self._json(201, result)
-                return
-            if route.path == "/api/remote/v1/commands":
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
                     return
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
