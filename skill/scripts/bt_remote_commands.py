@@ -164,7 +164,9 @@ def dispatch_run_command(command: str, target: str, params: dict, *, preconditio
                 raise ValueError("reopen requiere params.task.")
         else:
             target_id = ""
-        messages = ops.apply(project, req, rdir, command, target_id, reason)
+        expected_attempt_state = (precondition or {}).get("state") if command == "cancel-attempt" else None
+        messages = ops.apply(project, req, rdir, command, target_id, reason,
+                             expected_attempt_state=expected_attempt_state)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
     if command == "retry":
@@ -199,6 +201,8 @@ def dispatch_handlers() -> dict[str, Handler]:
     """Build handlers for commands owned by the Scheduler run surface."""
     handlers = {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
                 for command in ("pause", "resume", "cancel-attempt", "reopen", "revise", "answer-decision")}
+    handlers["cancel-attempt"] = lambda target, params, precondition: dispatch_run_command(
+        "cancel-attempt", target, params, precondition=precondition)
     handlers["retry"] = lambda target, params, precondition: dispatch_run_command(
         "retry", target, params, precondition=precondition)
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
@@ -457,7 +461,7 @@ class Ledger:
                 params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
             try:
                 handler = handlers[req["command"]]
-                if req["command"] == "retry":
+                if req["command"] in {"retry", "cancel-attempt"}:
                     import inspect
                     if len(inspect.signature(handler).parameters) >= 3:
                         outcome = handler(req["target"], params, req["precondition"])

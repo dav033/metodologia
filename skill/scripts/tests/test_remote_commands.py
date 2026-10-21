@@ -499,6 +499,44 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(json.loads(self.route_ledger().rows()[0]["outcome"]),
                          {"messages": ["owner stopped: 0 process(es)", f"{attempt_id}: cancelled", "watchdog started"]})
 
+    def test_f32_native_http_rejects_cancel_attempt_that_progressed_after_precondition_read(self):
+        import bt_core
+        import bt_server
+
+        _core, _rdir, harness = self.real_run()
+        attempt_id = harness.attempt("T1")
+        self.assertEqual(harness.core.read(lambda ctx: ctx.state.attempts[attempt_id].state), "dispatched")
+        body = req(command="cancel-attempt", target="demo/REQ-001",
+                   params={"attempt": attempt_id, "reason": "stuck"},
+                   precondition={"state": "dispatched", "revision": 1})
+        server = ThreadingHTTPServer(("127.0.0.1", 0), bt_server.RemoteHandler)
+        worker = threading.Thread(target=server.serve_forever, daemon=True)
+        worker.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        killed = []
+
+        def state_then_start(target, command, params):
+            observed = rc.target_state(target, command, params)
+            self.assertEqual(observed["state"], "dispatched")
+            harness.send("T1", "execution_started")
+            scheduler_adapter.write_projection(_rdir, harness.core)
+            return observed
+
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_remote_api, "HANDLERS", rc.dispatch_handlers()), \
+                patch.object(bt_remote_api, "_target_state", state_then_start), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "kill_agent", side_effect=lambda *args: killed.append(args) or 0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            status, response = self.post_http(server.server_address[1], "/api/remote/v1/commands", body)
+
+        self.assertEqual((status, response["code"]), (409, "STALE_PRECONDITION"), response)
+        self.assertEqual(harness.core.read(lambda ctx: ctx.state.attempts[attempt_id].state), "running")
+        self.assertEqual(killed, [])
+        self.assertEqual(self.route_ledger().rows()[0]["status"], "REJECTED")
+
     def test_f31_route_post_rejects_stale_retry_after_scheduler_starts_new_attempt(self):
         bt_core, rdir, harness = self.real_run(blocked=True)
         self.assertEqual(harness.state("T1"), "blocked")

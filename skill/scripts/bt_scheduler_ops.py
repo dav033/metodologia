@@ -207,7 +207,8 @@ def ensure_watch(project: str, req: str, rdir: Path) -> bool:
 
 
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
-          keep_held: bool = False, *, expected_task: str = "", expected_task_state: str | None = None) -> list[str]:
+          keep_held: bool = False, *, expected_task: str = "", expected_task_state: str | None = None,
+          expected_attempt_state: str | None = None) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -223,6 +224,14 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                     raise core.SchedulerError(
                         "STALE_PRECONDITION",
                         f"task {expected_task} changed from {expected_task_state} to {actual_state}",
+                    )
+            if expected_attempt_state is not None:
+                actual_state = sch.read(lambda ctx: ctx.state.attempts[target].state
+                                        if target in ctx.state.attempts else None)
+                if actual_state != expected_attempt_state:
+                    raise core.SchedulerError(
+                        "STALE_PRECONDITION",
+                        f"attempt {target} changed from {expected_attempt_state} to {actual_state}",
                     )
             if action == "cancel-attempt":
                 lines += cancel_attempts(project, req, rdir, sch, [target], why)
