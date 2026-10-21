@@ -984,3 +984,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + audits that verify their ledger with an exit code no longer deadlock. − the rule is matched by the ledger path appearing in the command; a differently written check is not recognised. The plan's acceptance wording «contains no open critical or high finding» is now judged by the gate, not by that command. REQ-029 T8 retried (att-0029).
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-029 T8
 
+## D-110 — A task that changes a module runs that module's own tests (path-scoped guards)
+
+- **Date:** 2026-10-21 · **Status:** Accepted · **Refines:** D-105
+- **Context:** REQ-029 T7 (the final regression) failed on four tests of the existing M6-M1 adapter. T4 had added a verification-map guard to `_deliver_one` (`bt_scheduler_quality_delivery.before_acceptance`) that treated ordinary tasks as if they needed a map, so the verdict was never submitted. T4 verified only its own tests; the adapter's test directory ran first in T7, which cannot repair. Same class as the boundary tests (D-105) and the flow contract (D-106).
+- **Decision:** project guards (`project.json`) accept `paths` (globs): the guard applies only to tasks that declare a matching `expected_paths`. The metodologia project now lists, for each package (`bt_planner` with the plan adapters, `bt_scheduler_core`, `_decision`, `_executor`, `_monitor`, `_quality` with `bt_scheduler_quality_*.py`, `_recovery`), `cd skill/scripts && python3 -m unittest discover -s <package>/tests`. `plan-json check` warns for each implement task that lacks the guard of a module it touches. T4 of REQ-029 was sent back with the four failing tests and the cause; the REQ-029 plan, frozen earlier, has 21 such warnings and no guards.
+- **Consequences:** + the task that breaks a module's tests is the one told. − each guarded task pays the module's test time; the guard matches declared paths, so a task that edits a module without declaring it escapes (the planner's declared paths are guidance, not a limit).
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-029 T7
+

@@ -11,6 +11,64 @@
    "repo": "skill",
    "command": "cd skill/scripts && python3 -m unittest tests.test_flow_contract tests.test_plan_boundary.Boundary.test_only_the_adapter_imports_the_module tests.test_scheduler_integration.Boundary.test_only_the_adapter_imports_the_core tests.test_scheduler_executor_integration.Boundary.test_only_the_adapter_imports_the_executor_module tests.test_scheduler_monitor_integration.SchedulerMonitorBoundaryTests.test_only_methodology_monitor_adapter_imports_the_m4_package tests.test_scheduler_recovery_cli.RecoveryOperationalCLI.test_only_the_recovery_adapter_imports_the_m5_package_in_production",
    "why": "module boundaries: only an adapter may import a module's package (M1 core, M3 executor, M4 monitor, M5 recovery, planner); the /flow bus must map every M1 audit kind and module table the moment a task adds one (tests.test_flow_contract)"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_planner/*",
+    "skill/scripts/bt_plan_adapter*.py"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_planner/tests",
+   "why": "a task that changes bt_planner runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_core/*"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests",
+   "why": "a task that changes bt_scheduler_core runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_decision/*"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_decision/tests",
+   "why": "a task that changes bt_scheduler_decision runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_executor/*"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_executor/tests",
+   "why": "a task that changes bt_scheduler_executor runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_monitor/*"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_monitor/tests",
+   "why": "a task that changes bt_scheduler_monitor runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_quality/*",
+    "skill/scripts/bt_scheduler_quality_*.py"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests",
+   "why": "a task that changes bt_scheduler_quality runs that module's own tests"
+  },
+  {
+   "repo": "skill",
+   "paths": [
+    "skill/scripts/bt_scheduler_recovery/*"
+   ],
+   "command": "cd skill/scripts && python3 -m unittest discover -s bt_scheduler_recovery/tests",
+   "why": "a task that changes bt_scheduler_recovery runs that module's own tests"
   }
  ]
 }
