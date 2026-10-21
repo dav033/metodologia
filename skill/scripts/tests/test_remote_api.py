@@ -14,18 +14,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 SCRIPTS = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(SCRIPTS.parents[1] / "remote" / "gateway"))
-<<<<<<< 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
-||||||| 8f79667cf84ec0090fd3b66913d431e3da8f60e3
-||||||| 21ed855e0526bd6f970e6e6d9769919c0dcbf0b3
-=======
 sys.path.insert(0, str(REPO / "tests" / "migration"))
->>>>>>> 0ba9b657011be079d160ed12134f1130cf08a4e9
-=======
-sys.path.insert(0, str(REPO / "tests" / "migration"))
->>>>>>> 4f158bc298d1217d991378eb8f09a3fb378e3af2
 import bt_remote_api
+import installed_wheel
 KEY = "test-gateway-key-0123456789"
 
 
@@ -246,3 +240,51 @@ class RemoteApiTests(unittest.TestCase):
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait(timeout=3)
+
+    def test_installed_wheel_serves_remote_api_from_packaged_modules(self):
+        installed = installed_wheel.get()
+        port = free_port()
+        env = {"PATH": "/usr/bin:/bin", "HOME": str(installed.work / "home"),
+               "BITACORA_ROOT": str(installed.work / "bitacora"), "FLOW_GATEWAY_KEY": KEY,
+               "PYTHONDONTWRITEBYTECODE": "1", "PYTHONIOENCODING": "utf-8"}
+        process = subprocess.Popen(
+            [str(installed.python), "-I", "-c",
+             "import sys; sys.path.insert(0, sys.argv[1]); "
+             "import bt_remote_api, bt_remote_commands, bt_remote_events, bt_remote_recovery, bt_remote_views; "
+             "from bt_server import serve_remote; serve_remote(int(sys.argv[2]))",
+             str(installed.site), str(port)],
+            cwd=installed.work,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            deadline = time.monotonic() + 8
+            while time.monotonic() < deadline:
+                if process.poll() is not None:
+                    self.fail(f"installed serve_remote exited: {process.stderr.read()}")
+                try:
+                    with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                        break
+                except OSError:
+                    time.sleep(0.05)
+            else:
+                self.fail("installed serve_remote did not start listening")
+
+            connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+            connection.request("GET", "/api/remote/v1/health",
+                               headers={"Authorization": f"Bearer {KEY}"})
+            response = connection.getresponse()
+            body = response.read()
+            connection.close()
+            self.assertEqual(response.status, 200, body.decode("utf-8"))
+            self.assertEqual(json.loads(body)["schemaVersion"], 1)
+        finally:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=3)
+            process.stderr.close()
