@@ -23,6 +23,15 @@ export async function createMockGatewayServer() {
       response.end(server.snapshot);
       return;
     }
+    const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
+    if (reviewMatch) {
+      const attemptId = decodeURIComponent(reviewMatch[1]);
+      send(200, { attemptId, cause: "La verificación falló; GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz123456",
+        verification: { command: "npm run verify", output: "Fallo de fixture en rejected" },
+        diff: { stat: "2 files changed, 3 insertions(+)" },
+        logTail: "Authorization: Bearer abc.def.ghi\nFin de log" });
+      return;
+    }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {
       send(200, { events: [], nextCursor: "mock-cursor-v1", hasMore: false });
       return;

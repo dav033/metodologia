@@ -117,26 +117,9 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
-<<<<<<< 703d8385bbdbc8891a9449e6f86dbcd8e2d4a6d7
-||||||| 416c702dd3d4808c3eb43383660804f7c8b9fe5d
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
-    let fixtureReview = "";
-    for (let attempt = 0; attempt < 70; attempt += 1) {
-      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
-      fixtureReview = evaluated.result?.value ?? "";
-      if (fixtureReview.includes("Fallo de fixture en rejected")) break;
-      await delay(100);
-    }
-    assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route: ${fixtureReview}`);
-    await cdp(socket, "Page.navigate", { url: frontendOrigin });
-    for (let attempt = 0; attempt < 70; attempt += 1) {
-      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
-      browserState.text = evaluated.result?.value ?? "";
-      if (browserState.text.includes("Tarea T15a")) break;
-      await delay(100);
-    }
-=======
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
+    const reviewHref = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=' + JSON.stringify('taskId=T15c') + ']')?.href", returnByValue: true });
+    assert.ok(reviewHref.result?.value, "rejected task should expose a review route");
+    await cdp(socket, "Page.navigate", { url: reviewHref.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -152,7 +135,6 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState.text.includes("Tarea T15a")) break;
       await delay(100);
     }
->>>>>>> 3ae7408296eef95d55356cc8c450b8469ba8a59e
     assert.equal(sessionContractObserved, true, "panel should consume the gateway's { login } session response");
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
       await delay(100);
@@ -225,7 +207,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (ready.result?.value) break;
       await delay(100);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
