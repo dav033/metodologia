@@ -14,38 +14,13 @@ from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
 from liveness import LaptopStatus
 from server import create_server
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-from upstream import UpstreamTimeout
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-from upstream import UpstreamTimeout
-||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
-from upstream import LaptopClient, UpstreamTimeout
-
-SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
-=======
-from upstream import LaptopClient, UpstreamResponseError, UpstreamTimeout
-
-SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
->>>>>>> d5722a644747de28545fa30eb743fa0997f37253
-=======
 from stream import StreamHub
 from upstream import LaptopClient, UpstreamResponseError, UpstreamTimeout
 
 SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 import bt_remote_api
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
-
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
 class LaptopLedgerHandler(BaseHTTPRequestHandler):
     def log_message(self, *_args):
         pass
@@ -63,45 +38,7 @@ class LaptopLedgerHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
 
-<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
-=======
-class LaptopLedgerHandler(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
 
-    def do_POST(self):
-        bt_remote_api.route_post(self)
-
-    def send(self, payload, status=200, content_type="application/json; charset=utf-8"):
-        if isinstance(payload, str):
-            payload = payload.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-
->>>>>>> d5722a644747de28545fa30eb743fa0997f37253
-=======
-class LaptopLedgerHandler(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_POST(self):
-        bt_remote_api.route_post(self)
-
-    def send(self, payload, status=200, content_type="application/json; charset=utf-8"):
-        if isinstance(payload, str):
-            payload = payload.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 def config(path: Path) -> GatewayConfig:
     return GatewayConfig("http://127.0.0.1:18765", "test-key", "test-token", "test-chat", path)
 
@@ -342,11 +279,6 @@ class CommandRelayHttpTests(unittest.TestCase):
             "precondition": {"state": "running"},
         })
 
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-    def test_authenticated_challenge_relay_supports_confirmed_command(self):
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
-=======
     def test_web_decision_answer_passes_gateway_allowlist_and_translates_request_id(self):
         body = {
             "schemaVersion": 1,
@@ -407,7 +339,6 @@ class CommandRelayHttpTests(unittest.TestCase):
         self.assertTrue(challenge.get("challengeId"))
 
     def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
         self.laptop.post_json.side_effect = [
             {"challengeId": "laptop-challenge-000001", "expiresIn": 120},
             {"status": "OK", "code": None},

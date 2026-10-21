@@ -181,7 +181,6 @@ class RemoteApiTests(unittest.TestCase):
             self.assertIn(b"A-live", live._now_frame(base))
             self.assertEqual(read_now.call_count, 1)
 
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     def test_keyed_read_models_are_served_by_the_real_http_listener(self):
         with tempfile.TemporaryDirectory() as root:
             import bt_remote_commands as commands
@@ -237,8 +236,6 @@ class RemoteApiTests(unittest.TestCase):
                 self.assertEqual(json.loads(body)["code"], "ROUTES_UNAVAILABLE")
             finally:
                 self.stop_server(process)
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-=======
     def test_snapshot_route_keeps_non_live_failed_attempt_for_review(self):
         import bt_remote_api
 
@@ -270,7 +267,6 @@ class RemoteApiTests(unittest.TestCase):
         self.assertIsNone(task["activeAttempt"])
         self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
         self.assertEqual(task["history"][0]["id"], "A-failed")
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
 
 if __name__ == "__main__":

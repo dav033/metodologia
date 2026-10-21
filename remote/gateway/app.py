@@ -10,14 +10,7 @@ from typing import Any, Mapping
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
 from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
-from commands import COMMAND_TYPES
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
@@ -43,12 +36,7 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(command, str):
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-=======
                  "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
                  "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
                  "field": "field", "value": "value"}
     params: dict[str, Any] = {}

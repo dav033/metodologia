@@ -395,7 +395,6 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["status"], saved["status"], saved["answers"], saved["answered_via"]),
                          (200, "OK", "answered", {"q1": {"text": "Keep scope"}}, "remote"))
 
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     def test_route_post_cancels_attempt_through_real_scheduler_operations(self):
         bt_core, rdir, harness = self.real_run()
         with sqlite3.connect(scheduler_adapter.run_db_path(rdir)) as db:
@@ -415,10 +414,8 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(saved["attempts"][attempt_id]["state"], "cancelled")
         self.assertEqual(json.loads(self.route_ledger().rows()[0]["outcome"]),
                          {"messages": ["owner stopped: 0 process(es)", f"{attempt_id}: cancelled", "watchdog started"]})
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
     def test_route_post_cancel_attempt_uses_scheduler_operator_apply(self):
         import bt_scheduler_ops as ops
-=======
     def test_open_round_precondition_uses_round_file_when_run_is_waiting(self):
         import bt_plans_api
         import bt_rounds
@@ -435,7 +432,6 @@ class EntryPointTests(LedgerBase):
                          "plan_ref": {"revision": 3}},
                  "plan": {"status": "waiting", "revision": 3}}
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
                 patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)), \
                 patch.object(bt_plans_api, "status_of", return_value=model):
             bt_remote_api.route_post(handler)
@@ -448,7 +444,6 @@ class EntryPointTests(LedgerBase):
 
     def test_route_post_cancel_attempt_uses_scheduler_operator_apply(self):
         import bt_scheduler_ops as ops
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
     def test_route_post_answers_decision_through_real_scheduler_decisions_api(self):
         import bt_scheduler_decisions as decisions
@@ -470,22 +465,18 @@ class EntryPointTests(LedgerBase):
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
 
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     def test_route_post_refuses_unknown_command(self):
         status, response = self.post(req(command="delete-everything"))
         self.assertEqual((status, response["code"]), (400, "INVALID_COMMAND"))
         self.assertEqual(self.route_ledger().rows(), [])
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
     def test_route_post_refuses_unknown_command_before_dispatch(self):
         command = req(command="erase-run")
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
                 patch.object(bt_remote_api, "_target_state", lambda target: self.state), \
                 patch.object(rc, "dispatch_run_command") as dispatch:
             status, body = self.post(command)
         self.assertEqual((status, body["code"]), (400, "INVALID_COMMAND"))
         dispatch.assert_not_called()
-=======
     def test_open_decision_precondition_uses_matching_request_while_run_is_waiting(self):
         import bt_plans_api
         import bt_scheduler_decisions as decisions
@@ -500,7 +491,6 @@ class EntryPointTests(LedgerBase):
                  "plan": {"status": "waiting", "revision": 3}}
         open_request = {"id": "T2:1", "task": "T2", "revision": 8}
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
                 patch.object(rc, "_run_target", return_value=("demo", "REQ-001", rdir)), \
                 patch.object(bt_plans_api, "status_of", return_value=model), \
                 patch.object(decisions, "open_requests", return_value=[open_request]), \
@@ -514,13 +504,11 @@ class EntryPointTests(LedgerBase):
     def test_route_post_refuses_unknown_command_before_dispatch(self):
         command = req(command="erase-run")
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
-                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
                 patch.object(bt_remote_api, "_target_state", lambda target: self.state), \
                 patch.object(rc, "dispatch_run_command") as dispatch:
             status, body = self.post(command)
         self.assertEqual((status, body["code"]), (400, "INVALID_COMMAND"))
         dispatch.assert_not_called()
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
 
 
 if __name__ == "__main__":

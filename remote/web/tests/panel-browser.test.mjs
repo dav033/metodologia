@@ -139,7 +139,6 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
     assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
     const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
     const reviewPoint = reviewLink.result?.value;
     assert.ok(reviewPoint, "review link should have a visible position");
@@ -153,11 +152,6 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       await delay(100);
     }
     if (!reviewRouteOpened) await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
-=======
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });

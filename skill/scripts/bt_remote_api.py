@@ -456,14 +456,32 @@ def _submit_command(handler, length: int) -> None:
 def route_post(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
-    if _path(handler) == f"{PREFIX}/commands":
+    path = _path(handler)
+    if path not in {f"{PREFIX}/commands", f"{PREFIX}/challenges"}:
+        return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
+    invalid_code = "INVALID_CHALLENGE" if path.endswith("/challenges") else "INVALID_COMMAND"
+    try:
+        length = int(handler.headers.get("Content-Length", "0"))
+    except (AttributeError, ValueError):
+        length = -1
+    if length <= 0:
+        return _problem(handler, 400, invalid_code, "Longitud de solicitud no válida.")
+    if length > MAX_BODY:
+        return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
+    if path.endswith("/challenges"):
         try:
-            length = int(handler.headers.get("Content-Length", "0"))
-        except (AttributeError, ValueError):
-            length = -1
-        if length < 0:
-            return _problem(handler, 400, "INVALID_COMMAND", "Longitud de solicitud no válida.")
-        if length > MAX_BODY:
-            return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
-        return _submit_command(handler, length)
-    return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
+            request = json.loads(handler.rfile.read(length) or b"null")
+        except (ValueError, OSError):
+            return _problem(handler, 400, invalid_code, "El cuerpo debe ser JSON válido.")
+        if not isinstance(request, dict):
+            return _problem(handler, 400, invalid_code, "El cuerpo debe ser un objeto JSON.")
+        typed_req = request.get("typedReq", request.get("typed_req"))
+        if (set(request) not in ({"target", "typedReq"}, {"target", "typed_req"})
+                or not isinstance(request.get("target"), str) or not isinstance(typed_req, str)):
+            return _problem(handler, 400, invalid_code, "La solicitud de confirmación no es válida.")
+        try:
+            challenge = _commands.Ledger().issue_challenge(request["target"], typed_req)
+        except ValueError as exc:
+            return _problem(handler, 400, invalid_code, str(exc))
+        return _send_json(handler, challenge, 200)
+    return _submit_command(handler, length)
