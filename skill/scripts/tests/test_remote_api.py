@@ -48,6 +48,30 @@ class RemoteApiTests(unittest.TestCase):
         self.assertTrue(content_type.startswith("application/problem+json"))
         self.assertEqual(json.loads(body)["code"], "SNAPSHOT_UNAVAILABLE")
 
+    def test_snapshot_keeps_plan_round_and_decision_metadata_with_shared_run_model(self):
+        import bt_remote_api
+
+        handler = Mock()
+        plan = {"project": "demo", "req_id": "REQ-001", "plan_status": "approved",
+                "revision": 2, "updated_at": "2026-10-21T12:00:00Z"}
+        request = {"id": "T1:3", "title": "T1 bloqueada", "options": ["retry", "stop"]}
+        round_data = {"id": "round-2", "title": "Question", "status": "open"}
+        with patch("bt_core.ROOT", Path("/tmp")), \
+                patch("bt_remote_snapshot.build", return_value={"schemaVersion": 1, "runs": [{"id": "run-1"}]}), \
+                patch("bt_plans_api.plans_payload", return_value=[plan]), \
+                patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")), \
+                patch("bt_plans_api.open_decisions", return_value=[request]), \
+                patch("bt_plans_api.open_rounds", return_value=[2]), \
+                patch("bt_rounds.rounds_dir", return_value=Path("/tmp/rounds")), \
+                patch("bt_rounds.load", return_value=round_data):
+            bt_remote_api._snapshot(handler)
+
+        payload = json.loads(handler.send.call_args.args[0])
+        self.assertEqual(payload["runs"], [{"id": "run-1"}])
+        self.assertEqual(payload["plans"][0]["id"], "demo/REQ-001")
+        self.assertEqual(payload["rounds"][0]["id"], "round-2")
+        self.assertEqual(payload["decisionRequests"][0]["options"][0]["id"], "retry")
+
     def start_server(self, command: str, port: int, env: dict[str, str]) -> subprocess.Popen:
         process = subprocess.Popen(
             [sys.executable, str(SCRIPTS / "bitacora.py"), command, "--port", str(port)],

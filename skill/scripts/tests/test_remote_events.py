@@ -75,7 +75,7 @@ class FixtureTests(unittest.TestCase):
 
     def test_open_decision_request_is_a_stable_plan_waiting_event(self):
         request = {"id": "decision-7", "task": "T4", "attempt": "a9", "title": "T4 bloqueada",
-                   "what": "Se agotaron los intentos.", "options": [{"id": "retry"}, {"id": "stop"}],
+                   "what": "Se agotaron los intentos.", "options": ["retry", "stop"],
                    "recommended": "retry"}
         event = events_for({"decisions": [{"project": "demo", "req": "REQ-001",
                                             "request": request, "at": AT}]})["plan.waiting"]
@@ -195,7 +195,7 @@ class RouteTests(unittest.TestCase):
 
     def _assert_decision_route(self, handler, root):
         plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
-        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": [{"id": "stop"}]}
+        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": ["stop"]}
         ledger = type("LedgerStub", (), {"rows": lambda self: []})
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
                 patch("bt_core.ROOT", root), \
@@ -212,6 +212,7 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(handler.status, 200)
         self.assertEqual(payload["events"][0]["type"], "plan.waiting")
         self.assertIn("decisionRequest", payload["events"][0]["data"])
+        self.assertEqual(payload["events"][0]["data"]["decisionRequest"]["options"], ["stop"])
 
     def test_events_route_rejects_bad_cursor_and_limit(self):
         for path, code in (("/api/remote/v1/events?after=junk", "INVALID_CURSOR"),

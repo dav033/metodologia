@@ -132,11 +132,14 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         request = decision["request"]
         project, req = decision["project"], decision["req"]
         identity = f"{project}/{req}:{request['id']}"
+        options = request.get("options", [])
+        option_ids = [option if isinstance(option, str) else option.get("id")
+                      for option in options if isinstance(option, str) or isinstance(option, dict)]
         out.append(_event("plan.waiting", identity, decision.get("at", ""),
                           _task_target(project, req, request.get("task"), request.get("attempt")),
                           {"decisionRequest": {"id": request["id"], "title": request.get("title"),
                                                 "what": request.get("what"), "reason": request.get("reason"),
-                                                "options": [option.get("id") for option in request.get("options", [])],
+                                                "options": option_ids,
                                                 "recommended": request.get("recommended")}}))
     for round_ in state.get("rounds", []):
         project, req, number = round_["project"], round_["req"], str(round_["round"])
