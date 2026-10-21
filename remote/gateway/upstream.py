@@ -41,7 +41,21 @@ class LaptopClient:
         try:
             with urlopen(request, timeout=self._timeout) as response:
                 payload = json.loads(response.read().decode("utf-8"))
-        except (HTTPError, URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+        except HTTPError as exc:
+            try:
+                error_body = exc.read(65536)
+            except (UnicodeError, json.JSONDecodeError) as parse_error:
+                raise UpstreamError("laptop API returned an invalid error response") from parse_error
+            finally:
+                exc.close()
+            try:
+                payload = json.loads(error_body.decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError) as parse_error:
+                raise UpstreamError("laptop API returned an invalid error response") from parse_error
+            if not isinstance(payload, dict):
+                raise UpstreamError("laptop API returned an invalid error response") from exc
+            raise UpstreamResponseError(exc.code, payload) from exc
+        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise UpstreamError("laptop API request failed") from exc
         if not isinstance(payload, dict):
             raise UpstreamError("laptop API returned a non-object response")

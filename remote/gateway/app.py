@@ -99,6 +99,13 @@ class GatewayRuntime:
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR":
+                self.event_cursor = ""
+                logger.info("Laptop event cursor expired; restarting feed from the beginning")
+                return
+            logger.warning("Laptop event feed unavailable")
+            return
         except UpstreamError:
             logger.warning("Laptop event feed unavailable")
             return
@@ -129,7 +136,7 @@ class GatewayRuntime:
             params["request_id"] = params.pop("requestId")
         if "typedReq" in params:
             params["typed_req"] = params.pop("typedReq")
-        if "answer" in params and command["type"] == "answer-round":
+        if "answer" in params and command["type"] == "answer-round" and "answers" not in params:
             params["answers"] = params.pop("answer")
         confirmation = params.pop("confirmation", None)
         ledger_command = {

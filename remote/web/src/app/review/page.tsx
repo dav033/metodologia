@@ -99,10 +99,10 @@ export default function ReviewPage() {
         {loading && <p role="status">Cargando revisión…</p>}
         {unavailable && <p className="error" role="status">La revisión de este intento no está disponible.</p>}
         <div className={styles.sections}>
-          <ReviewSection title="Causa">{review.cause}</ReviewSection>
-          <ReviewSection title="Salida de verificación">{review.verificationOutput}</ReviewSection>
-          <ReviewSection title="Estadística del diff">{review.diffStat}</ReviewSection>
-          <ReviewSection title="Final del log">{review.logTail}</ReviewSection>
+          <ReviewSection title="CAUSA">{review.cause}</ReviewSection>
+          <ReviewSection title="SALIDA DE VERIFICACIÓN">{review.verificationOutput}</ReviewSection>
+          <ReviewSection title="ESTADÍSTICA DEL DIFF">{review.diffStat}</ReviewSection>
+          <ReviewSection title="FINAL DEL LOG">{review.logTail}</ReviewSection>
         </div>
       </article>
       <footer className="footer"><span>FLOW REMOTE</span><span>REVISIÓN DE INTENTO</span></footer>

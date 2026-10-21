@@ -121,6 +121,37 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(payload["events"][0]["type"], "plan.waiting")
         self.assertIn("decisionRequest", payload["events"][0]["data"])
 
+    def test_get_events_route_accepts_cursor_after_ephemeral_decision_resolves(self):
+        handler = Handler()
+        plan = {"project": "demo", "req_id": "REQ-001", "updated_at": AT, "plan_status": "approved"}
+        request = {"id": "decision-1", "task": "T1", "title": "Waiting", "options": [{"id": "stop"}]}
+        ledger = type("LedgerStub", (), {"rows": lambda self: []})
+        dependencies = (
+            patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}),
+            patch("bt_live_api.run_summaries", return_value=[]),
+            patch("bt_plans_api.plans_payload", return_value=[plan]),
+            patch("bt_plans_api.req_dir", return_value=Path("/tmp/REQ-001")),
+            patch("bt_plans_api.open_decisions", side_effect=[[request], []]),
+            patch("bt_plans_api.open_rounds", side_effect=[[2], []]),
+            patch("bt_live_api.flow_events", return_value=([], [], {})),
+            patch("bt_subscriptions.summary", return_value=[]),
+            patch("bt_remote_commands.Ledger", ledger),
+        )
+        with dependencies[0], dependencies[1], dependencies[2], dependencies[3], dependencies[4], \
+                dependencies[5], dependencies[6], dependencies[7], dependencies[8]:
+            bt_remote_api.route_get(handler)
+            first_page = json.loads(handler.body)
+            self.assertEqual(handler.status, 200)
+            self.assertEqual({event["type"] for event in first_page["events"]}, {"plan.waiting", "round.waiting"})
+            cursor = first_page["events"][-1]["cursor"]
+
+            handler = Handler()
+            handler.path = "/api/remote/v1/events?after=" + __import__("urllib.parse").parse.quote(cursor, safe="")
+            bt_remote_api.route_get(handler)
+
+        self.assertEqual(handler.status, 200)
+        self.assertEqual(json.loads(handler.body)["events"], [])
+
     def test_snapshot_route_redacts_session_secret_from_payload(self):
         handler = Handler()
         handler.path = "/api/remote/v1/snapshot"

@@ -3,11 +3,11 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QuotasPanel, RoutesPanel, type RouteOption } from "./recovery-panels";
+import { FailureReviewPanel } from "./failure-review-panel";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
-type FailureReview = { attemptId: string };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: { attemptId: string } };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
@@ -26,177 +26,6 @@ function record(value: unknown): Record<string, unknown> | null {
 
 function text(value: unknown): value is string { return typeof value === "string"; }
 function field(source: Record<string, unknown>, camel: string, snake: string): unknown { return source[camel] ?? source[snake]; }
-
-<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
-||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
-<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
-||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
-function safeReviewText(value: string): string {
-  return value.replace(/\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY|CREDENTIAL)[A-Z0-9_]*)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
-}
-
-function parseFailureReview(value: unknown): FailureReview {
-  const review = record(value);
-  const verification = record(review?.verification);
-  const diff = record(review?.diff);
-  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
-    throw new Error("El detalle del intento no cumple el contrato v1.");
-  }
-  const files = Array.isArray(diff.files) ? diff.files.filter(text).map(safeReviewText) : [];
-  return {
-    attemptId: safeReviewText(review.attemptId),
-    cause: safeReviewText(review.cause),
-    verification: {
-      command: text(verification.command) ? safeReviewText(verification.command) : null,
-      output: text(verification.output) ? safeReviewText(verification.output) : "",
-    },
-    diff: { stat: text(diff.stat) ? safeReviewText(diff.stat) : null, files },
-    logTail: safeReviewText(review.logTail),
-  };
-}
-
-function FailureReviewPanel({ attemptId }: { attemptId: string }) {
-  const [review, setReview] = useState<FailureReview | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("No se pudo cargar la revisión del intento.");
-        return parseFailureReview(await response.json() as unknown);
-      })
-      .then((result) => { if (active) setReview(result); })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la revisión del intento."); });
-    return () => { active = false; };
-  }, [attemptId]);
-
-  if (error) return <p className="error" role="alert">{error}</p>;
-  if (!review) return <p className="empty">Cargando revisión del intento…</p>;
-  return <section className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
-    <h4>Revisión del intento {review.attemptId}</h4>
-    <section className="failure-section"><h5>Causa</h5><p>{review.cause}</p></section>
-    <section className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></section>
-    <section className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</section>
-    <section className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></section>
-  </section>;
-}
-
-=======
-function safeReviewText(value: string): string {
-  return value.replace(/\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY|CREDENTIAL)[A-Z0-9_]*)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
-}
-
-function parseFailureReview(value: unknown): FailureReview {
-  const review = record(value);
-  const verification = record(review?.verification);
-  const diff = record(review?.diff);
-  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
-    throw new Error("El detalle del intento no cumple el contrato v1.");
-  }
-  const files = Array.isArray(diff.files) ? diff.files.filter(text).map(safeReviewText) : [];
-  return {
-    attemptId: safeReviewText(review.attemptId),
-    cause: safeReviewText(review.cause),
-    verification: {
-      command: text(verification.command) ? safeReviewText(verification.command) : null,
-      output: text(verification.output) ? safeReviewText(verification.output) : "",
-    },
-    diff: { stat: text(diff.stat) ? safeReviewText(diff.stat) : null, files },
-    logTail: safeReviewText(review.logTail),
-  };
-}
-
-function FailureReviewPanel({ attemptId }: { attemptId: string }) {
-  const [review, setReview] = useState<FailureReview | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("No se pudo cargar la revisión del intento.");
-        return parseFailureReview(await response.json() as unknown);
-      })
-      .then((result) => { if (active) setReview(result); })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la revisión del intento."); });
-    return () => { active = false; };
-  }, [attemptId]);
-
-  useEffect(() => {
-    const target = `#attempt-${encodeURIComponent(attemptId)}`;
-    if (window.location.hash === target) document.getElementById(target.slice(1))?.scrollIntoView({ block: "start" });
-  }, [attemptId, review]);
-
-  if (error) return <p className="error" role="alert">{error}</p>;
-  if (!review) return <p className="empty">Cargando revisión del intento…</p>;
-  return <section id={`attempt-${encodeURIComponent(review.attemptId)}`} className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
-    <h4>Revisión del intento {review.attemptId}</h4>
-    <section className="failure-section"><h5>Causa</h5><p>{review.cause}</p></section>
-    <section className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></section>
-    <section className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</section>
-    <section className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></section>
-  </section>;
-}
-
->>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
-=======
-function safeReviewText(value: string): string {
-  return value.replace(/\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY|CREDENTIAL)[A-Z0-9_]*)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
-}
-
-function parseFailureReview(value: unknown): FailureReview {
-  const review = record(value);
-  const verification = record(review?.verification);
-  const diff = record(review?.diff);
-  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
-    throw new Error("El detalle del intento no cumple el contrato v1.");
-  }
-  const files = Array.isArray(diff.files) ? diff.files.filter(text).map(safeReviewText) : [];
-  return {
-    attemptId: safeReviewText(review.attemptId),
-    cause: safeReviewText(review.cause),
-    verification: {
-      command: text(verification.command) ? safeReviewText(verification.command) : null,
-      output: text(verification.output) ? safeReviewText(verification.output) : "",
-    },
-    diff: { stat: text(diff.stat) ? safeReviewText(diff.stat) : null, files },
-    logTail: safeReviewText(review.logTail),
-  };
-}
-
-function FailureReviewPanel({ attemptId }: { attemptId: string }) {
-  const [review, setReview] = useState<FailureReview | null>(null);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    void fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("No se pudo cargar la revisión del intento.");
-        return parseFailureReview(await response.json() as unknown);
-      })
-      .then((result) => { if (active) setReview(result); })
-      .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : "No se pudo cargar la revisión del intento."); });
-    return () => { active = false; };
-  }, [attemptId]);
-
-  useEffect(() => {
-    const target = `#attempt-${encodeURIComponent(attemptId)}`;
-    if (window.location.hash === target) document.getElementById(target.slice(1))?.scrollIntoView({ block: "start" });
-  }, [attemptId, review]);
-
-  if (error) return <p className="error" role="alert">{error}</p>;
-  if (!review) return <p className="empty">Cargando revisión del intento…</p>;
-  return <section id={`attempt-${encodeURIComponent(review.attemptId)}`} className="failure-review" aria-label={`Revisión del intento ${review.attemptId}`}>
-    <h4>Revisión del intento {review.attemptId}</h4>
-    <section className="failure-section"><h5>Causa</h5><p>{review.cause}</p></section>
-    <section className="failure-section"><h5>Verificación</h5>{review.verification.command && <p className="review-command">{review.verification.command}</p>}<pre className="review-scroll">{review.verification.output || "Sin salida de verificación."}</pre></section>
-    <section className="failure-section"><h5>Diff stat</h5><p>{review.diff.stat ?? "Sin diff disponible."}</p>{review.diff.files.length > 0 && <ul>{review.diff.files.map((file, index) => <li key={`${file}-${index}`}>{file}</li>)}</ul>}</section>
-    <section className="failure-section"><h5>Log del agente</h5><pre className="review-scroll">{review.logTail || "Sin log disponible."}</pre></section>
-  </section>;
-}
->>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
 function parseFlowEvent(value: unknown): FlowEvent | null {
   const event = record(value);
   const target = record(event?.target);
@@ -500,22 +329,8 @@ export default function HomePage() {
       }
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-round",
         target: { kind: "round", project: round.project, req: round.req, roundId: round.id ?? String(round.round) },
-<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
-<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answer }, `${round.req}-round-${round.round}`);
-=======
         precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
         round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
-=======
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
     };
   }
 
@@ -527,7 +342,7 @@ export default function HomePage() {
       }
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-decision",
         target: { kind: "run", project: decision.project, req: decision.req, ...(decision.task ? { taskId: decision.task } : {}) },
-        precondition: { state: decision.state ?? "waiting", ...(decision.revision === undefined ? {} : { revision: decision.revision }) },
+        precondition: { state: decision.state ?? "open", ...(decision.revision === undefined ? {} : { revision: decision.revision }) },
         requestId: decision.id, option: option.id, reason }, `${decision.req}-${decision.id}`);
     };
   }
@@ -573,19 +388,8 @@ export default function HomePage() {
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
-<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
-||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
-<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
-||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
-    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
-=======
-    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
-      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
->>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
-=======
-    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
-      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
->>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
+    {task.state === "failed" && task.reviewAttempt?.attemptId &&
+      <FailureReviewPanel attemptId={task.reviewAttempt.attemptId} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {(task.state === "failed" || task.state === "blocked") && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}

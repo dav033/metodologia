@@ -89,7 +89,19 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         return None
     run = status.get("run") or {}
     plan = status.get("plan") or {}
-    if command in {"approve", "launch", "answer-round", "cancel-plan", "delete-plan"}:
+    if command == "answer-round":
+        round_number = (params or {}).get("round")
+        if not isinstance(round_number, int) or isinstance(round_number, bool) or round_number < 1:
+            return None
+        try:
+            import bt_rounds
+            round_data = bt_rounds.load(rdir / "rounds" / f"round-{round_number:02d}.json")
+        except (OSError, ValueError):
+            return None
+        if round_data.get("round") != round_number:
+            return None
+        return {"state": round_data.get("status"), "revision": round_data.get("revision")}
+    if command in {"approve", "launch", "cancel-plan", "delete-plan"}:
         try:
             updated_at = dt.datetime.fromtimestamp((rdir / "PLAN.md").stat().st_mtime, dt.UTC).isoformat(
                 timespec="microseconds")
@@ -110,8 +122,11 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         request_id = params.get("request_id")
         if not isinstance(request_id, str) or not request_id:
             return None
-        is_open = any(item.get("id") == request_id for item in bt_scheduler_decisions.open_requests(rdir))
-        state = "open" if is_open else "closed"
+        request = next((item for item in bt_scheduler_decisions.open_requests(rdir)
+                        if item.get("id") == request_id), None)
+        revision = request.get("revision") if isinstance(request, dict) else None
+        return {"state": (request.get("state") or "open") if request else "closed",
+                **({"revision": revision} if isinstance(revision, int) else {})}
     return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
