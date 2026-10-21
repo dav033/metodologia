@@ -98,16 +98,10 @@ class GatewayRuntime:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
                 self.outbox.set_state_value("laptop_outage_started_at", int(time.time()))
         else:
-<<<<<<< 4448fef5a5e1184c47f83e2e7b1b508d2ad52259
-            self.liveness.record_success()
-            self.hub.set_online(True)
-||||||| ab6f183436f129f512e625816f6e8cfcc886786a
-            self.liveness.record_success()
-=======
             transition = self.liveness.record_success()
+            self.hub.set_online(True)
             if transition and transition.current is LaptopStatus.ONLINE:
                 self.outbox.set_state_value("laptop_outage_started_at", 0)
->>>>>>> bfd70e7b50aec41586bdf33cf7da3491eb764b7f
             self._refresh_active_run_cache()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
