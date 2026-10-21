@@ -70,6 +70,10 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
         def do_GET(self) -> None:
             route = urlsplit(self.path)
             if route.path in {"/api/auth/login", "/api/auth/github"}:
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("login-start", client_key, LOGIN_FAILURE_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
@@ -160,24 +164,12 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 return
             route = urlsplit(self.path)
             if route.path == "/api/remote/v1/challenges":
-<<<<<<< ede87253b5f40c74d13b25da89f0c8ea70ac0e63
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-||||||| c0af0bd65e6b3d72daaee036a0c60fb962d41ec6
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-=======
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 login = service.store.get_session(token) if token else None
                 if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
                 if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
->>>>>>> cb44d05b7dd50284f6561c3aa1724df1536dd260
                     self._rate_limited()
                     return
                 if runtime is None:
@@ -219,24 +211,12 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 self._json(201, result)
                 return
             if route.path == "/api/remote/v1/commands":
-<<<<<<< ede87253b5f40c74d13b25da89f0c8ea70ac0e63
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-||||||| c0af0bd65e6b3d72daaee036a0c60fb962d41ec6
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-=======
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 login = service.store.get_session(token) if token else None
                 if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
                 if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
->>>>>>> cb44d05b7dd50284f6561c3aa1724df1536dd260
                     self._rate_limited()
                     return
                 if runtime is None:

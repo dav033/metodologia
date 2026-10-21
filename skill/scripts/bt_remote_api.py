@@ -166,9 +166,12 @@ def _snapshot(handler) -> None:
         decisions.extend({**request, "project": project, "req": req}
                          for request in plans_api.open_decisions(rdir))
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plan_rows, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
+    import bt_remote_events
+
+    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                "runs": runs, "plans": plan_rows, "rounds": rounds,
+                "decisionRequests": decisions}
+    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
 
 
 def _read_model(handler, path: str) -> None:

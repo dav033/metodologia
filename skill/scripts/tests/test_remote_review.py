@@ -81,7 +81,9 @@ class RemoteReviewTests(unittest.TestCase):
             connection.execute("INSERT INTO attempts VALUES (?, ?, ?)",
                                (ATTEMPT_ID, "fixture-attempt", json.dumps({"attempt_id": ATTEMPT_ID})))
         (self.attempt_dir / "output.tail").write_text(
-            "\n".join(f"agent-line-{number}" for number in range(205)) +
+            "\n".join(f"agent-line-{number}" +
+                      (" SESSION_SECRET=example-session-secret" if number == 204 else "")
+                      for number in range(205)) +
             "\nTELEGRAM_BOT_TOKEN=example-telegram-secret\n", encoding="utf-8")
         (self.attempt_dir / "supervisor.log").write_text("supervisor text must stay private", encoding="utf-8")
         (self.attempt_dir / "handoff" / "manifest.json").write_text(
@@ -135,7 +137,7 @@ class RemoteReviewTests(unittest.TestCase):
 
         self.assertEqual(status, 200)
         serialized = json.dumps(review)
-        for secret in ("example-gateway-secret", "example-telegram-secret"):
+        for secret in ("example-gateway-secret", "example-telegram-secret", "example-session-secret"):
             self.assertNotIn(secret, serialized)
         self.assertIn("[REDACTED]", serialized)
         self.assertNotIn("supervisor text must stay private", serialized)
