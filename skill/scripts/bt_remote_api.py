@@ -116,6 +116,7 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
+    import bt_remote_events
 
     root = bt_core.ROOT
     try:
@@ -152,8 +153,9 @@ def _snapshot(handler) -> None:
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
+    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
+                "runs": runs}
+    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
 
 
 def _command_history(handler) -> None:
