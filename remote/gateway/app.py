@@ -8,6 +8,7 @@ from typing import Any
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
+from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
 from upstream import LaptopClient, UpstreamError
 
@@ -25,6 +26,7 @@ class GatewayRuntime:
         )
         self.outbox = NotificationOutbox(str(config.database_path))
         self.liveness = LivenessMonitor()
+        self.hub = StreamHub()
         self.event_cursor = ""
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
@@ -37,10 +39,13 @@ class GatewayRuntime:
                 raise UpstreamError("laptop health check was not successful")
         except UpstreamError:
             transition = self.liveness.record_failure()
+            if transition:
+                self.hub.set_online(False)
             if transition and transition.current is LaptopStatus.OFFLINE:
                 self.offline_generation = self.outbox.next_sequence("laptop_outage_generation")
         else:
             self.liveness.record_success()
+            self.hub.set_online(True)
             self._refresh_active_run_cache()
             self._poll_events()
         if self.liveness.status is LaptopStatus.OFFLINE:
@@ -70,6 +75,7 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
+        self.hub.update_snapshot(snapshot)
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
@@ -90,6 +96,7 @@ class GatewayRuntime:
         for event in events:
             if not isinstance(event, dict):
                 continue
+            self.hub.publish(event)
             notification = notification_for_event(event)
             if notification:
                 self.outbox.enqueue(*notification)

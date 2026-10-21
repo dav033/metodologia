@@ -17,15 +17,17 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+from stream import StreamHub, format_sse
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
 RATE_WINDOW_SECONDS = 60
 LOGIN_FAILURE_LIMIT = 5
 COMMAND_REQUEST_LIMIT = 30
+HEARTBEAT_SECONDS = 15.0
 
 
-def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
+def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -77,7 +79,42 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
                     return
                 self._json(200, {"login": login})
                 return
+            if route.path in ("/api/remote/v1/snapshot", "/api/remote/v1/stream") and hub is not None:
+                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
+                if not token or service.store.get_session(token) is None:
+                    self._json(401, {"error": "unauthorized"})
+                    return
+                if route.path.endswith("/snapshot"):
+                    self._json(200, hub.read_snapshot())
+                else:
+                    self._stream(hub)
+                return
             self._json(404, {"error": "not found"})
+
+        def _stream(self, hub: StreamHub) -> None:
+            cursor = self.headers.get("Last-Event-ID") or hub.live_cursor()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.close_connection = True
+            try:
+                while not hub.closed:
+                    events, resync = hub.wait_for_events(cursor, HEARTBEAT_SECONDS)
+                    if resync:
+                        state = hub.read_snapshot()
+                        self.wfile.write(format_sse(None, "resync", state))
+                        if not events:
+                            cursor = state["lastEventId"]
+                    for event_id, event in events:
+                        self.wfile.write(format_sse(event_id, "event", event))
+                        cursor = event_id
+                    if not events and not resync:
+                        self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+            except OSError:
+                return
 
         def do_POST(self) -> None:
             if not self._valid_state_changing_request():
@@ -130,8 +167,11 @@ def make_handler(service: OAuthService) -> type[BaseHTTPRequestHandler]:
     return GatewayHandler
 
 
-def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None) -> ThreadingHTTPServer:
+def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None,
+                  hub: StreamHub | None = None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    return ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service))
+    server = ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, hub))
+    server.daemon_threads = True
+    return server
 
 
