@@ -499,6 +499,39 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(json.loads(self.route_ledger().rows()[0]["outcome"]),
                          {"messages": ["owner stopped: 0 process(es)", f"{attempt_id}: cancelled", "watchdog started"]})
 
+    def test_f31_route_post_rejects_stale_retry_after_scheduler_starts_new_attempt(self):
+        bt_core, rdir, harness = self.real_run(blocked=True)
+        self.assertEqual(harness.state("T1"), "blocked")
+        scheduler_adapter.write_projection(rdir, harness.core)
+        body = req(command="retry", target="demo/REQ-001", params={"task": "T1", "reason": "retry"},
+                   precondition={"state": "blocked", "revision": 1})
+        saved_state = {}
+
+        def state_then_advance(target, command, params):
+            observed = rc.target_state(target, command, params)
+            self.assertEqual(observed["state"], "blocked")
+            harness.core.reopen("T1", "scheduler", "concurrent progress")
+            harness.core.step()
+            self.assertEqual(harness.state("T1"), "active")
+            saved_state["attempt"] = harness.attempt("T1")
+            scheduler_adapter.write_projection(rdir, harness.core)
+            return observed
+
+        handler = FakeHandler(json.dumps(body).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_remote_api, "_target_state", state_then_advance), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "kill_agent", return_value=0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            bt_remote_api.route_post(handler)
+
+        status, response = handler.sent
+        self.assertEqual((status, response["code"]), (409, "STALE_PRECONDITION"), response)
+        self.assertEqual(harness.state("T1"), "active")
+        self.assertEqual(harness.core.snapshot().tasks["T1"]["attempt"], saved_state["attempt"])
+        self.assertEqual(harness.core.read(lambda ctx: ctx.state.attempts[saved_state["attempt"]].state), "dispatched")
+
     def test_route_post_answers_decision_through_real_scheduler_decisions_api(self):
         import bt_scheduler_decisions as decisions
 

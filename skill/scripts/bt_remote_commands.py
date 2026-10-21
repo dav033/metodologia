@@ -27,7 +27,7 @@ _SCHEMA = """CREATE TABLE IF NOT EXISTS commands (
 _CHALLENGE_SCHEMA = """CREATE TABLE IF NOT EXISTS challenges (
     challenge_hash TEXT PRIMARY KEY, target TEXT NOT NULL, expires_at REAL NOT NULL, used_at TEXT)"""
 
-Handler = Callable[[str, dict], Any]            # (target, params) -> JSON-able result; raises on failure
+Handler = Callable[..., Any]                    # (target, params[, precondition]) -> JSON-able result
 StateReader = Callable[..., "dict | None"]        # target[, command, params] -> current precondition fields
 
 
@@ -136,7 +136,7 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
     return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
-def dispatch_run_command(command: str, target: str, params: dict) -> Any:
+def dispatch_run_command(command: str, target: str, params: dict, *, precondition: dict | None = None) -> Any:
     """Apply a remote run move through the existing Scheduler operator and decision APIs."""
     project, req, rdir = _run_target(target)
     import bt_scheduler_ops as ops
@@ -182,7 +182,8 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
             bt_route_pins.set_pin(rdir, task, pin)
         else:
             bt_route_pins.clear(rdir, task)
-        messages = ops.retry(project, req, rdir, task, reason)
+        expected_state = (precondition or {}).get("state")
+        messages = ops.retry(project, req, rdir, task, reason, expected_task_state=expected_state)
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
     if command == "answer-decision":
@@ -197,7 +198,9 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
 def dispatch_handlers() -> dict[str, Handler]:
     """Build handlers for commands owned by the Scheduler run surface."""
     handlers = {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
-                for command in ("pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "answer-decision")}
+                for command in ("pause", "resume", "cancel-attempt", "reopen", "revise", "answer-decision")}
+    handlers["retry"] = lambda target, params, precondition: dispatch_run_command(
+        "retry", target, params, precondition=precondition)
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
     handlers["edit-brief"] = dispatch_edit_brief
@@ -453,12 +456,23 @@ class Ledger:
             if req["command"] in CHALLENGED:
                 params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
             try:
-                outcome = handlers[req["command"]](req["target"], params)
+                handler = handlers[req["command"]]
+                if req["command"] == "retry":
+                    import inspect
+                    if len(inspect.signature(handler).parameters) >= 3:
+                        outcome = handler(req["target"], params, req["precondition"])
+                    else:
+                        outcome = handler(req["target"], params)
+                else:
+                    outcome = handler(req["target"], params)
                 status, code = "OK", None
             except RouteUnavailableError as exc:
                 outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "ROUTE_UNAVAILABLE"
             except Exception as exc:
-                outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
+                if getattr(exc, "code", None) == "STALE_PRECONDITION":
+                    outcome, status, code = {"message": str(exc)[:300]}, "REJECTED", "STALE_PRECONDITION"
+                else:
+                    outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
             with self._db() as db:
                 db.execute("UPDATE commands SET status=?, code=?, outcome=?, finished_at=? WHERE idempotency_key=?",
                            (status, code, json.dumps(outcome, ensure_ascii=False), _now(), key))

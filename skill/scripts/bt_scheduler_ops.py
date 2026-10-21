@@ -207,7 +207,7 @@ def ensure_watch(project: str, req: str, rdir: Path) -> bool:
 
 
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
-          keep_held: bool = False) -> list[str]:
+          keep_held: bool = False, *, expected_task: str = "", expected_task_state: str | None = None) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -216,6 +216,14 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
         if action == "stop":
             return lines
         with _opened(rdir) as sch:
+            if expected_task_state is not None:
+                actual_state = sch.read(lambda ctx: ctx.state.tasks.get(expected_task).state
+                                        if expected_task in ctx.state.tasks else None)
+                if actual_state != expected_task_state:
+                    raise core.SchedulerError(
+                        "STALE_PRECONDITION",
+                        f"task {expected_task} changed from {expected_task_state} to {actual_state}",
+                    )
             if action == "cancel-attempt":
                 lines += cancel_attempts(project, req, rdir, sch, [target], why)
             elif action == "reopen":
@@ -247,24 +255,33 @@ def _refresh_projection(rdir: Path) -> bool:
     return True
 
 
-def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0) -> list[str]:
+def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0,
+          expected_task_state: str | None = None) -> list[str]:
     """Cancel a live attempt and reopen its task once Scheduler makes it recoverable.
 
     A task reopened by a separate operator move is already ready; preserve that state instead of waiting for a block
     which will never arrive. A task already recovering can be reopened directly.
     """
     current = status(project, req, rdir)
+    task_state = current.get("task_states", {}).get(task)
+    if expected_task_state is not None and task_state != expected_task_state:
+        raise core.SchedulerError(
+            "STALE_PRECONDITION", f"task {task} changed from {expected_task_state} to {task_state}",
+        )
     attempts = [a["attempt"] for a in current["live_attempts"] if a["task"] == task]
     lines = []
     for attempt in attempts:
-        lines += apply(project, req, rdir, "cancel-attempt", attempt, reason)
-    task_state = current.get("task_states", {}).get(task)
+        lines += apply(project, req, rdir, "cancel-attempt", attempt, reason,
+                       expected_task=task, expected_task_state=expected_task_state)
+        expected_task_state = None
     if task_state == "ready":
         return lines + [f"{task}: already ready"]
     if task_state == "recovering":
-        return lines + apply(project, req, rdir, "reopen", task, reason)
+        return lines + apply(project, req, rdir, "reopen", task, reason,
+                             expected_task=task, expected_task_state=expected_task_state)
     if task_state == "blocked" or task in current.get("blocked_tasks", []):
-        return lines + apply(project, req, rdir, "reopen", task, reason)
+        return lines + apply(project, req, rdir, "reopen", task, reason,
+                             expected_task=task, expected_task_state=expected_task_state)
     deadline = time.monotonic() + wait
     while True:
         current = status(project, req, rdir)
