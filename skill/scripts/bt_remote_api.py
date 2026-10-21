@@ -6,15 +6,10 @@ import hashlib
 import hmac
 import json
 import os
-<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
-import sqlite3
-||||||| 039403d5906979e681173b8e75358ed03bfd4711
-=======
 import re
 import sqlite3
 import stat
 import subprocess
->>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
 from urllib.parse import parse_qs, urlparse
 
 import bt_remote_commands as _commands
@@ -61,15 +56,6 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
-<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
-    if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
-        return _command_history(handler)
-    if path == f"{PREFIX}/quotas":
-        return _quotas(handler)
-    if path == f"{PREFIX}/routes":
-        return _routes(handler)
-||||||| 039403d5906979e681173b8e75358ed03bfd4711
-=======
     review_match = re.fullmatch(re.escape(f"{PREFIX}/attempts/") + r"([^/]+)/review", path)
     if review_match:
         attempt_id = review_match.group(1)
@@ -79,7 +65,12 @@ def route_get(handler) -> None:
         if review is None:
             return _problem(handler, 404, "ATTEMPT_NOT_FOUND", "No se encontró el intento fallido.")
         return _send_json(handler, review, 200)
->>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
+    if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
+        return _command_history(handler)
+    if path == f"{PREFIX}/quotas":
+        return _quotas(handler)
+    if path == f"{PREFIX}/routes":
+        return _routes(handler)
     if path == f"{PREFIX}/events":
         import bt_remote_events as feed
         try:
@@ -165,11 +156,6 @@ def _snapshot(handler) -> None:
                                 "runs": runs}, 200)
 
 
-<<<<<<< 8667b54400fe6702b96dccc827a3ac5fc11d7388
-def _query(handler) -> dict[str, str]:
-    return {key: values[0] for key, values in parse_qs(urlparse(handler.path).query).items()}
-
-
 def _command_history(handler) -> None:
     query = _query(handler)
     try:
@@ -237,12 +223,6 @@ _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "CONFIRMATION_REQUIRED": 4
                    "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
                    "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
                    "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 409, "STATE_UNAVAILABLE": 503}
-||||||| 039403d5906979e681173b8e75358ed03bfd4711
-HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
-_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
-                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
-                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
-=======
 def _read_review_file(path, limit: int = _REVIEW_FILE_MAX) -> bytes | None:
     """Read a bounded regular artifact without following symlinks or blocking on special files."""
     try:
@@ -448,11 +428,6 @@ def _failure_review(attempt_id: str) -> dict | None:
     return None
 
 
-HANDLERS: dict = {}  # Filled by the dispatch layer in T5a/T5b.
-_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED": 501,
-                   "STALE_PRECONDITION": 409, "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
-                   "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503, "CONFIRMATION_REQUIRED": 409}
->>>>>>> acf3bd27e2fc38f1693baefdb782c6b849de5fc2
 
 
 def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
