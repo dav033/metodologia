@@ -5,16 +5,10 @@ import datetime as dt
 import hmac
 import json
 import os
-<<<<<<< 1bf44212059b963383f271468de78025d403d079
 import sqlite3
 from urllib.parse import parse_qs, urlparse
 
 import bt_remote_commands as _commands
-||||||| cbca0a797129a302e0dcdc822dfb801ab6fa58b7
-from urllib.parse import urlparse
-=======
-from urllib.parse import parse_qs, urlparse
->>>>>>> 039403d5906979e681173b8e75358ed03bfd4711
 
 PREFIX = "/api/remote/v1"
 MAX_BODY = 256 * 1024
@@ -54,15 +48,12 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
-<<<<<<< 1bf44212059b963383f271468de78025d403d079
     if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
         return _command_history(handler)
     if path == f"{PREFIX}/quotas":
         return _quotas(handler)
     if path == f"{PREFIX}/routes":
         return _routes(handler)
-||||||| cbca0a797129a302e0dcdc822dfb801ab6fa58b7
-=======
     if path == f"{PREFIX}/events":
         import bt_remote_events as feed
         try:
@@ -94,7 +85,6 @@ def route_get(handler) -> None:
             return _problem(handler, 400, "INVALID_CURSOR", str(exc))
         except (OSError, ValueError, bt_plans_api.PlanError):
             return _problem(handler, 503, "EVENTS_UNAVAILABLE", "El feed remoto aún no está disponible.")
->>>>>>> 039403d5906979e681173b8e75358ed03bfd4711
     if path != f"{PREFIX}/health":
         return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
 
