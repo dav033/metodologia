@@ -167,7 +167,8 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
         project, _, req = str(row["run"]).partition("/")
         target = _run_target(project, req or "REQ-000")
     if row.get("task"):
-        target = _task_target(target["project"], target["req"], str(row["task"]))
+        target = _task_target(target["project"], target["req"], str(row["task"]),
+                              str(row.get("attempt") or ""))
     source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     identity = f'{target["project"]}/{target["req"]}:{source_id}'
     payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}

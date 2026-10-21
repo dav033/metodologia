@@ -178,6 +178,11 @@ def notification_for_event(event: Mapping[str, Any]) -> tuple[str, str] | None:
     target = event.get("target")
     req = target.get("req") if isinstance(target, dict) else None
     details = f"\n{req}" if isinstance(req, str) and req else ""
+    attempt_id = target.get("attemptId") if isinstance(target, dict) else None
+    project = target.get("project") if isinstance(target, dict) else None
+    if event_type == "attempt.failed" and all(isinstance(value, str) and value for value in
+                                               (project, req, attempt_id)):
+        dedupe_key = f"attempt.failed:{project}/{req}:{attempt_id}"
     return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details
 
 

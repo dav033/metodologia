@@ -63,6 +63,18 @@ class NotificationTests(unittest.TestCase):
         self.assertEqual(len(self.sent), 1)
         self.assertIn("Una tarea falló", self.sent[0])
 
+    def test_duplicate_failure_sources_yield_one_notification_per_attempt(self):
+        runtime = self.runtime()
+        projection_event = feed_event("projection-event")
+        projection_event["target"].update({"project": "demo", "taskId": "T1", "attemptId": "att-0001"})
+        bus_event = feed_event("bus-event")
+        bus_event["target"].update({"project": "demo", "taskId": "T1", "attemptId": "att-0001"})
+        self.laptop.feed = [projection_event, bus_event]
+
+        runtime.poll_once()
+
+        self.assertEqual(len(self.sent), 1)
+
     def test_restart_rereading_feed_sends_nothing_new(self):
         self.laptop.feed = [feed_event("event-1"), feed_event("decision-2", "decision.requested")]
         self.runtime().poll_once()

@@ -6,6 +6,7 @@ import hmac
 import json
 import logging
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from auth import (
@@ -27,7 +28,8 @@ COMMAND_REQUEST_LIMIT = 30
 HEARTBEAT_SECONDS = 15.0
 
 
-def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[BaseHTTPRequestHandler]:
+def make_handler(service: OAuthService, hub: StreamHub | None = None,
+                 runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
 
     class GatewayHandler(BaseHTTPRequestHandler):
@@ -126,37 +128,6 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
                 if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
-<<<<<<< cebf9b3c3b7d7df1025e75cff18491e4be5a4347
-||||||| 2f2c1beae78f5f839277b9fd8d1ee938f6e1c818
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._json(400, {"code": "INVALID_COMMAND"})
-                    return
-                if length < 0:
-                    self._json(400, {"code": "INVALID_COMMAND"})
-                    return
-                if length > 256 * 1024:
-                    self._json(413, {"code": "BODY_TOO_LARGE"})
-                    return
-                try:
-                    request = json.loads(self.rfile.read(length) or b"null")
-                except (ValueError, OSError):
-                    self._json(400, {"code": "INVALID_COMMAND"})
-                    return
-                if route.path.endswith("/challenges"):
-                    result = runtime.issue_challenge(request)
-                else:
-                    result = runtime.submit_command(request)
-                status = {"UNKNOWN_OUTCOME": 503, "LAPTOP_OFFLINE": 410,
-                          "CONFIRMATION_REQUIRED": 409, "INVALID_COMMAND": 400,
-                          "INVALID_CHALLENGE": 400, "LAPTOP_UNAVAILABLE": 503}.get(result.get("code"), 200)
-                self._json(status, result)
-                return
-=======
                 if runtime is None:
                     self._json(404, {"error": "not found"})
                     return
@@ -186,7 +157,6 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
                           "STALE_PRECONDITION": 409}.get(result.get("code"), 200)
                 self._json(status, result)
                 return
->>>>>>> 140b39320159004087551f928a69509adedaf18b
             self._json(404, {"error": "not found"})
 
         def _valid_state_changing_request(self) -> bool:
@@ -229,9 +199,10 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None) -> type[Ba
 
 
 def create_server(config: OAuthConfig, bind_address: tuple[str, int] | None = None,
-                  hub: StreamHub | None = None) -> ThreadingHTTPServer:
+                  hub: StreamHub | None = None, runtime: Any | None = None) -> ThreadingHTTPServer:
     service = OAuthService(config, store=SessionStore(config.database_path, config.session_secret))
-    server = ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port), make_handler(service, hub))
+    server = ThreadingHTTPServer(bind_address or (config.bind_host, config.bind_port),
+                                 make_handler(service, hub, runtime))
     server.daemon_threads = True
     return server
 

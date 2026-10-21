@@ -401,7 +401,8 @@ adapter.write_projection(rdir, scheduler)
         laptop.close()
         feed = event_page["events"]
         self.assertTrue(event_page["nextCursor"], event_page)
-        failures = [event for event in feed if event["type"] == "attempt.failed"]
+        failures = [event for event in feed if event["type"] == "attempt.failed"
+                    and event["data"].get("failure") == "fixture failure"]
         self.assertEqual(len(failures), 3, feed)
         for failure in failures:
             self.assertEqual(failure["target"]["taskId"], "T1")
