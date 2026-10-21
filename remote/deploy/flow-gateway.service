@@ -8,6 +8,7 @@ Type=simple
 User=flow
 Group=flow
 EnvironmentFile=/etc/flow-gateway/env
+Environment=FLOW_RUN_BOT=0
 WorkingDirectory=/opt/flow-gateway/current/gateway
 ExecStart=/usr/bin/python3 /opt/flow-gateway/current/gateway/main.py
 Restart=always
