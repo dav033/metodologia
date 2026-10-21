@@ -119,24 +119,7 @@ def _snapshot(handler) -> None:
     """Compact run read model, with live task signals taken from the panel's shared now frame."""
     import bt_core
     import bt_live_api as live
-<<<<<<< 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
-||||||| fb08e3be2f8e159dd50ff476145296f86bfb408c
-    import bt_plans_api
-    import bt_rounds
-<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
-||||||| d88893200d213875887aba717975e1db538c70ff
-||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
-=======
     import bt_remote_events
->>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
-=======
-    import bt_remote_events
->>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
-=======
-    import bt_plans_api
-    import bt_rounds
-    import bt_remote_events
->>>>>>> 61cb405118d850940a6bc797f70cf43cff1ddc79
 
     root = bt_core.ROOT
     try:
@@ -210,40 +193,10 @@ def _snapshot(handler) -> None:
                            **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
                               if key in data}})
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
-<<<<<<< 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| fb08e3be2f8e159dd50ff476145296f86bfb408c
-<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| d88893200d213875887aba717975e1db538c70ff
-<<<<<<< 0d0dd48d35237123898d202a25bcd85838d7ff3f
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
-=======
-    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                "runs": runs}
-    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
->>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
-=======
-    payload = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-               "runs": runs, "plans": plans, "rounds": rounds,
-               "decisionRequests": decisions}
-    return _send_json(handler, bt_remote_events.redact(payload), 200)
->>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
-=======
     snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                 "runs": runs, "plans": plans, "rounds": rounds,
                 "decisionRequests": decisions}
     return _send_json(handler, bt_remote_events.redact(snapshot), 200)
->>>>>>> 61cb405118d850940a6bc797f70cf43cff1ddc79
 
 
 def _command_history(handler) -> None:
