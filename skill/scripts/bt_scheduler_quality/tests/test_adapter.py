@@ -191,11 +191,12 @@ class M6M1AdapterTests(unittest.TestCase):
         return attempts
 
     # ---- audit gate: the ledger decides, and the system sends the named work back -------------------------------
-    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=(), remediate=None):
+    def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=(), remediate=None,
+                      runner=None, audit_command="test -s audit.md"):
         implement = _task("T1", "python3 build.py")
         implement.update(kind="implement")
         implement["verification"][0]["category"] = "functional"
-        audit = _task("T2", "test -s audit.md")
+        audit = _task("T2", audit_command)
         audit.update(kind="audit", after=["T1"], expected_paths=["docs/audit.md"]
                      + (["docs/audit.findings.json"] if declare_ledger else []))
         audit["verification"][0]["category"] = "functional"
@@ -208,6 +209,7 @@ class M6M1AdapterTests(unittest.TestCase):
             rework_notes=lambda task_id, text: text and notes.append((task_id, text)),
             audit_policy=policy,
             remediate=remediate,
+            runner=runner,
         )
         root, core, _, executor, _, _ = system
         self._start_attempts(core, executor, root, ("T1",))
@@ -246,6 +248,38 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")
         self.assertNotIn("rework_requested", [e.kind for e in core.audit_log()])
         self.assertEqual(notes, [])
+
+    def test_a_check_on_the_audits_own_ledger_cannot_stop_the_gate_from_turning_findings_into_remediation(self):
+        # REQ-029 T8: `recovery_acceptance.py audit --ledger <ledger>` exits 1 while a blocking finding is open, so the
+        # audit never passed, the gate never ran and three attempts were spent without a single remediation task
+        finding = {"id": "F1", "severity": "high", "status": "open", "summary": "the gateway never listens",
+                   "tasks": ["T1"], "evidence": "curl -> refused"}
+        command = "python3 acceptance.py audit --ledger docs/audit.findings.json"
+        asked = []
+
+        def remediate(audit, attempt, findings):
+            asked.append((audit, [f["id"] for f in findings]))
+            return True
+        core = self._audit_system(lambda order, path: self._ledger(finding), [], remediate=remediate,
+                                  runner=ScriptedRunner(failing_commands=(command,)), audit_command=command)
+        self.assertTrue(_wait_for(lambda: bool(asked)))
+        self.assertEqual(asked, [("T2", ["F1"])])
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "completed")
+
+        # nothing against the ledger: the failure of the check stands and no remediation is asked
+        asked.clear()
+        core = self._audit_system(lambda order, path: self._ledger(), [], remediate=remediate,
+                                  runner=ScriptedRunner(failing_commands=(command,)), audit_command=command)
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(asked, [])
+
+        # a failed check that is not about the ledger is not deferred to the gate
+        core = self._audit_system(lambda order, path: self._ledger(finding), [], remediate=remediate,
+                                  runner=ScriptedRunner(failing_commands=("python3 other.py",)), audit_command="python3 other.py")
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T2"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual(asked, [])
 
     def test_when_remediation_is_not_possible_the_named_tasks_are_sent_back_as_before(self):
         finding = {"id": "F1", "severity": "critical", "status": "open", "summary": "the gateway never listens",

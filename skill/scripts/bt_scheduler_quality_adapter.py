@@ -363,6 +363,20 @@ class QualityVerificationPort:
                                       gate.rework)
         return gate
 
+    def _only_ledger_checks_failed(self, order: VerifyRequest, result) -> bool:
+        """Whether the task is an audit whose every failed check names its own findings ledger. REQ-029 T8 verified with
+        `recovery_acceptance.py audit --ledger <ledger>`, which exits 1 while a blocking finding is open: the audit could
+        never pass, the gate that turns findings into remediation tasks never ran, and three attempts were spent."""
+        try:
+            task = self.core.plan.task(order.task_id)
+        except m1.SchedulerError:
+            return False
+        path = bt_audit_gate.ledger_path(task.expected_paths) if task.meta.get("kind") == "audit" else None
+        if path is None:
+            return False
+        failed = [c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"]
+        return bool(failed) and all(str(c.get("command") or "").find(path) >= 0 for c in failed)
+
     def _rework_plan(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> tuple[tuple[str, ...], bool]:
         """(tasks to send back, cascade). `downstream`: the named tasks and everything that depends on them. `named`
         (default): the named tasks plus the `kind: test` tasks over them, because their result no longer proves anything;
@@ -528,7 +542,16 @@ class QualityVerificationPort:
                 )
                 return "pending"
             self._write_verify_note(order, result)
-            gate = self._audit_gate(order) if accepted else None
+            deferred = not accepted and result.get("status") == "FAIL" and self._only_ledger_checks_failed(order, result)
+            gate = self._audit_gate(order) if accepted or deferred else None
+            if deferred:
+                # the gate judges the ledger (and turns blocking findings into remediation); a check that asked the same
+                # question as an exit code cannot also stop the audit before the gate speaks. With nothing against the
+                # ledger, the failure of the check stands.
+                if gate is not None and not gate.ok:
+                    accepted = True              # rejected below, by the gate, with its evidence and its remediation
+                else:
+                    gate = None
             clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
             give_way: tuple[str, ...] = ()
             if clash:
