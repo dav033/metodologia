@@ -114,8 +114,24 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
+    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
+    }
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
+    let fixtureReview = "";
+    for (let attempt = 0; attempt < 70; attempt += 1) {
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+      fixtureReview = evaluated.result?.value ?? "";
+      if (fixtureReview.includes("Fallo de fixture en rejected")) break;
+      await delay(100);
+    }
+    assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route: ${fixtureReview}`);
+    await cdp(socket, "Page.navigate", { url: frontendOrigin });
+    for (let attempt = 0; attempt < 70; attempt += 1) {
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+      browserState.text = evaluated.result?.value ?? "";
+      if (browserState.text.includes("Tarea T15a")) break;
+      await delay(100);
     }
     assert.equal(sessionContractObserved, true, "panel should consume the gateway's { login } session response");
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
@@ -133,6 +149,15 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
         await delay(100);
       }
       assert.fail(`open panel did not refresh its snapshot to show ${expected} within 7 seconds`);
+    };
+    const waitForTaskState = async (taskId, expected) => {
+      for (let attempt = 0; attempt < 70; attempt += 1) {
+        const expression = `([...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith(${JSON.stringify(taskId)}))?.querySelector('.state')?.textContent ?? '')`;
+        const evaluated = await cdp(socket, "Runtime.evaluate", { expression, returnByValue: true });
+        if (evaluated.result?.value === expected) return;
+        await delay(100);
+      }
+      assert.fail(`task ${taskId} did not refresh to ${expected}`);
     };
     await delay(1200);
     const readsBeforePoll = gateway.snapshotReads.length;
@@ -164,17 +189,19 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       delete nextSnapshot.runs[0].tasks[0].activeAttempt;
       nextSnapshot.runs[0].tasks[0].reviewAttempt = { id: "att-rejected-1", live: false };
     });
-    const rejectedState = await waitForText("rejected");
+    await waitForTaskState("T15a", "rejected");
+    const rejectedState = await waitForText("Reabrir ejecución");
     assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and runs should expose recovery controls");
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href^=\"/review?\"]').click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15a") + "]').click()", returnByValue: true });
     const waitForReview = async () => {
+      let lastText = "";
       for (let attempt = 0; attempt < 70; attempt += 1) {
         const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
-        const text = evaluated.result?.value;
-        if (text?.includes("Fallo de fixture en rejected")) return text;
+        lastText = evaluated.result?.value ?? "";
+        if (lastText.includes("Fallo de fixture en rejected")) return lastText;
         await delay(100);
       }
-      assert.fail("failure review route did not load the rejected task's reviewAttempt");
+      assert.fail(`failure review route did not load the rejected task's reviewAttempt: ${lastText}`);
     };
     const rejectedReview = await waitForReview();
     for (const expected of ["CAUSA", "SALIDA DE VERIFICACIÓN", "ESTADÍSTICA DEL DIFF", "FINAL DEL LOG", "att-rejected-1", "Fin de log"]) {
@@ -211,11 +238,11 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(gateway.commands[0]?.reason, "Stop the stalled attempt");
     assert.equal(gateway.commands[0]?.target.attemptId, "att-0008");
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].some((button) => button.innerText === 'Reabrir' && !button.disabled)", returnByValue: true });
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.disabled === false", returnByValue: true });
       if (ready.result?.value) break;
       await delay(100);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
