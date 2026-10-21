@@ -98,8 +98,24 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     if action in {"freeze", "bind", "compat"}:
         import bt_scheduler_adapter
         compatibility_report = bt_scheduler_adapter.plan_compatibility_report(rdir)
-    return adapter.run_cli(action, rdir, force=force, as_json=as_json,
+    code = adapter.run_cli(action, rdir, force=force, as_json=as_json,
                            compatibility_report=compatibility_report, cross_check=bool(getattr(args, "cross_check", False)))
+    if action == "check" and not as_json:
+        _print_guard_warnings(root / project, rdir)
+    return code
+
+
+def _print_guard_warnings(project_dir: Path, rdir: Path) -> None:
+    """The project's guards (project.json) that implement tasks do not carry; they are the plan check's warnings too."""
+    import bt_plan_guards
+
+    guards = bt_plan_guards.load(project_dir)
+    try:
+        plan = json.loads((rdir / "PLAN.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    for line in bt_plan_guards.warnings(plan, guards):
+        print("WARN  " + line)
 
 
 def _amend(args: argparse.Namespace, rdir: Path, project: str) -> int:

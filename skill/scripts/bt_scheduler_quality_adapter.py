@@ -444,8 +444,13 @@ class QualityVerificationPort:
                     output = b""
                 if output.strip():
                     break
-            tail = output.decode("utf-8", "replace").strip()[-1500:]
-            blocks.append(f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n{tail}")
+            full = output.decode("utf-8", "replace").strip()
+            tail = full[-1500:]
+            # a long run buries the first failures above the tail: name every failing test before it
+            names = [m.group(0)[:200] for m in re.finditer(r"(?m)^(?:FAIL|ERROR): .+|^FAILED \S+::.+", full)][:12]
+            listing = ("Failing tests (" + str(len(names)) + (" shown" if len(names) == 12 else "") + "):\n"
+                       + "\n".join(names) + "\n\n") if names else ""
+            blocks.append(f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n{listing}{tail}")
             if len(blocks) == 3:
                 break
         if not blocks:

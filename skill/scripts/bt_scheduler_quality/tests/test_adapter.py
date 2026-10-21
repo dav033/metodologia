@@ -474,6 +474,28 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("node_modules", text)
         self.assertNotIn("npm ci --offline", text)
 
+    def test_every_failing_test_is_named_even_when_the_output_tail_hides_the_first_ones(self):
+        long_output = ("FAIL: test_a (tests.x.A.test_a)\nFAIL: test_b (tests.x.B.test_b)\nERROR: test_c (tests.x.C.test_c)\n"
+                       + "noise line\n" * 600 + "FAILED (failures=2, errors=1)\n").encode()
+
+        class Noisy(ScriptedRunner):
+            def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
+                return CommandOutcome("fail", 1, 2, b"", long_output, None, True)
+
+        notes = []
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        root, core, _, executor, _, _ = self._system([task], max_attempts=2, runner=Noisy(),
+                                                     verify_notes=lambda task_id, text: text and notes.append(text))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: bool(notes)))
+        for name in ("FAIL: test_a", "FAIL: test_b", "ERROR: test_c"):
+            self.assertIn(name, notes[0])
+        self.assertIn("Failing tests (3):", notes[0])
+        self.assertIn("FAILED (failures=2, errors=1)", notes[0])
+
     def test_a_missing_module_tells_the_agent_to_install_its_dependencies(self):
         class Missing(ScriptedRunner):
             def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):

@@ -105,6 +105,22 @@ def _fingerprints(rdir: Path, names: list[str]) -> dict[str, str]:
     return result
 
 
+def _only_appended(path: Path, stored: str) -> bool:
+    """Whether `path` is the file whose digest was `stored` with more lines added after it. The decisions log is
+    append-only: a new decision (by any session) must not revoke the approval of a requirement that cites none of it,
+    while an edit of the text that was there still changes the digest of every prefix and counts as drift."""
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as source:
+            for line in source:
+                digest.update(line)
+                if digest.copy().hexdigest() == stored:
+                    return True
+    except OSError:
+        return False
+    return False
+
+
 def _contract(rdir: Path) -> str:
     plan = rdir / "PLAN.md"
     text = plan.read_text(encoding="utf-8") if plan.exists() else ""
@@ -180,6 +196,9 @@ def check(rdir: Path) -> dict:
         snapshot = _validate(json.loads(path.read_text(encoding="utf-8")), stored=True)
         current = _fingerprints(rdir, list(snapshot["fingerprints"]))
         changed = [name for name, digest in current.items() if snapshot["fingerprints"].get(name) != digest]
+        decisions = rdir.parent.parent / "DECISIONS.md"
+        if "../../DECISIONS.md" in changed and _only_appended(decisions, snapshot["fingerprints"].get("../../DECISIONS.md", "")):
+            changed.remove("../../DECISIONS.md")        # new decisions were added after the approved text; nothing was edited
         reasons = (["Requirements authority changed: " + ", ".join(changed)] if changed else [])
         if snapshot["unresolved"]:
             reasons.append("Unresolved requirements decisions/contradictions; inspect REQUIREMENTS.json")

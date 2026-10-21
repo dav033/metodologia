@@ -109,6 +109,23 @@ class RequirementsGateTests(unittest.TestCase):
         decisions.write_text("# Decisions\nContradictory limit\n")
         self.assertEqual(gate.check(req)["status"], "needs_revalidation")
 
+    def test_a_decision_appended_after_the_approval_is_not_drift_but_an_edit_of_the_approved_text_is(self):
+        project = self.rdir / "project"
+        req = project / "requirements" / "REQ-001"
+        req.mkdir(parents=True)
+        for name in ("PLAN.md", "SPEC.md"):
+            (req / name).write_text((self.rdir / name).read_text())
+        decisions = project / "DECISIONS.md"
+        decisions.write_text("# Decisions\n\n## D-001 No push\n- keep local\n")
+        gate.record(req, self.review)
+        with decisions.open("a") as handle:                                   # another session logs D-002
+            handle.write("\n## D-002 Something else\n- unrelated\n")
+        self.assertEqual(gate.check(req)["status"], "ready")
+        decisions.write_text(decisions.read_text().replace("keep local", "push freely"))
+        self.assertEqual(gate.check(req)["status"], "needs_revalidation")
+        decisions.write_text("# Decisions\n\n## D-001 No push\n- keep local\n")        # back to the approved text
+        self.assertEqual(gate.check(req)["status"], "ready")
+
     def test_contract_comments_quotes_and_malformed_present_marker_fail_closed(self):
         plan = self.rdir / "PLAN.md"
         for value in ("requirements-v1 # comment", "'requirements-v1'", '\"requirements-v1\" # comment'):
