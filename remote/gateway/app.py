@@ -114,8 +114,6 @@ class GatewayRuntime:
         ledger_request = _ledger_command(request)
         if ledger_request is None:
             return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
-<<<<<<< f6a71b3b51a4b68b89be455c0487c4f924d8702e
-        idempotency_key = ledger_request.get("idempotency_key")
         if ledger_request["command"] in CHALLENGED_COMMANDS:
             confirmation = ledger_request.get("confirmation")
             target = request.get("target") if isinstance(request, dict) else None
@@ -125,14 +123,6 @@ class GatewayRuntime:
                     or not confirmation["challenge_id"].strip()
                     or confirmation.get("typed_req") != req):
                 return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-||||||| c99af4e0b5d867d05e655e275feeded1932aeb3e
-        command = ledger_request["command"]
-        if command in CHALLENGED_COMMANDS and not isinstance(ledger_request.get("confirmation"), dict):
-            return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-=======
-        command = ledger_request["command"]
-        if command in CHALLENGED_COMMANDS and not isinstance(ledger_request.get("confirmation"), dict):
-            return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
         return self._submit_ledger_command(ledger_request)
 
     def submit_telegram_command(self, request: Any) -> dict[str, Any]:
@@ -168,20 +158,23 @@ class GatewayRuntime:
         return self._submit_ledger_command(ledger_request)
 
     def _submit_ledger_command(self, ledger_request: dict[str, Any]) -> dict[str, Any]:
->>>>>>> 5fc76a4af1662ae7ec9c49b5404f5ab4fcf9dcfd
         if self.liveness.status is LaptopStatus.OFFLINE:
-            return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
+            return {"status": "REJECTED", "code": "LAPTOP_OFFLINE",
+                    "idempotency_key": ledger_request.get("idempotency_key")}
         try:
             result = self.laptop.post_json("/api/remote/v1/commands", ledger_request)
         except UpstreamTimeout:
-            return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "idempotency_key": idempotency_key}
+            return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME",
+                    "idempotency_key": ledger_request.get("idempotency_key")}
         except UpstreamError:
             self.liveness.record_failure()
             if self.liveness.status is LaptopStatus.OFFLINE:
-                return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
-            return {"status": "FAILED", "code": "LAPTOP_UNAVAILABLE", "idempotency_key": idempotency_key}
+                return {"status": "REJECTED", "code": "LAPTOP_OFFLINE",
+                        "idempotency_key": ledger_request.get("idempotency_key")}
+            return {"status": "FAILED", "code": "LAPTOP_UNAVAILABLE",
+                    "idempotency_key": ledger_request.get("idempotency_key")}
         if result.get("code") == "UNKNOWN_OUTCOME":
-            result["idempotency_key"] = idempotency_key
+            result["idempotency_key"] = ledger_request.get("idempotency_key")
         return result
 
     def issue_challenge(self, request: Any) -> dict[str, Any]:
