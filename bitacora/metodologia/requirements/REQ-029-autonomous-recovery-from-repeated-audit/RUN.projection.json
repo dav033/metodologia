@@ -1,13 +1,13 @@
 {
  "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-21T13:41:15+00:00",
+ "heartbeat_at": "2026-10-21T13:41:25+00:00",
  "plan_ref": {
   "plan_id": "REQ-029",
   "revision": 4,
   "sha256": "f47be844e454e80890af327fccbe2731c3cd3ca86a22a85872bbe22b6138083b"
  },
- "projected_at": "2026-10-21T13:41:15+00:00",
+ "projected_at": "2026-10-21T13:41:25+00:00",
  "projection": true,
  "req": "REQ-029",
  "scheduler_status": "running",
