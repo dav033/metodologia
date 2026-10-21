@@ -5,6 +5,7 @@ import datetime as dt
 import hashlib
 import json
 import re
+import sqlite3
 from typing import Any
 
 STALL_SECONDS = 15 * 60
@@ -146,8 +147,8 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
             out.append(event)
 
     out.sort(key=lambda event: (event["occurredAt"], event["id"]))
-    for event in out:
-        event["cursor"] = json.dumps([event["occurredAt"], event["id"]], ensure_ascii=False)
+    for ordinal, event in enumerate(out, 1):
+        event["cursor"] = json.dumps(["v2", str(ordinal), event["id"]], ensure_ascii=False)
     return out
 
 
@@ -178,14 +179,55 @@ def page(events: list[dict[str, Any]], after: str = "", limit: int = 200) -> dic
     if after:
         try:
             key = json.loads(after)
-            if not isinstance(key, list) or len(key) != 2 or not all(isinstance(item, str) for item in key):
+            if not isinstance(key, list) or not all(isinstance(item, str) for item in key):
+                raise ValueError
+            if len(key) == 3 and key[0] == "v2":
+                sequence = int(key[1])
+                events = [event for event in events
+                          if _cursor_sequence(event["cursor"]) > (sequence, key[2])]
+            elif len(key) == 2:  # accept cursors issued before the observation-order format
+                events = [event for event in events if [event["occurredAt"], event["id"]] > key]
+            else:
                 raise ValueError
         except (ValueError, TypeError):
             raise CursorError("El cursor no es válido.") from None
-        events = [event for event in events if [event["occurredAt"], event["id"]] > key]
     selected = events[:limit]
     return {"events": selected, "nextCursor": selected[-1]["cursor"] if selected else after,
             "hasMore": len(events) > limit}
+
+
+def _cursor_sequence(cursor: str) -> tuple[int, str]:
+    """Decode an event's persisted observation cursor."""
+    try:
+        version, sequence, event_id = json.loads(cursor)
+        if version != "v2":
+            return 0, event_id
+        return int(sequence), event_id
+    except (ValueError, TypeError):
+        return 0, ""
+
+
+def _observe(root, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Persist first-observation order so late-derived events follow existing cursors."""
+    path = root / ".state" / "remote-events.sqlite3"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    connection = sqlite3.connect(path, timeout=10)
+    try:
+        with connection:
+            connection.execute("CREATE TABLE IF NOT EXISTS observed_events ("
+                               "id TEXT PRIMARY KEY, sequence INTEGER NOT NULL UNIQUE)")
+            connection.execute("BEGIN IMMEDIATE")
+            sequence = connection.execute("SELECT COALESCE(MAX(sequence), 0) FROM observed_events").fetchone()[0]
+            for event in events:
+                sequence += 1
+                connection.execute("INSERT OR IGNORE INTO observed_events(id, sequence) VALUES (?, ?)",
+                                   (event["id"], sequence))
+            rows = dict(connection.execute("SELECT id, sequence FROM observed_events"))
+    finally:
+        connection.close()
+    for event in events:
+        event["cursor"] = json.dumps(["v2", str(rows[event["id"]]), event["id"]], ensure_ascii=False)
+    return sorted(events, key=lambda event: _cursor_sequence(event["cursor"]))
 
 
 def collect(root, runs: list[dict[str, Any]], plans: list[dict[str, Any]], quotas: list[dict[str, Any]],
@@ -205,5 +247,7 @@ def collect(root, runs: list[dict[str, Any]], plans: list[dict[str, Any]], quota
                       for number in bt_plans_api.open_rounds(rdir))
     flow, _, _ = bt_live_api.flow_events(root, "global")
     offline = []
-    return build_events({"runs": runs, "plans": plans, "quotas": quotas, "commands": commands,
-                         "decisions": decisions, "rounds": rounds, "offline": offline, "flow": flow}, now=time.time())
+    events = build_events({"runs": runs, "plans": plans, "quotas": quotas, "commands": commands,
+                           "decisions": decisions, "rounds": rounds, "offline": offline, "flow": flow},
+                          now=time.time())
+    return _observe(root, events)
