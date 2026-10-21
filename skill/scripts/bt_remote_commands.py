@@ -31,6 +31,10 @@ Handler = Callable[[str, dict], Any]            # (target, params) -> JSON-able 
 StateReader = Callable[..., "dict | None"]        # target[, command, params] -> current precondition fields
 
 
+class RouteUnavailableError(ValueError):
+    """A requested retry pin has no currently eligible Scheduler route."""
+
+
 def default_path() -> Path:
     root = Path(os.environ.get("BITACORA_ROOT") or Path.home() / "bitacora")
     return root / ".state" / "remote" / "commands.db"
@@ -154,7 +158,7 @@ def dispatch_run_command(command: str, target: str, params: dict) -> Any:
             # quota refresh or account identity is unavailable.
             candidates = bt_route_pins.available(project, rdir, task, pin)
             if not candidates:
-                raise ValueError("La ruta fijada no está disponible; la tarea no se reabrió.")
+                raise RouteUnavailableError("La ruta fijada no está disponible; la tarea no se reabrió.")
             bt_route_pins.set_pin(rdir, task, pin)
         else:
             bt_route_pins.clear(rdir, task)
@@ -407,6 +411,8 @@ class Ledger:
             try:
                 outcome = handlers[req["command"]](req["target"], params)
                 status, code = "OK", None
+            except RouteUnavailableError as exc:
+                outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "ROUTE_UNAVAILABLE"
             except Exception as exc:
                 outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "EFFECT_FAILED"
             with self._db() as db:

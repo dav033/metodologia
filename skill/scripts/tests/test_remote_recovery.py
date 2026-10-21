@@ -107,6 +107,7 @@ class RemoteRecoveryTests(unittest.TestCase):
                                       (candidate(quota_status="unknown"),))
 
         self.assertEqual(result["status"], "FAILED")
+        self.assertEqual(result["code"], "ROUTE_UNAVAILABLE")
         self.assertIn("no se reabrió", result["outcome"]["error"])
         retry.assert_not_called()
         self.assertEqual(pins.load(self.rdir), {})
@@ -120,6 +121,18 @@ class RemoteRecoveryTests(unittest.TestCase):
         self.assertEqual(json.loads(rows["retry-no-0001"]["params"])["route"], "missing-route")
         self.assertEqual(rows["retry-ok-0001"]["status"], "OK")
         self.assertEqual(rows["retry-no-0001"]["status"], "FAILED")
+
+    def test_replayed_pinned_retry_does_not_repeat_the_effect(self):
+        request = self.request("retry-once-0001", route="route-a")
+        result, retry = self.dispatch(request, (candidate(),))
+        self.assertEqual(result["status"], "OK")
+        retry.assert_called_once()
+
+        replay, retry = self.dispatch(request, (candidate(),))
+        self.assertEqual(replay["status"], "OK")
+        self.assertTrue(replay["replayed"])
+        retry.assert_not_called()
+        self.assertEqual(pins.get(self.rdir, "T1"), {"route": "route-a"})
 
     def test_route_pin_matches_provider_model_and_account_selectors(self):
         selected = pins.narrow(self.rdir, "T1", (candidate(), candidate("route-b", provider="codex")))
