@@ -27,6 +27,20 @@ export async function createMockGatewayServer() {
       send(200, { commands: server.history.slice(-100).reverse(), nextCursor: "mock-command-cursor-v1" });
       return;
     }
+    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
+      send(200, { routes: [
+        { route_id: "route-unavailable", provider: "claude", model: "sonnet", profile: "work", available: false },
+        { route_id: "route-codex-work", provider: "codex", model: "gpt-6.1-sol", profile: "codex-work", available: true, quota_status: "available" },
+      ] });
+      return;
+    }
+    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
+      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
+        { profile: "codex-work", provider: "codex", status: "ok", observed_at: 1792411200,
+          windows: { five_hour: { used_percent: 27, resets_at: 1792414800, window_minutes: 300 }, seven_day: { used_percent: 64, resets_at: 1792936800, window_minutes: 10080 } } },
+      ] });
+      return;
+    }
     if (request.method === "POST" && request.url === "/api/remote/v1/challenges") {
       let body = "";
       request.on("data", (chunk) => { body += chunk; });
@@ -82,10 +96,11 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
-          if (server.nextCommandResponse) {
-            const nextResponse = server.nextCommandResponse;
+          server.receivedCommands.push(command);
+          const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
+          if (nextResponse) {
             server.nextCommandResponse = null;
-            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado: el estado cambió" });
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
             send(nextResponse.status, nextResponse.body);
             return;
           }
@@ -103,8 +118,10 @@ export async function createMockGatewayServer() {
   server.snapshot = snapshot;
   server.snapshotReads = [];
   server.commands = [];
+  server.receivedCommands = [];
   server.history = [];
   server.challenges = [];
+  server.commandResponses = [];
   server.nextCommandResponse = null;
   return server;
 }

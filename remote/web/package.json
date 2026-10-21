@@ -6,7 +6,6 @@
     "node": ">=22"
   },
   "scripts": {
-<<<<<<< d4a0a2b55a8a733f1b48f2a8e52e8d38ecc781cf
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -31,10 +30,5 @@
     "eslint-config-next": "15.5.28",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.2"
-||||||| e3037b74a1a76def47b4e34dd011944470e2f084
-    "verify": "node --test tests/panel-browser.test.mjs"
-=======
-    "verify": "node --test tests/*.test.mjs"
->>>>>>> 87dc0ae2cf1dc35bd48bc7683b84b5a0af137568
   }
 }

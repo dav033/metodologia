@@ -125,8 +125,16 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
+    for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("64% usado"); attempt += 1) {
+      await delay(100);
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "({text: document.body.innerText, width: document.documentElement.scrollWidth, viewport: window.innerWidth})", returnByValue: true });
+      browserState = evaluated.result?.value;
+    }
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
+    }
+    for (const expected of ["Cuotas en vivo", "Five hour", "27% usado", "Seven day", "64% usado"]) {
+      assert.ok(browserState?.text?.includes(expected), `real panel should render each live quota window: ${expected}`);
     }
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
@@ -205,32 +213,6 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await waitForTaskState("T15a", "rejected");
     const rejectedState = await waitForText("Reabrir ejecución");
     assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and runs should expose recovery controls");
-<<<<<<< d4a0a2b55a8a733f1b48f2a8e52e8d38ecc781cf
-||||||| e3037b74a1a76def47b4e34dd011944470e2f084
-    const rejectedTaskCard = "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T15a'))";
-    const rejectedForms = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return { retry: [...card.querySelectorAll('.recovery-form')].some((form) => form.querySelector('select[name="route"]')), edit: [...card.querySelectorAll('.recovery-form')].some((form) => form.querySelector('textarea[name="brief"]')) }; })()`, returnByValue: true });
-    assert.deepEqual(rejectedForms.result?.value, { retry: true, edit: true }, "rejected tasks should expose retry and brief-edit forms on the real panel");
-    for (let attempt = 0; attempt < 40; attempt += 1) {
-      const availableRoute = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return [...card.querySelectorAll('select[name="route"] option')].some((option) => option.value === 'route-codex-work'); })()`, returnByValue: true });
-      if (availableRoute.result?.value) break;
-      await delay(100);
-    }
-    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('select[name="route"]')); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
-    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "retry" && command.target.taskId === "T15a"); attempt += 1) await delay(100);
-    const rejectedRetry = gateway.receivedCommands.find((command) => command.type === "retry" && command.target.taskId === "T15a");
-    assert.equal(rejectedRetry?.precondition.state, "rejected", "retry must submit the authoritative rejected task state");
-    assert.equal(rejectedRetry?.route?.route_id, "route-codex-work");
-    const rejectedEdit = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the rejected task'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-027'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return valid; })()`, returnByValue: true });
-    assert.equal(rejectedEdit.result?.value, true, "rejected task brief edit should pass browser validation");
-    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "edit-brief" && command.task === "T15a"); attempt += 1) await delay(100);
-    const rejectedEditCommand = gateway.receivedCommands.find((command) => command.type === "edit-brief" && command.task === "T15a");
-    assert.equal(rejectedEditCommand?.precondition.state, "rejected", "brief edit must submit the authoritative rejected run state");
-    assert.equal(rejectedEditCommand?.value, "Recover the rejected task");
-    gateway.commands = [];
-    gateway.receivedCommands = [];
-    gateway.challenges = [];
-    gateway.history = [];
-=======
     const rejectedTaskCard = "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T15a'))";
     const rejectedForms = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return [...card.querySelectorAll('.recovery-form')].length; })()`, returnByValue: true });
     assert.equal(rejectedForms.result?.value, 0, "rejected tasks must be reopened before retry or brief-edit forms become available");
@@ -242,6 +224,8 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       await delay(100);
     }
     assert.equal(recoveryFormsReady, true, "a successful reopen should enable the retry and brief-edit forms");
+    const recoveryFormText = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return card?.innerText ?? ''; })()`, returnByValue: true });
+    assert.ok(recoveryFormText.result?.value?.includes("Creará la revisión 3."), "brief edit should preview the revision it will create");
     const reopenedCommand = gateway.receivedCommands.find((command) => command.type === "reopen" && command.target.taskId === "T15a");
     assert.equal(reopenedCommand?.precondition.state, "rejected", "reopen must use the snapshot's authoritative failed state");
     for (let attempt = 0; attempt < 40; attempt += 1) {
@@ -249,22 +233,22 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (availableRoute.result?.value) break;
       await delay(100);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('select[name="route"]')); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('select[name="route"]')); const select = form.querySelector('select[name="route"]'); select.value = 'route-codex-work'; select.dispatchEvent(new Event('change', { bubbles: true })); const note = form.querySelector('textarea[name="reason"]'); note.value = 'Keep the review step'; note.dispatchEvent(new Event('input', { bubbles: true })); form.requestSubmit(); return true; })()`, returnByValue: true });
     for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "retry" && command.target.taskId === "T15a"); attempt += 1) await delay(100);
     const rejectedRetry = gateway.receivedCommands.find((command) => command.type === "retry" && command.target.taskId === "T15a");
     assert.equal(rejectedRetry?.precondition.state, "recovering", "retry must use the state returned by the successful reopen transition");
     assert.equal(rejectedRetry?.route?.route_id, "route-codex-work");
+    assert.equal(rejectedRetry?.reason, "Keep the review step", "retry should carry the phone note");
     const rejectedEdit = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the rejected task'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-027'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return valid; })()`, returnByValue: true });
     assert.equal(rejectedEdit.result?.value, true, "rejected task brief edit should pass browser validation");
     for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "edit-brief" && command.task === "T15a"); attempt += 1) await delay(100);
     const rejectedEditCommand = gateway.receivedCommands.find((command) => command.type === "edit-brief" && command.task === "T15a");
-    assert.equal(rejectedEditCommand?.precondition.state, "rejected", "brief edit must submit the authoritative rejected run state");
+    assert.equal(rejectedEditCommand?.precondition.state, "rejected", "brief edit must retain the authoritative run state while targeting the reopened task");
     assert.equal(rejectedEditCommand?.value, "Recover the rejected task");
     gateway.commands = [];
     gateway.receivedCommands = [];
     gateway.challenges = [];
     gateway.history = [];
->>>>>>> 87dc0ae2cf1dc35bd48bc7683b84b5a0af137568
     await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15a") + "]').click()", returnByValue: true });
     const waitForReview = async () => {
       let lastText = "";
