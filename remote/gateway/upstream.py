@@ -78,72 +78,6 @@ class LaptopClient:
         from urllib.parse import urlencode
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
-<<<<<<< c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
-||||||| 03ca13926945e4dcf4ecdc4e34dddc55b76da7e1
-
-    def challenge(self, challenge: dict[str, Any]) -> dict[str, Any]:
-        body = json.dumps(challenge).encode("utf-8")
-        request = Request(
-            self._origin + "/api/remote/v1/challenges",
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self._key}",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urlopen(request, timeout=self._timeout) as response:
-                payload = json.loads(response.read(65536).decode("utf-8"))
-        except HTTPError as exc:
-            try:
-                payload = json.loads(exc.read(65536).decode("utf-8"))
-            except (UnicodeError, json.JSONDecodeError) as parse_error:
-                raise UpstreamError("laptop API returned an invalid challenge response") from parse_error
-            if not isinstance(payload, dict):
-                raise UpstreamError("laptop API returned an invalid challenge response") from exc
-            raise UpstreamResponseError(exc.code, payload) from exc
-        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
-            raise UpstreamError("laptop challenge request failed") from exc
-        if not isinstance(payload, dict) or not isinstance(payload.get("challengeId"), str):
-            raise UpstreamError("laptop API returned an invalid challenge response")
-        return payload
-
-    def command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
-        body = json.dumps(command).encode("utf-8")
-        request = Request(
-            self._origin + "/api/remote/v1/commands",
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self._key}",
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
-        try:
-            with urlopen(request, timeout=self._timeout) as response:
-                status = response.status
-                payload = json.loads(response.read(65536).decode("utf-8"))
-        except HTTPError as exc:
-            try:
-                payload = json.loads(exc.read(65536).decode("utf-8"))
-            except (UnicodeError, json.JSONDecodeError):
-                raise UpstreamError("laptop API returned an invalid command response") from exc
-            status = exc.code
-        except TimeoutError as exc:
-            raise UpstreamTimeout("laptop command outcome is unknown") from exc
-        except (URLError, OSError, UnicodeError, json.JSONDecodeError) as exc:
-            if isinstance(exc, URLError) and isinstance(exc.reason, TimeoutError):
-                raise UpstreamTimeout("laptop command outcome is unknown") from exc
-            raise UpstreamError("laptop API request failed") from exc
-        if not isinstance(payload, dict):
-            raise UpstreamError("laptop API returned a non-object command response")
-        if status >= 400:
-            raise UpstreamResponseError(status, payload)
-        return status, payload
-=======
 
     def read_model(self, path: str) -> dict[str, Any]:
         from urllib.parse import urlsplit
@@ -219,4 +153,3 @@ class LaptopClient:
         if status >= 400:
             raise UpstreamResponseError(status, payload)
         return status, payload
->>>>>>> ede87253b5f40c74d13b25da89f0c8ea70ac0e63
