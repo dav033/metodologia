@@ -11,38 +11,15 @@ from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
 from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
-from commands import COMMAND_TYPES
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+COMMAND_TYPES = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
+                           "launch", "answer-decision", "answer-round", "cancel-plan", "delete-plan",
+                           "edit-brief", "note"})
 TELEGRAM_REQ_ID = re.compile(r"^REQ-[0-9]{3,}$")
 
 
@@ -57,30 +34,10 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(project, str) or not isinstance(req, str):
         return None
     command = request.get("type")
-    if not isinstance(command, str):
+    if not isinstance(command, str) or command not in COMMAND_TYPES:
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-<<<<<<< e6088af660026d2e861b496d907f514eef10722f
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-=======
                  "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
                  "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
                  "field": "field", "value": "value"}
     params: dict[str, Any] = {}
@@ -172,6 +129,14 @@ class GatewayRuntime:
                     or confirmation.get("typed_req") != req):
                 return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
         return self._submit_ledger_command(ledger_request)
+
+    def read_remote(self, path: str) -> dict[str, Any]:
+        """Read an allow-listed laptop v1 endpoint for an authenticated phone session."""
+        return self.laptop.get_json(path)
+
+    def read_model(self, path: str) -> dict[str, Any]:
+        """Relay an authenticated gateway read route to the laptop's v1 API."""
+        return self.laptop.read_model(path)
 
     def submit_telegram_command(self, request: Any) -> dict[str, Any]:
         """Relay only owner-safe run pause/resume commands to the laptop ledger."""
@@ -269,12 +234,8 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-        self.hub.update_snapshot(snapshot)
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-=======
         self.snapshot_cache = snapshot
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
+        self.hub.update_snapshot(snapshot)
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
@@ -301,13 +262,16 @@ class GatewayRuntime:
         result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
         return result
 
-    def read_model(self, path: str) -> dict[str, Any]:
-        """Relay an authenticated gateway read route to the laptop's v1 API."""
-        return self.laptop.read_model(path)
-
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
+        except UpstreamResponseError as exc:
+            if exc.status == 400 and exc.payload.get("code") == "INVALID_CURSOR":
+                self.event_cursor = ""
+                logger.info("Laptop event cursor expired; restarting feed from the beginning")
+                return
+            logger.warning("Laptop event feed unavailable")
+            return
         except UpstreamError:
             logger.warning("Laptop event feed unavailable")
             return

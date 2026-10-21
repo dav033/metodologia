@@ -143,10 +143,12 @@ def _snapshot(handler) -> None:
             last_activity = run.get("updated_at")
         tasks = []
         for task in run["tasks"]:
-            review = next((a for a in reversed(task["history"]) if a.get("state") == "rejected"), None)
+            review = next((a for a in reversed(task["history"])
+                           if a.get("state") in {"failed", "rejected"}), None)
             current = task.get("attempt")
             tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
-                          "activeAttempt": live._attempt(current) if current and current.get("live") else None,
+                          "activeAttempt": live._attempt(current) if current and
+                          (current.get("live") or current.get("state") in {"failed", "rejected"}) else None,
                           "reviewAttempt": live._attempt(review),
                           "history": [live._attempt(a) for a in task["history"]]})
         runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"],
@@ -174,7 +176,8 @@ def _snapshot(handler) -> None:
                     plan_tasks.append({"id": task["id"], "title": task.get("title"),
                                        "state": task.get("state", "pending"),
                                        "acceptanceCriteria": task.get("acceptance_criteria", []),
-                                       "activeAttempt": live._attempt(current) if current and current.get("live") else None,
+                                       "activeAttempt": live._attempt(current) if current and
+                                       (current.get("live") or current.get("state") in {"failed", "rejected"}) else None,
                                        "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
             plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
                           "title": summary.get("title"),

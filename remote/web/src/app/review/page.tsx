@@ -61,8 +61,10 @@ export default function ReviewPage() {
     const project = params.get("project");
     const req = params.get("req");
     const taskId = params.get("taskId");
-    const fragment = new URLSearchParams(window.location.hash.slice(1));
-    const fragmentAttempt = fragment.get("attempt") ?? fragment.get("attemptId");
+    const rawFragment = window.location.hash.slice(1);
+    const fragment = new URLSearchParams(rawFragment);
+    const fragmentAttempt = fragment.get("attempt") ?? fragment.get("attemptId") ??
+      (rawFragment.startsWith("attempt-") ? decodeURIComponent(rawFragment.slice("attempt-".length)) : null);
     if (!project || !req || (!fragmentAttempt && !taskId)) return;
     let active = true;
     setLoading(true);
