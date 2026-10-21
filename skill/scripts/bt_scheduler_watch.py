@@ -24,6 +24,7 @@ import bt_scheduler_adapter as adapter
 import bt_scheduler_ops as ops
 
 POLL_SECONDS = 5.0
+HEAL_LIMIT = 3                # automatic answers of one kind per task before a person is asked again
 BACKOFF_START = 5.0
 BACKOFF_CAP = 300.0
 MAX_FAILURES = 5              # this many failed owners within FAILURE_WINDOW end the watch
@@ -40,13 +41,14 @@ class Watch:
                  sleep: Callable[[float], None] = time.sleep, spawn: Callable[[bool], "subprocess.Popen"] | None = None,
                  free_bytes: Callable[[], int] | None = None, notify: Callable[[str, str], None] = bt_notify.notify,
                  log: Callable[[str], None] | None = None, announce: Callable[[], object] | None = None,
-                 pending: Callable[[], int] | None = None):
+                 pending: Callable[[], int] | None = None, heal: Callable[[], bool] | None = None):
         self.project, self.req, self.rdir = project, req, Path(rdir)
         self.now, self.sleep, self.notify = now, sleep, notify
         self.spawn = spawn or self._spawn
         self.free_bytes = free_bytes or (lambda: shutil.disk_usage(self.rdir).free)
         self.announce = announce or self._announce
         self.pending = pending or self._pending
+        self.heal = heal or self._heal
         self.log = log or (lambda text: print(f"{time.strftime('%H:%M:%S')} {text}", flush=True))
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
@@ -90,7 +92,7 @@ class Watch:
             if ops.owner_pids(self.project, self.req):
                 self._wait_owner_gone()
                 continue
-            if self._remediate():
+            if self._remediate() or self.heal():
                 continue
             if self.free_bytes() < MIN_FREE_BYTES:
                 if not self.low_disk_notified:
@@ -144,6 +146,37 @@ class Watch:
             bt_remediation.clear_request(self.rdir)
         return True
 
+    def _heal(self) -> bool:
+        """A stop whose diagnosis is a plain integration clash is answered by the scheduler itself: redo the task that
+        was built on a stale result, as the card's recommended option does. It used to wait for a person (REQ-027 asked
+        24 such cards); `HEAL_LIMIT` automatic answers per task keep a loop from running unnoticed, after which the card
+        stays for the owner. Nothing else is ever answered here."""
+        import bt_scheduler_decisions as decisions
+
+        try:
+            requests = decisions.open_requests(self.rdir)
+        except Exception:  # noqa: BLE001 - a run without readable state asks nothing
+            return False
+        for request in requests:
+            diagnosis = request.get("diagnosis") or {}
+            if (diagnosis.get("kind"), diagnosis.get("option"), diagnosis.get("confidence")) != ("conflict", "rework_conflict", "alta"):
+                continue
+            if "rework_conflict" not in {o["id"] for o in request.get("options") or ()}:
+                continue
+            if decisions.automatic_answers(self.rdir, request["task"], "rework_conflict") >= HEAL_LIMIT:
+                continue
+            try:
+                lines = decisions.answer(self.project, self.req, self.rdir, request["id"], "rework_conflict",
+                                         reason="automatic: " + str(diagnosis.get("headline") or "integration clash"),
+                                         by="scheduler")
+            except Exception as error:  # noqa: BLE001 - a failed move leaves the card for a person
+                self.log(f"automatic answer for {request['id']} failed ({type(error).__name__}: {error})")
+                continue
+            for line in lines:
+                self.log(f"automatic: {line}")
+            return True
+        return False
+
     def _pending(self) -> int:
         import bt_scheduler_decisions
 
@@ -159,6 +192,8 @@ class Watch:
             return False
         self.log("the run waits for a decision of its owner")
         while self.pending():
+            if self.heal():
+                return True
             self.announce()
             self.sleep(POLL_SECONDS * 4)
         return True
@@ -175,6 +210,7 @@ class Watch:
             if code is not None:
                 return code
             self.announce()
+            self.heal()                       # a clash card is answered while the owner keeps working on the rest
             self.sleep(POLL_SECONDS)
 
 

@@ -159,6 +159,22 @@ def audit_notes(rdir: Path, task: str) -> str:
     return f"Indications from the independent audit for this task (they come first):\n{text}" if text else ""
 
 
+def automatic_answers(rdir: Path, task: str, option: str) -> int:
+    """How many times the scheduler itself (not a person) already answered `option` for `task`."""
+    count = 0
+    try:
+        for line in answers_path(rdir).read_text(encoding="utf-8").splitlines():
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if entry.get("by") == "scheduler" and entry.get("task") == task and entry.get("option") == option:
+                count += 1
+    except OSError:
+        pass
+    return count
+
+
 def _answered(rdir: Path) -> set[str]:
     found = set()
     try:

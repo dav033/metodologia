@@ -115,6 +115,16 @@ class WhatTheOwnerSees(Base):
             self.assertNotIn("no es fiable", request["needs"])
             self.assertIn(request["diagnosis"]["option"], request["needs"])
 
+    def test_the_scheduler_counts_only_its_own_answers_of_one_kind_per_task(self):
+        lines = [{"request": "T1:1", "task": "T1", "option": "rework_conflict", "by": "scheduler"},
+                 {"request": "T1:2", "task": "T1", "option": "rework_conflict", "by": "owner"},
+                 {"request": "T1:3", "task": "T1", "option": "retry", "by": "scheduler"},
+                 {"request": "T2:1", "task": "T2", "option": "rework_conflict", "by": "scheduler"},
+                 {"request": "T1:4", "task": "T1", "option": "rework_conflict", "by": "scheduler"}]
+        decisions.answers_path(self.rdir).write_text("\n".join(json.dumps(x) for x in lines) + "\nnot json\n")
+        self.assertEqual(decisions.automatic_answers(self.rdir, "T1", "rework_conflict"), 2)
+        self.assertEqual(decisions.automatic_answers(self.rdir, "T3", "rework_conflict"), 0)
+
     def test_a_quota_stop_is_not_presented_as_a_code_defect(self):
         self.doc = doc(reason="m5:quota_reset_unknown")
         [request] = decisions.open_requests(self.rdir)

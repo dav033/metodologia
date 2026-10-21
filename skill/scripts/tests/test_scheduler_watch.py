@@ -92,6 +92,54 @@ class WatchTests(unittest.TestCase):
             self.watch().run(max_loops=3)
         self.assertFalse(bt_remediation.requested(self.rdir))
 
+    def card(self, **extra):
+        base = {"id": "T9:5", "task": "T9", "options": [{"id": "retry"}, {"id": "rework_conflict"}, {"id": "stop"}],
+                "diagnosis": {"kind": "conflict", "option": "rework_conflict", "confidence": "alta", "headline": "clash"}}
+        return {**base, **extra}
+
+    def test_a_plain_integration_clash_is_answered_by_the_scheduler_itself_a_bounded_number_of_times(self):
+        import bt_scheduler_decisions as decisions
+
+        answers = []
+
+        def answer(project, req, rdir, request_id, option, reason="", by="owner"):
+            answers.append((request_id, option, by))
+            return [f"sent back for rework: T8a"]
+        watcher = self.watch()
+        with patch.object(decisions, "open_requests", return_value=[self.card()]), \
+                patch.object(decisions, "answer", answer), patch.object(decisions, "automatic_answers", return_value=0):
+            self.assertTrue(watcher.heal())
+        self.assertEqual(answers, [("T9:5", "rework_conflict", "scheduler")])
+        with patch.object(decisions, "open_requests", return_value=[self.card()]), \
+                patch.object(decisions, "answer", answer), \
+                patch.object(decisions, "automatic_answers", return_value=watch.HEAL_LIMIT):
+            self.assertFalse(watcher.heal())                     # past the limit the card stays for a person
+        self.assertEqual(len(answers), 1)
+
+    def test_only_a_confident_clash_diagnosis_with_that_option_is_ever_answered_automatically(self):
+        import bt_scheduler_decisions as decisions
+
+        answers = []
+        watcher = self.watch()
+        others = [self.card(diagnosis={"kind": "code", "option": "retry_with_note", "confidence": "alta"}),
+                  self.card(diagnosis={"kind": "conflict", "option": "rework_conflict", "confidence": "media"}),
+                  self.card(diagnosis=None),
+                  self.card(options=[{"id": "retry"}, {"id": "stop"}])]
+        with patch.object(decisions, "open_requests", return_value=others), \
+                patch.object(decisions, "answer", lambda *a, **k: answers.append(a) or []), \
+                patch.object(decisions, "automatic_answers", return_value=0):
+            self.assertFalse(watcher.heal())
+        self.assertEqual(answers, [])
+
+    def test_a_failed_automatic_answer_leaves_the_card_for_a_person(self):
+        import bt_scheduler_decisions as decisions
+
+        def broken(*args, **kwargs):
+            raise RuntimeError("no")
+        with patch.object(decisions, "open_requests", return_value=[self.card()]), \
+                patch.object(decisions, "answer", broken), patch.object(decisions, "automatic_answers", return_value=0):
+            self.assertFalse(self.watch().heal())
+
     def test_crash_is_restarted_with_growing_backoff(self):
         self.codes = [3, -signal.SIGBUS, 0]
         self.assertEqual(self.watch().run(), 0)
