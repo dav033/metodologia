@@ -1,0 +1,33 @@
+[Unit]
+Description=Bitacora remote gateway (GitHub OAuth, cached snapshot, command relay, Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bitacora
+Group=bitacora
+EnvironmentFile=/etc/bitacora-gateway/gateway.env
+WorkingDirectory=/opt/bitacora-gateway/current/gateway
+ExecStart=/usr/bin/python3 /opt/bitacora-gateway/current/gateway/main.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+UMask=0077
+ReadWritePaths=/var/lib/bitacora-gateway
+StateDirectory=bitacora-gateway
+StateDirectoryMode=0700
+
+[Install]
+WantedBy=multi-user.target
