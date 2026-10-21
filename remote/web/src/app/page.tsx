@@ -5,7 +5,8 @@ import Link from "next/link";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string } };
+type FailureReview = { attemptId: string };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type Snapshot = { schemaVersion: 1; generatedAt: string; cursor: string; runs: Run[]; plans: Plan[]; laptop?: { online: boolean; checkedAt?: string } };
 type Session = { authenticated: boolean };
@@ -63,11 +64,14 @@ function parseSnapshot(value: unknown): Snapshot {
     if (!task || !text(task.id) || !text(task.state)) throw new Error("El snapshot contiene una tarea inválida.");
     const criteria = field(task, "acceptanceCriteria", "acceptance_criteria");
     const updatedAt = field(task, "updatedAt", "updated_at");
+    const review = record(field(task, "reviewAttempt", "review_attempt"));
+    const attemptId = review ? (field(review, "id", "attempt_id") ?? field(review, "attemptId", "attempt_id")) : undefined;
+    const reviewAttempt = review && text(attemptId) ? { attemptId } : undefined;
     return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
       revision: typeof task.revision === "number" ? task.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")) };
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")), reviewAttempt };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
@@ -126,9 +130,12 @@ export default function HomePage() {
     if (!sessionResponse.ok) throw new Error("No se pudo comprobar la sesión.");
     const sessionValue: unknown = await sessionResponse.json();
     const parsedSession = record(sessionValue);
-    if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
-    setSession({ authenticated: parsedSession.authenticated });
-    if (!parsedSession.authenticated) return;
+    const authenticated = typeof parsedSession?.authenticated === "boolean"
+      ? parsedSession.authenticated
+      : text(parsedSession?.login) && parsedSession.login.trim().length > 0;
+    if (typeof authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
+    setSession({ authenticated });
+    if (!authenticated) return;
     await refreshSnapshot();
   }, [refreshSnapshot]);
 
@@ -215,7 +222,8 @@ export default function HomePage() {
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     <div className="actions">
-      {task.state === "blocked" || task.state === "failed" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
+      {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || task.reviewAttempt) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}`}>Ver intento fallido</Link>}
+      {task.state === "blocked" || task.state === "failed" || task.state === "rejected" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>
   </article>;

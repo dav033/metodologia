@@ -64,12 +64,24 @@ async function cdp(socket, method, params = {}) {
 
 test("real panel entrypoint renders every contract run and refreshes live snapshots at 360 px", { timeout: 90_000 }, async () => {
   let gateway;
+  let sessionContractObserved = false;
   let next;
   let browser;
   let profile;
   let debugReservation;
   try {
     gateway = await createMockGatewayServer();
+    const mockGatewayHandler = gateway.listeners("request")[0];
+    gateway.removeAllListeners("request");
+    gateway.on("request", (request, response) => {
+      if (request.method === "GET" && request.url === "/api/auth/session") {
+        sessionContractObserved = true;
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+        response.end(JSON.stringify({ login: "dav033" }));
+        return;
+      }
+      mockGatewayHandler(request, response);
+    });
     const gatewayPort = await listen(gateway);
     const reservation = createServer();
     const frontendPort = await listen(reservation);
@@ -105,6 +117,25 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
+    const reviewHref = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=' + JSON.stringify('taskId=T15c') + ']')?.href", returnByValue: true });
+    assert.ok(reviewHref.result?.value, "rejected task should expose a review route");
+    await cdp(socket, "Page.navigate", { url: reviewHref.result.value });
+    let fixtureReview = "";
+    for (let attempt = 0; attempt < 300; attempt += 1) {
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+      fixtureReview = evaluated.result?.value ?? "";
+      if (fixtureReview.includes("Fallo de fixture en rejected")) break;
+      await delay(100);
+    }
+    assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route within 30 seconds: ${fixtureReview}`);
+    await cdp(socket, "Page.navigate", { url: frontendOrigin });
+    for (let attempt = 0; attempt < 70; attempt += 1) {
+      const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+      browserState.text = evaluated.result?.value ?? "";
+      if (browserState.text.includes("Tarea T15a")) break;
+      await delay(100);
+    }
+    assert.equal(sessionContractObserved, true, "panel should consume the gateway's { login } session response");
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
       await delay(100);
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -176,7 +207,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (ready.result?.value) break;
       await delay(100);
     }
-    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Reabrir')?.click()", returnByValue: true });
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.click()", returnByValue: true });
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 2; attempt += 1) await delay(100);
     assert.equal(gateway.commands[1]?.type, "reopen");
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
