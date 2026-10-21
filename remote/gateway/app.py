@@ -72,6 +72,7 @@ class GatewayRuntime:
         )
         self.outbox = NotificationOutbox(str(config.database_path))
         self.liveness = LivenessMonitor()
+        self.cached_snapshot: dict[str, Any] | None = None
         self.event_cursor = ""
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
@@ -199,12 +200,28 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
+        self.cached_snapshot = snapshot
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
         )
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
+
+    def web_snapshot(self) -> dict[str, Any]:
+        """Serve the last laptop read model with the gateway's current connection state."""
+        snapshot = dict(self.cached_snapshot or {
+            "schemaVersion": 1,
+            "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "cursor": "",
+            "runs": [],
+        })
+        snapshot.setdefault("plans", [])
+        snapshot["laptop"] = {
+            "online": self.liveness.status is LaptopStatus.ONLINE,
+            "checkedAt": snapshot.get("generatedAt"),
+        }
+        return snapshot
 
     def _poll_events(self) -> None:
         try:
