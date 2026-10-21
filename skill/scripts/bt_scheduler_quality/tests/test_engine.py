@@ -168,6 +168,19 @@ class QualityEngineTests(unittest.TestCase):
         self.assertEqual(result["status"], "NEEDS_REVIEW")
         self.assertIn("CHECK_UNMAPPED", {item["code"] for item in result["issues"]})
 
+    def test_a_supplementary_command_check_does_not_need_review_when_every_criterion_has_its_own(self):
+        for outcome, expected in (("pass", "PASS"), ("fail", "FAIL")):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as temporary:
+                _, source, _, _ = _make_snapshot(Path(temporary))
+                self.raw["verification"] = [*self.raw["verification"],
+                                            {"type": "command", "value": "python3 -m unittest -q",
+                                             "purpose": "Run the existing declared task checks"}]
+                with QualityStore(":memory:") as store:
+                    result = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner(outcome, 3 if outcome == "fail" else 0)
+                                           ).verify(self.raw, source)
+                self.assertEqual(result["status"], expected)
+                self.assertNotIn("CHECK_UNMAPPED", {item["code"] for item in result.get("issues", ())})
+
     def test_multiple_checks_for_one_criterion_are_ambiguous(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

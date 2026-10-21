@@ -107,7 +107,7 @@ class QualityEngine:
         }
         issue_codes = list(execution.issue_codes)
         issue_codes.extend(item.issue_code for item in criteria if item.issue_code)
-        if _has_unmapped_check(checks, order):
+        if _has_unmapped_check(checks, order, criteria):
             issue_codes.append("CHECK_UNMAPPED")
         unique_codes = tuple(dict.fromkeys(issue_codes))
         issues = _issue_documents(unique_codes)
@@ -466,8 +466,16 @@ def _build_check_results(
     return tuple(results), artifact_bodies
 
 
-def _has_unmapped_check(checks: tuple[CheckResult, ...], order: VerifyRequest) -> bool:
-    return any(item.spec.purpose not in order.acceptance_criteria for item in checks)
+def _has_unmapped_check(
+    checks: tuple[CheckResult, ...], order: VerifyRequest, criteria: tuple[CriterionResult, ...]
+) -> bool:
+    """A check whose purpose names no criterion needs review, except a supplementary COMMAND check (a baseline such as the
+    project's own test script) when every criterion already has exactly one clean check of its own: criteria are still
+    proven one by one, and `overall_status` still requires every command, supplementary ones too, to pass."""
+    unmapped = [item for item in checks if item.spec.purpose not in order.acceptance_criteria]
+    if not unmapped:
+        return False
+    return any(item.spec.kind != "command" for item in unmapped) or any(item.issue_code for item in criteria)
 
 
 def _issue_documents(codes: tuple[str, ...]) -> tuple[dict[str, str], ...]:
