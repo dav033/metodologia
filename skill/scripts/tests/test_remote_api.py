@@ -161,9 +161,10 @@ class RemoteApiTests(unittest.TestCase):
             self.addCleanup(server.server_close)
             self.addCleanup(server.shutdown)
             started = time.monotonic()
-            decision = {"id": "decision-1", "task": "T1", "title": "T1 bloqueada",
-                        "what": "Sin reintentos.", "options": ["retry", "stop"],
-                        "recommended": "retry", "evidence": ["attempts: 3"]}
+            decision = {"id": "decision-1", "task": "T2", "title": "Choose", "what": "Pick an option",
+                        "evidence": ["attempts exhausted"],
+                        "options": [{"id": "stop", "label": "Stop", "consequence": "Ends the run"}],
+                        "recommended": "stop", "unskippable": True}
             with patch("bt_plans_api.open_decisions", return_value=[decision]):
                 status, content_type, body = self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             elapsed = time.monotonic() - started
@@ -178,7 +179,7 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(snapshot["plans"][0]["req"], "REQ-001")
             self.assertEqual(snapshot["plans"][0]["state"], "approved")
             self.assertEqual(snapshot["rounds"][0]["questions"][0]["text"], "Choose")
-            self.assertEqual(snapshot["decisionRequests"][0]["options"][0]["consequence"], "retry")
+            self.assertEqual(snapshot["decisionRequests"][0]["options"][0]["consequence"], "Ends the run")
             last_activity = dt.datetime.fromisoformat(snapshot["runs"][0]["lastActivityAt"].replace("Z", "+00:00"))
             self.assertEqual(last_activity, dt.datetime(2026, 10, 20, 10, 1, tzinfo=dt.timezone.utc))
             rejected_task = snapshot["runs"][0]["tasks"][1]
@@ -187,6 +188,17 @@ class RemoteApiTests(unittest.TestCase):
             self.assertEqual(rejected_task["reviewAttempt"]["id"], "A-rejected")
             self.assertFalse(rejected_task["reviewAttempt"]["live"])
             self.assertEqual(rejected_task["history"][0]["id"], "A-rejected")
+
+            with patch("bt_attempt_facts.attempt_facts", return_value={
+                    "T2": [{"attempt": "A-rejected", "state": "rejected", "failure": "review required"}]}), \
+                    patch("bt_remote_api._review_executor_attempt", return_value=None), \
+                    patch("bt_remote_api._review_quality_result", return_value=(None, {})), \
+                    patch("bt_remote_api._review_diff", return_value={"stat": None, "files": []}):
+                status, _, review_body = self.request(
+                    server.server_address[1],
+                    "/api/remote/v1/attempts/A-rejected/review?target=demo%2FREQ-001", TEST_KEY)
+            self.assertEqual(status, 200, review_body.decode("utf-8"))
+            self.assertEqual(json.loads(review_body)["attemptId"], "A-rejected")
 
             self.request(server.server_address[1], "/api/remote/v1/snapshot", TEST_KEY)
             self.assertEqual(read_now.call_count, 1)

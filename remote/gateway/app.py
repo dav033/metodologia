@@ -10,27 +10,7 @@ from typing import Any, Mapping
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
 from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
-from commands import COMMAND_TYPES
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
@@ -56,22 +36,7 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(command, str) or command not in COMMAND_TYPES:
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-<<<<<<< e6088af660026d2e861b496d907f514eef10722f
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-=======
                  "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
                  "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
                  "field": "field", "value": "value"}
     params: dict[str, Any] = {}
@@ -112,6 +77,7 @@ class GatewayRuntime:
         self.outbox = NotificationOutbox(str(config.database_path))
         self.liveness = LivenessMonitor()
         self.event_cursor = ""
+        self.snapshot_cache: dict[str, Any] | None = None
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
@@ -152,10 +118,6 @@ class GatewayRuntime:
         if command in CHALLENGED_COMMANDS and not isinstance(ledger_request.get("confirmation"), dict):
             return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
         return self._submit_ledger_command(ledger_request)
-
-    def read_remote(self, path: str) -> dict[str, Any]:
-        """Read an allow-listed laptop v1 endpoint for an authenticated phone session."""
-        return self.laptop.get_json(path)
 
     def submit_telegram_command(self, request: Any) -> dict[str, Any]:
         """Relay only owner-safe run pause/resume commands to the laptop ledger."""
@@ -253,12 +215,36 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
+        self.snapshot_cache = snapshot
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
             for run in runs
         )
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
+
+    def web_snapshot(self) -> dict[str, Any] | None:
+        """Return the last laptop snapshot with gateway liveness for authenticated web clients."""
+        snapshot = self.snapshot_cache
+        if snapshot is None and self.liveness.status is LaptopStatus.ONLINE:
+            try:
+                snapshot = self.laptop.snapshot()
+            except UpstreamError:
+                return None
+            if not isinstance(snapshot, dict) or not isinstance(snapshot.get("runs"), list):
+                return None
+            self.snapshot_cache = snapshot
+        if snapshot is None:
+            return None
+        result = dict(snapshot)
+        result.setdefault("schemaVersion", 1)
+        result.setdefault("plans", [])
+        result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
+        return result
+
+    def read_model(self, path: str) -> dict[str, Any]:
+        """Relay an authenticated gateway read route to the laptop's v1 API."""
+        return self.laptop.read_model(path)
 
     def _poll_events(self) -> None:
         try:

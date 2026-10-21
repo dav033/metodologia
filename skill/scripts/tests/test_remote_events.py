@@ -8,25 +8,16 @@ import os
 import sys
 import tempfile
 import threading
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
 import time
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-=======
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
 import unittest
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-from http.server import ThreadingHTTPServer
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-=======
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote
 
 SCRIPTS = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(SCRIPTS))
 GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
+sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(GATEWAY))
 
 import bt_remote_api
@@ -330,6 +321,7 @@ class RouteTests(unittest.TestCase):
                 self.assertEqual([event["id"] for event in second["events"]],
                                  [event["id"] for event in replay["events"]])
                 self.assertEqual(len(replay["events"][1]["data"]["decisionRequest"]["options"]), 2)
+
 
     def test_gateway_recovers_expired_cursor_and_queues_next_event(self):
         from app import GatewayRuntime
