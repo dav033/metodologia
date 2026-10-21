@@ -3,7 +3,6 @@ import unittest
 from pathlib import Path
 
 from app import create_runtime
-from commands import CommandValidationError
 from config import GatewayConfig
 from telegram_bot import TelegramBot
 
@@ -20,9 +19,15 @@ class FakeLaptop:
             "active": True,
         }]}
 
-    def command(self, command):
+    def post_json(self, path, command):
+        self.assert_command_path(path)
         self.commands.append(command)
-        return 202, {"commandId": "ledger-1", "status": "accepted"}
+        return {"commandId": "ledger-1", "status": "accepted"}
+
+    @staticmethod
+    def assert_command_path(path):
+        if path != "/api/remote/v1/commands":
+            raise AssertionError("unexpected laptop API path")
 
 
 class FakeTelegramApi:
@@ -121,9 +126,9 @@ class TelegramBotTests(unittest.TestCase):
             "precondition": {"state": "review"},
         }
 
-        with self.assertRaises(CommandValidationError):
-            self.runtime.submit_telegram_command(command)
+        result = self.runtime.submit_telegram_command(command)
 
+        self.assertEqual(result["code"], "INVALID_COMMAND")
         self.assertEqual(self.laptop.commands, [])
 
 

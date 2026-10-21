@@ -9,8 +9,7 @@ import time
 from typing import Any, Callable, Mapping
 from urllib.request import Request, urlopen
 
-from app import CommandRelayError
-from commands import REQ_ID, CommandValidationError
+from app import TELEGRAM_REQ_ID
 from upstream import UpstreamError
 
 logger = logging.getLogger(__name__)
@@ -97,13 +96,14 @@ class TelegramBot:
             self._api_call("answerCallbackQuery", {"callback_query_id": callback_id, "text": "Acción vencida"})
             return
         try:
-            _status, result = self.runtime.submit_telegram_command(command)
-        except (CommandRelayError, CommandValidationError) as exc:
-            response = str(exc)
+            result = self.runtime.submit_telegram_command(command)
         except UpstreamError:
             response = "No fue posible enviar el comando al portátil."
         else:
-            response = f"Comando registrado: {result.get('status', 'aceptado')}"
+            status = result.get("status", "aceptado")
+            code = result.get("code")
+            response = f"Comando registrado: {status}" if status not in {"REJECTED", "FAILED", "UNKNOWN"} \
+                else f"Comando no aplicado: {code or status}"
         self._api_call("answerCallbackQuery", {
             "callback_query_id": callback_id,
             "text": response[:180],
@@ -139,7 +139,7 @@ class TelegramBot:
             req = run.get("req_id")
             status = run.get("status")
             if (not isinstance(project, str) or not 1 <= len(project) <= 80
-                    or not isinstance(req, str) or not REQ_ID.fullmatch(req)
+                    or not isinstance(req, str) or not TELEGRAM_REQ_ID.fullmatch(req)
                     or not isinstance(status, str)):
                 continue
             lines.append(f"• {project}/{req} — {status}")
