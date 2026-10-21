@@ -84,7 +84,7 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
                     out.append(_event("attempt.failed", identity, occurred_at, target, data))
                 elif attempt.get("state") == "blocked":
-                    out.append(_event("attempt.blocked", attempt["id"], occurred_at, target, data))
+                    out.append(_event("attempt.blocked", identity, occurred_at, target, data))
                 elif attempt.get("live") and now is not None:
                     last = _seconds(attempt.get("last_activity_at"))
                     if last is not None and now - last > STALL_SECONDS:
@@ -235,6 +235,7 @@ def collect(root, runs: list[dict[str, Any]], plans: list[dict[str, Any]], quota
     """Collect live flow events and open decisions/rounds, then project notification events."""
     import bt_plans_api
     import bt_live_api
+    import bt_rounds
     import time
 
     decisions, rounds = [], []
@@ -243,8 +244,17 @@ def collect(root, runs: list[dict[str, Any]], plans: list[dict[str, Any]], quota
         at = plan.get("updated_at") or ""
         decisions.extend({"project": plan["project"], "req": plan["req_id"], "request": request, "at": at}
                          for request in bt_plans_api.open_decisions(rdir))
-        rounds.extend({"project": plan["project"], "req": plan["req_id"], "round": number, "at": at}
-                      for number in bt_plans_api.open_rounds(rdir))
+        for number in bt_plans_api.open_rounds(rdir):
+            round_path = bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json"
+            try:
+                round_data = bt_rounds.load(round_path)
+            except (OSError, ValueError):
+                round_data = {}
+            round_at = round_data.get("created_at") if isinstance(round_data, dict) else None
+            if not isinstance(round_at, str) or not round_at:
+                round_at = at
+            rounds.append({"project": plan["project"], "req": plan["req_id"], "round": number,
+                           "at": round_at})
     flow, _, _ = bt_live_api.flow_events(root, "global")
     offline = []
     events = build_events({"runs": runs, "plans": plans, "quotas": quotas, "commands": commands,

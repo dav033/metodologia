@@ -1,10 +1,12 @@
 """Behavioral fixtures for stable remote notifications and cursor paging."""
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -15,6 +17,8 @@ sys.path.insert(0, str(SCRIPTS))
 
 import bt_remote_api
 import bt_remote_events as feed
+import bt_plans_api
+import bt_rounds
 
 AT = "2026-10-19T12:00:00Z"
 OLD = "2026-10-19T08:00:00Z"
@@ -103,6 +107,48 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+    def test_collect_keeps_blocked_attempt_ids_distinct_across_runs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            base_run = run([{"id": "T1", "attempt": attempt("att-0001", state="blocked")}])
+            runs = [base_run,
+                    {**base_run, "req_id": "REQ-002"},
+                    {**base_run, "tasks": [{"id": "T2", "attempt": attempt("att-0001", state="blocked")} ]},
+                    {**base_run, "project": "other"}]
+
+            first = feed.collect(root, runs, [], [], [])
+            replay = feed.collect(root, runs, [], [], [])
+
+            self.assertEqual(len(first), 4)
+            self.assertEqual(len({event["id"] for event in first}), 4)
+            self.assertEqual([event["id"] for event in first], [event["id"] for event in replay])
+            self.assertEqual([event["dedupeKey"] for event in first], [event["id"] for event in first])
+
+    def test_collect_uses_actual_open_round_creation_time_on_old_plan(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            req_dir = root / "demo" / "requirements" / "REQ-001-old-plan"
+            req_dir.mkdir(parents=True)
+            plan = req_dir / "PLAN.md"
+            plan.write_text("---\nstatus: proposed\n---\n# Plan — REQ-001 — Old plan\n", encoding="utf-8")
+            old_time = time.time() - 7200
+            os.utime(plan, (old_time, old_time))
+            round_path = bt_rounds.new_round(req_dir, {
+                "title": "New question",
+                "questions": [{"id": "q1", "text": "Choose", "type": "open"}],
+            })
+            created_at = bt_rounds.load(round_path)["created_at"]
+
+            plans = bt_plans_api.plans_payload(root)
+            self.assertEqual(len(plans), 1)
+            plan_updated = dt.datetime.fromisoformat(plans[0]["updated_at"]).timestamp()
+            round_created = dt.datetime.fromisoformat(created_at).astimezone().timestamp()
+            self.assertLess(plan_updated, round_created)
+            events = feed.collect(root, [], plans, [], [])
+
+            round_event = next(event for event in events if event["type"] == "round.waiting")
+            self.assertEqual(round_event["occurredAt"], created_at)
+
     def test_get_events_route_uses_cursor_and_projects_open_decisions(self):
         handler = Handler()
         with tempfile.TemporaryDirectory() as directory:
