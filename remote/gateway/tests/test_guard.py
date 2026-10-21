@@ -85,6 +85,21 @@ class RequestGuardTests(unittest.TestCase):
         status, _ = self.request("POST", "/api/remote/v1/commands", authenticated)
         self.assertEqual(status, 404)
 
+    def test_command_quota_is_shared_by_owner_across_sessions(self) -> None:
+        headers = {"Origin": "https://flow.example.test", "X-Flow-Request": "1"}
+        store = SessionStore(str(Path(self.temp_dir.name) / "gateway.sqlite"),
+                             "test-session-secret-with-more-than-32-bytes")
+        owner_session = store.create_session("dav033")
+        another_owner_session = store.create_session("another-owner")
+        owner_headers = {**headers, "Cookie": f"{SESSION_COOKIE}={owner_session}"}
+        same_owner_headers = {**headers, "Cookie": f"{SESSION_COOKIE}={store.create_session('dav033')}"}
+        another_owner_headers = {**headers, "Cookie": f"{SESSION_COOKIE}={another_owner_session}"}
+
+        statuses = [self.request("POST", "/api/remote/v1/commands", owner_headers)[0] for _ in range(30)]
+        self.assertEqual(statuses, [404] * 30)
+        self.assertEqual(self.request("POST", "/api/remote/v1/commands", same_owner_headers)[0], 429)
+        self.assertEqual(self.request("POST", "/api/remote/v1/commands", another_owner_headers)[0], 404)
+
 
 if __name__ == "__main__":
     unittest.main()

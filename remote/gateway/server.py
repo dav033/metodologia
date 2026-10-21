@@ -167,11 +167,11 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
             route = urlsplit(self.path)
             if route.path == "/api/remote/v1/challenges":
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
+                login = service.store.get_session(token) if token else None
+                if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
                 if runtime is None:
@@ -205,11 +205,11 @@ def make_handler(service: OAuthService, runtime: StreamRuntime | None = None) ->
                 return
             if route.path == "/api/remote/v1/commands":
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
+                login = service.store.get_session(token) if token else None
+                if login is None:
                     self._json(401, {"error": "unauthorized"})
                     return
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
+                if not rate_limiter.acquire("commands", login, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
                     self._rate_limited()
                     return
                 if runtime is None:
