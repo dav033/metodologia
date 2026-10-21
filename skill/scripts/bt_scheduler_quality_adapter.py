@@ -435,9 +435,17 @@ class QualityVerificationPort:
         # refuse it: it did, and the task that caused the clash was rejected again and again for a clash only the others
         # could resolve (REQ-027 T4a vs T5a, seven attempts). Its own ceiling stops a ping-pong.
         if not redo or self.core.rework_problem(redo, (), False, owner=True) \
-                or self.core.read(lambda ctx: any(ctx.state.tasks[t].reworks >= self.integration_rework_limit for t in redo)):
+                or any(self._give_ways_of(t) >= self.integration_rework_limit for t in redo):
             return ()
         return redo
+
+    def _give_ways_of(self, task_id: str) -> int:
+        """How many times the integration gate itself sent `task_id` back to give way. Only these count against
+        `integration_rework_limit`: audit and operator reworks (REQ-027 T18.3 had six of them) say nothing about a
+        ping-pong between two tasks that keep clashing."""
+        return sum(1 for entry in self.core.audit_log()
+                   if entry.kind == "rework_requested" and entry.detail.get("by") == "integration-gate"
+                   and task_id in (entry.detail.get("named") or ()))
 
     def _failure_digest(self, result) -> str:
         """The failing checks of an M6 result, with the tail of what each printed: what the agent must read to fix them."""

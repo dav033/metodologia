@@ -395,7 +395,7 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("T6+T10 vs T13 for T14", notes[0][1])
         self.assertIn("small change", notes[0][1])
 
-    def _give_way_system(self, prior_clashes, notes, t3_reworks=0, ceiling=6):
+    def _give_way_system(self, prior_clashes, notes, t3_reworks=0, ceiling=6, prior_give_ways=0):
         def spec(tid):
             task = _task(tid, "python3 build.py")
             task.update(kind="implement")
@@ -414,6 +414,8 @@ class M6M1AdapterTests(unittest.TestCase):
         core.step()
         self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] == "completed"))
         core.write(lambda ctx: setattr(ctx.state.tasks["T3"], "reworks", t3_reworks))
+        for _ in range(prior_give_ways):
+            core.record("rework_requested", by="integration-gate", named=["T3"], tasks=["T3"], reason="earlier give-way")
         self._start_attempts(core, executor, root, ("T1",))
         core.step()
         return core
@@ -432,10 +434,10 @@ class M6M1AdapterTests(unittest.TestCase):
     def test_the_give_way_is_not_refused_by_the_audit_rework_limit_but_has_its_own_ceiling(self):
         # REQ-027 T4a: the accepted task on the other side had been sent back by audits max_reworks times, the give-way
         # was refused, and the task that caused the clash was rejected seven times for a clash only the others could fix
-        core = self._give_way_system(2, [], t3_reworks=2)
+        core = self._give_way_system(2, [], t3_reworks=6)       # six audit/operator reworks do not count: only give-ways do
         self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
         self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] != "completed"))
-        core = self._give_way_system(2, [], t3_reworks=2, ceiling=2)             # sent back for it too often already
+        core = self._give_way_system(2, [], t3_reworks=0, ceiling=2, prior_give_ways=2)   # sent back by the gate twice already
         self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
                                               and e.detail.get("to") == "rejected" for e in core.audit_log())))
         self.assertEqual(core.snapshot().tasks["T3"]["state"], "completed")
