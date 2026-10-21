@@ -64,12 +64,24 @@ async function cdp(socket, method, params = {}) {
 
 test("real panel entrypoint renders every contract run and its controls at 360 px", { timeout: 60_000 }, async () => {
   let gateway;
+  let sessionContractObserved = false;
   let next;
   let browser;
   let profile;
   let debugReservation;
   try {
     gateway = await createMockGatewayServer();
+    const mockGatewayHandler = gateway.listeners("request")[0];
+    gateway.removeAllListeners("request");
+    gateway.on("request", (request, response) => {
+      if (request.method === "GET" && request.url === "/api/auth/session") {
+        sessionContractObserved = true;
+        response.writeHead(200, { "content-type": "application/json; charset=utf-8" });
+        response.end(JSON.stringify({ login: "dav033" }));
+        return;
+      }
+      mockGatewayHandler(request, response);
+    });
     const gatewayPort = await listen(gateway);
     const reservation = createServer();
     const frontendPort = await listen(reservation);
@@ -105,6 +117,7 @@ test("real panel entrypoint renders every contract run and its controls at 360 p
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
+    assert.equal(sessionContractObserved, true, "panel should consume the gateway's { login } session response");
     for (let attempt = 0; attempt < 40 && !browserState?.text?.includes("×2"); attempt += 1) {
       await delay(100);
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });

@@ -123,9 +123,12 @@ export default function HomePage() {
     if (!sessionResponse.ok) throw new Error("No se pudo comprobar la sesión.");
     const sessionValue: unknown = await sessionResponse.json();
     const parsedSession = record(sessionValue);
-    if (!parsedSession || typeof parsedSession.authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
-    setSession({ authenticated: parsedSession.authenticated });
-    if (!parsedSession.authenticated) return;
+    const authenticated = typeof parsedSession?.authenticated === "boolean"
+      ? parsedSession.authenticated
+      : text(parsedSession?.login) && parsedSession.login.trim().length > 0;
+    if (typeof authenticated !== "boolean") throw new Error("Respuesta de sesión inválida.");
+    setSession({ authenticated });
+    if (!authenticated) return;
     await refreshSnapshot();
   }, [refreshSnapshot]);
 
