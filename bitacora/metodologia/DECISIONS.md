@@ -1016,3 +1016,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + a stale-file regression is rejected where it is made. − heuristic by blob history (40 commits deep), false positive when a task deliberately restores an older version of a file it does not declare. The true fix is still one integration line per run (P-134).
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18
 
+## D-114 — Remediation tasks of one round run one after another
+
+- **Date:** 2026-10-21 · **Status:** Accepted · **Refines:** D-091, D-112
+- **Context:** REQ-027 T18.2 was blocked after ten attempts by «integration gate: T18.2 vs T18.3 for T18.3» with the give-way ceiling (6) reached. The remediation tasks T18.1, T18.2, T18.3 and T18.5 had each been sent back six times by the gate: remediation tasks of different components were built side by side but edit the same files (`remote/gateway/server.py`, `bt_remote_api.py`), and the chain T17 → T18.1 → T18.2 → T18.3 was rebuilt in full for each audit round and each rework of T17.
+- **Decision:** `bt_remediation.build_revision` chains all the tasks of a round, not only those of one component (`gates.remediation_parallel`, default off; the old behaviour stays available and tested). For the running REQ-027 the machine setting `gates.integration_rework_limit` was raised from 6 to 12 and T18.2 retried (att-0340).
+- **Consequences:** + no clashes between remediation tasks that were never ordered. − a round with several independent areas takes longer. − the raised ceiling is a setting of this machine, not a rule; the chain length (a rebuild of the whole lineage per round) remains the cost of not having an integration line (P-134).
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18.2
+
