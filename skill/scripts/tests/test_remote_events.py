@@ -47,14 +47,8 @@ class FixtureTests(unittest.TestCase):
     def test_each_notification_kind_has_a_fixture(self):
         fixtures = {
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
-<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
                                                "state": "blocked", "reason": "attempts_exhausted",
                                                "attempts_used": 3, "max_attempts": 3,
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-=======
-                                               "attemptsUsed": 3, "maxAttempts": 3,
-                                               "retriesRemaining": 0,
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -244,7 +238,6 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(handler.status, 400)
             self.assertEqual(json.loads(handler.body)["code"], code)
 
-<<<<<<< fe6f41a9ce94e7e0d6f2e6de6f1bc7bda2c997ac
     def test_events_route_requires_retry_exhaustion_before_failed_notification(self):
         handler = Handler()
         source = run([{"id": "T1", "state": "recovering", "attempts_used": 1, "max_attempts": 3,
@@ -272,6 +265,23 @@ class RouteTests(unittest.TestCase):
             failed = next(event for event in json.loads(handler.body)["events"] if event["type"] == "attempt.failed")
             self.assertTrue(failed["data"]["retryExhausted"])
             self.assertEqual((failed["data"]["attemptsUsed"], failed["data"]["maxAttempts"]), (3, 3))
+
+    def test_attempt_transition_route_requires_and_reports_retry_exhaustion(self):
+        transition = {"kind": "state_change", "project": "demo", "req": "REQ-001", "task": "T1",
+                      "attempt": "a1", "id": "transition-1", "at": AT,
+                      "data": {"state": "failed", "failure": "agent exited"}}
+        exhausted = {**transition, "data": {"state": "failed", "failure": "agent exited",
+                                              "attempts_used": 3, "max_attempts": 3,
+                                              "retries_remaining": 0}}
+
+        event = feed.from_flow(transition)
+        self.assertIsNone(event)
+        event = feed.from_flow(exhausted)
+        self.assertIsNotNone(event)
+        self.assertEqual(event["type"], "attempt.failed")
+        self.assertTrue(event["data"]["retryExhausted"])
+        self.assertEqual((event["data"]["attemptsUsed"], event["data"]["maxAttempts"],
+                          event["data"]["retriesRemaining"]), (3, 3, 0))
 
     def test_real_scheduler_projection_emits_exhausted_failure_through_remote_route(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -325,41 +335,6 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
             self.assertTrue(failed[0]["data"]["retryExhausted"])
             self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
-||||||| b5fb9e730a15b5f5a36ed676d8dc6b5caae4844d
-=======
-    def test_events_route_requires_exhaustion_for_failed_attempt_transition(self):
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            transition = {"id": "transition-1", "kind": "attempt_transition", "state": "failed",
-                          "project": "demo", "req": "REQ-001", "task": "T1", "attempt": "a1",
-                          "at": AT, "data": {"failure": "tests"}}
-            exhausted = {**transition, "data": {"failure": "tests", "attemptsUsed": 3,
-                                                 "maxAttempts": 3, "retriesRemaining": 0}}
-
-            class LedgerStub:
-                def rows(self):
-                    return []
-
-            def poll():
-                handler = Handler()
-                with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
-                    bt_remote_api.route_get(handler)
-                self.assertEqual(handler.status, 200)
-                return json.loads(handler.body)
-
-            with patch("bt_core.ROOT", root), \
-                    patch("bt_live_api.run_summaries", return_value=[]), \
-                    patch("bt_plans_api.plans_payload", return_value=[]), \
-                    patch("bt_live_api.flow_events", side_effect=[([transition], [], {}), ([exhausted], [], {})]), \
-                    patch("bt_subscriptions.summary", return_value=[]), \
-                    patch("bt_remote_commands.Ledger", LedgerStub):
-                self.assertEqual(poll()["events"], [])
-                events = poll()["events"]
-                self.assertEqual(len(events), 1)
-                self.assertEqual(events[0]["type"], "attempt.failed")
-                self.assertTrue(events[0]["data"]["retryExhausted"])
-                self.assertEqual(events[0]["data"]["attemptsUsed"], 3)
->>>>>>> af4745f7f09edb40bc2aff39c663b988ef7c9d07
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

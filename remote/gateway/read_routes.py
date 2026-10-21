@@ -11,7 +11,7 @@ from upstream import UpstreamError
 _PREFIX = "/api/remote/v1"
 _REVIEW = re.compile(r"attempts/([A-Za-z0-9._:-]{1,120})/review\Z")
 _TARGET = re.compile(r"[A-Za-z0-9_-]+/REQ-[0-9]+\Z")
-_READ_PATHS = {"snapshot", "events", "commands", "history", "quotas", "routes"}
+_READ_PATHS = {"commands", "history", "quotas", "routes"}
 
 
 def handle_remote_get(handler, service, runtime, route) -> bool:
