@@ -174,19 +174,11 @@ class LivenessTests(unittest.TestCase):
                 "TELEGRAM_BOT_TOKEN": config.telegram_bot_token,
                 "TELEGRAM_CHAT_ID": config.telegram_chat_id,
                 "GATEWAY_DATABASE": str(config.database_path),
-<<<<<<< 6325aad3bf697b5532e04cadff1faaf103f99745
                 "GITHUB_CLIENT_ID": "test-client",
                 "GITHUB_CLIENT_SECRET": "test-secret",
                 "SESSION_SECRET": "test-session-secret-with-more-than-32-bytes",
                 "FLOW_FRONTEND_ORIGIN": "https://flow.example.test",
                 "GATEWAY_PORT": str(free_port()),
-||||||| d50e31c90b0e67af0ef0f7d068ae134a8c2c23a0
-=======
-                "GITHUB_CLIENT_ID": "test-client-id",
-                "GITHUB_CLIENT_SECRET": "test-client-secret",
-                "SESSION_SECRET": "test-session-secret-with-more-than-32-bytes",
-                "FLOW_FRONTEND_ORIGIN": "https://flow.example.test",
->>>>>>> d88a6a63b45058501d9bd5ba9116859d7bfce2c5
             }
             with patch.dict(os.environ, env, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \
