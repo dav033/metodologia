@@ -1024,3 +1024,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + no clashes between remediation tasks that were never ordered. − a round with several independent areas takes longer. − the raised ceiling is a setting of this machine, not a rule; the chain length (a rebuild of the whole lineage per round) remains the cost of not having an integration line (P-134).
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T18.2
 
+## D-115 — The scheduler answers plain integration clashes itself (at most three times per task)
+
+- **Date:** 2026-10-21 · **Status:** Accepted · **Refines:** D-097, D-111
+- **Context:** the owner, seeing 20 attempts on one task, said the scheduler cannot try the same thing and fail the same way 25 times. Measured on the M1 history: REQ-027 has 343 attempts for 43 tasks; of its 67 rejections 54 are clashes between accepted tasks (30 at the integration gate, 24 start rejections) and only 21 are failed verifications; the longest streak of the identical failure signature is 5, usually 3 (M5's `same_cause_limit` works). What repeats is the failure CLASS across resets: each rework or retry gives a fresh budget, and a person had to answer the same card (redo the task built on a stale result) about two dozen times.
+- **Decision:** the watchdog answers a card by itself when its diagnosis is a plain integration clash with the `rework_conflict` option and high confidence (`Watch._heal`, also while the owner keeps working): it redoes the stale side exactly as the recommended option does, records `by: scheduler` and a reason, and stops after `HEAL_LIMIT` (3) such answers per task, leaving the card for a person. Nothing else is answered automatically. The three watchdogs were restarted on it (owners untouched).
+- **Alternatives:** automate more kinds (audit rework, retries): rejected for now, they change code or need per-task findings. Remove the human reset (a hard lifetime cap per task): proposed, not built.
+- **Consequences:** + the largest class of owner cards disappears. − three clashes per task is a heuristic; the lasting fix is the integration line (P-134) which removes the clashes at their source. Verification reviews where every criterion and check passed and only `CHECK_UNMAPPED` remains (REQ-020 T11) still wait for the owner: asked whether the system may approve those too.
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · owner question 2026-10-21
+
