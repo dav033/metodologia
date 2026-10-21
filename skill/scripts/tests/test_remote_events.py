@@ -124,6 +124,50 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+    def test_snapshot_route_redacts_session_secret_assignments(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/snapshot"
+        synthetic_secret = "fixture-session-secret-value"
+        diagnostic_run = run([], title=f"SESSION_SECRET={synthetic_secret}")
+        diagnostic_run["run"] = "demo/REQ-001"
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_core.ROOT", Path(directory)), \
+                patch("bt_live_api.run_summaries", return_value=[diagnostic_run]), \
+                patch("bt_live_api.now_frame_data", return_value={"items": []}), \
+                patch("bt_plans_api.plans_payload", return_value=[]):
+            bt_remote_api.route_get(handler)
+
+        payload = json.loads(handler.body)
+        self.assertEqual(handler.status, 200)
+        serialized = json.dumps(payload)
+        self.assertNotIn(synthetic_secret, serialized)
+        self.assertIn("SESSION_SECRET=[REDACTED]", serialized)
+
+    def test_failure_review_route_redacts_session_secret_from_diagnostics(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/attempts/att-1/review?target=demo%2FREQ-001"
+        synthetic_secret = "fixture-session-secret-value"
+        attempt_id = "att-1"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_remote_commands._run_target", return_value=("demo", "REQ-001", Path("."))), \
+                patch("bt_attempt_facts.attempt_facts", return_value={"T1": [{
+                    "attempt": attempt_id, "state": "failed", "failure": f"SESSION_SECRET={synthetic_secret}"
+                }]}), \
+                patch.object(bt_remote_api, "_review_executor_attempt", return_value=None), \
+                patch.object(bt_remote_api, "_review_quality_result", return_value=({"checks": []}, {})), \
+                patch.object(bt_remote_api, "_review_verification", return_value={
+                    "output": f"SESSION_SECRET={synthetic_secret}"
+                }), \
+                patch.object(bt_remote_api, "_review_diff", return_value={"files": []}):
+            bt_remote_api.route_get(handler)
+
+        payload = json.loads(handler.body)
+        self.assertEqual(handler.status, 200)
+        serialized = json.dumps(payload)
+        self.assertNotIn(synthetic_secret, serialized)
+        self.assertIn("SESSION_SECRET=[REDACTED]", serialized)
+
     def test_collect_keeps_blocked_attempt_ids_distinct_across_runs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

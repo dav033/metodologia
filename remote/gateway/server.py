@@ -59,6 +59,10 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
         def do_GET(self) -> None:
             route = urlsplit(self.path)
             if route.path in {"/api/auth/login", "/api/auth/github"}:
+                client_key = self.client_address[0]
+                if not rate_limiter.acquire("login-start", client_key, LOGIN_FAILURE_LIMIT, RATE_WINDOW_SECONDS):
+                    self._rate_limited()
+                    return
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
                 self._send(302, headers=(
