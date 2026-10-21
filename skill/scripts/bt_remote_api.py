@@ -8,7 +8,10 @@ import os
 import sqlite3
 from urllib.parse import parse_qs, urlparse
 
+import bt_remote_commands as _commands
+
 PREFIX = "/api/remote/v1"
+MAX_BODY = 256 * 1024
 
 
 def _send_json(handler, payload: dict, status: int, content_type: str = "application/json; charset=utf-8") -> None:
@@ -166,7 +169,39 @@ def _routes(handler) -> None:
     return _send_json(handler, {"routes": routes}, 200)
 
 
+HANDLERS: dict[str, _commands.Handler] = _commands.dispatch_handlers()
+_COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "CONFIRMATION_REQUIRED": 400,
+                   "COMMAND_NOT_IMPLEMENTED": 501, "STALE_PRECONDITION": 409,
+                   "IDEMPOTENCY_CONFLICT": 409, "UNKNOWN_OUTCOME": 409,
+                   "EFFECT_FAILED": 500, "ROUTE_UNAVAILABLE": 409, "STATE_UNAVAILABLE": 503}
+
+
+def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
+    """Resolve the live target state used to validate remote command preconditions."""
+    return _commands.target_state(target, command, params)
+
+
+def _submit_command(handler, length: int) -> None:
+    try:
+        request = json.loads(handler.rfile.read(length) or b"null")
+    except (ValueError, OSError):
+        return _problem(handler, 400, "INVALID_COMMAND", "El cuerpo debe ser JSON válido.")
+    result = _commands.Ledger().submit(request, HANDLERS, _target_state)
+    status = _COMMAND_STATUS.get(result.get("code") or result["status"], 200)
+    _send_json(handler, result, status)
+
+
 def route_post(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
+    if _path(handler) == f"{PREFIX}/commands":
+        try:
+            length = int(handler.headers.get("Content-Length", "0"))
+        except (AttributeError, ValueError):
+            length = -1
+        if length < 0:
+            return _problem(handler, 400, "INVALID_COMMAND", "Longitud de solicitud no válida.")
+        if length > MAX_BODY:
+            return _problem(handler, 413, "BODY_TOO_LARGE", "La solicitud excede el tamaño permitido.")
+        return _submit_command(handler, length)
     return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
