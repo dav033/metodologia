@@ -45,6 +45,9 @@ DEFAULTS: dict = {
               "integration_check": True,
               # clash rejections one task gets before the accepted tasks it clashes with are sent back to resolve the overlap on it
               "integration_retries": 0,
+              # REQ-028: one integration line per run (refs/m3/line/...) holds the integrated tree; new attempts start from
+              # it and acceptance applies the candidate to it. Off = the predecessor merge of snapshots, as before
+              "integration_line": False,
               # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)
