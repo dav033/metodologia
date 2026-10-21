@@ -1,17 +1,17 @@
 {
  "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-21T02:46:21+00:00",
+ "heartbeat_at": "2026-10-21T03:16:21+00:00",
  "plan_ref": {
   "plan_id": "REQ-020",
   "revision": 2,
   "sha256": "486350319755c1d4628a7db00ea872d3bf83d3cf3627fb90acbd02adaac48c72"
  },
- "projected_at": "2026-10-21T02:46:21+00:00",
+ "projected_at": "2026-10-21T03:16:21+00:00",
  "projection": true,
  "req": "REQ-020",
  "scheduler_status": "running",
- "sessions": 17,
+ "sessions": 18,
  "status": "running",
  "tasks": [
   {
@@ -275,26 +275,26 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T8",
     "T9"
    ],
-   "attempts": 1,
+   "attempts": 2,
    "complexity": "high",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:d34ea9e4cd1287061e9d85d397dcdb88dbe9d7554a128c7157095bb0c36c7b0e:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "executor": "route:m2:v1:dc9d72502a0c5d9ee77372ef5aeeed99f0910a325cf6ae941be2722efa7c9ff7:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T10",
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1792548588.892032",
+   "quota_observed_at": "1792550853.7381375",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "18.0",
-   "quota_valid_until": "1792555788.892032",
+   "quota_used_percent": "20.0",
+   "quota_valid_until": "1792558053.7381375",
    "repo": "pictures",
    "route_reason": "",
    "route_status": "assigned",

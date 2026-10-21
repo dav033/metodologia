@@ -1,17 +1,17 @@
 {
  "attention": [],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-21T02:46:24+00:00",
+ "heartbeat_at": "2026-10-21T03:16:25+00:00",
  "plan_ref": {
   "plan_id": "REQ-029",
   "revision": 2,
   "sha256": "4bb78e039d9522c47ef62bf753b29bb667485f699a0e123a77be0afbcdec821d"
  },
- "projected_at": "2026-10-21T02:46:24+00:00",
+ "projected_at": "2026-10-21T03:16:25+00:00",
  "projection": true,
  "req": "REQ-029",
  "scheduler_status": "running",
- "sessions": 27,
+ "sessions": 29,
  "status": "running",
  "tasks": [
   {
@@ -365,21 +365,21 @@
    "after": [
     "T7"
    ],
-   "attempts": 2,
+   "attempts": 4,
    "complexity": "high",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:993e0b0a0e6356390ab9a2af1515b2a375c339668bb80b8723ec0507a6d8445c:623258ea1a4f878bcb7cfed34d747453490c33e4f35d815193a60bd26183a900",
+   "executor": "route:m2:v1:03820db39f0a9c264335c70bbe4f5fdd3aeb733fb14f89ca0bfc217336cab2de:623258ea1a4f878bcb7cfed34d747453490c33e4f35d815193a60bd26183a900",
    "id": "T8",
    "milestone": "M1",
    "model": "gpt-6.1-sol",
    "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792549890.3327434",
+   "quota_observed_at": "1792552012.2124577",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "20.0",
-   "quota_valid_until": "1792557090.3327434",
+   "quota_used_percent": "22.0",
+   "quota_valid_until": "1792559212.2124577",
    "repo": "skill",
    "route_reason": "",
    "route_status": "assigned",

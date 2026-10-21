@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 1/4 · tareas 9/17 · generado: 2026-10-20T21:33:13-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 1/4 · tareas 9/17 · generado: 2026-10-20T22:08:30-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -26,7 +26,7 @@ created: 2026-10-20
 |---|---|---|---|---|---|---|
 | T8 | Photo upload from camera/gallery (`capture` + gallery), `preparar-foto`, bytea storage, inline to the model for first look, confirm + likes/dislikes per photo, venue photo flag, photos in brief/admin | alta | completada | gpt-6-luna | codex-2 | 2 |
 | T9 | Voice notes: `BotonVoz`/`useDictado` + `/api/voz/transcribir` for advisor sessions (VOZ_* env from the `voz-decoracion` container), transcript stored as the customer's text | alta | completada | gpt-6-luna | codex-luis | 1 |
-| T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | verificando | gpt-6-luna | codex-2 | 1 |
+| T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | verificando | gpt-6-luna | codex-luis | 2 |
 
 **M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 0/4
 

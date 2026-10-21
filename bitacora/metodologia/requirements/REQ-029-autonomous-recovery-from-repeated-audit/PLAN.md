@@ -5,7 +5,7 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 12/24 · generado: 2026-10-20T21:45:09-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 12/24 · generado: 2026-10-20T22:15:49-05:00
 
 **M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 12/14
 
@@ -23,7 +23,7 @@ execution_contract: requirements-v1
 | T6 | Author offline real CLI recovery integration harness | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | completada | gpt-6-luna | codex-2 | 2 |
 | T7 | Run backend regression and entrypoint acceptance | media | completada | gpt-6-luna | codex-2 | 6 |
-| T8 | Audit backend recovery authority and evidence | alta | en curso | gpt-6.1-sol | codex-1 | 2 |
+| T8 | Audit backend recovery authority and evidence | alta | en curso | gpt-6.1-sol | codex-1 | 4 |
 | T9 | Cross-check backend recovery independently | alta | pendiente | — | — | 0 |
 
 **M2 — Visual supervision and read-only rollout preview** · dificultad alta · 0/6

@@ -1,0 +1,23 @@
+{
+ "request": "T8:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T8 sigue con 14 hallazgos altos abiertos; el verificador lo rechaza tres veces",
+ "origin": "T8 es una auditoría de solo lectura: no puede parchear código ni dar por cerrado un hallazgo sin reproducirlo. El verificador ejecuta `recovery_acceptance.py audit` sobre `req029-m1-audit.findings.json` y sale con código 1 en los tres últimos intentos, con F1 a F14 marcados como `still open and blocking`. Como el mismo resultado se repite sin cambios, la causa probable está en el código de T1–T7, no en el aviso de intentos agotados. La evidencia no muestra el contenido de F1–F14, así que no puedo confirmar qué tarea concreta falla.",
+ "steps": [
+  "Abre `skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json` y mira, para cada F1–F14, el campo de tarea responsable y la reproducción indicada.",
+  "Reproduce los hallazgos que sigan siendo válidos en el árbol integrado. Si alguno se confirma, redacta la tarea responsable (T1–T7, T3a, T3b, T4a o T6a) y rehácela con una revisión del plan.",
+  "Si un hallazgo no se reproduce, ciérralo solo con evidencia de la reproducción en el ledger. No cambies la verificación ni los criterios de aceptación.",
+  "Después de corregir las tareas responsables, vuelve a lanzar T8 para una auditoría nueva."
+ ],
+ "option": "retry_with_note",
+ "note": "Re-run the audit as strictly read-only. Do not edit any source file and do not mark a finding closed without reproduction evidence on the integrated tree. For each of F1–F14: reproduce the failure, record the exact command and observed output, and keep it open with severity high only if it reproduces. For every open finding, set the responsible implementing task (T1–T7, T3a, T3b, T4a, T6a) that must be redone. Do not change the verification command, the acceptance criteria or the --tasks list. In the final report, state explicitly how many findings reproduce, so the owner can order rework of the responsible tasks instead of another audit retry.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-20T21:57:26",
+ "seconds": 21.1
+}
