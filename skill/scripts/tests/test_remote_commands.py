@@ -149,10 +149,10 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(req(command="nope"))[0], 400)
         self.assertEqual(self.post(b"{not json")[0], 400)
 
-    def test_route_post_without_executor_is_not_ok(self):
+    def test_route_post_requires_confirmation_for_edit_brief(self):
         self.handlers.clear()
         status, body = self.post(req(command="edit-brief"))
-        self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
+        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
         self.assertEqual(self.route_ledger().rows(), [])
 
     def test_real_entrypoint_refuses_launch_without_valid_challenge(self):
