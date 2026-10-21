@@ -67,6 +67,7 @@ class StreamHub:
             raise SnapshotUnavailable("no laptop snapshot has been cached")
         return {
             **snapshot,
+            "laptop": {"online": state["online"]},
             "online": state["online"],
             "cachedAt": state["cachedAt"],
             "lastEventId": state["lastEventId"],

@@ -101,6 +101,7 @@ class HubTests(unittest.TestCase):
         self.assertEqual(response["runs"], [{"id": "run-1"}])
         self.assertEqual(response["cachedAt"], 1000.0)
         self.assertFalse(response["online"])
+        self.assertFalse(response["laptop"]["online"])
         self.assertIn("lastEventId", response)
         self.assertNotIn("snapshot", response)
 
@@ -202,6 +203,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(body["schemaVersion"], 1)
         self.assertEqual(body["runs"], [{"status": "idle"}])
         self.assertFalse(body["online"])
+        self.assertFalse(body["laptop"]["online"])
         self.assertIsNotNone(body["cachedAt"])
         self.assertIn("lastEventId", body)
         self.assertNotIn("snapshot", body)
