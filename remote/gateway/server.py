@@ -113,83 +113,10 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
                 if runtime is None:
                     self._json(404, {"error": "not found"})
                     return
-<<<<<<< 6e14d8818318957c2a22229173f0d8756cc62fbb
-||||||| cef6803a8bb00ff874d51bb725bd35592ac54d1b
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-            if route.path == "/api/remote/v1/commands":
-=======
-            if route.path == "/api/remote/v1/challenges":
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
                 token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
                 if not token or service.store.get_session(token) is None:
                     self._json(401, {"error": "unauthorized"})
                     return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-                    self._problem(400, "INVALID_CHALLENGE", "Content-Length is invalid")
-                    return
-                if length <= 0:
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body is required")
-                    return
-                if length > 65536:
-                    self._problem(413, "BODY_TOO_LARGE", "Challenge body is too large")
-                    return
-                try:
-                    value = json.loads(self.rfile.read(length).decode("utf-8"))
-                except (UnicodeError, json.JSONDecodeError):
-                    self._problem(400, "INVALID_CHALLENGE", "Challenge body must be valid JSON")
-                    return
-                if (not isinstance(value, dict) or set(value) not in ({"target", "typedReq"}, {"target", "typed_req"})
-                        or not isinstance(value.get("target"), str)
-                        or not isinstance(value.get("typedReq", value.get("typed_req")), str)):
-                    self._problem(400, "INVALID_CHALLENGE", "Target and typedReq are required")
-                    return
-                try:
-                    result = runtime.issue_challenge(value["target"], value.get("typedReq", value.get("typed_req")))
-                except CommandValidationError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                except CommandRelayError as exc:
-                    self._problem(exc.status, exc.code, str(exc))
-                    return
-                self._json(201, result)
-                return
-            if route.path == "/api/remote/v1/commands":
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
-                client_key = self.client_address[0]
-                if not rate_limiter.acquire("commands", client_key, COMMAND_REQUEST_LIMIT, RATE_WINDOW_SECONDS):
-                    self._rate_limited()
-                    return
-                if runtime is None:
-                    self._json(404, {"error": "not found"})
-                    return
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-=======
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
-                try:
-                    length = int(self.headers.get("Content-Length", "0"))
-                except ValueError:
-=======
-                token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
-                if not token or service.store.get_session(token) is None:
-                    self._json(401, {"error": "unauthorized"})
-                    return
->>>>>>> 725ff33443950b7b5e0842d1366bc81f05c1a57c
                 try:
                     length = int(self.headers.get("Content-Length", "0"))
                 except ValueError:
