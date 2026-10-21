@@ -5,18 +5,20 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 1/33 · generado: 2026-10-21T08:31:09-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 6/35 · generado: 2026-10-21T09:30:08-05:00
 
-**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 1/23
+**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 6/25
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T1 | Define durable diagnostic cases and semantic progress | alta | completada | gpt-6-luna | codex-1 | 1 |
-| T2 | Capture immutable full audit evidence and source identities | alta | en curso | sonnet | claude-work | 4 |
-| T3 | Add read-only structured diagnostic transport | alta | pendiente | gpt-6-luna | codex-2 | 4 |
-| T3a | Define structural conflict envelope and bounded decision policy | alta | pendiente | gpt-6-luna | codex-2 | 2 |
-| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | pendiente | gpt-6-luna | codex-2 | 4 |
-| T4 | Compile and apply constrained recovery revisions through M1 | alta | pendiente | gpt-6-luna | codex-2 | 8 |
+| T2 | Capture immutable full audit evidence and source identities | alta | completada | sonnet | claude-work | 4 |
+| T3 | Add read-only structured diagnostic transport | alta | completada | sonnet | claude-work | 5 |
+| T3a | Define structural conflict envelope and bounded decision policy | alta | completada | sonnet | claude-work | 3 |
+| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | completada | sonnet | claude-work | 5 |
+| T4 | Add one generic atomic plan-revision primitive to M1 | media | en curso | gpt-6-luna | codex-1 | 11 |
+| T4b | Compile constrained recovery revisions outside M1 | alta | completada | gpt-6-luna | codex-1 | 2 |
+| T4c | Authorize and apply recovery revisions through the M1 primitive | alta | pendiente | — | — | 0 |
 | T4a | Build provenance-preserving executable convergence strategy | alta | pendiente | gpt-6-luna | codex-2 | 4 |
 | T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | pendiente | gpt-6-luna | codex-2 | 5 |
 | T5a | Implement pinned runtime staging and conditional host activation | alta | pendiente | gpt-6-luna | codex-2 | 6 |
@@ -102,7 +104,11 @@ Every new file has one producer. Existing accepted T2 historical adapter ownersh
 
 **T3b — Publish full integration evidence before clipping and retain refusal reasons**: `skill/scripts/bt_recovery_conflicts.py`; `skill/scripts/bt_scheduler_integrator.py`; `skill/scripts/bt_scheduler_quality_adapter.py`; `skill/scripts/tests/test_recovery_conflicts.py`.
 
-**T4 — Compile and apply constrained recovery revisions through M1**: `skill/scripts/bt_recovery_apply.py`; `skill/scripts/bt_remediation.py`; `skill/scripts/bt_plan_adapter.py`; `skill/scripts/bt_scheduler_adapter.py`; `skill/scripts/bt_scheduler_core/diagnostic_recovery.py`; `skill/scripts/bt_scheduler_core/model.py`; `skill/scripts/bt_scheduler_core/rebase.py`; `skill/scripts/bt_scheduler_core/recovery.py`; `skill/scripts/bt_scheduler_core/reservation.py`; `skill/scripts/bt_scheduler_core/__init__.py`; `skill/scripts/bt_scheduler_core/tests/test_diagnostic_recovery.py`; `skill/scripts/tests/test_recovery_apply.py`.
+**T4 — Add one generic atomic plan-revision primitive to M1**: `skill/scripts/bt_scheduler_core/rebase.py`; `skill/scripts/bt_scheduler_core/model.py`; `skill/scripts/bt_scheduler_core/reservation.py`; `skill/scripts/bt_scheduler_core/operations.py`; `skill/scripts/bt_scheduler_core/__init__.py`; `skill/scripts/bt_scheduler_core/README.md`; `skill/scripts/bt_scheduler_core/tests/test_revision_apply.py`; `skill/scripts/bt_flow_bus.py`.
+
+**T4b — Compile constrained recovery revisions outside M1**: `skill/scripts/bt_recovery_compiler.py`; `skill/scripts/bt_plan_adapter.py`; `skill/scripts/tests/test_recovery_compiler.py`.
+
+**T4c — Authorize and apply recovery revisions through the M1 primitive**: `skill/scripts/bt_recovery_authorization.py`; `skill/scripts/bt_recovery_apply.py`; `skill/scripts/bt_remediation.py`; `skill/scripts/bt_scheduler_adapter.py`; `skill/scripts/tests/test_recovery_authorization.py`; `skill/scripts/tests/test_recovery_apply.py`.
 
 **T4a — Build provenance-preserving executable convergence strategy**: `skill/scripts/bt_recovery_convergence.py`; `skill/scripts/tests/test_recovery_convergence.py`.
 
@@ -145,7 +151,7 @@ Every new file has one producer. Existing accepted T2 historical adapter ownersh
 
 IF-1–IF-6 retain inherited domain/evidence/transport/application/status/rollout contracts. IF-7 defines structural envelopes and one-cycle correlation; IF-8 publishes complete source-bound observations before clipping; IF-9 defines executable convergence plus an M1 accepted-lineage receipt. IF-10 defines the M1-authorized unresolved bootstrap over the existing M3 base_ref callable. T4 establishes generic application APIs before T4a builds a convergence strategy; T5 consumes both and calls T4 application with T4a output, avoiding a compiler dependency cycle. The producer/consumer interface is data-only across isolated module boundaries.
 
-Main extension: accepted T1 → T2 → T3 → T3a → T3b → T4 → T4a → T5 → T5a → T6 → T6a → T7 → T8 → T9; then existing visual/final and conditional rollout milestones. The runtime's target-plan strategy leaves unaffected work eligible; this implementation-plan order is not an instruction to serialize all future target work. Full graph is derived from `after` below.
+Main extension: accepted T1 → T2 → T3 → T3a → T3b → T4 (generic M1 primitive) and T3b → T4b (compiler) → T4c (authorization and application) → T4a → T5 → T5a → T6 → T6a → T7 → T8 → T9; then existing visual/final and conditional rollout milestones. The runtime's target-plan strategy leaves unaffected work eligible; this implementation-plan order is not an instruction to serialize all future target work. Full graph is derived from `after` below.
 
 ## Milestones and tasks
 
@@ -171,10 +177,14 @@ Acceptance: Real CLI integration generates scoped corrections after exhausted or
 - [ ] T3b — Publish full integration evidence before clipping and retain refusal reasons · repo: skill · after: T3a · covers: R11, R12, R13, R14, R15, R16 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_conflicts.py`
   Capture exact paths/sides/source hashes and rework refusal before clipping for both entry points; missing historical evidence blocks recovery.
 
-- [ ] T4 — Compile and apply constrained recovery revisions through M1 · repo: skill · after: T3b · covers: R4, R5, R6, R8, R9, R10, R12, R13, R15 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_apply.py`
+- [ ] T4 — Add one generic atomic plan-revision primitive to M1 · repo: skill · after: T3b · covers: R5, R6, R10, R15 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_core/tests -p test_revision_apply.py`
+
+- [ ] T4b — Compile constrained recovery revisions outside M1 · repo: skill · after: T3b · covers: R4, R5, R8, R10, R12, R13 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_compiler.py`
+
+- [ ] T4c — Authorize and apply recovery revisions through the M1 primitive · repo: skill · after: T4, T4b · covers: R4, R5, R6, R8, R9, R10, R13, R15 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_apply.py`
   Compile/apply authorized scoped revisions through M1, preserve all ordinary counters and independent checks, and journal stop/CAS/crash-safe application.
 
-- [ ] T4a — Build provenance-preserving executable convergence strategy · repo: skill · after: T4 · covers: R11, R12, R13, R14, R15, R16 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_convergence.py`
+- [ ] T4a — Build provenance-preserving executable convergence strategy · repo: skill · after: T4c · covers: R11, R12, R13, R14, R15, R16 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_convergence.py`
   Generate scoped stale-descendant rebuild or owned convergence work with both accepted behaviors, union checks and a real selected converged base.
 
 - [ ] T5 — Wire bounded recovery into existing owner and watch lifecycle · repo: skill · after: T4a · covers: R1, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15 · kind: implement · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_runtime.py`
@@ -192,10 +202,28 @@ Acceptance: Real CLI integration generates scoped corrections after exhausted or
 - [ ] T7 — Run backend regression and entrypoint acceptance · repo: skill · after: T6a · covers: R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: test · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py`
   Run established targeted module and methodology regression checks and the T6 process harness.
 
-- [ ] T8 — Audit backend recovery authority and evidence · repo: skill · after: T7 · covers: R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T3a,T3b,T4a,T6a`
+- [ ] T8.1 — Remediate T8 findings F1, F2, F3, F4 · repo: skill · after: T7 · covers: R10, R12, R13, R15, R4, R5, R6, R8, R9 · kind: implement
+
+- [ ] T8.2 — Remediate T8 findings F5 · repo: skill · after: T7 · covers: R1, R10, R11, R12, R13, R14, R15, R3, R4, R5, R6, R7, R8, R9 · kind: implement
+
+- [ ] T8.3 — Remediate T8 findings F6, F7, F8 · repo: skill · after: T7 · covers: R1, R10, R11, R12, R13, R14, R15, R16, R2, R3, R8, R9 · kind: implement
+
+- [ ] T8.4 — Remediate T8 findings F14 · repo: skill · after: T7 · covers: R1, R10, R11, R12, R13, R14, R15, R16, R2, R3, R4, R5, R6, R8, R9 · kind: implement
+
+- [ ] T8.5 — Remediate T8 findings F3, F4 · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4 · covers: R10, R12, R13, R15, R4, R5, R6, R8, R9 · kind: implement
+
+- [ ] T8.6 — Remediate T8 findings F5, F12 · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4, T8.5 · covers: R1, R10, R11, R12, R13, R14, R15, R3, R4, R5, R6, R7, R8, R9 · kind: implement
+
+- [ ] T8.7 — Remediate T8 findings F6, F8, F18 · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4, T8.6 · covers: R1, R10, R11, R12, R13, R14, R15, R16, R2, R3, R8, R9 · kind: implement
+
+- [ ] T8.8 — Remediate T8 findings F14 · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4, T8.7 · covers: R1, R10, R11, R12, R13, R14, R15, R16, R2, R3, R4, R5, R6, R8, R9 · kind: implement
+
+- [ ] T8.9 — Remediate T8 findings F17 · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4, T8.8 · covers: R1, R10, R11, R13, R15, R16, R2, R3, R4, R5, R6, R8, R9 · kind: implement
+
+- [ ] T8 — Audit backend recovery authority and evidence · repo: skill · after: T7, T8.1, T8.2, T8.3, T8.4, T8.5, T8.6, T8.7, T8.8, T8.9 · covers: R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T3a,T3b,T4a,T6a,T4b,T4c`
   Read-only independent review of T1-T7 evidence identity, M1 budget preservation, stale/stop fencing, transport isolation, atomic revision recovery and true entrypoint integration.
 
-- [ ] T9 — Cross-check backend recovery independently · repo: skill · after: T8 · covers: R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T3a,T3b,T4a,T6a`
+- [ ] T9 — Cross-check backend recovery independently · repo: skill · after: T8 · covers: R1, R2, R3, R4, R5, R6, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T3a,T3b,T4a,T6a,T4b,T4c`
   Read-only independent review of the same T1-T7 scope, independently including migration/rollback and falsely green integrations.
 
 
@@ -215,10 +243,10 @@ Acceptance: Flow and plan supervision and offline REQ027 preview pass with two i
 - [ ] T13 — Run full recovery supervision and preview acceptance · repo: skill · after: T12 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: test · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_supervision_e2e.py`
   Execute T11 real server/watch integration and historical replay, existing module/methodology suites, and disposable official-store CLI preview acceptance.
 
-- [ ] T14 — Audit complete autonomous recovery and rollout · repo: skill · after: T13 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T3a,T3b,T4a,T6a`
+- [ ] T14 — Audit complete autonomous recovery and rollout · repo: skill · after: T13 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T3a,T3b,T4a,T6a,T4b,T4c`
   Read-only independent review of all R1-R10 contracts, real integrated flow, visual stop, historical REQ027 preview and absence of active-run changes.
 
-- [ ] T15 — Cross-check final acceptance independently · repo: skill · after: T14 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T3a,T3b,T4a,T6a`
+- [ ] T15 — Cross-check final acceptance independently · repo: skill · after: T14 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T3a,T3b,T4a,T6a,T4b,T4c`
   Read-only independent review of the full feature independently, especially adversarial evidence identity, supplemental budgets, restart races and UI versus authority.
 
 
@@ -232,10 +260,10 @@ Acceptance: After accepted upgrade audits offline proof and fresh preview, the p
 - [ ] T17 — Verify rollout receipts and staged runtime integration · repo: skill · after: T16 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: test · verify: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_rollout_receipt.py`
   Run the T11 established receipt validation plus staged-runtime fixture integration against the integrated T16 receipt artifact.
 
-- [ ] T18 — Audit conditional rollout and real outcome · repo: skill · after: T17 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T3a,T3b,T4a,T6a`
+- [ ] T18 — Audit conditional rollout and real outcome · repo: skill · after: T17 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T3a,T3b,T4a,T6a,T4b,T4c`
   Independent read-only review of the staged-runtime rollout and official captured evidence, complete R1-R10 outcome and true blocker versus fabricated success.
 
-- [ ] T19 — Cross-check conditional rollout independently · repo: skill · after: T18 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T3a,T3b,T4a,T6a`
+- [ ] T19 — Cross-check conditional rollout independently · repo: skill · after: T18 · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit · verify: `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16,T17,T18,T3a,T3b,T4a,T6a,T4b,T4c`
   Independent read-only review of the staged-runtime rollout and official captured evidence, complete R1-R10 outcome and true blocker versus fabricated success.
 
 

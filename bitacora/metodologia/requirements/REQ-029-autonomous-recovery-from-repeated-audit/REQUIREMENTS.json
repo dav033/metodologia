@@ -1,26 +1,28 @@
 {
   "goal": "Implement automatic bounded recovery for recurring audit and structural integration conflicts, without coordinator product fixes.",
-  "scope": "Approved revision 2: R1–R16, 24 tasks, three milestones. Preserve accepted T1–T3. Add full conflict evidence, validated structural classification, authorized executable convergence and both-side independent proof within existing recovery machinery.",
+  "scope": "Approved revision 5: R1–R16, 35 tasks, three milestones. M1 (bt_scheduler_core) keeps only one generic apply_plan_revision primitive; recovery cases, compiler, authorization ledger and apply live outside M1 (T4b, T4c). Preserve accepted work per rebase r4→r5. Add full conflict evidence, validated structural classification, authorized executable convergence and both-side independent proof within existing recovery machinery.",
   "requirements": "Canonical SPEC.md and PLAN.md R1–R16 plus reviewed conflict evidence and candidate delta. Distinguish stale lineage, actual scope/ordering defects and semantic incompatibility; never infer scope escape from ordered overlap alone.",
   "limits": "One diagnosis and at most eight corrective implementation tasks per correlated cycle; preserve ordinary counters, accepted provenance, stop authority, permissions and CAS/idempotency. No silent acceptance, arbitrary snapshot override or fabricated owner decision. REQ027 activation only after independent gates and fresh preview.",
   "acceptance": "Execute all three milestones and independent audits, including full exact evidence, authorized bootstrap, both-side convergence proof, offline real-entrypoint replay, visual supervision and pinned-runtime conditional activation. Existing evidence proves plan readiness only.",
-  "approval": "Owner explicitly approved revision 2 and resumed in chat on 2026-10-20: apruebo, ademas hacer que t15a se debloquee mientras para que vaya corriendo mientras que hace el req20. Owner additionally requested no relay and bounded quota use. Temporary REQ027 unblock separately uses supported owner operator actions.",
+  "approval": "Owner confirmed in chat on 2026-10-21 that M1 must not carry recovery/patch logic, approved revising the plan while it runs ('si a todo'), asked to apply r5 held and to resume with the new plan ('renauda con el nuevo plan'), and explicitly authorized this requirements re-record ('autorizado'). Earlier approval of revision 2 (2026-10-20) retained. Owner explicitly approved revision 2 and resumed in chat on 2026-10-20: apruebo, ademas hacer que t15a se debloquee mientras para que vaya corriendo mientras que hace el req20. Owner additionally requested no relay and bounded quota use. Temporary REQ027 unblock separately uses supported owner operator actions.",
   "evidence": [
     "SPEC.md",
     "PLAN.md",
     "CONFLICT-INVESTIGATION.md",
     "conflict-amendment/DELTA.md",
-    "conflict-amendment/REVIEW.md"
+    "conflict-amendment/REVIEW.md",
+    "plan-revisions/R5-CHANGES.md"
   ],
   "unresolved": [],
   "schema": 1,
-  "reviewed_at": "2026-10-20T21:50:54.535948+00:00",
+  "reviewed_at": "2026-10-21T14:10:51.640471+00:00",
   "fingerprints": {
-    "../../DECISIONS.md": "51012e7925a97ad1b48844e8e4ce1230681c2a5698a3aaa3bfed750fa981fcf6",
+    "../../DECISIONS.md": "56597dc9406bab650b4a4650793b4e62bf843527e3ca4d576f5ee7f6bcde81ae",
     "CONFLICT-INVESTIGATION.md": "d4b3687391f4968f97b86fc3e7c8abbdd6a2e398a1e6d88e75df14ce4cb44f1d",
-    "PLAN.md": "1b6e35b4a133464ef5f39637b560f777b9351ec2b0cb64ca5bd06e82b6226b91",
-    "SPEC.md": "68c6093fe40c21b58f2208551e3f828a1c09e712968dc3d354f9977da9047bb6",
+    "PLAN.md": "33846e8be284aefda815b6af692b1b1174a5397d5d47445ca1613cc837903154",
+    "SPEC.md": "01bd5496bc87dceeb8b9e151a9a8c652bdba18db94011555ddbf923618c1e88a",
     "conflict-amendment/DELTA.md": "d3ddd1ba6aeb70e08f2dab4f5d9d459f502e02bc6818008a6c1913a16f6f3ac8",
-    "conflict-amendment/REVIEW.md": "812823f5e821aa5dbcb01e125f850dd66dc25b18d0ef4029a5830c566b7e94fd"
+    "conflict-amendment/REVIEW.md": "812823f5e821aa5dbcb01e125f850dd66dc25b18d0ef4029a5830c566b7e94fd",
+    "plan-revisions/R5-CHANGES.md": "664695b3e75d6b9c2b41282663ace37357edf6dd131d2cb0fb7f5daaee3a16c1"
   }
 }

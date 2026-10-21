@@ -1,7 +1,23 @@
 {
  "request": "T12:12",
- "state": "running",
- "started": 1792590069.6652582,
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "T12 bloqueada: el ejecutor no tiene registro del intento, así que no se puede verificar el resultado",
+ "origin": "El error del tablero es 'executor has no record of the attempt': el sistema no encuentra el registro del intento y por eso no puede comprobar qué proceso produjo el resultado (identity_unverified). Es un fallo de registro del sistema, no del código de T12: el mismo error aparece en los últimos intentos y tras la decisión manual 'T12:11 retry', que no lo cambió. La regla automática que sugiere 'código' no encaja con este texto de error; además, el intento att-0146 falló el gate de integración 'T6+T12 vs T13 para T14', un problema aparte que hay que revisar.",
+ "steps": [
+  "Pulsa 'stop' en la decisión de T12 para no volver a reintentar a ciegas.",
+  "Ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 status` y comprueba si T12 tiene registro de att-0146 y de los intentos posteriores.",
+  "Si falta el registro del intento, repórtalo como fallo del ejecutor y corrígelo antes de reanudar; no lo atribuyas al código de T12.",
+  "Revisa el conflicto 'T6+T12 vs T13 para T14' de att-0146 y, solo después de corregir el registro, reanuda T12 con `scheduler-op REQ-027 decide <id> retry`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "baja",
+ "source": "agente · haiku",
  "model": "haiku",
- "profile": "claude"
+ "profile": "claude",
+ "at": "2026-10-21T08:41:30",
+ "seconds": 20.7
 }

@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0023:verify",
+ "state": "done",
+ "kind": "verifier",
+ "label": "Verificador",
+ "tone": "info",
+ "headline": "El verificador pide revisión humana: la prueba con modelo real no corre en la sandbox",
+ "origin": "No hay fallo de intento: las dos comprobaciones de la tarjeta son de estructura del plan. CRITERION_MANUAL indica que los criterios de escenarios con modelo real solo tienen evidencia manual, y la sandbox no tiene .env, así que solo `run.ts --live` con .env.local puede cubrirlos. CHECK_UNMAPPED indica que el plan repite el comando live como [manual] y que las comprobaciones de `asesor:test`, `prompt.test.ts` y `--fake-model` no coinciden exactamente con un criterio.",
+ "steps": [
+  "Ejecuta `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` con .env.local en el worktree de pictures de REQ-020 y guarda la evidencia redactada.",
+  "Revisa que cada escenario cumpla completitud, aprobación previa, confirmación de foto y uso solo de IDs y precios del catálogo, y que la evidencia no tenga datos personales de clientes.",
+  "Si todo se cumple, aprueba con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"live run hecho: <escenarios y fecha>\"` o con «Aprobar a mano». Si falla, rechaza indicando el escenario.",
+  "Opcional, para quitar CHECK_UNMAPPED: deja el comando live una sola vez en PLAN.json y asigna cada comprobación a su criterio; eso es una revisión nueva (revision +1, `bitacora.py --project pictures plan-json freeze REQ-020`, luego opción revise)."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T08:47:35",
+ "seconds": 19.6
+}
