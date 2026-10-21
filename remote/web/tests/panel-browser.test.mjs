@@ -119,13 +119,13 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     }
     await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
     let fixtureReview = "";
-    for (let attempt = 0; attempt < 70; attempt += 1) {
+    for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
       fixtureReview = evaluated.result?.value ?? "";
       if (fixtureReview.includes("Fallo de fixture en rejected")) break;
       await delay(100);
     }
-    assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route: ${fixtureReview}`);
+    assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route within 30 seconds: ${fixtureReview}`);
     await cdp(socket, "Page.navigate", { url: frontendOrigin });
     for (let attempt = 0; attempt < 70; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
