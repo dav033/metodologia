@@ -172,6 +172,18 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   fallback tries the earlier result of every prerequisite as merge base. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
+- an **integration line** (`gates.integration_line`, default off; REQ-028 part 1, `bt_integration_line`): the predecessor merge
+  above keeps, per accepted task, the version of every file it was built on, so a redone task's fix can be lost behind a
+  dependent that still carries the old text (REQ-027: T8a v3 never reached the audit through T15f). With the flag on, each
+  repository role of the run has one ref `refs/m3/line/<run>/<role>` holding the integrated tree, a deterministic fold (plan
+  order) of every accepted task's own work (`start_base -> snapshot`, merge-tree with that merge base; objects only; the
+  run base is pinned in `<ref>-base`). A new attempt starts from the tip without the task's own earlier result;
+  acceptance applies the candidate to the tip, and a clash is the usual `integration gate:` rejection (`T vs line for T:
+  files`), so the existing carry/resolve retry resolves it on top of the current tip. A task whose accepted result no longer
+  fits after a redo is listed by `Line.needs_resolution` and left out of the tip (never silently resolved or dropped); its
+  dependents wait (`PREDECESSOR_NEEDS_RESOLUTION`, transient). `recompute()` rebuilds the refs from persisted facts at
+  owner start-up. If git fails the integrator falls back to the predecessor merge for that call and logs. Not done yet:
+  a `resolve` attempt started by the line itself for an already accepted task (part 2), pinning each attempt's real start base;
 - **remediation** (`gates.audit_remediation`, default on; REQ-028, `bt_remediation`): a rejected audit does not reopen the tasks its blocking findings name. The gate records the findings (`RUN.remediation.json`), the owner exits, and the watcher turns them into the next plan revision: remediation tasks (`T18.1`, `T18.2`, ...; `T18.1b` for a second auditor) are appended on the tree the run already integrated, findings that share a task or overlapping paths are grouped and chained (up to 4 per task), independent groups run side by side, each finding is checked by the command of the task that owns it, and the audit is moved after them. The run is rebased (accepted work is kept) and the audit runs again from scratch. Each finding is still charged to the tasks that own it in the attempt log. An audit gets `gates.remediation_rounds` (default 2) rounds; with none left, or when a task cannot be built soundly (a finding names no task of the plan with a command), the named tasks are sent back as before. `scheduler-op REQ remediate` applies a pending request by hand. A task that is accepted clears the notes earlier rounds left for it;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
   reset); the redo must prove each fix with a test over the real entry point;
