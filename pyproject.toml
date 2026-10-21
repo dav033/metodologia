@@ -150,21 +150,12 @@ py-modules = [
   "bt_profiles",
   "bt_quality",
   "bt_quota_live",
-<<<<<<< d5722a644747de28545fa30eb743fa0997f37253
-||||||| c0969389257f369ac7e60b2afc11ee15262aef0e
-  "bt_remote_api",
-  "bt_remote_commands",
-  "bt_remote_events",
-  "bt_remote_recovery",
-  "bt_remote_views",
-=======
   "bt_remote_api",
   "bt_remote_commands",
   "bt_remote_events",
   "bt_remote_preconditions",
   "bt_remote_recovery",
   "bt_remote_views",
->>>>>>> 8c18ec6092cb5c79129fab705964d0f2b775527a
   "bt_relay",
   "bt_relay_cli",
   "bt_relay_client",
