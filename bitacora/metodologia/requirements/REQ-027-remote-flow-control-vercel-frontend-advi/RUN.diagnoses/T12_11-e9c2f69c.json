@@ -1,0 +1,22 @@
+{
+ "request": "T12:11",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "T12 bloqueada: el ejecutor perdió el registro de su último intento",
+ "origin": "El ejecutor no tiene registro del intento (error: \"executor has no record of the attempt\"), así que no puede confirmar qué proceso produjo el resultado; por eso el sistema marca identity_unverified. El último fallo real visible es el intento #7 (att-0146), un rechazo de integración: \"integration gate: T6+T12 vs T13 for T14\" sobre remote/gateway/app.py, server.py y tests/test_stream.py. El contexto indica cambios recientes en el run de REQ-027 (reinicio de owners y línea de integración), lo que sugiere un desfase de estado más que un fallo del código de T12.",
+ "steps": [
+  "Ejecuta `bitacora.py --project metodologia scheduler-op REQ-027 status` y comprueba si T12 sigue asociada a un intento activo o ya no tiene intento.",
+  "Revisa `bitacora.py --project metodologia scheduler-op REQ-027 decisions` por si hay otra decisión abierta de T12, T6 o T13 que deba resolverse antes.",
+  "Elige la opción `retry` para repetir T12 desde su último snapshot. Si vuelve a fallar con el mismo rechazo de integración, revisa T13 antes de reintentar."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T08:37:06",
+ "seconds": 18.7
+}

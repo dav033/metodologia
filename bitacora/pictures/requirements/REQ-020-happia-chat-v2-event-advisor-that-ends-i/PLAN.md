@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 2/4 · tareas 10/17 · generado: 2026-10-21T06:32:25-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 2/4 · tareas 13/17 · generado: 2026-10-21T08:40:42-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -28,14 +28,14 @@ created: 2026-10-20
 | T9 | Voice notes: `BotonVoz`/`useDictado` + `/api/voz/transcribir` for advisor sessions (VOZ_* env from the `voz-decoracion` container), transcript stored as the customer's text | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | completada | gpt-6-luna | codex-luis | 2 |
 
-**M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 0/4
+**M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 3/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T11 | Happia catalogue daily cache in Postgres (refresh when older than 24 h) + fallback list seeded from the last good read; read-only reuse of `HappiaClient` | alta | verificando | gpt-6-luna | codex-2 | 1 |
-| T12 | Directions: editable config of 12 decorations from `biblioteca-sempertex/decoraciones.json` (with photos) + themed items, tool to show them to undecided customers | media | pendiente | — | — | 0 |
-| T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | pendiente | — | — | 0 |
-| T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | pendiente | — | — | 0 |
+| T11 | Happia catalogue daily cache in Postgres (refresh when older than 24 h) + fallback list seeded from the last good read; read-only reuse of `HappiaClient` | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T12 | Directions: editable config of 12 decorations from `biblioteca-sempertex/decoraciones.json` (with photos) + themed items, tool to show them to undecided customers | media | completada | sonnet | claude-work | 2 |
+| T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | sonnet | claude-work | 1 |
+| T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | en curso | sonnet | claude-work | 1 |
 
 **M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 0/3
 

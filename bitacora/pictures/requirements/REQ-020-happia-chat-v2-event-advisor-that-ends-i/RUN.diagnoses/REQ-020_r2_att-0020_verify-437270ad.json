@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0020:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador no puede dar veredicto: un check de T12 no corresponde a ningún criterio",
+ "origin": "El verificador de T12 no encontró un criterio de aceptación para el check genérico `npm run asesor:test`, así que se detuvo con CHECK_UNMAPPED. No hay fallos de intento registrados ni texto de error de un test. El plan también repite tres veces el mismo comando `npx tsx --conditions=react-server --test scripts/test/asesor/directions.test.ts`, lo que complica el mapeo. La evidencia no incluye el veredicto por criterio, así que que los tres criterios pasaran es lo que dice la suposición por reglas, no algo que pueda confirmar aquí.",
+ "steps": [
+  "Revisa el estado del run con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-020 status` y confirma que los tres criterios de T12 están en PASS.",
+  "Si lo están, aprueba con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"todos los criterios PASS; solo CHECK_UNMAPPED\"`, usando el id de la decisión que muestra `decisions`.",
+  "Para evitar que vuelva a pasar, en PLAN.json de T12 da al check genérico el propósito de un criterio o quítalo, y deja una sola línea del test de directions. Sube \"revision\" en 1, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción `revise`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T07:11:22",
+ "seconds": 19.6
+}

@@ -1,0 +1,22 @@
+{
+ "request": "T8:9",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Auditoría T8: 8 hallazgos altos abiertos en el código; ya agotó sus rondas",
+ "origin": "El fallo viene del código de recuperación, no de la auditoría. El ledger `req029-m1-audit.findings.json` tiene abiertos y bloqueantes F3, F4, F5, F6, F7, F8, F12 y F14 (severidad alta), y `recovery_acceptance.py audit` sale con código 1 por ello. Reintentar sin cambiar código daría los mismos hallazgos. El límite `rework_limit` salta porque T2 ya fue devuelta 2 veces (`gates.max_reworks`), así que el sistema no reabre las tareas solo.",
+ "steps": [
+  "Abre `skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json` y copia cada hallazgo abierto (F3 a F14 de la lista) con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea responsable que indica el ledger.",
+  "Pulsa «Devolver T2, T3a, T3b, T4, T4a, T5, T6a, T7, T13, T17, T3, T5a, T6, T8.1 a T8.9 para que los arreglen», o por terminal: `scheduler-op REQ-029 rework T2,T3a,T3b,T4,T4a,T5,T6a,T7,T13,T17,T3,T5a,T6,T8.1,T8.2,T8.3,T8.4,T8.5,T8.6,T8.7,T8.8,T8.9 --only --reason \"hallazgos F3 (high), F4 (high), F5 (high), F6 (high), F7 (high), F8 (high), F12 (high), F14 (high)\"`.",
+  "Cuando esas tareas terminen y T8 se audite de nuevo, si el verificador vuelve a salir con código 1 con los mismos IDs, revisa esos hallazgos antes de reintentar."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T07:46:30",
+ "seconds": 19.3
+}

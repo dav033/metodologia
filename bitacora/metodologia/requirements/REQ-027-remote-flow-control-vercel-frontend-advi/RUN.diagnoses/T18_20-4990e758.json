@@ -1,0 +1,22 @@
+{
+ "request": "T18:20",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría de T18 sigue encontrando 5 hallazgos altos abiertos en el código actual",
+ "origin": "La auditoría independiente de seguridad y especificación (T18) rechazó la tarea otra vez con cinco hallazgos bloqueantes de severidad alta: F2, F36, F63, F66 y F67. Como el sistema ya agotó las rondas de devolución de T5b (gates.max_reworks), no los convierte solo en tareas de remediación. F36 aparece también en la auditoría anterior (att-0297, con F1, F24, F26, F35 y F36), así que es el hallazgo que nunca llegó a corregirse. Reintentar sin tocar código solo repetiría estos hallazgos.",
+ "steps": [
+  "Abre el informe de la auditoría del último intento (att-0317) y copia cada hallazgo (F2, F36, F63, F66, F67) con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea que lo señala. Empieza por F36, que persiste entre auditorías.",
+  "Pulsa «Devolver T5b, T6, T7, T12, T17, T24, T8, T8a, T9, T13, T14, T14a, T14b, T15c, T15d, T15e, T15f, T16, T18.1, T18.2, T18.3, T18.4, T18.5, T18.6 para que los arreglen». Por terminal: `bitacora.py --project metodologia scheduler-op REQ-027 rework T5b,T6,T7,T12,T17,T24,T8,T8a,T9,T13,T14,T14a,T14b,T15c,T15d,T15e,T15f,T16,T18.1,T18.2,T18.3,T18.4,T18.5,T18.6 --only --reason \"hallazgos F2 (high), F3",
+  "Cuando termine el rework, comprueba que `remote/docs/audit.md` recoge un veredicto para cada uno de los cinco hallazgos. Si la auditoría vuelve a dar exactamente los mismos IDs, elige `stop` y revisa a mano F36 antes de seguir."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T07:41:50",
+ "seconds": 26.1
+}

@@ -5,30 +5,35 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 16/28 · generado: 2026-10-21T06:50:46-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: running · hitos 0/3 · tareas 1/33 · generado: 2026-10-21T08:31:09-05:00
 
-**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 16/18
+**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 1/23
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T1 | Define durable diagnostic cases and semantic progress | alta | completada | gpt-6-luna | codex-1 | 1 |
-| T2 | Capture immutable full audit evidence and source identities | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T3 | Add read-only structured diagnostic transport | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T3a | Define structural conflict envelope and bounded decision policy | alta | completada | gpt-6-luna | codex-2 | 2 |
-| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T4 | Compile and apply constrained recovery revisions through M1 | alta | completada | gpt-6-luna | codex-2 | 8 |
-| T4a | Build provenance-preserving executable convergence strategy | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | completada | gpt-6-luna | codex-2 | 5 |
-| T5a | Implement pinned runtime staging and conditional host activation | alta | completada | gpt-6-luna | codex-2 | 6 |
-| T6 | Author offline real CLI recovery integration harness | alta | completada | gpt-6-luna | codex-2 | 6 |
-| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T7 | Run backend regression and entrypoint acceptance | media | completada | gpt-6-luna | codex-2 | 11 |
-| T8 | Audit backend recovery authority and evidence | alta | en curso | gpt-6.1-sol | codex-luis | 7 |
+| T2 | Capture immutable full audit evidence and source identities | alta | en curso | sonnet | claude-work | 4 |
+| T3 | Add read-only structured diagnostic transport | alta | pendiente | gpt-6-luna | codex-2 | 4 |
+| T3a | Define structural conflict envelope and bounded decision policy | alta | pendiente | gpt-6-luna | codex-2 | 2 |
+| T3b | Publish full integration evidence before clipping and retain refusal reasons | alta | pendiente | gpt-6-luna | codex-2 | 4 |
+| T4 | Compile and apply constrained recovery revisions through M1 | alta | pendiente | gpt-6-luna | codex-2 | 8 |
+| T4a | Build provenance-preserving executable convergence strategy | alta | pendiente | gpt-6-luna | codex-2 | 4 |
+| T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | pendiente | gpt-6-luna | codex-2 | 5 |
+| T5a | Implement pinned runtime staging and conditional host activation | alta | pendiente | gpt-6-luna | codex-2 | 6 |
+| T6 | Author offline real CLI recovery integration harness | alta | pendiente | gpt-6-luna | codex-2 | 6 |
+| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | pendiente | gpt-6-luna | codex-2 | 4 |
+| T7 | Run backend regression and entrypoint acceptance | media | pendiente | gpt-6-luna | codex-2 | 11 |
+| T8 | Audit backend recovery authority and evidence | alta | pendiente | gpt-6.1-sol | codex-1 | 9 |
 | T9 | Cross-check backend recovery independently | alta | pendiente | — | — | 0 |
-| T8.1 | Remediate T8 findings F1, F2, F3, F4 | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T8.2 | Remediate T8 findings F5 | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T8.3 | Remediate T8 findings F6, F7, F8 | alta | completada | gpt-6-luna | codex-luis | 1 |
-| T8.4 | Remediate T8 findings F14 | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T8.1 | Remediate T8 findings F1, F2, F3, F4 | alta | pendiente | gpt-6-luna | codex-2 | 1 |
+| T8.2 | Remediate T8 findings F5 | alta | pendiente | gpt-6-luna | codex-2 | 1 |
+| T8.3 | Remediate T8 findings F6, F7, F8 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.4 | Remediate T8 findings F14 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.5 | Remediate T8 findings F3, F4 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.6 | Remediate T8 findings F5, F12 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.7 | Remediate T8 findings F6, F8, F18 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.8 | Remediate T8 findings F14 | alta | pendiente | gpt-6-luna | codex-luis | 1 |
+| T8.9 | Remediate T8 findings F17 | alta | pendiente | gpt-6-luna | codex-1 | 1 |
 
 **M2 — Visual supervision and read-only rollout preview** · dificultad alta · 0/6
 

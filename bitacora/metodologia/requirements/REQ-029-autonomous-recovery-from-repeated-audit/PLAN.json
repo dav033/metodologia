@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-029",
-  "revision": 3,
+  "revision": 4,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -1757,7 +1757,12 @@
         "T8.1",
         "T8.2",
         "T8.3",
-        "T8.4"
+        "T8.4",
+        "T8.5",
+        "T8.6",
+        "T8.7",
+        "T8.8",
+        "T8.9"
       ],
       "complexity": "high",
       "scope": "large_change",
@@ -3577,6 +3582,560 @@
         "R12",
         "R13",
         "R14",
+        "R15",
+        "R16",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8.5",
+      "milestone_id": "M1",
+      "title": "Remediate T8 findings F3, F4",
+      "objective": "Fix these confirmed audit findings of T8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F3 (high; owned by T4): Diagnostic revision application ignores the production owner hold and does not fence stop generation. Evidence from the audit: Independent unmocked Planner/SQLite apply probe writes bt_scheduler_ops.hold_path(rdir) before bt_recovery_apply.apply_recovery_revision. Exit 0: revision=2, T1=ready, owner_hold=True; identical replay is adopted. Core paused/cancelled guards now exist but neither application wrapper checks RUN.hold. Production recovery_runtime_inputs hardcodes stop generation 0. Report reproduction 1.\n- F4 (high; owned by T4): Recovery authorization/application still lacks accepted-map and current integration-base CAS fencing. Evidence from the audit: Fresh independent real M1 accepted_chain probe authorizes T1 correction with T2 accepted at att-0002, then legitimately reworks and independently accepts T2 as att-0003 through M1. The old grant still applies revision 2, kept=('T2',), reset=('T1',), instead of rejecting the moved accepted map. The grant's exact field set contains no accepted-map/base/stop/lease identities. Counter and owned-path fingerprint repairs pass but do not supply R15 CAS. Report reproduction 1 includes the executable probe.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8.1",
+        "T8.2",
+        "T8.3",
+        "T8.4"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T4, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T4",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_recovery_apply.py",
+        "skill/scripts/bt_remediation.py",
+        "skill/scripts/bt_plan_adapter.py",
+        "skill/scripts/bt_scheduler_adapter.py",
+        "skill/scripts/bt_scheduler_core/diagnostic_recovery.py",
+        "skill/scripts/bt_scheduler_core/model.py",
+        "skill/scripts/bt_scheduler_core/rebase.py",
+        "skill/scripts/bt_scheduler_core/recovery.py",
+        "skill/scripts/bt_scheduler_core/reservation.py",
+        "skill/scripts/bt_scheduler_core/__init__.py",
+        "skill/scripts/bt_scheduler_core/tests/test_diagnostic_recovery.py",
+        "skill/scripts/tests/test_recovery_apply.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "F3 (high) is fixed: Diagnostic revision application ignores the production owner hold and does not fence stop generation.",
+        "F4 (high) is fixed: Recovery authorization/application still lacks accepted-map and current integration-base CAS fencing."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_apply.py",
+          "purpose": "F3 (high) is fixed: Diagnostic revision application ignores the production owner hold and does not fence stop generation.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_apply.py",
+          "purpose": "F4 (high) is fixed: Recovery authorization/application still lacks accepted-map and current integration-base CAS fencing.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R10",
+        "R12",
+        "R13",
+        "R15",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8.6",
+      "milestone_id": "M1",
+      "title": "Remediate T8 findings F5, F12",
+      "objective": "Fix these confirmed audit findings of T8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F5 (high; owned by T5): No production driver connects exhausted ordinary recovery to evidence collection, diagnosis, convergence, application and independent reassessment. Evidence from the audit: Fresh production call-site searches on the audited tree find definitions but no caller of tick_diagnostic_recovery, collect_recovery_evidence, diagnose_recovery or plan_conflict_convergence, and no production ConflictBootstrapBase construction. Wiring now supplies live fences/policy reads, but no producer of the official independent-tree/progress proof or per-run policy/route is connected. Fresh real DiagnosticRecovery group observes owner_decision_pending, cycles=[], revision [1]; no card answered. Local Runtime tests inject scheduler=object(), live dictionaries and phase reports. Report repr\n- F12 (high; owned by T5): A new attempt identity for the same unresolved conflicting snapshots can mint a second structural cycle and diagnosis. Evidence from the audit: Independent adapter probe constructs validated conflict/plan/lineage contracts with identical run, plan, repository, task, paths and both snapshot identities. After first diagnosis fails, only candidate attempt A2->A3, token, consumer, source-record digest and attempt aliases change. A second diagnosis_authorized is returned, tokens cycle-33ef5a4df30a3d23e3ff798e3cac9dc7 and cycle-72d0c3c0616c1cb43def239347c7f68d; durable cycles=[(failed,1),(open,1)]. Existing unchanged-source alias tests pass but do not cover official retry identities. Structural trigger_reason also lacks exhaustion/two-no-pr\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8.1",
+        "T8.2",
+        "T8.3",
+        "T8.4",
+        "T8.5"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_scheduler_recovery_adapter.py",
+        "skill/scripts/bt_scheduler_executor_wiring.py",
+        "skill/scripts/bt_scheduler_run.py",
+        "skill/scripts/bt_scheduler_watch.py",
+        "skill/scripts/bt_scheduler_ops.py",
+        "skill/scripts/bt_scheduler_decisions.py",
+        "skill/scripts/bt_cli_scheduler_ops.py",
+        "skill/scripts/bt_config.py",
+        "skill/scripts/tests/test_recovery_runtime.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "F5 (high) is fixed: No production driver connects exhausted ordinary recovery to evidence collection, diagnosis, convergence, application and independent reassessment.",
+        "F12 (high) is fixed: A new attempt identity for the same unresolved conflicting snapshots can mint a second structural cycle and diagnosis."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_runtime.py",
+          "purpose": "F5 (high) is fixed: No production driver connects exhausted ordinary recovery to evidence collection, diagnosis, convergence, application and independent reassessment.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_runtime.py",
+          "purpose": "F12 (high) is fixed: A new attempt identity for the same unresolved conflicting snapshots can mint a second structural cycle and diagnosis.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8.7",
+      "milestone_id": "M1",
+      "title": "Remediate T8 findings F6, F8, F18",
+      "objective": "Fix these confirmed audit findings of T8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F6 (high; owned by T3b): Production start-conflict publication still supplies raw merge data without authoritative source records, so the new sink cannot persist it. Evidence from the audit: Independent seven-path Git PredecessorIntegrator probe wires persist_conflict_evidence exactly as executor wiring: base_ref(T3) yields EVIDENCE_UNAVAILABLE conflict evidence publication failed (ValueError), paths=7, source_records=None, persisted=False. wiring.py:206 has no start-context enrichment. The M6 official refusal operation is now forwarded and its targeted tests pass; that partial repair does not fix start observations. Report reproduction 3.\n- F8 (high; owned by T2): Nonempty historical source shells without complete official run, plan, revision, task and token identities still seal as diagnostic evidence. Evidence from the audit: Independent collector probe in report reproduction 4: M1 contains only attempt_id A-1; frozen plan only frozen:true; M3 has syntactic base/snapshot and verified:true lineage; M6 only attempt_id/snapshot. No run/plan/revision/task/token authority exists. collect_recovery_evidence returns diagnosable=true, missing_sources=[], validation_problems=[], digest 5be49067688df75f750a1acf9060437934c883781356a504089d20a2011333e4. Empty {} sources are now correctly refused, but identity comparisons remain optional and frozen:true bypasses a frozen digest.\n- F18 (high; owned by T2): Recovery verification rejects valid independently executed composite backend/web checks because it requires path/tool substrings in command text. Evidence from the audit: Independent real-process fixture variant freezes python3 verify.py as both owner command and verification-map command; verify.py executes backend smoke and web/typecheck.py. On the exact resulting snapshot the independent composite oracle exits 0, but real M6 rejects with lacks a matching independently executed web check for web/page.ts. bt_scheduler_recovery_verification.py:109 requires literal changed path plus web-tool regex in the command. No production code was mocked or patched. Report reproduction 7 includes fixture construction.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8.1",
+        "T8.2",
+        "T8.3",
+        "T8.4",
+        "T8.6"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "3 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T3b, T2, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "3 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3b",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/bt_recovery_conflicts.py",
+        "skill/scripts/bt_scheduler_integrator.py",
+        "skill/scripts/bt_scheduler_quality_adapter.py",
+        "skill/scripts/tests/test_recovery_conflicts.py",
+        "skill/scripts/bt_recovery_evidence.py",
+        "skill/scripts/bt_attempt_history.py",
+        "skill/scripts/tests/test_recovery_evidence.py",
+        "skill/scripts/tests/test_attempt_history.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "F6 (high) is fixed: Production start-conflict publication still supplies raw merge data without authoritative source records, so the new sink cannot persist it.",
+        "F8 (high) is fixed: Nonempty historical source shells without complete official run, plan, revision, task and token identities still seal as diagnostic evidence.",
+        "F18 (high) is fixed: Recovery verification rejects valid independently executed composite backend/web checks because it requires path/tool substrings in command text."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_conflicts.py",
+          "purpose": "F6 (high) is fixed: Production start-conflict publication still supplies raw merge data without authoritative source records, so the new sink cannot persist it.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_evidence.py",
+          "purpose": "F8 (high) is fixed: Nonempty historical source shells without complete official run, plan, revision, task and token identities still seal as diagnostic evidence.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_evidence.py",
+          "purpose": "F18 (high) is fixed: Recovery verification rejects valid independently executed composite backend/web checks because it requires path/tool substrings in command text.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R2",
+        "R3",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8.8",
+      "milestone_id": "M1",
+      "title": "Remediate T8 findings F14",
+      "objective": "Fix these confirmed audit findings of T8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F14 (high; owned by T6a, T7): The structural replay still does not exercise shipped watch/owner/executor/verifier/web convergence and independent preservation of the historical accepted behaviors. Evidence from the audit: Fresh recovery discovery passes all six test_recovery_conflict_e2e tests. Independent hashes match current fixture r7/r9 plans and T15b audit; three historical T15a records remain absent. The new sixth test calls a pure compiler with synthetic identities, hand-writes behaviors.js and descendant strings, directly commits a toy combined tree and invokes Node. It never reproduces the source conflicts, starts a granted convergence order, applies M1 revision, launches shipped process/web entrypoints or re-audits historical accepted att-0142/att-0204 surfaces. Both full plans already contain T3->T15\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8.1",
+        "T8.2",
+        "T8.3",
+        "T8.4",
+        "T8.7"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6a, T7, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/test_recovery_conflict_e2e.py",
+        "skill/scripts/tests/recovery_conflict_support.py",
+        "skill/scripts/tests/fixtures/recovery_req027_conflicts.json",
+        "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "F14 (high) is fixed: The structural replay still does not exercise shipped watch/owner/executor/verifier/web convergence and independent preservation of the historical accepted behaviors."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_conflict_e2e.py",
+          "purpose": "F14 (high) is fixed: The structural replay still does not exercise shipped watch/owner/executor/verifier/web convergence and independent preservation of the historical accepted behaviors.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T8.9",
+      "milestone_id": "M1",
+      "title": "Remediate T8 findings F17",
+      "objective": "Fix these confirmed audit findings of T8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F17 (high; owned by T6): The installed wheel omits four required production recovery/publication/verification modules. Evidence from the audit: Fresh python3 -m unittest discover -s tests/migration -p test_package_install.py: exit 1, 24 tests, one missing-py-modules failure. Independent installed_wheel.get build/install and unrelated-cwd venv_python -I imports each exit 1 with ModuleNotFoundError for bt_recovery_apply, bt_scheduler_conflict_publication, bt_scheduler_integration_gate and bt_scheduler_recovery_verification. These are new runtime imports absent from pyproject.toml. Report reproduction 7.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "skill",
+      "after": [
+        "T7",
+        "T8.1",
+        "T8.2",
+        "T8.3",
+        "T8.4",
+        "T8.8"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "skill/scripts/tests/recovery_process_support.py",
+        "skill/scripts/tests/test_recovery_entrypoints.py",
+        "skill/scripts/tests/recovery_acceptance.py",
+        "skill/scripts/tests/fixtures/recovery_req027.json",
+        "pyproject.toml",
+        "tests/migration/test_package_install.py"
+      ],
+      "shared_resources": [
+        "recovery-case-v1"
+      ],
+      "acceptance_criteria": [
+        "F17 (high) is fixed: The installed wheel omits four required production recovery/publication/verification modules."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py",
+          "purpose": "F17 (high) is fixed: The installed wheel omits four required production recovery/publication/verification modules.",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R13",
         "R15",
         "R16",
         "R2",
