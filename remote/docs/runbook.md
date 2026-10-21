@@ -18,9 +18,10 @@ Rollback: `sudo rm -r /etc/bitacora-gateway /opt/bitacora-gateway` (empty at thi
 
 ## Step 2: Fill the environment file
 
-`sudo install -m 0600 -o root -g root remote/deploy/gateway.env.example /etc/bitacora-gateway/gateway.env`, then fill every uncommented key.
+`sudo install -m 0600 -o root -g root remote/deploy/gateway.env.example /etc/bitacora-gateway/gateway.env`, then fill every key.
 `FLOW_GATEWAY_KEY` must be random and at least 24 characters (`openssl rand -hex 32`); the gateway refuses shorter ones.
 `FLOW_FRONTEND_ORIGIN` is the Vercel origin; `LAPTOP_ORIGIN` is `http://127.0.0.1:18765` (the reverse tunnel).
+Set `GATEWAY_BIND=172.20.0.1`: Caddy runs in Docker and reaches the host gateway interface at that address.
 
 Rollback: `sudo rm /etc/bitacora-gateway/gateway.env` (keep a copy of the previous file as `gateway.env.bak` before editing an existing one and restore it).
 
@@ -40,6 +41,7 @@ Rollback: `sudo systemctl disable --now bitacora-gateway; sudo rm /etc/systemd/s
 ## Step 5: Publish the API host through Caddy
 
 Set `GATEWAY_API_HOST` for Caddy, install `remote/deploy/Caddyfile` as a site block, `caddy validate`, then `sudo systemctl reload caddy`.
+The Caddy container proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2.
 Point the Vercel `FLOW_GATEWAY_ORIGIN` at `https://<api host>` and redeploy the frontend. Register the GitHub callback per the rule above.
 
 Rollback: restore the previous Caddyfile, `sudo systemctl reload caddy`; restore the previous Vercel `FLOW_GATEWAY_ORIGIN` and redeploy it.

@@ -74,7 +74,7 @@ class CaddyTest(unittest.TestCase):
             self.assertGreaterEqual(depth, 0)
         self.assertEqual(depth, 0)
         self.assertRegex(code, r"(?m)^\{\$GATEWAY_API_HOST\} \{")
-        self.assertIn("reverse_proxy 127.0.0.1:8790", code)
+        self.assertIn("reverse_proxy 172.20.0.1:8790", code)
         self.assertIn("flush_interval -1", code)
         self.assertRegex(code, r"request_body\s*\{\s*max_size \d+KB")
 
@@ -102,11 +102,13 @@ class EnvExampleTest(unittest.TestCase):
         self.assertFalse(required & optional)
         self.assertNotIn("GITHUB_CALLBACK_URL", required | optional)
 
-    def test_gateway_can_bind_to_the_docker_host_bridge_for_containerized_caddy(self):
+    def test_containerized_caddy_reaches_gateway_on_host_bridge(self):
         example = (DEPLOY / "gateway.env.example").read_text()
-        self.assertRegex(example, r"(?m)^# For Docker-hosted Caddy deployments, set GATEWAY_BIND to 172\.20\.0\.1\.$")
         self.assertRegex(example, r"(?m)^GATEWAY_BIND=$")
         self.assertIn('bind_host=values.get("GATEWAY_BIND", "127.0.0.1")', (GATEWAY / "config.py").read_text())
+        self.assertIn("reverse_proxy 172.20.0.1:8790", (DEPLOY / "Caddyfile").read_text())
+        self.assertRegex(RUNBOOK.read_text(), r"(?s)Step 2:.*?GATEWAY_BIND=172\.20\.0\.1.*?Rollback:")
+        self.assertRegex(RUNBOOK.read_text(), r"(?s)Step 5:.*?Caddy container.*?172\.20\.0\.1:8790")
 
 
 class ScriptTest(unittest.TestCase):
