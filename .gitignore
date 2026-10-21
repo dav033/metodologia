@@ -14,3 +14,5 @@ bitacora/**/*.jpg
 bitacora/**/*.jpeg
 bitacora/**/*.webp
 bitacora/**/*.gif
+.vercel
+.env*

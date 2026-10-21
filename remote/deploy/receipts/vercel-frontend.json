@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "name": "vercel-frontend",
+  "deployed_git_sha": "099941646c34f0823103cd8540ff3940eb2e3406",
+  "project": {
+    "name": "flow-remote",
+    "team": "dav033s-projects",
+    "root_directory": "remote/web",
+    "framework": "nextjs",
+    "id": "prj_XXHWG2Oca93vDkfNCR4YdIV0wJ9p"
+  },
+  "environment_variable_names": [
+    "GATEWAY_ORIGIN"
+  ],
+  "deployment": {
+    "url": "https://flow-remote-orkv9ndzd-dav033s-projects.vercel.app",
+    "production_alias": "https://flow-remote.vercel.app",
+    "id": "dpl_5JwTZFKkZaALcL296oKJzg9D1nEF",
+    "status": "Ready",
+    "target": "production"
+  },
+  "steps": [
+    {
+      "name": "project-create-or-link",
+      "command": "vercel link --yes --scope dav033s-projects --project flow-remote",
+      "exit_code": 0
+    },
+    {
+      "name": "project-settings",
+      "command": "vercel project update flow-remote --root-directory remote/web --framework nextjs --yes",
+      "exit_code": 0
+    },
+    {
+      "name": "environment-variables",
+      "command": "vercel env add GATEWAY_ORIGIN production --no-sensitive --project flow-remote (non-secret value supplied via stdin; value omitted)",
+      "exit_code": 0
+    },
+    {
+      "name": "production-deploy",
+      "command": "vercel --prod --yes --scope dav033s-projects (run from repository root)",
+      "exit_code": 0
+    },
+    {
+      "name": "deployment-ready",
+      "command": "vercel inspect <deployment-url> --wait --timeout 60s --scope dav033s-projects",
+      "exit_code": 0
+    },
+    {
+      "name": "rewrite-probe",
+      "command": "curl -sS -D - -o /dev/null https://flow-remote.vercel.app/api/health and direct HTTPS probe of flow-api.185-147-157-25.sslip.io/api/health",
+      "exit_code": 0
+    }
+  ],
+  "attempts": [
+    {
+      "command": "vercel --prod --yes --scope dav033s-projects (initial run from remote/web)",
+      "exit_code": 1,
+      "detail": "Vercel required repository-root context for rootDirectory remote/web; retried from repository root successfully."
+    }
+  ],
+  "checks": {
+    "project-linked": {
+      "ok": true,
+      "detail": "Vercel project flow-remote exists in dav033s-projects with project id prj_XXHWG2Oca93vDkfNCR4YdIV0wJ9p, rootDirectory remote/web, and Next.js framework."
+    },
+    "env-names": {
+      "ok": true,
+      "detail": "Production environment variable listing contains only GATEWAY_ORIGIN; it is a Config variable. No variable values are recorded in this receipt."
+    },
+    "deployment-ready": {
+      "ok": true,
+      "detail": "Production deployment dpl_5JwTZFKkZaALcL296oKJzg9D1nEF is Ready at https://flow-remote-orkv9ndzd-dav033s-projects.vercel.app; deployed Git SHA is recorded above."
+    },
+    "rewrite-reaches-caddy": {
+      "ok": true,
+      "detail": "GET https://flow-remote.vercel.app/api/health returned HTTP 502 rather than an application 404. Direct GET of the configured flow-api upstream returned HTTP 502 with Server: Caddy, consistent with the stopped gateway and the existing AdvIn Caddy route."
+    }
+  }
+}

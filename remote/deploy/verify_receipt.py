@@ -28,6 +28,20 @@ REQUIRED_CHECKS = {
     "other-hosts-unchanged",
     "rollback-rehearsed",
 }
+VERCEL_FRONTEND_STEPS = {
+    "project-create-or-link",
+    "project-settings",
+    "environment-variables",
+    "production-deploy",
+    "deployment-ready",
+    "rewrite-probe",
+}
+VERCEL_FRONTEND_CHECKS = {
+    "project-linked",
+    "env-names",
+    "deployment-ready",
+    "rewrite-reaches-caddy",
+}
 SENSITIVE_NAME = re.compile(r"(?:secret|token|password|passwd|private.?key|api.?key|credential)", re.I)
 SENSITIVE_ASSIGNMENT = re.compile(
     r"\b(?:[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|CREDENTIAL)[A-Z0-9_]*)"
@@ -86,6 +100,38 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
         raise ReceiptError("schema_version must be 1")
     _required_text(receipt, "name", "receipt")
 
+    if receipt["name"] == "vercel-frontend":
+        required_steps = VERCEL_FRONTEND_STEPS
+        required_checks = VERCEL_FRONTEND_CHECKS
+        project = receipt.get("project")
+        if not isinstance(project, dict):
+            raise ReceiptError("project must be an object")
+        for key, expected in {
+            "name": "flow-remote",
+            "team": "dav033s-projects",
+            "root_directory": "remote/web",
+            "framework": "nextjs",
+        }.items():
+            if project.get(key) != expected:
+                raise ReceiptError(f"project.{key} must be {expected}")
+        deployment = receipt.get("deployment")
+        if not isinstance(deployment, dict):
+            raise ReceiptError("deployment must be an object")
+        for key in ("url", "id", "status", "target"):
+            _required_text(deployment, key, "deployment")
+        if deployment["status"].lower() != "ready" or deployment["target"].lower() != "production":
+            raise ReceiptError("deployment must be Ready and target production")
+        if not re.fullmatch(r"https://[a-z0-9-]+\.vercel\.app", deployment["url"]):
+            raise ReceiptError("deployment.url must be a production *.vercel.app URL")
+        env_names = receipt.get("environment_variable_names")
+        if not isinstance(env_names, list) or not all(isinstance(name, str) for name in env_names):
+            raise ReceiptError("environment_variable_names must be an array of names")
+        if env_names != ["GATEWAY_ORIGIN"]:
+            raise ReceiptError("only GATEWAY_ORIGIN may be configured")
+    else:
+        required_steps = REQUIRED_STEPS
+        required_checks = REQUIRED_CHECKS
+
     sha = _required_text(receipt, "deployed_git_sha", "receipt")
     if not re.fullmatch(r"[0-9a-fA-F]{40}|[0-9a-fA-F]{64}", sha):
         raise ReceiptError("deployed_git_sha must be a full Git commit SHA")
@@ -115,14 +161,14 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
             raise ReceiptError(f"{where}.exit_code must be an integer")
         if code != 0:
             raise ReceiptError(f"step {name} failed with exit code {code}")
-    missing_steps = sorted(REQUIRED_STEPS - seen_steps.keys())
+    missing_steps = sorted(required_steps - seen_steps.keys())
     if missing_steps:
         raise ReceiptError("missing required steps: " + ", ".join(missing_steps))
 
     checks = receipt.get("checks")
     if not isinstance(checks, dict):
         raise ReceiptError("checks must be an object keyed by check name")
-    missing_checks = sorted(REQUIRED_CHECKS - checks.keys())
+    missing_checks = sorted(required_checks - checks.keys())
     if missing_checks:
         raise ReceiptError("missing required checks: " + ", ".join(missing_checks))
     for name, check in checks.items():
