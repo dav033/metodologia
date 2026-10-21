@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import os
+import sqlite3
 import sys
 import tempfile
 import threading
@@ -153,6 +154,48 @@ class EntryPointTests(LedgerBase):
     def route_ledger(self):
         return rc.Ledger(Path(self.temp.name) / ".state" / "remote" / "commands.db")
 
+    def real_run(self, *, blocked=False):
+        import bt_core
+
+        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
+        rdir.mkdir(parents=True)
+        (rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan\n", encoding="utf-8")
+        plan_folder = rdir / scheduler_adapter.REVISIONS
+        plan_folder.mkdir()
+        scheduler_adapter.run_db_path(rdir).parent.mkdir(parents=True)
+        harness = Harness(
+            [indep("T1")], repository=scheduler_core.SqliteRepository(scheduler_adapter.run_db_path(rdir)),
+            plan_id="REQ-001",
+        )
+        digest = hashlib.sha256(harness.text.encode()).hexdigest()
+        (plan_folder / "PLAN.r1.json").write_text(harness.text, encoding="utf-8")
+        (plan_folder / "MANIFEST.json").write_text(json.dumps({"schema": 1, "revisions": [
+            {"revision": 1, "sha256": digest, "frozen_at": "2026-10-20T00:00:00+00:00"}
+        ]}), encoding="utf-8")
+        if blocked:
+            harness.core.step()
+            harness.send("T1", "execution_failed", reason="boom")
+            harness.core.step()
+        else:
+            harness.core.step()
+        scheduler_adapter.write_projection(rdir, harness.core)
+        return bt_core, rdir, harness
+
+    def post_real(self, body):
+        import bt_core
+
+        handler = FakeHandler(json.dumps(body).encode())
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
+                patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_remote_api, "_target_state", rc.target_state):
+            bt_remote_api.route_post(handler)
+        return handler.sent
+
+    def real_target_state(self, target, command, params):
+        import bt_core
+        with patch.object(bt_core, "ROOT", Path(self.temp.name)):
+            return rc.target_state(target, command, params)
+
     def post(self, body):
         h = FakeHandler(json.dumps(body).encode() if not isinstance(body, bytes) else body)
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
@@ -177,39 +220,23 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(self.post(b"{not json")[0], 400)
 
     def test_route_post_reopens_rejected_work_through_real_scheduler_operations(self):
-        import bt_core
-
-        rdir = Path(self.temp.name) / "demo" / "requirements" / "REQ-001-demo"
-        rdir.mkdir(parents=True)
-        plan_folder = rdir / scheduler_adapter.REVISIONS
-        plan_folder.mkdir()
-        scheduler_adapter.run_db_path(rdir).parent.mkdir(parents=True)
-        harness = Harness(
-            [indep("T1")], repository=scheduler_core.SqliteRepository(scheduler_adapter.run_db_path(rdir)),
-            plan_id="REQ-001",
-        )
-        digest = hashlib.sha256(harness.text.encode()).hexdigest()
-        (plan_folder / "PLAN.r1.json").write_text(harness.text, encoding="utf-8")
-        manifest = {"schema": 1, "revisions": [
-            {"revision": 1, "sha256": digest, "frozen_at": "2026-10-20T00:00:00+00:00"}
-        ]}
-        (plan_folder / "MANIFEST.json").write_text(json.dumps(manifest), encoding="utf-8")
+        bt_core, rdir, harness = self.real_run()
         harness.core.step()
         harness.send("T1", "execution_finished")
         harness.verdict("T1", accepted=False)
         self.assertEqual(harness.state("T1"), "recovering")
-
-        def current_state(_target):
-            return {"state": harness.state("T1"), "revision": 1}
+        scheduler_adapter.write_projection(rdir, harness.core)
 
         body = req(command="reopen", target="demo/REQ-001", params={"task": "T1", "reason": "fixed"},
                    precondition={"state": "rejected", "revision": 1})
+        actual = self.real_target_state(body["target"], body["command"], body["params"])
+        self.assertEqual(actual["state"], "recovering")
+        self.assertTrue(rc._matches_precondition(body, actual), actual)
         handler = FakeHandler(json.dumps(body).encode())
         with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY, "BITACORA_ROOT": self.temp.name}), \
                 patch.object(bt_core, "ROOT", Path(self.temp.name)), \
-                patch.dict(bt_remote_api.HANDLERS, {}, clear=True), \
-                patch.object(bt_remote_api, "_target_state", current_state), \
                 patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "kill_agent", return_value=0), \
                 patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
             bt_remote_api.route_post(handler)
 
@@ -226,10 +253,55 @@ class EntryPointTests(LedgerBase):
         self.assertEqual(json.loads(row["outcome"]),
                          {"messages": ["owner stopped: 0 process(es)", "T1: reopened", "watchdog started"]})
 
+    def test_route_post_cancels_attempt_through_real_scheduler_operations(self):
+        bt_core, rdir, harness = self.real_run()
+        with sqlite3.connect(scheduler_adapter.run_db_path(rdir)) as db:
+            doc = json.loads(db.execute("SELECT doc FROM state WHERE id = 1").fetchone()[0])
+        attempt_id = next(iter(doc["attempts"]))
+        state = self.real_target_state("demo/REQ-001", "cancel-attempt", {"attempt": attempt_id})
+        body = req(command="cancel-attempt", target="demo/REQ-001", params={"attempt": attempt_id, "reason": "stuck"},
+                   precondition={"state": state["state"], "revision": 1})
+        with patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "kill_agent", return_value=0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(body)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        with sqlite3.connect(scheduler_adapter.run_db_path(rdir)) as db:
+            saved = json.loads(db.execute("SELECT doc FROM state WHERE id = 1").fetchone()[0])
+        self.assertEqual(saved["attempts"][attempt_id]["state"], "cancelled")
+        self.assertEqual(json.loads(self.route_ledger().rows()[0]["outcome"]),
+                         {"messages": ["owner stopped: 0 process(es)", f"{attempt_id}: cancelled", "watchdog started"]})
+
+    def test_route_post_answers_decision_through_real_scheduler_decisions_api(self):
+        import bt_scheduler_decisions as decisions
+
+        bt_core, rdir, harness = self.real_run(blocked=True)
+        self.assertEqual(harness.state("T1"), "blocked")
+        scheduler_adapter.write_projection(rdir, harness.core)
+        [request] = decisions.open_requests(rdir)
+        params = {"request_id": request["id"], "option": "retry", "reason": "fixed"}
+        state = self.real_target_state("demo/REQ-001", "answer-decision", params)
+        body = req(command="answer-decision", target="demo/REQ-001", params=params,
+                   precondition={key: state[key] for key in ("state", "revision") if key in state})
+        with patch.object(bt_core, "ROOT", Path(self.temp.name)), \
+                patch.object(bt_scheduler_ops, "stop_owner", return_value=0), \
+                patch.object(bt_scheduler_ops, "resume", return_value="watchdog started"):
+            status, response = self.post_real(body)
+        self.assertEqual((status, response["status"]), (200, "OK"), response)
+        self.assertEqual(harness.state("T1"), "ready")
+        saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
+        self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
+
     def test_route_post_without_executor_is_not_ok(self):
         self.handlers.clear()
         status, body = self.post(req())
         self.assertEqual((status, body["code"]), (501, "COMMAND_NOT_IMPLEMENTED"))
+        self.assertEqual(self.route_ledger().rows(), [])
+
+    def test_route_post_refuses_unknown_command(self):
+        status, response = self.post(req(command="delete-everything"))
+        self.assertEqual((status, response["code"]), (400, "INVALID_COMMAND"))
         self.assertEqual(self.route_ledger().rows(), [])
 
 

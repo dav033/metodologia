@@ -116,7 +116,7 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
     if run.get("authority") != "scheduler":
         return None
-    revision = (run.get("plan_ref") or {}).get("revision")
+    revision = plan.get("revision")
     state = run.get("status")
     if command in TASK_SCOPED:
         member_state = _member_state(rdir, command, params)
