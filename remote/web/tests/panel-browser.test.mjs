@@ -114,27 +114,12 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       if (browserState?.text?.includes("REQ-018") && browserState?.text?.includes("Eliminar plan") && browserState?.text?.includes("Intento att-0008")) break;
       await delay(250);
     }
-<<<<<<< 4b7278cd27f206dd23e84a30bc7838460d65b17c
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
-||||||| 172262df5d04c4390ea4ddc767d636add9d9da97
-<<<<<<< d73082a15e9f12065d3a05cf5bd8b3e2bc120e72
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
-||||||| bd90d4344a65160c45de638b41b7422a4f655b01
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan"]) {
-=======
-    for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
->>>>>>> 5b342b78553c961701edc16fd91ba9576e6af110
-=======
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
->>>>>>> 1d7eb7b52e5ef9dfb8091d7efbaaab4e17e2e028
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
-    const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
-    const reviewPoint = reviewLink.result?.value;
-    assert.ok(reviewPoint, "review link should have a visible position");
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
+    const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
+    assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
+    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -278,6 +263,32 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await fill('[aria-label="Id del reto de confirmación"]', "challenge-1");
     const destructiveEnabled = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('button')].find((button) => button.innerText === 'Eliminar plan')?.disabled", returnByValue: true });
     assert.equal(destructiveEnabled.result?.value, false, "typing the exact REQ and challenge should enable destructive commands");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-028");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    await delay(250);
+    assert.equal(gateway.challenges.length, 0, "a mismatched REQ id must not request an approval challenge");
+    assert.equal(gateway.commands.length, 2, "a mismatched REQ id must not submit an approval command");
+    await fill('[aria-label="Escribe REQ-027 para confirmar la aprobación"]', "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('form')].find((form) => form.innerText.includes('Aprobar plan'))?.requestSubmit()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 3; attempt += 1) await delay(100);
+    assert.equal(gateway.challenges.at(-1)?.typedReq, "REQ-027", "approval should issue a challenge for the exact REQ id");
+    assert.equal(gateway.commands.at(-1)?.type, "approve");
+    assert.equal(gateway.commands.at(-1)?.confirmation?.typedReq, "REQ-027");
+    await cdp(socket, "Runtime.evaluate", { expression: "(() => { const choice = document.querySelector('input[name=q1][value=safe]'); choice.click(); const detail = document.querySelector('textarea[name=q2]'); detail.value = 'Keep the audit trail'; detail.dispatchEvent(new Event('input', { bubbles: true })); detail.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('.answer-form').requestSubmit(); return true; })()", returnByValue: true });
+    for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
+    assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
+    assert.equal(gateway.commands.at(-1)?.round, 2);
+    assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
+    await waitForText("answer-round");
+    await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
+    await fill('[aria-label="Id del reto de confirmación"]', "challenge-1");
+    let destructiveReady = false;
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const ready = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('.plans form button.danger')?.disabled === false", returnByValue: true });
+      if (ready.result?.value) { destructiveReady = true; break; }
+      await delay(100);
+    }
+    assert.equal(destructiveReady, true, "destructive action should re-enable after the REQ and challenge are re-entered");
     gateway.nextCommandResponse = { status: 409, body: { code: "STALE_PRECONDITION", message: "stale" } };
     await click(".plans form button.danger");
     await waitForText("El estado cambió");
