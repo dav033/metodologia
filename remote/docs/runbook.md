@@ -10,39 +10,35 @@ cookies of the frontend host, so an API-host callback never receives them. Verce
 the callback to the gateway with the browser's `Cookie` header. The browser-level check is
 `cd remote/web && npm run verify` (headless Chromium, `web/tests/oauth-browser.test.mjs`); run it before step 5.
 
-## Step 1: Prepare the host account and directories
+## Step 1: Prepare the AdvIn service account and directories
 
-`sudo useradd --system --home /var/lib/bitacora-gateway --shell /usr/sbin/nologin bitacora; sudo install -d -o root -g root /etc/bitacora-gateway /opt/bitacora-gateway/releases`
+Create the no-login account `flow`, `/opt/flow-gateway/releases`, `/opt/flow-gateway/current`, `/var/lib/flow-gateway`, and `/etc/flow-gateway`. Releases and configuration are root-owned; SQLite state is owned by `flow` and mode 0700.
 
-Rollback: `sudo rm -r /etc/bitacora-gateway /opt/bitacora-gateway` (empty at this point) and `sudo userdel bitacora`.
+Rollback: remove only the directories created by this deployment and delete `flow` if no files or processes remain owned by it.
 
-## Step 2: Fill the environment file
+## Step 2: Install the empty environment skeleton
 
-`sudo install -m 0600 -o root -g root remote/deploy/gateway.env.example /etc/bitacora-gateway/gateway.env`, then fill every uncommented key.
-`FLOW_GATEWAY_KEY` must be random and at least 24 characters (`openssl rand -hex 32`); the gateway refuses shorter ones.
-`FLOW_FRONTEND_ORIGIN` is the Vercel origin; `LAPTOP_ORIGIN` is `http://127.0.0.1:18765` (the reverse tunnel). Set `GATEWAY_BIND=172.20.0.1` so Docker-hosted Caddy can reach the gateway on the host bridge.
+Install `remote/deploy/flow-gateway.env.example` as `/etc/flow-gateway/env` with owner root and mode 0600. It contains no credentials. Keep both services stopped until T23 supplies the deployment values. Do not read or copy any secret values through a command line.
 
-Rollback: `sudo rm /etc/bitacora-gateway/gateway.env` (keep a copy of the previous file as `gateway.env.bak` before editing an existing one and restore it).
+Rollback: remove the new environment file; restore a timestamped backup if one existed.
 
-## Step 3: Deploy the gateway release
+## Step 3: Install the release and stopped service units
 
-`sudo remote/deploy/deploy.sh remote/gateway` (use `--dry-run` first). It checks required keys, installs a timestamped release,
-records the previous one in `previous`, switches `current` and restarts the service.
+Install the checked gateway release under `/opt/flow-gateway/releases/<timestamp>`, point `/opt/flow-gateway/current` to it, and install `flow-gateway.service` and `flow-bot.service` under `/etc/systemd/system/`. Run `systemd-analyze verify` on both units and `systemctl daemon-reload`. Do not enable or start either unit until T23.
 
-Rollback: `sudo remote/deploy/rollback.sh` returns `current` to the previous release and restarts.
+Rollback: remove the two unit files, reload systemd, and restore the previous `current` symlink.
 
-## Step 4: Install and start the systemd unit
+## Step 4: Publish the API host through Caddy
 
-`sudo install -m 0644 remote/deploy/bitacora-gateway.service /etc/systemd/system/; sudo systemctl daemon-reload; sudo systemctl enable --now bitacora-gateway`
+Back up `/opt/edge-proxy/Caddyfile` with a timestamped name, then add `remote/deploy/Caddyfile` for `flow-api.185-147-157-25.sslip.io`. Validate and reload the Docker container, not a host systemd unit: `docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`, then `docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Caddy proxies to `172.20.0.1:8790` with streaming flush enabled. Compare every existing hostname's HTTP status, TLS subject, and first-byte time to the pre-change receipt snapshot.
 
-Rollback: `sudo systemctl disable --now bitacora-gateway; sudo rm /etc/systemd/system/bitacora-gateway.service; sudo systemctl daemon-reload`.
+Rollback: restore the timestamped Caddyfile backup, validate and reload it in the `caddy` container, then verify the existing host snapshot again. The services remain stopped until T23.
 
-## Step 5: Publish the API host through Caddy
+## Step 5: Start services and connect the frontend (T23 only)
 
-Set `GATEWAY_API_HOST` for Caddy and add `remote/deploy/Caddyfile` as a site block in the existing `/opt/edge-proxy/Caddyfile`. Back up that file before editing. Validate and reload the Docker container, not a host systemd unit: `docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`, then `docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Caddy proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2. Confirm every existing hostname still returns its recorded status and TLS subject after reload.
-Point the Vercel `FLOW_GATEWAY_ORIGIN` at `https://<api host>` and redeploy the frontend. Register the GitHub callback per the rule above.
+T23 supplies the real environment values, enables `flow-gateway.service` and `flow-bot.service`, and checks `/healthz`. Point the Vercel `FLOW_GATEWAY_ORIGIN` at the API host and redeploy the frontend only as part of that authorized task. Register the GitHub callback per the rule above.
 
-Rollback: restore the timestamped Caddyfile backup, validate and reload it with `docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` and `docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`; restore the previous Vercel `FLOW_GATEWAY_ORIGIN` and redeploy it.
+Rollback: stop and disable both units, restore the timestamped Caddyfile backup, validate and reload the `caddy` container, and restore the previous frontend origin.
 
 ## Step 6: Start the laptop listener and tunnel
 

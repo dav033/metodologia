@@ -1,7 +1,7 @@
 # API host only. The browser never calls this host: Vercel rewrites same-origin /api/* on the frontend host to it.
 # GitHub's OAuth callback is registered on the FRONTEND origin (<FLOW_FRONTEND_ORIGIN>/api/auth/callback), never here,
 # because the state and session cookies are host-only cookies of the frontend host.
-{$GATEWAY_API_HOST} {
+flow-api.185-147-157-25.sslip.io {
 	encode zstd gzip
 	header {
 		Strict-Transport-Security "max-age=31536000"

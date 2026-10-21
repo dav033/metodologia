@@ -3,11 +3,11 @@
 # Points `current` back to the release recorded in `previous` and restarts the gateway.
 set -euo pipefail
 dry=${1:-}
-root=${GATEWAY_ROOT:-/opt/bitacora-gateway}
+root=${GATEWAY_ROOT:-/opt/flow-gateway}
 run() { if [ "$dry" = "--dry-run" ]; then echo "+ $*"; else "$@"; fi; }
 
 target=$(readlink "$root/previous" 2>/dev/null || true)
 [ -n "$target" ] && [ -d "$target" ] || { echo "no previous release recorded under $root" >&2; exit 2; }
 run ln -sfn "$target" "$root/current"
-run systemctl restart bitacora-gateway
+run systemctl restart flow-gateway
 echo "rolled back to $target"

@@ -1,0 +1,26 @@
+[Unit]
+Description=Flow Telegram command bot
+After=network-online.target flow-gateway.service
+Wants=network-online.target
+Requires=flow-gateway.service
+
+[Service]
+Type=simple
+User=flow
+Group=flow
+EnvironmentFile=/etc/flow-gateway/env
+WorkingDirectory=/opt/flow-gateway/current/gateway
+ExecStart=/usr/bin/python3 /opt/flow-gateway/current/gateway/bot_main.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/flow-gateway
+StateDirectory=flow-gateway
+StateDirectoryMode=0700
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

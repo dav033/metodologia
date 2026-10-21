@@ -4,8 +4,8 @@
 set -euo pipefail
 src=${1:?usage: deploy.sh <gateway-dir> [--dry-run]}
 dry=${2:-}
-root=${GATEWAY_ROOT:-/opt/bitacora-gateway}
-env_file=${GATEWAY_ENV_FILE:-/etc/bitacora-gateway/gateway.env}
+root=${GATEWAY_ROOT:-/opt/flow-gateway}
+env_file=${GATEWAY_ENV_FILE:-/etc/flow-gateway/env}
 run() { if [ "$dry" = "--dry-run" ]; then echo "+ $*"; else "$@"; fi; }
 
 [ -f "$src/main.py" ] || { echo "no main.py in $src" >&2; exit 2; }
@@ -25,5 +25,5 @@ run python3 -m compileall -q "$release/gateway"
 [ -n "$previous" ] && echo "previous release: $previous"
 [ -n "$previous" ] && run ln -sfn "$previous" "$root/previous"
 run ln -sfn "$release" "$root/current"
-run systemctl restart bitacora-gateway
+run systemctl restart flow-gateway
 echo "deployed $release"

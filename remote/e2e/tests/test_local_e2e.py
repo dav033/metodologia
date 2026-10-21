@@ -297,8 +297,7 @@ adapter.write_projection(rdir, scheduler)
             import main as gateway_main
             import notifications
             with patch.object(gateway_app.GatewayRuntime, "run_forever", poll_until_stopped), \
-                    patch.object(notifications, "urlopen", fake_telegram_open), \
-                    patch.object(gateway_main.TelegramBot, "run_forever", lambda _bot: None):
+                    patch.object(notifications, "urlopen", fake_telegram_open):
                 gateway_main.main()
 
         cls.gateway_thread = threading.Thread(target=run_gateway, daemon=True)

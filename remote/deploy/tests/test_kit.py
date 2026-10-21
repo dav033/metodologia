@@ -46,9 +46,23 @@ class UnitTest(unittest.TestCase):
         self.assertNotRegex(text, r"FLOW_GATEWAY_KEY\s*=")  # never an inline secret
         self.assertIn("bitacora-remote-api.service", (DEPLOY / "advin-bitacora-tunnel.service").read_text())
 
+    def test_flow_production_units_are_separate_and_hardened(self):
+        gateway = (DEPLOY / "flow-gateway.service").read_text()
+        bot = (DEPLOY / "flow-bot.service").read_text()
+        for text in (gateway, bot):
+            self.assertIn("User=flow", text)
+            self.assertIn("Group=flow", text)
+            self.assertIn("EnvironmentFile=/etc/flow-gateway/env", text)
+            for directive in ("NoNewPrivileges=true", "PrivateTmp=true", "ProtectSystem=strict", "ProtectHome=true"):
+                self.assertIn(directive, text)
+            self.assertIn("UMask=0077", text)
+        self.assertIn("/current/gateway/main.py", gateway)
+        self.assertIn("/current/gateway/bot_main.py", bot)
+
     @unittest.skipUnless(shutil.which("systemd-analyze"), "systemd-analyze unavailable")
     def test_systemd_analyze_offline(self):
-        for unit in ("bitacora-gateway.service", "advin-bitacora-tunnel.service", "bitacora-remote-api.service"):
+        for unit in ("bitacora-gateway.service", "advin-bitacora-tunnel.service", "bitacora-remote-api.service",
+                     "flow-gateway.service", "flow-bot.service"):
             r = subprocess.run(["systemd-analyze", "verify", "--man=no", str(DEPLOY / unit)],
                                capture_output=True, text=True)
             bad = [l for l in r.stderr.splitlines() if "Failed to parse" in l or "Unknown" in l or "Invalid" in l]
@@ -66,7 +80,7 @@ class CaddyTest(unittest.TestCase):
             depth -= ch == "}"
             self.assertGreaterEqual(depth, 0)
         self.assertEqual(depth, 0)
-        self.assertRegex(code, r"(?m)^\{\$GATEWAY_API_HOST\} \{")
+        self.assertRegex(code, r"(?m)^flow-api\.185-147-157-25\.sslip\.io \{")
         self.assertIn("reverse_proxy 172.20.0.1:8790", code)
         self.assertNotIn("reverse_proxy 127.0.0.1:8790", code)
         self.assertIn("flush_interval -1", code)
@@ -95,6 +109,14 @@ class EnvExampleTest(unittest.TestCase):
         self.assertFalse(required & optional)
         self.assertNotIn("GITHUB_CALLBACK_URL", required | optional)
 
+    def test_flow_env_skeleton_has_no_secret_values_and_pins_the_bridge(self):
+        text = (DEPLOY / "flow-gateway.env.example").read_text()
+        for name in ("FLOW_GATEWAY_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "GITHUB_CLIENT_ID",
+                     "GITHUB_CLIENT_SECRET", "SESSION_SECRET", "LAPTOP_ORIGIN", "FLOW_FRONTEND_ORIGIN"):
+            self.assertRegex(text, rf"(?m)^{name}=$")
+        self.assertIn("GATEWAY_BIND=172.20.0.1", text)
+        self.assertIn("GATEWAY_PORT=8790", text)
+
 
 class ScriptTest(unittest.TestCase):
     def test_syntax_and_dry_run(self):
@@ -107,7 +129,7 @@ class ScriptTest(unittest.TestCase):
             env = {"GATEWAY_ROOT": str(root), "PATH": "/usr/bin:/bin"}
             r = subprocess.run([str(DEPLOY / "deploy.sh"), str(GATEWAY), "--dry-run"], capture_output=True, text=True, env=env)
             self.assertEqual(r.returncode, 0, r.stderr)
-            self.assertIn("systemctl restart bitacora-gateway", r.stdout)
+            self.assertIn("systemctl restart flow-gateway", r.stdout)
             self.assertEqual((root / "current").resolve(), (root / "releases" / "old").resolve())
             (root / "previous").symlink_to(root / "releases" / "old")
             r = subprocess.run([str(DEPLOY / "rollback.sh"), "--dry-run"], capture_output=True, text=True, env=env)
