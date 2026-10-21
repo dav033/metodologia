@@ -2,6 +2,7 @@ import os
 import socket
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -100,7 +101,7 @@ class LivenessTests(unittest.TestCase):
                 "id": "event-1",
                 "cursor": "1",
                 "type": "attempt.failed",
-                "occurredAt": "2026-10-19T00:00:00Z",
+                "occurredAt": datetime.now(timezone.utc).isoformat(),
                 "target": {"kind": "task", "project": "demo", "req": "REQ-027"},
                 "data": {},
                 "dedupeKey": "attempt-1-failed",
@@ -173,6 +174,10 @@ class LivenessTests(unittest.TestCase):
                 "TELEGRAM_BOT_TOKEN": config.telegram_bot_token,
                 "TELEGRAM_CHAT_ID": config.telegram_chat_id,
                 "GATEWAY_DATABASE": str(config.database_path),
+                "GITHUB_CLIENT_ID": "test-client-id",
+                "GITHUB_CLIENT_SECRET": "test-client-secret",
+                "SESSION_SECRET": "test-session-secret-with-more-than-32-bytes",
+                "FLOW_FRONTEND_ORIGIN": "https://flow.example.test",
             }
             with patch.dict(os.environ, env, clear=True), patch("app.LaptopClient", return_value=laptop), \
                     patch("app.TelegramSender", return_value=sent.append), \

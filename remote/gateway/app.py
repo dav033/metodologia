@@ -8,7 +8,7 @@ from typing import Any
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
+from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
 from upstream import LaptopClient, UpstreamError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
@@ -195,7 +195,7 @@ class GatewayRuntime:
                 continue
             notification = notification_for_event(event)
             if notification:
-                self.outbox.enqueue(*notification)
+                self.outbox.enqueue(*notification, created_at=event_timestamp(event))
         next_cursor = result.get("nextCursor")
         if isinstance(next_cursor, str):
             self.event_cursor = next_cursor
