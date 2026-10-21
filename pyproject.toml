@@ -83,6 +83,7 @@ py-modules = [
   "bt_cli_scheduler_run",
   "bt_cli_go",
   "bt_scheduler_monitor_adapter",
+  "bt_scheduler_ops",
   "bt_scheduler_monitor_recovery",
   "bt_scheduler_stream_adapter",
   "bt_scheduler_m4_stream_bridge",
@@ -91,6 +92,7 @@ py-modules = [
   "bt_scheduler_patch_chain",
   # Scheduler module adapters and local M2 runtime modules.
   "bt_scheduler_decision_adapter",
+  "bt_scheduler_decisions",
   "bt_scheduler_decision_benchmark",
   "bt_scheduler_laya",
   "bt_scheduler_laya_worker",
@@ -151,6 +153,7 @@ py-modules = [
   "bt_remote_api",
   "bt_remote_commands",
   "bt_remote_events",
+  "bt_remote_preconditions",
   "bt_remote_recovery",
   "bt_remote_views",
   "bt_relay",
