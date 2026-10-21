@@ -39,10 +39,10 @@ Rollback: `sudo systemctl disable --now bitacora-gateway; sudo rm /etc/systemd/s
 
 ## Step 5: Publish the API host through Caddy
 
-Set `GATEWAY_API_HOST` for Caddy, install `remote/deploy/Caddyfile` as a site block, `caddy validate`, then `sudo systemctl reload caddy`. Caddy runs in Docker and proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2.
+Set `GATEWAY_API_HOST` for Caddy and add `remote/deploy/Caddyfile` as a site block in the existing `/opt/edge-proxy/Caddyfile`. Back up that file before editing. Validate and reload the Docker container, not a host systemd unit: `docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile`, then `docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`. Caddy proxies to `172.20.0.1:8790` on the host; keep the gateway bound to that address as configured in step 2. Confirm every existing hostname still returns its recorded status and TLS subject after reload.
 Point the Vercel `FLOW_GATEWAY_ORIGIN` at `https://<api host>` and redeploy the frontend. Register the GitHub callback per the rule above.
 
-Rollback: restore the previous Caddyfile, `sudo systemctl reload caddy`; restore the previous Vercel `FLOW_GATEWAY_ORIGIN` and redeploy it.
+Rollback: restore the timestamped Caddyfile backup, validate and reload it with `docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile` and `docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile`; restore the previous Vercel `FLOW_GATEWAY_ORIGIN` and redeploy it.
 
 ## Step 6: Start the laptop listener and tunnel
 

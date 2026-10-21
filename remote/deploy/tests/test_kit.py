@@ -148,6 +148,14 @@ class RunbookTest(unittest.TestCase):
         self.assertRegex(text, r"Do \*\*not\*\* register the API host")
         self.assertNotIn("GITHUB_CALLBACK_URL", text)
 
+    def test_docker_caddy_is_validated_and_reloaded_inside_its_container(self):
+        text = RUNBOOK.read_text()
+        self.assertIn("docker exec caddy caddy validate", text)
+        self.assertIn("docker exec caddy caddy reload", text)
+        self.assertNotIn("systemctl reload caddy", text)
+        self.assertIn("timestamped Caddyfile backup", text)
+        self.assertIn("TLS subject", text)
+
 
 class OAuthCookieContractTest(unittest.TestCase):
     """Real gateway HTTP entry point: cookie attributes that make a frontend-host callback work."""
