@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import re
 import time
-from typing import Any
+from typing import Any, Mapping
 
 from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
@@ -18,6 +19,7 @@ ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
                                 "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note"})
 CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+TELEGRAM_REQ_ID = re.compile(r"REQ-[0-9]{3,6}\Z")
 
 
 def _ledger_command(payload: dict[str, Any]) -> dict[str, Any]:
@@ -162,119 +164,6 @@ class GatewayRuntime:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
 
-<<<<<<< dc250c511c07382f05d03504bc01d39edc0e4209
-||||||| f688ce1a402285ed1bbd50773264948587300303
-    def submit_command(self, request: Any) -> dict[str, Any]:
-        ledger_request = _ledger_command(request)
-        if ledger_request is None:
-            return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
-<<<<<<< f6a71b3b51a4b68b89be455c0487c4f924d8702e
-        idempotency_key = ledger_request.get("idempotency_key")
-        if ledger_request["command"] in CHALLENGED_COMMANDS:
-            confirmation = ledger_request.get("confirmation")
-            target = request.get("target") if isinstance(request, dict) else None
-            req = target.get("req") if isinstance(target, dict) else None
-            if (not isinstance(confirmation, dict)
-                    or not isinstance(confirmation.get("challenge_id"), str)
-                    or not confirmation["challenge_id"].strip()
-                    or confirmation.get("typed_req") != req):
-                return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-||||||| c99af4e0b5d867d05e655e275feeded1932aeb3e
-        command = ledger_request["command"]
-        if command in CHALLENGED_COMMANDS and not isinstance(ledger_request.get("confirmation"), dict):
-            return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-=======
-        command = ledger_request["command"]
-        if command in CHALLENGED_COMMANDS and not isinstance(ledger_request.get("confirmation"), dict):
-            return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-        return self._submit_ledger_command(ledger_request)
-
-    def submit_telegram_command(self, request: Any) -> dict[str, Any]:
-        """Relay only owner-safe run pause/resume commands to the laptop ledger."""
-        if not isinstance(request, Mapping) or request.get("schemaVersion") != 1:
-            return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
-        key = request.get("idempotencyKey")
-        command = request.get("type")
-        target = request.get("target")
-        precondition = request.get("precondition")
-        if (isinstance(request.get("schemaVersion"), bool)
-                or set(request) != {"schemaVersion", "idempotencyKey", "type", "target", "precondition"}
-                or not isinstance(key, str) or not 16 <= len(key) <= 128
-                or not re.fullmatch(r"[A-Za-z0-9._:-]+", key)
-                or not isinstance(command, str) or command not in {"pause", "resume"}
-                or not isinstance(target, Mapping)
-                or set(target) != {"kind", "project", "req"} or target.get("kind") != "run"
-                or not isinstance(target.get("project"), str) or not 1 <= len(target["project"]) <= 80
-                or not isinstance(target.get("req"), str) or not TELEGRAM_REQ_ID.fullmatch(target["req"])
-                or not isinstance(precondition, Mapping)
-                or set(precondition) != {"state"}
-                or not isinstance(precondition.get("state"), str)
-                or precondition.get("state") != ("running" if command == "pause" else "paused")):
-            return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
-        ledger_request = {
-            "idempotency_key": key,
-            "command": command,
-            "target": f"{target['project']}/{target['req']}",
-            "origin": "telegram",
-            "params": {},
-            "precondition": {"state": precondition["state"]},
-        }
-        return self._submit_ledger_command(ledger_request)
-
-    def _submit_ledger_command(self, ledger_request: dict[str, Any]) -> dict[str, Any]:
->>>>>>> 5fc76a4af1662ae7ec9c49b5404f5ab4fcf9dcfd
-        if self.liveness.status is LaptopStatus.OFFLINE:
-            return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
-        try:
-            result = self.laptop.post_json("/api/remote/v1/commands", ledger_request)
-        except UpstreamTimeout:
-            return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "idempotency_key": idempotency_key}
-        except UpstreamError:
-            self.liveness.record_failure()
-            if self.liveness.status is LaptopStatus.OFFLINE:
-                return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
-            return {"status": "FAILED", "code": "LAPTOP_UNAVAILABLE", "idempotency_key": idempotency_key}
-        if result.get("code") == "UNKNOWN_OUTCOME":
-            result["idempotency_key"] = idempotency_key
-        return result
-
-    def issue_challenge(self, request: Any) -> dict[str, Any]:
-        if not isinstance(request, dict):
-            return {"code": "INVALID_CHALLENGE"}
-        target = request.get("target")
-        if isinstance(target, dict):
-            project, req = target.get("project"), target.get("req")
-            target = f"{project}/{req}" if isinstance(project, str) and isinstance(req, str) else None
-        typed_req = request.get("typedReq")
-        if not isinstance(target, str) or not isinstance(typed_req, str):
-            return {"code": "INVALID_CHALLENGE"}
-        if self.liveness.status is LaptopStatus.OFFLINE:
-            return {"code": "LAPTOP_OFFLINE"}
-        try:
-            return self.laptop.post_json("/api/remote/v1/challenges", {"target": target, "typedReq": typed_req})
-        except UpstreamTimeout:
-            return {"code": "UNKNOWN_OUTCOME"}
-        except UpstreamError:
-            self.liveness.record_failure()
-            return {"code": "LAPTOP_OFFLINE" if self.liveness.status is LaptopStatus.OFFLINE
-                    else "LAPTOP_UNAVAILABLE"}
-
-=======
-    def submit_command(self, request: Any) -> dict[str, Any]:
-        ledger_request = _ledger_command(request)
-        if ledger_request is None:
-            return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
-        if ledger_request["command"] in CHALLENGED_COMMANDS:
-            confirmation = ledger_request.get("confirmation")
-            target = request.get("target") if isinstance(request, dict) else None
-            req = target.get("req") if isinstance(target, dict) else None
-            if (not isinstance(confirmation, dict)
-                    or not isinstance(confirmation.get("challenge_id"), str)
-                    or not confirmation["challenge_id"].strip()
-                    or confirmation.get("typed_req") != req):
-                return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
-        return self._submit_ledger_command(ledger_request)
-
     def submit_telegram_command(self, request: Any) -> dict[str, Any]:
         """Relay only owner-safe run pause/resume commands to the laptop ledger."""
         if not isinstance(request, Mapping) or request.get("schemaVersion") != 1:
@@ -312,7 +201,9 @@ class GatewayRuntime:
             return {"status": "REJECTED", "code": "LAPTOP_OFFLINE",
                     "idempotency_key": ledger_request.get("idempotency_key")}
         try:
-            result = self.laptop.post_json("/api/remote/v1/commands", ledger_request)
+            command = getattr(self.laptop, "command", None)
+            response = (command(ledger_request) if callable(command)
+                        else self.laptop.post_json("/api/remote/v1/commands", ledger_request))
         except UpstreamTimeout:
             return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME",
                     "idempotency_key": ledger_request.get("idempotency_key")}
@@ -323,32 +214,17 @@ class GatewayRuntime:
                         "idempotency_key": ledger_request.get("idempotency_key")}
             return {"status": "FAILED", "code": "LAPTOP_UNAVAILABLE",
                     "idempotency_key": ledger_request.get("idempotency_key")}
+        if isinstance(response, tuple) and len(response) == 2:
+            status, result = response
+        else:
+            status, result = 200, response
+        if not isinstance(result, dict):
+            return {"status": "FAILED", "code": "INVALID_UPSTREAM_RESPONSE"}
         if result.get("code") == "UNKNOWN_OUTCOME":
             result["idempotency_key"] = ledger_request.get("idempotency_key")
+        result.setdefault("http_status", status)
         return result
 
-    def issue_challenge(self, request: Any) -> dict[str, Any]:
-        if not isinstance(request, dict):
-            return {"code": "INVALID_CHALLENGE"}
-        target = request.get("target")
-        if isinstance(target, dict):
-            project, req = target.get("project"), target.get("req")
-            target = f"{project}/{req}" if isinstance(project, str) and isinstance(req, str) else None
-        typed_req = request.get("typedReq")
-        if not isinstance(target, str) or not isinstance(typed_req, str):
-            return {"code": "INVALID_CHALLENGE"}
-        if self.liveness.status is LaptopStatus.OFFLINE:
-            return {"code": "LAPTOP_OFFLINE"}
-        try:
-            return self.laptop.post_json("/api/remote/v1/challenges", {"target": target, "typedReq": typed_req})
-        except UpstreamTimeout:
-            return {"code": "UNKNOWN_OUTCOME"}
-        except UpstreamError:
-            self.liveness.record_failure()
-            return {"code": "LAPTOP_OFFLINE" if self.liveness.status is LaptopStatus.OFFLINE
-                    else "LAPTOP_UNAVAILABLE"}
-
->>>>>>> b133ebcade14b98dda6215693032d2d59d818b00
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since
         if offline_since is None or time.monotonic() - offline_since < OFFLINE_ALERT_DELAY_SECONDS:
