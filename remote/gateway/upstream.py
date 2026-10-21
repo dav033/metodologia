@@ -12,6 +12,10 @@ class UpstreamError(RuntimeError):
     """A laptop API request failed or returned an invalid response."""
 
 
+class UpstreamTimeout(UpstreamError):
+    """The laptop did not answer before the request deadline."""
+
+
 class LaptopClient:
     def __init__(self, origin: str, gateway_key: str, timeout: float = 5.0):
         self._origin = origin.rstrip("/")
@@ -45,3 +49,39 @@ class LaptopClient:
         from urllib.parse import urlencode
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
+
+    def command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return self.post_json("/api/remote/v1/commands", payload)
+
+    def challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        return self.post_json("/api/remote/v1/challenges", payload)
+
+    def post_json(self, path: str, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        if path not in {"/api/remote/v1/commands", "/api/remote/v1/challenges"}:
+            raise ValueError("unsupported laptop POST path")
+        request = Request(self._origin + path, data=json.dumps(payload).encode("utf-8"), headers={
+            "Authorization": f"Bearer {self._key}", "Accept": "application/json",
+            "Content-Type": "application/json",
+        }, method="POST")
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                status, raw = response.status, response.read().decode("utf-8")
+        except HTTPError as exc:
+            status = exc.code
+            try:
+                raw = exc.read().decode("utf-8")
+            except (OSError, UnicodeError):
+                raw = ""
+        except TimeoutError as exc:
+            raise UpstreamTimeout("laptop command timed out") from exc
+        except (URLError, OSError) as exc:
+            if isinstance(exc, URLError) and isinstance(exc.reason, TimeoutError):
+                raise UpstreamTimeout("laptop command timed out") from exc
+            raise UpstreamError("laptop command request failed") from exc
+        try:
+            result = json.loads(raw)
+        except (json.JSONDecodeError, UnicodeError) as exc:
+            raise UpstreamError("laptop command response was invalid") from exc
+        if not isinstance(result, dict):
+            raise UpstreamError("laptop command response was not an object")
+        return status, result

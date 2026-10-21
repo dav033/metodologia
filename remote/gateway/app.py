@@ -10,11 +10,63 @@ from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError
+from upstream import LaptopClient, UpstreamError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
+SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel-attempt", "reopen", "retry", "revise", "approve",
+                                "launch", "answer-round", "cancel-plan", "delete-plan", "edit-brief", "note"})
+CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
+
+
+def _ledger_command(payload: dict[str, Any]) -> dict[str, Any]:
+    """Translate a browser command into the laptop ledger's versioned request shape."""
+    command = payload.get("type")
+    target = payload.get("target")
+    if command not in SUPPORTED_COMMANDS or not isinstance(target, dict):
+        return {}
+    project, req = target.get("project"), target.get("req")
+    if not isinstance(project, str) or not isinstance(req, str):
+        return {}
+    params: dict[str, Any] = {}
+    if command == "cancel-attempt" and isinstance(target.get("attemptId"), str):
+        params["attempt"] = target["attemptId"]
+    if command in {"reopen", "retry", "edit-brief"} and isinstance(target.get("taskId"), str):
+        params["task"] = target["taskId"]
+    if command == "retry":
+        route = payload.get("route")
+        if isinstance(route, str):
+            params["route"] = route
+        elif isinstance(route, dict):
+            route_id = route.get("id", route.get("route_id"))
+            if isinstance(route_id, str):
+                params["route"] = route_id
+            for key in ("model", "account"):
+                if isinstance(route.get(key), str):
+                    params[key] = route[key]
+    if command == "answer-round":
+        round_id = target.get("roundId")
+        digits = "".join(char for char in round_id if char.isdigit()) if isinstance(round_id, str) else ""
+        if digits:
+            params["round"] = int(digits)
+        elif isinstance(payload.get("round"), int):
+            params["round"] = payload["round"]
+        params["answers"] = payload.get("answer", payload.get("answers"))
+    if command == "edit-brief":
+        params.update({"field": payload.get("field", "brief"), "value": payload.get("value", payload.get("brief"))})
+    if command == "note":
+        params["note"] = payload.get("note")
+    if "reason" in payload:
+        params["reason"] = payload["reason"]
+    request: dict[str, Any] = {"idempotency_key": payload.get("idempotencyKey"), "command": command,
+                               "target": f"{project}/{req}", "origin": "web", "params": params,
+                               "precondition": payload.get("precondition")}
+    confirmation = payload.get("confirmation")
+    if isinstance(confirmation, dict):
+        request["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
+                                   "typed_req": confirmation.get("typedReq")}
+    return request
 
 
 class GatewayRuntime:
@@ -31,6 +83,53 @@ class GatewayRuntime:
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
+
+    def submit_command(self, payload: dict[str, Any]) -> dict[str, Any]:
+        status, result = self.relay_command(payload)
+        return {**result, "http_status": status}
+
+    def issue_challenge(self, payload: dict[str, Any]) -> dict[str, Any]:
+        status, result = self.relay_challenge(payload)
+        return {**result, "http_status": status}
+
+    def relay_command(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        key = payload.get("idempotencyKey") if isinstance(payload, dict) else None
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return 503, {"code": "LAPTOP_OFFLINE", "idempotency_key": key}
+        request = _ledger_command(payload) if isinstance(payload, dict) else {}
+        if not request or not isinstance(key, str) or len(key) < 16:
+            return 400, {"code": "INVALID_COMMAND"}
+        confirmation = payload.get("confirmation")
+        if payload.get("type") in CHALLENGED_COMMANDS and (
+                not isinstance(confirmation, dict)
+                or not isinstance(confirmation.get("challengeId"), str)
+                or not confirmation["challengeId"]
+                or confirmation.get("typedReq") != payload.get("target", {}).get("req")):
+            return 400, {"code": "CONFIRMATION_REQUIRED", "idempotency_key": key}
+        try:
+            status, result = self.laptop.command(request)
+        except UpstreamTimeout:
+            return 503, {"code": "UNKNOWN_OUTCOME", "idempotency_key": key}
+        except UpstreamError:
+            return 503, {"code": "LAPTOP_UNAVAILABLE"}
+        if result.get("code") == "CONFIRMATION_REQUIRED":
+            status = 400
+        if result.get("code") == "UNKNOWN_OUTCOME" and "idempotency_key" not in result:
+            result = {**result, "idempotency_key": key}
+        return status, result
+
+    def relay_challenge(self, payload: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+        target = payload.get("target") if isinstance(payload, dict) else None
+        typed_req = payload.get("typedReq") if isinstance(payload, dict) else None
+        if isinstance(target, dict):
+            project, req = target.get("project"), target.get("req")
+            target = f"{project}/{req}" if isinstance(project, str) and isinstance(req, str) else None
+        if not isinstance(target, str) or not isinstance(typed_req, str):
+            return 400, {"code": "INVALID_CHALLENGE"}
+        try:
+            return self.laptop.challenge({"target": target, "typedReq": typed_req})
+        except UpstreamError:
+            return 503, {"code": "LAPTOP_UNAVAILABLE"}
 
     def poll_once(self) -> None:
         try:

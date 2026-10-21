@@ -30,9 +30,9 @@ MAX_COMMAND_BODY = 256 * 1024
 COMMAND_STATUS = {
     "INVALID_COMMAND": 400,
     "CONFIRMATION_REQUIRED": 400,
-    "LAPTOP_OFFLINE": 503,
+    "LAPTOP_OFFLINE": 410,
     "LAPTOP_UNAVAILABLE": 503,
-    "UNKNOWN_OUTCOME": 409,
+    "UNKNOWN_OUTCOME": 503,
 }
 
 
@@ -171,11 +171,13 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 self._json(400, {"code": "INVALID_COMMAND"})
                 return
             if endpoint == "challenges":
-                result = runtime.issue_challenge(payload)
+                status, result = runtime.relay_challenge(payload)
             else:
-                result = runtime.submit_command(payload)
+                status, result = runtime.relay_command(payload)
             code = result.get("code")
-            status = COMMAND_STATUS.get(code, 400 if endpoint == "challenges" and code else 200)
+            status = COMMAND_STATUS.get(code, status)
+            if "idempotency_key" in result:
+                result = {**result, "idempotencyKey": result.pop("idempotency_key")}
             self._json(status, result)
 
         def _valid_state_changing_request(self) -> bool:

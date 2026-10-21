@@ -36,43 +36,42 @@ class CommandRelayTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.laptop = Mock()
-        self.laptop.post_json.return_value = {"status": "OK", "code": None}
+        self.laptop.command.return_value = (200, {"status": "OK", "code": None})
+        self.laptop.challenge.return_value = (200, {"challengeId": "challenge-token", "expiresIn": 120})
         self.runtime = GatewayRuntime(config(Path(self.temp.name) / "gateway.sqlite"), laptop=self.laptop,
                                       sender=lambda _: None)
 
     def test_destructive_command_without_challenge_is_refused_without_forwarding(self):
         result = self.runtime.submit_command(command(type="launch", route=None))
         self.assertEqual(result["code"], "CONFIRMATION_REQUIRED")
-        self.laptop.post_json.assert_not_called()
+        self.laptop.command.assert_not_called()
 
     def test_destructive_command_with_empty_or_mismatched_challenge_is_refused(self):
         for confirmation in ({}, {"challengeId": "challenge-token", "typedReq": "REQ-999"}):
             with self.subTest(confirmation=confirmation):
                 result = self.runtime.submit_command(command(type="launch", route=None, confirmation=confirmation))
                 self.assertEqual(result["code"], "CONFIRMATION_REQUIRED")
-        self.laptop.post_json.assert_not_called()
+        self.laptop.command.assert_not_called()
 
     def test_offline_laptop_returns_laptop_offline_without_forwarding(self):
         self.runtime.liveness.status = LaptopStatus.OFFLINE
         result = self.runtime.submit_command(command())
         self.assertEqual(result["code"], "LAPTOP_OFFLINE")
-        self.laptop.post_json.assert_not_called()
+        self.laptop.command.assert_not_called()
 
     def test_timeout_returns_unknown_outcome_with_idempotency_key(self):
-        self.laptop.post_json.side_effect = UpstreamTimeout("late response")
+        self.laptop.command.side_effect = UpstreamTimeout("late response")
         result = self.runtime.submit_command(command())
         self.assertEqual(result["code"], "UNKNOWN_OUTCOME")
         self.assertEqual(result["idempotency_key"], "retry-key-00000001")
 
     def test_confirmation_challenge_is_relayed_with_string_target(self):
-        self.laptop.post_json.return_value = {"challengeId": "challenge-token", "expiresIn": 120}
         result = self.runtime.issue_challenge({
             "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
             "typedReq": "REQ-027",
         })
         self.assertEqual(result["challengeId"], "challenge-token")
-        self.laptop.post_json.assert_called_once_with("/api/remote/v1/challenges", {
-            "target": "demo/REQ-027", "typedReq": "REQ-027"})
+        self.laptop.challenge.assert_called_once_with({"target": "demo/REQ-027", "typedReq": "REQ-027"})
 
     def test_route_object_is_translated_to_string_selectors_for_laptop_ledger(self):
         translated = _ledger_command(command())
@@ -80,7 +79,7 @@ class CommandRelayTests(unittest.TestCase):
         self.assertEqual(translated["params"], {
             "task": "T4", "route": "route:abc", "model": "sonnet", "account": "work"})
         self.runtime.submit_command(command())
-        forwarded = self.laptop.post_json.call_args.args[1]
+        forwarded = self.laptop.command.call_args.args[0]
         self.assertEqual(forwarded["params"]["route"], "route:abc")
         self.assertEqual(forwarded["params"]["model"], "sonnet")
         self.assertEqual(forwarded["params"]["account"], "work")
@@ -162,32 +161,32 @@ class CommandRelayTests(unittest.TestCase):
         self.addCleanup(thread.join, 2)
 
         challenge = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
-        self.laptop.post_json.return_value = {"challengeId": "challenge-token", "expiresIn": 120}
+        self.laptop.challenge.return_value = (201, {"challengeId": "challenge-token", "expiresIn": 120})
         connection.request("POST", "/api/remote/v1/challenges", json.dumps(challenge), headers)
         challenge_response = connection.getresponse()
-        self.assertEqual(challenge_response.status, 200)
+        self.assertEqual(challenge_response.status, 201)
         self.assertEqual(json.loads(challenge_response.read())["challengeId"], "challenge-token")
 
-        self.laptop.post_json.return_value = {"status": "OK", "code": None}
+        self.laptop.command.return_value = (200, {"status": "OK", "code": None})
         connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
         command_response = connection.getresponse()
         self.assertEqual(command_response.status, 200)
         self.assertEqual(json.loads(command_response.read())["status"], "OK")
-        self.assertEqual([call.args[0] for call in self.laptop.post_json.call_args_list], [
-            "/api/remote/v1/challenges", "/api/remote/v1/commands"])
+        self.assertEqual(self.laptop.challenge.call_count, 1)
+        self.assertEqual(self.laptop.command.call_count, 1)
 
-        self.laptop.post_json.side_effect = UpstreamTimeout("late response")
+        self.laptop.command.side_effect = UpstreamTimeout("late response")
         connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
         timeout_response = connection.getresponse()
         timeout_body = json.loads(timeout_response.read())
-        self.assertEqual(timeout_response.status, 409)
+        self.assertEqual(timeout_response.status, 503)
         self.assertEqual(timeout_body["code"], "UNKNOWN_OUTCOME")
-        self.assertEqual(timeout_body["idempotency_key"], "retry-key-00000001")
+        self.assertEqual(timeout_body["idempotencyKey"], "retry-key-00000001")
 
         runtime.liveness.status = LaptopStatus.OFFLINE
         connection.request("POST", "/api/remote/v1/commands", json.dumps(command()), headers)
         offline_response = connection.getresponse()
-        self.assertEqual(offline_response.status, 503)
+        self.assertEqual(offline_response.status, 410)
         self.assertEqual(json.loads(offline_response.read())["code"], "LAPTOP_OFFLINE")
 
 
