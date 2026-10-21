@@ -88,19 +88,41 @@ def _conflict(request: dict, doc: dict, plan, match: re.Match, req: str) -> tupl
                  "rework_conflict"), [option]
 
 
-def _findings(request: dict, match: re.Match, refused: dict, req: str) -> tuple[dict, list[dict]]:
+def lineage_between(doc: dict, plan, audit: str, named: list[str]) -> list[str]:
+    """The accepted tasks that sit between the named ones and the audit: they hold the OLD version of what the named
+    tasks change, and the audit reads the tree they build. A fix that does not reach them never reaches the audit
+    (REQ-027: T8a was redone for F41/F42 and T18 found the same two again, because T9 -> T16 -> T17 kept the old file)."""
+    if plan is None:
+        return []
+    try:
+        before_audit = set(plan.ancestors(audit))
+        found = {m for n in named for m in plan.descendants(n)} & before_audit
+    except Exception:  # noqa: BLE001 - an unknown id: no lineage evidence
+        return []
+    done = {t for t, rec in (doc.get("tasks") or {}).items() if rec.get("state") == "completed"}
+    order = [spec.id for spec in getattr(plan, "tasks", ())]
+    return [t for t in order if t in found and t in done and t not in named and t != audit]
+
+
+def _findings(request: dict, match: re.Match, refused: dict, req: str, lineage: list[str] | None = None
+              ) -> tuple[dict, list[dict]]:
     task, named = request["task"], [str(t) for t in refused.get("named") or []]
+    lineage = [t for t in lineage or [] if t not in named]
     found = match["findings"].strip()
     why = refused.get("why", "")
     option = []
     steps = ["Lee los hallazgos en el informe de la auditoría (el log del último intento) y escribe cada uno, con "
              f"su evidencia, en `RUN.notes/<tarea>.audit.md` de la tarea que señala: es lo que el agente leerá."]
     if named:
-        targets = ",".join(named)
-        option = [{"id": "rework_findings", "target": targets, "label": f"Devolver {', '.join(named)} para que los arreglen",
-                   "consequence": f"{', '.join(named)} se rehacen (solo ellas) con las notas de la auditoría; {task} "
+        everything = [*named, *lineage]
+        targets = ",".join(everything)
+        extra = (f" También se rehacen {', '.join(lineage)}: están entre esas tareas y la auditoría y conservan la versión "
+                 "vieja, así que sin ellas el arreglo no llegaría al árbol que se audita." if lineage else "")
+        option = [{"id": "rework_findings", "target": targets, "label": f"Devolver {', '.join(everything)} para que los arreglen",
+                   "consequence": f"{', '.join(everything)} se rehacen (solo ellas) con las notas de la auditoría; {task} "
                                   "vuelve a auditar cuando terminen. Es lo que el sistema haría si no hubiera llegado "
-                                  "a su límite de devoluciones. Exige escribir los hallazgos: llegan a cada tarea como nota."}]
+                                  "a su límite de devoluciones. Exige escribir los hallazgos: llegan a cada tarea como nota."
+                                  + extra}]
         steps += [f"Pulsa «{option[0]['label']}».",
                   f"Por terminal: `scheduler-op {req} rework {targets} --only --reason \"hallazgos {found}\"`."]
     else:
@@ -147,7 +169,8 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
         return _conflict(request, doc, plan, match, req)
     gate = AUDIT_GATE.search(last)
     if gate and code.endswith("rework_limit"):
-        return _findings(request, gate, refused or {}, req)
+        return _findings(request, gate, refused or {}, req,
+                         lineage_between(doc, plan, request["task"], [str(t) for t in (refused or {}).get("named") or []]))
     if "not a git repository" in text:
         return _diag("plan", "Una comprobación del plan usa git y el verificador no tiene git",
                      "El verificador corre las comprobaciones en una copia limpia de los archivos, sin la carpeta .git. "

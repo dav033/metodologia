@@ -130,6 +130,31 @@ class Rules(unittest.TestCase):
         diagnosis, extra = rules.explain(audit, {}, failures=[failure])
         self.assertEqual((diagnosis["option"], extra), ("retry_with_note", []))
 
+    def test_the_findings_rework_includes_the_accepted_tasks_that_hold_the_old_version_between_the_fix_and_the_audit(self):
+        # REQ-027: T8a was redone for F41/F42, T18 found them again: T9 -> T16 -> T17 kept the old file, T18 reads their tree
+        class Chain:
+            graph = {"T18": {"T17", "T16", "T9", "T8a", "T2"}, "T17": {"T16", "T9", "T8a", "T2"}, "T16": {"T9", "T8a", "T2"},
+                     "T9": {"T8a", "T2"}, "T8a": {"T2"}, "T2": set(), "T20": {"T8a"}}
+            tasks = [SimpleNamespace(id=t) for t in ("T2", "T8a", "T9", "T16", "T17", "T18", "T20")]
+
+            def ancestors(self, task):
+                return self.graph[task]
+
+            def descendants(self, task):
+                return frozenset(t for t, up in self.graph.items() if task in up)
+        done = {"tasks": {t: {"state": "completed"} for t in ("T2", "T8a", "T9", "T16", "T17", "T20")}}
+        failure = "audit gate: 2 open blocking finding(s): F41 (high), F42 (high) | M6 evidence: m6://x"
+        audit = request(task="T18", reason="m5:rework_limit")
+        diagnosis, extra = rules.explain(audit, done, plan=Chain(), failures=[failure], req="REQ-027",
+                                         refused={"named": ["T8a"], "why": "limit: T8a was already sent back 2 time(s)"})
+        self.assertEqual(extra[0]["target"], "T8a,T9,T16,T17")          # not T20: it is not between T8a and the audit
+        self.assertIn("rework T8a,T9,T16,T17 --only", " ".join(diagnosis["steps"]))
+        self.assertIn("conservan la versión vieja", extra[0]["consequence"])
+        pending = {"tasks": {**done["tasks"], "T9": {"state": "pending"}}}
+        extra = rules.explain(audit, pending, plan=Chain(), failures=[failure], req="REQ-027",
+                              refused={"named": ["T8a"]})[1]
+        self.assertEqual(extra[0]["target"], "T8a,T16,T17")             # a task already back to pending needs nothing
+
     def test_the_bundle_carries_the_task_the_failures_and_the_rule(self):
         diagnosis, _ = rules.explain(request(), REDONE, plan=Plan(), failures=[CLASH])
         text = rules.bundle(request(), plan=Plan(), failures=[CLASH], verify="", rule=diagnosis,
