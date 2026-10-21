@@ -3,11 +3,12 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QuotasPanel, RoutesPanel, type RouteOption } from "./recovery-panels";
+import { FailureReviewPanel } from "./failure-review-panel";
 
 type Target = { kind: "run" | "attempt" | "task" | "plan" | "round"; project: string; req: string; taskId?: string; attemptId?: string; roundId?: string };
 type Run = { project: string; req: string; state: string; updatedAt?: string; lastSeenAt?: string; revision?: number; activeAttempt?: { id: string; state?: string; updatedAt?: string }; tasks?: Task[] };
 type FailureReview = { attemptId: string };
-type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview };
+type Task = { id: string; title?: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; activeAttempt?: { id: string; state?: string; updatedAt?: string }; reviewAttempt?: FailureReview; history?: { id: string; state?: string }[] };
 type Plan = { id?: string; project: string; req: string; state: string; revision?: number; updatedAt?: string; acceptanceCriteria?: string[]; tasks?: Task[] };
 type RoundQuestion = { id: string; text: string; type: "choice" | "open"; options?: { key: string; label: string }[]; recommended?: string; why?: string; suggested?: string };
 type Round = { project: string; req: string; round: number; id?: string; title?: string; intro?: string; coverage?: string; status: string; revision?: number; questions: RoundQuestion[] };
@@ -73,11 +74,15 @@ function parseSnapshot(value: unknown): Snapshot {
     const review = record(field(task, "reviewAttempt", "review_attempt"));
     const attemptId = review ? (field(review, "id", "attempt_id") ?? field(review, "attemptId", "attempt_id")) : undefined;
     const reviewAttempt = review && text(attemptId) ? { attemptId } : undefined;
+    const history = Array.isArray(task.history) ? task.history.flatMap((attempt) => {
+      const parsed = parseAttempt(attempt);
+      return parsed ? [parsed] : [];
+    }) : [];
     return { id: task.id, title: text(task.title) ? task.title : undefined, state: task.state,
       revision: typeof task.revision === "number" ? task.revision : undefined,
       updatedAt: text(updatedAt) ? updatedAt : undefined,
       acceptanceCriteria: Array.isArray(criteria) ? criteria.filter(text) : [],
-      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")), reviewAttempt };
+      activeAttempt: parseAttempt(field(task, "activeAttempt", "active_attempt")), reviewAttempt, history };
   };
   const runs = raw.runs.map((item): Run => {
     const run = record(item);
@@ -334,35 +339,7 @@ export default function HomePage() {
       }
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-round",
         target: { kind: "round", project: round.project, req: round.req, roundId: round.id ?? String(round.round) },
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
-<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
-<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
-<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answer }, `${round.req}-round-${round.round}`);
-||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answer }, `${round.req}-round-${round.round}`);
-=======
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
-=======
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
-=======
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) },
-        round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
-=======
-        precondition: { state: round.status, ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
->>>>>>> d5722a644747de28545fa30eb743fa0997f37253
+        precondition: { state: "open", ...(round.revision === undefined ? {} : { revision: round.revision }) }, round: round.round, answers: answer }, `${round.req}-round-${round.round}`);
     };
   }
 
@@ -374,7 +351,7 @@ export default function HomePage() {
       }
       return sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "answer-decision",
         target: { kind: "run", project: decision.project, req: decision.req, ...(decision.task ? { taskId: decision.task } : {}) },
-        precondition: { state: decision.state ?? "waiting", ...(decision.revision === undefined ? {} : { revision: decision.revision }) },
+        precondition: { state: "open", ...(decision.revision === undefined ? {} : { revision: decision.revision }) },
         requestId: decision.id, option: option.id, reason }, `${decision.req}-${decision.id}`);
     };
   }
@@ -418,33 +395,12 @@ export default function HomePage() {
     const plan = snapshot?.plans.find((item) => item.project === run.project && item.req === run.req);
     const nextRevision = (plan?.revision ?? run.revision ?? 0) + 1;
     const canRecover = task.state === "recovering";
+    const reviewAttemptId = task.reviewAttempt?.attemptId ?? [...(task.history ?? [])]
+      .reverse().find((attempt) => attempt.state === "failed" || attempt.state === "rejected")?.id;
     return <article className="task-card" key={`${run.req}-${task.id}`}>
     <div className="row-heading"><strong>{task.id}{task.title ? ` · ${task.title}` : ""}</strong><span className="state">{task.state}</span></div>
     <p className="last-seen">Última actividad · {prettyTime(task.activeAttempt?.updatedAt ?? task.updatedAt)}</p>
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-||||||| 6d69194de8a49c55d12c9d73b42d9cda2631c1dd
-<<<<<<< 9e2b4a7ef27c0360273e4d2c110f31839133069d
-||||||| f5aa1d3190788a2f58e4928c44fd96a9b9a3e1c7
-<<<<<<< 6d3f5e84232234b75e9c4e46669c09404e864f22
-||||||| 7584b578bb3b90c6e31cd3e80816703e3f56b659
-<<<<<<< b84ace56ec9b6860c1bc5b40067d7cdf7f7ce424
-||||||| 569a1485062992dae9f8a61f28ef43ad8179f56e
-    {task.state === "failed" && task.activeAttempt && <FailureReviewPanel attemptId={task.activeAttempt.id} />}
-=======
-    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
-      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
->>>>>>> 255adcdb1bc0fb3814e0d448585551076183162c
-=======
-    {task.state === "failed" && (task.activeAttempt ?? task.history?.at(-1)) &&
-      <FailureReviewPanel attemptId={(task.activeAttempt ?? task.history?.at(-1))!.id} />}
->>>>>>> 27ef4b35c0fcf26f0b68058d0e95deb7ed5fe25f
-=======
-    {task.state === "failed" && task.reviewAttempt?.attemptId &&
-      <FailureReviewPanel attemptId={task.reviewAttempt.attemptId} />}
->>>>>>> e5f3b15ac8278a1920c8feef414f89bd689013ca
-=======
-    {task.state === "failed" && task.reviewAttempt?.attemptId && <FailureReviewPanel attemptId={task.reviewAttempt.attemptId} />}
->>>>>>> d5722a644747de28545fa30eb743fa0997f37253
+    {task.state === "failed" && reviewAttemptId && <FailureReviewPanel attemptId={reviewAttemptId} />}
     {!!task.acceptanceCriteria?.length && <details><summary>Criterios de aceptación ({task.acceptanceCriteria.length})</summary><ul>{task.acceptanceCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></details>}
     {canRecover && <RoutesPanel project={run.project} req={run.req} taskId={task.id} working={!!working}
       onRetry={(event, route) => retryTask(event, task, run, route)} />}
@@ -455,7 +411,7 @@ export default function HomePage() {
       <button disabled={!!working}>Crear revisión y actualizar tarea</button>
     </form>}
     <div className="actions">
-      {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || task.reviewAttempt) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}`}>Ver intento fallido</Link>}
+      {(task.state === "failed" || task.state === "rejected" || task.activeAttempt?.state === "failed" || reviewAttemptId) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}${reviewAttemptId ? `#attempt=${encodeURIComponent(reviewAttemptId)}` : ""}`}>Ver intento fallido</Link>}
       {task.state === "blocked" || task.state === "failed" || task.state === "rejected" ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id }, task.activeAttempt.state ?? task.state, task.revision, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>

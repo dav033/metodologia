@@ -138,6 +138,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     }
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
+    assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
     await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
@@ -336,7 +337,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (let attempt = 0; attempt < 40 && gateway.commands.length < 4; attempt += 1) await delay(100);
     assert.equal(gateway.commands.at(-1)?.type, "answer-round", "round answers should use the command ledger");
     assert.equal(gateway.commands.at(-1)?.round, 2);
-    assert.deepEqual(gateway.commands.at(-1)?.answer, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
+    assert.deepEqual(gateway.commands.at(-1)?.answers, { q1: { choice: "safe", note: "" }, q2: { text: "Keep the audit trail" } });
     await waitForText("answer-round");
     await fill('[aria-label="Escribe REQ-027"]', "REQ-027");
     await fill('[aria-label="Id del reto de confirmación"]', "challenge-1");
