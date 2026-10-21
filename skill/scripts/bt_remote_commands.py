@@ -313,19 +313,6 @@ class Ledger:
         if not isinstance(req, dict):
             return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": validate(req), "stored": False}
         req = {**req, "params": req.get("params") or {}}
-<<<<<<< 428ea0d21bca3a100b4548979194ceaf8f376cc9
-        if req["command"] not in handlers:
-            return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
-                    "message": "El comando aún no tiene ejecutor."}
-        fp, key = fingerprint(req), req["idempotency_key"]
-        with _EFFECT_LOCK:
-||||||| 359fd6166abca5a190c5d6e7e4d5cf35f8948ff1
-        if req["command"] not in handlers:
-            return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
-                    "message": "El comando aún no tiene ejecutor."}
-        fp, key = fingerprint(req), req["idempotency_key"]
-        with _LOCK:
-=======
         key = req.get("idempotency_key")
         if not isinstance(key, str) or not 8 <= len(key) <= 120:
             return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": validate(req), "stored": False}
@@ -334,8 +321,11 @@ class Ledger:
         except (TypeError, ValueError):
             return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": "El comando no es JSON válido.",
                     "stored": False}
-        with _LOCK:
->>>>>>> cbca0a797129a302e0dcdc822dfb801ab6fa58b7
+        if req.get("command") not in COMMANDS:
+            return {"status": "REJECTED", "code": "INVALID_COMMAND", "message": validate(req), "stored": False}
+        # Serialize the state check, challenge consumption, reservation, effect, and outcome write.
+        # This keeps two concurrent commands from both acting on the same stale state.
+        with _EFFECT_LOCK:
             with self._db() as db:
                 row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
                 if row is not None:
@@ -346,41 +336,41 @@ class Ledger:
                         return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
                                 "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
                     return self._result(row, True)
-        problem = validate(req)
-        if problem:
-            code = "CONFIRMATION_REQUIRED" if req.get("command") in CHALLENGED else "INVALID_COMMAND"
-            return {"status": "REJECTED", "code": code, "message": problem, "stored": False}
-        if req["command"] not in handlers:
-            return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
-                    "message": "El comando aún no tiene ejecutor."}
-        confirmation = req.get("confirmation")
-        current = None
-        try:
-            current = _read_state(state_of, req)
-        except Exception as exc:
-            return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
-                    "message": str(exc)[:300]}
-        if not current or any(current.get(k) != v for k, v in req["precondition"].items()):
-            return {"status": "REJECTED", "code": "STALE_PRECONDITION", "stored": False,
-                    "message": "La precondición del objetivo ya no se cumple."}
-        with _LOCK:
+
+            problem = validate(req)
+            if problem:
+                code = "CONFIRMATION_REQUIRED" if req.get("command") in CHALLENGED else "INVALID_COMMAND"
+                return {"status": "REJECTED", "code": code, "message": problem, "stored": False}
+            if req["command"] not in handlers:
+                return {"status": "REJECTED", "code": "COMMAND_NOT_IMPLEMENTED", "stored": False,
+                        "message": "El comando aún no tiene ejecutor."}
+
+            try:
+                current = _read_state(state_of, req)
+            except Exception as exc:
+                return {"status": "FAILED", "code": "STATE_UNAVAILABLE", "stored": False,
+                        "message": str(exc)[:300]}
+            if not current or not _matches_precondition(req, current):
+                outcome = {"message": "La precondición del objetivo ya no se cumple."}
+                with self._db() as db:
+                    db.execute("INSERT INTO commands VALUES (?,?,?,?,?,?,?,'REJECTED','STALE_PRECONDITION',?,?,?)",
+                               (key, fp, req["command"], req["target"], req["origin"],
+                                json.dumps(req["params"], sort_keys=True),
+                                json.dumps(req["precondition"], sort_keys=True), json.dumps(outcome),
+                                _now(), _now()))
+                    row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
+                return self._result(row, False)
+
+            confirmation = req.get("confirmation")
             with self._db() as db:
                 db.execute("BEGIN IMMEDIATE")
-                row = db.execute("SELECT * FROM commands WHERE idempotency_key=?", (key,)).fetchone()
-                if row is not None:
-                    if row["fingerprint"] != fp:
-                        return {"status": "REJECTED", "code": "IDEMPOTENCY_CONFLICT", "stored": False,
-                                "message": "La clave ya se usó con un contenido distinto."}
-                    if row["status"] == "PENDING":
-                        return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "replayed": True,
-                                "idempotency_key": key, "message": "El comando se interrumpió; verifica el destino."}
-                    return self._result(row, True)
                 if req["command"] in CHALLENGED:
                     challenge_id = confirmation.get("challenge_id", confirmation.get("challengeId"))
                     typed_req = confirmation.get("typed_req", confirmation.get("typedReq", "")).strip().upper()
                     expected_req = req["target"].rsplit("/", 1)[-1].upper()
                     challenge_hash = hashlib.sha256(challenge_id.encode()).hexdigest()
-                    challenge = db.execute("SELECT * FROM challenges WHERE challenge_hash=?", (challenge_hash,)).fetchone()
+                    challenge = db.execute("SELECT * FROM challenges WHERE challenge_hash=?",
+                                           (challenge_hash,)).fetchone()
                     now = dt.datetime.now(dt.timezone.utc).timestamp()
                     if (typed_req != expected_req or challenge is None or challenge["target"] != req["target"]
                             or challenge["used_at"] is not None or challenge["expires_at"] < now):
@@ -392,6 +382,7 @@ class Ledger:
                            (key, fp, req["command"], req["target"], req["origin"],
                             json.dumps(req["params"], sort_keys=True), json.dumps(req["precondition"], sort_keys=True),
                             _now()))
+
             params = dict(req["params"])
             if req["command"] in CHALLENGED:
                 params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
