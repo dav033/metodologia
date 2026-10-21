@@ -42,6 +42,7 @@ VERCEL_FRONTEND_CHECKS = {
     "deployment-ready",
     "rewrite-reaches-caddy",
 }
+IDENTITY_CHECKS = {"oauth-app", "telegram", "generated-keys", "secrets-placement"}
 SENSITIVE_NAME = re.compile(r"(?:secret|token|password|passwd|private.?key|api.?key|credential)", re.I)
 SENSITIVE_ASSIGNMENT = re.compile(
     r"\b(?:[A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|CREDENTIAL)[A-Z0-9_]*)"
@@ -100,7 +101,19 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
         raise ReceiptError("schema_version must be 1")
     _required_text(receipt, "name", "receipt")
 
-    if receipt["name"] == "vercel-frontend":
+    identity_receipt = receipt["name"] == "identity"
+    if identity_receipt:
+        required_steps = set()
+        required_checks = IDENTITY_CHECKS
+        if receipt.get("status") not in {"blocked", "complete"}:
+            raise ReceiptError("identity receipt status must be blocked or complete")
+        if receipt["status"] == "complete" and any(
+            check.get("ok") is not True
+            for check in receipt.get("checks", {}).values()
+            if isinstance(check, dict)
+        ):
+            raise ReceiptError("a complete identity receipt cannot contain failed checks")
+    elif receipt["name"] == "vercel-frontend":
         required_steps = VERCEL_FRONTEND_STEPS
         required_checks = VERCEL_FRONTEND_CHECKS
         project = receipt.get("project")
@@ -174,7 +187,9 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
     for name, check in checks.items():
         if not isinstance(check, dict):
             raise ReceiptError(f"check {name} must be an object")
-        if check.get("ok") is not True:
+        if not isinstance(check.get("ok"), bool):
+            raise ReceiptError(f"check {name}.ok must be a boolean")
+        if not identity_receipt and check.get("ok") is not True:
             raise ReceiptError(f"check {name} did not pass")
         _required_text(check, "detail", f"checks.{name}")
 
@@ -209,8 +224,12 @@ def main(argv: list[str] | None = None) -> int:
             check = receipt["checks"].get(args.check)
             if check is None:
                 raise ReceiptError(f"check not found: {args.check}")
+            if check["ok"] is not True:
+                raise ReceiptError(f"{args.check} did not pass: {check['detail']}")
             print(f"{args.check}: ok — {check['detail']}")
         else:
+            if receipt["name"] == "identity" and receipt["status"] == "blocked":
+                raise ReceiptError("identity setup is blocked; run a named check for details")
             print(f"receipt {receipt['name']}: valid")
         return 0
     except (OSError, json.JSONDecodeError, ReceiptError, KeyError) as exc:

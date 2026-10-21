@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "name": "identity",
+  "status": "blocked",
+  "deployed_git_sha": "099941646c34f0823103cd8540ff3940eb2e3406",
+  "deployed_git_sha_detail": "Inherited from the T21 Vercel frontend receipt; this task performed no deployment.",
+  "steps": [],
+  "checks": {
+    "oauth-app": {
+      "ok": false,
+      "detail": "Not performed. This task's execution restrictions prohibit accessing account credentials. The task also specifies a gateway callback, while remote/docs/runbook.md requires the Vercel frontend callback /api/auth/callback for the OAuth state cookie."
+    },
+    "telegram": {
+      "ok": false,
+      "detail": "Not performed. The owner's secrets file was not accessed, and getMe/getChat were not called."
+    },
+    "generated-keys": {
+      "ok": false,
+      "detail": "Not performed. No FLOW_GATEWAY_KEY or SESSION_SECRET was generated or written."
+    },
+    "secrets-placement": {
+      "ok": false,
+      "detail": "Not performed. No secret files or Vercel environment variables were accessed or changed, and no claim of a secrets scan is made."
+    }
+  }
+}
