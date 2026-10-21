@@ -40,7 +40,7 @@ class UnitTest(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("systemd-analyze"), "systemd-analyze unavailable")
     def test_systemd_analyze_offline(self):
-        for unit in ("bitacora-gateway.service", "advin-bitacora-tunnel.service", "bitacora-remote.service"):
+        for unit in ("bitacora-gateway.service", "bitacora-remote.service", "advin-bitacora-tunnel.service"):
             r = subprocess.run(["systemd-analyze", "verify", "--man=no", str(DEPLOY / unit)],
                                capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
@@ -81,7 +81,8 @@ class CaddyTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which("caddy"), "caddy unavailable")
     def test_caddy_validate(self):
         r = subprocess.run(["caddy", "validate", "--config", str(DEPLOY / "Caddyfile"), "--adapter", "caddyfile"],
-                           capture_output=True, text=True, env={"GATEWAY_API_HOST": "api.example.test", "PATH": "/usr/bin:/bin"})
+                           capture_output=True, text=True,
+                           env={"GATEWAY_API_HOST": "api.example.test", "PATH": "/usr/bin:/bin"})
         self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_callback_not_registered_on_api_host(self):
