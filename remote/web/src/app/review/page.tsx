@@ -73,8 +73,9 @@ export default function ReviewPage() {
         return attemptFromSnapshot(await response.json() as unknown, project!, req!, taskId!);
       });
     void attemptIdPromise.then(async (attemptId) => {
-        if (!attemptId) return null;
-        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" });
+        if (!attemptId || !project || !req) return null;
+        const target = `${project}/${req}`;
+        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review?target=${encodeURIComponent(target)}`, { cache: "no-store" });
         if (!detailResponse.ok) throw new Error("Review unavailable");
         const response = await detailResponse.json() as unknown;
         const reviewValue = object(response);
