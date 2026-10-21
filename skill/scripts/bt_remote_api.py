@@ -98,9 +98,10 @@ _COMMAND_STATUS = {"OK": 200, "INVALID_COMMAND": 400, "COMMAND_NOT_IMPLEMENTED":
                    "EFFECT_FAILED": 500, "STATE_UNAVAILABLE": 503}
 
 
-def _target_state(target: str) -> dict | None:
+def _target_state(target: str, command: str | None = None, params: dict | None = None) -> dict | None:
     """Resolve the target's current precondition state once the dispatch layer is available."""
-    return None
+    import bt_remote_commands as commands
+    return commands.target_state(target, command, params)
 
 
 def _submit_command(handler, length: int) -> None:
@@ -111,7 +112,9 @@ def _submit_command(handler, length: int) -> None:
     except (ValueError, OSError):
         return _problem(handler, 400, "INVALID_COMMAND", "El cuerpo debe ser JSON válido.")
     ledger = commands.Ledger()
-    result = ledger.submit(request, HANDLERS, _target_state)
+    handlers = commands.dispatch_handlers()
+    handlers.update(HANDLERS)
+    result = ledger.submit(request, handlers, _target_state)
     status = _COMMAND_STATUS.get(result.get("code") or result["status"], 200)
     _send_json(handler, result, status)
 
