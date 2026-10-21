@@ -968,3 +968,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + the suite no longer depends on the zone or on today's date for this case. − other tests may hide the same dependency; the full suite has not been run under `TZ=UTC` (it takes about nine minutes and loads the machine while runs verify), so that sweep is pending.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-029 T7
 
+## D-108 — A failed check is run again once; a pass on the rerun counts
+
+- **Date:** 2026-10-20 · **Status:** Accepted · **Refines:** D-106
+- **Context:** REQ-027 T15c and T15d were blocked by the same 20-45 s browser test (`panel-browser.test.mjs`, waits of 7-30 s). It passes when run alone on the failing attempt's worktree and fails when the machine is busy: at the time the load average was 16 on 8 cores, with Baldur's Gate 3 at about 560 % CPU, three runs, their agents and a test suite running. Each timing failure spent an attempt of a task whose code was fine and ended in a card for the owner.
+- **Decision:** `QualityPolicy.rerun_failed_checks` (config `verifier.rerun_failed_checks`, default 1, 0 = never, at most 3): a command check that fails is run again; if it passes, the check passes and its stderr says «failed once (exit N) and passed when run again; flaky under load»; if it keeps failing, the last run judges it. A test covers pass-on-rerun, never, and the bound.
+- **Consequences:** + load-induced failures stop costing attempts; the note stays in the evidence. − a genuinely intermittent defect can pass once; a check that really fails costs its duration twice (45 s here); the rerun is invisible in the verdict except for that stderr note, so there is no flakiness metric yet. The owner process of a run reads it at its next restart. Playing a game on this machine still slows every run.
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T15c, T15d
+
