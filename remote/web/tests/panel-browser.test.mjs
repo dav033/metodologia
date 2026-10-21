@@ -159,9 +159,35 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     });
     await waitForText("failed");
     updateSnapshot((nextSnapshot) => {
+      nextSnapshot.runs[0].state = "rejected";
+      nextSnapshot.runs[0].tasks[0].state = "rejected";
+      delete nextSnapshot.runs[0].tasks[0].activeAttempt;
+      nextSnapshot.runs[0].tasks[0].reviewAttempt = { id: "att-rejected-1", live: false };
+    });
+    const rejectedState = await waitForText("rejected");
+    assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and runs should expose recovery controls");
+    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href^=\"/review?\"]').click()", returnByValue: true });
+    const waitForReview = async () => {
+      for (let attempt = 0; attempt < 70; attempt += 1) {
+        const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
+        const text = evaluated.result?.value;
+        if (text?.includes("Fallo de fixture en rejected")) return text;
+        await delay(100);
+      }
+      assert.fail("failure review route did not load the rejected task's reviewAttempt");
+    };
+    const rejectedReview = await waitForReview();
+    for (const expected of ["CAUSA", "SALIDA DE VERIFICACIÓN", "ESTADÍSTICA DEL DIFF", "FINAL DEL LOG", "att-rejected-1", "Fin de log"]) {
+      assert.ok(rejectedReview.includes(expected), `real failure review should render ${expected}`);
+    }
+    assert.doesNotMatch(rejectedReview, /ghp_abcdefghijklmnopqrstuvwxyz123456|abc\.def\.ghi/);
+    await cdp(socket, "Page.navigate", { url: frontendOrigin });
+    await waitForText("rejected");
+    updateSnapshot((nextSnapshot) => {
       nextSnapshot.runs[0].state = "finished";
       nextSnapshot.runs[0].tasks[0].state = "completed";
       delete nextSnapshot.runs[0].tasks[0].activeAttempt;
+      delete nextSnapshot.runs[0].tasks[0].reviewAttempt;
       delete nextSnapshot.runs[0].activeAttempt;
     });
     await waitForText("finished");

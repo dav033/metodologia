@@ -14,8 +14,8 @@ test("failure review renders its four sections from the fixture", async () => {
   for (const section of ["Causa", "Salida de verificación", "Estadística del diff", "Final del log"]) {
     assert.match(page, new RegExp(`title="${section}"`));
   }
+  assert.match(page, /useState<FailureReview>\(\{ \.\.\.reviewFixture/);
   for (const field of ["cause", "verificationOutput", "diffStat", "logTail"]) {
-    assert.match(page, new RegExp(`reviewFixture\\.${field}`));
     assert.match(fixture, new RegExp(`${field}:`));
   }
 });
