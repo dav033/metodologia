@@ -1,5 +1,8 @@
+import json
+import threading
 import tempfile
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -71,6 +74,65 @@ class CommandRelayTests(unittest.TestCase):
         self.assertEqual(forwarded["params"]["route"], "route:abc")
         self.assertEqual(forwarded["params"]["model"], "sonnet")
         self.assertEqual(forwarded["params"]["account"], "work")
+
+    def test_phone_payloads_reach_laptop_http_with_route_round_and_edit_fields(self):
+        received = []
+
+        class LaptopEndpoint(BaseHTTPRequestHandler):
+            def do_POST(self):
+                payload = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
+                self.server.received.append((self.path, self.headers.get("Authorization"), payload))
+                body = json.dumps({"status": "OK"}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, _format, *_args):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopEndpoint)
+        server.received = received
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(thread.join, 2)
+        self.addCleanup(server.shutdown)
+        runtime = GatewayRuntime(
+            GatewayConfig(f"http://127.0.0.1:{server.server_port}", "test-key", "test-token",
+                          "test-chat", Path(self.temp.name) / "http-gateway.sqlite"),
+            sender=lambda _: None,
+        )
+
+        route_request = command(route={"route_id": "route:phone", "model": "sonnet", "account": "work"})
+        round_request = command(
+            type="answer-round",
+            target={"kind": "round", "project": "demo", "req": "REQ-027", "roundId": "2"},
+            round=2, answer={"Q1": "yes"},
+        )
+        edit_request = command(
+            type="edit-brief",
+            target={"kind": "task", "project": "demo", "req": "REQ-027", "taskId": "T1"},
+            field="acceptance_criteria", value="Keep the chosen route.",
+            confirmation={"challengeId": "challenge-token", "typedReq": "REQ-027"},
+        )
+        round_request.pop("route")
+        edit_request.pop("route")
+
+        for request in (route_request, round_request, edit_request):
+            self.assertEqual(runtime.submit_command(request)["status"], "OK")
+
+        self.assertEqual([item[0] for item in received], ["/api/remote/v1/commands"] * 3)
+        self.assertEqual([item[1] for item in received], ["Bearer test-key"] * 3)
+        sent = [item[2] for item in received]
+        self.assertEqual(sent[0]["params"], {
+            "task": "T4", "route": "route:phone", "model": "sonnet", "account": "work"})
+        self.assertEqual(sent[1]["params"], {"round": 2, "answers": {"Q1": "yes"}})
+        self.assertEqual(sent[2]["params"], {
+            "task": "T1", "field": "acceptance_criteria", "value": "Keep the chosen route."})
+        self.assertEqual(sent[2]["confirmation"], {
+            "challenge_id": "challenge-token", "typed_req": "REQ-027"})
 
 
 if __name__ == "__main__":

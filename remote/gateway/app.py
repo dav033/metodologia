@@ -31,7 +31,8 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(command, str):
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-                 "note": "note", "attemptId": "attempt", "taskId": "task"}
+                 "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
+                 "field": "field", "value": "value"}
     params: dict[str, Any] = {}
     for source, destination in field_map.items():
         if source in request:
@@ -43,7 +44,8 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     route = request.get("route")
     if isinstance(route, dict):
         # Laptop recovery dispatch accepts selectors, while the web contract carries a route object.
-        params["route"] = route.get("id") or route.get("routeId") or route.get("route")
+        params["route"] = (route.get("id") or route.get("routeId") or route.get("route_id")
+                           or route.get("route"))
         for selector in ("model", "account"):
             if selector in route:
                 params[selector] = route[selector]
