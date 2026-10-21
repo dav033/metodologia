@@ -5,7 +5,7 @@ import datetime as dt
 import hmac
 import json
 import os
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 PREFIX = "/api/remote/v1"
 MAX_BODY = 256 * 1024
@@ -33,6 +33,11 @@ def _path(handler) -> str:
     return urlparse(handler.path).path
 
 
+def _query(handler) -> dict[str, str]:
+    parsed = urlparse(handler.path)
+    return {key: values[0] for key, values in parse_qs(parsed.query).items()}
+
+
 def route_get(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
@@ -40,6 +45,37 @@ def route_get(handler) -> None:
     path = _path(handler)
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
+    if path == f"{PREFIX}/events":
+        import bt_remote_events as feed
+        try:
+            limit = int(_query(handler).get("limit", "200"))
+        except ValueError:
+            return _problem(handler, 400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.")
+        if limit < 1:
+            return _problem(handler, 400, "INVALID_LIMIT", "El límite debe estar entre 1 y 1000.")
+        query = _query(handler)
+        try:
+            feed.page([], query.get("after", ""), min(limit, 1000))
+        except feed.CursorError as exc:
+            return _problem(handler, 400, "INVALID_CURSOR", str(exc))
+        import bt_core
+        import bt_live_api as live
+        import bt_plans_api
+        import bt_subscriptions
+        import bt_remote_commands as commands
+
+        try:
+            runs = live.run_summaries(bt_core.ROOT, "global")
+            plans = bt_plans_api.plans_payload(bt_core.ROOT)
+            quotas = bt_subscriptions.summary()
+            ledger = commands.Ledger()
+            rows = ledger.rows()
+            events = feed.collect(bt_core.ROOT, runs, plans, quotas, rows)
+            return _send_json(handler, feed.page(events, query.get("after", ""), min(limit, 1000)), 200)
+        except feed.CursorError as exc:
+            return _problem(handler, 400, "INVALID_CURSOR", str(exc))
+        except (OSError, ValueError, bt_plans_api.PlanError):
+            return _problem(handler, 503, "EVENTS_UNAVAILABLE", "El feed remoto aún no está disponible.")
     if path != f"{PREFIX}/health":
         return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
 
