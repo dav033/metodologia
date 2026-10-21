@@ -67,7 +67,8 @@ def route_get(handler) -> None:
         review = _failure_review(target, attempt_id)
         if review is None:
             return _problem(handler, 404, "ATTEMPT_NOT_FOUND", "No se encontró el intento fallido en esa ejecución.")
-        return _send_json(handler, review, 200)
+        import bt_remote_events
+        return _send_json(handler, bt_remote_events.redact(review), 200)
     if path in (f"{PREFIX}/commands", f"{PREFIX}/history"):
         return _command_history(handler)
     if path == f"{PREFIX}/quotas":
@@ -118,209 +119,14 @@ def route_get(handler) -> None:
 def _snapshot(handler) -> None:
     """Serve the mobile run and plan read model."""
     import bt_core
-<<<<<<< 8396774b39745bb03bfad884ccec848a6ea9f946
+    import bt_remote_events
     from bt_remote_snapshot import build_snapshot
-||||||| 024ac1f25d0ebcfc15590117412f79007ece2440
-    import bt_live_api as live
-<<<<<<< 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
-||||||| fb08e3be2f8e159dd50ff476145296f86bfb408c
-    import bt_plans_api
-    import bt_rounds
-<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
-||||||| d88893200d213875887aba717975e1db538c70ff
-||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
-=======
-    import bt_remote_events
->>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
-=======
-    import bt_remote_events
->>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
-=======
-    import bt_plans_api
-    import bt_rounds
-    import bt_remote_events
->>>>>>> 61cb405118d850940a6bc797f70cf43cff1ddc79
 
-    root = bt_core.ROOT
-=======
-    import bt_live_api as live
-    import bt_remote_events
-
-    root = bt_core.ROOT
->>>>>>> 7f7daa5dc88f455c4fefc5b532973e6493139e44
     try:
         payload = build_snapshot(bt_core.ROOT)
     except Exception:
         return _problem(handler, 503, "SNAPSHOT_UNAVAILABLE", "La vista remota aún no está disponible.")
-<<<<<<< 8396774b39745bb03bfad884ccec848a6ea9f946
-    return _send_json(handler, payload, 200)
-||||||| 024ac1f25d0ebcfc15590117412f79007ece2440
-
-    active_by_run: dict[str, dict] = {}
-    for item in now["items"]:
-        active_by_run.setdefault(f'{item["project"]}/{item["req_id"]}', item)
-
-    runs = []
-    for run in summaries:
-        active = active_by_run.get(run["run"])
-        attempts = [attempt for task in run["tasks"] for attempt in task["history"]]
-        last_activity = max((a.get("last_activity_at") for a in attempts if a.get("last_activity_at")), default=None)
-        if last_activity is None:
-            last_activity = run.get("updated_at")
-        tasks = []
-        for task in run["tasks"]:
-            review = next((a for a in reversed(task["history"]) if a.get("state") == "rejected"), None)
-            current = task.get("attempt")
-            tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
-                          "activeAttempt": live._attempt(current) if current and current.get("live") else None,
-                          "reviewAttempt": live._attempt(review),
-                          "history": [live._attempt(a) for a in task["history"]]})
-        runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"],
-                     "reqId": run["req_id"],
-                     "state": run.get("status") or ("running" if run.get("active") else "idle"),
-                     "title": run["title"], "status": run["status"], "active": run["active"],
-                     "revision": run.get("revision"), "updatedAt": run.get("updated_at"),
-                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
-                     "activeTask": ({"id": active["task"], "title": active["task_title"],
-                                     "state": active["state"], "attempt": live._attempt(active["attempt"])}
-                                    if active else None),
-                     "lastActivityAt": last_activity, "tasks": tasks})
-    plans, rounds, decisions = [], [], []
-    for plan in plan_summaries:
-        project, req = plan["project"], plan["req_id"]
-        rdir = bt_plans_api.req_dir(root, project, req)
-        plan_status = bt_plans_api.status_of(root, project, req)
-        tasks = [task for milestone in plan_status.get("milestones", [])
-                 for task in milestone.get("tasks", [])]
-        plans.append({"id": plan_status.get("plan", {}).get("plan_id") or f"{project}/{req}",
-                      "project": project, "req": req,
-                      "state": plan_status.get("plan", {}).get("status") or plan.get("plan_status") or "unknown",
-                      "revision": plan_status.get("plan", {}).get("revision") or plan.get("revision"),
-                      "updatedAt": plan.get("updated_at"),
-                      "acceptanceCriteria": [criterion for task in tasks
-                                             for criterion in task.get("acceptance_criteria", [])],
-                      "tasks": tasks})
-        for request in bt_plans_api.open_decisions(rdir):
-            options = []
-            for option in request.get("options", []):
-                if isinstance(option, str):
-                    options.append({"id": option, "label": option.replace("_", " "),
-                                    "consequence": option.replace("_", " ")})
-                elif isinstance(option, dict) and isinstance(option.get("id"), str):
-                    options.append(option)
-            decisions.append({**request, "project": project, "req": req, "options": options})
-        for number in bt_plans_api.open_rounds(rdir):
-            try:
-                data = bt_rounds.load(bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json")
-            except (OSError, ValueError):
-                continue
-            rounds.append({"project": project, "req": req, "round": number,
-                           **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
-                              if key in data}})
-    generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
-<<<<<<< 6a384ab4c1c843dcde961f5b5b47db14aa3d408d
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| fb08e3be2f8e159dd50ff476145296f86bfb408c
-<<<<<<< af4745f7f09edb40bc2aff39c663b988ef7c9d07
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| d88893200d213875887aba717975e1db538c70ff
-<<<<<<< 0d0dd48d35237123898d202a25bcd85838d7ff3f
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs, "plans": plans, "rounds": rounds,
-                                "decisionRequests": decisions}, 200)
-||||||| 27eddbf4d46527a94f9c3d70f4f01c34f744c5ca
-    return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
-=======
-    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                "runs": runs}
-    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
->>>>>>> 5a5761a021f0c8d1a035ba4a2695e335afaa258b
-=======
-    payload = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-               "runs": runs, "plans": plans, "rounds": rounds,
-               "decisionRequests": decisions}
     return _send_json(handler, bt_remote_events.redact(payload), 200)
->>>>>>> ac534adf5cfac8a08cfba2690234314cc0a6286c
-=======
-    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                "runs": runs, "plans": plans, "rounds": rounds,
-                "decisionRequests": decisions}
-    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
->>>>>>> 61cb405118d850940a6bc797f70cf43cff1ddc79
-=======
-
-    active_by_run: dict[str, dict] = {}
-    for item in now["items"]:
-        active_by_run.setdefault(f'{item["project"]}/{item["req_id"]}', item)
-
-    runs = []
-    for run in summaries:
-        active = active_by_run.get(run["run"])
-        attempts = [attempt for task in run["tasks"] for attempt in task["history"]]
-        last_activity = max((a.get("last_activity_at") for a in attempts if a.get("last_activity_at")), default=None)
-        if last_activity is None:
-            last_activity = run.get("updated_at")
-        tasks = []
-        for task in run["tasks"]:
-            review = next((a for a in reversed(task["history"]) if a.get("state") == "rejected"), None)
-            current = task.get("attempt")
-            tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
-                          "activeAttempt": live._attempt(current) if current and current.get("live") else None,
-                          "reviewAttempt": live._attempt(review),
-                          "history": [live._attempt(a) for a in task["history"]]})
-        runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"],
-                     "reqId": run["req_id"],
-                     "state": run.get("status") or ("running" if run.get("active") else "idle"),
-                     "title": run["title"], "status": run["status"], "active": run["active"],
-                     "revision": run.get("revision"), "updatedAt": run.get("updated_at"),
-                     "activeAttempt": live._attempt(active["attempt"]) if active else None,
-                     "activeTask": ({"id": active["task"], "title": active["task_title"],
-                                     "state": active["state"], "attempt": live._attempt(active["attempt"])}
-                                    if active else None),
-                     "lastActivityAt": last_activity, "tasks": tasks})
-    plans, rounds, decisions = [], [], []
-    for plan in plan_summaries:
-        project, req = plan["project"], plan["req_id"]
-        rdir = bt_plans_api.req_dir(root, project, req)
-        plan_status = bt_plans_api.status_of(root, project, req)
-        tasks = [task for milestone in plan_status.get("milestones", [])
-                 for task in milestone.get("tasks", [])]
-        plans.append({"id": plan_status.get("plan", {}).get("plan_id") or f"{project}/{req}",
-                      "project": project, "req": req,
-                      "state": plan_status.get("plan", {}).get("status") or plan.get("plan_status") or "unknown",
-                      "revision": plan_status.get("plan", {}).get("revision") or plan.get("revision"),
-                      "updatedAt": plan.get("updated_at"),
-                      "acceptanceCriteria": [criterion for task in tasks
-                                             for criterion in task.get("acceptance_criteria", [])],
-                      "tasks": tasks})
-        for request in bt_plans_api.open_decisions(rdir):
-            options = []
-            for option in request.get("options", []):
-                if isinstance(option, str):
-                    options.append({"id": option, "label": option.replace("_", " "),
-                                    "consequence": option.replace("_", " ")})
-                elif isinstance(option, dict) and isinstance(option.get("id"), str):
-                    options.append(option)
-            decisions.append({**request, "project": project, "req": req, "options": options})
-        for number in bt_plans_api.open_rounds(rdir):
-            try:
-                data = bt_rounds.load(bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json")
-            except (OSError, ValueError):
-                continue
-            rounds.append({"project": project, "req": req, "round": number,
-                           **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
-                              if key in data}})
-    generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
-    snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                "runs": runs, "plans": plans, "rounds": rounds,
-                "decisionRequests": decisions}
-    return _send_json(handler, bt_remote_events.redact(snapshot), 200)
->>>>>>> 7f7daa5dc88f455c4fefc5b532973e6493139e44
 
 
 def _command_history(handler) -> None:

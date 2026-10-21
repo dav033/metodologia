@@ -114,6 +114,37 @@ class Handler:
 
 
 class RouteTests(unittest.TestCase):
+    def test_snapshot_route_redacts_session_secret_from_diagnostic_payload(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/snapshot"
+        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                patch("bt_remote_snapshot.build_snapshot", return_value={
+                    "runs": [{"failure": "SESSION_SECRET=synthetic-not-a-credential"}],
+                }):
+            bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
+    def test_review_route_redacts_session_secret_from_diagnostic_payload(self):
+        handler = Handler()
+        handler.path = "/api/remote/v1/attempts/a1/review?target=demo%2FREQ-001"
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "output.tail"
+            output.write_text("SESSION_SECRET=synthetic-not-a-credential\n", encoding="utf-8")
+            with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}), \
+                    patch("bt_remote_api._commands._run_target", return_value=("demo", "REQ-001", Path(directory))), \
+                    patch("bt_attempt_facts.attempt_facts", return_value={
+                        "T1": [{"attempt": "a1", "state": "failed", "failure": "verification failed"}],
+                    }), \
+                    patch("bt_remote_api._review_executor_attempt", return_value=Path(directory)), \
+                    patch("bt_remote_api._review_quality_result", return_value=(None, {})), \
+                    patch("bt_remote_api._review_diff", return_value={"stat": None}):
+                bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200)
+        self.assertNotIn("synthetic-not-a-credential", handler.body)
+        self.assertIn("SESSION_SECRET=[REDACTED]", handler.body)
+
     def test_collect_keeps_blocked_attempt_ids_distinct_across_runs(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
