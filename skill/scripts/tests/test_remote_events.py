@@ -10,75 +10,27 @@ import tempfile
 import threading
 import time
 import unittest
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-from http.server import ThreadingHTTPServer
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-from http.server import ThreadingHTTPServer
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-=======
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
-=======
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
 from pathlib import Path
 from unittest.mock import patch
 from urllib.parse import quote
 
 SCRIPTS = Path(__file__).resolve().parents[1]
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
-sys.path.insert(0, str(SCRIPTS))
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-sys.path.insert(0, str(SCRIPTS))
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-sys.path.insert(0, str(SCRIPTS))
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-sys.path.insert(0, str(SCRIPTS))
-GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
-sys.path.insert(0, str(GATEWAY))
-=======
 GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(GATEWAY))
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(GATEWAY))
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
-=======
-GATEWAY = Path(__file__).resolve().parents[3] / "remote" / "gateway"
-sys.path.insert(0, str(SCRIPTS))
-sys.path.insert(0, str(GATEWAY))
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
 
 import bt_remote_api
 import bt_remote_events as feed
 import bt_plans_api
 import bt_rounds
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
 import bt_core
 import bt_live_api
 import bt_plan_adapter
 import bt_scheduler_adapter
 from bt_planner import revisions as plan_revisions
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-=======
 import bt_server
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
+
 
 AT = "2026-10-19T12:00:00Z"
 OLD = "2026-10-19T08:00:00Z"
@@ -104,6 +56,8 @@ class FixtureTests(unittest.TestCase):
             "attempt.failed": {"runs": [run([{"id": "T1", "title": "Build",
                                                "state": "blocked", "reason": "attempts_exhausted",
                                                "attempts_used": 3, "max_attempts": 3,
+                                               "attemptsUsed": 3, "maxAttempts": 3,
+                                               "retriesRemaining": 0,
                                                "attempt": attempt("a1", state="rejected", failure="tests")}])]},
             "attempt.blocked": {"runs": [run([{"id": "T1", "attempt": attempt("a2", state="blocked")}])]},
             "run.finished": {"runs": [run([], status="done")]},
@@ -237,6 +191,7 @@ class RouteTests(unittest.TestCase):
             self.assertEqual([item[1]["id"] for item in published], ["evt-next"])
             self.assertEqual(runtime.outbox._db.execute("SELECT dedupe_key FROM telegram_outbox").fetchall(),
                              [("event:evt-next",)])
+
 
     def test_snapshot_route_redacts_session_secret_assignments(self):
         handler = Handler()
@@ -488,6 +443,39 @@ class RouteTests(unittest.TestCase):
             self.assertEqual(failed[0]["target"]["attemptId"], "att-0003")
             self.assertTrue(failed[0]["data"]["retryExhausted"])
             self.assertEqual((failed[0]["data"]["attemptsUsed"], failed[0]["data"]["maxAttempts"]), (3, 3))
+    def test_events_route_requires_exhaustion_for_failed_attempt_transition(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            transition = {"id": "transition-1", "kind": "attempt_transition", "state": "failed",
+                          "project": "demo", "req": "REQ-001", "task": "T1", "attempt": "a1",
+                          "at": AT, "data": {"failure": "tests"}}
+            exhausted = {**transition, "data": {"failure": "tests", "attemptsUsed": 3,
+                                                 "maxAttempts": 3, "retriesRemaining": 0}}
+
+            class LedgerStub:
+                def rows(self):
+                    return []
+
+            def poll():
+                handler = Handler()
+                with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key"}):
+                    bt_remote_api.route_get(handler)
+                self.assertEqual(handler.status, 200)
+                return json.loads(handler.body)
+
+            with patch("bt_core.ROOT", root), \
+                    patch("bt_live_api.run_summaries", return_value=[]), \
+                    patch("bt_plans_api.plans_payload", return_value=[]), \
+                    patch("bt_live_api.flow_events", side_effect=[([transition], [], {}), ([exhausted], [], {})]), \
+                    patch("bt_subscriptions.summary", return_value=[]), \
+                    patch("bt_remote_commands.Ledger", LedgerStub):
+                self.assertEqual(poll()["events"], [])
+                events = poll()["events"]
+                self.assertEqual(len(events), 1)
+                self.assertEqual(events[0]["type"], "attempt.failed")
+                self.assertTrue(events[0]["data"]["retryExhausted"])
+                self.assertEqual(events[0]["data"]["attemptsUsed"], 3)
+
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.

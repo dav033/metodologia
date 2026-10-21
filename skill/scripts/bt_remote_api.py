@@ -144,7 +144,8 @@ def _snapshot(handler) -> None:
             last_activity = run.get("updated_at")
         tasks = []
         for task in run["tasks"]:
-            review = next((a for a in reversed(task["history"]) if a.get("state") == "rejected"), None)
+            review = next((a for a in reversed(task["history"])
+                           if a.get("state") in {"failed", "rejected"}), None)
             current = task.get("attempt")
             tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
                           "activeAttempt": live._attempt(current) if current and current.get("live") else None,
@@ -161,100 +162,12 @@ def _snapshot(handler) -> None:
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
     plans, rounds, decisions = [], [], []
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
     for plan in plan_summaries:
         project, req = plan["project"], plan["req_id"]
         rdir = bt_plans_api.req_dir(root, project, req)
         plan_status = bt_plans_api.status_of(root, project, req)
         tasks = [task for milestone in plan_status.get("milestones", [])
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-    for row in bt_plans_api.plans_payload(root):
-        project, req = row["project"], row["req_id"]
-        try:
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-    try:
-        for summary in bt_plans_api.plans_payload(root):
-            project, req = summary["project"], summary["req_id"]
-            try:
-                status = bt_plans_api.status_of(root, project, req)
-            except (OSError, ValueError, bt_plans_api.PlanError):
-                continue
-            plan = status.get("plan") if isinstance(status.get("plan"), dict) else {}
-            plan_tasks = []
-            for milestone in status.get("milestones", []):
-                for task in milestone.get("tasks", []):
-                    current = task.get("attempt")
-                    plan_tasks.append({"id": task["id"], "title": task.get("title"),
-                                       "state": task.get("state", "pending"),
-                                       "acceptanceCriteria": task.get("acceptance_criteria", []),
-                                       "activeAttempt": live._attempt(current) if current and current.get("live") else None,
-                                       "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
-            plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
-                          "title": summary.get("title"),
-                          "state": plan.get("status") or summary.get("run_status") or "unknown",
-                          "revision": plan.get("revision"), "updatedAt": summary.get("updated_at"),
-                          "tasks": plan_tasks})
-            decisions.extend({"id": item["id"], "project": project, "req": req,
-                              "task": item.get("task"), "title": item.get("title"),
-                              "what": item.get("what"), "evidence": item.get("evidence", []),
-                              "options": item.get("options", []), "recommended": item.get("recommended"),
-                              "unskippable": item.get("unskippable"), "state": item.get("state", "open"),
-                              "revision": item.get("revision")}
-                             for item in status.get("decisions", []) if isinstance(item, dict))
-=======
-    try:
-        for summary in bt_plans_api.plans_payload(root):
-            project, req = summary["project"], summary["req_id"]
-            try:
-                status = bt_plans_api.status_of(root, project, req)
-            except (OSError, ValueError, bt_plans_api.PlanError):
-                continue
-            plan = status.get("plan") if isinstance(status.get("plan"), dict) else {}
-            plan_tasks = []
-            for milestone in status.get("milestones", []):
-                for task in milestone.get("tasks", []):
-                    current = task.get("attempt")
-                    plan_tasks.append({"id": task["id"], "title": task.get("title"),
-                                       "state": task.get("state", "pending"),
-                                       "acceptanceCriteria": task.get("acceptance_criteria", []),
-                                       "activeAttempt": live._attempt(current) if current and
-                                       (current.get("live") or current.get("state") in {"failed", "rejected"}) else None,
-                                       "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
-            plans.append({"id": plan.get("plan_id") or f"{project}/{req}", "project": project, "req": req,
-                          "title": summary.get("title"),
-                          "state": plan.get("status") or summary.get("run_status") or "unknown",
-                          "revision": plan.get("revision"), "updatedAt": summary.get("updated_at"),
-                          "tasks": plan_tasks})
-            decisions.extend({"id": item["id"], "project": project, "req": req,
-                              "task": item.get("task"), "title": item.get("title"),
-                              "what": item.get("what"), "evidence": item.get("evidence", []),
-                              "options": item.get("options", []), "recommended": item.get("recommended"),
-                              "unskippable": item.get("unskippable"), "state": item.get("state", "open"),
-                              "revision": item.get("revision")}
-                             for item in status.get("decisions", []) if isinstance(item, dict))
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
-            rdir = bt_plans_api.req_dir(root, project, req)
-            status = bt_plans_api.status_of(root, project, req)
-        except bt_plans_api.PlanError:
-            continue
-        tasks = [task for milestone in status.get("milestones", [])
-=======
-    for row in bt_plans_api.plans_payload(root):
-        project, req = row["project"], row["req_id"]
-        try:
-            rdir = bt_plans_api.req_dir(root, project, req)
-            status = bt_plans_api.status_of(root, project, req)
-        except bt_plans_api.PlanError:
-            continue
-        tasks = [task for milestone in status.get("milestones", [])
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
                  for task in milestone.get("tasks", [])]
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
-        plans.append({"id": plan_status.get("plan", {}).get("plan_id") or f"{project}/{req}",
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-        plans.append({"id": status.get("plan", {}).get("plan_id") or req,
-=======
         plan_tasks = []
         for task in tasks:
             current = task.get("attempt")
@@ -263,16 +176,15 @@ def _snapshot(handler) -> None:
                                "acceptanceCriteria": task.get("acceptance_criteria", []),
                                "activeAttempt": live._attempt(current) if current and current.get("live") else None,
                                "history": [live._attempt(attempt) for attempt in task.get("history", [])]})
-        plans.append({"id": status.get("plan", {}).get("plan_id") or req,
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
+        criteria = [criterion for task in tasks for criterion in task.get("acceptance_criteria", [])]
+        plans.append({"id": plan_status.get("plan", {}).get("plan_id") or f"{project}/{req}",
                       "project": project, "req": req,
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
                       "state": plan_status.get("plan", {}).get("status") or plan.get("plan_status") or "unknown",
                       "revision": plan_status.get("plan", {}).get("revision") or plan.get("revision"),
-                      "updatedAt": plan.get("updated_at"),
-                      "acceptanceCriteria": [criterion for task in tasks
-                                             for criterion in task.get("acceptance_criteria", [])],
-                      "tasks": tasks})
+                      "title": plan.get("title"), "updatedAt": plan.get("updated_at"),
+                      "updated_at": plan.get("updated_at"),
+                      "acceptanceCriteria": criteria, "acceptance_criteria": criteria,
+                      "tasks": plan_tasks, "taskDetails": tasks})
         for request in bt_plans_api.open_decisions(rdir):
             options = []
             for option in request.get("options", []):
@@ -283,45 +195,11 @@ def _snapshot(handler) -> None:
                     options.append(option)
             decisions.append({**request, "project": project, "req": req, "options": options})
         for number in bt_plans_api.open_rounds(rdir):
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-                      "state": status.get("plan", {}).get("status") or row.get("plan_status") or "unknown",
-                      "revision": status.get("plan", {}).get("revision"),
-                      "updated_at": row.get("updated_at"),
-                      "acceptance_criteria": [criterion for task in tasks
-                                              for criterion in task.get("acceptance_criteria", [])],
-                      "tasks": tasks})
-        for round_path in bt_rounds.list_rounds(rdir):
-=======
-                      "state": status.get("plan", {}).get("status") or row.get("plan_status") or "unknown",
-                      "revision": status.get("plan", {}).get("revision"),
-                      "updated_at": row.get("updated_at"),
-                      "title": row.get("title"),
-                      "updatedAt": row.get("updated_at"),
-                      "acceptance_criteria": [criterion for task in tasks
-                                              for criterion in task.get("acceptance_criteria", [])],
-                      "acceptanceCriteria": [criterion for task in tasks
-                                             for criterion in task.get("acceptance_criteria", [])],
-                      "tasks": plan_tasks, "taskDetails": tasks})
-        for round_path in bt_rounds.list_rounds(rdir):
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
             try:
                 data = bt_rounds.load(bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json")
             except (OSError, ValueError):
                 continue
-<<<<<<< bfa41a71c3071e38a990cad13eb732a5ba9e52a5
-            rounds.append({"project": project, "req": req, "round": number,
-                           **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
-                              if key in data}})
-||||||| 2bedcb11d2d5783266fb3a9f9602d8bf82e99a3f
-            if round_data.get("status") == "open":
-                rounds.append({**round_data, "project": project, "req": req})
-        decisions.extend({**decision, "project": project, "req": req}
-                         for decision in bt_plans_api.open_decisions(rdir))
-=======
-            rounds.append({**round_data, "project": project, "req": req})
-        decisions.extend({**decision, "project": project, "req": req}
-                         for decision in bt_plans_api.open_decisions(rdir))
->>>>>>> 3023898c06ce29d14d9ab50f11757fe675920e9d
+            rounds.append({**data, "project": project, "req": req, "round": number})
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     snapshot = {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
                 "runs": runs, "plans": plans, "rounds": rounds,
