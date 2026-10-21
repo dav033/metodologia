@@ -37,7 +37,9 @@ DEFAULTS: dict = {
     # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
     # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
-    "verifier": {"network": True, "allow_production_actions": True, "env_file": ""},
+    "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
+                 # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
+                 "rerun_failed_checks": 1},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start

@@ -87,6 +87,35 @@ class QualityEngineTests(unittest.TestCase):
         self.assertEqual(result["checks"][0]["exit_code"], 3)
         self.assertEqual(result["criteria"][0]["status"], "fail")
 
+    def test_a_check_that_fails_once_and_passes_on_the_rerun_counts_and_says_so(self):
+        class FlakyOnce(ScriptedRunner):
+            def run(self, check, snapshot_root, *, timeout_seconds=None, mounts=()):
+                self.status, self.exit_code = ("fail", 1) if not self.calls else ("pass", 0)
+                return super().run(check, snapshot_root, timeout_seconds=timeout_seconds, mounts=mounts)
+
+        for reruns, status, calls in ((1, "PASS", 2), (0, "FAIL", 1)):
+            with self.subTest(reruns=reruns), tempfile.TemporaryDirectory() as temporary:
+                _, source, _, _ = _make_snapshot(Path(temporary))
+                runner = FlakyOnce()
+                with QualityStore(":memory:") as store:
+                    result = QualityEngine(QualityPolicy(rerun_failed_checks=reruns), store, runner=runner).verify(
+                        self.raw, source)
+                    note = store.get_artifact(result["checks"][0]["stderr_ref"]) if reruns else b""
+            self.assertEqual((result["status"], len(runner.calls)), (status, calls))
+            if reruns:
+                self.assertIn(b"flaky under load", note)
+
+    def test_a_check_that_keeps_failing_is_judged_by_its_last_run_and_the_rerun_count_is_bounded(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            _, source, _, _ = _make_snapshot(Path(temporary))
+            runner = ScriptedRunner("fail", 3)
+            with QualityStore(":memory:") as store:
+                result = QualityEngine(QualityPolicy(rerun_failed_checks=2), store, runner=runner).verify(self.raw, source)
+        self.assertEqual((result["status"], len(runner.calls)), ("FAIL", 3))
+        for bad in (-1, 4, True):
+            with self.assertRaises((ValueError, TypeError)):
+                QualityPolicy(rerun_failed_checks=bad)
+
     def test_completed_nonzero_check_is_fail_even_when_its_mapping_is_invalid(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

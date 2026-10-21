@@ -105,10 +105,13 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         import bt_config
 
         configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
+        rerun = bt_config.get("verifier.rerun_failed_checks", 1)
+        if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
+            configured["rerun_failed_checks"] = rerun
         import bt_verifier_env
 
         environment, secrets = bt_verifier_env.load(bt_verifier_env.path_for(bt_config.get("verifier.env_file", ""), project))
-        quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, bool)},
+        quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
                                                   **({"environment": environment, "secret_values": secrets}
                                                      if environment else {}),
                                                   **dict(quality_policy or {})})

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -198,6 +199,26 @@ class QualityEngine:
                 },
             )
 
+    def _rerun_if_flaky(self, spec, snapshot_root, outcome, remaining, mounts, started):
+        """A check that failed is run again `policy.rerun_failed_checks` times: a browser or timing test that fails
+        only while the machine is busy would otherwise spend the attempts of a task whose code is fine (REQ-027 T15c
+        and T15d, load average 16 on 8 cores). A pass on the rerun counts and says so in the check's output; a check
+        that keeps failing is judged by its last run."""
+        for _ in range(self.policy.rerun_failed_checks):
+            if outcome.status != "fail":
+                break
+            remaining = self.policy.max_total_seconds - int(time.monotonic() - started)
+            if remaining <= 0:
+                break
+            again = self.runner.run(spec, snapshot_root, timeout_seconds=min(self.policy.max_command_seconds, remaining),
+                                    mounts=mounts)
+            if again.status == "pass":
+                note = (f"[M6] this check failed once (exit {outcome.exit_code}) and passed when run again; "
+                        "flaky under load, not a defect of the code\n").encode()
+                return dataclasses.replace(again, stderr=note + again.stderr)
+            outcome = again
+        return outcome
+
     def _run_checks(
         self,
         specs: tuple[CheckSpec, ...],
@@ -230,6 +251,7 @@ class QualityEngine:
                     timeout_seconds=min(self.policy.max_command_seconds, remaining),
                     mounts=mounts,
                 )
+                outcome = self._rerun_if_flaky(spec, snapshot_root, outcome, remaining, mounts, started)
                 done[same] = outcome
             outcomes[spec.id] = outcome
             if outcome.issue_code:

@@ -83,6 +83,7 @@ class QualityPolicy:
     max_processes: int = 512
     toolchain: bool = True  # mount the operator's Node install, Playwright browsers and the attempt's node_modules
     provision_dependencies: bool = True  # an attempt with no node_modules gets the lockfile's, installed offline
+    rerun_failed_checks: int = 0  # a check that fails is run again this many times; a pass on the rerun counts (flaky)
     network: bool = True  # checks share the host network (live services, a database); False = no network at all
     allow_production_actions: bool = True  # checks may run deploy/migrate-style commands; False = operator review
     environment: tuple[tuple[str, str], ...] = ()
@@ -162,6 +163,9 @@ def _validate_policy_controls(policy: QualityPolicy) -> None:
         raise TypeError("review policy must be boolean")
     if not isinstance(policy.toolchain, bool):
         raise TypeError("toolchain flag must be boolean")
+    if (not isinstance(policy.rerun_failed_checks, int) or isinstance(policy.rerun_failed_checks, bool)
+            or not 0 <= policy.rerun_failed_checks <= 3):
+        raise ValueError("rerun_failed_checks must be between 0 and 3")
     if not isinstance(policy.network, bool) or not isinstance(policy.allow_production_actions, bool):
         raise TypeError("network and production-action flags must be boolean")
 
