@@ -976,3 +976,11 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + load-induced failures stop costing attempts; the note stays in the evidence. − a genuinely intermittent defect can pass once; a check that really fails costs its duration twice (45 s here); the rerun is invisible in the verdict except for that stderr note, so there is no flakiness metric yet. The owner process of a run reads it at its next restart. Playing a game on this machine still slows every run.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-027 T15c, T15d
 
+## D-109 — A check on the audit's own ledger cannot stop the audit gate from running
+
+- **Date:** 2026-10-20 · **Status:** Accepted · **Refines:** D-091
+- **Context:** REQ-029 T8 (the backend audit) found 14 high defects and was rejected three times with «F1 (high) is still open and blocking». Its verification was `recovery_acceptance.py audit --ledger <ledger>`, which exits 1 while a blocking finding is open. The audit gate (which turns blocking findings into remediation tasks, D-091) runs only after M6 passes, so the audit could never pass, the gate never spoke, and the attempts were spent without a remediation task; the card then offered a plain retry.
+- **Decision:** for a `kind: audit` task whose every failed check names the task's own findings ledger, the gate judges the ledger even though M6 said FAIL: blocking findings reject the audit through the gate (evidence, remediation, or rework as before); with nothing against the ledger the failure of the check stands. A test covers the three cases (blocking ledger, clean ledger, a failed check about something else) and fails without the change. The ledger decision belongs to the gate (`gates.audit_blocking`); a verification should check the ledger's form.
+- **Consequences:** + audits that verify their ledger with an exit code no longer deadlock. − the rule is matched by the ledger path appearing in the command; a differently written check is not recognised. The plan's acceptance wording «contains no open critical or high finding» is now judged by the gate, not by that command. REQ-029 T8 retried (att-0029).
+- **Source:** [day log](2026-10/W4/2026-10-20.md) · REQ-029 T8
+
