@@ -227,6 +227,17 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
         self.assertEqual(self.calls, [])
 
+    def test_f19_retry_does_not_fall_back_to_running_run_for_missing_task(self):
+        _, patches = self._create_scheduler_run({})
+        self.handlers["retry"] = self._pause
+
+        status, body = self.post_with_scheduler_state(
+            req(command="retry", params={"task": "T-missing"},
+                precondition={"state": "running", "revision": 3}), patches)
+
+        self.assertEqual((status, body["code"]), (409, "STALE_PRECONDITION"))
+        self.assertEqual(self.calls, [])
+
     def test_f19_cancel_attempt_precondition_uses_attempt_state(self):
         _, patches = self._create_scheduler_run({"T1": "done"}, {"att-7": "running"})
         self.handlers["cancel-attempt"] = self._pause
