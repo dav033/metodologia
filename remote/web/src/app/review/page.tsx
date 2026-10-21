@@ -63,7 +63,7 @@ export default function ReviewPage() {
     const taskId = params.get("taskId");
     const fragment = new URLSearchParams(window.location.hash.slice(1));
     const fragmentAttempt = fragment.get("attempt") ?? fragment.get("attemptId");
-    if (!fragmentAttempt && (!project || !req || !taskId)) return;
+    if (!project || !req || (!fragmentAttempt && !taskId)) return;
     let active = true;
     setLoading(true);
     const attemptIdPromise = fragmentAttempt
@@ -74,7 +74,8 @@ export default function ReviewPage() {
       });
     void attemptIdPromise.then(async (attemptId) => {
         if (!attemptId) return null;
-        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review`, { cache: "no-store" });
+        const target = encodeURIComponent(`${project}/${req}`);
+        const detailResponse = await fetch(`/api/remote/v1/attempts/${encodeURIComponent(attemptId)}/review?target=${target}`, { cache: "no-store" });
         if (!detailResponse.ok) throw new Error("Review unavailable");
         const response = await detailResponse.json() as unknown;
         const reviewValue = object(response);
