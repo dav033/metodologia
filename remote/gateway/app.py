@@ -10,57 +10,11 @@ from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError
+from upstream import LaptopClient, UpstreamError, UpstreamTimeout
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
 ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
-<<<<<<< c2b225c9191627acfbad740aef3a84c0daca7a7b
-||||||| ef9fe0162516f6adb503d5596e407285e62f7c0e
-CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
-
-
-def _ledger_command(request: Any) -> dict[str, Any] | None:
-    """Translate the public v1 command envelope into the laptop ledger contract."""
-    if not isinstance(request, dict) or request.get("schemaVersion") != 1:
-        return None
-    target = request.get("target")
-    if not isinstance(target, dict):
-        return None
-    project, req = target.get("project"), target.get("req")
-    if not isinstance(project, str) or not isinstance(req, str):
-        return None
-    command = request.get("type")
-    if not isinstance(command, str):
-        return None
-    field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-                 "note": "note", "attemptId": "attempt", "taskId": "task"}
-    params: dict[str, Any] = {}
-    for source, destination in field_map.items():
-        if source in request:
-            params[destination] = request[source]
-    if isinstance(target.get("taskId"), str):
-        params.setdefault("task", target["taskId"])
-    if isinstance(target.get("attemptId"), str):
-        params.setdefault("attempt", target["attemptId"])
-    route = request.get("route")
-    if isinstance(route, dict):
-        # Laptop recovery dispatch accepts selectors, while the web contract carries a route object.
-        params["route"] = route.get("id") or route.get("routeId") or route.get("route")
-        for selector in ("model", "account"):
-            if selector in route:
-                params[selector] = route[selector]
-    confirmation = request.get("confirmation")
-    ledger: dict[str, Any] = {
-        "idempotency_key": request.get("idempotencyKey"), "command": command,
-        "target": f"{project}/{req}", "origin": "web", "params": params,
-        "precondition": request.get("precondition"),
-    }
-    if isinstance(confirmation, dict):
-        ledger["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
-                                  "typed_req": confirmation.get("typedReq")}
-    return ledger
-=======
 CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
 
 
@@ -106,7 +60,6 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
         ledger["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
                                   "typed_req": confirmation.get("typedReq")}
     return ledger
->>>>>>> 3367f62355c02b2ad638862c6589e7b3f266b243
 
 
 class GatewayRuntime:
@@ -143,6 +96,56 @@ class GatewayRuntime:
         if self.liveness.status is LaptopStatus.OFFLINE:
             self._notify_long_offline_with_active_run()
         self.outbox.deliver_due(self.sender)
+
+    def submit_command(self, request: Any) -> dict[str, Any]:
+        ledger_request = _ledger_command(request)
+        if ledger_request is None:
+            return {"status": "REJECTED", "code": "INVALID_COMMAND", "stored": False}
+        idempotency_key = ledger_request.get("idempotency_key")
+        if ledger_request["command"] in CHALLENGED_COMMANDS:
+            confirmation = ledger_request.get("confirmation")
+            target = request.get("target") if isinstance(request, dict) else None
+            req = target.get("req") if isinstance(target, dict) else None
+            if (not isinstance(confirmation, dict)
+                    or not isinstance(confirmation.get("challenge_id"), str)
+                    or not confirmation["challenge_id"].strip()
+                    or confirmation.get("typed_req") != req):
+                return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
+        try:
+            result = self.laptop.post_json("/api/remote/v1/commands", ledger_request)
+        except UpstreamTimeout:
+            return {"status": "UNKNOWN", "code": "UNKNOWN_OUTCOME", "idempotency_key": idempotency_key}
+        except UpstreamError:
+            self.liveness.record_failure()
+            if self.liveness.status is LaptopStatus.OFFLINE:
+                return {"status": "REJECTED", "code": "LAPTOP_OFFLINE", "idempotency_key": idempotency_key}
+            return {"status": "FAILED", "code": "LAPTOP_UNAVAILABLE", "idempotency_key": idempotency_key}
+        if result.get("code") == "UNKNOWN_OUTCOME":
+            result["idempotency_key"] = idempotency_key
+        return result
+
+    def issue_challenge(self, request: Any) -> dict[str, Any]:
+        if not isinstance(request, dict):
+            return {"code": "INVALID_CHALLENGE"}
+        target = request.get("target")
+        if isinstance(target, dict):
+            project, req = target.get("project"), target.get("req")
+            target = f"{project}/{req}" if isinstance(project, str) and isinstance(req, str) else None
+        typed_req = request.get("typedReq")
+        if not isinstance(target, str) or not isinstance(typed_req, str):
+            return {"code": "INVALID_CHALLENGE"}
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            return {"code": "LAPTOP_OFFLINE"}
+        try:
+            return self.laptop.post_json("/api/remote/v1/challenges", {"target": target, "typedReq": typed_req})
+        except UpstreamTimeout:
+            return {"code": "UNKNOWN_OUTCOME"}
+        except UpstreamError:
+            self.liveness.record_failure()
+            return {"code": "LAPTOP_OFFLINE" if self.liveness.status is LaptopStatus.OFFLINE
+                    else "LAPTOP_UNAVAILABLE"}
 
     def _notify_long_offline_with_active_run(self) -> None:
         offline_since = self.liveness.offline_since

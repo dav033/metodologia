@@ -42,6 +42,13 @@ class CommandRelayTests(unittest.TestCase):
         self.assertEqual(result["code"], "CONFIRMATION_REQUIRED")
         self.laptop.post_json.assert_not_called()
 
+    def test_destructive_command_with_empty_or_mismatched_challenge_is_refused(self):
+        for confirmation in ({}, {"challengeId": "challenge-token", "typedReq": "REQ-999"}):
+            with self.subTest(confirmation=confirmation):
+                result = self.runtime.submit_command(command(type="launch", route=None, confirmation=confirmation))
+                self.assertEqual(result["code"], "CONFIRMATION_REQUIRED")
+        self.laptop.post_json.assert_not_called()
+
     def test_offline_laptop_returns_laptop_offline_without_forwarding(self):
         self.runtime.liveness.status = LaptopStatus.OFFLINE
         result = self.runtime.submit_command(command())
