@@ -1,87 +1,20 @@
 import json
+import http.client
 import threading
 import tempfile
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
 from unittest.mock import Mock
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-from unittest.mock import patch
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
-=======
-from unittest.mock import Mock, patch
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 
 from app import GatewayRuntime, _ledger_command
+from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
 from liveness import LaptopStatus
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
-from upstream import UpstreamTimeout
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
 from server import create_server
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
 from upstream import UpstreamTimeout
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-from stream import SnapshotEventStream
-from upstream import UpstreamTimeout
-=======
-from stream import SnapshotEventStream
-from upstream import LaptopClient, UpstreamTimeout
-
-SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
-=======
-from server import create_server
-from upstream import LaptopClient, UpstreamTimeout
-
-SCRIPTS = Path(__file__).resolve().parents[3] / "skill" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-import bt_remote_api
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 
 
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-class LaptopLedgerHandler(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_POST(self):
-        bt_remote_api.route_post(self)
-
-    def send(self, payload, status=200, content_type="application/json; charset=utf-8"):
-        if isinstance(payload, str):
-            payload = payload.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
-
-
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
-=======
-class LaptopLedgerHandler(BaseHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
-
-    def do_POST(self):
-        bt_remote_api.route_post(self)
-
-    def send(self, payload, status=200, content_type="application/json; charset=utf-8"):
-        if isinstance(payload, str):
-            payload = payload.encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
-
-
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 def config(path: Path) -> GatewayConfig:
     return GatewayConfig("http://127.0.0.1:18765", "test-key", "test-token", "test-chat", path)
 
@@ -162,7 +95,6 @@ class CommandRelayTests(unittest.TestCase):
             def log_message(self, _format, *_args):
                 pass
 
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
         server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopEndpoint)
         server.received = received
         thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -204,293 +136,113 @@ class CommandRelayTests(unittest.TestCase):
             "task": "T1", "field": "acceptance_criteria", "value": "Keep the chosen route."})
         self.assertEqual(sent[2]["confirmation"], {
             "challenge_id": "challenge-token", "typed_req": "REQ-027"})
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
-    def post(self, body):
-        self.connection.request("POST", "/api/remote/v1/commands", json.dumps(body), {
-            "Origin": "https://flow.example.test", "X-Flow-Request": "1",
-            "Cookie": f"flow_session={self.session}", "Content-Type": "application/json",
-        })
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-    def post(self, command: dict[str, object]):
-        self.connection.request("POST", "/api/remote/v1/commands", json.dumps(command), self.headers)
-=======
-    def post(self, command: dict[str, object]):
-        return self.post_path("/api/remote/v1/commands", command, self.headers)
 
-    def post_path(self, path: str, value: dict[str, object], headers: dict[str, str]):
-        self.connection.request("POST", path, json.dumps(value), headers)
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
+
+class CommandRelayHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        database = Path(self.temp.name) / "gateway.sqlite"
+        self.oauth = OAuthConfig(
+            client_id="test-client", client_secret="test-secret",
+            session_secret="test-session-secret-with-more-than-32-bytes",
+            frontend_origin="https://flow.example.test", database_path=str(database),
+        )
+        self.session = SessionStore(str(database), self.oauth.session_secret).create_session("dav033")
+        self.laptop = Mock()
+        self.laptop.post_json.return_value = {"status": "OK", "code": None}
+        self.runtime = GatewayRuntime(config(database), laptop=self.laptop, sender=lambda _: None)
+        self.server = create_server(self.oauth, ("127.0.0.1", 0), runtime=self.runtime)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port)
+        self.headers = {
+            "Origin": "https://flow.example.test",
+            "X-Flow-Request": "1",
+            "Cookie": f"flow_session={self.session}",
+            "Content-Type": "application/json",
+        }
+        self.addCleanup(self.runtime.outbox._db.close)
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
+        self.addCleanup(self.connection.close)
+
+    def post_path(self, path, body, headers=None):
+        self.connection.request("POST", path, json.dumps(body), headers or self.headers)
         response = self.connection.getresponse()
-        result = response.status, json.loads(response.read())
-        return result
+        payload = json.loads(response.read())
+        return response.status, payload
 
-    def get(self, path: str):
-        self.connection.request("GET", path)
+    def test_displayed_github_and_logout_routes_are_real_http_entrypoints(self):
+        self.connection.request("GET", "/api/auth/github")
         response = self.connection.getresponse()
-        body = response.read()
-        return response.status, response.getheader("Location"), response.getheader("Set-Cookie"), body
+        self.assertEqual(response.status, 302)
+        self.assertIn("github.com", response.getheader("Location"))
 
-    def test_displayed_github_and_logout_routes_are_real_http_entrypoints(self) -> None:
-        status, location, _cookie, _body = self.get("/api/auth/github")
-        self.assertEqual(status, 302)
-        self.assertIn("github.com", location)
+        self.connection.request("GET", "/api/auth/logout")
+        response = self.connection.getresponse()
+        self.assertEqual(response.status, 302)
+        self.assertEqual(response.getheader("Location"), "https://flow.example.test/")
+        self.assertIn("Max-Age=0", response.getheader("Set-Cookie"))
 
-        status, location, cookie, _body = self.get("/api/auth/logout")
-        self.assertEqual(status, 302)
-        self.assertEqual(location, "https://flow.example.test/")
-        self.assertIn("flow_session=", cookie)
-        self.assertIn("Max-Age=0", cookie)
+    def test_public_pause_http_command_is_translated_to_laptop_ledger_schema(self):
+        public_command = {
+            "schemaVersion": 1,
+            "idempotencyKey": "command-key-000001",
+            "type": "pause",
+            "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
+            "precondition": {"state": "running"},
+        }
+        status, body = self.post_path("/api/remote/v1/commands", public_command)
 
-    def test_public_pause_command_is_translated_to_laptop_ledger_schema(self) -> None:
-        status, _content_type, body = self.post(self.command())
-
-        self.assertEqual(status, 202)
-        self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [{
+        self.assertEqual(status, 200)
+        self.assertEqual(body["status"], "OK")
+        self.laptop.post_json.assert_called_once_with("/api/remote/v1/commands", {
             "idempotency_key": "command-key-000001",
             "command": "pause",
             "target": "demo/REQ-027",
             "origin": "web",
             "params": {},
             "precondition": {"state": "running"},
-        }])
+        })
 
-    def test_authenticated_challenge_request_is_relayed_to_laptop(self) -> None:
-        status, content_type, body = self.post_path(
-            "/api/remote/v1/challenges",
-            {"target": "demo/REQ-027", "typedReq": "REQ-027"},
-            self.headers,
-        )
+    def test_authenticated_challenge_http_relay_enables_confirmed_command(self):
+        self.laptop.post_json.side_effect = [
+            {"challengeId": "laptop-challenge-000001", "expiresIn": 120},
+            {"status": "OK", "code": None},
+        ]
+        challenge_status, challenge = self.post_path("/api/remote/v1/challenges", {
+            "target": "demo/REQ-027", "typedReq": "REQ-027",
+        })
+        self.assertEqual(challenge_status, 200)
+        self.assertEqual(challenge["challengeId"], "laptop-challenge-000001")
 
-        self.assertEqual(status, 201)
-        self.assertTrue(content_type.startswith("application/json"))
-        self.assertEqual(body["challengeId"], "laptop-challenge-000001")
-        self.assertEqual(self.laptop.challenge_calls, [{"target": "demo/REQ-027", "typedReq": "REQ-027"}])
-
-    def test_command_and_challenge_pass_through_both_production_http_handlers(self) -> None:
-        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopLedgerHandler)
-        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
-        laptop_thread.start()
-        self.addCleanup(laptop_server.server_close)
-        self.addCleanup(laptop_server.shutdown)
-        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
-        handlers = {"pause": lambda _target, _params: {"paused": True},
-                    "approve": lambda _target, _params: {"approved": True}}
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": self.temp_dir.name}), \
-                patch.object(bt_remote_api, "_target_state", lambda *_args: {"state": "running"}), \
-                patch.dict(bt_remote_api.HANDLERS, handlers, clear=True):
-            command_status, _content_type, command_body = self.post(self.command())
-            self.assertEqual(command_status, 200)
-            self.assertEqual(command_body["status"], "OK")
-            self.assertEqual(command_body["outcome"], {"paused": True})
-
-            challenge_status, _content_type, challenge_body = self.post_path(
-                "/api/remote/v1/challenges",
-                {"target": "demo/REQ-027", "typedReq": "REQ-027"},
-                self.headers,
-            )
-            self.assertEqual(challenge_status, 201)
-            approve = self.command("approve")
-            approve["idempotencyKey"] = "challenge-command-key-0002"
-            approve["confirmation"] = {"challengeId": challenge_body["challengeId"], "typedReq": "REQ-027"}
-            approve_status, _content_type, approve_body = self.post(approve)
-            self.assertEqual(approve_status, 200, approve_body)
-            self.assertEqual(approve_body["status"], "OK")
-            self.assertEqual(approve_body["outcome"], {"approved": True})
-
-    def test_challenge_request_requires_valid_session_and_request_marker(self) -> None:
-        value = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
-        no_session = {key: val for key, val in self.headers.items() if key != "Cookie"}
-        status, _content_type, _body = self.post_path("/api/remote/v1/challenges", value, no_session)
-        self.assertEqual(status, 401)
-
-        no_marker = {key: val for key, val in self.headers.items() if key != "X-Flow-Request"}
-        status, _content_type, _body = self.post_path("/api/remote/v1/challenges", value, no_marker)
-        self.assertEqual(status, 403)
-        self.assertEqual(self.laptop.challenge_calls, [])
-
-    @staticmethod
-    def run_command(command_type="pause"):
-        return {
-            "schemaVersion": 1, "idempotencyKey": "command-key-000001", "type": command_type,
+        command_status, command_body = self.post_path("/api/remote/v1/commands", {
+            "schemaVersion": 1,
+            "idempotencyKey": "approve-command-key-0001",
+            "type": "approve",
             "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
             "precondition": {"state": "running"},
-        }
+            "confirmation": {"challengeId": challenge["challengeId"], "typedReq": "REQ-027"},
+        })
 
-    def test_destructive_command_requires_confirmation(self):
-        status, body = self.post(self.run_command("approve"))
-        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
+        self.assertEqual(command_status, 200)
+        self.assertEqual(command_body["status"], "OK")
+        self.assertEqual(self.laptop.post_json.call_args_list[0].args, (
+            "/api/remote/v1/challenges", {"target": "demo/REQ-027", "typedReq": "REQ-027"}))
+        self.assertEqual(self.laptop.post_json.call_args_list[1].args[1]["confirmation"], {
+            "challenge_id": "laptop-challenge-000001", "typed_req": "REQ-027"})
+
+    def test_challenge_and_command_mutations_require_session_and_request_marker(self):
+        body = {"target": "demo/REQ-027", "typedReq": "REQ-027"}
+        no_session = {key: value for key, value in self.headers.items() if key != "Cookie"}
+        self.assertEqual(self.post_path("/api/remote/v1/challenges", body, no_session)[0], 401)
+        self.assertEqual(self.post_path("/api/remote/v1/commands", {}, no_session)[0], 401)
+
+        no_marker = {key: value for key, value in self.headers.items() if key != "X-Flow-Request"}
+        self.assertEqual(self.post_path("/api/remote/v1/challenges", body, no_marker)[0], 403)
+        self.assertEqual(self.post_path("/api/remote/v1/commands", {}, no_marker)[0], 403)
         self.laptop.post_json.assert_not_called()
-
-    def test_confirmed_destructive_command_reaches_laptop_ledger(self):
-        command = self.run_command("approve")
-        command["confirmation"] = {"challengeId": "challenge-token-1234", "typedReq": "REQ-027"}
-        status, body = self.post(command)
-        self.assertEqual((status, body["status"]), (200, "OK"))
-        self.laptop.post_json.assert_called_once_with("/api/remote/v1/commands", {
-            "idempotency_key": command["idempotencyKey"], "command": "approve", "target": "demo/REQ-027",
-            "origin": "web", "params": {}, "precondition": {"state": "running"},
-            "confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"},
-        })
-
-<<<<<<< 4afe24b9701478e708836c2a834fe7e817773f1d
-    def test_offline_command_is_refused_without_forwarding(self):
-        for _ in range(self.runtime.liveness.failures_before_offline):
-||||||| c04d03849ef5c7dc6c4e925a2221829c531ea8d3
-        status, _content_type, body = self.post(command)
-
-        self.assertEqual(status, 202)
-        self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [{
-            "idempotency_key": command["idempotencyKey"],
-            "command": "approve",
-            "target": "demo/REQ-027",
-            "origin": "web",
-            "params": {"confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"}},
-            "precondition": {"state": "running"},
-        }])
-
-    def test_offline_laptop_refuses_command_without_queueing(self) -> None:
-        for _ in range(3):
-=======
-        status, _content_type, body = self.post(command)
-
-        self.assertEqual(status, 202)
-        self.assertEqual(body["status"], "accepted")
-        self.assertEqual(self.laptop.command_calls, [{
-            "idempotency_key": command["idempotencyKey"],
-            "command": "approve",
-            "target": "demo/REQ-027",
-            "origin": "web",
-            "params": {},
-            "precondition": {"state": "running"},
-            "confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"},
-        }])
-
-    def test_offline_laptop_refuses_command_without_queueing(self) -> None:
-        for _ in range(3):
->>>>>>> 8a050424a13d0335b6f496bee2e6edb1152be935
-            self.runtime.liveness.record_failure()
-        status, body = self.post(self.run_command())
-        self.assertEqual((status, body["code"]), (410, "LAPTOP_OFFLINE"))
-        self.laptop.post_json.assert_not_called()
-
-    def test_timeout_returns_unknown_outcome_with_idempotency_key(self):
-        self.laptop.post_json.side_effect = UpstreamTimeout("late response")
-        status, body = self.post(self.run_command())
-        self.assertEqual((status, body["code"]), (503, "UNKNOWN_OUTCOME"))
-        self.assertEqual(body["idempotency_key"], "command-key-000001")
-=======
-    def post(self, body):
-        return self.post_path("/api/remote/v1/commands", body, {
-            "Origin": "https://flow.example.test", "X-Flow-Request": "1",
-            "Cookie": f"flow_session={self.session}", "Content-Type": "application/json",
-        })
-
-    def post_path(self, path, body, headers=None):
-        self.connection.request("POST", path, json.dumps(body), headers or {})
-        response = self.connection.getresponse()
-        return response.status, json.loads(response.read())
-
-    def test_displayed_github_login_and_logout_routes_reach_gateway(self):
-        self.connection.request("GET", "/api/auth/github")
-        login = self.connection.getresponse()
-        self.assertEqual(login.status, 302)
-        self.assertIn("github.com/login/oauth/authorize", login.getheader("Location"))
-        self.assertIn("flow_oauth_state=", login.getheader("Set-Cookie"))
-        login.read()
-
-        self.connection.request("GET", "/api/auth/logout")
-        logout = self.connection.getresponse()
-        self.assertEqual(logout.status, 302)
-        self.assertEqual(logout.getheader("Location"), "https://flow.example.test/")
-        self.assertIn("flow_session=;", logout.getheader("Set-Cookie"))
-        logout.read()
-
-    @staticmethod
-    def run_command(command_type="pause"):
-        return {
-            "schemaVersion": 1, "idempotencyKey": "command-key-000001", "type": command_type,
-            "target": {"kind": "run", "project": "demo", "req": "REQ-027"},
-            "precondition": {"state": "running"},
-        }
-
-    def test_destructive_command_requires_confirmation(self):
-        status, body = self.post(self.run_command("approve"))
-        self.assertEqual((status, body["code"]), (409, "CONFIRMATION_REQUIRED"))
-        self.laptop.post_json.assert_not_called()
-
-    def test_confirmed_destructive_command_reaches_laptop_ledger(self):
-        command = self.run_command("approve")
-        command["confirmation"] = {"challengeId": "challenge-token-1234", "typedReq": "REQ-027"}
-        status, body = self.post(command)
-        self.assertEqual((status, body["status"]), (200, "OK"))
-        self.laptop.post_json.assert_called_once_with("/api/remote/v1/commands", {
-            "idempotency_key": command["idempotencyKey"], "command": "approve", "target": "demo/REQ-027",
-            "origin": "web", "params": {}, "precondition": {"state": "running"},
-            "confirmation": {"challenge_id": "challenge-token-1234", "typed_req": "REQ-027"},
-        })
-
-    def test_authenticated_challenge_http_entrypoint_relays_to_laptop(self):
-        self.laptop.post_json.return_value = {"challengeId": "challenge-token-1234", "expiresIn": 120}
-        status, body = self.post_path("/api/remote/v1/challenges", {
-            "target": "demo/REQ-027", "typedReq": "REQ-027",
-        }, {
-            "Origin": "https://flow.example.test", "X-Flow-Request": "1",
-            "Cookie": f"flow_session={self.session}", "Content-Type": "application/json",
-        })
-        self.assertEqual(status, 200)
-        self.assertEqual(body["challengeId"], "challenge-token-1234")
-        self.laptop.post_json.assert_called_once_with("/api/remote/v1/challenges", {
-            "target": "demo/REQ-027", "typedReq": "REQ-027",
-        })
-
-    def test_public_command_and_challenge_work_through_the_real_laptop_ledger(self):
-        laptop_server = ThreadingHTTPServer(("127.0.0.1", 0), LaptopLedgerHandler)
-        laptop_thread = threading.Thread(target=laptop_server.serve_forever, daemon=True)
-        laptop_thread.start()
-        self.addCleanup(laptop_server.server_close)
-        self.addCleanup(laptop_server.shutdown)
-        self.runtime.laptop = LaptopClient(f"http://127.0.0.1:{laptop_server.server_port}", "test-key")
-        with patch.dict(os.environ, {"FLOW_GATEWAY_KEY": "test-key", "BITACORA_ROOT": self.temp.name}), \
-                patch.object(bt_remote_api, "_target_state", lambda *_args: {"state": "running"}), \
-                patch.dict(bt_remote_api.HANDLERS, {"pause": lambda *_args: {"paused": True}}, clear=True):
-            status, _body = self.post(self.run_command())
-            self.assertEqual(status, 200)
-
-            challenge_status, challenge = self.post_path("/api/remote/v1/challenges", {
-                "target": "demo/REQ-027", "typedReq": "REQ-027",
-            }, {
-                "Origin": "https://flow.example.test", "X-Flow-Request": "1",
-                "Cookie": f"flow_session={self.session}", "Content-Type": "application/json",
-            })
-            self.assertEqual(challenge_status, 200)
-            self.assertTrue(challenge.get("challengeId"))
-
-    def test_challenge_http_entrypoint_requires_authenticated_session(self):
-        status, body = self.post_path("/api/remote/v1/challenges", {
-            "target": "demo/REQ-027", "typedReq": "REQ-027",
-        }, {
-            "Origin": "https://flow.example.test", "X-Flow-Request": "1",
-            "Content-Type": "application/json",
-        })
-        self.assertEqual((status, body["error"]), (401, "unauthorized"))
-        self.laptop.post_json.assert_not_called()
-
-    def test_offline_command_is_refused_without_forwarding(self):
-        for _ in range(self.runtime.liveness.failures_before_offline):
-            self.runtime.liveness.record_failure()
-        status, body = self.post(self.run_command())
-        self.assertEqual((status, body["code"]), (410, "LAPTOP_OFFLINE"))
-        self.laptop.post_json.assert_not_called()
-
-    def test_timeout_returns_unknown_outcome_with_idempotency_key(self):
-        self.laptop.post_json.side_effect = UpstreamTimeout("late response")
-        status, body = self.post(self.run_command())
-        self.assertEqual((status, body["code"]), (503, "UNKNOWN_OUTCOME"))
-        self.assertEqual(body["idempotency_key"], "command-key-000001")
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
 
 
 if __name__ == "__main__":

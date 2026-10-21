@@ -51,6 +51,7 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_CHALLENGE", message: "El id del requerimiento no coincide" });
             return;
           }
+          challengeRequest.requestMarker = request.headers["x-flow-request"];
           server.challenges.push(challengeRequest);
           send(201, { challengeId: "mock-server-challenge-0001", target: challengeRequest.target, expiresIn: 120 });
         } catch { send(400, { code: "INVALID_CHALLENGE", message: "JSON inválido" }); }
@@ -97,16 +98,8 @@ export async function createMockGatewayServer() {
             return;
           }
           server.receivedCommands.push(command);
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
-          const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-          const queuedResponse = server.commandResponses.shift();
-          const nextResponse = queuedResponse ?? server.nextCommandResponse;
-=======
           server.commandMarkers.push(request.headers["x-flow-request"]);
-          const queuedResponse = server.commandResponses.shift();
-          const nextResponse = queuedResponse ?? server.nextCommandResponse;
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
+          const nextResponse = server.commandResponses.shift() ?? server.nextCommandResponse;
           if (nextResponse) {
             server.nextCommandResponse = null;
             server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
@@ -128,13 +121,7 @@ export async function createMockGatewayServer() {
   server.snapshotReads = [];
   server.commands = [];
   server.receivedCommands = [];
-<<<<<<< 95117308c8f8cb3d2df1d6fc5995a46c9c874bd5
-||||||| a9d34cf7541f716c9f34151d11e37355821f1f52
-  server.challenges = [];
-=======
   server.commandMarkers = [];
-  server.challenges = [];
->>>>>>> c0a5e47ed090adf0bb7ad5ad7bdf2c67e37ce775
   server.history = [];
   server.challenges = [];
   server.commandResponses = [];
