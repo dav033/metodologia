@@ -51,7 +51,8 @@ class RemoteListenerTests(unittest.TestCase):
                     response = connection.getresponse()
                     response.read()
                     connection.close()
-                    self.assertEqual(response.status, 404, path)
+                    expected = 401 if path == "/api/remote/v1/health" else 404
+                    self.assertEqual(response.status, expected, path)
 
                 connection = http.client.HTTPConnection("127.0.0.1", port, timeout=2)
                 connection.request("POST", "/plans/metodologia/REQ-027/launch", body="confirm=REQ-027")

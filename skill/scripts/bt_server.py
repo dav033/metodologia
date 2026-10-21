@@ -361,12 +361,14 @@ class RemoteHandler(Handler):
         return self.remote_api_post()
 
     def remote_api_get(self):
-        """Reserved for the versioned remote API implementation; never fall through to panel routes."""
-        return self.send("Not found", 404, "text/plain")
+        """Dispatch to the versioned API; never fall through to panel routes."""
+        import bt_remote_api
+        return bt_remote_api.route_get(self)
 
     def remote_api_post(self):
-        """Reserved for the versioned remote API implementation; never fall through to panel controls."""
-        return self.send("Not found", 404, "text/plain")
+        """Dispatch to the versioned API; never fall through to panel controls."""
+        import bt_remote_api
+        return bt_remote_api.route_post(self)
 
 
 def url(port: int = DEFAULT_PORT) -> str:
