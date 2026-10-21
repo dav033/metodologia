@@ -4,22 +4,22 @@
     {
       "id": "F1",
       "severity": "high",
-      "status": "fixed",
+      "status": "open",
       "tasks": [
         "T16"
       ],
-      "summary": "Caddy container-loopback upstream is corrected in the audited prerequisites.",
-      "evidence": "cd remote/deploy && python -m unittest discover -s tests -p test_kit.py: exit 0, 18 tests in 6.638 s, 1 skip (Caddy unavailable). bash remote/deploy/deploy.sh --check: exit 0, topology 172.20.0.1:8790; rollback.sh --check: exit 0. No live container connectivity was tested."
+      "summary": "The current prerequisites removed the deployment kit, including the previously corrected Caddy topology.",
+      "evidence": "Frozen T16 command `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 1, ImportError: Start directory is not importable: 'tests'. Caddyfile, bitacora-gateway.service, deploy.sh, rollback.sh and remote/docs/runbook.md are absent. `git diff 108efc35f HEAD` confirms their deletion. Historical topology tests cannot establish the missing kit; restore it with its tests and container-host bridge configuration."
     },
     {
       "id": "F2",
       "severity": "high",
-      "status": "open",
+      "status": "fixed",
       "tasks": [
         "T17"
       ],
-      "summary": "Required built-web E2E still fails because its forced-failure fixture emits no failure event.",
-      "evidence": "cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, 1 test in 18.521 s; production build succeeds, then line 401 fails on events=[], nextCursor=\"\". Probe C independently confirms the empty production feed. The fixture seeds one failure below the retry budget and an M5 retry decision; do not weaken production retry-budget alert suppression. Later cancellation, OAuth, offline and notification assertions are not reached."
+      "summary": "The frozen built-web E2E command now completes; its previous empty-event failure is no longer reproduced.",
+      "evidence": "`cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 0, 1 test in 19.630 s, production build succeeds; fake OAuth owner/foreign account, ledger cancellation/stale precondition, offline cache and single fake Telegram assertion execute. This does not parse the real snapshot in the phone. New F35 records that failure; F37 records that the E2E became green while retry-exhaustion filtering was removed."
     },
     {
       "id": "F3",
@@ -28,8 +28,8 @@
       "tasks": [
         "T16"
       ],
-      "summary": "The runbook restarts an uninstalled gateway unit on first install and reloads host Caddy although the approved service is containerized.",
-      "evidence": "Source recheck: remote/docs/runbook.md steps 3/4 deploy (systemctl restart) before installing the unit. Step 5 reloads host Caddy although the approved topology uses a Docker container. Private listener/key/tunnel instructions and hostname replacement are present; those historical subclaims remain withdrawn."
+      "summary": "The required go-live runbook has been removed.",
+      "evidence": "Current tree has no remote/docs/runbook.md; `git diff 108efc35f HEAD -- remote/docs/runbook.md` shows all 61 lines deleted. Previous first-install/reload ordering defects cannot be rechecked in an absent runbook. Restore the runbook with first-install-before-restart and containerized Caddy instructions; F1 records the blocking kit loss."
     },
     {
       "id": "F4",
@@ -39,7 +39,7 @@
         "T11a"
       ],
       "summary": "Gateway request logging exposes OAuth code/state query values in its purported status field.",
-      "evidence": "Probe A: exit 0; callback query code=SYNTHETIC_CODE&state=SYNTHETIC_STATE appears in captured logging. remote/gateway/server.py:38 assigns the request line args[0] to status. Independent Anthropic finding 1 confirms the source defect; primary severity remains medium because no usable session credential or account takeover was demonstrated."
+      "evidence": "Fresh report Probe A: exit 0; synthetic callback code/state appear in captured server logging. server.py:38 uses args[0] (request line) as status. Fresh Anthropic finding 3 independently confirms the leak. Short-lived OAuth values are exposed; no session-token theft/account takeover was demonstrated."
     },
     {
       "id": "F5",
@@ -50,7 +50,7 @@
         "T15a"
       ],
       "summary": "The mutation marker accepts arbitrary nonempty values, and GET logout clears the cookie without guards or revoking its server session.",
-      "evidence": "Probe A: exit 0; X-Flow-Request: wrong passes the real HTTP guard (200 with an isolated successful runtime), foreign-Origin GET logout returns 302/clearing cookie, and the token still resolves afterward. server.py:189 checks nonempty marker rather than value 1; logout has no server-side revocation. No Origin bypass for command POST was demonstrated."
+      "evidence": "Fresh Probe A: exit 0; wrong nonempty X-Flow-Request passes with HTTP 200, foreign-Origin GET logout clears the cookie with 302, and its server token still resolves. server.py:189-191 checks bool(marker). Anthropic findings 7/8 confirm. Command POST Origin guards still run; no cross-site command bypass is claimed."
     },
     {
       "id": "F6",
@@ -61,7 +61,7 @@
         "T14b"
       ],
       "summary": "Telegram alerts still omit a working review URL and safe inline actions, and retry callbacks remain unsupported.",
-      "evidence": "Probe B: exit 0; submit_telegram_command rejects retry with INVALID_COMMAND. Source recheck: app.py:107 permits pause/resume only; telegram_bot.py /estado supplies only those callbacks; notifications.py TelegramSender sends chat_id/text without reply_markup, review URL, task or classified cause. Telegram bot/send suites pass within the 45 gateway tests; they do not establish the missing alert actions."
+      "evidence": "Fresh Probe B: exit 0; Telegram retry returns INVALID_COMMAND. Source: app.py submit_telegram_command allows only pause/resume; notifications.py TelegramSender sends chat_id/text with no reply_markup, review URL, task/cause detail. The 45 gateway tests pass, covering sender/bot but not these omitted alert controls."
     },
     {
       "id": "F7",
@@ -71,7 +71,7 @@
         "T5a"
       ],
       "summary": "The public note command is still advertised and validated without a laptop dispatcher.",
-      "evidence": "Probe B: exit 0; real Ledger.submit returns COMMAND_NOT_IMPLEMENTED for note. Both command registries and command.schema.json advertise it; dispatch_handlers has no note. Existing retry reason/RUN.notes reuse remains valid, as PLAN.md specifies; it does not execute the advertised standalone command."
+      "evidence": "Fresh Probe B: exit 0; real Ledger.submit(note) returns COMMAND_NOT_IMPLEMENTED. dispatch_handlers has no note although laptop/gateway registries and public schema advertise it. Existing retry reason/RUN.notes support does not implement the standalone note command."
     },
     {
       "id": "F8",
@@ -81,7 +81,7 @@
         "T15f"
       ],
       "summary": "The phone brief form still cannot edit acceptance criteria.",
-      "evidence": "Source recheck: page.tsx:372-380 always submits field=objective and a string value; renderTask has only a brief textarea. Laptop bt_remote_edit supports acceptance_criteria lists. The current recovering-only form gate and failed reopen are F26; dropped edit fields are F33."
+      "evidence": "Fresh page.tsx:368-377 always sends field=objective and a string value; no acceptance-criteria editor is rendered. bt_remote_edit supports list criteria, and the current 54-test laptop remote suite exercises revision edits. Anthropic finding 2 independently confirms the phone omission. F33's field adapter repair is retained."
     },
     {
       "id": "F9",
@@ -91,7 +91,7 @@
         "T15d"
       ],
       "summary": "Run-level Reabrir ejecución supplies no task identity to a task-scoped operation.",
-      "evidence": "Source recheck: run-level commandForm(reopen, kind:run) has no taskId. bt_remote_commands.TASK_SCOPED, _member_state and dispatch_run_command require params.task; such a run-level command cannot satisfy the member precondition. Task-specific recovery is independently recorded as F26."
+      "evidence": "Current page.tsx run-level commandForm(reopen, kind:run) omits taskId; bt_remote_commands.TASK_SCOPED/_member_state and dispatch_run_command require params.task. Its state precondition cannot resolve. Probe C separately confirms task-scoped real reopen succeeds; do not conflate that with the invalid run-level form."
     },
     {
       "id": "F10",
@@ -101,7 +101,7 @@
         "T6"
       ],
       "summary": "Ordinary plans waiting for approval previously emitted no plan.waiting event without a scheduler decision.",
-      "evidence": "Probe B: exit 0; build_events for a review plan with no scheduler decisions emits plan.waiting. cd skill/scripts && python -m unittest discover -s tests -p test_remote_*.py (isolated BITACORA_ROOT wrapper): exit 0, 54 tests in 7.885 s; collect still passes plans to build_events."
+      "evidence": "Fresh Probe B: exit 0; review plan with no scheduler decisions emits plan.waiting. Combined isolated laptop tests: exit 0, 124 tests, including all 54 test_remote_*.py cases. collect still supplies plans to build_events."
     },
     {
       "id": "F11",
@@ -111,7 +111,7 @@
         "T12"
       ],
       "summary": "Gateway restart still loses the last snapshot; the replacement replay hub is not integrated into production.",
-      "evidence": "Probe B: exit 0; a runtime with an offline cached snapshot serves it, but a newly constructed runtime using the same database returns None. app.py keeps snapshot_cache only in memory. stream.py now has a bounded StreamHub and resync support, but main.py/app.py/server.py never instantiate or serve it (F21); do not carry forward claims about the removed SnapshotEventStream as current production evidence."
+      "evidence": "Fresh Probe B: exit 0; offline runtime serves its memory snapshot, newly constructed runtime with the same database returns None. app.py snapshot_cache is not persisted; production never instantiates the otherwise tested StreamHub. F21 records absent production streaming."
     },
     {
       "id": "F12",
@@ -123,7 +123,7 @@
         "T5"
       ],
       "summary": "Delivered/dropped Telegram history and abandoned expired sessions remain unbounded.",
-      "evidence": "Probe B: exit 0; creating a new session leaves an expired abandoned row. Source recheck: notifications.py has no 90-day deletion of telegram_outbox/delivery_history; SessionStore expires sessions only on presentation. Laptop Ledger.rows loads the complete history before endpoint slicing. Withdraw the old unbounded production SSE deque claim: it was removed, replacement StreamHub has maxlen=1000 and is unused. Its unbounded subscriber queues are not a demonstrated production exposure."
+      "evidence": "Fresh Probe B: exit 0; creating a session leaves an expired abandoned row. notifications.py never prunes telegram_outbox/telegram_delivery_history after 90 days; SessionStore removes expired sessions only on presentation, and Ledger.rows reads all rows. Old production SSE-deque claim remains withdrawn; StreamHub is bounded and unused."
     },
     {
       "id": "F13",
@@ -134,7 +134,7 @@
         "T15b"
       ],
       "summary": "No stable offline-start timestamp reaches the phone.",
-      "evidence": "Probe B: exit 0; cached snapshot retains generatedAt while laptop exposes only online=False, with no offlineSince/cachedAt. app.py:211-228 serializes only online; page.tsx:424 says LAPTOP SIN CONEXIÓN without sin conexión desde HH:MM. LivenessMonitor has a monotonic offline_since internally but never translates it into a public wall-clock timestamp."
+      "evidence": "Fresh Probe B: exit 0; cached generatedAt remains but laptop object is only {online:false}; no offline-start wall-clock timestamp. app.py web_snapshot serializes only online and page.tsx renders LAPTOP SIN CONEXIÓN without HH:MM. Monotonic liveness.offline_since is not exposed."
     },
     {
       "id": "F14",
@@ -145,7 +145,7 @@
         "T6"
       ],
       "summary": "Laptop-side redaction previously missed provider-key assignments and bearer authorization text before transmission.",
-      "evidence": "Probe B: exit 0; synthetic provider-key assignment and bearer value become OPENAI_API_KEY=[REDACTED] Authorization: [REDACTED]. Isolated laptop remote suite: exit 0, 54 tests, including real review response redaction. Snapshot, events and reviews retain the shared recursive redactor; no exhaustive secret-detection claim."
+      "evidence": "Fresh Probe B: exit 0; synthetic provider-key assignment and bearer become [REDACTED]. Combined isolated laptop suite: exit 0, 124 tests, including all 54 remote cases and real review redaction. Shared recursive redactor remains in snapshot/events/reviews. No exhaustive secret-scanning guarantee."
     },
     {
       "id": "F15",
@@ -155,7 +155,7 @@
         "T9"
       ],
       "summary": "The local panel previously had no inherited systemd listener implementation.",
-      "evidence": "Combined isolated unittest discovery in skill/scripts for test_platform.py and test_page*.py: exit 0, 68 tests in 13.412 s, including inherited-listener reload and activation-environment regressions. No live systemd restart was performed."
+      "evidence": "Combined isolated unittest discovery of test_remote_*.py, test_platform.py and test_page*.py in skill/scripts: exit 0, 124 tests in 21.184 s (54 remote, 27 platform, 43 page). Includes inherited listener and activation/reload regressions. No real systemd restart performed."
     },
     {
       "id": "F16",
@@ -165,7 +165,7 @@
         "T15d"
       ],
       "summary": "The phone still discards unknown-outcome command envelopes and creates a fresh idempotency key on resubmission.",
-      "evidence": "Source recheck: page.tsx:275-320 sendCommand retains neither the exact envelope nor UNKNOWN_OUTCOME key. Every form generates a new web UUID. An uncertain HTTP failure is presented as generic Rechazado and resubmission uses a new key. Gateway/laptop replay tests pass but do not reconcile the client. Independent Anthropic finding 5 confirmed after inspecting the full sendCommand implementation."
+      "evidence": "Fresh source inspection page.tsx:272-316: every form makes a new web UUID, sendCommand retains no replayable exact envelope/key; UNKNOWN_OUTCOME HTTP 503 is labelled Rechazado. Anthropic finding 5 confirms. Existing server replay tests and fresh Probe D pass but do not reconcile the phone's uncertain submission."
     },
     {
       "id": "F17",
@@ -175,7 +175,7 @@
         "T3"
       ],
       "summary": "Public command schema disagrees with production commands, fields and key limits.",
-      "evidence": "Source recheck plus Probe B: schema lacks answer-decision, uses string route and singular answer, and models edit-brief as brief; phone uses route object, answers and field/value. Schema max key length is 128; laptop validate rejects 121 characters (limit 120). JSON syntax checks exit 0 and are not semantic schema validation. Event target normalization remains repaired."
+      "evidence": "Current command.schema.json lacks answer-decision, requires singular answer, models route as text and edit as brief; phone sends plural answers/round, route object and field/value. Fresh Probe B rejects 121-character laptop key while schema permits 128. JSON-tool checks validate syntax only."
     },
     {
       "id": "F18",
@@ -186,7 +186,7 @@
         "T15e"
       ],
       "summary": "The required browser verification previously failed and asserted obsolete singular round answers.",
-      "evidence": "cd remote/web && npm run verify: exit 0; lint, tsc --noEmit, all 14 tests (0 skipped/cancelled), and next build pass. Test duration 50.833 s. panel-browser.test.mjs asserts plural answers, real {login} dialect, selected review and new five-second mock snapshot polling. These mock tests do not prove real gateway command dispatch."
+      "evidence": "`cd remote/web && npm run verify`: exit 0; lint, tsc --noEmit, 14/14 tests (0 skipped/cancelled; 46.251 s) and production next build pass. These browser tests use fixtures; they do not refute real snapshot parser failure F35."
     },
     {
       "id": "F19",
@@ -198,7 +198,7 @@
         "T15d"
       ],
       "summary": "The integrated phone app previously failed strict typing and production build due to overlapping implementations.",
-      "evidence": "cd remote/web && npm run verify: exit 0, lint/typecheck/14 tests/production build pass. The production build also succeeds inside the fresh T17 execution before F2. One refreshCommandHistory remains; no missing FailureReview or invalid Attempt predicate is reproduced."
+      "evidence": "Fresh `cd remote/web && npm run verify`: exit 0, lint/strict typing/14 tests/production build pass; production build also succeeds in T17. No duplicate refreshCommandHistory or invalid Attempt predicate reproduced. Runtime integration remains separately F35/F36."
     },
     {
       "id": "F20",
@@ -208,7 +208,7 @@
         "T15a"
       ],
       "summary": "The phone previously rejected the real gateway's successful {login:'dav033'} session response.",
-      "evidence": "cd remote/web && npm run verify: exit 0; browser test observes {login:\"dav033\"} and renders the authenticated panel. Probe A independently observes real gateway HTTP 200 {login:\"dav033\"}. No production OAuth deployment was exercised."
+      "evidence": "Fresh Probe A: exit 0, real gateway session returns HTTP 200 {login:'dav033'}. Fresh npm run verify: exit 0, including browser handling of that dialect. No deployed OAuth claim; F35 concerns the later real snapshot, not authentication."
     },
     {
       "id": "F21",
@@ -220,7 +220,7 @@
         "T15b"
       ],
       "summary": "Production gateway serves neither SSE route; the replacement tested StreamHub is disconnected from runtime and HTTP.",
-      "evidence": "Probe A: exit 0; authenticated GET /api/remote/v1/events/stream?after=abc AND /api/remote/v1/events both return 404. main.py creates GatewayRuntime; app.py never imports/instantiates StreamHub; server.py has no stream handler. StreamHub unit replay/resync tests pass in the 45-test gateway suite but do not cover production. Phone page.tsx:260 still opens the first route, so the feed remains empty; its new five-second snapshot polling does not supply feed events. Laptop feed also filters ordinary flow transitions. Keep the working poll fallback; wire a real stream and explicit cursor/replay adapter."
+      "evidence": "Fresh Probe A: exit 0; authenticated GET /api/remote/v1/events/stream?after=abc and /api/remote/v1/events both return 404. Full server.py/main.py/app.py contain no stream handler or production StreamHub instance. Phone still opens events/stream. 45 gateway tests exercise the disconnected hub; mock SSE and five-second phone polling do not restore the production feed."
     },
     {
       "id": "F22",
@@ -230,27 +230,30 @@
         "T16"
       ],
       "summary": "The earlier env-startup allegation assumed blank optional settings despite the current runbook requiring every uncommented key to be filled.",
-      "evidence": "Probe B: exit 0; fill every uncommented gateway.env.example key with synthetic/standard nonsecret values as runbook step 2 requires; GatewayConfig.from_env and OAuthConfig.from_env succeed with bind 172.20.0.1:8790. Deployment suite exit 0, 18 tests, 1 Caddy skip. No live startup claim."
+      "evidence": "Fresh Probe B: exit 0; filling every uncommented gateway.env.example setting with synthetic/standard values makes GatewayConfig.from_env and OAuthConfig.from_env succeed at 172.20.0.1:8790. This closes the earlier mandatory-blank-config allegation only. The current runbook is absent (F3) and deployment suite fails (F1); no startup/deploy success is claimed."
     },
     {
       "id": "F23",
       "severity": "medium",
-      "status": "fixed",
+      "status": "open",
       "tasks": [
+        "T4a",
         "T15d"
       ],
-      "summary": "Overlapping phone command-history implementations previously broke compilation and mislabeled origin.",
-      "evidence": "cd remote/web && npm run verify: exit 0, including browser history origin/result assertions. Isolated laptop remote suite: exit 0, 54 tests including read-model coverage; gateway suite: exit 0, 45 tests including authenticated reads. One /commands normalizer retains command, target, time, origin and outcome; obsolete incompatible history reader is absent."
+      "summary": "Phone command-history compilation remains repaired, but its production read endpoint has been removed.",
+      "evidence": "Fresh npm run verify exits 0 and the single history normalizer compiles. Fresh Probe C: keyed GET /api/remote/v1/commands returns 404; bt_remote_api.route_get no longer routes it. Gateway turns that upstream failure into 503. Fixture history assertions do not establish real command history. F36 groups the removed read models."
     },
     {
       "id": "F24",
       "severity": "high",
-      "status": "fixed",
+      "status": "open",
       "tasks": [
-        "T18.6"
+        "T18.6",
+        "T8",
+        "T8a"
       ],
-      "summary": "Installed planning-command preconditions previously failed because bt_remote_preconditions was absent from distributions.",
-      "evidence": "Isolated cd skill/scripts unittest discovery test_remote_*.py: exit 0, 54 tests in 7.885 s, including test_installed_wheel_serves_remote_api_and_resolves_round_and_decision_preconditions. It builds wheel/sdist, checks remote modules and exercises installed keyed API and round/decision state readers. This confirms packaging, not gateway public-envelope adaptation (F33)."
+      "summary": "Installed distributions include the old precondition helper but omit the actual retry and edit implementation modules.",
+      "evidence": "Fresh packaging probe builds wheel/sdist with tests/migration/installed_wheel.get. Both archives omit bt_remote_edit.py and bt_route_pins.py; isolated wheel imports exit 1 with ModuleNotFoundError for each, while bt_remote_preconditions imports with exit 0. pyproject.toml omits those modules. Real dispatch imports them dynamically. Existing installed test checks health/imports of six other modules, so its green result misses this. Add both modules and exercise installed retry/edit dispatch."
     },
     {
       "id": "F25",
@@ -260,19 +263,19 @@
         "T15c"
       ],
       "summary": "The failed-task link previously opened only an unrelated static review fixture.",
-      "evidence": "cd remote/web && npm run verify: exit 0, selected rejected-attempt review browser assertions pass. Isolated laptop remote suite: exit 0, 54 tests including HTTP review against synthetic M6/executor evidence. Probe C sees rejected reviewAttempt att-0001 in the real projection. Task-specific /review links remain; inline failed-only guard does not prevent that separate route."
+      "evidence": "Fresh npm run verify exits 0 including selected review assertions. Probe C projects rejected reviewAttempt att-0001; current task link includes its attempt hash and review/page.tsx consumes it directly. All 54 laptop remote tests pass including real failure review/redaction. The global snapshot failure F35 and recovery defect F26 remain separate."
     },
     {
       "id": "F26",
       "severity": "high",
       "status": "open",
       "tasks": [
-        "T5",
-        "T5a",
-        "T15f"
+        "T15f",
+        "T8",
+        "T5a"
       ],
-      "summary": "Rejected-task reopen passes its new precondition alias but fails in the real scheduler; recovery forms still cannot be used end to end.",
-      "evidence": "Probe C: exit 0; real fixture projects rejected, authoritative member state is recovering. Exact phone reopen envelope now passes _matches_precondition, but real dispatch_handlers -> ops.apply -> Scheduler.reopen returns FAILED/EFFECT_FAILED: NOT_ALLOWED: only a blocked task of a live run can be reopened (T1 is recovering). Only stop_owner/resume are stubbed to prevent agents/process control. Source: core operations.py:60-69 permits blocked only; page.tsx:401 exposes retry/edit only for recovering after a successful reopen. Browser mock fabricates success; the new ledger regression also replaces the reopen handler, so neither checks the real transition. Separate review access remains fixed."
+      "summary": "Real reopen now succeeds, but leaves the task ready while the phone exposes recovery controls only for recovering.",
+      "evidence": "Fresh Probe C: exact task reopen via GatewayRuntime -> real keyed HTTP -> ledger -> ops.apply -> Scheduler.reopen returns OK; authoritative recovering becomes ready and real snapshot projects ready. Only process stop/resume are stubbed. page.tsx:397 shows retry/edit only for recovering; reopenedTasks overrides failed/blocked/rejected, not ready, so controls disappear. In addition ops.retry waits up to 180 s for blocked and does not accept ready/recovering. Browser mock preserves the synthetic recovering state. Keep the real scheduler fix; repair/recheck the complete recovery flow."
     },
     {
       "id": "F27",
@@ -282,7 +285,7 @@
         "T11a"
       ],
       "summary": "Command rate limits remain shared by owner login across sessions rather than per session as R17 specifies.",
-      "evidence": "Source recheck: server.py:141 keys commands/challenges on authenticated login (dav033), shared across sessions, rather than token/session identity. This is a stricter aggregate cap, not an authorization bypass. No owner-approved R17 amendment is evidenced."
+      "evidence": "Current server.py:142 uses authenticated login, not session token, as command/challenge rate-limit key. Multiple owner sessions share a cap; this is stricter than R17 and not an auth bypass. Fresh guard tests pass in the 45-test gateway suite; no owner-approved amendment found."
     },
     {
       "id": "F28",
@@ -292,17 +295,17 @@
       "tasks": [
         "T5"
       ],
-      "evidence": "Probe D: exit 0; two simultaneously submitted running-precondition commands execute exactly one handler (entry state running); results are OK and REJECTED/STALE_PRECONDITION, with two audit rows. _EFFECT_LOCK now encloses state read/check, challenge/reservation, handler and outcome write. Isolated laptop remote suite: exit 0, 54 tests including test_concurrent_commands_recheck_state_under_the_effect_lock. This verifies process-local ledger command concurrency, not every possible external scheduler race."
+      "evidence": "Fresh Probe D: exit 0; simultaneous distinct-key commands execute one handler at running; results OK and REJECTED/STALE_PRECONDITION, two audit rows. Current _EFFECT_LOCK encloses state check/reservation/effect/outcome. Combined 124-test laptop suite passes concurrency regression. This is process-local remote-command serialization, not proof against every external scheduler mutation."
     },
     {
       "id": "F29",
       "severity": "medium",
       "status": "open",
-      "summary": "Production snapshots omit the timestamp fields the phone uses for last signal of life and discard plan detail/revision metadata.",
+      "summary": "Real snapshot omits life-sign/revision/criteria metadata and now all plans, rounds and decision requests.",
       "tasks": [
         "T4a"
       ],
-      "evidence": "Probe C: exit 0; production run has lastActivityAt but lastSeenAt/updatedAt are None; phone only consumes the latter fields and attempt.updatedAt, while production emits last_activity_at. Source recheck: bt_remote_api._snapshot still emits plan tasks=[] without revision/criteria and omits run/task revision. Browser fixtures supply the missing metadata."
+      "evidence": "Fresh Probe C lists actual run fields: active,activeTask,id,lastActivityAt,project,reqId,status,tasks,title. No lastSeenAt/updatedAt/revision; tasks lack revision/criteria. bt_remote_api._snapshot no longer collects any plans/rounds/decisionRequests; GatewayRuntime inserts plans=[] only. page.tsx needs those fields for the signals, revision preview and planning forms. Anthropic finding 2 confirms. F35 is the separate fatal run-dialect mismatch."
     },
     {
       "id": "F30",
@@ -312,7 +315,7 @@
       "tasks": [
         "T6"
       ],
-      "evidence": "Probe B: exit 0; a live attempt emits no attempt.stalled at +660 s and does at +901 s. bt_remote_events.py:10 still uses 15*60, against SPEC R10 >10 min. Independent Anthropic review of this full source was not completed; this is the primary auditor's own source/runtime finding."
+      "evidence": "Fresh Probe B: exit 0; a live attempt has no attempt.stalled event at +660 s and has one at +901 s. bt_remote_events.STALL_SECONDS remains 15*60 despite SPEC R10 requiring more than 10 minutes."
     },
     {
       "id": "F31",
@@ -323,27 +326,27 @@
         "T11",
         "T12"
       ],
-      "evidence": "Probe A: exit 0; both authenticated candidate SSE endpoints return 404. Full server.py contains no stream/wait/write loop, so the old post-expiry delivery reproduction no longer applies. This closes that exposure only; it does not approve removing streaming. Lost required functionality is open F21, and session-expiry enforcement must be rechecked when a stream is restored."
+      "evidence": "Fresh Probe A: exit 0; both candidate authenticated SSE routes return 404. Current HTTP server has no stream wait/write loop, so old post-expiry delivery is unreachable. This supersedes that exposure only; lost functionality remains F21. Recheck session expiry when streaming is restored."
     },
     {
       "id": "F32",
       "severity": "high",
-      "status": "open",
-      "summary": "Every phone pinned retry still fails: the new gateway selector adapter does not recognize route_id.",
+      "status": "fixed",
+      "summary": "The gateway now preserves the phone route_id selector and forwards the selected pin.",
       "tasks": [
         "T13"
       ],
-      "evidence": "Probe F: exit 0; exact page.tsx:368 route object {route_id,provider,model,account} becomes params.route=None because app.py:50 accepts only id/routeId/route. Real GatewayRuntime -> LaptopClient -> keyed HTTP route_post returns REJECTED/INVALID_COMMAND (params.route must be nonempty text), stored=False, before state/effects. The new gateway test uses route.id and therefore passes without testing the phone dialect. model/account copying is preserved; do not drop the selected route."
+      "evidence": "Fresh Probe C: exit 0; exact phone route {route_id:'synthetic-route',provider:'codex',model:'synthetic',account:'synthetic'} translates to route/model/account, passes real keyed HTTP/ledger validation and persists the exact pin. Availability/ops.retry/resume are stubbed to avoid account reads and agent starts; no real attempt launch claimed. Fresh 54 remote and 45 gateway tests pass, including pin assignment and exact phone dialect. F24/F26/F36 independently block installed/full recovery paths."
     },
     {
       "id": "F33",
       "severity": "high",
-      "status": "open",
-      "summary": "Gateway public-envelope adapter drops the round number and edited brief/criteria fields, breaking both phone operations.",
+      "status": "fixed",
+      "summary": "The gateway now forwards the phone round number and edited field/value.",
       "tasks": [
         "T13"
       ],
-      "evidence": "Probe F: exit 0; a real open round has target_state={state:open}, but translating the exact phone command drops round and real laptop HTTP returns STALE_PRECONDITION with the round unchanged. A valid server challenge plus current real run state and phone edit-brief task/field/value yields params={task:T1} and FAILED/EFFECT_FAILED: edit-brief requiere un brief de tarea no vacío. app.py:36-42 omits round/field/value; target.taskId preserves task. These fail independently of F26 and the current precondition can be valid. Anthropic finding 2 independently confirms both omissions."
+      "evidence": "Fresh Probe C: exit 0; exact phone round/answers travels through real GatewayRuntime/keyed HTTP/ledger/round file and returns OK/answered. edit-brief forwards task/field/value with valid real challenge, reaching plan validation instead of the former empty-brief error (minimal fixture returns PLAN_INVALID, not a product defect). Current 54 remote tests include real brief/criteria freeze and rebase. Fresh 45 gateway tests include exact public fields. F24/F26/F29/F35 limit complete phone recovery."
     },
     {
       "id": "F34",
@@ -354,7 +357,70 @@
         "T14",
         "T13"
       ],
-      "evidence": "cd remote/gateway && python -m unittest discover -s tests -p test_notify.py: exit 5 under Python 3.14.7, Ran 0 tests, NO TESTS RAN. git diff 0af07a73 HEAD -- remote/gateway/tests/test_notify.py shows deletion of 128 lines, including runtime restart dedupe and production delayed-offline-alert tests. Remaining sender/bot/cursor tests do not replace that frozen command. Restore/adapt the behavior tests; do not treat empty discovery as a passing gate."
+      "evidence": "Fresh frozen command `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 5, Ran 0 tests, NO TESTS RAN. File remains absent. 45 other gateway tests do not replace the required runtime restart/offline notification verification; restore/adapt it."
+    },
+    {
+      "id": "F35",
+      "severity": "high",
+      "status": "open",
+      "summary": "The production snapshot run dialect makes the real phone parser reject every nonempty runs list.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Fresh Probe C: exit 0 reproducer; real fixture laptop snapshot -> GatewayRuntime.web_snapshot -> exact TypeScript parseSnapshot transpiled with installed TypeScript throws 'El snapshot contiene una ejecución inválida.' Laptop emits reqId/status; phone page.tsx:89 requires req/state; gateway only adds plans=[]. npm mock tests and HTTP-only T17 both pass without crossing this parser boundary. Restore compatible producer fields or aliases and add a real producer-to-parser regression. Anthropic finding 1 independently confirms."
+    },
+    {
+      "id": "F36",
+      "severity": "high",
+      "status": "open",
+      "summary": "Removing the production keyed command-history, quotas and routes endpoints disables phone history and route selection.",
+      "tasks": [
+        "T4a"
+      ],
+      "evidence": "Fresh Probe C: exit 0 reproducer; authenticated real keyed HTTP GET /api/remote/v1/commands, /quotas and /routes each returns 404. bt_remote_api.route_get removed their _read_model dispatch; gateway still relays them and raises 503. Phone recovery-panels.tsx depends on /routes to enable selected retry and /quotas for accounts, and page.tsx requests /commands. Restore all read models with their contract/consumer tests; fixture responses do not establish production support."
+    },
+    {
+      "id": "F37",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Failure notifications no longer require exhausted retries, so the green E2E sends a false no-retries-left alert.",
+      "tasks": [
+        "T6",
+        "T17"
+      ],
+      "evidence": "Fresh Probe H: exit 0 reproducer; one failed attempt with attempts_used=1/max_attempts=3 emits attempt.failed and notification_for_event renders 'Una tarea falló sin reintentos pendientes.' Diff from 108efc35f removes _retry_budget_exhausted and live max_attempts. T17's one-failure fixture now passes by observing that false alert. Restore exhaustion-aware notifications and seed an exhausted fixture without weakening R10."
+    },
+    {
+      "id": "F38",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Real HTTP INVALID_CURSOR errors no longer reach the gateway cursor-reset branch.",
+      "tasks": [
+        "T13",
+        "T12"
+      ],
+      "evidence": "Fresh Probe G: exit 0 reproducer; loopback laptop HTTP 400 {code:INVALID_CURSOR} leaves runtime.event_cursor='stale-cursor'. upstream.LaptopClient.get_json flattens HTTPError into UpstreamError, so app.py/_poll_events and StreamHub's UpstreamResponseError branch are unreachable for actual HTTP. Current tests inject the exception directly. Preserve structured HTTP errors and test with real client/HTTP."
+    },
+    {
+      "id": "F39",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Gateway HTTP 200 for failed effects makes the phone clear forms and treat failed reopen as successful.",
+      "tasks": [
+        "T13",
+        "T15d"
+      ],
+      "evidence": "Fresh Probe G: exit 0 reproducer; authenticated gateway command receives laptop {status:FAILED,code:ROUTE_UNAVAILABLE} and returns HTTP 200. server.py status map also omits EFFECT_FAILED, STATE_UNAVAILABLE and COMMAND_NOT_IMPLEMENTED. page.tsx sendCommand checks only response.ok then adds failed reopen to reopenedTasks and clears form. Map failure codes and validate semantic outcome before success UI. Anthropic finding 4 confirms."
+    },
+    {
+      "id": "F40",
+      "severity": "medium",
+      "status": "open",
+      "summary": "Upstream command errors misclassify known connection failure and an uncertain malformed successful response.",
+      "tasks": [
+        "T13"
+      ],
+      "evidence": "Fresh Probe I: exit 0 reproducer; real HTTP 200 with invalid JSON after POST is reported FAILED/LAPTOP_UNAVAILABLE, while mocked URLError(ConnectionRefusedError) becomes UNKNOWN_OUTCOME. upstream.py catches URLError in its earlier OSError branch; malformed post-success JSON goes to plain UpstreamError even though effects may have run. Preserve UNKNOWN_OUTCOME and exact key when execution is uncertain. Anthropic finding 6 confirms; IncompleteRead was not dynamically tested."
     }
   ]
 }

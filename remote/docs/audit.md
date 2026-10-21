@@ -1,286 +1,326 @@
 # Independent security and specification audit — T18
 
-**Rework remains required. F2, F26, F32 and F33 are high and open.** The acceptance criterion
-“Confirmed high findings are fixed” is not met. This read-only audit changes only this report and
-`audit.findings.json`; prerequisite owners must repair the implementation. No risk is accepted here.
+**Rework required: F1, F24, F26, F35 and F36 are high and open.** Their causes are in prerequisite
+implementation, packaging and deleted deployment files, outside this task's explicit read-only boundary.
+The criterion “Confirmed high findings are fixed” is not met. Repeating the previous report cannot fix them.
+Only this report and `audit.findings.json` are changed; no risk is accepted and no independent verdict is claimed.
 
-Audited tree: `ef3e83a595c4ce541ee9aaa25f96cdcd359905f7` (HEAD at entry), 2026-10-21,
-America/Bogota. Primary auditor: OpenAI Codex. Fresh independent other-provider review: Anthropic Claude,
-receipt and all dispositions below. Final acceptance belongs to the independent checker.
+Audited tree: `1ecc1fee7c227504e84c098772230a61323b11fd` (HEAD at entry), 2026-10-21.
+Primary auditor: OpenAI Codex. Fresh other-provider review: Anthropic Claude Sonnet, receipt below.
+The ledger contains **40 findings: 13 rechecked fixed/superseded exposures and 27 open
+(5 high, 20 medium, 2 low); 0 accepted**.
 
-## Overlap reconciliation and scope
+## Carried overlap, earlier failures and scope
 
-Initial git status/diff were clean. Both supplied documents were opened and scanned: neither contained conflict
-markers, despite the carried-result warning. Their conclusions were stale against 20 changed implementation/test
-files relative to the previous T18 result `0af07a73e86087e921eff62169ec5db12a5ab68d`.
-This report retains all F1–F32 identities and both intents: recheck the new prerequisites while preserving the
-previous confirmed defects and repairs. F28 is now rechecked fixed; F26 and F32 still fail at different, later
-boundaries. F31's old exposure disappeared with the removal of production streaming; that functional regression
-remains F21. New F33 records the omitted command fields; F34 records the deleted frozen verification tests.
+Initial git status/diff were clean. Both supplied documents were opened before editing and neither contained
+conflict markers. Their inherited conclusions were stale against 44 changed implementation/test/configuration
+files relative to the earlier task result `108efc35f370dd19fe3cabbafe85bc60a7e69084`.
+This reconciliation keeps every F1–F34 identity, acknowledges repairs, and records regressions rather than
+discarding either side's intent or changing working implementation. No source, tests or configuration were edited.
 
-Read the full frozen SPEC/PLAN.md and every PLAN.json objective/acceptance/verification. Compared the supplied
-attempt outcomes #8–#13 and reachable ledgers/reports at `dcfc5a59`, `13d914a6`, `15f1a318`, `088cefb3`,
-`81a29c39` and `0af07a73`. Earlier omitted attempts and raw m6 URI contents were not available in this task.
-The earlier 240-second source review and historical receipts are not current-tree verdicts.
+Read the supplied #9–#14 outcomes and reachable report history at `13d914a6`, `15f1a318`, `088cefb3`,
+`81a29c39`, `0af07a73` and `108efc35f`. Raw m6 URI results and omitted older attempts were not available.
+Read the frozen SPEC, PLAN.md and every PLAN.json task objective, acceptance criterion and verification.
+Historical provider receipts and passing checks are not current-tree evidence.
 
-The ledger contains **34 findings: 13 rechecked fixed/superseded exposures and 21 open (4 high, 15 medium,
-2 low); 0 accepted**. An open medium/low finding is recorded, not an owner-approved risk exception.
-Only the two authorized documents are deliverable changes; task notes remain here under the explicit read-only
-boundary rather than modifying bitácora, source, tests or configuration.
+The previous empty-event E2E failure is no longer reproduced (F2); its production notification regression is
+explicitly F37. Gateway route/round/edit field omissions are repaired (F32/F33). Real core reopen succeeds,
+but the subsequent phone flow still fails (F26). The supplied tree also removed deployment files (F1/F3),
+omitted actual installed recovery modules (F24), broke the real phone snapshot (F35), and removed read models
+needed for history, quota and route selection (F23/F36). These are different, traced causes, not another retry
+of the previous same report.
 
-Reviewed keyed/private laptop listener, OAuth/state/session/Origin/logging/throttling, command translation,
-preconditions/idempotency/concurrency, real scheduler recovery, shared snapshot/review/events, gateway polling/cache,
-stream integration, notifications/bot, phone consumers versus mocks, installed distributions and deployment kit.
-Dynamic requests and state used synthetic loopback fixtures and temporary roots; no real credentials, live project
-state, desktop profile, SSH host or deployed service was read or changed. Deployment/go-live remains outside scope.
+Audited laptop listener/key isolation, OAuth/state/session/Origin/logging/throttling, ledger/challenge/replay,
+concurrency and real scheduler recovery; producer/consumer snapshot, review and event contracts; gateway
+polling/cache/stream, notifications/bot; installed distributions, web and deployment artifacts.
+Fixtures used temporary state, synthetic credentials and loopback only. No real account/quota source, project
+state, credential file, browser profile, SSH host or deployed service was read or modified.
+Audit notes remain in these documents under the user-imposed two-file boundary rather than writing external
+bitácora or project-memory files.
 
-## Fresh command evidence
+## Fresh verification evidence
 
-Python 3.14.7; Node 24.21.0. Python 3.12 is unavailable. Installed the lockfile first with
-`cd remote/web && npm ci --offline`: exit 0, 320 packages; lockfile unchanged. No added verification installs
-packages or writes to node_modules. Browser tests/builds ran sequentially.
+Python 3.14.7, Node 24.21.0; Python 3.12 was unavailable.
+Installed the existing lockfile first: `cd remote/web && npm ci --offline`, exit 0, 320 packages; lock unchanged.
+Subsequent verification does not install dependencies or write inside node_modules.
+Browser tests, builds and E2E ran sequentially.
 
-Python laptop/gateway/local-panel suites used a wrapper setting BITACORA_ROOT to an empty TemporaryDirectory
-before discovery/import. The wrapper changes no source and prevents access to the real project registry.
-Wildcard/combined discovery includes the frozen individual prerequisite commands; T14's missing test is reported
-separately rather than hidden by wildcard discovery.
+Laptop/gateway/local-panel discovery ran with BITACORA_ROOT set to an empty TemporaryDirectory before imports.
+It does not change source or access the real registry. Combined discovery includes the frozen individual test
+patterns; missing patterns are explicitly reported, never hidden behind a green wildcard suite.
 
 | Command / execution | Actual result |
 |---|---|
-| `cd skill/scripts && python -m unittest discover -s tests -p 'test_remote_*.py'` (isolated root wrapper) | Exit 0; 54 tests in 7.885 s, including wheel/sdist/installed preconditions and concurrent ledger regression. |
-| `cd remote/gateway && python -m unittest discover -s tests -p 'test_*.py'` (isolated root wrapper) | Exit 0; 45 tests in 13.116 s. Stream replay tests exercise the unconnected StreamHub; this does not prove production SSE. |
-| Combined discovery of `test_platform.py` and `test_page*.py` in skill/scripts (isolated root wrapper) | Exit 0; 68 tests in 13.412 s, including listener reload and local-panel regression tests. |
-| `cd remote/web && npm run verify` | Exit 0; lint, strict typecheck, 14/14 tests (0 skipped/cancelled; test duration 50.833 s), production build. Browser assertions use the mock gateway. |
-| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` | Exit 1; 1 test in 18.521 s. Build succeeds, then line 401 fails on empty events/cursor (F2). Later assertions are not reached. |
-| `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` | Exit 0; 18 tests in 6.638 s, 1 explicit skip: Caddy executable unavailable. Includes browser OAuth/cookie test. |
+| `cd skill/scripts && python -m unittest discover -s tests -p 'test_remote_*.py'`, plus `test_platform.py` and `test_page*.py` in one isolated discovery process | Exit 0; 124 tests in 21.184 s: 54 remote, 27 platform, 43 page. Installed health, real revision editing and concurrency tests included. |
+| `cd remote/gateway && python -m unittest discover -s tests -p 'test_*.py'` (isolated root) | Exit 0; 45 tests in 22.627 s. Fake typed cursor errors and disconnected hub tests do not establish real HTTP cursor reset or production SSE. |
+| `cd skill/scripts/bt_scheduler_core && python -m unittest discover -s tests -p test_operations.py` | Exit 0; 18 tests in 0.762 s, including recovering reopen. |
+| `cd remote/web && npm run verify` | Exit 0; lint, strict typecheck, 14/14 tests (0 skipped/cancelled, 46.251 s), optimized production build. Browser uses mock models. |
+| `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` | Exit 0; 1 test in 19.630 s, build/OAuth/stale cancellation/offline/Telegram assertions execute. Does not hydrate the phone parser with the real snapshot. |
+| `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` | Exit 1; `ImportError: Start directory is not importable: 'tests'`. Kit tests and most kit files have been deleted (F1). |
 | `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py` | Exit 5; 0 tests, `NO TESTS RAN` (F34). |
-| `bash remote/deploy/deploy.sh --check`; `bash remote/deploy/rollback.sh --check` | Each exit 0; host bridge topology 172.20.0.1:8790 and rollback unit. No deployment performed. |
-| `python -m json.tool remote/contract/command.schema.json`; event-schema equivalent | Each exit 0; syntax only, not semantic schema compliance. |
+| `bash remote/deploy/deploy.sh --check`; rollback equivalent | Each exit 127, script absent. No deploy or rollback performed. |
+| `python -m json.tool remote/contract/command.schema.json`; event equivalent | Each exit 0; syntax only, not semantic schema compliance. |
 | `test -s remote/docs/route-pin.md`; architecture.md and contract.md equivalents | Each exit 0. |
-| Report probes A–D and F below | Each final execution exit 0; observations are evidence, not a passing product verdict. |
-| `test -s remote/docs/audit.md` (all three frozen T18 checks) | Each exit 0; these check existence only. |
-| Ledger schema/IDs/status/evidence checks, conflict scan and `git diff --check` | Exit 0; only the authorized report and ledger changed. |
+| Report probes A, B, C, D, G, H, I and P below | Each exit 0 reproducer; specific findings/limited repairs observed. Probe P's two expected missing-module import subprocesses each exit 1. |
+| Three frozen `test -s remote/docs/audit.md` checks | Each exit 0; existence only. |
+| Ledger validation, artifact conflict scan, changed-path restriction and `git diff --check` | Exit 0; only the authorized two documents changed. |
 
-One preliminary Probe B used `laptop=object()` while a new runtime defaults online; its lazy snapshot read raised
-AttributeError. That was an audit harness error, not product evidence. The corrected final probe explicitly puts
-both synthetic runtimes offline before checking cached restart behavior. The first fresh Anthropic whole-source
-request timed out at 240 seconds without a result; the smaller independent boundary review completed below.
+187 Python regression tests, 14 web tests and one E2E passed. These do not cancel the explicitly failing kit and
+notification gates or substitute for cross-boundary probes. E2E emits ResourceWarnings for HTTPError/SQLite
+cleanup; they are not hidden as failing assertions.
 
-Not run: unrelated repository suites, Python 3.12, real Caddy validation/Docker connectivity, deployed OAuth or
-Telegram, Vercel rewrite stream lifetime, PWA installation and exhaustive 44 px touch-target measurement.
-No live dependency advisory scan was run; npm offline output is not claimed as one. None of these omissions is
-reported passing. T17's failure and T14's absent tests remain visible.
+Not run: unrelated repository suites, Python 3.12, Caddy validation/Docker connectivity (kit absent), deployed
+OAuth/Telegram, real selected-route agent execution, live Vercel SSE lifetime, PWA installation, exhaustive touch
+target measurement or a live dependency advisory scan. Offline npm output is not claimed as a fresh advisory
+audit. No missing check is reported passing.
+
+## Fresh independent other-provider audit
+
+The first tools-disabled whole-source Anthropic request (175,631 characters; input SHA-256
+`8a08fd8a2f6071d7abf8339395f0c1495636b6f39325bbf38e114662baa14886`) timed out at 210 seconds.
+No findings or verdict are inferred from it. A smaller request provided the governing requirements and numbered
+producer/consumer excerpts for the phone, gateway HTTP/client/adapter, laptop snapshot/ledger and scheduler
+reopen. It received neither the primary report nor the ledger or findings, and had no tools/write access.
+
+Invocation: `claude -p --safe-mode --no-session-persistence --setting-sources '' --model sonnet --effort medium --tools '' --max-turns 1 --output-format json`, source bundle on stdin.
+Receipt: exit 0, subtype success, is_error false, 1 turn; provider duration 106,308 ms, wall 107.650 s;
+reported provider/model `firstParty / claude-sonnet-5-5`.
+Input SHA-256: `07805c46755e0d0ce2839ad9c78c428555a6cb34a4dcc505f8545c087049358e`.
+Output JSON SHA-256: `fe3eeec3dd79b58a571ebb1d0ddcb51b23fd2b3c932351f646ed44a1fc0d9ce1`.
+
+This satisfies a fresh review by another provider, not proof of who built every prerequisite. That review covers
+the supplied boundaries only; the primary auditor checked the other scope and independently reproduced defects.
+
+| Anthropic finding | Primary verdict and reason |
+|---|---|
+| 1 high: real snapshot cannot parse | Confirmed high F35 by real producer + exact TypeScript parser in C. |
+| 2 medium: missing metadata/plans/criteria | Confirmed F29/F8. Missing rounds/decisions also confirmed in the full source. The speculative failed→retried→failed ABA implication is not a separate confirmed race: R6 allows state preconditions and no concurrent interleaving was demonstrated here. |
+| 3 medium: OAuth query in status log | Confirmed F4 by A. No account takeover/session-token leak demonstrated. |
+| 4 medium: failed effect returned 200 | Confirmed F39 by G and actual phone control flow. |
+| 5 low-medium: unknown result labelled rejected | Confirmed medium F16; same-key server replay is still valid. |
+| 6 low-medium: upstream outcome classification | Confirmed medium F40 by I. Truncated HTTP body/IncompleteRead consequence was not exercised and is not claimed as separate evidence. |
+| 7 low: nonempty header instead of 1 | Confirmed within F5 by A; no Origin bypass demonstrated. |
+| 8 low: GET logout/no revocation | Confirmed within F5 by A; a clearing-cookie response is not an authenticated command exploit. |
+
+All uncertain provider observations were checked against collaborators:
+
+| Candidate | Verdict and reason |
+|---|---|
+| Null confirmation crashes ledger | Rejected: full validate() rejects non-string challenge/typed_req before `.strip()`/`.encode()`; current confirmation regressions pass. |
+| Failed/rejected reopen necessarily fails in core | Rejected for current rejected projection: C shows authoritative recovering and successful real reopen to ready; rejected alias exists. Remaining UI/next-step failure is F26. |
+| `live._attempt(None)` crashes snapshot | Rejected: collaborator explicitly handles None; real C snapshot succeeds. |
+| Pin set before retry can fail | Ordering confirmed; no additional wrong-route attempt demonstrated. Full-flow readiness/wait issue is F26; existing strict route-availability test remains valid. |
+| Cancel/reopen auto-resumes owner pause | Observed explicit ops.resume; not raised as a separate spec violation without an agreed contradictory operation contract. |
+| Read 400/404 becomes 503 | Confirmed error flattening; actionable cursor-reset failure is F38, removed real read models are F36. No extra duplicate finding. |
+| Local scheduler can race process-local effect lock | Lock scope is accurately limited in F28; no concrete external race reproduced, so no claim it is fixed globally or a new proven bypass. |
 
 ## Findings and verdicts
 
-### F1 — high / fixed — Caddy container-loopback upstream is corrected in the audited prerequisites.
+### F1 — high / open — The current prerequisites removed the deployment kit, including the previously corrected Caddy topology.
 
-Tasks: `T16`. Evidence: cd remote/deploy && python -m unittest discover -s tests -p test_kit.py: exit 0, 18 tests in 6.638 s, 1 skip (Caddy unavailable). bash remote/deploy/deploy.sh --check: exit 0, topology 172.20.0.1:8790; rollback.sh --check: exit 0. No live container connectivity was tested.
+Tasks: `T16`. Evidence: Frozen T16 command `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py`: exit 1, ImportError: Start directory is not importable: 'tests'. Caddyfile, bitacora-gateway.service, deploy.sh, rollback.sh and remote/docs/runbook.md are absent. `git diff 108efc35f HEAD` confirms their deletion. Historical topology tests cannot establish the missing kit; restore it with its tests and container-host bridge configuration.
 
-### F2 — high / open — Required built-web E2E still fails because its forced-failure fixture emits no failure event.
+### F2 — high / fixed — The frozen built-web E2E command now completes; its previous empty-event failure is no longer reproduced.
 
-Tasks: `T17`. Evidence: cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py: exit 1, 1 test in 18.521 s; production build succeeds, then line 401 fails on events=[], nextCursor="". Probe C independently confirms the empty production feed. The fixture seeds one failure below the retry budget and an M5 retry decision; do not weaken production retry-budget alert suppression. Later cancellation, OAuth, offline and notification assertions are not reached.
+Tasks: `T17`. Evidence: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py`: exit 0, 1 test in 19.630 s, production build succeeds; fake OAuth owner/foreign account, ledger cancellation/stale precondition, offline cache and single fake Telegram assertion execute. This does not parse the real snapshot in the phone. New F35 records that failure; F37 records that the E2E became green while retry-exhaustion filtering was removed.
 
-### F3 — medium / open — The runbook restarts an uninstalled gateway unit on first install and reloads host Caddy although the approved service is containerized.
+### F3 — medium / open — The required go-live runbook has been removed.
 
-Tasks: `T16`. Evidence: Source recheck: remote/docs/runbook.md steps 3/4 deploy (systemctl restart) before installing the unit. Step 5 reloads host Caddy although the approved topology uses a Docker container. Private listener/key/tunnel instructions and hostname replacement are present; those historical subclaims remain withdrawn.
+Tasks: `T16`. Evidence: Current tree has no remote/docs/runbook.md; `git diff 108efc35f HEAD -- remote/docs/runbook.md` shows all 61 lines deleted. Previous first-install/reload ordering defects cannot be rechecked in an absent runbook. Restore the runbook with first-install-before-restart and containerized Caddy instructions; F1 records the blocking kit loss.
 
 ### F4 — medium / open — Gateway request logging exposes OAuth code/state query values in its purported status field.
 
-Tasks: `T11a`. Evidence: Probe A: exit 0; callback query code=SYNTHETIC_CODE&state=SYNTHETIC_STATE appears in captured logging. remote/gateway/server.py:38 assigns the request line args[0] to status. Independent Anthropic finding 1 confirms the source defect; primary severity remains medium because no usable session credential or account takeover was demonstrated.
+Tasks: `T11a`. Evidence: Fresh report Probe A: exit 0; synthetic callback code/state appear in captured server logging. server.py:38 uses args[0] (request line) as status. Fresh Anthropic finding 3 independently confirms the leak. Short-lived OAuth values are exposed; no session-token theft/account takeover was demonstrated.
 
 ### F5 — medium / open — The mutation marker accepts arbitrary nonempty values, and GET logout clears the cookie without guards or revoking its server session.
 
-Tasks: `T11a`, `T15a`. Evidence: Probe A: exit 0; X-Flow-Request: wrong passes the real HTTP guard (200 with an isolated successful runtime), foreign-Origin GET logout returns 302/clearing cookie, and the token still resolves afterward. server.py:189 checks nonempty marker rather than value 1; logout has no server-side revocation. No Origin bypass for command POST was demonstrated.
+Tasks: `T11a`, `T15a`. Evidence: Fresh Probe A: exit 0; wrong nonempty X-Flow-Request passes with HTTP 200, foreign-Origin GET logout clears the cookie with 302, and its server token still resolves. server.py:189-191 checks bool(marker). Anthropic findings 7/8 confirm. Command POST Origin guards still run; no cross-site command bypass is claimed.
 
 ### F6 — medium / open — Telegram alerts still omit a working review URL and safe inline actions, and retry callbacks remain unsupported.
 
-Tasks: `T14a`, `T14b`. Evidence: Probe B: exit 0; submit_telegram_command rejects retry with INVALID_COMMAND. Source recheck: app.py:107 permits pause/resume only; telegram_bot.py /estado supplies only those callbacks; notifications.py TelegramSender sends chat_id/text without reply_markup, review URL, task or classified cause. Telegram bot/send suites pass within the 45 gateway tests; they do not establish the missing alert actions.
+Tasks: `T14a`, `T14b`. Evidence: Fresh Probe B: exit 0; Telegram retry returns INVALID_COMMAND. Source: app.py submit_telegram_command allows only pause/resume; notifications.py TelegramSender sends chat_id/text with no reply_markup, review URL, task/cause detail. The 45 gateway tests pass, covering sender/bot but not these omitted alert controls.
 
 ### F7 — medium / open — The public note command is still advertised and validated without a laptop dispatcher.
 
-Tasks: `T5a`. Evidence: Probe B: exit 0; real Ledger.submit returns COMMAND_NOT_IMPLEMENTED for note. Both command registries and command.schema.json advertise it; dispatch_handlers has no note. Existing retry reason/RUN.notes reuse remains valid, as PLAN.md specifies; it does not execute the advertised standalone command.
+Tasks: `T5a`. Evidence: Fresh Probe B: exit 0; real Ledger.submit(note) returns COMMAND_NOT_IMPLEMENTED. dispatch_handlers has no note although laptop/gateway registries and public schema advertise it. Existing retry reason/RUN.notes support does not implement the standalone note command.
 
 ### F8 — medium / open — The phone brief form still cannot edit acceptance criteria.
 
-Tasks: `T15f`. Evidence: Source recheck: page.tsx:372-380 always submits field=objective and a string value; renderTask has only a brief textarea. Laptop bt_remote_edit supports acceptance_criteria lists. The current recovering-only form gate and failed reopen are F26; dropped edit fields are F33.
+Tasks: `T15f`. Evidence: Fresh page.tsx:368-377 always sends field=objective and a string value; no acceptance-criteria editor is rendered. bt_remote_edit supports list criteria, and the current 54-test laptop remote suite exercises revision edits. Anthropic finding 2 independently confirms the phone omission. F33's field adapter repair is retained.
 
 ### F9 — medium / open — Run-level Reabrir ejecución supplies no task identity to a task-scoped operation.
 
-Tasks: `T15d`. Evidence: Source recheck: run-level commandForm(reopen, kind:run) has no taskId. bt_remote_commands.TASK_SCOPED, _member_state and dispatch_run_command require params.task; such a run-level command cannot satisfy the member precondition. Task-specific recovery is independently recorded as F26.
+Tasks: `T15d`. Evidence: Current page.tsx run-level commandForm(reopen, kind:run) omits taskId; bt_remote_commands.TASK_SCOPED/_member_state and dispatch_run_command require params.task. Its state precondition cannot resolve. Probe C separately confirms task-scoped real reopen succeeds; do not conflate that with the invalid run-level form.
 
 ### F10 — medium / fixed — Ordinary plans waiting for approval previously emitted no plan.waiting event without a scheduler decision.
 
-Tasks: `T6`. Evidence: Probe B: exit 0; build_events for a review plan with no scheduler decisions emits plan.waiting. cd skill/scripts && python -m unittest discover -s tests -p test_remote_*.py (isolated BITACORA_ROOT wrapper): exit 0, 54 tests in 7.885 s; collect still passes plans to build_events.
+Tasks: `T6`. Evidence: Fresh Probe B: exit 0; review plan with no scheduler decisions emits plan.waiting. Combined isolated laptop tests: exit 0, 124 tests, including all 54 test_remote_*.py cases. collect still supplies plans to build_events.
 
 ### F11 — medium / open — Gateway restart still loses the last snapshot; the replacement replay hub is not integrated into production.
 
-Tasks: `T12`. Evidence: Probe B: exit 0; a runtime with an offline cached snapshot serves it, but a newly constructed runtime using the same database returns None. app.py keeps snapshot_cache only in memory. stream.py now has a bounded StreamHub and resync support, but main.py/app.py/server.py never instantiate or serve it (F21); do not carry forward claims about the removed SnapshotEventStream as current production evidence.
+Tasks: `T12`. Evidence: Fresh Probe B: exit 0; offline runtime serves its memory snapshot, newly constructed runtime with the same database returns None. app.py snapshot_cache is not persisted; production never instantiates the otherwise tested StreamHub. F21 records absent production streaming.
 
 ### F12 — medium / open — Delivered/dropped Telegram history and abandoned expired sessions remain unbounded.
 
-Tasks: `T11`, `T14a`, `T5`. Evidence: Probe B: exit 0; creating a new session leaves an expired abandoned row. Source recheck: notifications.py has no 90-day deletion of telegram_outbox/delivery_history; SessionStore expires sessions only on presentation. Laptop Ledger.rows loads the complete history before endpoint slicing. Withdraw the old unbounded production SSE deque claim: it was removed, replacement StreamHub has maxlen=1000 and is unused. Its unbounded subscriber queues are not a demonstrated production exposure.
+Tasks: `T11`, `T14a`, `T5`. Evidence: Fresh Probe B: exit 0; creating a session leaves an expired abandoned row. notifications.py never prunes telegram_outbox/telegram_delivery_history after 90 days; SessionStore removes expired sessions only on presentation, and Ledger.rows reads all rows. Old production SSE-deque claim remains withdrawn; StreamHub is bounded and unused.
 
 ### F13 — medium / open — No stable offline-start timestamp reaches the phone.
 
-Tasks: `T12`, `T15b`. Evidence: Probe B: exit 0; cached snapshot retains generatedAt while laptop exposes only online=False, with no offlineSince/cachedAt. app.py:211-228 serializes only online; page.tsx:424 says LAPTOP SIN CONEXIÓN without sin conexión desde HH:MM. LivenessMonitor has a monotonic offline_since internally but never translates it into a public wall-clock timestamp.
+Tasks: `T12`, `T15b`. Evidence: Fresh Probe B: exit 0; cached generatedAt remains but laptop object is only {online:false}; no offline-start wall-clock timestamp. app.py web_snapshot serializes only online and page.tsx renders LAPTOP SIN CONEXIÓN without HH:MM. Monotonic liveness.offline_since is not exposed.
 
 ### F14 — medium / fixed — Laptop-side redaction previously missed provider-key assignments and bearer authorization text before transmission.
 
-Tasks: `T7`, `T6`. Evidence: Probe B: exit 0; synthetic provider-key assignment and bearer value become OPENAI_API_KEY=[REDACTED] Authorization: [REDACTED]. Isolated laptop remote suite: exit 0, 54 tests, including real review response redaction. Snapshot, events and reviews retain the shared recursive redactor; no exhaustive secret-detection claim.
+Tasks: `T7`, `T6`. Evidence: Fresh Probe B: exit 0; synthetic provider-key assignment and bearer become [REDACTED]. Combined isolated laptop suite: exit 0, 124 tests, including all 54 remote cases and real review redaction. Shared recursive redactor remains in snapshot/events/reviews. No exhaustive secret-scanning guarantee.
 
 ### F15 — medium / fixed — The local panel previously had no inherited systemd listener implementation.
 
-Tasks: `T9`. Evidence: Combined isolated unittest discovery in skill/scripts for test_platform.py and test_page*.py: exit 0, 68 tests in 13.412 s, including inherited-listener reload and activation-environment regressions. No live systemd restart was performed.
+Tasks: `T9`. Evidence: Combined isolated unittest discovery of test_remote_*.py, test_platform.py and test_page*.py in skill/scripts: exit 0, 124 tests in 21.184 s (54 remote, 27 platform, 43 page). Includes inherited listener and activation/reload regressions. No real systemd restart performed.
 
 ### F16 — medium / open — The phone still discards unknown-outcome command envelopes and creates a fresh idempotency key on resubmission.
 
-Tasks: `T15d`. Evidence: Source recheck: page.tsx:275-320 sendCommand retains neither the exact envelope nor UNKNOWN_OUTCOME key. Every form generates a new web UUID. An uncertain HTTP failure is presented as generic Rechazado and resubmission uses a new key. Gateway/laptop replay tests pass but do not reconcile the client. Independent Anthropic finding 5 confirmed after inspecting the full sendCommand implementation.
+Tasks: `T15d`. Evidence: Fresh source inspection page.tsx:272-316: every form makes a new web UUID, sendCommand retains no replayable exact envelope/key; UNKNOWN_OUTCOME HTTP 503 is labelled Rechazado. Anthropic finding 5 confirms. Existing server replay tests and fresh Probe D pass but do not reconcile the phone's uncertain submission.
 
 ### F17 — low / open — Public command schema disagrees with production commands, fields and key limits.
 
-Tasks: `T3`. Evidence: Source recheck plus Probe B: schema lacks answer-decision, uses string route and singular answer, and models edit-brief as brief; phone uses route object, answers and field/value. Schema max key length is 128; laptop validate rejects 121 characters (limit 120). JSON syntax checks exit 0 and are not semantic schema validation. Event target normalization remains repaired.
+Tasks: `T3`. Evidence: Current command.schema.json lacks answer-decision, requires singular answer, models route as text and edit as brief; phone sends plural answers/round, route object and field/value. Fresh Probe B rejects 121-character laptop key while schema permits 128. JSON-tool checks validate syntax only.
 
 ### F18 — medium / fixed — The required browser verification previously failed and asserted obsolete singular round answers.
 
-Tasks: `T15`, `T15e`. Evidence: cd remote/web && npm run verify: exit 0; lint, tsc --noEmit, all 14 tests (0 skipped/cancelled), and next build pass. Test duration 50.833 s. panel-browser.test.mjs asserts plural answers, real {login} dialect, selected review and new five-second mock snapshot polling. These mock tests do not prove real gateway command dispatch.
+Tasks: `T15`, `T15e`. Evidence: `cd remote/web && npm run verify`: exit 0; lint, tsc --noEmit, 14/14 tests (0 skipped/cancelled; 46.251 s) and production next build pass. These browser tests use fixtures; they do not refute real snapshot parser failure F35.
 
 ### F19 — high / fixed — The integrated phone app previously failed strict typing and production build due to overlapping implementations.
 
-Tasks: `T15a`, `T15c`, `T15d`. Evidence: cd remote/web && npm run verify: exit 0, lint/typecheck/14 tests/production build pass. The production build also succeeds inside the fresh T17 execution before F2. One refreshCommandHistory remains; no missing FailureReview or invalid Attempt predicate is reproduced.
+Tasks: `T15a`, `T15c`, `T15d`. Evidence: Fresh `cd remote/web && npm run verify`: exit 0, lint/strict typing/14 tests/production build pass; production build also succeeds in T17. No duplicate refreshCommandHistory or invalid Attempt predicate reproduced. Runtime integration remains separately F35/F36.
 
 ### F20 — high / fixed — The phone previously rejected the real gateway's successful {login:'dav033'} session response.
 
-Tasks: `T15a`. Evidence: cd remote/web && npm run verify: exit 0; browser test observes {login:"dav033"} and renders the authenticated panel. Probe A independently observes real gateway HTTP 200 {login:"dav033"}. No production OAuth deployment was exercised.
+Tasks: `T15a`. Evidence: Fresh Probe A: exit 0, real gateway session returns HTTP 200 {login:'dav033'}. Fresh npm run verify: exit 0, including browser handling of that dialect. No deployed OAuth claim; F35 concerns the later real snapshot, not authentication.
 
 ### F21 — medium / open — Production gateway serves neither SSE route; the replacement tested StreamHub is disconnected from runtime and HTTP.
 
-Tasks: `T12`, `T6`, `T15b`. Evidence: Probe A: exit 0; authenticated GET /api/remote/v1/events/stream?after=abc AND /api/remote/v1/events both return 404. main.py creates GatewayRuntime; app.py never imports/instantiates StreamHub; server.py has no stream handler. StreamHub unit replay/resync tests pass in the 45-test gateway suite but do not cover production. Phone page.tsx:260 still opens the first route, so the feed remains empty; its new five-second snapshot polling does not supply feed events. Laptop feed also filters ordinary flow transitions. Keep the working poll fallback; wire a real stream and explicit cursor/replay adapter.
+Tasks: `T12`, `T6`, `T15b`. Evidence: Fresh Probe A: exit 0; authenticated GET /api/remote/v1/events/stream?after=abc and /api/remote/v1/events both return 404. Full server.py/main.py/app.py contain no stream handler or production StreamHub instance. Phone still opens events/stream. 45 gateway tests exercise the disconnected hub; mock SSE and five-second phone polling do not restore the production feed.
 
 ### F22 — medium / fixed — The earlier env-startup allegation assumed blank optional settings despite the current runbook requiring every uncommented key to be filled.
 
-Tasks: `T16`. Evidence: Probe B: exit 0; fill every uncommented gateway.env.example key with synthetic/standard nonsecret values as runbook step 2 requires; GatewayConfig.from_env and OAuthConfig.from_env succeed with bind 172.20.0.1:8790. Deployment suite exit 0, 18 tests, 1 Caddy skip. No live startup claim.
+Tasks: `T16`. Evidence: Fresh Probe B: exit 0; filling every uncommented gateway.env.example setting with synthetic/standard values makes GatewayConfig.from_env and OAuthConfig.from_env succeed at 172.20.0.1:8790. This closes the earlier mandatory-blank-config allegation only. The current runbook is absent (F3) and deployment suite fails (F1); no startup/deploy success is claimed.
 
-### F23 — medium / fixed — Overlapping phone command-history implementations previously broke compilation and mislabeled origin.
+### F23 — medium / open — Phone command-history compilation remains repaired, but its production read endpoint has been removed.
 
-Tasks: `T15d`. Evidence: cd remote/web && npm run verify: exit 0, including browser history origin/result assertions. Isolated laptop remote suite: exit 0, 54 tests including read-model coverage; gateway suite: exit 0, 45 tests including authenticated reads. One /commands normalizer retains command, target, time, origin and outcome; obsolete incompatible history reader is absent.
+Tasks: `T4a`, `T15d`. Evidence: Fresh npm run verify exits 0 and the single history normalizer compiles. Fresh Probe C: keyed GET /api/remote/v1/commands returns 404; bt_remote_api.route_get no longer routes it. Gateway turns that upstream failure into 503. Fixture history assertions do not establish real command history. F36 groups the removed read models.
 
-### F24 — high / fixed — Installed planning-command preconditions previously failed because bt_remote_preconditions was absent from distributions.
+### F24 — high / open — Installed distributions include the old precondition helper but omit the actual retry and edit implementation modules.
 
-Tasks: `T18.6`. Evidence: Isolated cd skill/scripts unittest discovery test_remote_*.py: exit 0, 54 tests in 7.885 s, including test_installed_wheel_serves_remote_api_and_resolves_round_and_decision_preconditions. It builds wheel/sdist, checks remote modules and exercises installed keyed API and round/decision state readers. This confirms packaging, not gateway public-envelope adaptation (F33).
+Tasks: `T18.6`, `T8`, `T8a`. Evidence: Fresh packaging probe builds wheel/sdist with tests/migration/installed_wheel.get. Both archives omit bt_remote_edit.py and bt_route_pins.py; isolated wheel imports exit 1 with ModuleNotFoundError for each, while bt_remote_preconditions imports with exit 0. pyproject.toml omits those modules. Real dispatch imports them dynamically. Existing installed test checks health/imports of six other modules, so its green result misses this. Add both modules and exercise installed retry/edit dispatch.
 
 ### F25 — medium / fixed — The failed-task link previously opened only an unrelated static review fixture.
 
-Tasks: `T15c`. Evidence: cd remote/web && npm run verify: exit 0, selected rejected-attempt review browser assertions pass. Isolated laptop remote suite: exit 0, 54 tests including HTTP review against synthetic M6/executor evidence. Probe C sees rejected reviewAttempt att-0001 in the real projection. Task-specific /review links remain; inline failed-only guard does not prevent that separate route.
+Tasks: `T15c`. Evidence: Fresh npm run verify exits 0 including selected review assertions. Probe C projects rejected reviewAttempt att-0001; current task link includes its attempt hash and review/page.tsx consumes it directly. All 54 laptop remote tests pass including real failure review/redaction. The global snapshot failure F35 and recovery defect F26 remain separate.
 
-### F26 — high / open — Rejected-task reopen passes its new precondition alias but fails in the real scheduler; recovery forms still cannot be used end to end.
+### F26 — high / open — Real reopen now succeeds, but leaves the task ready while the phone exposes recovery controls only for recovering.
 
-Tasks: `T5`, `T5a`, `T15f`. Evidence: Probe C: exit 0; real fixture projects rejected, authoritative member state is recovering. Exact phone reopen envelope now passes _matches_precondition, but real dispatch_handlers -> ops.apply -> Scheduler.reopen returns FAILED/EFFECT_FAILED: NOT_ALLOWED: only a blocked task of a live run can be reopened (T1 is recovering). Only stop_owner/resume are stubbed to prevent agents/process control. Source: core operations.py:60-69 permits blocked only; page.tsx:401 exposes retry/edit only for recovering after a successful reopen. Browser mock fabricates success; the new ledger regression also replaces the reopen handler, so neither checks the real transition. Separate review access remains fixed.
+Tasks: `T15f`, `T8`, `T5a`. Evidence: Fresh Probe C: exact task reopen via GatewayRuntime -> real keyed HTTP -> ledger -> ops.apply -> Scheduler.reopen returns OK; authoritative recovering becomes ready and real snapshot projects ready. Only process stop/resume are stubbed. page.tsx:397 shows retry/edit only for recovering; reopenedTasks overrides failed/blocked/rejected, not ready, so controls disappear. In addition ops.retry waits up to 180 s for blocked and does not accept ready/recovering. Browser mock preserves the synthetic recovering state. Keep the real scheduler fix; repair/recheck the complete recovery flow.
 
 ### F27 — low / open — Command rate limits remain shared by owner login across sessions rather than per session as R17 specifies.
 
-Tasks: `T11a`. Evidence: Source recheck: server.py:141 keys commands/challenges on authenticated login (dav033), shared across sessions, rather than token/session identity. This is a stricter aggregate cap, not an authorization bypass. No owner-approved R17 amendment is evidenced.
+Tasks: `T11a`. Evidence: Current server.py:142 uses authenticated login, not session token, as command/challenge rate-limit key. Multiple owner sessions share a cap; this is stricter than R17 and not an auth bypass. Fresh guard tests pass in the 45-test gateway suite; no owner-approved amendment found.
 
 ### F28 — high / fixed — Concurrent distinct-key stale preconditions are now serialized with the ledger effect.
 
-Tasks: `T5`. Evidence: Probe D: exit 0; two simultaneously submitted running-precondition commands execute exactly one handler (entry state running); results are OK and REJECTED/STALE_PRECONDITION, with two audit rows. _EFFECT_LOCK now encloses state read/check, challenge/reservation, handler and outcome write. Isolated laptop remote suite: exit 0, 54 tests including test_concurrent_commands_recheck_state_under_the_effect_lock. This verifies process-local ledger command concurrency, not every possible external scheduler race.
+Tasks: `T5`. Evidence: Fresh Probe D: exit 0; simultaneous distinct-key commands execute one handler at running; results OK and REJECTED/STALE_PRECONDITION, two audit rows. Current _EFFECT_LOCK encloses state check/reservation/effect/outcome. Combined 124-test laptop suite passes concurrency regression. This is process-local remote-command serialization, not proof against every external scheduler mutation.
 
-### F29 — medium / open — Production snapshots omit the timestamp fields the phone uses for last signal of life and discard plan detail/revision metadata.
+### F29 — medium / open — Real snapshot omits life-sign/revision/criteria metadata and now all plans, rounds and decision requests.
 
-Tasks: `T4a`. Evidence: Probe C: exit 0; production run has lastActivityAt but lastSeenAt/updatedAt are None; phone only consumes the latter fields and attempt.updatedAt, while production emits last_activity_at. Source recheck: bt_remote_api._snapshot still emits plan tasks=[] without revision/criteria and omits run/task revision. Browser fixtures supply the missing metadata.
+Tasks: `T4a`. Evidence: Fresh Probe C lists actual run fields: active,activeTask,id,lastActivityAt,project,reqId,status,tasks,title. No lastSeenAt/updatedAt/revision; tasks lack revision/criteria. bt_remote_api._snapshot no longer collects any plans/rounds/decisionRequests; GatewayRuntime inserts plans=[] only. page.tsx needs those fields for the signals, revision preview and planning forms. Anthropic finding 2 confirms. F35 is the separate fatal run-dialect mismatch.
 
 ### F30 — medium / open — Stalled-attempt notifications start after 15 minutes although the specification requires more than 10 minutes.
 
-Tasks: `T6`. Evidence: Probe B: exit 0; a live attempt emits no attempt.stalled at +660 s and does at +901 s. bt_remote_events.py:10 still uses 15*60, against SPEC R10 >10 min. Independent Anthropic review of this full source was not completed; this is the primary auditor's own source/runtime finding.
+Tasks: `T6`. Evidence: Fresh Probe B: exit 0; a live attempt has no attempt.stalled event at +660 s and has one at +901 s. bt_remote_events.STALL_SECONDS remains 15*60 despite SPEC R10 requiring more than 10 minutes.
 
 ### F31 — low / fixed — The previously exposed post-expiry SSE continuation is no longer reachable because production streaming was removed.
 
-Tasks: `T11`, `T12`. Evidence: Probe A: exit 0; both authenticated candidate SSE endpoints return 404. Full server.py contains no stream/wait/write loop, so the old post-expiry delivery reproduction no longer applies. This closes that exposure only; it does not approve removing streaming. Lost required functionality is open F21, and session-expiry enforcement must be rechecked when a stream is restored.
+Tasks: `T11`, `T12`. Evidence: Fresh Probe A: exit 0; both candidate authenticated SSE routes return 404. Current HTTP server has no stream wait/write loop, so old post-expiry delivery is unreachable. This supersedes that exposure only; lost functionality remains F21. Recheck session expiry when streaming is restored.
 
-### F32 — high / open — Every phone pinned retry still fails: the new gateway selector adapter does not recognize route_id.
+### F32 — high / fixed — The gateway now preserves the phone route_id selector and forwards the selected pin.
 
-Tasks: `T13`. Evidence: Probe F: exit 0; exact page.tsx:368 route object {route_id,provider,model,account} becomes params.route=None because app.py:50 accepts only id/routeId/route. Real GatewayRuntime -> LaptopClient -> keyed HTTP route_post returns REJECTED/INVALID_COMMAND (params.route must be nonempty text), stored=False, before state/effects. The new gateway test uses route.id and therefore passes without testing the phone dialect. model/account copying is preserved; do not drop the selected route.
+Tasks: `T13`. Evidence: Fresh Probe C: exit 0; exact phone route {route_id:'synthetic-route',provider:'codex',model:'synthetic',account:'synthetic'} translates to route/model/account, passes real keyed HTTP/ledger validation and persists the exact pin. Availability/ops.retry/resume are stubbed to avoid account reads and agent starts; no real attempt launch claimed. Fresh 54 remote and 45 gateway tests pass, including pin assignment and exact phone dialect. F24/F26/F36 independently block installed/full recovery paths.
 
-### F33 — high / open — Gateway public-envelope adapter drops the round number and edited brief/criteria fields, breaking both phone operations.
+### F33 — high / fixed — The gateway now forwards the phone round number and edited field/value.
 
-Tasks: `T13`. Evidence: Probe F: exit 0; a real open round has target_state={state:open}, but translating the exact phone command drops round and real laptop HTTP returns STALE_PRECONDITION with the round unchanged. A valid server challenge plus current real run state and phone edit-brief task/field/value yields params={task:T1} and FAILED/EFFECT_FAILED: edit-brief requiere un brief de tarea no vacío. app.py:36-42 omits round/field/value; target.taskId preserves task. These fail independently of F26 and the current precondition can be valid. Anthropic finding 2 independently confirms both omissions.
+Tasks: `T13`. Evidence: Fresh Probe C: exit 0; exact phone round/answers travels through real GatewayRuntime/keyed HTTP/ledger/round file and returns OK/answered. edit-brief forwards task/field/value with valid real challenge, reaching plan validation instead of the former empty-brief error (minimal fixture returns PLAN_INVALID, not a product defect). Current 54 remote tests include real brief/criteria freeze and rebase. Fresh 45 gateway tests include exact public fields. F24/F26/F29/F35 limit complete phone recovery.
 
 ### F34 — medium / open — The frozen T14 notification verification references a test file removed from the audited prerequisites.
 
-Tasks: `T14`, `T13`. Evidence: cd remote/gateway && python -m unittest discover -s tests -p test_notify.py: exit 5 under Python 3.14.7, Ran 0 tests, NO TESTS RAN. git diff 0af07a73 HEAD -- remote/gateway/tests/test_notify.py shows deletion of 128 lines, including runtime restart dedupe and production delayed-offline-alert tests. Remaining sender/bot/cursor tests do not replace that frozen command. Restore/adapt the behavior tests; do not treat empty discovery as a passing gate.
+Tasks: `T14`, `T13`. Evidence: Fresh frozen command `cd remote/gateway && python -m unittest discover -s tests -p test_notify.py`: exit 5, Ran 0 tests, NO TESTS RAN. File remains absent. 45 other gateway tests do not replace the required runtime restart/offline notification verification; restore/adapt it.
 
-## Independent other-provider review and dispositions
+### F35 — high / open — The production snapshot run dialect makes the real phone parser reject every nonempty runs list.
 
-A fresh Anthropic source-only review received the frozen requirements and numbered current-tree excerpts from
-app.py, server.py, the phone command forms, laptop dispatch, edit validation and scheduler reopen. It received
-neither this report nor the ledger nor the primary auditor's conclusions. Tools/write access were disabled.
-This is a different provider from the primary auditor; it is not a claim about who authored every prerequisite.
-The completed review covers those boundaries only; the primary auditor performed the other source/runtime checks.
+Tasks: `T4a`. Evidence: Fresh Probe C: exit 0 reproducer; real fixture laptop snapshot -> GatewayRuntime.web_snapshot -> exact TypeScript parseSnapshot transpiled with installed TypeScript throws 'El snapshot contiene una ejecución inválida.' Laptop emits reqId/status; phone page.tsx:89 requires req/state; gateway only adds plans=[]. npm mock tests and HTTP-only T17 both pass without crossing this parser boundary. Restore compatible producer fields or aliases and add a real producer-to-parser regression. Anthropic finding 1 independently confirms.
 
-Invocation: `claude -p --safe-mode --no-session-persistence --setting-sources '' --model sonnet --effort medium --tools '' --max-turns 1 --output-format json`, source bundle on stdin.
-Receipt: exit 0, subtype success, is_error false, 1 turn, provider duration 42,620 ms, wall time 43.714 s;
-reported model `claude-sonnet-5-5`.
-Input SHA-256: `e2b2a8666fdd66eef5943022beb9f3167eec7fb91350bd555c63294cbed12913`.
-Output JSON SHA-256: `07e440b7b83d3e5e76e410320d6d6ade1edc808cca81f1ed1385fdb4fac98a40`.
-No independent passing tests are inferred from source review. Its six findings receive these verdicts:
+### F36 — high / open — Removing the production keyed command-history, quotas and routes endpoints disables phone history and route selection.
 
-| Provider finding | Primary verdict and reason |
-|---|---|
-| 1 high: OAuth query logging | Confirmed F4 by A. Primary severity medium: queries contain short-lived one-use code/state; successful callback state is consumed before response logging. No usable session token leak or takeover was demonstrated. Logging still violates R17 and remains open. |
-| 2 high: omitted round/field/value | Confirmed high F33 by real gateway-to-laptop F. Correction to provider's route: round fails during the actual state-reader precondition, before its handler, while edit fails at dispatch validation. Both still block the phone operation. |
-| 3 high, conditional: typed confirmation missing/no server challenge | Rejected after full-source review: Ledger.submit validates/consumes the target-bound 120 s challenge and copies typed_req into params before dispatch; page.tsx sendCommand obtains a challenge when only typedReq is supplied. Challenge/one-use/replay tests pass. The provider explicitly lacked these collaborators; F33 is unrelated to confirmation. |
-| 4 medium: lost route selector; pin persistence before retry error | Lost selector confirmed as high F32: F shows actual laptop validation rejects route=None, so reject the provider's suggestion that this exact request can run unpinned. Ordering of set_pin before ops.retry is real, but no separate R6 violation is confirmed: availability is checked first, stale preconditions are checked before dispatch, and R6 does not promise rollback of every partial failed effect. No failed command causing a later wrong-route attempt was demonstrated. |
-| 5 medium, conditional: fresh UUID after unknown result | Confirmed F16 after inspecting complete sendCommand: it has no envelope/key reconciliation cache. Reject examples of duplicate standalone note effects: note is currently unimplemented (F7). Server-side replay protection remains valid. |
-| 6 low: marker/logout/rate limits | Marker and GET logout confirmed F5 by A; owner-wide rather than session-wide command quota is F27. Full do_POST invokes the guard before authentication/dispatch. No command Origin bypass, authenticated cross-site mutation, or deployed proxy-induced sign-in lockout was demonstrated; those implications are rejected. |
+Tasks: `T4a`. Evidence: Fresh Probe C: exit 0 reproducer; authenticated real keyed HTTP GET /api/remote/v1/commands, /quotas and /routes each returns 404. bt_remote_api.route_get removed their _read_model dispatch; gateway still relays them and raises 503. Phone recovery-panels.tsx depends on /routes to enable selected retry and /quotas for accounts, and page.tsx requests /commands. Restore all read models with their contract/consumer tests; fixture responses do not establish production support.
+
+### F37 — medium / open — Failure notifications no longer require exhausted retries, so the green E2E sends a false no-retries-left alert.
+
+Tasks: `T6`, `T17`. Evidence: Fresh Probe H: exit 0 reproducer; one failed attempt with attempts_used=1/max_attempts=3 emits attempt.failed and notification_for_event renders 'Una tarea falló sin reintentos pendientes.' Diff from 108efc35f removes _retry_budget_exhausted and live max_attempts. T17's one-failure fixture now passes by observing that false alert. Restore exhaustion-aware notifications and seed an exhausted fixture without weakening R10.
+
+### F38 — medium / open — Real HTTP INVALID_CURSOR errors no longer reach the gateway cursor-reset branch.
+
+Tasks: `T13`, `T12`. Evidence: Fresh Probe G: exit 0 reproducer; loopback laptop HTTP 400 {code:INVALID_CURSOR} leaves runtime.event_cursor='stale-cursor'. upstream.LaptopClient.get_json flattens HTTPError into UpstreamError, so app.py/_poll_events and StreamHub's UpstreamResponseError branch are unreachable for actual HTTP. Current tests inject the exception directly. Preserve structured HTTP errors and test with real client/HTTP.
+
+### F39 — medium / open — Gateway HTTP 200 for failed effects makes the phone clear forms and treat failed reopen as successful.
+
+Tasks: `T13`, `T15d`. Evidence: Fresh Probe G: exit 0 reproducer; authenticated gateway command receives laptop {status:FAILED,code:ROUTE_UNAVAILABLE} and returns HTTP 200. server.py status map also omits EFFECT_FAILED, STATE_UNAVAILABLE and COMMAND_NOT_IMPLEMENTED. page.tsx sendCommand checks only response.ok then adds failed reopen to reopenedTasks and clears form. Map failure codes and validate semantic outcome before success UI. Anthropic finding 4 confirms.
+
+### F40 — medium / open — Upstream command errors misclassify known connection failure and an uncertain malformed successful response.
+
+Tasks: `T13`. Evidence: Fresh Probe I: exit 0 reproducer; real HTTP 200 with invalid JSON after POST is reported FAILED/LAPTOP_UNAVAILABLE, while mocked URLError(ConnectionRefusedError) becomes UNKNOWN_OUTCOME. upstream.py catches URLError in its earlier OSError branch; malformed post-success JSON goes to plain UpstreamError even though effects may have run. Preserve UNKNOWN_OUTCOME and exact key when execution is uncertain. Anthropic finding 6 confirms; IncompleteRead was not dynamically tested.
 
 ## Frozen acceptance coverage and rejected/superseded candidates
 
-| Requirement / boundary | Evidence or remaining gap |
+| Requirement | Evidence or remaining gap |
 |---|---|
-| R1/R3: single owner, OAuth state/cookies, private keyed listener | Gateway auth/browser and laptop remote/listener/installed suites pass on fixtures. No live deployment claim. |
-| R2/R17: mutation and logging guards | Foreign/missing Origin/header tests pass; exact marker/logout/logging/per-session deviations remain F4/F5/F27. |
-| R4: real runs/activity/tasks/feed/plan detail | Snapshot/browser tests pass on their own fixtures; real timestamp/metadata and production stream gaps remain F21/F29. Five-second mock polling is retained. |
-| R5/R13: control, rounds, recovery, brief/criteria/note | F7/F8/F9/F26/F32/F33 remain; isolated successful laptop dispatch tests do not establish the phone-to-gateway envelope. |
-| R6: idempotency and stale-command safety | Existing replay/conflict and fresh concurrent-key D pass (F28 fixed); client unknown-outcome reconciliation is F16. |
-| R7: offline refusal/cache | Liveness/offline tests pass; restart persistence/outage timestamp remain F11/F13. |
-| R8: confirmation challenge | Target-bound, typed, expiring, one-use/replay tests pass. No bypass demonstrated. |
-| R9: actual selected failure review | Laptop review/phone tests pass (F25 fixed); recovery failure is separately F26. |
-| R10/R11/R12: alerts, deterministic delivery, bot safety | Sender/bot tests pass; forced-failure E2E fails (F2), missing actions F6, threshold F30 and removed runtime verification F34 remain. |
-| R14: mobile/PWA/theme | Web build/14 tests pass, including 360 px mock browser. Real installation/complete touch-size measurement remain untested. |
-| R15: quotas/history | Current parser/read-model/history regression suites pass (F23 fixed); retention remains F12. |
-| R16/R18: deployment/local panel | Kit and 68 local regression tests pass with the Caddy skip; no secrets inspected and no live services touched. |
+| R1/R3 | Gateway auth/browser, keyed listener and installed health tests pass; real fake OAuth E2E passes. No deployed claim. |
+| R2/R17 | Origin/auth guard tests pass; logging/marker/logout/per-session discrepancies F4/F5/F27 remain. |
+| R4 | Real producer-to-phone parsing fails F35; planning/life-sign metadata F29, stream F21 remain. Poll fallback preserved. |
+| R5/R13 | Field adapter repairs F32/F33 retained; standalone note F7, criteria editor F8, invalid run reopen F9, recovery flow F26, installed modules F24 and read models F36 remain. |
+| R6/R8 | Same-key replay/challenge/stale/concurrent tests pass; process-local race F28 fixed. Client reconciliation F16 and result semantics F39/F40 remain. |
+| R7 | Offline E2E/cache/refusal pass; restart persistence and offline-start time remain F11/F13. |
+| R9 | Real selected review projection/link and remote review tests pass (F25); general dashboard failure is independently F35. |
+| R10/R11/R12 | Sender/bot and one fake alert E2E pass; controls F6, threshold F30, exhaustion F37, absent required notification test F34 and HTTP cursor recovery F38 remain. |
+| R14 | 360 px mock browser/theme/build pass. Real install and exhaustive 44 px targets untested. |
+| R15 | Real command/quota read endpoints removed F23/F36; database retention F12 remains. |
+| R16/R18 | Existing listener/local-panel tests pass; deployment kit is absent F1/F3. Only synthetic credentials used. |
 
-| Inherited candidate | Current verdict and reason |
-|---|---|
-| Caddy container-loopback upstream / missing private listener instructions | F1 fixed structurally; runbook step 6 contains the private keyed listener/tunnel. F3 still concerns initial ordering/container reload. |
-| Blank optional example keys necessarily break a compliant install | Superseded F22: current runbook requires filling every uncommented key; final B validates both complete configs. |
-| Web cannot compile or consume real {login} | Fixed F18/F19/F20 with fresh complete verify and A; no broad current failure inferred from old attempts. |
-| Missing installed precondition dependency | Fixed F24 by fresh installed wheel/sdist/API test. F33 concerns public command adaptation instead. |
-| Rejected attempt has no accessible review | Fixed F25 for selected review links/real read model. Failed real recovery is independently F26. |
-| Callback state cookie must be Strict | Rejected: Lax permits cross-site top-level OAuth callback; state is browser-bound and one-use, resulting session is Strict. |
-| Same-key replay executes twice / edit-brief lacks a challenge | Rejected on tested paths: real ledger enforces challenge/replay and passes these regressions. F28's distinct-key race is now also fixed. |
-| Tunnel exposes the unauthenticated panel | Rejected: remote-only listener 8766, keyed API and panel-route denial tests pass; panel 8765 stays separate. |
-| Current production SSE replay deque is unbounded | Withdrawn: old class was removed; unused replacement is bounded. Production has no stream at all (F21); F12 retains confirmed database retention gaps. |
-| Post-expiry SSE still delivers (old probe E) | Superseded F31: both production paths now return 404 in A. This removes that exposure, not the requirement to restore a secure live feed. |
-| Shared .next alone proves current web test failure | Rejected: fresh serialized verify passes all 14 tests/build. |
-| T17 cancellation fixture still reserved | Withdrawn: both fixtures ingest execution_started. T17 fails earlier on the non-exhausted forced-failure fixture (F2). |
+Historical candidates retained with explicit dispositions:
+- Callback state cookie need not be Strict: Lax supports cross-site top-level OAuth return; resulting session is Strict and state is browser-bound/one-use. No regression shown.
+- Current web cannot compile or consume {login}: rejected by fresh complete verify and A; F35 occurs later.
+- Installed precondition helper is absent: withdrawn for that helper, which imports successfully; actual installed retry/edit modules are absent F24.
+- Duplicate same-key execution or edit without challenge: rejected on tested paths; ledger enforces replay and a target-bound one-use challenge.
+- Tunnel exposes local unauthenticated panel: rejected by private-listener/key/panel-denial tests. No tunnel was retargeted.
+- Current production SSE deque is unbounded or post-expiry continuation leaks: old production stream was removed. Old exposure F31 is superseded; required functionality remains missing F21. Unused hub subscriber queues are not a demonstrated production exposure.
+- Blanket env startup failure: complete synthetic configs succeed B (F22). Missing kit/runbook F1/F3 is not dismissed.
+- T17 still fails at reserved cancellation/empty feed: withdrawn by fresh full T17 execution (F2); false exhaustion alert remains F37.
+- Every prior field-adapter omission still exists: rejected by C, preserving route_id/round/field/value repairs (F32/F33). This does not assert complete recovery works.
+- Passing report-existence checks establishes “all high fixed”: rejected. It cannot establish substantive acceptance with five high open.
 
 ## Handoff
 
-Return **F2 to T17; F26 to T5/T5a/T15f; F32 and F33 to T13**. F34 names T14 and the T13 integration
-that removed its tests. Preserve all other recorded open items until repaired or explicitly accepted by the owner.
-Keep the fixed process-local serialization, installed dependencies, selected failure review, redaction, local
-listener, strict web build/session/history and new snapshot poll fallback. Do not repair the E2E by weakening the
-real retry-budget notification rule, fabricate scheduler reopen success, or drop the chosen route/operation fields.
-Recheck commands through the real gateway/laptop/scheduler; mocks currently hide those boundary failures.
-No source/test/configuration repair was made by this audit, and no task is declared independently verified.
+Return **F1 to T16; F24 to T18.6/T8/T8a; F26 to T15f/T8/T5a; F35 and F36 to T4a**.
+Keep all other open findings until repaired or explicitly accepted by the owner; none is self-accepted.
+Restore deploy artifacts, installed implementation modules and real read contracts, then check the full phone
+recovery transition. Preserve the real core reopen, process-local command serialization, redaction, listener,
+strict web build, selected review, and route/round/edit adapter repairs.
+Restore retry-budget alert filtering and seed an exhausted failure instead of treating a green fixture as R10
+compliance. Add real producer-to-consumer and installed-dispatch coverage; mocks currently hide those boundaries.
+Only an independent checker decides acceptance. This audit makes no source/test/configuration repair.
 
-## Reproduction probes
+## Reproduction commands
 
-Run from repository root with installed dependencies. Inputs are synthetic. Each probe uses temporary state and
-only loopback; no real scheduler/agent may be started. E2E fixture seeding invokes only a FakeExecutor.
-The temporary fixture root is set before importing production modules. A successful reproduction means the stated
-observation was obtained, not that the feature passed acceptance. Old post-expiry probe E is retired (see F31).
+Run from repository root with installed dependencies. All credentials/data are synthetic and all network is
+loopback. Probes return zero when their documented observations hold, including defect reproduction.
+A FakeExecutor seeds fixture state; real agent starts/process control are suppressed.
+The old C/F assertions against obsolete failures are replaced by C below; no working implementation is removed.
 
 ### Probe A — real gateway HTTP boundaries
 
@@ -377,39 +417,6 @@ with tempfile.TemporaryDirectory() as tmp:
 PY
 ```
 
-### Probe C — authoritative rejected-task projection and real reopen effect
-
-```bash
-python - <<'PY'
-import json, os, pathlib, sys, tempfile
-from unittest.mock import patch
-root = pathlib.Path.cwd(); sys.path[:0] = [str(root/'remote/e2e/tests'), str(root/'skill/scripts')]
-from test_local_e2e import LocalEndToEndTests as Fixture
-with tempfile.TemporaryDirectory() as tmp:
-    Fixture.root = pathlib.Path(tmp)/'bitacora'; Fixture.root.mkdir()
-    os.environ['BITACORA_ROOT'] = str(Fixture.root); os.environ['FLOW_GATEWAY_KEY'] = 'synthetic-audit-key'
-    Fixture._seed_retry_event_fixture(); Fixture._seed_cancel_run_fixture()
-    import bt_remote_api as api, bt_remote_commands as commands, bt_subscriptions, bt_scheduler_ops as ops
-    class Handler:
-        headers = {'Authorization': 'Bearer synthetic-audit-key'}
-        def send(self, payload, status=200, *args): self.result = status, json.loads(payload)
-    handler = Handler()
-    with patch.object(bt_subscriptions, 'summary', return_value=[]):
-        handler.path = '/api/remote/v1/snapshot'; api.route_get(handler)
-        run = next(r for r in handler.result[1]['runs'] if r['req'] == 'REQ-001'); task = run['tasks'][0]
-        print('task', task['state'], 'review', task['reviewAttempt']['id'])
-        print('signal fields', {k: run.get(k) for k in ('lastActivityAt', 'lastSeenAt', 'updatedAt')})
-        handler.path = '/api/remote/v1/events?limit=100'; api.route_get(handler); print('events', handler.result)
-        print('real member state', commands.target_state('demo/REQ-001', 'reopen', {'task': 'T1'}))
-        with patch.object(ops, 'stop_owner', return_value=0), patch.object(ops, 'resume', return_value='synthetic-no-start'):
-            result = commands.Ledger(pathlib.Path(tmp)/'ledger.db').submit(
-                {'idempotency_key': 'synthetic-reopen-key', 'command': 'reopen', 'target': 'demo/REQ-001', 'origin': 'web', 'params': {'task': 'T1'}, 'precondition': {'state': task['state']}},
-                commands.dispatch_handlers(), commands.target_state)
-        print('real reopen dispatch', result)
-        assert result['code'] == 'EFFECT_FAILED' and 'only a blocked task' in result['outcome']['error']
-PY
-```
-
 ### Probe D — concurrent distinct-key command preconditions
 
 ```bash
@@ -433,48 +440,192 @@ with tempfile.TemporaryDirectory() as tmp:
 PY
 ```
 
-### Probe F — exact phone command envelopes through the real gateway/laptop adapter
+### Probe C — real producer/parser, keyed read models, reopened state and phone fields
 
 ```bash
 python - <<'PY'
-import json, os, pathlib, sys, tempfile, threading
+import json, os, pathlib, sys, tempfile, threading, subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-root = pathlib.Path.cwd(); sys.path[:0] = [str(root/'remote/e2e/tests'), str(root/'remote/gateway'), str(root/'skill/scripts')]
+from unittest.mock import patch
+root=pathlib.Path.cwd()
+sys.path[:0]=[str(root/'remote/e2e/tests'),str(root/'remote/gateway'),str(root/'skill/scripts')]
 from test_local_e2e import LocalEndToEndTests as Fixture
+with tempfile.TemporaryDirectory(dir=root/'remote',prefix='.audit-boundary-') as tmp:
+ Fixture.root=pathlib.Path(tmp)/'bitacora';Fixture.root.mkdir()
+ os.environ['BITACORA_ROOT']=str(Fixture.root);os.environ['FLOW_GATEWAY_KEY']='synthetic-audit-key'
+ Fixture._seed_retry_event_fixture()
+ import bt_remote_api as api, bt_remote_commands as commands, bt_scheduler_ops as ops, bt_route_pins as pins
+ from app import GatewayRuntime, _ledger_command
+ from config import GatewayConfig
+ class Handler(BaseHTTPRequestHandler):
+  def log_message(self,*args): pass
+  def send(self,body,status=200,content_type='application/json'):
+   body=body.encode();self.send_response(status);self.send_header('Content-Type',content_type)
+   self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
+  def do_POST(self): api.route_post(self)
+  def do_GET(self): api.route_get(self)
+ server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
+ worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+ runtime=GatewayRuntime(GatewayConfig(f'http://127.0.0.1:{server.server_port}','synthetic-audit-key','synthetic','synthetic',pathlib.Path(tmp)/'gateway.db'),sender=lambda _:None)
+ rdir=Fixture.root/'demo/requirements/REQ-001-forced-failure'
+ try:
+  snapshot=runtime.web_snapshot()
+  run=snapshot['runs'][0];task=run['tasks'][0]
+  print('snapshot run fields',sorted(run),'plan count',len(snapshot['plans']))
+  js="""const fs=require('node:fs'),vm=require('node:vm'),ts=require('./remote/web/node_modules/typescript');const source=fs.readFileSync('remote/web/src/app/page.tsx','utf8');const code=source.slice(source.indexOf('type Target'),source.indexOf('function prettyTime'));const sandbox={input:JSON.parse(fs.readFileSync(0,'utf8')),exports:{}};vm.createContext(sandbox);try{vm.runInContext(ts.transpileModule(code+';parseSnapshot(input)',{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,sandbox);process.exit(2)}catch(e){console.log('PHONE PARSER:',e.message);if(!e.message.includes('ejecución inválida'))process.exit(3)}"""
+  check=subprocess.run(['node','-e',js],input=json.dumps(snapshot),text=True,capture_output=True,check=True)
+  print(check.stdout.strip())
+  import urllib.request,urllib.error
+  for route in ('commands','quotas','routes'):
+   request=urllib.request.Request(f'http://127.0.0.1:{server.server_port}/api/remote/v1/{route}',headers={'Authorization':'Bearer synthetic-audit-key'})
+   try: urllib.request.urlopen(request,timeout=3);raise AssertionError('expected 404')
+   except urllib.error.HTTPError as exc:
+    print('keyed read',route,exc.code);assert exc.code==404;exc.close()
+  round_path=rdir/'rounds/round-01.json';round_path.parent.mkdir()
+  round_path.write_text(json.dumps({'round':1,'status':'open','questions':[{'id':'q1','type':'open','text':'Question'}],'answers':{}}))
+  target={'kind':'task','project':'demo','req':'REQ-001','taskId':'T1'}
+  round_command={'schemaVersion':1,'idempotencyKey':'synthetic-round-command','type':'answer-round','target':{**target,'kind':'round','roundId':'1'},'precondition':{'state':'open'},'round':1,'answers':{'q1':{'text':'synthetic answer'}}}
+  print('round params',_ledger_command(round_command)['params'])
+  result=runtime.submit_command(round_command);print('round result',result);assert result['status']=='OK'
+  state=commands.target_state('demo/REQ-001','reopen',{'task':'T1'})
+  reopen={'schemaVersion':1,'idempotencyKey':'synthetic-reopen-key','type':'reopen','target':target,'precondition':{'state':task['state']}}
+  with patch.object(ops,'stop_owner',return_value=0),patch.object(ops,'resume',return_value='synthetic-no-start'):
+   result=runtime.submit_command(reopen)
+  print('reopen result',result,'before',state,'after',commands.target_state('demo/REQ-001','reopen',{'task':'T1'}))
+  assert result['status']=='OK'
+  runtime.snapshot_cache=None;after=runtime.web_snapshot()['runs'][0]['tasks'][0]['state']
+  print('projected task after reopen',after);assert after=='ready'
+  retry={'schemaVersion':1,'idempotencyKey':'synthetic-pinned-retry','type':'retry','target':target,'precondition':{'state':'ready'},'route':{'route_id':'synthetic-route','provider':'codex','model':'synthetic','account':'synthetic'}}
+  params=_ledger_command(retry)['params'];print('retry params',params);assert params['route']=='synthetic-route'
+  # Do not execute the 180-second retry loop or launch agents; observe real relay validation and dispatch selectors.
+  with patch.object(pins,'available',return_value=(object(),)),patch.object(ops,'retry',return_value=['synthetic retry suppressed']),patch.object(ops,'resume',return_value='synthetic-no-start'):
+   result=runtime.submit_command(retry)
+  print('retry relay',result,'persisted pin',pins.get(rdir,'T1'));assert result['status']=='OK' and pins.get(rdir,'T1')['route']=='synthetic-route'
+  challenge=runtime.issue_challenge({'target':'demo/REQ-001','typedReq':'REQ-001'})
+  current=commands.target_state('demo/REQ-001','edit-brief',{'task':'T1'})
+  edit={'schemaVersion':1,'idempotencyKey':'synthetic-edit-command','type':'edit-brief','target':target,'precondition':{'state':current['state']},'task':'T1','field':'objective','value':'New objective','confirmation':{'challengeId':challenge['challengeId'],'typedReq':'REQ-001'}}
+  params=_ledger_command(edit)['params'];print('edit params',params)
+  assert params['field']=='objective' and params['value']=='New objective'
+  result=runtime.submit_command(edit);print('edit real validation',result)
+  assert 'brief de tarea no vacío' not in str(result)
+ finally:
+  server.shutdown();server.server_close();worker.join();runtime.outbox._db.close()
+PY
+```
+
+### Probe G — real HTTP cursor error and semantic command failure
+
+```bash
+python - <<'PY'
+import http.client,json,pathlib,sys,tempfile,threading
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+sys.path.insert(0,str(pathlib.Path('remote/gateway').resolve()))
+from app import GatewayRuntime
+from config import GatewayConfig
+from auth import OAuthConfig,OAuthService,SessionStore
+from server import make_handler
+class LaptopHandler(BaseHTTPRequestHandler):
+ def log_message(self,*args):pass
+ def do_GET(self):
+  body=b'{"code":"INVALID_CURSOR"}'
+  self.send_response(400);self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body)
 with tempfile.TemporaryDirectory() as tmp:
-    Fixture.root = pathlib.Path(tmp)/'bitacora'; Fixture.root.mkdir()
-    os.environ['BITACORA_ROOT'] = str(Fixture.root); os.environ['FLOW_GATEWAY_KEY'] = 'synthetic-audit-key'
-    Fixture._seed_retry_event_fixture()
-    import bt_remote_api as api, bt_remote_commands as commands
-    from app import GatewayRuntime, _ledger_command
-    from config import GatewayConfig
-    rdir = Fixture.root/'demo/requirements/REQ-001-forced-failure'
-    round_path = rdir/'rounds/round-01.json'; round_path.parent.mkdir()
-    round_path.write_text(json.dumps({'round': 1, 'status': 'open', 'questions': [{'id': 'q1', 'type': 'open', 'text': 'Question'}], 'answers': {}}))
-    class Handler(BaseHTTPRequestHandler):
-        def log_message(self, *args): pass
-        def send(self, body, status=200, content_type='application/json'):
-            body = body.encode(); self.send_response(status); self.send_header('Content-Type', content_type)
-            self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)
-        def do_POST(self): api.route_post(self)
-    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
-    worker = threading.Thread(target=server.serve_forever, daemon=True); worker.start()
-    runtime = GatewayRuntime(GatewayConfig(f'http://127.0.0.1:{server.server_port}', 'synthetic-audit-key', 'synthetic', 'synthetic', pathlib.Path(tmp)/'gateway.db'), sender=lambda _: None)
-    try:
-        target = {'kind': 'run', 'project': 'demo', 'req': 'REQ-001', 'taskId': 'T1'}
-        retry = {'schemaVersion': 1, 'idempotencyKey': 'synthetic-pinned-retry', 'type': 'retry', 'target': {**target, 'kind': 'task'}, 'precondition': {'state': 'recovering'}, 'route': {'route_id': 'synthetic-route', 'provider': 'codex', 'model': 'synthetic', 'account': 'synthetic'}}
-        print('retry params', _ledger_command(retry)['params']); result = runtime.submit_command(retry)
-        print('retry result', result); assert result['code'] == 'INVALID_COMMAND' and not result['stored']
-        round_command = {'schemaVersion': 1, 'idempotencyKey': 'synthetic-round-command', 'type': 'answer-round', 'target': {**target, 'kind': 'round', 'roundId': '1'}, 'precondition': {'state': 'open'}, 'round': 1, 'answers': {'q1': {'text': 'synthetic answer'}}}
-        print('proper round state', commands.target_state('demo/REQ-001', 'answer-round', {'round': 1}))
-        print('round forwarded params', _ledger_command(round_command)['params']); result = runtime.submit_command(round_command)
-        print('round result', result); assert result['code'] == 'STALE_PRECONDITION' and json.loads(round_path.read_text())['status'] == 'open'
-        challenge = runtime.issue_challenge({'target': 'demo/REQ-001', 'typedReq': 'REQ-001'})
-        current = commands.target_state('demo/REQ-001', 'edit-brief', {'task': 'T1'})
-        edit = {'schemaVersion': 1, 'idempotencyKey': 'synthetic-edit-command', 'type': 'edit-brief', 'target': target, 'precondition': {'state': current['state']}, 'task': 'T1', 'field': 'objective', 'value': 'New objective', 'confirmation': {'challengeId': challenge['challengeId'], 'typedReq': 'REQ-001'}}
-        print('edit forwarded params', _ledger_command(edit)['params']); result = runtime.submit_command(edit)
-        print('edit result', result); assert result['code'] == 'EFFECT_FAILED' and 'brief' in result['outcome']['error']
-    finally:
-        server.shutdown(); server.server_close(); worker.join(); runtime.outbox._db.close()
+ laptop=ThreadingHTTPServer(('127.0.0.1',0),LaptopHandler)
+ lt=threading.Thread(target=laptop.serve_forever,daemon=True);lt.start()
+ runtime=GatewayRuntime(GatewayConfig(f'http://127.0.0.1:{laptop.server_port}','synthetic-key','synthetic','synthetic',pathlib.Path(tmp)/'db'),sender=lambda _:None)
+ runtime.event_cursor='stale-cursor'
+ runtime._poll_events()
+ print('cursor after real HTTP INVALID_CURSOR',runtime.event_cursor)
+ assert runtime.event_cursor=='stale-cursor'
+ class FakeLaptop:
+  def post_json(self,*args):return {'status':'FAILED','code':'ROUTE_UNAVAILABLE','outcome':{'error':'synthetic route unavailable'}}
+ runtime.laptop=FakeLaptop()
+ store=SessionStore(str(pathlib.Path(tmp)/'auth.db'),'synthetic-session-secret-32-characters')
+ token=store.create_session('dav033')
+ service=OAuthService(OAuthConfig('synthetic','synthetic','synthetic-session-secret-32-characters','https://frontend.test',store.database_path),store)
+ gateway=ThreadingHTTPServer(('127.0.0.1',0),make_handler(service,runtime))
+ gt=threading.Thread(target=gateway.serve_forever,daemon=True);gt.start()
+ try:
+  conn=http.client.HTTPConnection('127.0.0.1',gateway.server_port,timeout=3)
+  command={'schemaVersion':1,'idempotencyKey':'synthetic-failed-retry','type':'retry','target':{'kind':'task','project':'demo','req':'REQ-001','taskId':'T1'},'precondition':{'state':'ready'}}
+  conn.request('POST','/api/remote/v1/commands',json.dumps(command),{'Cookie':'flow_session='+token,'Origin':'https://frontend.test','X-Flow-Request':'1','Content-Type':'application/json'})
+  response=conn.getresponse();payload=json.loads(response.read());print('failed effect public response',response.status,payload)
+  assert response.status==200 and payload['status']=='FAILED'
+  conn.close()
+ finally:
+  gateway.shutdown();gateway.server_close();gt.join();laptop.shutdown();laptop.server_close();lt.join();runtime.outbox._db.close()
+PY
+```
+
+### Probe H — failure before retry exhaustion
+
+```bash
+python - <<'PY'
+import pathlib,sys
+sys.path[:0]=[str(pathlib.Path('skill/scripts').resolve()),str(pathlib.Path('remote/gateway').resolve())]
+import bt_remote_events as feed
+from notifications import notification_for_event
+stamp='2026-10-20T00:00:00Z'
+state={'runs':[{'project':'demo','req_id':'REQ-001','max_attempts':3,'tasks':[{'id':'T1','attempts_used':1,'max_attempts':3,'attempt':{'id':'a1','state':'failed','ended_at':stamp,'failure':'synthetic retryable failure'}}]}]}
+events=feed.build_events(state);messages=[notification_for_event(e) for e in events]
+print('one failure / budget 3 ->',[(e['type'],m[1]) for e,m in zip(events,messages) if m])
+assert any(m and 'sin reintentos pendientes' in m[1] for m in messages)
+PY
+```
+
+### Probe I — ambiguous command outcome classification
+
+```bash
+python - <<'PY'
+import json,pathlib,sys,tempfile,threading
+from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
+from urllib.error import URLError
+from unittest.mock import patch
+sys.path.insert(0,str(pathlib.Path('remote/gateway').resolve()))
+from app import GatewayRuntime
+from config import GatewayConfig
+class Handler(BaseHTTPRequestHandler):
+ def log_message(self,*args):pass
+ def do_POST(self):
+  self.rfile.read(int(self.headers['Content-Length']))
+  self.send_response(200);self.send_header('Content-Length','1');self.end_headers();self.wfile.write(b'{')
+with tempfile.TemporaryDirectory() as tmp:
+ server=ThreadingHTTPServer(('127.0.0.1',0),Handler);worker=threading.Thread(target=server.serve_forever,daemon=True);worker.start()
+ runtime=GatewayRuntime(GatewayConfig(f'http://127.0.0.1:{server.server_port}','synthetic-key','synthetic','synthetic',pathlib.Path(tmp)/'db'),sender=lambda _:None)
+ command={'schemaVersion':1,'idempotencyKey':'synthetic-unknown-key','type':'pause','target':{'kind':'run','project':'demo','req':'REQ-001'},'precondition':{'state':'running'}}
+ try:
+  result=runtime.submit_command(command);print('malformed 200 after request accepted',result)
+  assert result['code']=='LAPTOP_UNAVAILABLE'
+  with patch('upstream.urlopen',side_effect=URLError(ConnectionRefusedError('synthetic refusal'))):
+   result=runtime.submit_command(command)
+  print('connection refused',result);assert result['code']=='UNKNOWN_OUTCOME'
+ finally:
+  server.shutdown();server.server_close();worker.join();runtime.outbox._db.close()
+PY
+```
+
+### Probe P — real installed distributions
+
+```bash
+python - <<'PY'
+import pathlib, subprocess, sys, zipfile, tarfile
+root=pathlib.Path.cwd();sys.path.insert(0,str(root/'tests/migration'))
+import installed_wheel
+installed=installed_wheel.get()
+with zipfile.ZipFile(installed.wheel) as archive:
+ names=set(archive.namelist())
+ assert 'bt_remote_preconditions.py' in names
+ assert 'bt_remote_edit.py' not in names and 'bt_route_pins.py' not in names
+ print('wheel omits bt_remote_edit.py and bt_route_pins.py')
+with tarfile.open(installed.sdist) as archive:
+ names={pathlib.Path(p.name).name for p in archive.getmembers()}
+ assert 'bt_remote_edit.py' not in names and 'bt_route_pins.py' not in names
+ print('sdist omits both recovery implementation modules')
+for name in ['bt_remote_preconditions','bt_remote_edit','bt_route_pins']:
+ result=subprocess.run([str(installed.python),'-I','-c',
+  f'import sys;sys.path.insert(0,sys.argv[1]);__import__("{name}")',str(installed.site)],
+  cwd=installed.work,capture_output=True,text=True)
+ print('isolated import',name,'exit',result.returncode)
+ assert result.returncode == (0 if name=='bt_remote_preconditions' else 1)
 PY
 ```
