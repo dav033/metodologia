@@ -1,8 +1,4 @@
-<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
 from __future__ import annotations
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-import unittest
-=======
 import unittest
 import http.client
 import json
@@ -10,28 +6,12 @@ import tempfile
 import threading
 from pathlib import Path
 from unittest.mock import Mock
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
-
-<<<<<<< 34ab19a2491850919dd1d00647ea1a3883471932
-import http.client
-import json
-import tempfile
-import threading
-import unittest
-from pathlib import Path
 
 from app import GatewayRuntime
 from auth import SESSION_COOKIE, OAuthConfig, SessionStore
 from config import GatewayConfig
 from server import create_server
-from stream import StreamHub
-||||||| a4dce0b93ae5079f85d1c9469a9fead921b507dd
-from stream import StreamHub, format_sse, parse_last_event_id
-=======
-from auth import OAuthConfig, SessionStore
-from server import create_server
-from stream import StreamHub, format_sse, parse_last_event_id
->>>>>>> 592a10ffff06f8904cf34efa124eca7973d62ea2
+from stream import StreamHub, format_sse
 from upstream import UpstreamError
 
 
@@ -236,7 +216,7 @@ class HttpTests(unittest.TestCase):
             config = OAuthConfig("client", "secret", secret, "http://localhost:3000", database)
             runtime = Mock()
             runtime.read_remote.side_effect = lambda path: {"path": path}
-            server = create_server(config, ("127.0.0.1", 0), runtime)
+            server = create_server(config, ("127.0.0.1", 0), runtime=runtime)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             self.addCleanup(server.server_close)
