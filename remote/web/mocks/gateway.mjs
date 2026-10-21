@@ -23,6 +23,10 @@ export async function createMockGatewayServer() {
       response.end(server.snapshot);
       return;
     }
+    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/commands?")) {
+      send(200, { commands: server.history.slice(-100).reverse() });
+      return;
+    }
     const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
     if (reviewMatch) {
       const attemptId = decodeURIComponent(reviewMatch[1]);
@@ -62,7 +66,15 @@ export async function createMockGatewayServer() {
             send(400, { code: "INVALID_COMMAND", message: "Comando inválido" });
             return;
           }
+          if (server.nextCommandResponse) {
+            const nextResponse = server.nextCommandResponse;
+            server.nextCommandResponse = null;
+            server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "Rechazado" });
+            send(nextResponse.status, nextResponse.body);
+            return;
+          }
           server.commands.push(command);
+          server.history.push({ id: command.idempotencyKey, command: command.type, target: `${command.target?.project}/${command.target?.req}`, submittedAt: new Date().toISOString(), origin: "Web", result: "accepted" });
           send(202, { commandId: "mock-command-v1", status: "accepted", idempotencyKey: command.idempotencyKey });
         } catch {
           send(400, { code: "INVALID_COMMAND", message: "JSON inválido" });
@@ -75,6 +87,8 @@ export async function createMockGatewayServer() {
   server.snapshot = snapshot;
   server.snapshotReads = [];
   server.commands = [];
+  server.history = [];
+  server.nextCommandResponse = null;
   return server;
 }
 
