@@ -47,3 +47,21 @@ test("mock gateway accepts versioned, idempotent control commands", async () => 
   assert.equal(response.status, 202);
   assert.equal((await response.json()).idempotencyKey, "test-idempotency-key");
 });
+
+test("queued command responses preserve the fallback and record origin and stale result", async () => {
+  server.commandResponses.push({ status: 409, body: { code: "STALE_PRECONDITION", message: "stale" } });
+  server.nextCommandResponse = { status: 422, body: { code: "REJECTED", message: "rejected" } };
+
+  const submit = (idempotencyKey) => fetch(`${origin}/api/remote/v1/commands`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ schemaVersion: 1, idempotencyKey, type: "delete-plan", target: { project: "lotm", req: "REQ-027" } }),
+  });
+
+  assert.equal((await submit("queued-command")).status, 409);
+  assert.equal(server.history.at(-1)?.origin, "Web");
+  assert.equal(server.history.at(-1)?.result, "Rechazado: el estado cambió");
+
+  assert.equal((await submit("fallback-command")).status, 422);
+  assert.equal(server.history.at(-1)?.origin, "Web");
+  assert.equal(server.history.at(-1)?.result, "Rechazado");
+});

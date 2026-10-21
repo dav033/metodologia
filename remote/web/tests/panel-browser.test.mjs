@@ -139,39 +139,12 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     const reviewUrl = await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]')?.href ?? null", returnByValue: true });
     assert.ok(reviewUrl.result?.value?.includes("taskId=T15c"), "rendered panel should link to the rejected task review");
     assert.ok(reviewUrl.result?.value?.includes("#attempt=att-rejected-fixture"), "review links should target the selected failed-attempt fragment");
-<<<<<<< dbe9af6fa48d86c710e39535bd40561c61f887a4
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
-||||||| edf7ff97f693839f8f1c3556b3edc83fd7fa4be0
-<<<<<<< bf3913c2ab9879f2c4a2bb8b61f62ab7e53ccc83
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
-||||||| b498bd7e66aed145929c5fd334fb808458c7e9c4
-    await cdp(socket, "Page.navigate", { url: reviewUrl.result.value });
-||||||| ab51e89869d7e5691e66531a32861db97d644083
-    await cdp(socket, "Runtime.evaluate", { expression: "document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]').click()", returnByValue: true });
-=======
     const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
     const reviewPoint = reviewLink.result?.value;
     assert.ok(reviewPoint, "review link should have a visible position");
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
     await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
->>>>>>> 4b7278cd27f206dd23e84a30bc7838460d65b17c
-=======
-    const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
-    const reviewPoint = reviewLink.result?.value;
-    assert.ok(reviewPoint, "review link should have a visible position");
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
->>>>>>> 9ef9600bb6d980b33f9e0e4bf809cda193f40287
-=======
-    const reviewLink = await cdp(socket, "Runtime.evaluate", { expression: "(() => { const link = document.querySelector('a[href*=" + JSON.stringify("taskId=T15c") + "]'); if (!link) throw new Error('Missing review link'); link.scrollIntoView(); const bounds = link.getBoundingClientRect(); return { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 }; })()", returnByValue: true });
-    const reviewPoint = reviewLink.result?.value;
-    assert.ok(reviewPoint, "review link should have a visible position");
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseMoved", x: reviewPoint.x, y: reviewPoint.y });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mousePressed", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
-    await cdp(socket, "Input.dispatchMouseEvent", { type: "mouseReleased", x: reviewPoint.x, y: reviewPoint.y, button: "left", clickCount: 1 });
->>>>>>> d7f02de5e9bf4a86971317a06d90d8a632c02a7f
     let fixtureReview = "";
     for (let attempt = 0; attempt < 300; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
