@@ -25,19 +25,6 @@ export async function createMockGatewayServer() {
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/commands?")) {
       send(200, { commands: server.history.slice(-100).reverse() });
-<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
-||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
-||||||| dca4bf1e93c3a76be36c77768b74123a4047b72d
-    if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
-      response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
-      response.end(attemptReview);
-=======
-    if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
-      send(200, { routes: [
-        { route_id: "route-unavailable", provider: "claude", model: "sonnet", profile: "work", available: false },
-        { route_id: "route-codex-work", provider: "codex", model: "gpt-6.1-sol", profile: "codex-work", available: true, quota_status: "available" },
-      ] });
-=======
       return;
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/routes?")) {
@@ -45,10 +32,15 @@ export async function createMockGatewayServer() {
         { route_id: "route-unavailable", provider: "claude", model: "sonnet", profile: "work", available: false },
         { route_id: "route-codex-work", provider: "codex", model: "gpt-6.1-sol", profile: "codex-work", available: true, quota_status: "available" },
       ] });
->>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
       return;
     }
-<<<<<<< 8897333073c9f813187ee4d4ab49ec12ced7167a
+    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
+      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
+        { profile: "codex-work", provider: "codex", status: "ok", observed_at: 1792411200,
+          windows: { five_hour: { used_percent: 27, resets_at: 1792414800, window_minutes: 300 }, seven_day: { used_percent: 64, resets_at: 1792936800, window_minutes: 10080 } } },
+      ] });
+      return;
+    }
     const reviewMatch = request.method === "GET" && request.url?.match(/^\/api\/remote\/v1\/attempts\/([^/]+)\/review$/);
     if (reviewMatch) {
       const attemptId = decodeURIComponent(reviewMatch[1]);
@@ -56,30 +48,6 @@ export async function createMockGatewayServer() {
         verification: { command: "npm run verify", output: "Fallo de fixture en rejected" },
         diff: { stat: "2 files changed, 3 insertions(+)" },
         logTail: "Authorization: Bearer abc.def.ghi\nFin de log" });
-||||||| 942f3505046fe22f2a0f8824ec2590de4734860c
-    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
-      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
-        { profile: "codex-work", provider: "codex", status: "ok", observed_at: 1792411200,
-          windows: { five_hour: { used_percent: 27, resets_at: 1792414800, window_minutes: 300 }, seven_day: { used_percent: 64, resets_at: 1792936800, window_minutes: 10080 } } },
-      ] });
-      return;
-    }
-    if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
-      response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
-      response.end(attemptReview);
->>>>>>> 0c3c9165791db2c8201f4598d850c891d915c1e6
-=======
-    if (request.method === "GET" && request.url === "/api/remote/v1/quotas") {
-      send(200, { checkedAt: "2026-10-19T12:00:00Z", accounts: [
-        { profile: "codex-work", provider: "codex", status: "ok", observed_at: 1792411200,
-          windows: { five_hour: { used_percent: 27, resets_at: 1792414800, window_minutes: 300 }, seven_day: { used_percent: 64, resets_at: 1792936800, window_minutes: 10080 } } },
-      ] });
-      return;
-    }
-    if (request.method === "GET" && request.url === "/api/remote/v1/attempts/att-review-1/review") {
-      response.writeHead(200, { "cache-control": "no-store", "content-type": "application/json; charset=utf-8" });
-      response.end(attemptReview);
->>>>>>> 413bda613d2f7acf3d37c6862f9e17c552b18427
       return;
     }
     if (request.method === "GET" && request.url?.startsWith("/api/remote/v1/events?")) {
