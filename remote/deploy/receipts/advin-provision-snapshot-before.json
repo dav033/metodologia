@@ -1,96 +1,112 @@
 {
-  "captured_at_utc": "2026-10-21T21:17:38+00:00",
-  "git_sha_observed": "d3ce7e2b6668aa492eb87928b34a30061c2408ab",
-  "source": "Fresh HTTPS probes and read-only AdvIn preflight before any T20 production change",
-  "probe": "GET / without redirect following; TLS subject from the same SNI connection; elapsed time to response headers as first-byte time",
+  "captured_at_utc": "2026-10-21T21:33:53+00:00",
+  "git_sha_observed": "430ea7e6cbb7fefef6493e2b3f0977791d10a4de",
+  "source": "Fresh HTTPS probes of every site label in the live AdvIn Caddyfile before the corrected T20 deployment pass",
+  "probe": "GET / with redirects disabled; TLS subject from the same SNI connection; elapsed time from connect start to response headers",
   "hosts": [
     {
       "host": "api.marosconstruction.com",
       "status": 404,
       "tls_subject": "commonName=api.marosconstruction.com",
-      "first_byte_seconds": 0.358038
+      "first_byte_seconds": 0.27733,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "marketplace.185-147-157-25.sslip.io",
       "status": 401,
       "tls_subject": "commonName=marketplace.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.408364
+      "first_byte_seconds": 0.261038,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "lotm.185-147-157-25.sslip.io",
       "status": 200,
       "tls_subject": "commonName=lotm.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.421655
+      "first_byte_seconds": 0.491917,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "lotm.marosconstruction.com",
       "status": 200,
       "tls_subject": "commonName=lotm.marosconstruction.com",
-      "first_byte_seconds": 0.23451
+      "first_byte_seconds": 0.316273,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "185-147-157-25.sslip.io",
       "status": 307,
       "tls_subject": "commonName=185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.408279
+      "first_byte_seconds": 0.275533,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "fichas-fotos.185-147-157-25.sslip.io",
       "status": 404,
       "tls_subject": "commonName=fichas-fotos.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.40649
+      "first_byte_seconds": 0.369621,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "training-api.marosconstruction.com",
       "status": 404,
       "tls_subject": "commonName=training-api.marosconstruction.com",
-      "first_byte_seconds": 0.18806
+      "first_byte_seconds": 0.279729,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "training-mcp.marosconstruction.com",
       "status": 404,
       "tls_subject": "commonName=training-mcp.marosconstruction.com",
-      "first_byte_seconds": 0.266669
+      "first_byte_seconds": 0.258726,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "files.marosconstruction.com",
       "status": 403,
       "tls_subject": "commonName=files.marosconstruction.com",
-      "first_byte_seconds": 0.210946
+      "first_byte_seconds": 0.252974,
+      "challenge_detected": false,
+      "server": ""
     },
     {
       "host": "api-decoracion.185-147-157-25.sslip.io",
       "status": 404,
       "tls_subject": "commonName=api-decoracion.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.410267
+      "first_byte_seconds": 0.483254,
+      "challenge_detected": false,
+      "server": "Caddy"
     },
     {
       "host": "voz-decoracion.185-147-157-25.sslip.io",
       "status": 404,
       "tls_subject": "commonName=voz-decoracion.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.271814
+      "first_byte_seconds": 0.361596,
+      "challenge_detected": false,
+      "server": "Caddy"
     },
     {
       "host": "almacen-decoracion.185-147-157-25.sslip.io",
       "status": 403,
       "tls_subject": "commonName=almacen-decoracion.185-147-157-25.sslip.io",
-      "first_byte_seconds": 0.398549
+      "first_byte_seconds": 0.362749,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "flow-api.185-147-157-25.sslip.io",
+      "status": 502,
+      "tls_subject": "commonName=flow-api.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.47242,
+      "challenge_detected": false,
+      "server": "Caddy"
     }
-  ],
-  "remote_preflight": {
-    "ssh_alias": "advin",
-    "read_only_output": [
-      "644:root:root",
-      "flow_user=gateway_dirs=absent",
-      "state_dir=absent",
-      "env_file=absent",
-      "gateway_unit=absent",
-      "bot_unit=absent",
-      "listener_8790="
-    ],
-    "caddyfile_sha256": "e42219cbe52f5198ec90653002774a4d58aafb2e831abbf853d26c8eb532b990",
-    "caddy_config_validation": "passed before changes via docker exec caddy caddy validate",
-    "site_labels_confirmed_against_snapshot": 12
-  },
-  "note": "No production files or services changed during this snapshot."
+  ]
 }
