@@ -1,0 +1,29 @@
+{
+  "captured_at_utc": "2026-10-21T21:12:36Z",
+  "git_sha_observed": "fa29eec0be32fafdfe11baf32d88d8196fd6f002",
+  "source": "HTTPS probes from the deployment workstation before any AdvIn changes",
+  "probe": "GET / with curl; record HTTP status and time_starttransfer; record TLS certificate subject from SNI handshake",
+  "hosts": [
+    {"host": "api.marosconstruction.com", "status": 404, "tls_subject": "CN=api.marosconstruction.com", "first_byte_seconds": 0.323665},
+    {"host": "marketplace.185-147-157-25.sslip.io", "status": 401, "tls_subject": "CN=marketplace.185-147-157-25.sslip.io", "first_byte_seconds": 0.284809},
+    {"host": "lotm.185-147-157-25.sslip.io", "status": 200, "tls_subject": "CN=lotm.185-147-157-25.sslip.io", "first_byte_seconds": 0.295362},
+    {"host": "lotm.marosconstruction.com", "status": 200, "tls_subject": "CN=lotm.marosconstruction.com", "first_byte_seconds": 0.346298},
+    {"host": "185-147-157-25.sslip.io", "status": 307, "tls_subject": "CN=185-147-157-25.sslip.io", "first_byte_seconds": 0.275678},
+    {"host": "fichas-fotos.185-147-157-25.sslip.io", "status": 404, "tls_subject": "CN=fichas-fotos.185-147-157-25.sslip.io", "first_byte_seconds": 0.277892},
+    {"host": "training-api.marosconstruction.com", "status": 404, "tls_subject": "CN=training-api.marosconstruction.com", "first_byte_seconds": 0.203392},
+    {"host": "training-mcp.marosconstruction.com", "status": 404, "tls_subject": "CN=training-mcp.marosconstruction.com", "first_byte_seconds": 0.221392},
+    {"host": "files.marosconstruction.com", "status": 403, "tls_subject": "CN=files.marosconstruction.com", "first_byte_seconds": 0.805308},
+    {"host": "api-decoracion.185-147-157-25.sslip.io", "status": 404, "tls_subject": "CN=api-decoracion.185-147-157-25.sslip.io", "first_byte_seconds": 0.313092},
+    {"host": "voz-decoracion.185-147-157-25.sslip.io", "status": 404, "tls_subject": "CN=voz-decoracion.185-147-157-25.sslip.io", "first_byte_seconds": 0.277324},
+    {"host": "almacen-decoracion.185-147-157-25.sslip.io", "status": 403, "tls_subject": "CN=almacen-decoracion.185-147-157-25.sslip.io", "first_byte_seconds": 0.276600}
+  ],
+  "remote_preflight": {
+    "ssh_alias": "advin",
+    "caddy_container": "running",
+    "caddyfile": "/opt/edge-proxy/Caddyfile",
+    "flow_user": "absent",
+    "gateway_directories_and_units": "absent",
+    "listener_172_20_0_1_8790": "none"
+  },
+  "note": "Pre-change evidence only. No production files or services were changed during this attempt."
+}
