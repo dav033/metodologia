@@ -9,6 +9,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
+from urllib.parse import urlencode
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -183,7 +184,13 @@ def notification_for_event(event: Mapping[str, Any]) -> tuple[str, str] | None:
     if event_type == "attempt.failed" and all(isinstance(value, str) and value for value in
                                                (project, req, attempt_id)):
         dedupe_key = f"attempt.failed:{project}/{req}:{attempt_id}"
-    return f"event:{dedupe_key}", _EVENT_MESSAGES[event_type] + details
+    message = _EVENT_MESSAGES[event_type] + details
+    task_id = target.get("taskId") if isinstance(target, dict) else None
+    if (event_type == "attempt.failed" and all(isinstance(value, str) and value for value in
+            (project, req, task_id, attempt_id))):
+        query = urlencode({"project": project, "req": req, "taskId": task_id})
+        message += f"\n/review?{query}#attempt-{attempt_id}"
+    return f"event:{dedupe_key}", message
 
 
 def event_timestamp(event: Mapping[str, Any]) -> float | None:

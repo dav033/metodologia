@@ -387,7 +387,8 @@ class EntryPointTests(LedgerBase):
         saved = json.loads(decisions.answers_path(rdir).read_text(encoding="utf-8").splitlines()[0])
         self.assertEqual((saved["request"], saved["option"], saved["by"]), (request["id"], "retry", "remote"))
 
-    def test_route_post_answers_open_round_using_round_state_precondition(self):
+    def test_route_post_answers_open_round_while_scheduler_is_waiting(self):
+        import bt_plans_api
         import bt_rounds
 
         _bt_core, rdir, _harness = self.real_run()
@@ -397,7 +398,15 @@ class EntryPointTests(LedgerBase):
                            "options": [{"key": "yes", "label": "Yes"}]}],
         })
         round_data = bt_rounds.load(round_path)
-        actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
+        original_status_of = bt_plans_api.status_of
+
+        def waiting_scheduler_status(*args, **kwargs):
+            status = original_status_of(*args, **kwargs)
+            status["run"]["status"] = "waiting"
+            return status
+
+        with patch.object(bt_plans_api, "status_of", side_effect=waiting_scheduler_status):
+            actual = self.real_target_state("demo/REQ-001", "answer-round", {"round": round_data["round"]})
         self.assertEqual(actual, {"state": "open", "revision": None})
         body = req(command="answer-round", params={"round": round_data["round"],
                                                     "answers": {"q1": {"text": "yes"}}},

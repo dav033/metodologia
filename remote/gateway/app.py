@@ -11,39 +11,7 @@ from config import GatewayConfig
 from liveness import LaptopStatus, LivenessMonitor
 from stream import StreamHub
 from notifications import NotificationOutbox, TelegramSender, event_timestamp, notification_for_event
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-from upstream import LaptopClient, UpstreamError, UpstreamTimeout
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
 from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
-from commands import COMMAND_TYPES
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-from notifications import NotificationOutbox, TelegramSender, notification_for_event
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-from upstream import LaptopClient, UpstreamError, UpstreamResponseError, UpstreamTimeout
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
 
 logger = logging.getLogger(__name__)
 OFFLINE_ALERT_DELAY_SECONDS = 15 * 60
@@ -69,38 +37,15 @@ def _ledger_command(request: Any) -> dict[str, Any] | None:
     if not isinstance(command, str) or command not in COMMAND_TYPES:
         return None
     field_map = {"reason": "reason", "route": "route", "brief": "brief", "answer": "answers",
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-<<<<<<< f05f8fd659ac343b89d326952a27e078aab647c1
-||||||| bb8d45c1c426152ebc0ce48c79c6b29d739fa631
-<<<<<<< e6088af660026d2e861b496d907f514eef10722f
-||||||| 9c190842d7f30c6178e9794e196264c85b92bba2
-<<<<<<< 6048a7cab2664fbc1ed484e52a4a784570976dce
-||||||| a86df111448409a7063f992bae2d9ccdfe498fa4
-<<<<<<< a474fe7810a1d2a36f9a5f0474a49e4d4dadd236
-=======
                  "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 4273ff48ab3b1b2c2ef13b15ffc7e756d2fef067
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 70de5f62178587b71e15d40677732fb4dc3cae8c
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 7d0156fc3acf8afdbcdf78e19160f8fd15f17368
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-                 "requestId": "request_id", "answers": "answers", "option": "option",
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
                  "note": "note", "attemptId": "attempt", "taskId": "task", "round": "round",
                  "field": "field", "value": "value"}
     params: dict[str, Any] = {}
     for source, destination in field_map.items():
         if source in request:
             params[destination] = request[source]
+    if "request_id" in request:
+        params["request_id"] = request["request_id"]
     if isinstance(target.get("taskId"), str):
         params.setdefault("task", target["taskId"])
     if isinstance(target.get("attemptId"), str):
@@ -136,6 +81,7 @@ class GatewayRuntime:
         self.liveness = LivenessMonitor()
         self.hub = StreamHub()
         self.event_cursor = ""
+        self.snapshot_cache: dict[str, Any] | None = None
         self.offline_generation = self.outbox.state_value("laptop_outage_generation")
         self.offline_alerted_generation = self.outbox.state_value("laptop_outage_alerted")
         self.has_cached_active_run = bool(self.outbox.state_value("laptop_has_cached_active_run"))
@@ -290,17 +236,7 @@ class GatewayRuntime:
         if not isinstance(runs, list):
             logger.warning("Laptop snapshot response was invalid; retaining cached active-run state")
             return
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
-<<<<<<< fdc224e41c20baaf18251239055e505699e9db6a
-        self.hub.update_snapshot(snapshot)
-||||||| abc942f14b9a0fa0d84e36f8efa479328584534c
-=======
         self.snapshot_cache = snapshot
->>>>>>> d58d5211dfbc3de3567c96dfad21cbe074ff5303
-=======
-        self.snapshot_cache = snapshot
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
         self.hub.update_snapshot(snapshot)
         has_active_run = any(
             isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
@@ -309,8 +245,6 @@ class GatewayRuntime:
         self.has_cached_active_run = has_active_run
         self.outbox.set_state_value("laptop_has_cached_active_run", int(has_active_run))
 
-<<<<<<< a82720ecf6dc19a4b38cdab385315351a90c5c52
-||||||| 7bbf41f3848b323c12af604ffeb9255ba1e71e8e
     def web_snapshot(self) -> dict[str, Any] | None:
         """Return the last laptop snapshot with gateway liveness for authenticated web clients."""
         snapshot = self.snapshot_cache
@@ -330,31 +264,6 @@ class GatewayRuntime:
         result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
         return result
 
-    def read_model(self, path: str) -> dict[str, Any]:
-        """Relay an authenticated gateway read route to the laptop's v1 API."""
-        return self.laptop.read_model(path)
-
-=======
-    def web_snapshot(self) -> dict[str, Any] | None:
-        """Return the last laptop snapshot with gateway liveness for authenticated web clients."""
-        snapshot = self.snapshot_cache
-        if snapshot is None and self.liveness.status is LaptopStatus.ONLINE:
-            try:
-                snapshot = self.laptop.snapshot()
-            except UpstreamError:
-                return None
-            if not isinstance(snapshot, dict) or not isinstance(snapshot.get("runs"), list):
-                return None
-            self.snapshot_cache = snapshot
-        if snapshot is None:
-            return None
-        result = dict(snapshot)
-        result.setdefault("schemaVersion", 1)
-        result.setdefault("plans", [])
-        result["laptop"] = {"online": self.liveness.status is LaptopStatus.ONLINE}
-        return result
-
->>>>>>> 2aa3a1885b93515f6a7eaa307a9fb85ab1f1392a
     def _poll_events(self) -> None:
         try:
             result = self.laptop.events(self.event_cursor)
