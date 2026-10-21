@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const pagePath = fileURLToPath(new URL("../src/app/page.tsx", import.meta.url));
 const panelsPath = fileURLToPath(new URL("../src/app/recovery-panels.tsx", import.meta.url));
+const failureReviewPath = fileURLToPath(new URL("../src/app/failure-review-panel.tsx", import.meta.url));
 
 test("reopened ready tasks keep recovery controls and send the authoritative state", async () => {
   const page = await readFile(pagePath, "utf8");
@@ -16,6 +17,15 @@ test("reopened ready tasks keep recovery controls and send the authoritative sta
   assert.match(page, /\{canRecover && <form className="recovery-form" onSubmit=\{editBriefForm/);
   assert.match(page, /precondition: \{ state: task\.state/);
   assert.match(page, /task\.state === "rejected"[\s\S]*?Reabrir/);
+});
+
+test("failure review requests include the owning project and requirement target", async () => {
+  const [page, panel] = await Promise.all([readFile(pagePath, "utf8"), readFile(failureReviewPath, "utf8")]);
+
+  assert.match(page, /<FailureReviewPanel attemptId=\{reviewAttemptId\} target=\{`\$\{run\.project\}\/\$\{run\.req\}`\} \/>/);
+  assert.match(panel, /function FailureReviewPanel\(\{ attemptId, target \}: \{ attemptId: string; target: string \}\)/);
+  assert.match(panel, /review\?target=\$\{encodeURIComponent\(target\)\}/);
+  assert.match(panel, /\}, \[attemptId, target\]\);/);
 });
 
 test("recovery entrypoint previews the next revision and renders each account quota window", async () => {
