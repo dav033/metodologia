@@ -104,8 +104,13 @@ class Line:
         self._states[role] = (key, state)
         return state
 
-    def tip(self, role: str) -> str:
-        return self.state(role).tip
+    def tip(self, role: str, without: str | None = None) -> str:
+        """The integrated tree; `without=T` leaves T's own contribution out (what a redo of T starts from)."""
+        state = self.state(role)
+        if without is None or without not in dict(self.accepted()):
+            return state.tip
+        repo = self._repo(role)
+        return self._replay(repo, state.base, [c for c in self.contributions(role) if c.task != without])[0]
 
     def needs_resolution(self, role: str) -> dict[str, tuple[str, ...]]:
         return dict(self.state(role).unresolved)
@@ -114,9 +119,7 @@ class Line:
         """Would `task`'s candidate result apply on the current tip? -> (new tip commit, conflicting files). The candidate
         replaces any earlier contribution of the same task. Objects only, nothing is stored and no ref moves."""
         repo = self._repo(role)
-        others = [c for c in self.contributions(role) if c.task != task]
-        base = self._base(role, repo)
-        tip, _, _ = self._replay(repo, base, [c for c in others if self._precedes(c.task, task)])
+        tip = self.tip(role, without=task)
         start = start_base or f"{snapshot}^1"
         resolved = _git(repo, "rev-parse", "--verify", f"{start}^{{commit}}")
         merged, conflicts = self._apply_one(repo, tip, Contribution(task, attempt, resolved.stdout.strip(), snapshot))
@@ -182,6 +185,8 @@ class Line:
         """(merged commit, ()) when it applies; (None, ()) when the tip already holds it; (None, files) on a clash."""
         if item.snapshot == tip or _git(repo, "merge-base", "--is-ancestor", item.snapshot, tip, check=False).returncode == 0:
             return None, ()
+        if item.start_base == tip:
+            return item.snapshot, ()                         # fast-forward: the same tree a merge would give, without the commit
         if not item.start_base:
             raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{item.task}: no start base for snapshot {item.snapshot[:12]}")
         done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={item.start_base}",

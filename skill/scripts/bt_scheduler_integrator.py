@@ -18,6 +18,7 @@ Dependency direction: adapter -> this module. It imports no scheduler or executo
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import re
 import subprocess
@@ -31,12 +32,14 @@ IDENT = {"GIT_AUTHOR_NAME": "m3-integrator", "GIT_AUTHOR_EMAIL": "m3@localhost",
          "GIT_AUTHOR_DATE": "1970-01-01T00:00:00+0000", "GIT_COMMITTER_DATE": "1970-01-01T00:00:00+0000"}
 LOCATION_VARS = frozenset({"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
                            "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR", "GIT_NAMESPACE", "GIT_PREFIX"})
+LOGGER = logging.getLogger(__name__)
 SHA = re.compile(r"[0-9a-f]{40,64}")
 SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 # Causes that say something about the PLAN'S work (retrying cannot change them): the order is rejected with the cause.
 # Anything else (git timeout, ref lock, signal, an unbound integrator) is transient and must be retried, not burn an attempt.
+# PREDECESSOR_NEEDS_RESOLUTION (integration line) is deliberately NOT permanent: the task waits, it does not fail.
 PERMANENT = frozenset({"INTEGRATION_CONFLICT", "PREDECESSOR_NOT_ACCEPTED", "PREDECESSOR_HANDOFF_MISSING",
                        "INTEGRATION_REPOSITORY"})
 
@@ -76,6 +79,7 @@ class PredecessorIntegrator:
         self.fallback, self.ref_prefix = fallback, ref_prefix.rstrip("/")
         self._bound: dict[str, Any] | None = None
         self._memo: dict[str, str] = {}
+        self.line = None                                   # bt_integration_line.Line when gates.integration_line is on
 
     def bind(self, *, plan, accepted: Callable[[], Mapping[str, str]], snapshot_of: Callable[[str], str | None],
              repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
@@ -89,10 +93,29 @@ class PredecessorIntegrator:
                        "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
                        "earlier_of": earlier_of}
 
+    def attach_line(self, line) -> None:
+        """Make the integration line authoritative (REQ-028): new attempts start from its tip and acceptance is checked
+        against it. Without a line (the default) everything below behaves exactly as before."""
+        self.line = line
+
+    def recompute_line(self) -> None:
+        """Rebuild every line from the persisted facts and move its refs (owner start-up). Never raises: a run is not
+        blocked by the line; the next call that needs it computes it again or falls back."""
+        if self.line is None:
+            return
+        try:
+            self.line.recompute()
+        except IntegrationError as error:
+            LOGGER.warning("integration line not recomputed (%s)", error.code)
+
     # ------------------------------------------------------------------------------------------------ public
     def base_ref(self, task_id: str) -> str:
         if self._bound is None:
             raise IntegrationError("INTEGRATION_UNBOUND", "the integrator was not bound to a run")
+        if self.line is not None:
+            tip = self._line_base(task_id)
+            if tip is not None:
+                return tip
         if task_id in self._memo:
             return self._memo[task_id]
         result = self._integrate(task_id)
@@ -195,6 +218,10 @@ class PredecessorIntegrator:
         bound = self._bound
         if bound is None or not SHA.fullmatch(snapshot or ""):
             return ""
+        if self.line is not None:
+            clash = self._line_conflict(task_id, attempt_id, snapshot)
+            if clash is not None:
+                return clash
         current = dict(bound["accepted"]())
         accepted = {**current, task_id: attempt_id}
         real = bound["snapshot_of"]
@@ -216,6 +243,41 @@ class PredecessorIntegrator:
                     continue                                # the same clash exists with its previous result: not its doing
                 return error.detail
         return self._clash_with_built_on(task_id, snapshot, accepted, overlay, current, before)
+
+    def _line_base(self, task_id: str) -> str | None:
+        """The line's tip for a task that has same-repository prerequisites, without the task's own earlier result (a
+        redo replaces it). None = use the predecessor merge (nothing to integrate, or the line cannot be computed)."""
+        role = self._role(task_id)
+        same_repo = [t for t in self.ancestors(task_id) if self._role(t) == role]
+        if not same_repo:
+            return None
+        try:
+            accepted = self._bound["accepted"]()
+            for tid in same_repo:
+                if tid not in accepted:
+                    raise IntegrationError("PREDECESSOR_NOT_ACCEPTED", f"{tid} is a prerequisite of {task_id} but is not accepted")
+            waiting = [tid for tid in same_repo if tid in self.line.needs_resolution(role)]
+            if waiting:
+                raise IntegrationError("PREDECESSOR_NEEDS_RESOLUTION",
+                                       f"{', '.join(waiting)} is accepted but does not fit the integrated tree yet")
+            tip = self.line.tip(role, without=task_id)
+            self.line.recompute([role])
+            return tip
+        except IntegrationError as error:
+            if error.code in ("PREDECESSOR_NOT_ACCEPTED", "PREDECESSOR_NEEDS_RESOLUTION"):
+                raise
+            LOGGER.warning("integration line unavailable for %s (%s): using the predecessor merge", task_id, error.code)
+            return None
+
+    def _line_conflict(self, task_id: str, attempt_id: str, snapshot: str) -> str | None:
+        """'' when the candidate applies on the tip, the clash when it does not, None when the line cannot say."""
+        role = self._role(task_id)
+        try:
+            _, conflicts = self.line.apply(role, task_id, attempt_id, snapshot)
+        except IntegrationError as error:
+            LOGGER.warning("integration line cannot check %s (%s): using the predecessor check", task_id, error.code)
+            return None
+        return f"{task_id} vs line for {task_id}: {', '.join(conflicts[:6])}"[:170] if conflicts else ""
 
     def _clash_with_built_on(self, task_id: str, snapshot: str, accepted: dict, overlay, current: dict, before) -> str:
         """The candidate against each accepted task that comes after it. Such a task was built on the candidate's earlier

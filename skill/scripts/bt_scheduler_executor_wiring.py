@@ -34,6 +34,15 @@ def close(wiring: api.Wiring) -> None:
                     wiring.executor.close()
 
 
+def _line_enabled() -> bool:
+    """`gates.integration_line` (REQ-028); an unreadable configuration means off, the behaviour of every run before it."""
+    try:
+        import bt_config
+        return bt_config.get("gates.integration_line", False) is True
+    except Exception:  # noqa: BLE001 - configuration trouble must not stop a run from starting
+        return False
+
+
 def _with_owner_notes(rdir, plan, base):
     """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request, by
     the open audit findings of a task sent back, and, for an audit task, by how to write its findings ledger."""
@@ -150,6 +159,14 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                            snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                            earlier_of=lambda task: api._earlier_attempts(scheduler, task))
             port.base_ref = integrate.base_ref
+            if _line_enabled():
+                import bt_integration_line
+                integrate.attach_line(bt_integration_line.Line(
+                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                    identity=api.run_identity(scheduler), accepted=lambda: api._accepted_attempts(scheduler),
+                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD"))
+                integrate.recompute_line()
         if recovery_store_path is not None:
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
                                              default_repository=default_repository,
