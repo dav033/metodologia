@@ -67,6 +67,18 @@ def _task_target(project: str, req: str, task: str | None = None, attempt: str |
             **({"taskId": task} if task else {}), **({"attemptId": attempt} if attempt else {})}
 
 
+def _retry_exhausted(value: dict[str, Any]) -> bool:
+    used = value.get("attempts_used", value.get("attemptsUsed"))
+    maximum = value.get("max_attempts", value.get("maxAttempts"))
+    remaining = value.get("retries_remaining", value.get("retriesRemaining"))
+    if (not isinstance(used, int) or isinstance(used, bool) or used < 1
+            or not isinstance(maximum, int) or isinstance(maximum, bool) or maximum < 1 or used < maximum):
+        return False
+    return (value.get("retry_exhausted") is True or value.get("retryExhausted") is True
+            or (isinstance(remaining, int) and not isinstance(remaining, bool) and remaining == 0)
+            or (value.get("state") == "blocked" and value.get("reason") == "attempts_exhausted"))
+
+
 def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[str, Any]]:
     """Derive stable events from current run state and explicit notification fixtures."""
     out: list[dict[str, Any]] = []
@@ -74,6 +86,7 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
     for run in state.get("runs", []):
         project, req = run.get("project", ""), run.get("req_id", "")
         for task in run.get("tasks", []):
+            exhausted = _retry_exhausted(task)
             attempts = [attempt for attempt in [task.get("attempt"), *(task.get("history") or [])]
                         if isinstance(attempt, dict) and attempt.get("id")]
             for attempt in {item["id"]: item for item in attempts}.values():
@@ -83,8 +96,12 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
                 data = {"title": task.get("title"), "failure": attempt.get("failure"),
                         "verdict": attempt.get("verdict")}
                 if attempt.get("state") in {"rejected", "failed"} or attempt.get("failure"):
-                    out.append(_event("attempt.failed", identity, occurred_at, target, data))
-                    state_failure_targets.add((project, req, str(task.get("id", ""))))
+                    if exhausted:
+                        data.update({"retryExhausted": True,
+                                     "attemptsUsed": task.get("attempts_used", task.get("attempts")),
+                                     "maxAttempts": task.get("max_attempts")})
+                        out.append(_event("attempt.failed", identity, occurred_at, target, data))
+                        state_failure_targets.add((project, req, str(task.get("id", ""))))
                 elif attempt.get("state") == "blocked":
                     out.append(_event("attempt.blocked", identity, occurred_at, target, data))
                 elif attempt.get("live") and now is not None:
@@ -177,6 +194,8 @@ def from_flow(row: dict[str, Any]) -> dict[str, Any] | None:
     source_id = str(row.get("id") or row.get("ord") or row.get("seq") or "")
     identity = f'{target["project"]}/{target["req"]}:{source_id}'
     payload = data or {key: row[key] for key in ("failure", "summary") if row.get(key) is not None}
+    if kind == "attempt.failed" and not _retry_exhausted(payload):
+        return None
     return _event(kind, identity, str(row.get("at") or row.get("occurredAt") or ""), target, payload)
 
 

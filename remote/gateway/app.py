@@ -114,6 +114,10 @@ class GatewayRuntime:
             return {"status": "REJECTED", "code": "CONFIRMATION_REQUIRED", "stored": False}
         return self._submit_ledger_command(ledger_request)
 
+    def read_remote(self, path: str) -> dict[str, Any]:
+        """Read an allow-listed laptop v1 endpoint for an authenticated phone session."""
+        return self.laptop.get_json(path)
+
     def submit_telegram_command(self, request: Any) -> dict[str, Any]:
         """Relay only owner-safe run pause/resume commands to the laptop ledger."""
         if not isinstance(request, Mapping) or request.get("schemaVersion") != 1:

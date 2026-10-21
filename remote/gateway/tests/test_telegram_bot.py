@@ -118,6 +118,21 @@ class TelegramBotTests(unittest.TestCase):
         self.assertEqual(button["text"], "Pausar: demo/REQ-027")
         self.assertLessEqual(len(button["callback_data"].encode("utf-8")), 64)
 
+    def test_estado_uses_inline_buttons_only_for_live_owner_runs(self) -> None:
+        self.laptop.snapshot = lambda: {"runs": [
+            {"project": "demo", "req_id": "REQ-027", "status": "running", "active": True},
+            {"project": "demo", "req_id": "REQ-028", "status": "done", "active": False},
+        ]}
+        self.api.updates = [{"update_id": 1, "message": {"chat": {"id": "owner-chat"}, "text": "/estado"}}]
+
+        self.bot.poll_once()
+
+        message = next(payload for method, payload in self.api.calls if method == "sendMessage")
+        buttons = message["reply_markup"]["inline_keyboard"]
+        self.assertEqual(len(buttons), 1)
+        self.assertEqual(buttons[0][0]["text"], "Pausar: demo/REQ-027")
+        self.assertNotIn("REQ-028", [self.bot._callbacks[token]["target"]["req"] for token in self.bot._callbacks])
+
     def test_telegram_relay_rejects_commands_outside_safe_run_controls(self) -> None:
         command = {
             "schemaVersion": 1,

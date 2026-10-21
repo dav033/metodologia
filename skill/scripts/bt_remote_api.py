@@ -124,6 +124,9 @@ def _snapshot(handler) -> None:
     try:
         summaries = live.run_summaries(root, "global")
         now = live.now_frame_data(root)
+        import bt_plans_api
+        import bt_rounds
+        plan_summaries = bt_plans_api.plans_payload(root)
     except Exception:
         return _problem(handler, 503, "SNAPSHOT_UNAVAILABLE", "La vista remota aún no está disponible.")
 
@@ -154,9 +157,30 @@ def _snapshot(handler) -> None:
                                      "state": active["state"], "attempt": live._attempt(active["attempt"])}
                                     if active else None),
                      "lastActivityAt": last_activity, "tasks": tasks})
+    plans, rounds, decisions = [], [], []
+    for plan in plan_summaries:
+        project, req = plan["project"], plan["req_id"]
+        rdir = bt_plans_api.req_dir(root, project, req)
+        plans.append({"id": f"{project}/{req}", "project": project, "req": req,
+                      "state": plan.get("plan_status") or "unknown", "revision": plan.get("revision"),
+                      "updatedAt": plan.get("updated_at")})
+        decisions.extend({**request, "project": project, "req": req,
+                          "options": [{"id": option, "label": option.replace("_", " "),
+                                       "consequence": option.replace("_", " ")}
+                                      for option in request.get("options", []) if isinstance(option, str)]}
+                         for request in bt_plans_api.open_decisions(rdir))
+        for number in bt_plans_api.open_rounds(rdir):
+            try:
+                data = bt_rounds.load(bt_rounds.rounds_dir(rdir) / f"round-{number:02d}.json")
+            except (OSError, ValueError):
+                continue
+            rounds.append({"project": project, "req": req, "round": number,
+                           **{key: data[key] for key in ("id", "title", "intro", "coverage", "status", "questions")
+                              if key in data}})
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z")
     return _send_json(handler, {"schemaVersion": 1, "generatedAt": generated_at, "cursor": generated_at,
-                                "runs": runs}, 200)
+                                "runs": runs, "plans": plans, "rounds": rounds,
+                                "decisionRequests": decisions}, 200)
 
 
 def _command_history(handler) -> None:

@@ -17,6 +17,7 @@ from auth import (
     SessionStore,
     cookie_values,
 )
+from read_routes import handle_remote_get
 from security import RateLimiter, origin_matches
 from typing import Any
 
@@ -54,6 +55,8 @@ def make_handler(service: OAuthService, runtime: Any | None = None) -> type[Base
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
+            if handle_remote_get(self, service, runtime, route):
+                return
             if route.path in {"/api/auth/login", "/api/auth/github"}:
                 state = service.store.create_state()
                 # GitHub returns by a cross-site top-level GET, so the one-time state cookie must be Lax.
