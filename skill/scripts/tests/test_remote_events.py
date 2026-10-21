@@ -162,6 +162,9 @@ class RouteTests(unittest.TestCase):
             root = Path(directory)
             failed = run([{"id": "T1", "title": "Build",
                            "attempt": attempt("a1", state="failed", failure="tests")}])
+            # This is the public flow-bus shape emitted for an attempt_transition audit row.
+            transition = {"kind": "state_change", "run": "demo/REQ-001", "task": "T1",
+                          "attempt": "a1", "at": AT, "data": {"state": "failed"}}
 
             class LedgerStub:
                 def rows(self):
@@ -177,7 +180,7 @@ class RouteTests(unittest.TestCase):
                     patch("bt_core.ROOT", root), \
                     patch("bt_live_api.run_summaries", return_value=[failed]), \
                     patch("bt_plans_api.plans_payload", return_value=[]), \
-                    patch("bt_live_api.flow_events", return_value=([], [], {})), \
+                    patch("bt_live_api.flow_events", return_value=([transition], [], {})), \
                     patch("bt_subscriptions.summary", return_value=[]), \
                     patch("bt_remote_commands.Ledger", LedgerStub):
                 self.assertNotIn("attempt.failed", [event["type"] for event in poll()])
@@ -186,6 +189,7 @@ class RouteTests(unittest.TestCase):
                 failure = next(event for event in events if event["type"] == "attempt.failed")
                 self.assertEqual(failure["data"]["retryBudgetRemaining"], 0)
                 self.assertEqual(failure["data"]["maxAttempts"], 3)
+                self.assertEqual(sum(event["type"] == "attempt.failed" for event in events), 1)
 
     def test_gateway_poll_returns_late_stall_and_round_after_saved_cursor(self):
         # Exercise the route's real feed.collect -> build_events -> page path across polls.
