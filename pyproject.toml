@@ -156,6 +156,7 @@ py-modules = [
   "bt_plan_gate",
   "bt_pending",
   "bt_platform",
+  "bt_scheduler_projection",
   "bt_profile_matrix",
   "bt_profiles",
   "bt_quality",
