@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from config import GatewayConfig
-from commands import validate_command
+from commands import CommandValidationError, validate_command
 from liveness import LaptopStatus, LivenessMonitor
 from notifications import NotificationOutbox, TelegramSender, notification_for_event
 from stream import SnapshotEventStream
@@ -20,7 +20,7 @@ ACTIVE_RUN_STATES = frozenset({"running", "waiting", "paused"})
 
 
 class CommandRelayError(RuntimeError):
-    def __init__(self, status: int, code: str, message: str, idempotency_key: str):
+    def __init__(self, status: int, code: str, message: str, idempotency_key: str | None):
         super().__init__(message)
         self.status = status
         self.code = code
@@ -131,12 +131,7 @@ class GatewayRuntime:
             params["typed_req"] = params.pop("typedReq")
         if "answer" in params and command["type"] == "answer-round":
             params["answers"] = params.pop("answer")
-        if "confirmation" in params and isinstance(params["confirmation"], dict):
-            confirmation = params["confirmation"]
-            params["confirmation"] = {
-                "challenge_id": confirmation.get("challengeId", confirmation.get("challenge_id")),
-                "typed_req": confirmation.get("typedReq", confirmation.get("typed_req")),
-            }
+        confirmation = params.pop("confirmation", None)
         ledger_command = {
             "idempotency_key": command["idempotencyKey"],
             "command": command["type"],
@@ -145,7 +140,30 @@ class GatewayRuntime:
             "params": params,
             "precondition": command["precondition"],
         }
+        if isinstance(confirmation, dict):
+            ledger_command["confirmation"] = {
+                "challenge_id": confirmation.get("challengeId", confirmation.get("challenge_id")),
+                "typed_req": confirmation.get("typedReq", confirmation.get("typed_req")),
+            }
         return self._relay_command(ledger_command)
+
+    def issue_challenge(self, target: str, typed_req: str) -> dict[str, Any]:
+        if (not isinstance(target, str) or target.count("/") != 1 or not isinstance(typed_req, str)
+                or target.rsplit("/", 1)[-1] != typed_req):
+            raise CommandValidationError("INVALID_CHALLENGE", "Typed request id must match its target")
+        if self.liveness.status is LaptopStatus.OFFLINE:
+            raise CommandRelayError(410, "LAPTOP_OFFLINE", "Laptop is offline; challenge was not issued", None)
+        try:
+            challenge = self.laptop.challenge({"target": target, "typedReq": typed_req})
+        except UpstreamResponseError as exc:
+            code = exc.payload.get("code")
+            safe_code = code if isinstance(code, str) and code in {"INVALID_CHALLENGE", "LAPTOP_OFFLINE"} else "CHALLENGE_REJECTED"
+            raise CommandValidationError(safe_code, "Laptop rejected the confirmation challenge", exc.status) from exc
+        except UpstreamError as exc:
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Could not issue confirmation challenge", None) from exc
+        if not isinstance(challenge, dict) or not isinstance(challenge.get("challengeId"), str):
+            raise CommandRelayError(503, "CHALLENGE_UNAVAILABLE", "Laptop returned an invalid confirmation challenge", None)
+        return challenge
 
     def submit_telegram_command(self, value: object) -> tuple[int, dict[str, Any]]:
         command = validate_command(value)

@@ -57,6 +57,35 @@ class LaptopClient:
 
         return self.get_json("/api/remote/v1/events?" + urlencode({"after": after, "limit": limit}))
 
+    def challenge(self, challenge: dict[str, Any]) -> dict[str, Any]:
+        body = json.dumps(challenge).encode("utf-8")
+        request = Request(
+            self._origin + "/api/remote/v1/challenges",
+            data=body,
+            headers={
+                "Authorization": f"Bearer {self._key}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                payload = json.loads(response.read(65536).decode("utf-8"))
+        except HTTPError as exc:
+            try:
+                payload = json.loads(exc.read(65536).decode("utf-8"))
+            except (UnicodeError, json.JSONDecodeError) as parse_error:
+                raise UpstreamError("laptop API returned an invalid challenge response") from parse_error
+            if not isinstance(payload, dict):
+                raise UpstreamError("laptop API returned an invalid challenge response") from exc
+            raise UpstreamResponseError(exc.code, payload) from exc
+        except (URLError, TimeoutError, OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise UpstreamError("laptop challenge request failed") from exc
+        if not isinstance(payload, dict) or not isinstance(payload.get("challengeId"), str):
+            raise UpstreamError("laptop API returned an invalid challenge response")
+        return payload
+
     def command(self, command: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         body = json.dumps(command).encode("utf-8")
         request = Request(
