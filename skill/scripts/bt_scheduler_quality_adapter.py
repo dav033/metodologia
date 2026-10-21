@@ -56,6 +56,7 @@ class QualityVerificationPort:
         integration_retries: int = 0,
         integration_rework_limit: int = 6,
         unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
+        revert_check: Callable[[str, str], tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
     ):
         self.core = core
@@ -70,6 +71,7 @@ class QualityVerificationPort:
         self.integration_retries = integration_retries    # clash rejections of one task before the dependents give way
         self.integration_rework_limit = integration_rework_limit  # times one task may be sent back to give way
         self.unresolved_check = unresolved_check          # (task, snapshot) -> files still holding merge conflict markers
+        self.revert_check = revert_check                  # (task, snapshot) -> files changed back to an older version
         self.remediate = remediate                        # (audit, attempt, findings) -> True when they became remediation tasks
         self.executor = executor
         self.store = store
@@ -393,7 +395,7 @@ class QualityVerificationPort:
     def _integration_problem(self, order: VerifyRequest) -> str:
         """Why the verified result cannot be combined with the accepted work around it ('' when it can). A check that
         cannot run (no snapshot yet) is not a verdict: it returns ''."""
-        if self.integration_check is None and self.unresolved_check is None:
+        if self.integration_check is None and self.unresolved_check is None and self.revert_check is None:
             return ""
         try:
             source = self._snapshot_source(order)
@@ -402,6 +404,9 @@ class QualityVerificationPort:
             left = self.unresolved_check(order.task_id, source.snapshot_sha) if self.unresolved_check else ()
             if left:
                 return UNRESOLVED + ", ".join(left[:6])
+            back = self.revert_check(order.task_id, source.snapshot_sha) if self.revert_check else ()
+            if back:
+                return REVERTED + ", ".join(back[:6])
             return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) \
                 if self.integration_check else ""
         except Exception as error:  # noqa: BLE001 - an outage is not a reason to reject work
@@ -571,6 +576,7 @@ class QualityVerificationPort:
                     accepted = False
                     evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
                     self._write_note((order.task_id,), _unresolved_note(clash) if clash.startswith(UNRESOLVED)
+                                     else _reverted_note(clash) if clash.startswith(REVERTED)
                                      else _integration_note(clash))
             remediating = False
             if gate is not None and gate.blocking and not gate.problems and self.remediate is not None:
@@ -658,12 +664,21 @@ def _read_snapshot_inputs(
 
 
 UNRESOLVED = "merge conflict markers left in: "
+REVERTED = "files changed back to an older version than the base they started from: "
 
 
 def _unresolved_note(clash: str) -> str:
     return (f"Your result still contains unresolved merge conflict markers ({clash.removeprefix(UNRESOLVED)}). Your tree "
             "started as a merge in progress: open every file with `<<<<<<<` / `=======` / `>>>>>>>` lines, combine both "
             "sides' behaviour, delete the markers, and run the tests again.")
+
+
+def _reverted_note(clash: str) -> str:
+    return (f"Your result puts these files back to an OLDER version of themselves than the one your work started from "
+            f"({clash.removeprefix(REVERTED)}). That undoes what an earlier task fixed, and every task built after you "
+            "inherits the regression. Restore each of them to the version in your starting tree (`git checkout <start> -- "
+            "<file>`; the start is the first parent of your worktree's HEAD) unless the task really owns the file, then run the "
+            "tests of the module again.")
 
 
 _NOISE_LINE = re.compile(r"^\s*npm (?:notice|warn(?:ing)?)\b", re.IGNORECASE)

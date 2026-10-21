@@ -102,6 +102,7 @@ class M6M1AdapterTests(unittest.TestCase):
         read_changes=None,
         integration_check=None,
         unresolved_check=None,
+        revert_check=None,
         remediate=None,
         rework_notes=None,
         verify_notes=None,
@@ -144,6 +145,7 @@ class M6M1AdapterTests(unittest.TestCase):
             read_changes=read_changes,
             integration_check=integration_check,
             unresolved_check=unresolved_check,
+            revert_check=revert_check,
             remediate=remediate,
             rework_notes=rework_notes,
             verify_notes=verify_notes,
@@ -484,6 +486,22 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertEqual([task_id for task_id, _ in notes], ["T1"])
         self.assertIn("a.py, b.py", notes[0][1])
         self.assertIn("delete the markers", notes[0][1])
+
+    def test_a_result_that_puts_files_back_to_an_older_version_is_rejected_with_a_note_to_restore_them(self):
+        task = _task("T1", "python3 build.py")
+        task.update(kind="implement")
+        task["verification"][0]["category"] = "functional"
+        notes = []
+        root, core, _, executor, _, _ = self._system(
+            [task], max_attempts=2, schema_version="1.2.0", revert_check=lambda task_id, snapshot: ("edit.py",),
+            rework_notes=lambda task_id, text: text and notes.append((task_id, text)))
+        self._start_attempts(core, executor, root, ("T1",))
+        core.step()
+        self.assertTrue(_wait_for(lambda: any(e.kind == "attempt_transition" and e.task_id == "T1"
+                                              and e.detail.get("to") == "rejected" for e in core.audit_log())))
+        self.assertEqual([task_id for task_id, _ in notes], ["T1"])
+        self.assertIn("edit.py", notes[0][1])
+        self.assertIn("OLDER version", notes[0][1])
 
     def test_a_failed_verification_leaves_the_failing_output_for_the_retry_and_a_pass_clears_it(self):
         class Failing(ScriptedRunner):

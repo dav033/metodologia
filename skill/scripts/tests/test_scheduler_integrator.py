@@ -191,6 +191,21 @@ class Unit(unittest.TestCase):
         git(self.app, "update-ref", "HEAD", with_markers)                     # markers that the head itself holds
         self.assertEqual(integrator.unresolved("T2", with_markers), ())
 
+    def test_a_result_that_changes_a_file_back_to_an_older_version_is_found_unless_the_task_declares_the_file(self):
+        v1 = snapshot(self.app, self.head, {"edit.py": "old version\n", "keep.py": "keep\n"})
+        v2 = snapshot(self.app, v1, {"edit.py": "new version with the fix\n"})            # a predecessor fixed the file
+        reverted = snapshot(self.app, v2, {"edit.py": "old version\n", "own.py": "the task's own work\n"})
+        honest = snapshot(self.app, v2, {"edit.py": "new version with the fix\n and more\n", "own.py": "x\n"})
+        spec = {"T1": ([], "app")}
+        integrator = self.bound(spec)
+        self.assertEqual(integrator.reverted("T1", reverted), ("edit.py",))
+        self.assertEqual(integrator.reverted("T1", honest), ())                              # a new version is not a revert
+        self.assertEqual(integrator.reverted("T1", v2), ())                                  # nothing changed back
+        self.assertEqual(integrator.reverted("T1", "not-a-sha"), ())
+        owned = self.bound(spec)
+        owned._bound["plan"].spec["T1"].expected_paths = ("edit.py",)                       # the task owns the file: its call
+        self.assertEqual(owned.reverted("T1", reverted), ())
+
     def test_a_clash_caused_by_a_common_ancestor_that_was_redone_is_merged_over_its_earlier_result(self):
         lines = [f"line{n}" for n in range(1, 21)]
         base = snapshot(self.app, self.head, {"up.txt": "\n".join(lines) + "\n"})

@@ -17,6 +17,7 @@ Dependency direction: adapter -> this module. It imports no scheduler or executo
 """
 from __future__ import annotations
 
+import fnmatch
 import hashlib
 import os
 import re
@@ -173,6 +174,42 @@ class PredecessorIntegrator:
         known = _git(repo, "grep", "-lI", "-E", *pattern, "HEAD", "--", check=False)
         files -= {line.split(":", 1)[1] for line in known.stdout.splitlines() if ":" in line}
         return tuple(sorted(files))
+
+    def reverted(self, task_id: str, snapshot: str, depth: int = 40, limit: int = 200) -> tuple[str, ...]:
+        """Files the result changed BACK to an older version of themselves than the one it started from (the first
+        parent of the snapshot), outside the files the task declares. A task that resolves a merge by taking the stale
+        side hands every later merge a regression: REQ-027's T15f carried the old `bt_remote_edit.py` (57 lines) over
+        T8a's fix (103 lines), so the fix never reached the tasks built after it and the audit found it five rounds."""
+        bound = self._bound
+        path = bound["repo_of"](self._role(task_id)) if bound is not None and SHA.fullmatch(snapshot or "") else None
+        if not path:
+            return ()
+        repo = Path(path)
+        parent = f"{snapshot}^1"
+        diff = _git(repo, "diff", "--name-only", "--no-renames", parent, snapshot, check=False)
+        if diff.returncode:
+            return ()
+        try:
+            declared = tuple(bound["plan"].task(task_id).expected_paths or ())
+        except Exception:  # noqa: BLE001 - no declared paths known: every changed file counts
+            declared = ()
+        found = []
+        for name in diff.stdout.splitlines()[:limit]:
+            if any(fnmatch.fnmatch(name, pattern) or name == pattern for pattern in declared):
+                continue
+            new = _git(repo, "rev-parse", "--verify", f"{snapshot}:{name}", check=False)
+            now = _git(repo, "rev-parse", "--verify", f"{parent}:{name}", check=False)
+            if new.returncode or now.returncode or new.stdout.strip() == now.stdout.strip():
+                continue                                   # deleted, brand new or unchanged: not a revert
+            history = _git(repo, "log", f"-n{depth}", "--format=%H", parent, "--", name, check=False)
+            earlier = set()
+            for commit in history.stdout.split()[1:]:       # the newest one made the version it started from
+                blob = _git(repo, "rev-parse", "--verify", f"{commit}:{name}", check=False)
+                if blob.returncode == 0:
+                    earlier.add(blob.stdout.strip())
+            if new.stdout.strip() in earlier:
+                found.append(name)
+        return tuple(found)
 
     # ------------------------------------------------------------------------------------------------ internals
     @staticmethod
