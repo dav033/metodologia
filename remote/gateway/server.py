@@ -21,6 +21,7 @@ from auth import (
 )
 from stream import SnapshotUnavailable, StreamHub, format_sse
 from read_routes import handle_remote_get
+import panel_proxy
 from security import RateLimiter, origin_matches
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,7 @@ COMMAND_STATUS = {
 def make_handler(service: OAuthService, hub: StreamHub | None = None,
                  runtime: Any | None = None) -> type[BaseHTTPRequestHandler]:
     rate_limiter = RateLimiter()
+    challenges = panel_proxy.Challenges()
 
     class GatewayHandler(BaseHTTPRequestHandler):
         server_version = "FlowGateway"
@@ -126,6 +128,8 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 else:
                     self._stream(hub)
                 return
+            if panel_proxy.handle(self, service, runtime, rate_limiter, challenges, "GET", route):
+                return
             self._json(404, {"error": "not found"})
 
         def _stream(self, hub: StreamHub) -> None:
@@ -165,7 +169,8 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
                 return
             route = urlsplit(self.path)
             if route.path not in ("/api/remote/v1/commands", "/api/remote/v1/challenges"):
-                self._json(404, {"error": "not found"})
+                if not panel_proxy.handle(self, service, runtime, rate_limiter, challenges, "POST", route):
+                    self._json(404, {"error": "not found"})
                 return
             token = cookie_values(self.headers.get("Cookie")).get(SESSION_COOKIE, "")
             owner = service.store.get_session(token) if token else None

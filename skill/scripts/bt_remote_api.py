@@ -54,6 +54,9 @@ def route_get(handler) -> None:
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
 
     path = _path(handler)
+    if path == f"{PREFIX}/panel" or path.startswith(f"{PREFIX}/panel/"):
+        import bt_remote_panel
+        return bt_remote_panel.serve(handler, "GET")
     if path == f"{PREFIX}/snapshot":
         return _snapshot(handler)
     review_match = re.fullmatch(re.escape(f"{PREFIX}/attempts/") + r"([^/]+)/review", path)
@@ -442,6 +445,9 @@ def route_post(handler) -> None:
     if not _authorized(handler):
         return _problem(handler, 401, "UNAUTHORIZED", "Se requiere la clave del gateway.")
     path = _path(handler)
+    if path.startswith(f"{PREFIX}/panel/"):
+        import bt_remote_panel
+        return bt_remote_panel.serve(handler, "POST")
     if path not in {f"{PREFIX}/commands", f"{PREFIX}/challenges"}:
         return _problem(handler, 404, "NOT_FOUND", "Ruta remota no encontrada.")
     is_challenge = path == f"{PREFIX}/challenges"

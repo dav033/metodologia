@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 
 class UpstreamError(RuntimeError):
@@ -24,6 +24,13 @@ class UpstreamResponseError(UpstreamError):
 
 class UpstreamTimeout(UpstreamError):
     """The laptop did not answer before the request deadline."""
+
+
+class _NoRedirect(HTTPRedirectHandler):
+    """Hand 3xx answers to the browser instead of following them (the panel redirects after every action)."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
 
 
 class LaptopClient:
@@ -109,6 +116,22 @@ class LaptopClient:
         if not isinstance(result, dict):
             raise UpstreamError("laptop command response was not an object")
         return status, result
+
+    def open_panel(self, method: str, path: str, body: bytes | None = None, content_type: str | None = None,
+                   timeout: float = 30.0):
+        """Open a laptop panel page or action and return the live response (an HTTPError is also a response)."""
+        if not path.startswith("/") or method not in {"GET", "POST"}:
+            raise ValueError("unsupported panel request")
+        headers = {"Authorization": f"Bearer {self._key}", "Accept": "*/*", "Accept-Encoding": "identity"}
+        if content_type and body is not None:
+            headers["Content-Type"] = content_type
+        request = Request(self._origin + "/api/remote/v1/panel" + path, data=body, headers=headers, method=method)
+        try:
+            return build_opener(_NoRedirect).open(request, timeout=timeout)
+        except HTTPError as exc:
+            return exc
+        except (URLError, TimeoutError, OSError) as exc:
+            raise UpstreamError("laptop panel request failed") from exc
 
     def read_model(self, path: str) -> dict[str, Any]:
         from urllib.parse import urlsplit
