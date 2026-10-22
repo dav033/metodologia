@@ -250,13 +250,22 @@ def _manual_closure(rdir: Path, attempt_id: str) -> str:
     return bt_attempt_facts.resolution_text(bt_attempt_facts.manual_resolutions(m1).get(attempt_id))
 
 
+def _start_rejected(code: str):
+    """The scheduler itself refused to start the attempt (`start rejected: <CODE>`): its own evidence, not an integrity anomaly, so it is
+    not an owner-only decision and the self-healing may answer it (an integration clash is redone on the stale result)."""
+    if not code.startswith("start_rejected_"):
+        return None
+    return (f"El scheduler no pudo arrancar el intento: {code[len('start_rejected_'):].upper()}. La evidencia es del propio scheduler "
+            "(no un fallo de integridad), y el error de abajo dice qué choca o qué falta.", False, "retry")
+
+
 def _blocked(doc: dict, rdir: Path) -> list[dict]:
     out = []
     for task, rec in doc.get("tasks", {}).items():
         if rec.get("state") != "blocked":
             continue
         code = reason_code(rec.get("reason", ""))
-        known = REASONS.get(code)
+        known = REASONS.get(code) or _start_rejected(code)
         what, unskippable, recommended = known if known else (
             f"La tarea está bloqueada por una razón que el sistema no reconoce: «{rec.get('reason', '')[:200]}».", True, "retry_with_note")
         attempts = rec.get("attempts", [])
@@ -265,7 +274,7 @@ def _blocked(doc: dict, rdir: Path) -> list[dict]:
         if _newer_revision(rdir, int(doc.get("revision", 0))):
             options.append(REVISE)
         options.append(STOP)
-        needs, you_can = known and GUIDE.get(code) or UNKNOWN_GUIDE
+        needs, you_can = known and (GUIDE.get(code) or _TRANSIENT) or UNKNOWN_GUIDE
         closed = _manual_closure(rdir, last.get("id", ""))
         error = _clip("\n".join(x for x in (verify_notes(rdir, task), f"Cerrado a mano: {closed}" if closed else "",
                                               f"Último fallo: {last.get('failure')}" if last.get("failure") else "",

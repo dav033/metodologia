@@ -6,6 +6,7 @@ profile configuration or filesystem path is copied into its ledger. Source reade
 from __future__ import annotations
 
 import hashlib
+import re
 import json
 import logging
 import math
@@ -74,7 +75,7 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
                     "attempts_used": used, "max_attempts": ctx.config.max_attempts, "recovery_round": task.waits,
                     "max_waits": ctx.config.max_recovery_waits, "max_wait_seconds": ctx.config.max_recovery_wait,
                     "failure_at": attempt.updated_at, "now": ctx.now, "evidence": attempt.evidence,
-                    "verifier": attempt.verifier}
+                    "verifier": attempt.verifier, "failure": attempt.failure}
         return self.scheduler.read(read)
 
     def _case(self, context, official, facts):
@@ -105,7 +106,7 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             refs += (opaque_ref("outcome", {"cause": cause, "state": state, "reset_epoch": reset}),)
         if verification_ref:
             refs += (verification_ref,)
-        values = {k: v for k, v in official.items() if k not in {"evidence", "verifier"}}
+        values = {k: v for k, v in official.items() if k not in {"evidence", "verifier", "failure"}}
         values["manual_cancel"] = official["manual_cancel"] or verified and facts.get("cancel_requested") is True
         return m5.RecoveryCase(
             **values, run_id=self.run_id, core_cause=context.cause,
@@ -126,6 +127,12 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             facts = self.describe(context.attempt_id) or {}
             if not isinstance(facts, Mapping):
                 raise TypeError("invalid evidence object")
+            started = re.match(r"start rejected: ([A-Z][A-Z_]+)", str(official.get("failure") or ""))
+            if not facts and started:
+                # the scheduler itself refused to start the attempt (an integration clash, a predecessor that is not accepted...): the
+                # executor never had a record BY DESIGN, and the evidence is the scheduler's own. It was filed as `identity_unverified`
+                # (an integrity anomaly nobody answers for): 39 of its 44 real blocks were these, and a person had to look at each one
+                return sched.core.RecoveryProposal("block", f"m5:start_rejected_{started.group(1).lower()}")
             case = self._case(context, official, facts)
             decision = self._open().decide(case, self.policy)
         except Exception as error:  # noqa: BLE001 - a broken recovery store must not enable the core retry fallback
