@@ -353,16 +353,30 @@ def _path_symptom(path: str) -> str:
     return "surface_" + token[:110]
 
 
+_INERT = frozenset({"echo", "printf", "true", "false", ":", "cat", "ls", "test", "sleep", "pwd", "type", "exit"})
+
+
 def _command_covers_path(path: str, command: str) -> bool:
-    """Require an explicit surface command or an established project-wide static/build check."""
+    """Require a command that RUNS something over the surface: an inert command (`echo web/`) never covers a path, and a surface
+    name counts only as a path argument (`web/`, `./web/x`), not as a substring of another word."""
+    words = re.split(r"\s+", command.strip())
+    first = next((w for w in words if "=" not in w.split("/")[0] or w.startswith(("./", "/"))), "")
+    segments = [seg.strip().split(" ")[0] for seg in re.split(r"&&|\|\||;", command) if seg.strip()]
+    if all(Path(seg).name.lower() in _INERT for seg in segments if seg):
+        return False
+    if Path(first).name.lower() in _INERT and len(segments) == 1:
+        return False
     top = path.split("/", 1)[0].lower()
     lowered = command.lower()
     web_path = top in {"web", "frontend", "client", "app", "apps"} or path.endswith((".tsx", ".jsx", ".css"))
+    # a web file under a generic root (`src/ui/Foo.tsx`) is covered by a command over ITS package (`src/ui/`), not over `src/`
+    parts = path.lower().split("/")
+    scope = top if top in {"web", "frontend", "client", "app", "apps"} or len(parts) < 3 or not web_path else "/".join(parts[:2])
+    as_arg = re.search(rf"(?:^|[\s='\":]|\./){re.escape(scope)}/", lowered) is not None
     if web_path:
-        return f"{top}/" in lowered or any(token in lowered for token in
-                                           ("npm run typecheck", "tsc --noemit", "npm run lint", "npm run build"))
-    return (f"{top}/" in lowered or Path(path).name.lower() in lowered
-            or Path(path).stem.lower() in lowered)
+        return as_arg or any(token in lowered for token in
+                             ("npm run typecheck", "tsc --noemit", "npm run lint", "npm run build"))
+    return as_arg or Path(path).name.lower() in lowered or Path(path).stem.lower() in lowered
 
 
 def recovery_coverage_problems(core: object, order: object, result: object, resolver: object,

@@ -172,3 +172,16 @@ class RecoveryEvidence(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CommandCoverage(unittest.TestCase):
+    """REQ-029 F7: a command covers a changed surface only if it runs something over it (not echo, not a lookalike substring)."""
+
+    def test_inert_and_lookalike_commands_never_cover_a_path(self):
+        import bt_recovery_evidence as ev
+        for path, command in (("web/page.ts", "echo web/"), ("src/server.py", "echo server"),
+                              ("src/ui/Foo.tsx", "pytest src/backend"), ("web/page.ts", "true && printf 'web/ ok'")):
+            self.assertFalse(ev._command_covers_path(path, command), (path, command))
+        for path, command in (("web/page.ts", "cd web && npm run typecheck"), ("src/ui/Foo.tsx", "cd src/ui && npm run lint"),
+                              ("src/server.py", "python3 -m unittest tests.test_server"), ("src/a.py", "pytest src/")):
+            self.assertTrue(ev._command_covers_path(path, command), (path, command))
