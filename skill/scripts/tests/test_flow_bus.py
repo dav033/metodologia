@@ -93,6 +93,22 @@ class Bus(unittest.TestCase):
         later, _ = bus.collect(self.rdir, "demo", cursors)
         self.assertEqual([e["kind"] for e in later], ["verdict"])
 
+    def test_a_recovery_cycle_is_shown_and_shown_again_when_its_state_changes(self):
+        m5 = next(self.rdir.parents[2].glob(".state/scheduler/*-modules/m5-recovery.sqlite3"))
+        sql(m5, "CREATE TABLE diagnostic_cycles (lineage_id TEXT PRIMARY KEY, cycle_token TEXT NOT NULL UNIQUE, state TEXT NOT NULL, "
+                "identity_json TEXT NOT NULL, payload_json TEXT NOT NULL, updated_at REAL NOT NULL)",
+            "INSERT INTO diagnostic_cycles VALUES ('lin-1', 'cyc-1', 'diagnosing', '{}', '{}', 200.0)")
+        _, cursors = bus.collect(self.rdir, "demo")
+        again, cursors = bus.collect(self.rdir, "demo", cursors)
+        self.assertEqual([e for e in again if e["kind"] == "recovery_cycle"], [])
+        sql(m5, "UPDATE diagnostic_cycles SET state='blocked', payload_json='{\"blocker\": {\"code\": \"diagnostic_pipeline_unavailable\"}}', "
+                "updated_at=300.0")
+        new, _ = bus.collect(self.rdir, "demo", cursors)
+        cycles = [e for e in new if e["kind"] == "recovery_cycle"]
+        self.assertEqual(len(cycles), 1)
+        self.assertIn("bloqueado", cycles[0]["summary"])
+        self.assertEqual(cycles[0]["data"]["blocker"], "diagnostic_pipeline_unavailable")
+
     def test_cursor_resumes_without_repeats_and_picks_up_new_rows(self):
         _, cursors = bus.collect(self.rdir, "demo")
         again, _ = bus.collect(self.rdir, "demo", cursors)

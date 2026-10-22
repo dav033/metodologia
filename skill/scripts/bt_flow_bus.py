@@ -30,11 +30,12 @@ import bt_scheduler_adapter as scheduler_
 VERSION = 1
 PARTIES = ("planner", "M1", "M2", "M3", "M4", "M5", "M6", "web", "owner")
 LIMIT = 2000                                    # rows per store per cycle: bounded work, the cursor catches up
-STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal")
+STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal", "cyc")
 
 
 # What each module's database holds and what the bus does with it. A table nobody classified here fails
 # `test_flow_contract`: a new module table is either a message source (add a tailer) or bookkeeping (say why).
+# `diagnostic_cycles` (REQ-029) is created by the methodology adapter beside the M5 store, not by the package: _cycle_events reads it.
 COVERED_TABLES = {"m1": {"audit"}, "m2": {"decision_records"}, "m3": {"events"},
                   "m4": {"normalized_events", "incidents"}, "m5": {"decisions"}, "m6": {"requests"}}
 IGNORED_TABLES = {
@@ -348,6 +349,27 @@ def _heal_events(run: str, rdir: Path, after: int) -> list[dict]:
     return out
 
 
+CYCLE_TEXT = {"diagnosing": "diagnostica", "applying": "prepara correcciones", "executing": "ejecuta correcciones",
+              "auditing": "reaudita", "succeeded": "resuelto", "blocked": "bloqueado", "escalated": "necesita al dueño"}
+
+
+def _cycle_events(run: str, path: Path | None, after: int) -> list[dict]:
+    """The durable diagnostic-recovery cycles (REQ-029 R7). The cursor is the update time in milliseconds, so a cycle that
+    moves to another state is reported again."""
+    out = []
+    for row in _rows(path, "SELECT lineage_id, cycle_token, state, payload_json, updated_at, "
+                     "CAST(updated_at * 1000 AS INTEGER) AS ms FROM diagnostic_cycles "
+                     "WHERE CAST(updated_at * 1000 AS INTEGER) > ? ORDER BY updated_at LIMIT ?", (after, LIMIT)):
+        why = _json(row["payload_json"]).get("blocker") or ""
+        if isinstance(why, dict):
+            why = why.get("code") or ""
+        out.append(event(run, "cyc", row["ms"], float(row["updated_at"] or 0.0), "M5", "M1", "recovery_cycle",
+                         f'Recuperación diagnóstica: {CYCLE_TEXT.get(row["state"], row["state"])}{" · " + str(why)[:120] if why else ""}',
+                         from_part="M5.recovery", data={"state": row["state"], "lineage": str(row["lineage_id"])[:16],
+                                                        "cycle": str(row["cycle_token"])[:16], "blocker": why or None}))
+    return out
+
+
 def _m5_events(run: str, path: Path | None, after: int, ctx: Ctx) -> list[dict]:
     out = []
     for row in _rows(path, "SELECT seq, task_id, attempt_id, cause, action FROM decisions WHERE seq > ? ORDER BY seq "
@@ -420,6 +442,7 @@ def sources(rdir: Path, project: str) -> dict[str, tuple[str, int]]:
         except OSError:
             out[name] = (str(path), 0)
     out["m4i"] = out["m4"]
+    out["cyc"] = out["m5"]
     interventions = Path(rdir) / "RUN.interventions.jsonl"
     try:
         out["heal"] = (str(interventions), interventions.stat().st_ino)
@@ -451,6 +474,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
         "m5": _m5_events(run, paths.get("m5"), cur["m5"], ctx),
         "m6": _m6_events(run, paths.get("m6"), cur["m6"]),
         "heal": _heal_events(run, rdir, cur["heal"]),
+        "cyc": _cycle_events(run, paths.get("m5"), cur["cyc"]),
     }
     merged = []
     for name, items in events.items():

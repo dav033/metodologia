@@ -154,3 +154,51 @@ class RecoveryRuntimeContracts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ProductionSources(unittest.TestCase):
+    """REQ-029 G3: the owner loop's sources come from the run's own records, and the cycle ends in an exact durable blocker."""
+    IDENTITY = {"plan_id": "P", "revision": 5, "source_sha256": "a" * 64, "stop_generation": 0,
+                "accepted_map_digest": "b" * 64, "paused": False, "cancelled": False, "live_attempts": []}
+
+    def adapter(self, root):
+        import bt_recovery_runtime
+        return RecoveryAdapter(root / "m5.db", scheduler=None, run_id="run-1", describe=lambda _: None, rdir=root,
+                               recovery_sources=lambda: bt_recovery_runtime.sources(root, "run-1"))
+
+    def tick(self, root, requests=()):
+        (root / "RUN.recovery-policy.json").write_text('{"schema_version":"recovery-policy/1","run_id":"run-1",'
+                                                       '"identity":{"stop_generation":0}}')
+        with (patch("bt_scheduler_recovery_adapter.sched.revision_identity", return_value=self.IDENTITY),
+              patch("bt_scheduler_decisions.open_requests", return_value=list(requests))):
+            return self.adapter(root).tick_diagnostic_recovery()
+
+    def test_nothing_exhausted_means_the_ordinary_path_goes_first(self):
+        with tempfile.TemporaryDirectory() as temp:
+            self.assertEqual(self.tick(Path(temp))["state"], "ordinary_path_first")
+
+    def test_a_blocked_audit_past_its_rework_limit_opens_one_cycle_that_ends_in_an_exact_blocker(self):
+        card = {"task": "T8", "reason": "m5:rework_impact", "unskippable": False, "options": []}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            first = self.tick(root, [card])
+            self.assertEqual(first["state"], "blocked")
+            self.assertEqual(first["result"]["blocker"], "diagnostic_pipeline_unavailable")   # no pipeline, no model route: said exactly
+            again = self.tick(root, [card])
+            self.assertTrue(again["duplicate"])                                              # one cycle per lineage, whatever the restarts
+            status = self.adapter(root).recovery_status()
+            self.assertEqual([c["state"] for c in status["cycles"]], ["blocked"])
+
+    def test_a_healing_case_that_gave_up_counts_as_exhausted_ordinary_recovery(self):
+        import bt_recovery_runtime
+        import bt_scheduler_healing as healing
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            healing.save(root, {"actions": 3, "cases": {"abc": {"id": "abc", "task": "T4", "class": "integration_defect",
+                                                                   "status": "exhausted", "applied": 3, "history": []}}})
+            with patch("bt_scheduler_decisions.open_requests", return_value=[]):
+                found = bt_recovery_runtime.sources(root, "run-1")
+            self.assertIs(found["ordinary_exhausted"], True)
+            self.assertIn("T4:integration_defect:abc", found["audit_lineage"])
+            self.assertIsNone(found["planner_route"])                                        # nothing is invented
+            self.assertIs(found["evidence_available"], False)

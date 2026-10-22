@@ -229,13 +229,15 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 integrate.attach_line(line)
                 integrate.recompute_line()
         if recovery_store_path is not None:
+            import bt_recovery_runtime
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
                                              default_repository=default_repository,
                                              snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                                              run_dir=rdir, integrator=integrate)
             wiring.recovery = RecoveryAdapter(
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
-                describe=continuation.describe, policy=recovery_policy, rdir=rdir)
+                describe=continuation.describe, policy=recovery_policy, rdir=rdir,
+                recovery_sources=lambda: bt_recovery_runtime.sources(rdir, api.run_identity(scheduler)))
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
             if integrate is not None:
