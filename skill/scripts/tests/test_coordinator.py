@@ -185,10 +185,21 @@ class Prepare(unittest.TestCase):
             subprocess.run(["git", "-C", str(repo), "add", "app.txt"], check=True)
             subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"], check=True)
             sha = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
-            root = coord.prepare(repo, sha, work, env)
+            voice = Path(base) / "voice.wav"
+            voice.write_bytes(b"RIFF")
+            root = coord.prepare(repo, sha, work, env, {".e2e/voice.wav": str(voice)})
+            self.assertEqual((root / ".e2e" / "voice.wav").read_bytes(), b"RIFF")
             self.assertEqual((root / "app.txt").read_text(), "v1")
             self.assertEqual((root / ".env.local").read_text(), "KEY=secret-value\n")
             self.assertEqual(oct((root / ".env.local").stat().st_mode & 0o777), "0o600")
             modules = root / "node_modules"
             self.assertTrue(modules.is_dir() and not modules.is_symlink())
             self.assertEqual((modules / "dep" / "index.js").stat().st_ino, (repo / "node_modules" / "dep" / "index.js").stat().st_ino)
+
+
+class ExtraFiles(unittest.TestCase):
+    def test_only_relative_destinations_inside_the_tree_are_taken(self):
+        files = {"pictures": {".e2e/voice.wav": "/a/voice.wav", "/etc/passwd": "/a/x", "../out": "/a/y"}}
+        with patch.object(bt_config, "get", side_effect=lambda key, default=None: files if key == "coordinator.files" else default):
+            self.assertEqual(coord.extra_files("pictures"), {".e2e/voice.wav": "/a/voice.wav"})
+            self.assertEqual(coord.extra_files("other"), {})

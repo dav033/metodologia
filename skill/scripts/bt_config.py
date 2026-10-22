@@ -36,6 +36,7 @@ DEFAULTS: dict = {
     # key; `{project}` in the path is replaced by the project name); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
     # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
     # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
+    "analyst": {"auto": True},
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
@@ -98,7 +99,7 @@ DEFAULTS: dict = {
     "planner": {"require_mapped_checks": False},
     # coordinator (P-157): the projects whose manual LIVE checks («Coordinator runs `cmd` with .env.local») the scheduler runs itself
     # and attests; each one is the owner's explicit authorization (it uses that project's credentials and real services)
-    "coordinator": {"projects": [], "command_seconds": 1800},
+    "coordinator": {"projects": [], "command_seconds": 1800, "files": {}},
     # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
     # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
     # model_diagnosis (REQ-029 R3/R4): a stop the rules cannot repair (or place) is answered with the diagnosing model's validated option,

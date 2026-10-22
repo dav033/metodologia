@@ -87,7 +87,18 @@ def redact(text: str, secrets: list[str]) -> str:
     return text
 
 
-def prepare(repository: Path, snapshot: str, work: Path, env_file: Path) -> Path:
+def extra_files(project: str) -> dict[str, str]:
+    """`coordinator.files.<project>`: {path inside the tree: file on this machine} for fixtures a live command needs and the repository
+    does not carry (a recorded voice for the voice check). Relative destinations only: nothing is written outside the tree."""
+    import bt_config
+
+    configured = bt_config.get("coordinator.files", {})
+    files = configured.get(project, {}) if isinstance(configured, dict) else {}
+    return {str(dest): str(src) for dest, src in files.items()
+            if isinstance(files, dict) and not Path(str(dest)).is_absolute() and ".." not in Path(str(dest)).parts}
+
+
+def prepare(repository: Path, snapshot: str, work: Path, env_file: Path, files: dict[str, str] | None = None) -> Path:
     """The attempt's snapshot as a plain tree with the project's env file and node_modules (nothing of the checkout is touched)."""
     root = work / "tree"
     root.mkdir()
@@ -99,6 +110,10 @@ def prepare(repository: Path, snapshot: str, work: Path, env_file: Path) -> Path
         raise RuntimeError(f"tar: {unpacked.stderr.decode('utf-8', 'replace')[:160]}")
     shutil.copyfile(env_file, root / ".env.local")
     os.chmod(root / ".env.local", 0o600)
+    for dest, source in (files or {}).items():
+        target = root / dest
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
     modules = repository / "node_modules"
     if modules.is_dir() and not (root / "node_modules").exists():
         # A hard-linked copy, not a symlink: Next/Turbopack refuses a node_modules that points out of the project root. The links share
@@ -172,7 +187,7 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     scratch = Path.home() / ".cache" / "bt-coordinator"         # on the checkout's filesystem (not /tmp) so node_modules can be hard-linked
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="run-", dir=scratch) as work:
-        root = prepare(repository, snapshot, Path(work), env_file)
+        root = prepare(repository, snapshot, Path(work), env_file, extra_files(project))
         for command in commands:
             result = run(command, root, limit, secrets)
             results.append(result)
