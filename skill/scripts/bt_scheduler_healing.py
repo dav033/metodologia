@@ -166,7 +166,12 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
         analysis = analyst_case(rdir, request) if case is None else None
         if analysis is not None:
             case = analysis
-            context = {**context, "analysis": _analysis_text(rdir, request["task"])}
+        if case is not None:
+            # a repair built from the rules' reading alone is blind to what the analyst found (REQ-020 T14.3a: a generic repair, and the
+            # live check failed the same way): whatever places the stop, the finished analysis rides along in the repair's objective
+            text = _analysis_text(rdir, request["task"])
+            if text:
+                context = {**context, "analysis": text}
         if case is None and model_enabled() and model_eligible(request):
             case = classify_mod.unplaced(request, verify=context.get("verify", ""), failures=context.get("failures", ()))
         if case is None or _too_fresh(case, request, doc, now()):

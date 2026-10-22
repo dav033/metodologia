@@ -130,6 +130,16 @@ class Cycle(unittest.TestCase):
                              revise=lambda why: self.revisions.append(why) or ["rebased"],
                              notify=lambda title, text: self.notes.append(text), **over)
 
+    def test_a_finished_analysis_rides_along_whatever_places_the_stop(self):
+        import bt_attempt_analyst as analyst
+
+        analyst._save(self.rdir, "T7", {"state": "done", "failures": 6, "not_the_task": True, "confidence": "alta",
+                                        "cause": "the client concatenates functionCall parts", "solution": "1. read the parts"})
+        seen = []
+        with patch.object(healing, "_repair", side_effect=lambda *a: seen.append(a[5]) or {"repair": "none", "result": "pending"}):
+            self.run_cycle([request()])                                                      # placed by the rules (transient), not by the analyst
+        self.assertIn("the client concatenates functionCall parts", seen[0]["analysis"])
+
     def test_a_transient_stop_is_retried_once_per_signature_budget_and_recorded(self):
         self.assertEqual(self.run_cycle([request()]), 1)
         self.assertEqual([a[:2] for a in self.answers], [("T7:3", "retry")])
