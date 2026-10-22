@@ -135,10 +135,8 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     import bt_config
     import bt_interventions
     import bt_recovery_export as export
-    import bt_run_stores
     import bt_scheduler_decisions as decisions
     import bt_scheduler_ops as ops
-    from bt_scheduler_quality.store import QualityStore
 
     if not authorized(project):
         raise ops.core.SchedulerError("NOT_ALLOWED", f"the owner has not authorized the coordinator for {project} (config coordinator.projects)")
@@ -152,11 +150,7 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
         commands += [c for c in found if c not in commands]
     if not commands:
         return [f"{task} has no manual check"]
-    store = QualityStore(bt_run_stores.paths(rdir)["m6"])
-    try:
-        attempts = store.open_review_attempts(task)
-    finally:
-        store.close()
+    attempts = ops.review_attempts(rdir, task)
     if len(attempts) != 1:
         return [f"{task}: no single verification is waiting for evidence ({len(attempts)} found)"]
     attempt = attempts[0]

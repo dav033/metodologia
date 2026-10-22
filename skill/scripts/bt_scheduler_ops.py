@@ -517,6 +517,30 @@ def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wa
         time.sleep(2)
 
 
+def review_attempts(rdir: Path, task: str) -> tuple[str, ...]:
+    """The attempts whose open reviews wait for `task`'s manual evidence. The M6 store belongs to the owner while it is alive (the
+    verification that waits for evidence keeps it so), so then the read goes through the decision cards, which open it read-only."""
+    import bt_run_stores
+    from bt_scheduler_quality.store import QualityError, QualityStore
+
+    try:
+        probe = QualityStore(bt_run_stores.paths(rdir)["m6"])
+    except QualityError as error:
+        if error.code != "STORE_IN_USE":
+            raise
+        import bt_scheduler_decisions as decisions
+
+        found: list[str] = []
+        for request in decisions.open_requests(rdir):
+            if request.get("source") == "review" and request.get("task") == task and request.get("attempt") not in found:
+                found.append(request["attempt"])
+        return tuple(a for a in found if a)
+    try:
+        return probe.open_review_attempts(task)
+    finally:
+        probe.close()
+
+
 def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: str, by: str = "coordinator") -> list[str]:
     """Leave the coordinator's receipt for the manual check(s) of `task` (`which`: a purpose text or 1-based index; empty =
     every manual check of the task) and send the task's open review back to the verifier, which then finds the receipt."""
@@ -540,11 +564,7 @@ def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: 
     attempts: tuple[str, ...] = ("",)
     if bt_config.get("gates.attestation_bind_attempt", True) is True:
         # the receipt covers the attempt being verified: a redone task has to be attested again (REQ-029 A11)
-        probe = QualityStore(bt_run_stores.paths(rdir)["m6"])
-        try:
-            attempts = probe.open_review_attempts(task)
-        finally:
-            probe.close()
+        attempts = review_attempts(rdir, task)
         if not attempts:
             raise core.SchedulerError("NOT_ALLOWED", f"{task} has no verification waiting for evidence: a receipt covers the attempt "
                                       "being verified, so attest once the verifier asks")

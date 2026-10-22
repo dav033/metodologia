@@ -258,3 +258,26 @@ class AgentKill(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReviewAttempts(unittest.TestCase):
+    """The attempts a review waits on are readable while the owner holds the M6 store (the coordinator runs then)."""
+
+    def test_a_store_in_use_falls_back_to_the_decision_cards_read_only(self):
+        import bt_scheduler_decisions as decisions
+        from bt_scheduler_quality.contracts import QualityError
+
+        cards = [{"source": "review", "task": "T9", "attempt": "att-7"}, {"source": "review", "task": "T9", "attempt": "att-7"},
+                 {"source": "review", "task": "T1", "attempt": "att-2"}, {"source": "blocked", "task": "T9", "attempt": "att-9"}]
+        with patch("bt_scheduler_quality.store.QualityStore", side_effect=QualityError("STORE_IN_USE", "another M6 process owns this store")), \
+                patch.object(decisions, "open_requests", return_value=cards), \
+                patch("bt_run_stores.paths", return_value={"m6": "x"}):
+            self.assertEqual(ops.review_attempts(Path("/nowhere"), "T9"), ("att-7",))
+
+    def test_any_other_store_error_is_not_swallowed(self):
+        from bt_scheduler_quality.contracts import QualityError
+
+        with patch("bt_scheduler_quality.store.QualityStore", side_effect=QualityError("STORE_CORRUPT", "damaged")), \
+                patch("bt_run_stores.paths", return_value={"m6": "x"}):
+            with self.assertRaises(QualityError):
+                ops.review_attempts(Path("/nowhere"), "T9")
