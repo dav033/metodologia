@@ -138,6 +138,34 @@ class Cycle(unittest.TestCase):
             self.assertEqual(self.run_cycle(many), 1)                                        # only one action left in the budget
             self.assertEqual(self.run_cycle(many), 0)
 
+    def test_an_audit_that_would_send_back_accepted_tasks_gets_one_more_remediation_round_once(self):
+        import bt_remediation
+        self.verify = "audit gate: 11 open blocking finding(s): F3 (high), F4 (high)"
+        card = request(task="T8", id="T8:3", reason="rework_impact", error=self.verify)
+        self.doc["tasks"]["T8"] = {"state": "blocked", "attempts": ["att-9"]}
+        self.assertEqual(self.run_cycle([card]), 1)
+        self.assertEqual(self.answers[0][:2], ("T8:3", "retry"))
+        self.assertEqual(bt_remediation.extra_rounds(self.rdir, "T8"), 1)
+        self.assertFalse(bt_remediation.grant_round(self.rdir, "T8"))                         # one extra round per audit, no more
+        self.assertEqual(self.run_cycle([card]), 0)                                          # it came back: the owner decides now
+
+    def test_a_full_verifier_workspace_gets_a_bigger_one_but_a_full_disk_is_left_alone(self):
+        import bt_config
+        self.verify = "next build: ENOSPC: no space left on device, write"
+        card = request(diagnosis={"kind": "environment"})
+        changed = {}
+        with patch.object(bt_config, "set_value", lambda key, value: changed.__setitem__(key, value)), \
+                patch.object(bt_config, "get", lambda key, default=None: 2048 if key == "verifier.max_workspace_mb" else default), \
+                patch("shutil.disk_usage", return_value=SimpleNamespace(free=50 << 30)):
+            self.assertEqual(self.run_cycle([card]), 1)
+        self.assertEqual(changed, {"verifier.max_workspace_mb": 4096})
+        self.assertEqual(self.answers[-1][1], "retry")
+        again = request(id="T9:1", task="T9", attempt="a9", diagnosis={"kind": "environment"})
+        self.doc["tasks"]["T9"] = {"state": "blocked", "attempts": ["a9"]}
+        self.doc["attempts"]["a9"] = {"updated_at": NOW - 3600}
+        with patch("shutil.disk_usage", return_value=SimpleNamespace(free=1 << 30)):         # the host itself is full
+            self.assertEqual(self.run_cycle([again]), 0)
+
     def test_nothing_is_repaired_while_an_operator_move_holds_the_run(self):
         import bt_scheduler_ops as ops
         ops.hold_path(self.rdir).parent.mkdir(parents=True, exist_ok=True)

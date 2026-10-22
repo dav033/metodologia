@@ -80,6 +80,32 @@ def history(rdir: Path) -> list[dict]:
     return out
 
 
+EXTRA = "RUN.remediation.extra.json"
+
+
+def extra_rounds(rdir: Path, audit: str) -> int:
+    """Rounds beyond `gates.remediation_rounds` the self-healing granted this audit (one per audit, REQ-030): an audit that
+    still finds problems after its rounds gets one more instead of sending 20 accepted tasks back."""
+    try:
+        return int(json.loads((Path(rdir) / EXTRA).read_text(encoding="utf-8")).get(audit, 0))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return 0
+
+
+def grant_round(rdir: Path, audit: str, limit: int = 1) -> bool:
+    """One more round for `audit`, at most `limit` in all; False when it already has them."""
+    if extra_rounds(rdir, audit) >= limit:
+        return False
+    path = Path(rdir) / EXTRA
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    data[audit] = extra_rounds(rdir, audit) + 1
+    path.write_text(json.dumps(data, sort_keys=True) + "\n", encoding="utf-8")
+    return True
+
+
 def rounds_used(rdir: Path, audit: str) -> int:
     return sum(1 for row in history(rdir) if row.get("audit") == audit)
 
@@ -291,7 +317,7 @@ def hook(rdir: Path, policy):
     the owner will turn into a plan revision, False when the audit has no rounds left or a task cannot be built soundly
     (the gate then sends the named tasks back, as it always did)."""
     def remediate(audit: str, attempt: str, findings: list[dict]) -> bool:
-        if not getattr(policy, "remediate", False) or rounds_used(rdir, audit) >= getattr(policy, "remediation_rounds", 0):
+        if not getattr(policy, "remediate", False) or rounds_used(rdir, audit) >= getattr(policy, "remediation_rounds", 0) + extra_rounds(rdir, audit):
             return False
         plan = latest_plan(rdir)
         if plan is None or build_revision(plan, audit, findings, round_no=rounds_used(rdir, audit) + 1,

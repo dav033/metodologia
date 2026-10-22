@@ -1102,9 +1102,9 @@
     }
    },
    "expect": {
-    "auto": false,
-    "class": null,
-    "repair": "none"
+    "auto": true,
+    "class": "regression",
+    "repair": "one more remediation round"
    },
    "id": "S10",
    "kind": "stop",
@@ -1163,9 +1163,9 @@
     }
    },
    "expect": {
-    "auto": false,
+    "auto": true,
     "class": "environment",
-    "repair": "none"
+    "repair": "verifier.max_workspace_mb"
    },
    "id": "S11",
    "kind": "stop",

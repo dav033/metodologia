@@ -131,6 +131,9 @@ def classify(request: dict, *, verify: str = "", failures=(), plan=None, doc: di
         return case("environment", f"environment signature: {(hit.group(0) if hit else diagnosis.get('headline', ''))[:120]}")
     if QUOTA.search(error) or reason.endswith(("quota_reset_unknown", "wait_limit", "wait_window_exceeded")):
         return case("quota", f"quota signature in the last error: {_first(QUOTA, error) or reason}", decisive=error)
+    if "audit gate:" in text and reason.endswith(("rework_impact", "rework_limit")):
+        return case("regression", "the independent audit still finds blocking problems after its remediation rounds and would "
+                    "send back accepted tasks", decisive="audit gate " + task)
     failing = failing_tests(text)
     if failing:
         owners = owners_of(failing, plan, doc, task)

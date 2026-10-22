@@ -215,7 +215,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   safe repair of its class: retry (`transient`, `quota`), redo the task built on a stale result (`integration_defect`), retry with the
   note the diagnosis wrote plus the evidence (`environment`), accept when every criterion passed and only an extra check is unmapped
   or give a check the exact text of its criterion in a new plan revision (`criterion_unmapped`), insert a repair task BEFORE a task
-  that can only execute and record, built from the failing evidence (`regression`, `plan_defect`). A case is its signature, so a
+  that can only execute and record, built from the failing evidence (`regression`, `plan_defect`); an audit that still finds blocking problems after its `remediation_rounds` gets ONE extra round (`RUN.remediation.extra.json`) instead of a rework of accepted tasks; a full verifier workspace (ENOSPC while the host has >5 GiB free) doubles `verifier.max_workspace_mb` up to 8192 and retries (a full host disk is never touched). A case is its signature, so a
   restart never repeats a repair, and one that comes back after its repair is `exhausted` (the owner is notified, never the same
   strategy twice); `healing.max_per_task` and `healing.max_actions` bound it, `PER_CYCLE` bounds one pass. State and history are in
   `RUN.healing.json`, every intervention (automatic or by hand) in `RUN.interventions.jsonl` (`bt_interventions`).
@@ -227,7 +227,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   costs none, and are recorded for `--revert`. `bt_recovery_benchmark` runs twelve stops of the REQ-020 / REQ-029 night through the
   current code (`tests/fixtures/recovery-scenarios-v1.json`); its results per version are in `recovery-benchmark-results.json` and
   a test fails when a version is worse than the previous one (v0, the night: 10 human interventions, 1,086 minutes waiting;
-  v1: 2 interventions, 76 minutes);
+  v1: 2 interventions, 76 minutes; v2: 0 interventions, 8 minutes);
 - **remediation** (`gates.audit_remediation`, default on; REQ-028, `bt_remediation`): a rejected audit does not reopen the tasks its blocking findings name. The gate records the findings (`RUN.remediation.json`), the owner exits, and the watcher turns them into the next plan revision: remediation tasks (`T18.1`, `T18.2`, ...; `T18.1b` for a second auditor) are appended on the tree the run already integrated, findings that share a task or overlapping paths are grouped and chained (up to 4 per task), independent groups run side by side, each finding is checked by the command of the task that owns it, and the audit is moved after them. The run is rebased (accepted work is kept) and the audit runs again from scratch. Each finding is still charged to the tasks that own it in the attempt log. An audit gets `gates.remediation_rounds` (default 2) rounds; with none left, or when a task cannot be built soundly (a finding names no task of the plan with a command), the named tasks are sent back as before. `scheduler-op REQ remediate` applies a pending request by hand. A task that is accepted clears the notes earlier rounds left for it;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
   reset); the redo must prove each fix with a test over the real entry point;

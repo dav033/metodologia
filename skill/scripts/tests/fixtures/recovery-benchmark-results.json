@@ -15,6 +15,13 @@
    "human_interventions": 2,
    "minutes_to_recovery": 76.3,
    "scenarios": 12
+  },
+  "v2": {
+   "as_expected": 12,
+   "classified": 12,
+   "human_interventions": 0,
+   "minutes_to_recovery": 7.8,
+   "scenarios": 12
   }
  }
 }
