@@ -59,7 +59,7 @@ class Req020Replica(Base):
         tree = integrator.base_ref("T14")
         for name in ("src/voice.ts", "src/directions.ts", "src/packages.ts", "README.md"):
             self.assertTrue(has(self.app, tree, name), name)
-        self.assertEqual([(kind, f["result"]) for kind, f in events], [("files_lost", "fixed")])
+        self.assertEqual([(kind, f["result"]) for kind, f in events], [("integration_defect", "fixed")])
         self.assertIn("T12: src/directions.ts", events[0][1]["evidence"])
         self.assertEqual(integrator.base_ref("T14"), tree)                        # stable on a retry, no second repair event
         self.assertEqual(len(events), 1)
@@ -91,7 +91,7 @@ class OnTheLine(Base):
         tree = integrator.base_ref("T14")
         for name in ("src/directions.ts", "src/packages.ts"):
             self.assertTrue(has(self.app, tree, name), name)
-        self.assertEqual(events, [("files_lost", "fixed")])
+        self.assertEqual(events, [("integration_defect", "fixed")])
 
 
     def test_a_retry_that_continued_from_a_rejected_snapshot_applies_on_a_tip_that_never_held_it(self):

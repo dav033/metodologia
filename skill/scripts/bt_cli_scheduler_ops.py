@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "heal", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -19,7 +19,8 @@ def register(subparsers) -> None:
     op.add_argument("target", nargs="?", default="",
                     help="attempt id for cancel-attempt, task id for reopen and retry, comma-separated task ids for rework "
                          "(they and everything downstream go back to be redone; with --only just them) and withdraw-rework "
-                         "(take the rework back for tasks that redid nothing), task id for attest (--reason is the evidence: what you did and saw; "
+                         "(take the rework back for tasks that redid nothing), status|stop|start|run|revert for heal (self-healing of the run; revert takes "
+                         "the case id as the second argument), task id for attest (--reason is the evidence: what you did and saw; "
                          "the optional second argument picks one manual check by purpose text or number), request id for decide and diagnose (diagnose: a cheap model reads why it stopped, config diagnosis.*)")
     op.add_argument("option", nargs="?", default="",
                     help="the option to take, for decide; the accepted attempt to continue from, for continue-from")
@@ -29,6 +30,35 @@ def register(subparsers) -> None:
                     help="rework and revise: go ahead although it would throw away more accepted tasks than gates.rework_confirm_over")
     op.add_argument("--only", action="store_true",
                     help="rework: send back only the tasks named, not what depends on them")
+
+
+def _heal(project: str, args: argparse.Namespace, rdir) -> int:
+    """`scheduler-op REQ heal [status|stop|start|run|revert CASE]`: the owner's hand on the self-healing of one run."""
+    import bt_scheduler_healing as healing
+
+    what = args.target or "status"
+    if what == "status":
+        print(json.dumps(healing.status(rdir), indent=1, ensure_ascii=False))
+    elif what == "stop":
+        print(healing.stop(rdir))
+    elif what == "start":
+        print(healing.start(rdir))
+    elif what == "run":
+        print(f"healing cycle: {healing.cycle(project, args.req, rdir, log=print)} repair(s)")
+    elif what == "revert":
+        if not args.option:
+            print("heal revert needs a case id: scheduler-op REQ heal revert <case> (see `heal status`)")
+            return 2
+        try:
+            for line in healing.revert(project, args.req, rdir, args.option):
+                print(line)
+        except (ValueError, adapter.core.SchedulerError) as exc:
+            print(exc)
+            return 2
+    else:
+        print("heal takes status, stop, start, run or revert <case>")
+        return 2
+    return 0
 
 
 def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
@@ -75,6 +105,8 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
     if args.action == "resume":
         print(ops.resume(project, args.req, rdir))
         return 0
+    if args.action == "heal":
+        return _heal(project, args, rdir)
     if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest"} and not args.target:
         print(f"{args.action} needs a target (attempt id, or task id(s) for reopen, retry and rework)")
         return 2
@@ -96,6 +128,11 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         for line in ops.apply(project, args.req, rdir, args.action, args.target, args.reason, keep_held=args.hold,
                            only=args.only, option=args.option, confirm=args.confirm):
             print(line)
+        if args.action in {"cancel-attempt", "reopen", "rework", "withdraw-rework", "continue-from", "revise", "remediate"}:
+            import bt_interventions
+            bt_interventions.record(rdir, kind="unknown", source="manual", task=args.target, evidence=args.reason,
+                                    repair=f"scheduler-op {args.action} {args.target}".strip(), result="fixed",
+                                    run=f"{project}-{args.req}")
     except adapter.core.SchedulerError as exc:
         print(f"{exc.code}: {exc}")
         ops.resume(project, args.req, rdir) if not args.hold else None

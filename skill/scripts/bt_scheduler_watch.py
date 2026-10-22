@@ -54,6 +54,16 @@ class Watch:
         self.backoff = BACKOFF_START
         self.low_disk_notified = False
 
+    @staticmethod
+    def _min_free() -> int:
+        import bt_config
+
+        try:
+            mb = bt_config.get("scheduler.min_free_mb", MIN_FREE_BYTES >> 20)
+        except (KeyError, TypeError):
+            return MIN_FREE_BYTES
+        return mb << 20 if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 0 else MIN_FREE_BYTES
+
     def _spawn(self, resume: bool) -> "subprocess.Popen":
         cli = Path(__file__).with_name("bitacora.py")
         argv = [sys.executable, str(cli), "--project", self.project, "scheduler-run", self.req]
@@ -94,10 +104,11 @@ class Watch:
                 continue
             if self._remediate() or self.heal():
                 continue
-            if self.free_bytes() < MIN_FREE_BYTES:
+            if self.free_bytes() < self._min_free():
                 if not self.low_disk_notified:
                     self.low_disk_notified = True
-                    self.log("disk almost full: waiting before restarting the owner")
+                    self.log(f"disk almost full: {self.free_bytes() >> 20} MiB free under {self.rdir} and the owner needs "
+                             f"{self._min_free() >> 20} MiB (config scheduler.min_free_mb): waiting before restarting it")
                     self.notify(f"Bitácora · {self.req}", "Disco casi lleno: el scheduler no se reinicia hasta liberar espacio.")
                 self.sleep(60.0)
                 continue
@@ -147,6 +158,18 @@ class Watch:
         return True
 
     def _heal(self) -> bool:
+        """The self-healing cycle first (`bt_scheduler_healing`: diagnose each open stop in a closed taxonomy and apply the
+        smallest safe repair, bounded and recorded); then the older clash answer below, which it supersedes when on."""
+        import bt_scheduler_healing
+
+        try:
+            if bt_scheduler_healing.cycle(self.project, self.req, self.rdir, log=self.log, notify=self.notify):
+                return True
+        except Exception as error:  # noqa: BLE001 - healing is an extra: a failure in it never stops the watch
+            self.log(f"healing failed ({type(error).__name__}: {error})")
+        return self._heal_conflicts()
+
+    def _heal_conflicts(self) -> bool:
         """A stop whose diagnosis is a plain integration clash is answered by the scheduler itself: redo the task that
         was built on a stale result, as the card's recommended option does. It used to wait for a person (REQ-027 asked
         24 such cards); `HEAL_LIMIT` automatic answers per task keep a loop from running unnoticed, after which the card
@@ -174,6 +197,10 @@ class Watch:
                 continue
             for line in lines:
                 self.log(f"automatic: {line}")
+            import bt_interventions
+            bt_interventions.record(self.rdir, kind="integration_defect", source="auto", task=request["task"],
+                                    evidence=str(diagnosis.get("headline") or "integration clash"),
+                                    repair="redo the task built on the stale result", result="fixed", run=f"{self.project}-{self.req}")
             return True
         return False
 

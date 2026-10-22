@@ -39,7 +39,10 @@ DEFAULTS: dict = {
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
-                 "rerun_failed_checks": 1},
+                 "rerun_failed_checks": 1,
+                 # the verifier's private workspace (a tmpfs the checked tree and its build output share); a build that needs
+                 # more says "No space left on device" and the card names this key
+                 "max_workspace_mb": 2048},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start
@@ -83,12 +86,16 @@ DEFAULTS: dict = {
               "rebase_cascade": "content"},   # a plan with an audit also needs an independent cross-check audit
     # max_turns: turns one Claude attempt may use under the Scheduler (the legacy marathon keeps 45); an attempt that uses
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
+    # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
+    # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
+    "healing": {"enabled": True, "max_per_task": 2, "max_actions": 40},
     # exclusive_scopes: plan `scope` values whose tasks run alone in their repository. Empty since REQ-030: what keeps two
     # tasks apart is the overlap of their declared `expected_paths` / `shared_resources` (and a task that declares neither
     # is serialised anyway), not how big the task is. REQ-020 and REQ-029 ran ~1x serial because nearly every task is
     # `large_change` or `full_feature`. Put the old list back (["large_change", "full_feature", "full_system"]) to restore it.
+    # min_free_mb: the watchdog does not restart a run's owner below this much free disk (it says how much is free and where)
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120, "max_turns": 120,
-                  "exclusive_scopes": []},
+                  "exclusive_scopes": [], "min_free_mb": 1024},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

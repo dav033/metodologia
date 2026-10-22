@@ -156,6 +156,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         import bt_config
 
         configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
+        mb = bt_config.get("verifier.max_workspace_mb", 2048)
+        if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 64:
+            configured["max_workspace_bytes"] = mb << 20
         rerun = bt_config.get("verifier.rerun_failed_checks", 1)
         if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
             configured["rerun_failed_checks"] = rerun

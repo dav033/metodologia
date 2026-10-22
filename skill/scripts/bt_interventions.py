@@ -21,7 +21,7 @@ from typing import Any
 FILE = "RUN.interventions.jsonl"
 # The closed taxonomy of failures a run can hit (REQ-030 step 5). Anything the diagnosis cannot place is `unknown`.
 CLASSES = ("plan_defect", "integration_defect", "regression", "environment", "criterion_unmapped", "quota", "transient",
-           "files_lost", "unknown")
+           "unknown")
 SOURCES = ("auto", "manual")
 RESULTS = ("fixed", "failed", "pending")
 MAX_TEXT = 600

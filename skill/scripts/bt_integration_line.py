@@ -183,7 +183,7 @@ class Line:
             return
         self._announced.add(key)
         try:
-            self.on_event("files_lost", task=next(iter(report.files()), ""),
+            self.on_event("integration_defect", task=next(iter(report.files()), ""),
                           evidence=f"the integration line lost files of accepted tasks: {report.describe()}",
                           repair="restored from the owners' snapshots" if result == "fixed" else "could not restore", result=result)
         except Exception:  # noqa: BLE001 - a listener never stops the line

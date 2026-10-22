@@ -437,6 +437,13 @@ def evidence(rdir: Path, request: dict) -> str:
 def _record(rdir: Path, request: dict, option: str, by: str, reason: str, result: list[str]) -> None:
     line = {"request": request["id"], "task": request["task"], "option": option, "by": by, "reason": reason,
             "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "result": result}
+    if by != "scheduler":          # what the scheduler answers itself is recorded by the healing cycle, with its class
+        import bt_healing_classify
+        import bt_interventions
+
+        bt_interventions.record(rdir, kind=bt_healing_classify.class_of_diagnosis(request.get("diagnosis")), source="manual",
+                                task=request["task"], evidence=str(request.get("title") or request.get("what") or ""),
+                                repair=f"{option}: {reason[:300]}", result="fixed", request=request["id"])
     with answers_path(rdir).open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(line, ensure_ascii=False) + "\n")
 

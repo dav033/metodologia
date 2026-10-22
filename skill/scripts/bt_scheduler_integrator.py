@@ -459,9 +459,9 @@ class PredecessorIntegrator:
         fixed = invariant.restore(_git, repo, merged, items, report)
         again = invariant.check(_git, repo, fixed, items, self._declared, self.ancestors) if fixed else report
         if not fixed or not again.ok:
-            self._announce("files_lost", task_id, report, "failed")
+            self._announce("integration_defect", task_id, report, "failed")
             raise IntegrationError("INTEGRATION_FILES_LOST", f"{task_id}: {report.describe()}"[:170])
-        self._announce("files_lost", task_id, report, "fixed")
+        self._announce("integration_defect", task_id, report, "fixed")
         return _git(repo, "commit-tree", "--no-gpg-sign", fixed, "-p", merged, "-m",
                     f"m3 integration repair for {task_id}: restored {report.describe(3)}"[:200]).stdout.strip()
 
