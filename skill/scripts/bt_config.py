@@ -39,7 +39,10 @@ DEFAULTS: dict = {
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
-                 "rerun_failed_checks": 1},
+                 "rerun_failed_checks": 1,
+                 # the verifier's private workspace (a tmpfs the checked tree and its build output share); a build that needs
+                 # more says "No space left on device" and the card names this key
+                 "max_workspace_mb": 2048},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start
@@ -51,8 +54,14 @@ DEFAULTS: dict = {
               # held to `max_reworks`); past this the clash is rejected on the task that caused it
               "integration_rework_limit": 6,
               # REQ-028: one integration line per run (refs/m3/line/...) holds the integrated tree; new attempts start from
-              # it and acceptance applies the candidate to it. Off = the predecessor merge of snapshots, as before
-              "integration_line": False,
+              # it and acceptance applies the candidate to it (on by default since REQ-030: the predecessor merge lost
+              # files of parallel branches). Off = the predecessor merge of snapshots, as before
+              "integration_line": True,
+              # a run that began without the line moves onto it when it can hold every accepted task cleanly; else it
+              # stays as it was and RUN.integration-line.skipped says why
+              "integration_line_migrate": True,
+              # every integrated tree is checked: no file of an accepted task is missing from it (bt_integration_invariant)
+              "integration_check_files": True,
               # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)
@@ -62,15 +71,31 @@ DEFAULTS: dict = {
               # tasks are sent back as before
               "audit_remediation": True, "remediation_rounds": 2,
               # remediation tasks of one round run one after another (False) or side by side when their findings sit in
-              # different components (True); side by side they kept sending each other back over shared files
-              "remediation_parallel": False,
+              # different components (True, the default since REQ-030: components share no task, path or resource, the
+              # core keeps any two that claim the same surface apart, and the integration invariant protects the rest)
+              "remediation_parallel": True,
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
-              "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit
+              "attribute_max_tasks": 3,
+              # an action that would send back more ACCEPTED tasks than this (an audit rejection, `scheduler-op rework`,
+              # `scheduler-op revise`) needs the owner's confirmation (`--confirm`) and says what it costs; 0 = no ceiling
+              "rework_confirm_over": 3,
+              # `scheduler-op revise` onto a new plan revision: "content" keeps every accepted task whose own content did not
+              # change (what depends on a redone task is merged with the redo, like `rework_scope: named`; checks and audits
+              # over redone work are redone); "downstream" resets everything that depended on a reset task
+              "rebase_cascade": "content"},   # a plan with an audit also needs an independent cross-check audit
     # max_turns: turns one Claude attempt may use under the Scheduler (the legacy marathon keeps 45); an attempt that uses
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
+    # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
+    # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
+    "healing": {"enabled": True, "max_per_task": 2, "max_actions": 40},
+    # exclusive_scopes: plan `scope` values whose tasks run alone in their repository. Empty since REQ-030: what keeps two
+    # tasks apart is the overlap of their declared `expected_paths` / `shared_resources` (and a task that declares neither
+    # is serialised anyway), not how big the task is. REQ-020 and REQ-029 ran ~1x serial because nearly every task is
+    # `large_change` or `full_feature`. Put the old list back (["large_change", "full_feature", "full_system"]) to restore it.
+    # min_free_mb: the watchdog does not restart a run's owner below this much free disk (it says how much is free and where)
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120, "max_turns": 120,
-                  "exclusive_scopes": ["large_change", "full_feature", "full_system"]},
+                  "exclusive_scopes": [], "min_free_mb": 1024},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),
@@ -78,6 +103,7 @@ ALLOWED: dict[str, tuple] = {
     "routing.quality_protection": ("critical", "always", "off"),
     "audit.mode": ("milestone", "off"),
     "gates.rework_scope": ("named", "downstream"),
+    "gates.rebase_cascade": ("content", "downstream"),
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),
 }

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import re
 
+import bt_healing_classify as taxonomy
+
 # kind -> (label shown on the chip, colour token of the web theme)
 KINDS = {
     "conflict": ("Conflicto entre tareas", "warn"),
@@ -20,6 +22,7 @@ KINDS = {
     "dependency": ("Dependencias", "info"),
     "code": ("Código", "bad"),
     "quota": ("Cuota del agente", "warn"),
+    "transient": ("Fallo pasajero", "info"),
     "cancelled": ("Cancelado", "muted"),
     "verifier": ("Verificador", "info"),
     "manual": ("Comprobación manual", "lav"),
@@ -168,7 +171,7 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
     if match:
         return _conflict(request, doc, plan, match, req)
     gate = AUDIT_GATE.search(last)
-    if gate and code.endswith("rework_limit"):
+    if gate and code.endswith(("rework_limit", "rework_impact")):
         return _findings(request, gate, refused or {}, req,
                          lineage_between(doc, plan, request["task"], [str(t) for t in (refused or {}).get("named") or []]))
     if "not a git repository" in text:
@@ -190,6 +193,15 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
                      note="The verification sandbox mounts node_modules read-only, so installing dependencies inside a "
                           "check fails with EROFS before any test runs. Do not install dependencies in tests or "
                           "verification commands; use the installed ones and run the checks again before finishing."), []
+    if re.search(r"ENOSPC|No space left on device|recovery_space_unavailable|workspace[^\n]{0,30}(?:limit|full|exceed)", text, re.I):
+        return _diag("environment", "Se acabó el espacio (disco o espacio de trabajo del verificador)",
+                     "Una comprobación o el propio run se quedó sin espacio: «No space left on device», o el espacio de "
+                     "trabajo privado del verificador (un tmpfs que comparten el árbol verificado y lo que construye) es "
+                     "más pequeño que lo que la tarea necesita. No es un fallo del código.",
+                     ["Mira el disco (`df -h`) y libera lo que sea tuyo; el sistema nunca borra archivos tuyos.",
+                      "Si es el espacio del verificador, sube `verifier.max_workspace_mb` (`bitacora.py config`) "
+                      "— hoy 2048 por defecto — y reintenta.",
+                      "Para el reinicio del run, `scheduler.min_free_mb` fija cuánto disco libre exige el vigilante."], "retry"), []
     module = MODULE.search(text)
     if module:
         name = module["name"] or module["py"]
@@ -221,7 +233,17 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
                      "no está levantado en esta máquina.",
                      [f"Levanta el servicio (por ejemplo `docker compose up -d` en el repositorio) y comprueba {where}.",
                       "Después pulsa «Reintentar»."], "retry"), []
-    if re.search(r"usage limit|rate.?limit|quota|429", text, re.I) or code.startswith("quota"):
+    recent = failures[-1] if failures else (verify or "")
+    transient = taxonomy.TRANSIENT.search(recent or text)
+    if transient and code not in ("quota_reset_unknown", "wait_limit"):
+        return _diag("transient", f"Fallo pasajero al arrancar o verificar ({transient.group(0)})",
+                     f"El último error es «{transient.group(0)}»: el intento no llegó a ejecutarse o el verificador no pudo "
+                     "comprobar nada. No es un fallo del código ni de la cuota; reintentar en un entorno sano suele bastar.",
+                     ["Reintenta (el sistema ya lo hace solo con un límite).",
+                      "Si vuelve a pasar, mira el log del verificador o la ruta de la tarea."], "retry"), []
+    # the quota rule reads the LAST real error only (REQ-029: an unclassified route was called "quota" because `429` and
+    # `quota` were somewhere in the whole bundle)
+    if taxonomy.QUOTA.search(recent or "") or code.startswith("quota"):
         return _diag("quota", "El agente se quedó sin cuota",
                      "La cuenta que ejecutaba la tarea llegó a su límite de uso. No es un fallo del código.",
                      ["Mira la cuota con `globalusage`.", "Reintenta cuando se renueve (el sistema elige otra cuenta si "

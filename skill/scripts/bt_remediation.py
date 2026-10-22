@@ -231,6 +231,13 @@ def _parallel() -> bool:
     return bt_config.get("gates.remediation_parallel", False) is True
 
 
+def parallel_for(rdir: Path) -> bool:
+    """Side-by-side remediation only on a run that integrates through the line (`RUN.integration-line`): on the predecessor
+    merge, remediation tasks of different components sent each other back over shared files (REQ-027 T18.2, D-114), and the
+    line is what makes a clash resolve on top of the current tip instead."""
+    return _parallel() and (Path(rdir) / "RUN.integration-line").exists()
+
+
 def build_revision(plan: dict, audit: str, findings: list[dict], *, round_no: int = 1,
                    parallel: bool | None = None) -> dict | None:
     """The next revision of `plan`: remediation tasks for `findings`, `audit` moved after them. None when a task cannot be
@@ -287,7 +294,8 @@ def hook(rdir: Path, policy):
         if not getattr(policy, "remediate", False) or rounds_used(rdir, audit) >= getattr(policy, "remediation_rounds", 0):
             return False
         plan = latest_plan(rdir)
-        if plan is None or build_revision(plan, audit, findings, round_no=rounds_used(rdir, audit) + 1) is None:
+        if plan is None or build_revision(plan, audit, findings, round_no=rounds_used(rdir, audit) + 1,
+                                          parallel=parallel_for(rdir)) is None:
             return False
         write_request(rdir, audit, attempt, findings)
         return True
@@ -307,7 +315,7 @@ def apply(rdir: Path) -> dict | None:
     plan = latest_plan(rdir)
     audit, findings = str(request["audit"]), list(request["findings"])
     round_no = rounds_used(rdir, audit) + 1
-    revised = build_revision(plan, audit, findings, round_no=round_no) if plan else None
+    revised = build_revision(plan, audit, findings, round_no=round_no, parallel=parallel_for(rdir)) if plan else None
     if revised is None:
         clear_request(rdir)
         return None

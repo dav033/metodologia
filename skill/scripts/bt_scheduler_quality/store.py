@@ -17,7 +17,7 @@ from typing import Any, Literal, Self
 
 from .contracts import QualityError, VerifyRequest
 from .evidence import canonical_json, finished_at
-from .recovery import retry_interrupted
+from .recovery import retry_attested, retry_interrupted
 
 _SCHEMA_VERSION = 1
 
@@ -338,6 +338,26 @@ class QualityStore:
         with self._transaction() as connection:
             retry_interrupted(connection, request_key, operator, reason)
 
+    def open_reviews_of(self, task_id: str) -> tuple[str, ...]:
+        """Request keys of the open reviews that belong to `task_id` (oldest first)."""
+        found = []
+        for review in self.list_reviews():
+            with self._lock:
+                row = self._connection.execute("SELECT request_json FROM requests WHERE idempotency_key = ?",
+                                               (review["request_key"],)).fetchone()
+            try:
+                if row and json.loads(row["request_json"]).get("task_id") == task_id:
+                    found.append(review["request_key"])
+            except ValueError:
+                continue
+        return tuple(found)
+
+    def retry_attested(self, request_key: str, operator: str, reason: str) -> None:
+        """Requeue one open review that only waited for manual evidence, now attested (see `recovery.retry_attested`)."""
+        _validate_operator(operator, reason, "FAIL")
+        with self._transaction() as connection:
+            retry_attested(connection, request_key, operator, reason)
+
     def resolve_review(
         self, request_key: str, operator: str, decision: str, reason: str
     ) -> str:
@@ -552,6 +572,33 @@ class QualityStore:
             ),
         )
 
+    def cached_pass(self, key: str, max_age: float, now: float) -> sqlite3.Row | None:
+        """A passing outcome stored under `key` no older than `max_age` seconds, else None."""
+        if max_age <= 0:
+            return None
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT exit_code, duration_ms, stdout, stderr, created_at FROM check_pass_cache WHERE key = ?",
+                (key,)).fetchone()
+        return row if row is not None and now - row["created_at"] <= max_age else None
+
+    def remember_pass(self, key: str, exit_code: int | None, duration_ms: int, stdout: bytes, stderr: bytes,
+                      now: float) -> None:
+        with self._lock, self._transaction() as connection:
+            connection.execute("INSERT OR REPLACE INTO check_pass_cache VALUES (?, ?, ?, ?, ?, ?)",
+                               (key, exit_code, duration_ms, stdout, stderr, now))
+            connection.execute("DELETE FROM check_pass_cache WHERE created_at < ?", (now - 7 * 86_400,))
+
+    def last_check_ms(self, command_key: str) -> int | None:
+        with self._lock:
+            row = self._connection.execute("SELECT last_ms FROM check_stats WHERE command_key = ?",
+                                           (command_key,)).fetchone()
+        return int(row["last_ms"]) if row else None
+
+    def record_check_ms(self, command_key: str, duration_ms: int, now: float) -> None:
+        with self._lock, self._transaction() as connection:
+            connection.execute("INSERT OR REPLACE INTO check_stats VALUES (?, ?, ?)", (command_key, int(duration_ms), now))
+
     def metrics(self) -> dict[str, Any]:
         with self._lock:
             state_rows = self._connection.execute(
@@ -660,6 +707,19 @@ CREATE TABLE IF NOT EXISTS verification_retries (
     reason TEXT NOT NULL,
     created_at TEXT NOT NULL,
     previous_result_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS check_pass_cache (
+    key TEXT PRIMARY KEY,
+    exit_code INTEGER,
+    duration_ms INTEGER NOT NULL,
+    stdout BLOB NOT NULL,
+    stderr BLOB NOT NULL,
+    created_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS check_stats (
+    command_key TEXT PRIMARY KEY,
+    last_ms INTEGER NOT NULL,
+    updated_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS outbox (
     request_key TEXT PRIMARY KEY REFERENCES requests(idempotency_key),

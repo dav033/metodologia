@@ -58,6 +58,7 @@ class QualityVerificationPort:
         unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
         revert_check: Callable[..., tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
+        attestations: Callable[..., str | None] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -84,7 +85,7 @@ class QualityVerificationPort:
             raise TypeError("M3 attempts root must be a configured filesystem path")
         self.attempts_root = Path(configured_attempts)
         self.engine = QualityEngine(
-            policy, store, reviewer=reviewer, runner=runner, resolver=snapshot_resolver
+            policy, store, reviewer=reviewer, runner=runner, resolver=snapshot_resolver, attestations=attestations
         )
         self._pool = ThreadPoolExecutor(
             max_workers=policy.max_concurrent, thread_name_prefix="m6-quality"
@@ -609,7 +610,10 @@ class QualityVerificationPort:
             )
             if gate is not None and gate.rework and not remediating:
                 ids, cascade = self._rework_plan(gate, order)
-                if not self.core.rework_problem(ids, (order.task_id,), cascade):
+                problem = self.core.rework_problem(ids, (order.task_id,), cascade)
+                if not problem or problem.startswith(("limit", "impact")):
+                    # also when the system will not send the tasks back by itself: the owner who decides to will find the
+                    # real text of each finding already written for the task, not only the reason he types
                     self._write_rework_notes(gate, order)
                 response, _moved = self.core.reject_and_rework(verdict, ids, "audit-gate", gate.summary(),
                                                                cascade=cascade)

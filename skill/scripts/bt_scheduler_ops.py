@@ -233,9 +233,36 @@ def direct_continuation(rdir: Path, sch, task_id: str, attempt_id: str) -> str:
     return f"{task_id}: its next attempt continues from the accepted result of {attempt_id}"
 
 
+def _revise_impact(rdir: Path, sch) -> tuple[int, tuple[str, ...]]:
+    """(bound revision, the ACCEPTED tasks a rebase onto the latest frozen plan would redo). Nothing is written; any trouble
+    reading either plan means "no impact known" (the rebase itself reports its own errors)."""
+    try:
+        plan, latest = bound_plan(rdir), adapter.approved_plan(rdir)
+        if latest.revision <= plan.revision:
+            return plan.revision, ()
+        would = sch.read(lambda ctx: core.plan_rebase(ctx.state, plan, latest, cascade=adapter.rebase_cascade()))
+        done = sch.read(lambda ctx: tuple(t for t in would.reset
+                                          if ctx.state.tasks.get(t) and ctx.state.tasks[t].state == "completed"))
+        return plan.revision, tuple(done)
+    except (core.SchedulerError, OSError, sqlite3.Error, ValueError, KeyError):
+        return 0, ()
+
+
+def _impact_guard(rdir: Path, sch, action: str, lost, confirm: bool) -> None:
+    """Refuse an action that would invalidate more accepted tasks than the ceiling without `--confirm`, saying what it costs."""
+    import bt_rework_impact as impact
+
+    limit = impact.ceiling()
+    if confirm or not limit or len(lost) <= limit:
+        return
+    cost = impact.estimate(adapter.run_db_path(rdir), lost, bound_plan(rdir))
+    raise core.SchedulerError("NOT_ALLOWED", impact.describe(action, cost, limit))
+
+
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
           keep_held: bool = False, only: bool = False, option: str = "", *, expected_task: str = "",
-          expected_task_state: str | None = None, expected_attempt_state: str | None = None) -> list[str]:
+          expected_task_state: str | None = None, expected_attempt_state: str | None = None,
+          confirm: bool = False) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -277,7 +304,8 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                 lines.append(f"{target}: reopened")
             elif action == "rework":
                 tasks = tuple(item.strip() for item in target.split(",") if item.strip())
-                moved = sch.rework(tasks, OPERATOR, why, cascade=not only)
+                _impact_guard(rdir, sch, "rework", sch.rework_impact(tasks, (), not only), confirm)
+                moved = sch.rework(tasks, OPERATOR, why, cascade=not only, confirmed=True)
                 lines.append(f"sent back for rework: {', '.join(moved) or 'nothing (already pending)'}")
             elif action == "continue-from":
                 lines.append(direct_continuation(rdir, sch, target, option))
@@ -286,6 +314,9 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                 restored = sch.withdraw_rework(tasks, OPERATOR, why)
                 lines.append(f"rework taken back (completed again on their accepted result): {', '.join(restored)}")
             elif action == "revise":
+                if not confirm:
+                    plan, done = _revise_impact(rdir, sch)
+                    _impact_guard(rdir, sch, f"revise r{plan} -> latest", done, confirm)
                 live = [a for a, _, _ in _live_attempts(sch)]
                 lines += cancel_attempts(project, req, rdir, sch, live, f"{why}: superseded by a plan revision")
             else:
@@ -349,6 +380,48 @@ def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wa
         if time.monotonic() > deadline:
             return lines + [f"{task}: not blocked after {int(wait)} s; reopen it by hand if it needs to"]
         time.sleep(2)
+
+
+def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: str, by: str = "coordinator") -> list[str]:
+    """Leave the coordinator's receipt for the manual check(s) of `task` (`which`: a purpose text or 1-based index; empty =
+    every manual check of the task) and send the task's open review back to the verifier, which then finds the receipt."""
+    import bt_attestation
+    import bt_run_stores
+    from bt_scheduler_quality.store import QualityStore
+
+    plan = bound_plan(rdir)
+    try:
+        checks = bt_attestation.manual_checks(plan, task)
+    except core.SchedulerError as exc:
+        raise core.SchedulerError("NOT_ALLOWED", f"{task} is not a task of the plan") from exc
+    if which:
+        picked = [checks[int(which) - 1]] if which.isdigit() and 0 < int(which) <= len(checks) \
+            else [c for c in checks if which.lower() in c["purpose"].lower() or which.lower() in c["value"].lower()]
+    else:
+        picked = checks
+    if not picked:
+        raise core.SchedulerError("NOT_ALLOWED", f"{task} has no manual check{f' matching {which!r}' if which else ''} to attest")
+    lines = []
+    try:
+        for check in picked:
+            path = bt_attestation.mint(rdir, task, check["purpose"], check["value"], check["expected"], evidence, by)
+            lines.append(f"attested {task}: «{check['purpose'][:80]}» -> {path.name}")
+    except bt_attestation.AttestationError as exc:
+        raise core.SchedulerError("NOT_ALLOWED", str(exc)) from exc
+    with hold(rdir, f"attestation of {task}"):
+        stopped = stop_owner(project, req)
+        store = QualityStore(bt_run_stores.paths(rdir)["m6"])
+        try:
+            for key in store.open_reviews_of(task):
+                try:
+                    store.retry_attested(key, by, f"manual evidence attested by {by}: {evidence[:120]}")
+                    lines.append(f"verification of {task} requeued: the verifier will find the receipt")
+                except Exception as exc:  # noqa: BLE001 - QualityError: not only manual evidence, or already retried
+                    lines.append(f"verification of {task} stays for a person ({getattr(exc, 'code', type(exc).__name__)})")
+        finally:
+            store.close()
+        lines.insert(0, f"owner stopped: {stopped} process(es)")
+    return lines
 
 
 def resume(project: str, req: str, rdir: Path) -> str:

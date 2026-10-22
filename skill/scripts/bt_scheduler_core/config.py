@@ -19,6 +19,8 @@ class Config:
     max_recovery_wait: float = 3600.0    # cap on a recovery proposal's `wait`
     max_recovery_waits: int = 3          # a recovery module may ask to wait this many times per task, then the task blocks
     max_reworks: int = 2                 # times an audit may send one task back after acceptance; then the owner decides
+    rework_confirm_over: int = 0         # a rework that would send back more than this many ACCEPTED tasks needs the owner's
+    #                                      confirmation (`confirmed=True`); the system never does it alone. 0 = no ceiling
     max_deliveries: int = 5              # an order whose delivery keeps failing is abandoned (attempt becomes uncertain)
     require_independent_verifier: bool = True  # the verdict's verifier must differ from the attempt's executor label
 
@@ -33,6 +35,9 @@ class Config:
             value = getattr(self, name)
             if not isinstance(value, int) or isinstance(value, bool) or value < 1:
                 problems.append(f"{name} must be an integer >= 1")
+        if not isinstance(self.rework_confirm_over, int) or isinstance(self.rework_confirm_over, bool) \
+                or self.rework_confirm_over < 0:
+            problems.append("rework_confirm_over must be an integer >= 0")
         for name in ("lease_seconds", "reconcile_seconds", "max_recovery_wait"):
             value = getattr(self, name)
             if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:

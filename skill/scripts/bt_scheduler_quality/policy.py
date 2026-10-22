@@ -89,6 +89,10 @@ class QualityPolicy:
     environment: tuple[tuple[str, str], ...] = ()
     secret_values: tuple[str, ...] = ()
     require_independent_review: bool = False
+    cache_seconds: int = 86_400  # a check that passed on this exact tree is not run again for this long (0 = never reuse)
+    defer_expensive: bool = True  # expensive checks run last and are skipped once a cheaper one has failed
+    expensive_check_seconds: int = 120  # a check that took at least this long last time (or looks like a whole suite)
+    mixed_evidence: bool = True  # one criterion may be backed by several checks, manual ones by an attestation receipt
 
     def __post_init__(self) -> None:
         _validate_policy_identity(self)
@@ -168,6 +172,13 @@ def _validate_policy_controls(policy: QualityPolicy) -> None:
         raise ValueError("rerun_failed_checks must be between 0 and 3")
     if not isinstance(policy.network, bool) or not isinstance(policy.allow_production_actions, bool):
         raise TypeError("network and production-action flags must be boolean")
+    for name in ("defer_expensive", "mixed_evidence"):
+        if not isinstance(getattr(policy, name), bool):
+            raise TypeError(f"{name} must be boolean")
+    for name in ("cache_seconds", "expensive_check_seconds"):
+        value = getattr(policy, name)
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise ValueError(f"{name} must be zero or positive")
 
 
 def _validate_policy_secrets(policy: QualityPolicy) -> None:

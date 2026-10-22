@@ -4,6 +4,7 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_integration_line as line_mod
@@ -75,21 +76,55 @@ class WithLine(base_tests.Unit):
 
 
 class Marker(unittest.TestCase):
-    def test_the_line_belongs_to_a_run_that_began_with_it(self):
-        import tempfile
-        from unittest import mock
+    def conf(self, **values):
         import bt_config
+        return mock.patch.object(bt_config, "get", lambda key, default=None: values.get(key.split(".")[-1], default))
+
+    def test_the_line_belongs_to_a_run_that_began_with_it_and_is_on_by_default(self):
+        import tempfile
         import bt_scheduler_executor_wiring as wiring
-        flag = lambda key, default=None: True if key == "gates.integration_line" else default   # noqa: E731
-        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(bt_config, "get", flag):
+        with tempfile.TemporaryDirectory() as tmp, self.conf():
             started, midway = Path(tmp) / "a", Path(tmp) / "b"
             started.mkdir(), midway.mkdir()
-            self.assertTrue(wiring._line_enabled(started, {}))                       # fresh: on, and remembered
+            self.assertTrue(wiring._line_enabled(started, {}))                       # fresh: on by default, and remembered
             self.assertTrue(wiring._line_enabled(started, {"T1": "att-1"}))          # restarts keep it
-            self.assertFalse(wiring._line_enabled(midway, {"T1": "att-1"}))          # tasks accepted without it: off
+            self.assertFalse(wiring._line_enabled(midway, {"T1": "att-1"}))          # tasks accepted without it, no probe: off
             self.assertFalse((midway / wiring.LINE_MARKER).exists())
-        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(bt_config, "get", lambda k, d=None: d):
+        with tempfile.TemporaryDirectory() as tmp, self.conf(integration_line=False):
             self.assertFalse(wiring._line_enabled(Path(tmp), {}))                    # flag off: off
+
+    def test_a_run_in_flight_moves_onto_the_line_only_when_the_line_holds_all_its_accepted_work(self):
+        import tempfile
+        import bt_scheduler_executor_wiring as wiring
+        with tempfile.TemporaryDirectory() as tmp, self.conf():
+            fits, clashes, off = (Path(tmp) / n for n in ("fits", "clashes", "off"))
+            for d in (fits, clashes, off):
+                d.mkdir()
+            self.assertTrue(wiring._line_enabled(fits, {"T1": "a"}, lambda: ""))
+            self.assertTrue((fits / wiring.LINE_MARKER).exists())
+            self.assertFalse((fits / (wiring.LINE_MARKER + ".skipped")).exists())
+            self.assertFalse(wiring._line_enabled(clashes, {"T1": "a"}, lambda: "T2 does not fit (README.md)"))
+            self.assertIn("T2 does not fit", (clashes / (wiring.LINE_MARKER + ".skipped")).read_text())
+            self.assertFalse((clashes / wiring.LINE_MARKER).exists())
+        with tempfile.TemporaryDirectory() as tmp, self.conf(integration_line_migrate=False):
+            self.assertFalse(wiring._line_enabled(Path(tmp), {"T1": "a"}, lambda: ""))   # migration switched off
+
+    def test_the_migration_probe_reads_the_line_in_memory(self):
+        import bt_scheduler_executor_wiring as wiring
+
+        class Held:
+            def roles(self): return ["app"]
+            def state(self, role): return SimpleNamespace(unresolved={})
+
+        class Clash(Held):
+            def state(self, role): return SimpleNamespace(unresolved={"T2": ("a.ts", "b.ts")})
+
+        class Broken(Held):
+            def state(self, role): raise RuntimeError("git")
+
+        self.assertEqual(wiring._migration_probe(Held())(), "")
+        self.assertIn("T2 does not fit the integrated tree (a.ts, b.ts)", wiring._migration_probe(Clash())())
+        self.assertIn("cannot be computed", wiring._migration_probe(Broken())())
 
 
 class ThroughLine(base_tests.Through):

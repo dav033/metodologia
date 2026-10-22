@@ -87,11 +87,22 @@ class Build(unittest.TestCase):
         areas = plan(task("T1", kind="test", category="integration"), task("T2"),
                      task("T3", ["T1", "T2"], kind="audit", paths=["a.md", "a.findings.json"]))
         two = [finding("F1", ["T1"]), finding("F2", ["T2"])]
-        serial = {t["id"]: t["after"] for t in rem.build_revision(areas, "T3", two)["tasks"] if t["id"].startswith("T3.")}
-        self.assertEqual(serial, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2", "T3.1"]})   # one after another by default
-        side = rem.build_revision(areas, "T3", two, parallel=True)
-        parallel = {t["id"]: t["after"] for t in side["tasks"] if t["id"].startswith("T3.")}
-        self.assertEqual(parallel, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2"]})       # independent areas side by side if allowed
+        chained = rem.build_revision(areas, "T3", two, parallel=False)
+        serial = {t["id"]: t["after"] for t in chained["tasks"] if t["id"].startswith("T3.")}
+        self.assertEqual(serial, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2", "T3.1"]})   # one after another when switched off
+        parallel = {t["id"]: t["after"] for t in rem.build_revision(areas, "T3", two)["tasks"] if t["id"].startswith("T3.")}
+        self.assertEqual(parallel, {"T3.1": ["T1", "T2"], "T3.2": ["T1", "T2"]})       # independent areas side by side by default
+
+    def test_side_by_side_remediation_needs_the_integration_line_of_the_run(self):
+        from unittest import mock
+
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp)
+            self.assertFalse(rem.parallel_for(rdir))                                        # predecessor merge: chained, as D-114
+            (rdir / "RUN.integration-line").write_text("on")
+            self.assertTrue(rem.parallel_for(rdir))
+            with mock.patch.object(rem, "_parallel", return_value=False):
+                self.assertFalse(rem.parallel_for(rdir))                                    # the setting still wins
 
     def test_a_second_auditor_gets_its_own_numbering(self):
         spec = plan(task("T1", kind="test", category="integration"),

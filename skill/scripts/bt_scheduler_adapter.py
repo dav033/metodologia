@@ -584,6 +584,17 @@ def record_amendment(rdir: Path, record: dict[str, Any]) -> bool:
     return True
 
 
+def rebase_cascade() -> bool:
+    """`gates.rebase_cascade`: "content" (default since REQ-030: an accepted task whose own content did not change is kept
+    whatever happened to its prerequisites) or "downstream" (the original: a reset prerequisite resets what depends on it)."""
+    import bt_config
+
+    try:
+        return bt_config.get("gates.rebase_cascade", "content") == "downstream"
+    except (KeyError, TypeError):
+        return False
+
+
 def rebase_to_latest(rdir: Path) -> Any:
     """Move this requirement's Scheduler run onto the latest frozen plan revision, keeping accepted work that did not
     change (M1's `rebase_run`). Refused while an owner process holds the run or any attempt is alive."""
@@ -605,4 +616,4 @@ def rebase_to_latest(rdir: Path) -> Any:
     old = core.load_plan_file(old_path, approved_sha256=doc["plan_sha256"], plan_id=doc["plan_id"],
                               revision=doc["revision"])
     with owner_lock(rdir):
-        return core.rebase_run(core.SqliteRepository(db), old, new)
+        return core.rebase_run(core.SqliteRepository(db), old, new, cascade=rebase_cascade())

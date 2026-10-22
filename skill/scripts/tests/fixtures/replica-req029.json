@@ -1,0 +1,1976 @@
+{
+ "attempts": {
+  "T1": [
+   {
+    "exec_min": 4.27,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   }
+  ],
+  "T2": [
+   {
+    "exec_min": 18.34,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 2.16,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 10.55,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 12.17,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 11.66,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   }
+  ],
+  "T3": [
+   {
+    "exec_min": 4.31,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 3.69,
+    "outcome": "rejected",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 1.42,
+    "outcome": "rejected",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 0.99,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 2.0,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 3.48,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   }
+  ],
+  "T3a": [
+   {
+    "exec_min": 1.92,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 1.65,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 0.75,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 3.59,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   }
+  ],
+  "T3b": [
+   {
+    "exec_min": 11.79,
+    "outcome": "accepted",
+    "verify_min": 0.14
+   },
+   {
+    "exec_min": 1.7,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 12.73,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 5.99,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 16.13,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 7.8,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 2.45,
+    "outcome": "accepted",
+    "verify_min": 0.16
+   }
+  ],
+  "T4": [
+   {
+    "exec_min": 10.51,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 10.69,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 1.21,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 6.28,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 10.2,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 7.95,
+    "outcome": "accepted",
+    "verify_min": 0.15
+   },
+   {
+    "exec_min": 2.43,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 1.75,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 2.12,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 10.23,
+    "outcome": "accepted",
+    "verify_min": 0.73
+   },
+   {
+    "exec_min": 1.86,
+    "outcome": "accepted",
+    "verify_min": 0.85
+   },
+   {
+    "exec_min": 8.84,
+    "outcome": "rejected",
+    "verify_min": 0.88
+   },
+   {
+    "exec_min": 3.62,
+    "outcome": "accepted",
+    "verify_min": 0.76
+   },
+   {
+    "exec_min": 3.62,
+    "outcome": "accepted",
+    "verify_min": 0.75
+   },
+   {
+    "exec_min": 5.32,
+    "outcome": "rejected",
+    "verify_min": 0.93
+   },
+   {
+    "exec_min": 3.85,
+    "outcome": "accepted",
+    "verify_min": 0.75
+   },
+   {
+    "exec_min": 1.76,
+    "outcome": "accepted",
+    "verify_min": 1.07
+   },
+   {
+    "exec_min": 2.28,
+    "outcome": "accepted",
+    "verify_min": 1.22
+   }
+  ],
+  "T4a": [
+   {
+    "exec_min": 5.81,
+    "outcome": "accepted",
+    "verify_min": 0.15
+   },
+   {
+    "exec_min": 0.91,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 4.93,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 2.26,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 7.24,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 1.86,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 15.06,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   }
+  ],
+  "T4b": [
+   {
+    "exec_min": 5.22,
+    "outcome": "rejected",
+    "verify_min": 0.79
+   },
+   {
+    "exec_min": 1.37,
+    "outcome": "accepted",
+    "verify_min": 0.6
+   },
+   {
+    "exec_min": 5.84,
+    "outcome": "rejected",
+    "verify_min": 0.77
+   },
+   {
+    "exec_min": 11.32,
+    "outcome": "rejected",
+    "verify_min": 0.82
+   },
+   {
+    "exec_min": 9.55,
+    "outcome": "accepted",
+    "verify_min": 0.7
+   },
+   {
+    "exec_min": 2.08,
+    "outcome": "accepted",
+    "verify_min": 0.62
+   }
+  ],
+  "T4c": [
+   {
+    "exec_min": 30.02,
+    "outcome": "accepted",
+    "verify_min": 0.37
+   },
+   {
+    "exec_min": 17.03,
+    "outcome": "accepted",
+    "verify_min": 0.3
+   }
+  ],
+  "T5": [
+   {
+    "exec_min": 13.89,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 2.02,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 3.74,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 3.32,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 3.89,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 9.6,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 2.21,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 14.38,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 4.41,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   }
+  ],
+  "T5a": [
+   {
+    "exec_min": 5.16,
+    "outcome": "rejected",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 0.76,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 1.64,
+    "outcome": "accepted",
+    "verify_min": 0.17
+   },
+   {
+    "exec_min": 3.16,
+    "outcome": "rejected",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 3.31,
+    "outcome": "rejected",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 1.07,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 4.36,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   },
+   {
+    "exec_min": 0.79,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   },
+   {
+    "exec_min": 4.8,
+    "outcome": "accepted",
+    "verify_min": 0.13
+   }
+  ],
+  "T6": [
+   {
+    "exec_min": 75.53,
+    "outcome": "rejected",
+    "verify_min": 10.42
+   },
+   {
+    "exec_min": 4.69,
+    "outcome": "accepted",
+    "verify_min": 1.36
+   },
+   {
+    "exec_min": 18.28,
+    "outcome": "rejected",
+    "verify_min": 17.11
+   },
+   {
+    "exec_min": 17.24,
+    "outcome": "rejected",
+    "verify_min": 8.4
+   },
+   {
+    "exec_min": 12.44,
+    "outcome": "accepted",
+    "verify_min": 4.28
+   },
+   {
+    "exec_min": 9.46,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 22.14,
+    "outcome": "rejected",
+    "verify_min": 38.41
+   },
+   {
+    "exec_min": 14.38,
+    "outcome": "rejected",
+    "verify_min": 49.38
+   },
+   {
+    "exec_min": 12.66,
+    "outcome": "rejected",
+    "verify_min": 38.52
+   },
+   {
+    "exec_min": 50.93,
+    "outcome": "rejected",
+    "verify_min": 38.4
+   },
+   {
+    "exec_min": 27.14,
+    "outcome": "rejected",
+    "verify_min": 38.45
+   },
+   {
+    "exec_min": 12.32,
+    "outcome": "rejected",
+    "verify_min": 69.25
+   },
+   {
+    "exec_min": 16.67,
+    "outcome": "accepted",
+    "verify_min": 3.73
+   },
+   {
+    "exec_min": 9.91,
+    "outcome": "rejected",
+    "verify_min": 0.78
+   },
+   {
+    "exec_min": 1.86,
+    "outcome": "rejected",
+    "verify_min": 0.76
+   },
+   {
+    "exec_min": 1.99,
+    "outcome": "rejected",
+    "verify_min": 0.76
+   },
+   {
+    "exec_min": 1.43,
+    "outcome": "rejected",
+    "verify_min": 0.15
+   },
+   {
+    "exec_min": 2.86,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   }
+  ],
+  "T6a": [
+   {
+    "exec_min": 2.66,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 0.86,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 1.48,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 2.45,
+    "outcome": "accepted",
+    "verify_min": 0.08
+   },
+   {
+    "exec_min": 7.14,
+    "outcome": "accepted",
+    "verify_min": 0.21
+   },
+   {
+    "exec_min": 12.11,
+    "outcome": "accepted",
+    "verify_min": 0.17
+   }
+  ],
+  "T6b": [
+   {
+    "exec_min": 15.68,
+    "outcome": "accepted",
+    "verify_min": 6.32
+   },
+   {
+    "exec_min": 8.16,
+    "outcome": "accepted",
+    "verify_min": 11.24
+   },
+   {
+    "exec_min": 9.08,
+    "outcome": "accepted",
+    "verify_min": 19.18
+   },
+   {
+    "exec_min": 8.5,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   }
+  ],
+  "T7": [
+   {
+    "exec_min": 10.37,
+    "outcome": "rejected",
+    "verify_min": 8.13
+   },
+   {
+    "exec_min": 10.98,
+    "outcome": "rejected",
+    "verify_min": 7.78
+   },
+   {
+    "exec_min": 11.36,
+    "outcome": "rejected",
+    "verify_min": 8.26
+   },
+   {
+    "exec_min": 12.54,
+    "outcome": "rejected",
+    "verify_min": 7.85
+   },
+   {
+    "exec_min": 10.99,
+    "outcome": "rejected",
+    "verify_min": 8.34
+   },
+   {
+    "exec_min": 10.01,
+    "outcome": "accepted",
+    "verify_min": 8.55
+   },
+   {
+    "exec_min": 9.98,
+    "outcome": "rejected",
+    "verify_min": 14.19
+   },
+   {
+    "exec_min": 16.68,
+    "outcome": "rejected",
+    "verify_min": 14.14
+   },
+   {
+    "exec_min": 16.72,
+    "outcome": "rejected",
+    "verify_min": 14.1
+   },
+   {
+    "exec_min": 30.49,
+    "outcome": "accepted",
+    "verify_min": 13.79
+   },
+   {
+    "exec_min": 14.36,
+    "outcome": "accepted",
+    "verify_min": 5.53
+   },
+   {
+    "exec_min": 14.14,
+    "outcome": "rejected",
+    "verify_min": 20.78
+   },
+   {
+    "exec_min": 14.03,
+    "outcome": "rejected",
+    "verify_min": 21.55
+   },
+   {
+    "exec_min": 14.43,
+    "outcome": "rejected",
+    "verify_min": 22.47
+   },
+   {
+    "exec_min": 15.57,
+    "outcome": "accepted",
+    "verify_min": 13.83
+   },
+   {
+    "exec_min": 9.29,
+    "outcome": "rejected",
+    "verify_min": 10.99
+   },
+   {
+    "exec_min": 9.01,
+    "outcome": "rejected",
+    "verify_min": 10.89
+   },
+   {
+    "exec_min": 11.61,
+    "outcome": "rejected",
+    "verify_min": 19.47
+   },
+   {
+    "exec_min": 0.02,
+    "outcome": "failed",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 9.2,
+    "outcome": "rejected",
+    "verify_min": 10.2
+   }
+  ],
+  "T8": [
+   {
+    "exec_min": 11.64,
+    "outcome": "rejected",
+    "verify_min": 0.07
+   },
+   {
+    "exec_min": 5.85,
+    "outcome": "rejected",
+    "verify_min": 0.07
+   },
+   {
+    "exec_min": 5.8,
+    "outcome": "rejected",
+    "verify_min": 0.07
+   },
+   {
+    "exec_min": 5.84,
+    "outcome": "rejected",
+    "verify_min": 0.17
+   },
+   {
+    "exec_min": 18.51,
+    "outcome": "rejected",
+    "verify_min": 0.19
+   },
+   {
+    "exec_min": 10.69,
+    "outcome": "rejected",
+    "verify_min": 0.19
+   },
+   {
+    "exec_min": 17.23,
+    "outcome": "rejected",
+    "verify_min": 0.18
+   },
+   {
+    "exec_min": 0.07,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 13.37,
+    "outcome": "rejected",
+    "verify_min": 0.17
+   },
+   {
+    "exec_min": 15.33,
+    "outcome": "rejected",
+    "verify_min": 0.28
+   }
+  ],
+  "T8.1": [
+   {
+    "exec_min": 2.52,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 7.25,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   }
+  ],
+  "T8.2": [
+   {
+    "exec_min": 2.78,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 3.3,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   }
+  ],
+  "T8.3": [
+   {
+    "exec_min": 8.0,
+    "outcome": "accepted",
+    "verify_min": 0.32
+   },
+   {
+    "exec_min": 4.36,
+    "outcome": "accepted",
+    "verify_min": 0.39
+   }
+  ],
+  "T8.4": [
+   {
+    "exec_min": 3.07,
+    "outcome": "accepted",
+    "verify_min": 0.1
+   },
+   {
+    "exec_min": 0.01,
+    "outcome": "failed",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 2.76,
+    "outcome": "accepted",
+    "verify_min": 0.25
+   }
+  ],
+  "T8.5": [
+   {
+    "exec_min": 6.61,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 6.5,
+    "outcome": "accepted",
+    "verify_min": 0.12
+   }
+  ],
+  "T8.6": [
+   {
+    "exec_min": 3.67,
+    "outcome": "accepted",
+    "verify_min": 0.09
+   },
+   {
+    "exec_min": 3.02,
+    "outcome": "accepted",
+    "verify_min": 0.11
+   }
+  ],
+  "T8.7": [
+   {
+    "exec_min": 8.69,
+    "outcome": "accepted",
+    "verify_min": 0.36
+   },
+   {
+    "exec_min": 6.72,
+    "outcome": "accepted",
+    "verify_min": 0.6
+   }
+  ],
+  "T8.8": [
+   {
+    "exec_min": 1.89,
+    "outcome": "accepted",
+    "verify_min": 0.15
+   },
+   {
+    "exec_min": 2.72,
+    "outcome": "accepted",
+    "verify_min": 0.44
+   }
+  ],
+  "T8.9": [
+   {
+    "exec_min": 1.99,
+    "outcome": "accepted",
+    "verify_min": 0.16
+   },
+   {
+    "exec_min": 12.57,
+    "outcome": "accepted",
+    "verify_min": 3.88
+   }
+  ]
+ },
+ "name": "REQ-029",
+ "plan": {
+  "plan_id": "REQ-029",
+  "tasks": [
+   {
+    "after": [],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/diagnostic_contracts.py",
+     "skill/scripts/bt_scheduler_recovery/diagnostic_store.py",
+     "skill/scripts/bt_scheduler_recovery/progress.py",
+     "skill/scripts/bt_scheduler_recovery/history.py",
+     "skill/scripts/bt_scheduler_recovery/__init__.py",
+     "skill/scripts/bt_scheduler_recovery/tests/test_diagnostic_cases.py"
+    ],
+    "id": "T1",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T1"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_evidence.py",
+     "skill/scripts/bt_scheduler_quality_adapter.py",
+     "skill/scripts/bt_attempt_history.py",
+     "skill/scripts/tests/test_recovery_evidence.py",
+     "skill/scripts/tests/test_attempt_history.py"
+    ],
+    "id": "T2",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T2"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_block_agent.py",
+     "skill/scripts/tests/test_recovery_diagnosis.py",
+     "skill/scripts/bt_planner_runtime.py"
+    ],
+    "id": "T3",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T3"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/conflict_contracts.py",
+     "skill/scripts/bt_scheduler_recovery/conflict_policy.py",
+     "skill/scripts/bt_scheduler_recovery/tests/test_conflict_policy.py"
+    ],
+    "id": "T3a",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T3a"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_conflicts.py",
+     "skill/scripts/bt_scheduler_integrator.py",
+     "skill/scripts/bt_scheduler_quality_adapter.py",
+     "skill/scripts/tests/test_recovery_conflicts.py"
+    ],
+    "id": "T3b",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T3b"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_core/rebase.py",
+     "skill/scripts/bt_scheduler_core/model.py",
+     "skill/scripts/bt_scheduler_core/reservation.py",
+     "skill/scripts/bt_scheduler_core/operations.py",
+     "skill/scripts/bt_scheduler_core/__init__.py",
+     "skill/scripts/bt_scheduler_core/README.md",
+     "skill/scripts/bt_scheduler_core/tests/test_revision_apply.py",
+     "skill/scripts/bt_flow_bus.py"
+    ],
+    "id": "T4",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "m1-run-state-schema"
+    ]
+   },
+   {
+    "after": [
+     "T3b"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_compiler.py",
+     "skill/scripts/bt_plan_adapter.py",
+     "skill/scripts/tests/test_recovery_compiler.py"
+    ],
+    "id": "T4b",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T4",
+     "T4b"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_authorization.py",
+     "skill/scripts/bt_recovery_apply.py",
+     "skill/scripts/bt_remediation.py",
+     "skill/scripts/bt_scheduler_adapter.py",
+     "skill/scripts/tests/test_recovery_authorization.py",
+     "skill/scripts/tests/test_recovery_apply.py"
+    ],
+    "id": "T4c",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T4c"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_convergence.py",
+     "skill/scripts/tests/test_recovery_convergence.py"
+    ],
+    "id": "T4a",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T4a"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery_adapter.py",
+     "skill/scripts/bt_scheduler_executor_wiring.py",
+     "skill/scripts/bt_scheduler_run.py",
+     "skill/scripts/bt_scheduler_watch.py",
+     "skill/scripts/bt_scheduler_ops.py",
+     "skill/scripts/bt_scheduler_decisions.py",
+     "skill/scripts/bt_cli_scheduler_ops.py",
+     "skill/scripts/bt_config.py",
+     "skill/scripts/tests/test_recovery_runtime.py"
+    ],
+    "id": "T5",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T5"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_rollout.py",
+     "skill/scripts/tests/test_recovery_rollout.py"
+    ],
+    "id": "T5a",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T5a"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/recovery_process_support.py",
+     "skill/scripts/tests/test_recovery_entrypoints.py",
+     "skill/scripts/tests/recovery_acceptance.py",
+     "skill/scripts/tests/fixtures/recovery_req027.json",
+     "pyproject.toml",
+     "tests/migration/test_package_install.py"
+    ],
+    "id": "T6",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T6"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/test_recovery_conflict_e2e.py",
+     "skill/scripts/tests/recovery_conflict_support.py",
+     "skill/scripts/tests/fixtures/recovery_req027_conflicts.json"
+    ],
+    "id": "T6a",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T6a"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/test_scheduler_integration.py",
+     "skill/scripts/tests/test_scheduler_recovery_cli.py",
+     "skill/scripts/bt_recovery_convergence.py",
+     "skill/scripts/bt_scheduler_recovery_adapter.py"
+    ],
+    "id": "T6b",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T6b"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+    ],
+    "id": "T7",
+    "kind": "test",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4",
+     "T8.5",
+     "T8.6",
+     "T8.7",
+     "T8.8",
+     "T8.9"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json"
+    ],
+    "id": "T8",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T8"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-crosscheck.findings.json"
+    ],
+    "id": "T9",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T9"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_flow_bus.py",
+     "skill/scripts/bt_live_api.py",
+     "skill/scripts/bt_planstatus.py",
+     "skill/scripts/bt_page_flow.py",
+     "skill/scripts/bt_page_plans.py",
+     "skill/scripts/bt_page_run.py",
+     "skill/scripts/bt_server.py",
+     "skill/assets/flow-core.js",
+     "skill/assets/flow-decisions.js",
+     "skill/assets/flow.css",
+     "skill/scripts/tests/test_recovery_views.py",
+     "skill/scripts/bt_block_diagnosis.py",
+     "skill/scripts/bt_page_diagnosis.py",
+     "skill/scripts/tests/test_block_diagnosis.py"
+    ],
+    "id": "T10",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T10"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/test_recovery_supervision_e2e.py",
+     "skill/scripts/tests/test_recovery_req027_preview.py",
+     "skill/scripts/tests/recovery_preview_support.py",
+     "skill/scripts/tests/test_recovery_rollout_receipt.py"
+    ],
+    "id": "T11",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T11"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/README.md",
+     "skill/references/modules.md",
+     "skill/references/plan-contract.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout.md"
+    ],
+    "id": "T12",
+    "kind": "docs",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T12"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-final-checks.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-req027-preview.json"
+    ],
+    "id": "T13",
+    "kind": "test",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T13"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-final-audit.findings.json"
+    ],
+    "id": "T14",
+    "kind": "audit",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T14"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-final-crosscheck.findings.json"
+    ],
+    "id": "T15",
+    "kind": "audit",
+    "milestone_id": "M2",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T15"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.json",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-live-rollout.md"
+    ],
+    "id": "T16",
+    "kind": "implement",
+    "milestone_id": "M3",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "REQ027-conditional-rollout"
+    ]
+   },
+   {
+    "after": [
+     "T16"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-checks.md"
+    ],
+    "id": "T17",
+    "kind": "test",
+    "milestone_id": "M3",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "REQ027-conditional-rollout"
+    ]
+   },
+   {
+    "after": [
+     "T17"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-audit.findings.json"
+    ],
+    "id": "T18",
+    "kind": "audit",
+    "milestone_id": "M3",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "REQ027-conditional-rollout"
+    ]
+   },
+   {
+    "after": [
+     "T18"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.md",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-rollout-crosscheck.findings.json"
+    ],
+    "id": "T19",
+    "kind": "audit",
+    "milestone_id": "M3",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "REQ027-conditional-rollout"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_apply.py",
+     "skill/scripts/bt_recovery_authorization.py",
+     "skill/scripts/bt_remediation.py",
+     "skill/scripts/bt_plan_adapter.py",
+     "skill/scripts/bt_scheduler_adapter.py",
+     "skill/scripts/bt_scheduler_core/model.py",
+     "skill/scripts/bt_scheduler_core/rebase.py",
+     "skill/scripts/bt_scheduler_core/reservation.py",
+     "skill/scripts/bt_scheduler_core/operations.py",
+     "skill/scripts/bt_scheduler_core/__init__.py",
+     "skill/scripts/bt_scheduler_core/tests/test_revision_apply.py",
+     "skill/scripts/tests/test_recovery_apply.py",
+     "skill/scripts/tests/test_recovery_authorization.py"
+    ],
+    "id": "T8.1",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "m1-run-state-schema"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery_adapter.py",
+     "skill/scripts/bt_scheduler_executor_wiring.py",
+     "skill/scripts/bt_scheduler_run.py",
+     "skill/scripts/bt_scheduler_watch.py",
+     "skill/scripts/bt_scheduler_ops.py",
+     "skill/scripts/bt_scheduler_decisions.py",
+     "skill/scripts/bt_cli_scheduler_ops.py",
+     "skill/scripts/bt_config.py",
+     "skill/scripts/tests/test_recovery_runtime.py"
+    ],
+    "id": "T8.2",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_conflicts.py",
+     "skill/scripts/bt_scheduler_integrator.py",
+     "skill/scripts/bt_scheduler_quality_adapter.py",
+     "skill/scripts/tests/test_recovery_conflicts.py",
+     "skill/scripts/bt_recovery_evidence.py",
+     "skill/scripts/bt_attempt_history.py",
+     "skill/scripts/tests/test_recovery_evidence.py",
+     "skill/scripts/tests/test_attempt_history.py"
+    ],
+    "id": "T8.3",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/test_recovery_conflict_e2e.py",
+     "skill/scripts/tests/recovery_conflict_support.py",
+     "skill/scripts/tests/fixtures/recovery_req027_conflicts.json",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+    ],
+    "id": "T8.4",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_apply.py",
+     "skill/scripts/bt_recovery_authorization.py",
+     "skill/scripts/bt_remediation.py",
+     "skill/scripts/bt_plan_adapter.py",
+     "skill/scripts/bt_scheduler_adapter.py",
+     "skill/scripts/bt_scheduler_core/model.py",
+     "skill/scripts/bt_scheduler_core/rebase.py",
+     "skill/scripts/bt_scheduler_core/reservation.py",
+     "skill/scripts/bt_scheduler_core/operations.py",
+     "skill/scripts/bt_scheduler_core/__init__.py",
+     "skill/scripts/bt_scheduler_core/tests/test_revision_apply.py",
+     "skill/scripts/tests/test_recovery_apply.py",
+     "skill/scripts/tests/test_recovery_authorization.py"
+    ],
+    "id": "T8.5",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1",
+     "m1-run-state-schema"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4",
+     "T8.5"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_scheduler_recovery_adapter.py",
+     "skill/scripts/bt_scheduler_executor_wiring.py",
+     "skill/scripts/bt_scheduler_run.py",
+     "skill/scripts/bt_scheduler_watch.py",
+     "skill/scripts/bt_scheduler_ops.py",
+     "skill/scripts/bt_scheduler_decisions.py",
+     "skill/scripts/bt_cli_scheduler_ops.py",
+     "skill/scripts/bt_config.py",
+     "skill/scripts/tests/test_recovery_runtime.py"
+    ],
+    "id": "T8.6",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4",
+     "T8.6"
+    ],
+    "expected_paths": [
+     "skill/scripts/bt_recovery_conflicts.py",
+     "skill/scripts/bt_scheduler_integrator.py",
+     "skill/scripts/bt_scheduler_quality_adapter.py",
+     "skill/scripts/tests/test_recovery_conflicts.py",
+     "skill/scripts/bt_recovery_evidence.py",
+     "skill/scripts/bt_attempt_history.py",
+     "skill/scripts/tests/test_recovery_evidence.py",
+     "skill/scripts/tests/test_attempt_history.py"
+    ],
+    "id": "T8.7",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "large_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4",
+     "T8.7"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/test_recovery_conflict_e2e.py",
+     "skill/scripts/tests/recovery_conflict_support.py",
+     "skill/scripts/tests/fixtures/recovery_req027_conflicts.json",
+     "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+    ],
+    "id": "T8.8",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   },
+   {
+    "after": [
+     "T7",
+     "T8.1",
+     "T8.2",
+     "T8.3",
+     "T8.4",
+     "T8.8"
+    ],
+    "expected_paths": [
+     "skill/scripts/tests/recovery_process_support.py",
+     "skill/scripts/tests/test_recovery_entrypoints.py",
+     "skill/scripts/tests/recovery_acceptance.py",
+     "skill/scripts/tests/fixtures/recovery_req027.json",
+     "pyproject.toml",
+     "tests/migration/test_package_install.py"
+    ],
+    "id": "T8.9",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "skill",
+    "scope": "small_change",
+    "shared_resources": [
+     "recovery-case-v1"
+    ]
+   }
+  ]
+ },
+ "recorded": {
+  "accepted": 98,
+  "attempt_minutes": 1889.7,
+  "attempts": 151,
+  "rejected": 47,
+  "rework_requests": 22,
+  "wall_minutes": 2343.2
+ },
+ "reworks": [
+  {
+   "at_min": 281.95,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T3b",
+    "T4",
+    "T4a"
+   ],
+   "reason": "module-boundary violations found by the T7 regression (M5 package imported outside its adapter; core imported by a test); per-task notes in RUN.notes",
+   "tasks": [
+    "T3b",
+    "T4",
+    "T4a"
+   ]
+  },
+  {
+   "at_min": 286.52,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T5"
+   ],
+   "reason": "T3b was accepted and clashes with T5: T3b vs T5 for T5: skill/scripts/bt_scheduler_recovery_adapter.py",
+   "tasks": [
+    "T5"
+   ]
+  },
+  {
+   "at_min": 315.82,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T6a"
+   ],
+   "reason": "flow contract coverage fails at T7: recovery audit kinds and tables are not registered in bt_flow_bus; note in RUN.notes",
+   "tasks": [
+    "T6a"
+   ]
+  },
+  {
+   "at_min": 405.46,
+   "by": "audit-gate",
+   "cascade": false,
+   "named": [
+    "T2",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T6a",
+    "T7",
+    "T13",
+    "T17"
+   ],
+   "reason": "audit gate: 14 open blocking finding(s): F1 (high), F2 (high), F3 (high), F4 (high), F5 (high), F6 (high), F7 (high), F8 (high), F9 (high), F10 (high), F11 (hig",
+   "tasks": [
+    "T2",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T6a",
+    "T7",
+    "T8"
+   ]
+  },
+  {
+   "at_min": 407.88,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T5a"
+   ],
+   "reason": "T2 was accepted and clashes with T5a: T2 vs T5a for T5a: skill/scripts/bt_recovery_evidence.py, skill/scripts/tests/test_recovery_evidence.py",
+   "tasks": [
+    "T5a"
+   ]
+  },
+  {
+   "at_min": 486.94,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T4",
+    "T5"
+   ],
+   "reason": "T7 regression: recovery-preview CLI action and the verification-map enforcement are missing; per-task notes in RUN.notes",
+   "tasks": [
+    "T4",
+    "T5"
+   ]
+  },
+  {
+   "at_min": 500.99,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T6"
+   ],
+   "reason": "T5 was accepted and clashes with T6: T5+T5a vs T6 for T6a: skill/scripts/tests/test_recovery_entrypoints.py",
+   "tasks": [
+    "T6"
+   ]
+  },
+  {
+   "at_min": 637.49,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T7: the verification-map guard added by T4 breaks 4 existing adapter tests (ordinary tasks are treated as recovery tasks); note in RUN.notes",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 698.76,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T7: _recovery_verification_problem was spliced into the middle of _deliver_one (T2, att-0030): deliveries never complete; structural fix in T4's scope (it edits",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 788.76,
+   "by": "operator",
+   "cascade": true,
+   "named": [
+    "T2",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T6a",
+    "T7"
+   ],
+   "reason": "audit T8 findings F5-F8, F10-F16; cascade because the audited tree is the lineage of T7 (per-task notes in RUN.notes)",
+   "tasks": [
+    "T2",
+    "T3",
+    "T3a",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T5a",
+    "T6",
+    "T6a",
+    "T7",
+    "T8"
+   ]
+  },
+  {
+   "at_min": 1014.34,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T2",
+    "T3a",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T6a",
+    "T7",
+    "T13",
+    "T17",
+    "T3",
+    "T5a",
+    "T6",
+    "T8.1",
+    "T8.2",
+    "T8.3",
+    "T8.4",
+    "T8.5",
+    "T8.6",
+    "T8.7",
+    "T8.8",
+    "T8.9"
+   ],
+   "reason": "F3,F4,F5,F6,F7,F8,F12,F14 (high) still open in the M1 audit ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json; rework with the in",
+   "tasks": [
+    "T2",
+    "T3",
+    "T3a",
+    "T3b",
+    "T4",
+    "T4a",
+    "T5",
+    "T5a",
+    "T6",
+    "T6a",
+    "T7",
+    "T8.1",
+    "T8.2",
+    "T8.3",
+    "T8.4",
+    "T8.5",
+    "T8.6",
+    "T8.7",
+    "T8.8",
+    "T8.9"
+   ]
+  },
+  {
+   "at_min": 1073.71,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T4b was accepted and clashes with T4: T4 vs T4b for T4c: skill/scripts/bt_flow_bus.py",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 1478.22,
+   "by": "operator",
+   "cascade": true,
+   "named": [
+    "T4a",
+    "T5"
+   ],
+   "reason": "T6 att-0094 found 3 production defects outside its scope: plan loader drops recovery_task/recovery_owner_tasks from task.meta (2 FAILs, T4a), generated attempts",
+   "tasks": [
+    "T4a",
+    "T5",
+    "T5a",
+    "T6"
+   ]
+  },
+  {
+   "at_min": 1970.9,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T2",
+    "T3a",
+    "T3b",
+    "T4",
+    "T4b",
+    "T4c",
+    "T4a",
+    "T5",
+    "T6a",
+    "T7",
+    "T13",
+    "T17",
+    "T3",
+    "T5a",
+    "T6",
+    "T6b",
+    "T8.1",
+    "T8.2",
+    "T8.3",
+    "T8.4",
+    "T8.5",
+    "T8.6",
+    "T8.7",
+    "T8.8",
+    "T8.9"
+   ],
+   "reason": "Audit rounds exhausted with 11 open high findings (F3-F8, F12-F15, F22) in the ledger; taking the recommended rework so owner tasks fix them with the audit note",
+   "tasks": [
+    "T2",
+    "T3",
+    "T3a",
+    "T3b",
+    "T4",
+    "T4b",
+    "T4c",
+    "T4a",
+    "T5",
+    "T5a",
+    "T6",
+    "T6a",
+    "T6b",
+    "T7",
+    "T8.1",
+    "T8.2",
+    "T8.3",
+    "T8.4",
+    "T8.5",
+    "T8.6",
+    "T8.7",
+    "T8.8",
+    "T8.9"
+   ]
+  },
+  {
+   "at_min": 2042.67,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T4b was accepted and clashes with T4: T4 vs T4b for T4c: skill/scripts/bt_recovery_conflicts.py, skill/scripts/bt_scheduler_quality_adapter.py, skill/scripts/bt",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 2151.14,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T5"
+   ],
+   "reason": "T6 attempt 17 shows TaskSpec.meta drops recovery_task/recovery_case_id; T4c/T5 own the propagation (test comment). Added the finding to T5's audit note.",
+   "tasks": [
+    "T5"
+   ]
+  },
+  {
+   "at_min": 2251.98,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T3b",
+    "T4"
+   ],
+   "reason": "T7 regression: 3 quality adapter rejection tests and test_scheduler_run_controls fail in the integration tree but pass on main HEAD; owners T3b (integration/ref",
+   "tasks": [
+    "T3b",
+    "T4"
+   ]
+  },
+  {
+   "at_min": 2276.59,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T4b"
+   ],
+   "reason": "T4 was accepted and clashes with T4b: T4 vs T4b for T4c: skill/scripts/bt_recovery_conflicts.py, skill/scripts/bt_scheduler_quality_adapter.py, skill/scripts/bt",
+   "tasks": [
+    "T4b"
+   ]
+  },
+  {
+   "at_min": 2279.35,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T4b was accepted and clashes with T4: T4 vs T4b for T4c: skill/scripts/bt_recovery_conflicts.py, skill/scripts/bt_scheduler_quality_adapter.py, skill/scripts/bt",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 2282.5,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T6b"
+   ],
+   "reason": "automatic: Conflicto de c\u00f3digo entre T4 + T4b y T6b",
+   "tasks": [
+    "T6b"
+   ]
+  },
+  {
+   "at_min": 2330.94,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T4"
+   ],
+   "reason": "T7 attempt 20: only test_scheduler_run_controls PLAN_MISMATCH remains; apply_control must fall back to approved_plan when the db has no valid revision identity.",
+   "tasks": [
+    "T4"
+   ]
+  },
+  {
+   "at_min": 2334.69,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T6b"
+   ],
+   "reason": "T4 was accepted and clashes with T6b: T4 vs T6b for T7: skill/scripts/bt_scheduler_adapter.py",
+   "tasks": [
+    "T6b"
+   ]
+  }
+ ],
+ "version": 1
+}

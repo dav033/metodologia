@@ -91,11 +91,18 @@ def _building(ctx: Ctx, task_id: str):
     return att if att is not None and A(att.state) != A.VERIFYING else None
 
 
+def rework_impact(ctx: Ctx, scope: tuple[str, ...], also: tuple[str, ...] = ()) -> tuple[str, ...]:
+    """The ACCEPTED tasks a rework over `scope` would throw away (what the owner is asked to confirm past a ceiling)."""
+    return tuple(task_id for task_id in scope if task_id not in also
+                 and ctx.state.tasks[task_id].state == T.COMPLETED.value)
+
+
 def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = (), *, owner: bool = False,
-                   cascade: bool = True) -> str:
+                   cascade: bool = True, confirmed: bool = False) -> str:
     """Why a rework cannot start now ('' when it can). The text starts with a code: `cancelled` (the run is being
-    cancelled), `limit` (a named task was already sent back `max_reworks` times: only the owner can decide more) or
-    `busy` (a task it would reset is still building: its result would sit on work being redone, try later). `also` is
+    cancelled), `limit` (a named task was already sent back `max_reworks` times: only the owner can decide more),
+    `impact` (it would throw away more accepted tasks than `Config.rework_confirm_over`: only an owner who confirms
+    it can) or `busy` (a task it would reset is still building: its result would sit on work being redone, try later). `also` is
     the task whose rejecting verdict asks for the rework: its attempt closes with that verdict. An attempt waiting for
     its verdict does not count: two audits that both reject would otherwise wait for each other forever, so the rework
     supersedes it instead (see `rework`)."""
@@ -105,6 +112,12 @@ def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = 
     for task_id in () if owner else task_ids:      # the owner may send work back more often than the system does
         if ctx.state.tasks[task_id].reworks >= ctx.config.max_reworks:
             return f"limit: {task_id} was already sent back {ctx.config.max_reworks} time(s)"
+    ceiling = ctx.config.rework_confirm_over
+    if ceiling and not confirmed:
+        lost = rework_impact(ctx, scope, also)
+        if len(lost) > ceiling:
+            return f"impact: it would send back {len(lost)} accepted tasks ({', '.join(lost[:8])}{', …' if len(lost) > 8 else ''}); " \
+                   f"more than {ceiling} needs the owner's confirmation"
     live = [task_id for task_id in scope if task_id not in also and _building(ctx, task_id) is not None]
     if live:
         return f"busy: live attempt on {', '.join(live)}"
@@ -112,14 +125,14 @@ def rework_problem(ctx: Ctx, task_ids: tuple[str, ...], also: tuple[str, ...] = 
 
 
 def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, also: tuple[str, ...] = (),
-           owner: bool = False, cascade: bool = True) -> tuple[str, ...]:
+           owner: bool = False, cascade: bool = True, confirmed: bool = False) -> tuple[str, ...]:
     """Send accepted work back: the named tasks, the tasks downstream of them and `also` (the task whose rejection asked
     for it) return to PENDING with a fresh attempt budget; those whose prerequisites are all still completed become
     READY at once. It never completes anything: the redone work needs a new independent verdict. Cancelled tasks stay."""
     by, reason = _who(by, reason)
     if not task_ids:
         raise SchedulerError("NOT_ALLOWED", "rework needs at least one task")
-    problem = rework_problem(ctx, task_ids, also, owner=owner, cascade=cascade)
+    problem = rework_problem(ctx, task_ids, also, owner=owner, cascade=cascade, confirmed=confirmed)
     if problem:
         raise SchedulerError("NOT_ALLOWED", f"rework refused: {problem}")
     scope = rework_scope(ctx, (*task_ids, *also), cascade)

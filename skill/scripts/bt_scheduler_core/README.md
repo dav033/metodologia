@@ -77,8 +77,10 @@ outbox (`pending_orders()` for pull-style adapters); no recovery port → "retry
 block". `Config` (all explicit, none inferred from the plan; an estimate is never a timeout): `max_parallel_tasks=1`,
 `max_attempts=1`, `lease_seconds=300`, `reconcile_seconds=60`, `repository_isolation="shared"`,
 `unknown_surface="serialize"`, `max_recovery_wait=3600`, `max_recovery_waits=3`, `max_deliveries=5`,
-`require_independent_verifier=True`, `exclusive_scopes=()` (plan `scope` values whose tasks claim their whole repository
-exclusively: the one classification field the core reads, and only when the operator names values here). A recovery `wait` always holds at least one second and, like any wait, is not
+`require_independent_verifier=True`, `rework_confirm_over=0` (an action that would send back more ACCEPTED tasks than
+this needs the owner's confirmation; 0 = no ceiling, the methodology sets 3), `exclusive_scopes=()` (plan `scope` values whose tasks claim their whole repository
+exclusively: the one classification field the core reads, and only when the operator names values here; the methodology
+leaves it empty since REQ-030 because two tasks are kept apart by the overlap of their declared paths and resources). A recovery `wait` always holds at least one second and, like any wait, is not
 progress. `run()` also returns when the only live attempts left are `uncertain` (an operator must resolve them).
 The outbox is bounded: past 1000 items, settled orders of closed attempts are pruned (newest 500 kept).
 
@@ -101,7 +103,10 @@ redone work needs a new independent verdict. When it cannot start the outcome de
 2) applies the verdict and **blocks** the rejected task at once (`rework_limit`, audit `rework_refused`) because another
 attempt cannot fix it; a cancelling run just applies the verdict. Repeating the same verdict reworks once.
 `core.rework(task_ids, by, reason)` is the owner's version (no limit; refused while a live attempt is in scope) and
-`core.rework_problem(...)` says in advance why a rework would not start (`busy:`, `limit:` or `cancelled:`).
+`core.rework_problem(...)` says in advance why a rework would not start (`busy:`, `limit:`, `impact:` or `cancelled:`).
+`impact:` (REQ-030) is a rework that would throw away more accepted tasks than `Config.rework_confirm_over`: an
+automatic one (the audit gate) applies the verdict and blocks the rejected task with reason `rework_impact`, and the owner's
+`core.rework(..., confirmed=True)` goes ahead; `core.rework_impact(task_ids, also, cascade)` lists what it would discard.
 
 ## Persistence decision
 
@@ -151,6 +156,11 @@ core.pause(by) / resume / cancel / reopen(task_id, by) / resolve_attempt(attempt
 `rebase_run(repository, old_plan, new_plan)` moves the persisted run from revision N to N+1 in one transaction.
 An accepted task whose *fingerprint* (id, prerequisites, repository, acceptance criteria, verification; never the
 classification) is unchanged, and whose prerequisites were all kept, stays accepted with its attempts and route.
+With `cascade=False` (REQ-030, `gates.rebase_cascade: content`, the methodology's default) the test is the task's OWN
+content (`content_fingerprint`: objective, scope, checks, repository; not where it sits in the graph): a task of
+unchanged content stays accepted whatever happened to its prerequisites, except a `test` or `audit` task over a reset
+one, which judges work that no longer exists. REQ-029's r4 -> r5 reset 28 of 33 accepted tasks under the first rule and
+would have reset 15 under the second.
 Every other existing task returns to `pending` with a fresh attempt budget (its old attempts stay in the history);
 new tasks start `pending`; removed tasks leave the run. A run with a live attempt is refused (`NOT_ALLOWED`), and so are
 another plan id, a revision that is not later, and a cancelled run; a run bound to another plan is `PLAN_MISMATCH`.

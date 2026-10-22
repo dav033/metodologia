@@ -38,14 +38,14 @@ from .plan import Plan, TaskSpec, load_plan, load_plan_file
 from .repository import InMemoryRepository, StateRepository, Transaction
 from .reservation import ClaimResult
 from .scheduler import Ports, SchedulerCore, StepReport
-from .rebase import RebaseReport, fingerprint, plan_rebase, rebase_run
+from .rebase import RebaseReport, content_fingerprint, fingerprint, plan_rebase, rebase_run
 from .simulators import FakeExecutor, FakeVerifier, FifoAssignment, ScriptedRecovery
 from .sqlite_repository import SqliteRepository
 from .states import AttemptState, EventKind, RunStatus, TaskState
 from .views import Snapshot
 
 __all__ = [
-    "RebaseReport", "fingerprint", "plan_rebase", "rebase_run",
+    "RebaseReport", "content_fingerprint", "fingerprint", "plan_rebase", "rebase_run",
     "CODES", "CONTRACT_VERSION", "Ack", "Assignment", "AssignmentPort", "AssignmentRequest", "AttemptState",
     "AuditEntry", "CancelOrder", "ClaimResult", "Config", "Event", "EventKind", "EventPort", "ExecutionPort",
     "ExecutionStatus", "PortNotReady", "FailureContext", "FakeExecutor", "FakeVerifier", "FifoAssignment", "InMemoryRepository",

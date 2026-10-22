@@ -37,22 +37,52 @@ def close(wiring: api.Wiring) -> None:
 LINE_MARKER = "RUN.integration-line"
 
 
-def _line_enabled(rdir: Path, accepted: Mapping[str, str]) -> bool:
-    """`gates.integration_line` (REQ-028) applies to a run that BEGAN with it. A run that already accepted tasks without it
-    never integrated them with each other (their snapshots overlap), so switching the line on mid-run would mark most of
-    them as not fitting and strand the run: it stays on the predecessor merge. The run records the choice in `RUN.integration-line`
-    when it starts with the flag on. An unreadable configuration means off."""
+def _line_enabled(rdir: Path, accepted: Mapping[str, str], probe: Callable[[], str] | None = None) -> bool:
+    """`gates.integration_line` (REQ-028) is on for every run that BEGINS with it (the default since REQ-030). The run
+    records the choice in `RUN.integration-line` and keeps it: switching a run between two integration models mid-way
+    would change what its tasks start from. A run that already accepted tasks without the line is MIGRATED only when the
+    line can hold all of them (`probe()` -> '' when every accepted contribution applies cleanly and no file is lost,
+    else the reason): their snapshots were never integrated with each other, so a run whose accepted work overlaps stays
+    on the predecessor merge and says why in `RUN.integration-line.skipped`. `gates.integration_line_migrate` = False
+    turns the migration off. An unreadable configuration means off."""
     marker = Path(rdir) / LINE_MARKER
+    skipped = Path(str(marker) + ".skipped")
     try:
         if marker.exists():
             return True
         import bt_config
-        if bt_config.get("gates.integration_line", False) is not True or accepted:
+        if bt_config.get("gates.integration_line", True) is not True:
             return False
-        marker.write_text("integration line on since the run began\n", encoding="utf-8")
+        if not accepted:
+            marker.write_text("integration line on since the run began\n", encoding="utf-8")
+            return True
+        if bt_config.get("gates.integration_line_migrate", True) is not True or probe is None:
+            return False
+        reason = probe()
+        if reason:
+            skipped.write_text(f"not migrated to the integration line: {reason}\n", encoding="utf-8")
+            return False
+        marker.write_text(f"integration line on since the run was migrated with {len(accepted)} accepted tasks\n",
+                          encoding="utf-8")
+        skipped.unlink(missing_ok=True)
         return True
     except Exception:  # noqa: BLE001 - configuration trouble must not stop a run from starting
         return False
+
+
+def _migration_probe(line) -> Callable[[], str]:
+    """'' when the line holds every accepted task of every role (dry run: computed in memory, no ref moves)."""
+    def probe() -> str:
+        try:
+            for role in line.roles():
+                state = line.state(role)
+                if state.unresolved:
+                    task, files = next(iter(state.unresolved.items()))
+                    return f"{task} does not fit the integrated tree ({', '.join(files[:4])})"
+        except Exception as error:  # noqa: BLE001 - any trouble means "do not migrate"
+            return f"the line cannot be computed ({type(error).__name__})"
+        return ""
+    return probe
 
 
 def _with_owner_notes(rdir, plan, base):
@@ -126,6 +156,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         import bt_config
 
         configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
+        mb = bt_config.get("verifier.max_workspace_mb", 2048)
+        if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 64:
+            configured["max_workspace_bytes"] = mb << 20
         rerun = bt_config.get("verifier.rerun_failed_checks", 1)
         if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
             configured["rerun_failed_checks"] = rerun
@@ -168,19 +201,32 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
     try:
         if integrate_predecessors:
             integrate = api.integrator.PredecessorIntegrator(fallback=base_ref)
+            import bt_interventions
+            identity = api.run_identity(scheduler)
+
+            def heard(kind, **fields):
+                bt_interventions.record(rdir, kind=kind, run=identity, **fields)
+
             integrate.bind(plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
-                           identity=api.run_identity(scheduler),
+                           identity=identity,
                            accepted=lambda: api._accepted_attempts(scheduler),
                            snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
-                           earlier_of=lambda task: api._earlier_attempts(scheduler, task))
+                           earlier_of=lambda task: api._earlier_attempts(scheduler, task),
+                           start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                           on_conflict=lambda **fields: bt_interventions.record_conflict(rdir, run=identity, **fields))
             port.base_ref = integrate.base_ref
-            if _line_enabled(rdir, api._accepted_attempts(scheduler)):
-                import bt_integration_line
-                integrate.attach_line(bt_integration_line.Line(
-                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
-                    identity=api.run_identity(scheduler), accepted=lambda: api._accepted_attempts(scheduler),
-                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
-                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD"))
+            import bt_config
+            integrate.check_files = bt_config.get("gates.integration_check_files", True) is not False
+            import bt_integration_line
+            line = bt_integration_line.Line(
+                plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                identity=identity, accepted=lambda: api._accepted_attempts(scheduler),
+                snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                check_files=integrate.check_files,
+                base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
+            if _line_enabled(rdir, api._accepted_attempts(scheduler), _migration_probe(line)):
+                integrate.attach_line(line)
                 integrate.recompute_line()
         if recovery_store_path is not None:
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
@@ -197,6 +243,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
         if quality_store_path is not None:
             import bt_attempt_history
+            import bt_attestation
             import bt_audit_gate
             import bt_config
             import bt_remediation
@@ -229,6 +276,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 unresolved_check=getattr(integrate, "unresolved", None),
                 revert_check=getattr(integrate, "reverted", None),
                 remediate=bt_remediation.hook(rdir, bt_audit_gate.policy_from(bt_config.get)),
+                attestations=bt_attestation.lookup(rdir),
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)),
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(

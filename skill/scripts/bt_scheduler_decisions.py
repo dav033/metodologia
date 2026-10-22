@@ -48,6 +48,7 @@ REASONS = {
     "wait_window_exceeded": ("La espera necesaria supera la ventana permitida.", False, "retry"),
     "elapsed_limit": ("Pasó demasiado tiempo desde el primer fallo.", False, "retry"),
     "rework_limit": ("La auditoría rechazó esta tarea otra vez, pero alguna de las tareas que señala ya fue devuelta el máximo de veces permitido (gates.max_reworks) y el sistema no las reabre solo. Lo normal es que los hallazgos se conviertan en tareas de remediación sin preguntarte; esto aparece cuando una auditoría ya agotó sus rondas (gates.remediation_rounds) o sus hallazgos no se pudieron convertir. Reintentar sirve para que la auditoría mire de nuevo el árbol actual; con una indicación puedes decirle qué priorizar.", False, "retry_with_note"),
+    "rework_impact": ("La auditoría rechazó esta tarea y pide devolver más tareas ya aceptadas de las que el sistema rehace sin tu permiso (gates.rework_confirm_over). Lo normal es que los hallazgos se conviertan en tareas de remediación sin tocar lo aceptado; esto aparece cuando una auditoría agotó sus rondas o sus hallazgos no se pudieron convertir. Reintentar hace que la auditoría mire de nuevo el árbol actual; si de verdad quieres rehacer ese trabajo aceptado, hazlo tú con `scheduler-op REQ rework <tareas> --confirm` viendo el coste estimado.", False, "retry_with_note"),
     "manual_cancel": ("Alguien canceló el intento.", False, "retry"),
     "stale_or_cancelled": ("El intento quedó cancelado u obsoleto.", False, "retry"),
     # integrity anomalies: the evidence itself cannot be trusted, so a person looks first
@@ -75,6 +76,9 @@ _INTEGRITY = ("Que una persona mire primero: la evidencia del intento no es fiab
 GUIDE = {
     "attempts_exhausted": _CODE, "timeout_repeated": _CODE, "same_cause_limit": _CODE, "decision_limit": _CODE,
     "permanent_or_unknown_cause": _CODE,
+    "rework_impact": ("Decidir si la auditoría vuelve a mirar el árbol actual o si pagas el coste de rehacer trabajo aceptado.",
+                      ["Reintenta para que la auditoría revise el árbol de ahora (la remediación ya está integrada).",
+                       "Si quieres rehacer las tareas aceptadas, `scheduler-op REQ rework <tareas> --confirm` te dice antes cuántas son y cuántos minutos cuestan."]),
     "rework_limit": ("Decidir si la auditoría vuelve a mirar el árbol actual, con una indicación tuya si quieres.",
                      ["Reintenta para que la auditoría revise el árbol de ahora (los arreglos previos ya están integrados).",
                       "Con `retry_with_note` dile qué hallazgos priorizar."]),
@@ -125,6 +129,21 @@ def write_audit_notes(rdir: Path, task: str, text: str) -> None:
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text.strip() + "\n", encoding="utf-8")
+
+
+def append_audit_notes(rdir: Path, task: str, text: str) -> None:
+    """Add the owner's words to what the system already wrote from the audit's findings (never replace the findings)."""
+    text = text.strip()
+    if not text:
+        return
+    path = audit_notes_path(rdir, task)
+    try:
+        existing = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        existing = ""
+    if text in existing:
+        return
+    write_audit_notes(rdir, task, f"{existing}\n\nOwner's note:\n{text}" if existing else text)
 
 
 def verify_notes_path(rdir: Path, task: str) -> Path:
@@ -418,6 +437,13 @@ def evidence(rdir: Path, request: dict) -> str:
 def _record(rdir: Path, request: dict, option: str, by: str, reason: str, result: list[str]) -> None:
     line = {"request": request["id"], "task": request["task"], "option": option, "by": by, "reason": reason,
             "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "result": result}
+    if by != "scheduler":          # what the scheduler answers itself is recorded by the healing cycle, with its class
+        import bt_healing_classify
+        import bt_interventions
+
+        bt_interventions.record(rdir, kind=bt_healing_classify.class_of_diagnosis(request.get("diagnosis")), source="manual",
+                                task=request["task"], evidence=str(request.get("title") or request.get("what") or ""),
+                                repair=f"{option}: {reason[:300]}", result="fixed", request=request["id"])
     with answers_path(rdir).open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(line, ensure_ascii=False) + "\n")
 
@@ -446,7 +472,7 @@ def answer(project: str, req: str, rdir: Path, request_id: str, option: str, rea
         target = next(o["target"] for o in request["options"] if o["id"] == option)
         if option == "rework_findings":                 # the findings the owner wrote reach each task's next prompt
             for name in target.split(","):
-                write_audit_notes(rdir, name, f"The independent audit {task} still finds, in the current tree:\n{reason.strip()}")
+                append_audit_notes(rdir, name, f"The independent audit {task} still finds, in the current tree:\n{reason.strip()}")
         result = ops.apply(project, req, rdir, "rework", target, reason or f"decision {request_id}: redo {target} on the "
                            f"current work it clashed with", only=True)
         if task in ops.status(project, req, rdir)["blocked_tasks"]:

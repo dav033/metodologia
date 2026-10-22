@@ -1,0 +1,1032 @@
+{
+ "attempts": {
+  "T1": [
+   {
+    "exec_min": 1.17,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 3.44,
+    "outcome": "rejected",
+    "verify_min": 0.57
+   },
+   {
+    "exec_min": 2.19,
+    "outcome": "rejected",
+    "verify_min": 0.58
+   },
+   {
+    "exec_min": 4.9,
+    "outcome": "rejected",
+    "verify_min": 0.66
+   },
+   {
+    "exec_min": 0.9,
+    "outcome": "cancelled",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 3.62,
+    "outcome": "rejected",
+    "verify_min": 3.45
+   },
+   {
+    "exec_min": 1.19,
+    "outcome": "accepted",
+    "verify_min": 6.81
+   }
+  ],
+  "T10": [
+   {
+    "exec_min": 18.92,
+    "outcome": "rejected",
+    "verify_min": 16.82
+   },
+   {
+    "exec_min": 18.37,
+    "outcome": "accepted",
+    "verify_min": 498.45
+   },
+   {
+    "exec_min": 19.7,
+    "outcome": "rejected",
+    "verify_min": 30.21
+   },
+   {
+    "exec_min": 19.07,
+    "outcome": "accepted",
+    "verify_min": 34.31
+   },
+   {
+    "exec_min": 5.69,
+    "outcome": "rejected",
+    "verify_min": 6.07
+   },
+   {
+    "exec_min": 12.76,
+    "outcome": "rejected",
+    "verify_min": 15.8
+   },
+   {
+    "exec_min": 8.55,
+    "outcome": "rejected",
+    "verify_min": 9.27
+   },
+   {
+    "exec_min": 7.06,
+    "outcome": "rejected",
+    "verify_min": 9.33
+   },
+   {
+    "exec_min": 8.72,
+    "outcome": "rejected",
+    "verify_min": 9.3
+   },
+   {
+    "exec_min": 18.17,
+    "outcome": "accepted",
+    "verify_min": 22.61
+   },
+   {
+    "exec_min": 21.55,
+    "outcome": "accepted",
+    "verify_min": 37.28
+   },
+   {
+    "exec_min": 19.63,
+    "outcome": "accepted",
+    "verify_min": 28.43
+   },
+   {
+    "exec_min": 17.44,
+    "outcome": "accepted",
+    "verify_min": 33.64
+   }
+  ],
+  "T10a": [
+   {
+    "exec_min": 11.72,
+    "outcome": "accepted",
+    "verify_min": 2.07
+   }
+  ],
+  "T11": [
+   {
+    "exec_min": 5.39,
+    "outcome": "accepted",
+    "verify_min": 30.03
+   },
+   {
+    "exec_min": 4.08,
+    "outcome": "accepted",
+    "verify_min": 0.34
+   }
+  ],
+  "T12": [
+   {
+    "exec_min": 8.31,
+    "outcome": "rejected",
+    "verify_min": 82.63
+   },
+   {
+    "exec_min": 2.75,
+    "outcome": "accepted",
+    "verify_min": 0.33
+   },
+   {
+    "exec_min": 5.48,
+    "outcome": "rejected",
+    "verify_min": 0.38
+   },
+   {
+    "exec_min": 5.93,
+    "outcome": "accepted",
+    "verify_min": 0.38
+   },
+   {
+    "exec_min": 9.19,
+    "outcome": "accepted",
+    "verify_min": 0.38
+   },
+   {
+    "exec_min": 1.2,
+    "outcome": "accepted",
+    "verify_min": 0.28
+   },
+   {
+    "exec_min": 13.8,
+    "outcome": "accepted",
+    "verify_min": 0.46
+   },
+   {
+    "exec_min": 1.61,
+    "outcome": "accepted",
+    "verify_min": 0.49
+   }
+  ],
+  "T13": [
+   {
+    "exec_min": 3.86,
+    "outcome": "accepted",
+    "verify_min": 0.35
+   },
+   {
+    "exec_min": 7.01,
+    "outcome": "rejected",
+    "verify_min": 0.43
+   },
+   {
+    "exec_min": 1.55,
+    "outcome": "accepted",
+    "verify_min": 0.46
+   },
+   {
+    "exec_min": 11.72,
+    "outcome": "accepted",
+    "verify_min": 0.38
+   },
+   {
+    "exec_min": 7.82,
+    "outcome": "accepted",
+    "verify_min": 0.43
+   },
+   {
+    "exec_min": 8.26,
+    "outcome": "rejected",
+    "verify_min": 0.35
+   },
+   {
+    "exec_min": 2.34,
+    "outcome": "rejected",
+    "verify_min": 0.35
+   },
+   {
+    "exec_min": 2.06,
+    "outcome": "accepted",
+    "verify_min": 0.49
+   },
+   {
+    "exec_min": 1.45,
+    "outcome": "accepted",
+    "verify_min": 0.48
+   }
+  ],
+  "T14": [
+   {
+    "exec_min": 5.9,
+    "outcome": "accepted",
+    "verify_min": 10.82
+   },
+   {
+    "exec_min": 1.33,
+    "outcome": "accepted",
+    "verify_min": 6.09
+   },
+   {
+    "exec_min": 5.13,
+    "outcome": "rejected",
+    "verify_min": 19.19
+   },
+   {
+    "exec_min": 1.82,
+    "outcome": "accepted",
+    "verify_min": 7.26
+   },
+   {
+    "exec_min": 2.06,
+    "outcome": "accepted",
+    "verify_min": 18.67
+   },
+   {
+    "exec_min": 0.04,
+    "outcome": "failed",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 0.04,
+    "outcome": "failed",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 0.03,
+    "outcome": "failed",
+    "verify_min": 0.0
+   },
+   {
+    "exec_min": 2.85,
+    "outcome": "rejected",
+    "verify_min": 0.7
+   },
+   {
+    "exec_min": 19.75,
+    "outcome": "accepted",
+    "verify_min": 16.55
+   }
+  ],
+  "T14a": [
+   {
+    "exec_min": 18.32,
+    "outcome": "rejected",
+    "verify_min": 16.85
+   },
+   {
+    "exec_min": 16.68,
+    "outcome": "rejected",
+    "verify_min": 17.02
+   },
+   {
+    "exec_min": 22.64,
+    "outcome": "rejected",
+    "verify_min": 17.12
+   },
+   {
+    "exec_min": 19.45,
+    "outcome": "rejected",
+    "verify_min": 17.3
+   },
+   {
+    "exec_min": 20.1,
+    "outcome": "accepted",
+    "verify_min": 19.72
+   },
+   {
+    "exec_min": 11.67,
+    "outcome": "rejected",
+    "verify_min": 6.21
+   },
+   {
+    "exec_min": 7.98,
+    "outcome": "rejected",
+    "verify_min": 6.25
+   },
+   {
+    "exec_min": 7.97,
+    "outcome": "rejected",
+    "verify_min": 6.15
+   }
+  ],
+  "T15": [
+   {
+    "exec_min": 12.15,
+    "outcome": "rejected",
+    "verify_min": 10.84
+   },
+   {
+    "exec_min": 12.06,
+    "outcome": "rejected",
+    "verify_min": 11.02
+   },
+   {
+    "exec_min": 12.96,
+    "outcome": "rejected",
+    "verify_min": 11.13
+   },
+   {
+    "exec_min": 13.4,
+    "outcome": "rejected",
+    "verify_min": 11.06
+   },
+   {
+    "exec_min": 13.16,
+    "outcome": "rejected",
+    "verify_min": 11.76
+   }
+  ],
+  "T2": [
+   {
+    "exec_min": 15.19,
+    "outcome": "accepted",
+    "verify_min": 57.03
+   }
+  ],
+  "T3": [
+   {
+    "exec_min": 12.36,
+    "outcome": "accepted",
+    "verify_min": 5.87
+   },
+   {
+    "exec_min": 2.79,
+    "outcome": "accepted",
+    "verify_min": 0.34
+   }
+  ],
+  "T4": [
+   {
+    "exec_min": 7.83,
+    "outcome": "accepted",
+    "verify_min": 15.14
+   },
+   {
+    "exec_min": 2.82,
+    "outcome": "accepted",
+    "verify_min": 1.49
+   }
+  ],
+  "T5": [
+   {
+    "exec_min": 14.25,
+    "outcome": "accepted",
+    "verify_min": 23.64
+   },
+   {
+    "exec_min": 2.18,
+    "outcome": "accepted",
+    "verify_min": 0.33
+   }
+  ],
+  "T6": [
+   {
+    "exec_min": 9.42,
+    "outcome": "accepted",
+    "verify_min": 17.25
+   },
+   {
+    "exec_min": 1.56,
+    "outcome": "accepted",
+    "verify_min": 0.35
+   }
+  ],
+  "T7": [
+   {
+    "exec_min": 38.74,
+    "outcome": "accepted",
+    "verify_min": 174.16
+   },
+   {
+    "exec_min": 15.18,
+    "outcome": "accepted",
+    "verify_min": 230.17
+   }
+  ],
+  "T8": [
+   {
+    "exec_min": 10.48,
+    "outcome": "accepted",
+    "verify_min": 22.83
+   },
+   {
+    "exec_min": 3.73,
+    "outcome": "accepted",
+    "verify_min": 13.46
+   },
+   {
+    "exec_min": 8.48,
+    "outcome": "accepted",
+    "verify_min": 0.45
+   },
+   {
+    "exec_min": 1.87,
+    "outcome": "accepted",
+    "verify_min": 0.29
+   }
+  ],
+  "T9": [
+   {
+    "exec_min": 6.87,
+    "outcome": "accepted",
+    "verify_min": 50.74
+   },
+   {
+    "exec_min": 1.11,
+    "outcome": "accepted",
+    "verify_min": 0.4
+   }
+  ]
+ },
+ "name": "REQ-020",
+ "plan": {
+  "plan_id": "REQ-020",
+  "tasks": [
+   {
+    "after": [],
+    "expected_paths": [
+     "package.json",
+     "scripts/test/gate.mjs",
+     ".env.example",
+     "src/lib/asesor/db.ts",
+     "src/lib/asesor/repository.ts",
+     "scripts/migrate-asesor.ts",
+     "scripts/migrations-asesor/001_initial.sql",
+     "scripts/test/asesor/run.ts",
+     "scripts/test/asesor/db.test.ts",
+     "scripts/integration/asesor-db.test.ts"
+    ],
+    "id": "T1",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "large_change",
+    "shared_resources": [
+     "advisor-persistence-contract",
+     "advisor-command-contract"
+    ]
+   },
+   {
+    "after": [
+     "T1"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/auth.ts",
+     "src/app/asesor/login/page.tsx",
+     "src/app/api/asesor/login/route.ts",
+     "src/proxy.ts",
+     "scripts/seed-asesor.ts",
+     "scripts/test/asesor/auth.test.ts",
+     "scripts/test/test-proxy-matcher.ts"
+    ],
+    "id": "T2",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-session-contract",
+     "advisor-persistence-contract"
+    ]
+   },
+   {
+    "after": [
+     "T2"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/contracts.ts",
+     "src/lib/asesor/agent.ts",
+     "src/lib/asesor/tools.ts",
+     "src/lib/asesor/progress.ts",
+     "src/lib/asesor/prompts/base.ts",
+     "src/app/api/asesor/conversar/route.ts",
+     "src/app/api/asesor/conversations/route.ts",
+     "src/app/api/asesor/conversations/[id]/route.ts",
+     "scripts/test/asesor/agent.test.ts"
+    ],
+    "id": "T3",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "large_change",
+    "shared_resources": [
+     "advisor-session-contract",
+     "advisor-persistence-contract",
+     "event-brief-contract",
+     "advisor-stream-contract"
+    ]
+   },
+   {
+    "after": [
+     "T3"
+    ],
+    "expected_paths": [
+     "src/app/asesor/page.tsx",
+     "src/components/asesor/ChatView.tsx",
+     "src/components/asesor/Composer.tsx",
+     "src/components/asesor/useConversation.ts",
+     "scripts/test/asesor/chat-ui.test.ts",
+     "scripts/e2e/asesor/scenarios/text.ts"
+    ],
+    "id": "T4",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-stream-contract",
+     "advisor-media-ui-contract"
+    ]
+   },
+   {
+    "after": [
+     "T3"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/brief.ts",
+     "src/app/api/asesor/briefs/[id]/route.ts",
+     "src/app/asesor/brief/[id]/page.tsx",
+     "src/components/asesor/BriefView.tsx",
+     "src/components/asesor/brief-print.css",
+     "scripts/test/asesor/brief.test.ts"
+    ],
+    "id": "T5",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "event-brief-contract",
+     "advisor-brief-projection"
+    ]
+   },
+   {
+    "after": [
+     "T5"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/admin.ts",
+     "src/app/api/asesor/admin/conversations/route.ts",
+     "src/app/api/asesor/admin/conversations/[id]/route.ts",
+     "src/app/asesor/admin/page.tsx",
+     "src/app/asesor/admin/[id]/page.tsx",
+     "scripts/test/asesor/admin.test.ts"
+    ],
+    "id": "T6",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-session-contract",
+     "advisor-brief-projection"
+    ]
+   },
+   {
+    "after": [
+     "T4",
+     "T6"
+    ],
+    "expected_paths": [
+     "scripts/e2e/asesor/run.ts",
+     "scripts/e2e/asesor/check-findings.ts",
+     "scripts/e2e/asesor/scenarios/m1.ts",
+     "docs/req-020/deployment.md",
+     "scripts/test/asesor/harness.test.ts"
+    ],
+    "id": "T7",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "repository": "pictures",
+    "scope": "large_change",
+    "shared_resources": [
+     "advisor-command-contract",
+     "pictures-production-deployment"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/photos.ts",
+     "src/app/api/asesor/photos/route.ts",
+     "src/app/api/asesor/photos/[id]/route.ts",
+     "scripts/test/asesor/photos.test.ts",
+     "scripts/e2e/asesor/scenarios/photos.ts"
+    ],
+    "id": "T8",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-photo-capability"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "src/app/api/voz/transcribir/route.ts",
+     "src/lib/asesor/voice.ts",
+     "scripts/test/asesor/voice.test.ts",
+     "scripts/e2e/asesor/scenarios/voice.ts"
+    ],
+    "id": "T9",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-session-contract",
+     "voice-transcription-contract"
+    ]
+   },
+   {
+    "after": [
+     "T8",
+     "T9"
+    ],
+    "expected_paths": [
+     "scripts/e2e/asesor/run.ts",
+     "scripts/e2e/asesor/scenarios/photos.ts",
+     "scripts/e2e/asesor/scenarios/voice.ts",
+     "scripts/e2e/asesor/scenarios/m2.ts"
+    ],
+    "id": "T10a",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "pictures",
+    "scope": "small_change",
+    "shared_resources": []
+   },
+   {
+    "after": [
+     "T8",
+     "T9",
+     "T10a"
+    ],
+    "expected_paths": [
+     "docs/req-020/m2-deployment.md"
+    ],
+    "id": "T10",
+    "kind": "implement",
+    "milestone_id": "M2",
+    "repository": "pictures",
+    "scope": "small_change",
+    "shared_resources": [
+     "pictures-production-deployment",
+     "advisor-media-ui-contract"
+    ]
+   },
+   {
+    "after": [
+     "T7"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/catalogue.ts",
+     "src/lib/asesor/catalogue-fallback.json",
+     "scripts/migrations-asesor/002_catalogue.sql",
+     "scripts/test/asesor/catalogue.test.ts"
+    ],
+    "id": "T11",
+    "kind": "implement",
+    "milestone_id": "M3",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-persistence-contract",
+     "advisor-catalogue-contract"
+    ]
+   },
+   {
+    "after": [
+     "T11"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/directions.ts",
+     "src/lib/asesor/directions.json",
+     "scripts/test/asesor/directions.test.ts",
+     "scripts/e2e/asesor/scenarios/directions.ts"
+    ],
+    "id": "T12",
+    "kind": "implement",
+    "milestone_id": "M3",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-direction-contract"
+    ]
+   },
+   {
+    "after": [
+     "T11"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/packages.ts",
+     "scripts/test/asesor/packages.test.ts",
+     "scripts/e2e/asesor/scenarios/packages.ts"
+    ],
+    "id": "T13",
+    "kind": "implement",
+    "milestone_id": "M3",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-catalogue-contract",
+     "advisor-package-contract"
+    ]
+   },
+   {
+    "after": [
+     "T12",
+     "T13",
+     "T10"
+    ],
+    "expected_paths": [
+     "src/lib/asesor/prompts/catalogue.ts",
+     "scripts/eval/asesor/run.ts",
+     "scripts/eval/asesor/scenarios.json",
+     "scripts/test/asesor/prompt.test.ts",
+     "scripts/e2e/asesor/scenarios/m3.ts"
+    ],
+    "id": "T14",
+    "kind": "implement",
+    "milestone_id": "M3",
+    "repository": "pictures",
+    "scope": "large_change",
+    "shared_resources": [
+     "advisor-direction-contract",
+     "advisor-package-contract"
+    ]
+   },
+   {
+    "after": [
+     "T10",
+     "T14"
+    ],
+    "expected_paths": [
+     "docs/req-020/integration-results.json"
+    ],
+    "id": "T14a",
+    "kind": "test",
+    "milestone_id": "M4",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-command-contract",
+     "pictures-production-deployment"
+    ]
+   },
+   {
+    "after": [
+     "T14a"
+    ],
+    "expected_paths": [
+     "docs/req-020/T15.md",
+     "docs/req-020/T15.findings.json"
+    ],
+    "id": "T15",
+    "kind": "audit",
+    "milestone_id": "M4",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-command-contract",
+     "pictures-production-deployment"
+    ]
+   },
+   {
+    "after": [
+     "T15"
+    ],
+    "expected_paths": [
+     "docs/req-020/T15-crosscheck.md",
+     "docs/req-020/T15-crosscheck.findings.json"
+    ],
+    "id": "T15b",
+    "kind": "audit",
+    "milestone_id": "M4",
+    "repository": "pictures",
+    "scope": "full_feature",
+    "shared_resources": [
+     "advisor-command-contract",
+     "pictures-production-deployment"
+    ]
+   }
+  ]
+ },
+ "recorded": {
+  "accepted": 45,
+  "attempt_minutes": 2451.7,
+  "attempts": 80,
+  "rejected": 30,
+  "rework_requests": 15,
+  "wall_minutes": 2529.7
+ },
+ "reworks": [
+  {
+   "at_min": 522.04,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T8"
+   ],
+   "reason": "T9 was accepted and clashes with T8: T8 vs T9 for T10: src/components/asesor/Composer.tsx, src/components/asesor/useConversation.ts",
+   "tasks": [
+    "T8"
+   ]
+  },
+  {
+   "at_min": 1242.41,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T10"
+   ],
+   "reason": "T14 was accepted and clashes with T10: T10 vs T14 for T14a: scripts/test/asesor/run.ts, src/lib/asesor/agent.ts, src/lib/asesor/prompts/base.ts, src/lib/asesor/",
+   "tasks": [
+    "T10"
+   ]
+  },
+  {
+   "at_min": 1345.74,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T14"
+   ],
+   "reason": "T10 was accepted and clashes with T14: T10 vs T14 for T14a: scripts/test/asesor/run.ts, src/lib/asesor/agent.ts, src/lib/asesor/prompts/base.ts, src/lib/asesor/",
+   "tasks": [
+    "T14"
+   ]
+  },
+  {
+   "at_min": 1676.25,
+   "by": "operator",
+   "cascade": true,
+   "named": [
+    "T3",
+    "T5",
+    "T8",
+    "T11",
+    "T12",
+    "T13",
+    "T14"
+   ],
+   "reason": "T15 acceptance audit: 7 high findings (F1-F7); F1 T5, F2 T3, F3 T8, F4 T11/T12/T13, F5 T14 are genuinely missing product behavior (verified in git: photo capabi",
+   "tasks": [
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "T7",
+    "T8",
+    "T9",
+    "T10",
+    "T11",
+    "T12",
+    "T13",
+    "T14",
+    "T14a",
+    "T15"
+   ]
+  },
+  {
+   "at_min": 1944.96,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T8"
+   ],
+   "reason": "T9 was accepted and clashes with T8: T8 vs T9 for T10: src/components/asesor/Composer.tsx, src/components/asesor/useConversation.ts",
+   "tasks": [
+    "T8"
+   ]
+  },
+  {
+   "at_min": 1985.47,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T12"
+   ],
+   "reason": "T13 was accepted and clashes with T12: T12 vs T13 for T14: scripts/test/asesor/directions.test.ts, src/app/api/asesor/conversar/route.ts, src/components/asesor/",
+   "tasks": [
+    "T12"
+   ]
+  },
+  {
+   "at_min": 1995.06,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T13"
+   ],
+   "reason": "T12 was accepted and clashes with T13: T12 vs T13 for T14: scripts/test/asesor/directions.test.ts, scripts/test/asesor/packages.test.ts, scripts/test/asesor/run",
+   "tasks": [
+    "T13"
+   ]
+  },
+  {
+   "at_min": 2007.21,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T12"
+   ],
+   "reason": "T13 was accepted and clashes with T12: T12 vs T13 for T14: scripts/test/asesor/directions.test.ts, scripts/test/asesor/packages.test.ts, scripts/test/asesor/run",
+   "tasks": [
+    "T12"
+   ]
+  },
+  {
+   "at_min": 2193.22,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T14"
+   ],
+   "reason": "T10 was accepted and clashes with T14: T10 vs T14 for T14a: scripts/e2e/asesor/run.ts, scripts/test/asesor/admin.test.ts, scripts/test/asesor/brief.test.ts, scr",
+   "tasks": [
+    "T14"
+   ]
+  },
+  {
+   "at_min": 2213.98,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T10"
+   ],
+   "reason": "T14 was accepted and clashes with T10: T10 vs T14 for T14a: scripts/test/asesor/admin.test.ts, scripts/test/asesor/brief.test.ts, scripts/test/asesor/chat-ui.te",
+   "tasks": [
+    "T10"
+   ]
+  },
+  {
+   "at_min": 2336.22,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T13"
+   ],
+   "reason": "automatic: Conflicto de c\u00f3digo entre T10 + T12 y T13",
+   "tasks": [
+    "T13"
+   ]
+  },
+  {
+   "at_min": 2344.49,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T10",
+    "T12"
+   ],
+   "reason": "T13 was accepted and clashes with T10, T12: T10+T12 vs T13 for T14: scripts/test/asesor/chat-ui.test.ts, scripts/test/asesor/packages.test.ts, scripts/test/ases",
+   "tasks": [
+    "T10",
+    "T12"
+   ]
+  },
+  {
+   "at_min": 2407.0,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T13"
+   ],
+   "reason": "automatic: Conflicto de c\u00f3digo entre T10 + T12 y T13",
+   "tasks": [
+    "T13"
+   ]
+  },
+  {
+   "at_min": 2420.99,
+   "by": "integration-gate",
+   "cascade": false,
+   "named": [
+    "T10",
+    "T12"
+   ],
+   "reason": "T13 was accepted and clashes with T10, T12: T10+T12 vs T13 for T14: scripts/test/asesor/chat-ui.test.ts, scripts/test/asesor/run.ts, src/components/asesor/Compo",
+   "tasks": [
+    "T10",
+    "T12"
+   ]
+  },
+  {
+   "at_min": 2474.38,
+   "by": "operator",
+   "cascade": false,
+   "named": [
+    "T13"
+   ],
+   "reason": "automatic: Conflicto de c\u00f3digo entre T10 + T12 y T13",
+   "tasks": [
+    "T13"
+   ]
+  }
+ ],
+ "version": 1
+}

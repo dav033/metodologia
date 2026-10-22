@@ -1,0 +1,20 @@
+{
+ "note": "minutes_to_recovery = minutes until the recovery action was taken (a person last night, the watchdog now); not the time the repaired work then takes",
+ "scenarios": "recovery-scenarios/1",
+ "versions": {
+  "v0-night": {
+   "as_expected": 0,
+   "classified": 0,
+   "human_interventions": 10,
+   "minutes_to_recovery": 1085.6,
+   "scenarios": 12
+  },
+  "v1": {
+   "as_expected": 12,
+   "classified": 11,
+   "human_interventions": 2,
+   "minutes_to_recovery": 76.3,
+   "scenarios": 12
+  }
+ }
+}

@@ -29,6 +29,29 @@ def request(**extra):
     return {**base, **extra}
 
 
+class LastRealError(unittest.TestCase):
+    """REQ-030: the rules read the LAST error, not every word of the bundle (a stop was called "quota" over an unclassified route)."""
+
+    def explain(self, **kw):
+        return rules.explain(request(), {"tasks": {}, "attempts": {}}, **kw)[0]
+
+    def test_an_old_quota_word_does_not_outrank_the_last_error_a_replaced_route(self):
+        noise = ["agent stopped: usage limit reached (429)", "start rejected: ROUTE_INVALID: the decision was replaced by 2e7a754a"]
+        got = self.explain(verify="usage limit 429 quota", failures=noise)
+        self.assertEqual((got["kind"], got["option"]), ("transient", "retry"))
+        self.assertIn("ROUTE_INVALID", got["headline"])
+
+    def test_a_real_quota_message_as_the_last_error_is_still_quota(self):
+        got = self.explain(failures=["agent stopped: you've hit your limit, resets at 3pm"])
+        self.assertEqual(got["kind"], "quota")
+        self.assertNotEqual(self.explain(failures=["processed 429 rows"])["kind"], "quota")
+
+    def test_no_space_names_the_workspace_and_the_knob_not_the_code(self):
+        got = self.explain(failures=["next build: ENOSPC: no space left on device, write"])
+        self.assertEqual(got["kind"], "environment")
+        self.assertIn("verifier.max_workspace_mb", " ".join(got["steps"]))
+
+
 class Plan:
     """ancestors() over a fixed graph: T14a → T14b → T16, T9 → T16."""
     graph = {"T16": {"T14b", "T14a", "T9"}, "T14b": {"T14a"}, "T14a": set(), "T9": set()}
