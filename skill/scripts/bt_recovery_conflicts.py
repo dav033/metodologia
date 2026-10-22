@@ -8,7 +8,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +48,8 @@ def _paths(values: object) -> list[str]:
 
 
 def collect_conflict_evidence(source_records: Mapping[str, Any], *, source_type: str,
-                              conflict: Mapping[str, Any], repository_root: Path | str | None = None) -> dict[str, Any]:
+                              conflict: Mapping[str, Any], repository_root: Path | str | None = None,
+                              extra_digests: Iterable[str] = ()) -> dict[str, Any]:
     """Return a plain ``conflict-observation/1`` mapping after cross-checking records.
 
     Start conflicts require M1 attempts/accepted maps, frozen old/current task
@@ -142,13 +143,16 @@ def collect_conflict_evidence(source_records: Mapping[str, Any], *, source_type:
     if not isinstance(refusal_detail, str) or not refusal_detail.strip() or len(refusal_detail) > 4096:
         raise ConflictEvidenceError("ordinary rework refusal detail is missing")
 
+    # Digests of facts the convergence compiler binds its strategy to (the bare accepted-attempt map and the manifest of the
+    # accepted base): they are derived from the same official records, never supplied by an agent.
+    extra = {digest for digest in extra_digests if isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest)}
     observation = {"schema_version": SCHEMA, "source_type": source_type, "run_id": run_id,
         "plan_id": plan_id, "revision": revision, "plan_sha256": plan_sha, "task_id": task_id,
         "attempt_id": attempt_id, "token": token, "consumer_id": consumer_id,
         "repository_id": repository_id, "paths": paths, "sides": sides,
         "original_merge_base": hashlib.sha256(merge_base.encode()).hexdigest(),
         "carry_ancestry": list(conflict.get("carry_ancestry", ())),
-        "evidence_digests": sorted(set(digests.values())), "ordinary_rework_refusal": refusal,
+        "evidence_digests": sorted({*digests.values(), *extra}), "ordinary_rework_refusal": refusal,
         "ordinary_rework_refusal_detail": refusal_detail}
     if not all(isinstance(value, str) and value for value in (token, consumer_id, repository_id)):
         raise ConflictEvidenceError("M3 consumer identity is incomplete")
