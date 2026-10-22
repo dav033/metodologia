@@ -122,3 +122,12 @@ refs, read-only CLI and a copied package tested alone under `python -I` from an
 unrelated directory. No providers, credentials, paid requests or real sleeps are used.
 Cross-module acceptance, M1 application and the real executor handoff are adapter
 integration responsibilities tested outside this independent package.
+
+
+## Structural recovery (REQ-029)
+M5 stays advice-only. REQ-029 adds, outside it: evidence capture (`bt_recovery_evidence`), conflict observations published before
+clipping (`bt_recovery_conflicts`, `conflict_contracts/policy/delivery`), a constrained compiler and convergence work
+(`bt_recovery_compiler`, `bt_recovery_convergence`), a run-scoped authorization ledger (`bt_recovery_authorization`), journaled
+application through one generic M1 revision primitive (`bt_recovery_apply`) and the owner lifecycle (`bt_scheduler_recovery_lifecycle`).
+One cycle per run and lineage, at most eight corrective tasks, ordinary counters never reset. Boundary, migration and rollback:
+`reviews/req029-rollout.md`. The common stops are handled earlier by `bt_scheduler_healing` (`references/modules.md` §self-healing).
