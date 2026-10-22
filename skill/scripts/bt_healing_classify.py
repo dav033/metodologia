@@ -25,7 +25,7 @@ TRANSIENT = re.compile(r"ROUTE_INVALID|SANDBOX_UNAVAILABLE|RUNNER_BUSY|CHECK_TIM
                        r"|ECONNRESET|ETIMEDOUT|EAI_AGAIN|temporarily unavailable|decision was replaced|stale_or_cancelled|manual_cancel")
 CRITERION = re.compile(r"CRITERION_UNVERIFIABLE|CRITERION_AMBIGUOUS|CRITERION_MANUAL|CHECK_UNMAPPED")
 PLAN = re.compile(r"CHECK_UNSUPPORTED|not a git repository|relative executable|CHECK_PRODUCTION_ACTION")
-ENVIRONMENT = re.compile(r"EROFS|read-only file system|ENOSPC|No space left|ECONNREFUSED|connection refused|could not connect to server"
+ENVIRONMENT = re.compile(r"ENOTCACHED|only-if-cached|EROFS|read-only file system|ENOSPC|No space left|ECONNREFUSED|connection refused|could not connect to server"
                          r"|Cannot find module '[^'.\/][^']*'|No module named|\b[A-Z][A-Z0-9]*_[A-Z0-9_]{2,}\b[^\n]{0,40}\b(?:is not set|is missing|undefined)", re.I)
 # a real quota/rate-limit message, never a bare number or a word that happens to be in the text
 QUOTA = re.compile(r"usage limit|rate[- ]?limit(?:ed)?|quota (?:exceeded|exhausted|reached)|insufficient[_ ]quota|too many requests"

@@ -174,6 +174,25 @@ class Cycle(unittest.TestCase):
         self.assertIn("all 1 criteria PASS", self.answers[0][2])
 
 
+    def test_one_criterion_and_only_passing_checks_none_of_them_mapped_is_accepted_by_elimination(self):
+        self.verify = "CRITERION_UNVERIFIABLE: No verification check maps exactly to this acceptance criterion."
+        evidence = ["CRITERION_UNVERIFIABLE: No verification check maps exactly", "CHECK_UNMAPPED: A verification check does not map",
+                    "criterio UNKNOWN: Both boundary tests pass and nothing is weakened",
+                    "cd skill/scripts && python3 -m unittest discover -s tests -p test_a.py → pass",
+                    "cd skill/scripts && python3 -m unittest discover -s tests -p test_b.py → pass"]
+        options = [{"id": "review_fail"}, {"id": "review_pass"}, {"id": "stop"}]
+        card = request(source="review", id="key-9", options=options, evidence=evidence)
+        self.assertEqual(self.run_cycle([card]), 1)
+        self.assertEqual(self.answers[0][:2], ("key-9", "review_pass"))
+        self.assertIn("by elimination", self.answers[0][2])
+        # a failing or undetermined check, or a second criterion, is never accepted this way
+        for bad in (evidence[:4] + ["x → fail"], evidence[:4] + ["x → unknown (CHECK_TIMEOUT)"], evidence + ["criterio UNKNOWN: another"]):
+            self.answers.clear()
+            self.rdir = Path(tempfile.mkdtemp(dir=self.tmp.name))
+            self.run_cycle([request(source="review", id="key-9", options=options, evidence=bad)])
+            self.assertNotIn("review_pass", [a[1] for a in self.answers], bad[-1])
+
+
 class PlanRepairs(unittest.TestCase):
     def plan(self):
         return make_plan(make_task("T1", paths=["src/a.py"], command="pytest tests/test_a.py"),

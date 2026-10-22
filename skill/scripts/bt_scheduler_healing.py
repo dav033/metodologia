@@ -238,6 +238,12 @@ def _fix_mapping(project, req, rdir, request, case, plan, answer, revise) -> dic
         answer(request["id"], "review_pass", f"automatic: all {len(criteria)} criteria PASS and every command check passed; "
                                              "only an extra check names no criterion (CHECK_UNMAPPED)")
         return {"repair": "accept: every criterion proved, only an extra check unmapped", "result": "fixed"}
+    checks = [e for e in evidence if " → " in e and not e.startswith("criterio ")]
+    if (len(criteria) == 1 and criteria[0].startswith("criterio UNKNOWN") and issues <= {"CRITERION_UNVERIFIABLE", "CHECK_UNMAPPED"}
+            and checks and all(e.endswith("→ pass") or "→ pass (" in e for e in checks) and "review_pass" in _options(request)):
+        answer(request["id"], "review_pass", f"automatic: the task's single criterion has no check with its exact text, but all {len(checks)} "
+                                             "command checks passed and none is left over for another criterion (mapping by elimination)")
+        return {"repair": "accept by elimination: one criterion, every command check passed", "result": "fixed"}
     if plan is None:
         return {"repair": "none", "result": "pending"}
     latest = _latest_plan(rdir)
