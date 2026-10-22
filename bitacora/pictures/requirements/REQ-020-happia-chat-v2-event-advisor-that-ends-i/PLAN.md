@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 15/19 · generado: 2026-10-22T12:21:08-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 15/19 · generado: 2026-10-22T12:41:03-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -45,7 +45,7 @@ created: 2026-10-20
 | T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | gpt-6-luna | codex-2 | 14 |
 | T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-1 | 5 |
 | T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
-| T14.1a | Repair what blocks T14a | alta | en curso | gpt-6-luna | codex-1 | 1 |
+| T14.1a | Repair what blocks T14a | alta | verificando | gpt-6-luna | codex-1 | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach
