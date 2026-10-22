@@ -40,6 +40,9 @@ DEFAULTS: dict = {
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
                  "rerun_failed_checks": 1,
+                 # the pass cache leaves out the report files a test/audit task itself writes (they change every attempt and the
+                 # suites do not read them); a check that names one keeps it in its key. False = the whole tree, as before
+                 "cache_ignores_outputs": True,
                  # the verifier's private workspace (a tmpfs the checked tree and its build output share); a build that needs
                  # more says "No space left on device" and the card names this key
                  "max_workspace_mb": 2048},

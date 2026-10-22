@@ -160,6 +160,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         mb = bt_config.get("verifier.max_workspace_mb", 2048)
         if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 64:
             configured["max_workspace_bytes"] = mb << 20
+        configured["cache_ignores_outputs"] = bt_config.get("verifier.cache_ignores_outputs", True)
         rerun = bt_config.get("verifier.rerun_failed_checks", 1)
         if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
             configured["rerun_failed_checks"] = rerun

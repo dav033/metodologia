@@ -97,7 +97,8 @@ class QualityVerificationPort:
             raise TypeError("M3 attempts root must be a configured filesystem path")
         self.attempts_root = Path(configured_attempts)
         self.engine = QualityEngine(
-            policy, store, reviewer=reviewer, runner=runner, resolver=snapshot_resolver, attestations=attestations
+            policy, store, reviewer=reviewer, runner=runner, resolver=snapshot_resolver, attestations=attestations,
+            own_outputs=self._own_outputs
         )
         self._pool = ThreadPoolExecutor(
             max_workers=policy.max_concurrent, thread_name_prefix="m6-quality"
@@ -150,6 +151,17 @@ class QualityVerificationPort:
             else:
                 self._thread.join(timeout=5)
         self._pool.shutdown(wait=wait, cancel_futures=False)
+
+    def _own_outputs(self, order: VerifyRequest) -> tuple[str, ...]:
+        """The report files this order's task writes, when it is a test or audit task (`reuse.own_outputs`)."""
+        from bt_scheduler_quality import reuse
+
+        try:
+            task = self.core.plan.task(order.task_id)
+        except Exception:  # noqa: BLE001 - an unknown task has no outputs to leave out of the key
+            return ()
+        meta = getattr(task, "meta", None) or {}
+        return reuse.own_outputs(meta.get("kind"), getattr(task, "expected_paths", ()))
 
     def request(self, order: m1.VerifyOrder) -> m1.Ack:
         try:

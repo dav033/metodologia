@@ -67,10 +67,12 @@ class QualityEngine:
         resolver: SnapshotResolver | None = None,
         reviewer: ReviewerPort | None = None,
         attestations: Callable[[VerifyRequest, CheckSpec], str | None] | None = None,
+        own_outputs: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
     ):
         """`attestations(order, spec)` -> the digest of a valid receipt the coordinator left for that manual check, or None
         (a receipt is minted and verified outside this package; M6 only learns whether one holds)."""
         self.attestations = attestations
+        self.own_outputs = own_outputs          # order -> the report files its task writes (they do not change what a check proves)
         self.policy = policy
         self.store = store
         self.runner = runner or SandboxRunner(policy)
@@ -197,9 +199,20 @@ class QualityEngine:
     ) -> _ExecutionEvidence:
         with self.resolver.materialize(source) as snapshot:
             specs = compile_verification(order, snapshot.directory, self.policy)
+            ignore = tuple(self.own_outputs(order)) if self.own_outputs and self.policy.cache_ignores_outputs else ()
+            pruned: dict[tuple[str, ...], str | None] = {}
+
+            def tree_for(spec: CheckSpec) -> str | None:
+                # a check that names a report file reads it: that file stays in ITS key
+                skip = tuple(path for path in ignore if path not in spec.command)
+                if skip not in pruned:
+                    pruned[skip] = reuse.tree_id(source.repository, snapshot.snapshot_sha, skip)
+                return pruned[skip]
+
             outcomes, issue_codes = self._run_checks(
                 specs, snapshot.directory, started, source.worktree, source.repository,
-                tree=reuse.tree_id(source.repository, snapshot.snapshot_sha),
+                tree=None if ignore else reuse.tree_id(source.repository, snapshot.snapshot_sha),
+                tree_for=tree_for if ignore else None,
             )
             return _ExecutionEvidence(
                 specs,
@@ -244,6 +257,7 @@ class QualityEngine:
         worktree: Path | None = None,
         repository: Path | None = None,
         tree: str | None = None,
+        tree_for: Callable[[CheckSpec], str | None] | None = None,
     ) -> tuple[dict[str, CommandOutcome], list[str]]:
         outcomes: dict[str, CommandOutcome] = {}
         issue_codes: list[str] = []
@@ -271,7 +285,8 @@ class QualityEngine:
                         b"again with the next attempt.\n"))
                     issue_codes.append("CHECK_DEFERRED")
                 else:
-                    outcome = self._run_or_reuse(spec, snapshot_root, remaining, mounts, started, tree, fingerprint)
+                    outcome = self._run_or_reuse(spec, snapshot_root, remaining, mounts, started,
+                                                 tree_for(spec) if tree_for else tree, fingerprint)
                 done[same] = outcome
             outcomes[spec.id] = outcome
             failed = failed or outcome.status == "fail"

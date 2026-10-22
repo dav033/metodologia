@@ -29,8 +29,22 @@ def looks_like_full_suite(command: str) -> bool:
     return bool(FULL_SUITE.search(tail))
 
 
-def tree_id(repository: Path | None, snapshot_sha: str | None) -> str | None:
-    """The git tree of the snapshot commit (content-addressed: equal trees are equal files), or None."""
+REPORT_FILE = re.compile(r"\.(?:md|json|txt|log|csv|html)$")
+
+
+def own_outputs(kind: str | None, expected_paths) -> tuple[str, ...]:
+    """The report files a task of kind `test` or `audit` writes: they change at every attempt and the suites the task's checks run do
+    not read them. REQ-020's T14a rewrote `docs/req-020/integration-results.json` each time, so its 10-minute `npm run gate` never hit
+    the cache and was paid again at every one of 16 attempts. An implementing task's paths are the code under check: never ignored."""
+    if kind not in ("test", "audit"):
+        return ()
+    return tuple(sorted({str(p) for p in expected_paths or () if isinstance(p, str) and REPORT_FILE.search(p)
+                         and not any(c in p for c in "*?[")}))
+
+
+def tree_id(repository: Path | None, snapshot_sha: str | None, ignore: tuple[str, ...] = ()) -> str | None:
+    """The git tree of the snapshot commit (content-addressed: equal trees are equal files), or None. With `ignore`, the tree WITHOUT
+    those paths (a temporary index: nothing in the repository changes but unreferenced objects)."""
     if repository is None or not snapshot_sha:
         return None
     try:
@@ -39,7 +53,25 @@ def tree_id(repository: Path | None, snapshot_sha: str | None) -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None
     tree = done.stdout.strip()
-    return tree if done.returncode == 0 and re.fullmatch(r"[0-9a-f]{40,64}", tree) else None
+    if done.returncode != 0 or not re.fullmatch(r"[0-9a-f]{40,64}", tree):
+        return None
+    if not ignore:
+        return tree
+    import os
+    import tempfile
+
+    with tempfile.TemporaryDirectory(prefix="m6-tree-") as work:
+        env = {**os.environ, "GIT_INDEX_FILE": str(Path(work) / "index")}
+        try:
+            for args in (["read-tree", tree], ["update-index", "--force-remove", "--", *ignore], ["write-tree"]):
+                step = subprocess.run(["git", "-C", str(repository), *args], capture_output=True, text=True, timeout=60,
+                                      check=False, env=env)
+                if step.returncode:
+                    return tree                                   # cannot tell: the whole tree is the safe key
+        except (OSError, subprocess.SubprocessError):
+            return tree
+    pruned = step.stdout.strip()
+    return pruned if re.fullmatch(r"[0-9a-f]{40,64}", pruned) else tree
 
 
 def environment_fingerprint(policy: QualityPolicy) -> str:

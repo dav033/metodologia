@@ -134,3 +134,6 @@ verification command is not an audit finding, so M6 does not write command outco
 as defects.
 
 No provider calls, paid tests, live deployment, production database or migration are part of M6 verification.
+
+## Pass cache and a task's own reports
+The cache key is the snapshot's git tree + the command + the operator environment. For a task of kind `test` or `audit`, the report files it declares in `expected_paths` (`.md .json .txt .log .csv .html`, no globs) are left out of the tree of every check that does not name them (`reuse.own_outputs`, `reuse.tree_id(..., ignore)`; a temporary index, nothing in the repository changes), so a retry that only rewrote its report reuses the passes of the earlier attempt. `QualityPolicy.cache_ignores_outputs` / `verifier.cache_ignores_outputs` (default on); if git cannot tell, the whole tree is the key.
