@@ -163,3 +163,32 @@ class Turn(Attest):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Prepare(unittest.TestCase):
+    """The snapshot tree the live commands run in: the attempt's files, the env file, and a node_modules Next/Turbopack accepts."""
+
+    def test_the_tree_has_the_snapshot_the_env_file_and_a_hard_linked_node_modules_not_a_symlink(self):
+        import subprocess
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory(dir=Path.home() / ".cache") as base:
+            repo, work = Path(base) / "repo", Path(base) / "work"
+            (repo / "node_modules" / "dep").mkdir(parents=True)
+            work.mkdir()
+            (repo / "app.txt").write_text("v1")
+            (repo / "node_modules" / "dep" / "index.js").write_text("module.exports = 1")
+            env = Path(base) / "env"
+            env.write_text("KEY=secret-value\n")
+            subprocess.run(["git", "-C", str(repo), "init", "-q"], check=True)
+            subprocess.run(["git", "-C", str(repo), "add", "app.txt"], check=True)
+            subprocess.run(["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "x"], check=True)
+            sha = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+            root = coord.prepare(repo, sha, work, env)
+            self.assertEqual((root / "app.txt").read_text(), "v1")
+            self.assertEqual((root / ".env.local").read_text(), "KEY=secret-value\n")
+            self.assertEqual(oct((root / ".env.local").stat().st_mode & 0o777), "0o600")
+            modules = root / "node_modules"
+            self.assertTrue(modules.is_dir() and not modules.is_symlink())
+            self.assertEqual((modules / "dep" / "index.js").stat().st_ino, (repo / "node_modules" / "dep" / "index.js").stat().st_ino)

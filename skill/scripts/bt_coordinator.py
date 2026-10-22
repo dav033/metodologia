@@ -7,7 +7,7 @@ AUTHORIZED a project (`coordinator.projects`), this module is that person:
 1. only when every manual check of the task is such a runnable command (a phone, a review of the product or any other human step is not,
    and the task then stays for its owner) and the verifier's only doubt is manual evidence (an open review it can requeue);
 2. it runs the commands on the SNAPSHOT of the attempt being verified (`git archive`, no `.git`), with that project's `.env.local` copied
-   in and its `node_modules` linked, so the evidence is about the work that is verified, not about whatever the checkout holds today;
+   in and its `node_modules` hard-linked, so the evidence is about the work that is verified, not about whatever the checkout holds today;
 3. everything printed is redacted of every value of that env file before it is kept anywhere;
 4. exit code 0 for all of them: one attestation, bound to the attempt (`bt_attestation`), then the review is requeued; otherwise nothing is
    attested and what failed goes to the attempt's verification note, where the agent and the self-healing read it (a real defect is then a
@@ -101,7 +101,12 @@ def prepare(repository: Path, snapshot: str, work: Path, env_file: Path) -> Path
     os.chmod(root / ".env.local", 0o600)
     modules = repository / "node_modules"
     if modules.is_dir() and not (root / "node_modules").exists():
-        (root / "node_modules").symlink_to(modules)
+        # A hard-linked copy, not a symlink: Next/Turbopack refuses a node_modules that points out of the project root. The links share
+        # the files with the checkout (no space, seconds); a different filesystem falls back to the symlink.
+        linked = subprocess.run(["cp", "-al", str(modules), str(root / "node_modules")], capture_output=True, timeout=600, check=False)
+        if linked.returncode:
+            shutil.rmtree(root / "node_modules", ignore_errors=True)
+            (root / "node_modules").symlink_to(modules)
     return root
 
 
@@ -164,7 +169,9 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     limit = timeout or int(bt_config.get("coordinator.command_seconds", 1800))
     run = runner or run_one
     results: list[dict] = []
-    with tempfile.TemporaryDirectory(prefix="bt-coordinator-") as work:
+    scratch = Path.home() / ".cache" / "bt-coordinator"         # on the checkout's filesystem (not /tmp) so node_modules can be hard-linked
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="run-", dir=scratch) as work:
         root = prepare(repository, snapshot, Path(work), env_file)
         for command in commands:
             result = run(command, root, limit, secrets)
