@@ -132,3 +132,6 @@ revision: it only adds tasks (`T7.1`, `kind: implement`, built from evidence, ve
 renames a check's `purpose` to its criterion's exact text; it never lowers a check or drops a criterion. `scheduler-op REQ heal revert CASE`
 freezes the next revision without the added task. Rebasing onto it keeps every accepted task whose own content is unchanged
 (`gates.rebase_cascade: content`).
+
+## Checks map to criteria by exact text
+The verifier compares a check's `purpose` with the acceptance criteria of its task character by character. `plan-json check` warns for a check whose purpose is no criterion (`CHECK_UNMAPPED`, with the closest criterion), a criterion no check carries (`CRITERION_UNVERIFIABLE`) and a criterion proven only manually (`CRITERION_MANUAL`: the run waits for `scheduler-op REQ attest`). `plan-json freeze` (the approval) refuses the first two unless `--force` or `planner.require_mapped_checks=false`; revisions the scheduler makes itself (healing, remediation, recovery) are not gated, and plans already frozen are not re-gated.

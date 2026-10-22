@@ -228,7 +228,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
         emit(json.dumps(report, indent=1, ensure_ascii=False))
         return 0
     if action in {"freeze", "bind"}:
-        problem = publishable_problem(rdir, compatibility_report=compatibility_report) if action == "freeze" else \
+        problem = publishable_problem(rdir, compatibility_report=compatibility_report, allow_unmapped=force) if action == "freeze" else \
             plan_consumer_problem(rdir, compatibility_report=compatibility_report)
         if problem:
             emit(problem)
@@ -328,7 +328,32 @@ def resume_problem(rdir: Path, state: dict, *,
     return None
 
 
-def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None) -> str | None:
+def mapping_problem(rdir: Path) -> str | None:
+    """Approval gate (config `planner.require_mapped_checks`, off by default): a check whose purpose is not the exact text of a
+    criterion of its task, or a criterion no check carries, makes the verifier stop for a person on every attempt (CHECK_UNMAPPED /
+    CRITERION_UNVERIFIABLE: the two most frequent stops of four real runs). New approvals must not carry them; plans already
+    frozen are never re-gated (revisions made by the scheduler itself do not pass here)."""
+    import bt_config
+
+    if bt_config.get("planner.require_mapped_checks", False) is not True:
+        return None
+    try:
+        plan = planner.load(Path(rdir) / planner.PLAN_JSON)
+    except Exception:  # noqa: BLE001 - an unreadable plan is the validity check's to report
+        return None
+    lines = [f"{c['task_id']}.verification[{c['verification_index']}] «{str(c['purpose'])[:60]}»" for c in planner_quality.unmapped_checks(plan)]
+    lines += [f"{c['task_id']}: criterion «{str(c['criterion'])[:60]}» has no check with its exact text"
+              for c in planner_quality.criteria_without_command(plan) if c["reason"] in ("purpose_not_found", "whitespace_mismatch")]
+    if not lines:
+        return None
+    more = f" (+{len(lines) - 4} more)" if len(lines) > 4 else ""
+    return ("PLAN_CHECKS_UNMAPPED: the verifier maps evidence to criteria by exact text, so these would stop the run for a person: "
+            + "; ".join(lines[:4]) + more + f" (bitacora.py plan-json check {plan_id(rdir)} lists them; `purpose` = the criterion's text; "
+            "pass --force to approve anyway, or set planner.require_mapped_checks=false)")
+
+
+def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
+                        allow_unmapped: bool = False) -> str | None:
     """Approval gate: a PLAN.json that is invalid, or contradicts PLAN.md, cannot be approved. None for legacy plans."""
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return None
@@ -339,7 +364,7 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if report.ok:
-        return plan_consumer_problem(rdir, compatibility_report=compatibility_report)
+        return (None if allow_unmapped else mapping_problem(rdir)) or plan_consumer_problem(rdir, compatibility_report=compatibility_report)
     more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
     return ("PLAN_INVALID: the plan cannot be approved while PLAN.json has errors: " + "; ".join(report.errors[:5]) +
             more + f" (bitacora.py plan-json check {plan_id(rdir)})")

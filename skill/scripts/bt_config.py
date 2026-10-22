@@ -89,6 +89,10 @@ DEFAULTS: dict = {
               "rebase_cascade": "content"},   # a plan with an audit also needs an independent cross-check audit
     # max_turns: turns one Claude attempt may use under the Scheduler (the legacy marathon keeps 45); an attempt that uses
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
+    # planner.require_mapped_checks: approving (`plan-json freeze`) a plan with a check whose purpose is not a criterion's exact text, or
+    # a criterion no check carries, is refused (they stop the run for a person on every attempt); --force approves anyway. Off by default:
+    # `plan-json check` always warns, and the Planner agent is told the rule
+    "planner": {"require_mapped_checks": False},
     # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
     # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
     # model_diagnosis (REQ-029 R3/R4): a stop the rules cannot repair (or place) is answered with the diagnosing model's validated option,

@@ -388,6 +388,28 @@ def criteria_without_command(plan: dict) -> list[dict[str, object]]:
     return missing
 
 
+def unmapped_checks(plan: dict) -> list[dict[str, object]]:
+    """Checks whose `purpose` is not the exact text of one acceptance criterion of their own task. The verifier maps evidence to
+    criteria by exact text, so such a check proves nothing and every verification of the task ends in `CHECK_UNMAPPED` and waits
+    for a person (REQ-020 had 37 of them: the most frequent stop of four real runs). `closest` is the criterion the text looks
+    like, when one does."""
+    import difflib
+
+    found: list[dict[str, object]] = []
+    for task_id, task in _plan_tasks(plan):
+        criteria = [c for c in task.get("acceptance_criteria") or [] if isinstance(c, str)] \
+            if isinstance(task.get("acceptance_criteria"), list) else []
+        verification = task.get("verification") if isinstance(task.get("verification"), list) else []
+        for index, item in enumerate(verification):
+            purpose = item.get("purpose") if isinstance(item, dict) else None
+            if not isinstance(purpose, str) or purpose in criteria:
+                continue
+            best = max(criteria, key=lambda c: difflib.SequenceMatcher(None, purpose.lower(), c.lower()).ratio(), default=None)
+            near = best if best and difflib.SequenceMatcher(None, purpose.lower(), best.lower()).ratio() >= 0.6 else None
+            found.append({"task_id": task_id, "verification_index": index, "purpose": purpose, "closest": near})
+    return found
+
+
 def verification_report(plan: dict) -> dict[str, object]:
     """Stable Planner report fields for T10 to expose without changing legacy analysis output."""
     return {"verification_categories": verification_categories(plan),
@@ -469,6 +491,12 @@ def verification_findings(plan: dict) -> list[str]:
             detail = "no verification purpose matches after whitespace trim"
         warnings.append(f"{task_id}.acceptance_criteria: {criterion!r}; {detail}; M6 will mark this criterion "
                         "NEEDS_REVIEW")
+
+    for item in unmapped_checks(plan):
+        hint = f"; closest criterion: {item['closest']!r}" if item["closest"] else ""
+        warnings.append(f"{item['task_id']}.verification[{item['verification_index']}]: purpose {item['purpose']!r} is not the exact "
+                        f"text of any acceptance criterion of {item['task_id']}; the verifier reports CHECK_UNMAPPED and the "
+                        f"task waits for a person (copy a criterion's text into `purpose`){hint}")
 
     for requirement_id, details in verification_categories(plan).items():
         records = details["verifications"]

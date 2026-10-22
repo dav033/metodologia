@@ -209,6 +209,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   and evidence of each finding even when the system did not send it back itself;
 - **proportional verification** (REQ-030, `bt_scheduler_quality/reuse.py`, `bt_attestation`): see the quality README. The
   environment guards are configurable and name their cause: `verifier.max_workspace_mb`, `scheduler.min_free_mb`;
+- **checks that map to criteria** (`bt_planner.quality.unmapped_checks`, `bt_plan_adapter.mapping_problem`): the verifier compares a check's `purpose` with the criteria of its task by exact text. Over four real runs the two most frequent stops were `CHECK_UNMAPPED` (59) and `CRITERION_MANUAL` (45), and REQ-020's plan carried 37 unmapped checks, 2 criteria without a check and 11 proven only manually. `plan-json check` now warns for each unmapped check with its closest criterion; `plan-json freeze` (the approval) refuses unmapped checks and criteria without a check (`planner.require_mapped_checks`, on by default; `--force` approves anyway); revisions the scheduler makes itself and plans already frozen are not gated. The Planner agent's instructions carry the rule;
 - **self-healing** (REQ-030, `bt_scheduler_healing`, `bt_healing_classify`): the watchdog's `heal` runs a bounded cycle over the
   open stops. Each is placed in a closed taxonomy from the LAST real error and the evidence (`plan_defect`, `integration_defect`,
   `regression`, `environment`, `criterion_unmapped`, `quota`, `transient`; anything else is left for a person) and gets the smallest
