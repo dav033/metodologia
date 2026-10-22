@@ -106,3 +106,30 @@ class RecoveryRun:
         with closing(sqlite3.connect(self.db)) as conn:
             conn.execute("INSERT OR REPLACE INTO state(id, doc) VALUES (1, ?)", (json.dumps(doc),))
             conn.commit()
+
+
+def conflict_plan() -> dict:
+    """Two UNORDERED tasks that both own `web` (the planner allows it when each names the other as its coupling), a consumer that
+    needs both, and an audit after it: the plan in which two accepted results can clash on the same file."""
+    import copy
+
+    import bt_plan_adapter
+
+    plan = plan_for_tests()
+    first = plan["tasks"][0]
+    second = copy.deepcopy(first)
+    second.update({"id": "T5", "title": "Implement the second page behavior", "coupling": "high",
+                   "objective": "Implement the second page behavior in the same page file",
+                   "acceptance_criteria": ["The second page behavior holds"]})
+    first["coupling"] = "high"
+    first["classification_evidence"]["coupling"]["evidence"] = ["spec:SPEC.md", "task:T5"]
+    second["classification_evidence"]["coupling"]["evidence"] = ["spec:SPEC.md", "task:T1"]
+    for check in second["verification"]:
+        check["purpose"] += " (second behavior)"
+    plan["tasks"].insert(1, second)
+    for task in plan["tasks"]:
+        if task["id"] == "T3":
+            task["after"] = ["T1", "T5"]
+    errors = bt_plan_adapter.plan_errors(plan)
+    assert not errors, errors
+    return plan

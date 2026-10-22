@@ -62,6 +62,36 @@ Evidence ({count} sections, in order):
 """
 
 
+CONFLICT_PROMPT = """You are the Planner role judging an integration clash that an automated run could not settle by redoing one task over the
+other. Two accepted tasks each changed the same files; a third task needs both. You have NO tools and NO connectors: use only the
+evidence below. Do not run anything: the commands you write are validated and run later in a sandbox. Do not answer any owner decision.
+Reply with ONE JSON object and nothing else (schema recovery-proposal/1):
+
+{{"schema_version": "recovery-proposal/1",
+  "confidence": "confirmed" | "reported",
+  "causal_history": "why the two results overlap and what each is trying to do",
+  "semantic_conflict": false,                        // true ONLY when the two requirements cannot both hold: then say which below
+  "incompatible_requirements": [],                   // texts of the requirements that exclude each other (only when semantic_conflict)
+  "evidence_refs": ["m6:<sha256>", ...],             // copy from `refs` below the ones you relied on
+  "symptom_oracle": {{"symptom": "one sentence: the behaviour that needs BOTH sides",
+                     "path": "one of the clashing files this check exercises",
+                     "red_command": "a command that FAILS on an accepted side alone (it lacks the other side's behaviour)",
+                     "command": "the same behaviour as a command that PASSES once both requirements hold"}}}}
+
+Rules (a proposal that breaks one is refused whole and you get no second try):
+- commands: one argv, no pipes, `;`, `&&`, `||`, redirections, backticks or `$(`; never `sh -c`, `python -c`, `rm`, `sudo`; they must
+  already exist in the repository at the accepted sides or be runnable from it (an existing test file, a module call);
+- `red_command` is executed on each accepted side: if it does not FAIL like a test fails (exit non-zero) on one of them, the cycle stops;
+- "semantic_conflict" is a product judgement: set it only when satisfying one requirement necessarily breaks the other.
+If the evidence cannot support a judgement, set "confidence" to "unknown": that is an honest answer.
+
+Request identity: {identity}
+
+Evidence ({count} sections, in order):
+{sections}
+"""
+
+
 class Blocked(Exception):
     """The cycle cannot go on: `code` is the durable, exact reason shown on the plan page."""
 
@@ -102,7 +132,29 @@ def target(rdir: Path, requests: list[dict]) -> dict[str, Any] | None:
         for option in request.get("options") or ():
             if option.get("id") == "rework_findings":
                 named = [name for name in str(option.get("target") or "").split(",") if name]
-        return {"request": request["id"], "task": request["task"], "attempt": request["attempt"], "reason": code, "named": named}
+        return {"kind": "audit", "request": request["id"], "task": request["task"], "attempt": request["attempt"], "reason": code,
+                "named": named}
+    return conflict_target(rdir, requests)
+
+
+def conflict_target(rdir: Path, requests: list[dict]) -> dict[str, Any] | None:
+    """A task stopped by an integration clash the ordinary redo gave up on: the two accepted tasks and ALL the paths (recorded
+    when the clash happened, never clipped)."""
+    import bt_recovery_lineage as lineage
+
+    for request in requests:
+        if request.get("source") != "task" or not request.get("task"):
+            continue
+        text = " ".join(str(request.get(key) or "") for key in ("error", "reason", "what")) + " ".join(
+            str(e) for e in request.get("evidence") or ())
+        if "INTEGRATION_CONFLICT" not in text and (request.get("diagnosis") or {}).get("kind") != "conflict":
+            continue
+        row = lineage.latest_conflict(rdir, request["task"])
+        if row is None:
+            continue
+        return {"kind": "conflict", "request": request["id"], "task": request["task"], "attempt": request.get("attempt") or "",
+                "reason": "integration_conflict", "named": [row["left"], row["right"]], "left": row["left"], "right": row["right"],
+                "files": sorted(set(row["files"]))}
     return None
 
 
@@ -211,6 +263,89 @@ def diagnose(project: str, rdir: Path, goal: dict, route_: dict, cycle_dir: Path
     if answer["outcome"] != "ok":
         raise Blocked(f"diagnosis_{answer['outcome']}", str(answer.get("blocker") or ""))
     return evidence, parse(answer["raw"]), {"paths": paths, "view": view}
+
+
+def parse_conflict(raw: bytes) -> dict[str, Any]:
+    """The model's judgement and oracle, as data: the shape is checked, the command safety is the compiler's job."""
+    try:
+        body = json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError) as error:
+        raise Blocked("proposal_invalid", f"not JSON: {error}") from error
+    if not isinstance(body, dict) or body.get("schema_version") != "recovery-proposal/1":
+        raise Blocked("proposal_invalid", "not a recovery-proposal/1 object")
+    if body.get("confidence") not in ("confirmed", "reported"):
+        raise Blocked("diagnosis_inconclusive", f"the model's confidence is {body.get('confidence')!r}")
+    oracle = body.get("symptom_oracle")
+    if not isinstance(oracle, dict) or any(not isinstance(oracle.get(k), str) or not oracle[k].strip()
+                                           for k in ("symptom", "path", "red_command", "command")):
+        raise Blocked("proposal_invalid", "the symptom oracle is incomplete")
+    refs = body.get("evidence_refs")
+    if not isinstance(refs, list) or any(not isinstance(r, str) for r in refs):
+        raise Blocked("proposal_invalid", "evidence_refs must be a list of references")
+    incompatible = body.get("incompatible_requirements") or []
+    if not isinstance(incompatible, list) or any(not isinstance(x, str) for x in incompatible):
+        raise Blocked("proposal_invalid", "incompatible_requirements must be a list of texts")
+    if body.get("semantic_conflict") is True:
+        raise Blocked("incompatible_requirements", "; ".join(x.strip() for x in incompatible if x.strip())[:240] or
+                      "the model judges the two requirements incompatible")
+    return {"oracle": {k: oracle[k].strip() for k in ("symptom", "path", "red_command", "command")}, "refs": refs,
+            "semantic": {"semantic_conflict": False, "incompatible_requirements": []}}
+
+
+def diagnose_conflict(project: str, rdir: Path, goal: dict, route_: dict, cycle_dir: Path, *, runner=None, probe_runner=None,
+                      home: Path | None = None, timeout_seconds: int = 300) -> tuple[dict, dict, dict]:
+    """(evidence, judgement, extra) for an integration clash: the facts are derived, the model judges and writes the oracle."""
+    import bt_block_agent
+    import bt_recovery_evidence as evidence_mod
+    import bt_recovery_export as export
+    import bt_recovery_lineage as lineage
+
+    row = lineage.latest_conflict(rdir, goal["task"])
+    if row is None:
+        raise Blocked("evidence_unavailable", "the clash was not recorded with its paths")
+    facts = lineage.gather(rdir, project, row)
+    side = facts["sides"][0]
+    try:
+        audit, attempt = export.export(rdir, side["task_id"], side["attempt_id"], accepted=True)
+    except export.ExportError as error:
+        raise Blocked("evidence_unavailable", str(error)) from error
+    evidence = evidence_mod.collect_recovery_evidence(rdir, audit, attempt, states=("accepted",))
+    if evidence.get("diagnosable") is not True:
+        raise Blocked("evidence_unavailable", "; ".join(evidence.get("validation_problems") or ["not diagnosable"]))
+    shown = lineage.view(facts)
+    shown.update({"diagnosable": True, "refs": {n: f"{n}:{evidence['sources'][n]['sha256']}"
+                                                for n in ("m1", "plan", "m6", "remediation", "m3_manifest")},
+                  "evidence_sha256": hashlib.sha256(json.dumps({k: v["sha256"] for k, v in evidence["sources"].items()},
+                                                               sort_keys=True).encode()).hexdigest()})
+    answer = bt_block_agent.diagnose_recovery(
+        project, shown, {"run": rdir.name, "request": goal["request"], "clash": goal["files"][:8], "evidence": shown["evidence_sha256"]},
+        route_, store=cycle_dir, timeout_seconds=timeout_seconds, runner=runner, probe_runner=probe_runner, home=home,
+        prompt=CONFLICT_PROMPT)
+    if answer["outcome"] != "ok":
+        raise Blocked(f"diagnosis_{answer['outcome']}", str(answer.get("blocker") or ""))
+    judgement = parse_conflict(answer["raw"])
+    if judgement["oracle"]["path"] not in facts["files"]:
+        raise Blocked("proposal_invalid", "the oracle's path is not one of the clashing files")
+    return evidence, judgement, {"paths": facts["files"], "facts": facts, "view": shown}
+
+
+def compile_conflict(evidence: dict, judgement: dict, extra: dict, project: str):
+    """The plan revision with the convergence writer, or Blocked: the oracle is run red on an accepted side first."""
+    import bt_recovery_compiler as compiler
+    import bt_recovery_compiler_verification as cv
+    import bt_recovery_lineage as lineage
+    import bt_recovery_oracle as runner
+
+    facts = extra["facts"]
+    work = lineage.convergence_work(facts, judgement["oracle"], judgement["semantic"], runner.policy_for(project))
+    proposal = lineage.synthesized_proposal(facts, judgement["oracle"], judgement["refs"])
+    plan = evidence["sources"]["plan"]["document"]
+    try:
+        compiled = compiler.compile_recovery_revision(plan, {**evidence, "changed_paths": list(extra["paths"])}, proposal,
+                                                       convergence=work)
+    except cv.RecoveryCompilationError as error:
+        raise Blocked("proposal_rejected", f"{error.code}: {error.reason}") from error
+    return compiled, proposal
 
 
 def compile_revision(evidence: dict, proposal: dict, paths: list[str]):

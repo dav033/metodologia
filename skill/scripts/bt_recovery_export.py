@@ -87,8 +87,10 @@ def _m6_result(rdir: Path, task_id: str, attempt_id: str) -> tuple[dict, dict]:
     return found
 
 
-def export(rdir: Path | str, task_id: str, attempt_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Write the five documents of one failed attempt and return `(audit, attempt)` for `collect_recovery_evidence`."""
+def export(rdir: Path | str, task_id: str, attempt_id: str, *, accepted: bool = False) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Write the five documents of one failed attempt (or, with `accepted`, of an attempt M1 holds as the accepted one: the side of an
+    integration conflict, whose verdict may have been given under an earlier revision) and return `(audit, attempt)` for
+    `collect_recovery_evidence`."""
     import bt_plan_adapter
     import bt_scheduler_decisions as decisions
 
@@ -109,7 +111,10 @@ def export(rdir: Path | str, task_id: str, attempt_id: str) -> tuple[dict[str, A
     if hashlib.sha256(plan_bytes).hexdigest() != plan_sha:
         raise ExportError("the frozen plan on disk is not the one M1 runs")
     request, result = _m6_result(rdir, task_id, attempt_id)
-    if request.get("revision") != revision:
+    if accepted:
+        if (doc.get("tasks") or {}).get(task_id, {}).get("state") != "completed" or attempt.get("state") != "accepted":
+            raise ExportError(f"{attempt_id} is not the accepted attempt of {task_id}")
+    elif request.get("revision") != revision:
         raise ExportError(f"the verdict of {attempt_id} was given under plan r{request.get('revision')}, the run is on r{revision}")
     manifest = _manifest_path(rdir, attempt_id)
     remediation = []
@@ -131,7 +136,7 @@ def export(rdir: Path | str, task_id: str, attempt_id: str) -> tuple[dict[str, A
         "plan": plan_bytes,
         "m6": _json_bytes({"identity": {"plan_id": doc.get("plan_id"), "revision": revision, "task_id": task_id,
                                         "attempt_id": attempt_id, "token": request.get("token"), "plan_sha256": plan_sha},
-                           "checks": result.get("checks") or [], "result": result}),
+                           "verdict_revision": request.get("revision"), "checks": result.get("checks") or [], "result": result}),
         "remediation": _json_bytes({"events": remediation}),
     }
     audit: dict[str, Any] = {"task_id": task_id, "plan_id": doc.get("plan_id"), "revision": revision}

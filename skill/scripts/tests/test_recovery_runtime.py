@@ -198,13 +198,29 @@ class ProductionSources(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp, patch("bt_recovery_diagnosis.route", return_value=route), \
                 patch("bt_scheduler_decisions.open_requests", return_value=[card]):
             found = bt_recovery_runtime.sources(Path(temp), "run-1")
-        self.assertEqual(found["diagnosis_target"], {"request": "T8:5", "task": "T8", "attempt": "att-9", "reason": "rework_impact",
+        self.assertEqual(found["diagnosis_target"], {"kind": "audit", "request": "T8:5", "task": "T8", "attempt": "att-9", "reason": "rework_impact",
                                                      "named": ["T4", "T5"]})
         self.assertEqual((found["evidence_available"], found["planner_route"]), (True, route))
         with tempfile.TemporaryDirectory() as temp, patch("bt_recovery_diagnosis.route", return_value=None), \
                 patch("bt_scheduler_decisions.open_requests", return_value=[card]):
             found = bt_recovery_runtime.sources(Path(temp), "run-1")
         self.assertIsNone(found["planner_route"])                                       # no authorized profile: the cycle says so, exactly
+
+    def test_a_clash_the_redo_gave_up_on_is_the_conflict_stop_the_cycle_is_about(self):
+        import bt_interventions
+        import bt_recovery_runtime
+        card = {"id": "T9:0", "task": "T9", "attempt": "", "source": "task", "reason": "m5:attempts_exhausted", "unskippable": False,
+                "error": "start rejected: INTEGRATION_CONFLICT: T4 vs T5 for T9: a.py, b.py", "options": []}
+        with tempfile.TemporaryDirectory() as temp, patch("bt_recovery_diagnosis.route", return_value=None), \
+                patch("bt_scheduler_decisions.open_requests", return_value=[card]):
+            bt_interventions.record_conflict(Path(temp), task="T9", left="T4", right="T5", files=["b.py", "a.py", "c" * 300 + ".py"])
+            found = bt_recovery_runtime.sources(Path(temp), "run-1")
+        goal = found["diagnosis_target"]
+        self.assertEqual((goal["kind"], goal["left"], goal["right"], goal["named"]), ("conflict", "T4", "T5", ["T4", "T5"]))
+        self.assertEqual(len(goal["files"]), 3)                                          # every path, none clipped
+        self.assertTrue(found["evidence_available"])
+        with tempfile.TemporaryDirectory() as temp, patch("bt_scheduler_decisions.open_requests", return_value=[card]):
+            self.assertNotIn("diagnosis_target", bt_recovery_runtime.sources(Path(temp), "run-1"))   # no recorded clash: no target
 
     def test_a_healing_case_that_gave_up_counts_as_exhausted_ordinary_recovery(self):
         import bt_recovery_runtime

@@ -247,6 +247,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                identity=api.run_identity(scheduler), accepted=lambda: api._accepted_attempts(scheduler),
                                snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                                earlier_of=lambda task: api._earlier_attempts(scheduler, task),
+                               # bind() replaces the whole binding: everything the first call set must be said again
+                               start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                               on_conflict=lambda **fields: bt_interventions.record_conflict(
+                                   rdir, run=api.run_identity(scheduler), **fields),
                                conflict_sink=wiring.recovery.publish_conflict_observation)
             port.base_ref = continuation.base_ref
             base_notes = continuation.notes

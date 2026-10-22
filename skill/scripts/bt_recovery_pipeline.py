@@ -161,8 +161,12 @@ def _diagnose(project: str, rdir: Path, cycle: dict, folder: Path, **model) -> N
     import bt_config
 
     timeout = max(int(bt_config.get("diagnosis.timeout_seconds", 180) or 180), 300)
-    evidence, proposal, extra = dg.diagnose(project, rdir, goal, route, folder, timeout_seconds=timeout, **model)
-    compiled = dg.compile_revision(evidence, proposal, extra["paths"])
+    if goal.get("kind") == "conflict":
+        evidence, judgement, extra = dg.diagnose_conflict(project, rdir, goal, route, folder, timeout_seconds=timeout, **model)
+        compiled, proposal = dg.compile_conflict(evidence, judgement, extra, project)
+    else:
+        evidence, proposal, extra = dg.diagnose(project, rdir, goal, route, folder, timeout_seconds=timeout, **model)
+        compiled = dg.compile_revision(evidence, proposal, extra["paths"])
     (folder / "proposal.json").write_text(json.dumps(proposal, indent=1, sort_keys=True), encoding="utf-8")
     body = {"plan": compiled.plan, "scope": list(compiled.scope), "verification_map": compiled.verification_map,
             "changed_paths": extra["paths"], "proposal_hash": dg.proposal_hash(proposal),

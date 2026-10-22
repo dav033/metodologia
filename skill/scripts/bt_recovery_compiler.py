@@ -389,16 +389,23 @@ def compile_recovery_revision(plan: Mapping[str, Any], evidence: Mapping[str, An
             or not oracle["symptom"].strip()):
         _refuse("a symptom oracle with captured-source red and integrated-tree green commands is required", "MISSING_ORACLE")
     affected_owners = []
+    shared_owners: set[str] = set()
     frozen_tasks = [row for row in plan["tasks"] if isinstance(row, Mapping)]
     for path in actual_paths:
         matches = [task for task in frozen_tasks if any(path == p or path.startswith(p.rstrip("/") + "/") for p in task.get("expected_paths", []) if isinstance(p, str))]
-        if len(matches) != 1:
+        # Two owners may both declare a conflict path: that is exactly what a convergence writer repairs. Then every one of them
+        # must be named by an action (checked below) and the path is attributed to the first, in plan order.
+        shared = convergence is not None and len(matches) > 1 and {task["id"] for task in matches} <= owners
+        if len(matches) != 1 and not shared:
             _refuse(f"changed path has ambiguous or unknown owner: {path}", "UNKNOWN_OWNER")
         affected_owners.append(matches[0]["id"])
+        shared_owners.update(task["id"] for task in matches[1:] if shared)
     if not set(affected_owners) <= owners:
         _refuse("proposal actions do not name every owner of the changed paths", "UNKNOWN_OWNER")
     integration_predecessors.update(affected_owners)
-    checks = coverage_checks({"tasks": tasks}, list(dict.fromkeys(affected_owners)), actual_paths, oracle["symptom"])
+    integration_predecessors.update(shared_owners)
+    checks = coverage_checks({"tasks": tasks}, list(dict.fromkeys([*affected_owners, *sorted(shared_owners)])), actual_paths,
+                             oracle["symptom"])
     oracle_owner = affected_owners[0]
     checks.append({"check_id": f"{oracle_owner}:oracle", "owner_task_id": oracle_owner,
                    "command": oracle["command"], "symptom": _slug(oracle["symptom"])})

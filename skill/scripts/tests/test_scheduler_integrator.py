@@ -61,14 +61,61 @@ class Unit(unittest.TestCase):
 
     def bound(self, spec, default="app"):
         integrator = integ.PredecessorIntegrator()
+        self.heard = []
         integrator.bind(plan=FakePlan(spec), accepted=lambda: dict(self.accepted), snapshot_of=lambda a: self.snaps.get(a),
                         repo_of=lambda role: {"app": self.app, "docs": self.docs}.get(role), default_repository=default,
-                        identity="r1-abc-1", earlier_of=lambda tid: list(self.earlier.get(tid, ())))
+                        identity="r1-abc-1", earlier_of=lambda tid: list(self.earlier.get(tid, ())),
+                        on_conflict=lambda **fields: self.heard.append(fields))
         return integrator
 
     def accept(self, tid, sha):
         self.accepted[tid] = f"att-{tid}"
         self.snaps[f"att-{tid}"] = sha
+
+    # --- REQ-029 P-152: a convergence writer starts from the two accepted sides, measured from where each started ------------
+    def bootstrap_case(self, overlap):
+        lines = [f"line{n}" for n in range(1, 21)]
+        base = snapshot(self.app, self.head, {"shared.txt": "\n".join(lines) + "\n"})
+        left = snapshot(self.app, base, {"shared.txt": "\n".join(["LEFT", *lines[1:]]) + "\n", "left.txt": "left\n"})
+        other = ["RIGHT", *lines[1:]] if overlap else [*lines[:-1], "RIGHT"]
+        right = snapshot(self.app, base, {"shared.txt": "\n".join(other) + "\n", "right.txt": "right\n"})
+        self.accept("T1", left)
+        self.accept("T2", right)
+        self.snaps["att-T1"], self.snaps["att-T2"] = left, right
+        spec = {"T1": ([], "app"), "T2": ([], "app"), "T3": ([], "app")}
+        plan = FakePlan(spec)
+        plan.spec["T3"].meta = {"recovery_task": True, "recovery_owner_tasks": ["T1", "T2"],
+                                "bootstrap": {"required": True, "parents": [left, right], "marker_paths": ["shared.txt"]}}
+        integrator = integ.PredecessorIntegrator()
+        integrator.bind(plan=plan, accepted=lambda: dict(self.accepted), snapshot_of=lambda a: self.snaps.get(a),
+                        repo_of=lambda role: self.app, default_repository="app", identity="r1-abc-1",
+                        start_base_of=lambda attempt: base)
+        return integrator, base, left, right
+
+    def test_a_convergence_writer_starts_from_both_sides_with_markers_where_they_overlap(self):
+        integrator, base, left, right = self.bootstrap_case(overlap=True)
+        start = integrator.base_ref("T3")
+        text = git(self.app, "show", f"{start}:shared.txt")
+        self.assertIn("<<<<<<<", text)
+        self.assertIn("LEFT", text)
+        self.assertIn("RIGHT", text)                                                           # both sides' work is in the merge
+        self.assertEqual(git(self.app, "show", f"{start}:left.txt"), "left")
+        self.assertEqual(git(self.app, "show", f"{start}:right.txt"), "right")
+        parents = git(self.app, "rev-list", "--parents", "-n", "1", start).split()[1:]
+        self.assertEqual(len(parents), 2)
+        self.assertEqual(integrator.base_ref("T3"), start)                                     # the same start for every attempt
+        self.assertEqual(integrator.unresolved("T3", start), ("shared.txt",))                  # and it cannot be handed back as it is
+
+    def test_a_convergence_writer_over_disjoint_hunks_starts_clean_with_both_sides(self):
+        integrator, *_ = self.bootstrap_case(overlap=False)
+        start = integrator.base_ref("T3")
+        text = git(self.app, "show", f"{start}:shared.txt")
+        self.assertNotIn("<<<<<<<", text)
+        self.assertTrue(text.startswith("LEFT") and text.rstrip().endswith("RIGHT"))
+
+    def test_an_ordinary_task_never_gets_a_bootstrap(self):
+        integrator, *_ = self.bootstrap_case(overlap=True)
+        self.assertIsNone(integrator._bootstrap_of("T1"))
 
     def test_a_task_with_no_predecessors_starts_from_the_fallback(self):
         self.assertEqual(self.bound({"T1": ([], "app")}).base_ref("T1"), "HEAD")
@@ -143,6 +190,7 @@ class Unit(unittest.TestCase):
         with self.assertRaises(integ.IntegrationError) as caught:
             self.bound(spec).base_ref("T3")
         self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
+        self.assertEqual([(h["task"], h["files"]) for h in self.heard], [("T3", ["f.txt"])])      # REQ-029 R11: heard in full
         ancestry = caught.exception.conflict_data["carry_ancestry"]                  # REQ-029 G4: the earlier result is named
         self.assertEqual(ancestry, (hashlib.sha256(self.snaps["att-T1-v1"].encode()).hexdigest(),))
 

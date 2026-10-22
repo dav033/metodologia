@@ -115,10 +115,12 @@ def _valid_sha256(value: object) -> bool:
     return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
 
 
-def collect_recovery_evidence(rdir: Path | str, audit: object, attempt: object) -> dict[str, Any]:
+def collect_recovery_evidence(rdir: Path | str, audit: object, attempt: object, *,
+                              states: tuple[str, ...] = ("failed", "rejected")) -> dict[str, Any]:
     """Return a complete recovery-evidence/1 record; invalid sources remain explicit and non-diagnosable.
 
-    ``audit`` and ``attempt`` are official M1 descriptors. They identify source files with relative paths and
+    ``states`` are the terminal M1 states the attempt may be in: a failed audit by default, ``accepted`` for the evidence of an
+    accepted side of an integration conflict. ``audit`` and ``attempt`` are official M1 descriptors. They identify source files with relative paths and
     SHA-256 digests; snapshot content always comes from the pinned M3 Git commits, never the current worktree.
     """
     evidence: dict[str, Any] = {"schema_version": SCHEMA, "diagnosable": False, "identity": {},
@@ -155,7 +157,7 @@ def collect_recovery_evidence(rdir: Path | str, audit: object, attempt: object) 
         if (m1_doc.get("plan_id") != audit.get("plan_id") or m1_doc.get("revision") != audit.get("revision")
                 or m1_doc.get("plan_sha256") != plan_sha or not isinstance(m1_attempt, dict)
                 or m1_attempt.get("task_id") != audit.get("task_id")
-                or m1_attempt.get("state") not in {"failed", "rejected"}
+                or m1_attempt.get("state") not in set(states)
                 or ("token" in attempt and m1_attempt.get("token") != attempt.get("token"))):
             raise EvidenceError("M1 attempt identity or terminal state mismatch")
         if not isinstance(m6_doc.get("checks"), list) or not isinstance(remediation_doc.get("events"), list):

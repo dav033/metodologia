@@ -113,9 +113,11 @@ def coverage_checks(plan: Mapping[str, Any], owners: object, actual_paths: objec
         matches = [owner_id for owner_id, owner in owner_rows.items()
                    if any(isinstance(scope, str) and (path == scope or path.startswith(scope.rstrip("/") + "/"))
                           for scope in owner.get("expected_paths", []))]
-        if len(matches) != 1:
-            _refuse(f"changed path has ambiguous or unknown named owner: {path}", "UNKNOWN_OWNER")
-        if not any(check["owner_task_id"] == matches[0] and _command_covers(path, check["command"]) for check in checks):
+        if not matches:
+            _refuse(f"changed path has unknown named owner: {path}", "UNKNOWN_OWNER")
+        # a path two NAMED owners share is the clash a convergence repairs (the compiler refuses shared paths outside one): it
+        # needs a relevant command of at least one of them
+        if not any(check["owner_task_id"] in matches and _command_covers(path, check["command"]) for check in checks):
             _refuse(f"changed path has no relevant owner command: {path}", "MISSING_OWNER_CHECK")
     if not checks:
         _refuse("no existing owner command verifies the affected paths", "MISSING_OWNER_CHECK")

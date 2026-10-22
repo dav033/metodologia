@@ -108,6 +108,7 @@ class PredecessorIntegrator:
              earlier_of: Callable[[str], list[str]] | None = None,
              start_base_of: Callable[[str], str | None] | None = None,
              on_event: Callable[..., None] | None = None,
+             on_conflict: Callable[..., None] | None = None,
              conflict_context: Callable[[str, str, Mapping[str, Any]], Mapping[str, Any]] | None = None,
              conflict_sink: Callable[[Mapping[str, Any]], str] | None = None) -> None:
         """`accepted()` -> {task_id: accepted attempt id} (read once per call); `snapshot_of(attempt_id)` -> its snapshot commit sha
@@ -115,10 +116,11 @@ class PredecessorIntegrator:
         `earlier_of(task_id)` -> the attempts whose accepted results an audit sent back, newest first: when a redone task
         clashes with a dependent that was built on its earlier result, that result is the merge base that tells the fix
         from the dependent's own work. `start_base_of(attempt)` -> the commit that attempt started from (default: the snapshot's
-        first parent); `on_event(kind, **fields)` hears about every repair the invariant makes (`bt_interventions`)."""
+        first parent); `on_event(kind, **fields)` hears about every repair the invariant makes (`bt_interventions`);
+        `on_conflict(task, left, right, files)` hears about every clash with ALL its paths, before any clipping (REQ-029 R11)."""
         self._bound = {"plan": plan, "accepted": accepted, "snapshot_of": snapshot_of, "repo_of": repo_of,
                        "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
-                       "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event,
+                       "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event, "on_conflict": on_conflict,
                        "conflict_context": conflict_context, "conflict_sink": conflict_sink}
 
     def attach_line(self, line) -> None:
@@ -140,6 +142,13 @@ class PredecessorIntegrator:
     def base_ref(self, task_id: str) -> str:
         if self._bound is None:
             raise IntegrationError("INTEGRATION_UNBOUND", "the integrator was not bound to a run")
+        if task_id in self._memo and self._bootstrap_of(task_id) is not None:
+            return self._memo[task_id]
+        if self._bootstrap_of(task_id) is not None:                  # a convergence writer starts from the merge in progress, never the tip
+            result = self._bootstrap_base(task_id)
+            if result is not None:
+                self._memo[task_id] = result
+                return result
         if self.line is not None:
             tip = self._line_base(task_id)
             if tip is not None:
@@ -149,6 +158,54 @@ class PredecessorIntegrator:
         result = self._integrate(task_id)
         self._memo[task_id] = result
         return result
+
+    def _bootstrap_of(self, task_id: str) -> dict | None:
+        """The bootstrap a structural recovery froze into a convergence task (`bt_recovery_lineage`), else None."""
+        try:
+            meta = self._bound["plan"].task(task_id).meta
+        except Exception:  # noqa: BLE001 - an unknown task has none
+            return None
+        boot = meta.get("bootstrap") if isinstance(meta, Mapping) and meta.get("recovery_task") is True else None
+        parents = boot.get("parents") if isinstance(boot, Mapping) else None
+        if (isinstance(boot, Mapping) and boot.get("required") is True and isinstance(parents, list) and len(parents) == 2
+                and all(isinstance(p, str) and SHA.fullmatch(p) for p in parents)):
+            return {"parents": list(parents), "owners": list(meta.get("recovery_owner_tasks") or [])}
+        return None
+
+    def _bootstrap_base(self, task_id: str) -> str | None:
+        """The start of a convergence writer: what its own prerequisites hold, plus each accepted side's work measured from where
+        THAT side started, as one commit that has both sides as parents. Where the two overlap the files hold git's conflict markers
+        (a merge in progress) and the writer resolves them; `unresolved` refuses its result while any is left. None when git cannot
+        build it (the writer then starts from the ordinary base, and the cycle's own checks refuse it)."""
+        boot, bound = self._bootstrap_of(task_id), self._bound
+        path = bound["repo_of"](self._role(task_id))
+        if boot is None or not path:
+            return None
+        repo = Path(path)
+        try:
+            base = self._integrate(task_id, write_ref=False)
+        except IntegrationError:
+            return None
+        accepted, snapshot_of, start_of = bound["accepted"](), bound["snapshot_of"], bound.get("start_base_of")
+        current = base
+        for parent in boot["parents"]:
+            origin = None
+            for owner in boot["owners"]:
+                attempt = accepted.get(owner)
+                if attempt and snapshot_of(attempt) == parent:
+                    origin = (start_of(attempt) if start_of else None) or f"{parent}^1"
+            origin = origin or f"{parent}^1"
+            done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={origin}", current,
+                        parent, check=False)
+            lines = done.stdout.splitlines()
+            if done.returncode not in (0, 1) or not lines or not SHA.fullmatch(lines[0].strip()):
+                return None
+            conflicts = done.returncode == 1
+            current = _git(repo, "commit-tree", "--no-gpg-sign", lines[0].strip(), "-p", current, "-p", parent, "-m",
+                           f"m3 bootstrap of {task_id}: {parent[:12]}" + (" (conflicts to resolve)" if conflicts else "")
+                           ).stdout.strip()
+        _git(repo, "update-ref", f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}-bootstrap", current)
+        return current
 
     def ancestors(self, task_id: str) -> list[str]:
         """Every transitive predecessor of the task, in plan order (the deterministic merge order)."""
@@ -558,6 +615,12 @@ class PredecessorIntegrator:
                 files = tuple(sorted(set(line.strip() for line in done.stdout.splitlines()[1:] if line.strip())))
                 # Keep the historical operator string bounded, but attach the exact merge-tree result first.
                 merge_base = _git(repo, "merge-base", current, sha).stdout.strip()
+                heard = (self._bound or {}).get("on_conflict")
+                if heard is not None:
+                    try:
+                        heard(task=task_id, left=current_task, right=tid, files=list(files))
+                    except Exception:  # noqa: BLE001 - the record is best effort; the clash itself is raised below
+                        pass
                 conflict_data = {"task_id": task_id, "sides": ((current_task, current), (tid, sha)),
                                  "paths": files, "merge_base": merge_base,
                                  "trees": (done.stdout.splitlines()[0].strip(),),
