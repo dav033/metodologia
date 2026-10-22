@@ -96,6 +96,28 @@ class Receipt(unittest.TestCase):
         self.assertIsNone(att.lookup(self.rdir, bind_attempt=True, key_file=self.key)(order, spec))   # gate on: needs the attempt
 
 
+class Rotation(Receipt):
+    def test_a_rotation_keeps_the_receipts_of_one_generation_and_a_second_drops_them(self):
+        self.mint()
+        self.assertIsNotNone(self.verify())
+        att.rotate(self.key)
+        self.assertIsNotNone(self.verify())                      # sealed under the previous key
+        self.assertEqual(oct(self.key.stat().st_mode & 0o777), "0o600")
+        att.rotate(self.key)
+        self.assertIsNone(self.verify())                         # two generations back: the check is asked again
+        self.mint()
+        self.assertIsNotNone(self.verify())                      # a new receipt is sealed under the new key
+
+    def test_status_names_both_keys_and_a_damaged_one_is_not_used(self):
+        att.rotate(self.key)
+        att.rotate(self.key)
+        self.assertEqual(len(att.key_status(self.key)), 2)
+        self.assertTrue(all("valid" in line for line in att.key_status(self.key)))
+        self.key.write_bytes(b"short")
+        self.assertIn("DAMAGED", att.key_status(self.key)[0])
+        self.assertEqual(len(att._keys(self.key)), 1)
+
+
 class Operator(unittest.TestCase):
     def test_attest_writes_a_receipt_per_manual_check_and_requeues_the_open_review(self):
         with tempfile.TemporaryDirectory() as tmp:

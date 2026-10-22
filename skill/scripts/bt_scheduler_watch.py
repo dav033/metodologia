@@ -10,6 +10,7 @@ from __future__ import annotations
 import collections
 import contextlib
 import fcntl
+import json
 import os
 import shutil
 import signal
@@ -41,7 +42,8 @@ class Watch:
                  sleep: Callable[[float], None] = time.sleep, spawn: Callable[[bool], "subprocess.Popen"] | None = None,
                  free_bytes: Callable[[], int] | None = None, notify: Callable[[str, str], None] = bt_notify.notify,
                  log: Callable[[str], None] | None = None, announce: Callable[[], object] | None = None,
-                 pending: Callable[[], int] | None = None, heal: Callable[[], bool] | None = None):
+                 pending: Callable[[], int] | None = None, heal: Callable[[], bool] | None = None,
+                 capture: Callable[[], str] | None = None):
         self.project, self.req, self.rdir = project, req, Path(rdir)
         self.now, self.sleep, self.notify = now, sleep, notify
         self.spawn = spawn or self._spawn
@@ -49,6 +51,7 @@ class Watch:
         self.announce = announce or self._announce
         self.pending = pending or self._pending
         self.heal = heal or self._heal
+        self.capture = capture or self._capture
         self.log = log or (lambda text: print(f"{time.strftime('%H:%M:%S')} {text}", flush=True))
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
@@ -123,6 +126,13 @@ class Watch:
                 if self._wait_for_decisions():
                     continue
                 self.log("owner finished: the run is terminal or stalled")
+                try:
+                    saved = self.capture()
+                except Exception as error:  # noqa: BLE001 - the replica is an extra: its failure never changes how the run ends
+                    saved = ""
+                    self.log(f"replica not saved ({type(error).__name__}: {error})")
+                if saved:
+                    self.log(saved)
                 return 0
             if ops.on_hold(self.rdir) or code == -signal.SIGTERM:      # stopped on purpose, not a crash
                 continue
@@ -156,6 +166,20 @@ class Watch:
             self.log(f"remediation failed ({type(error).__name__}: {error}); request dropped")
             bt_remediation.clear_request(self.rdir)
         return True
+
+    def _capture(self) -> str:
+        """P-163: a run that ended with every task completed leaves its replica (plan + measured times) in `<project>/replicas/`, so the
+        benchmark and the A/B settings (`scheduler-evolve`) grow with each real run. A stalled run is not a replica of anything."""
+        states = ops.status(self.project, self.req, self.rdir)["task_states"]
+        if not states or any(state not in ("completed", "cancelled") for state in states.values()):
+            return ""
+        import bt_scheduler_replica as replica
+
+        target = self.rdir.parent.parent / "replicas" / f"{self.req}.json"
+        fixture = replica.extract(adapter.run_db_path(self.rdir), self.rdir / "PLAN.json", name=self.req)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps(fixture, indent=1, sort_keys=True), encoding="utf-8")
+        return f"replica of {self.req} saved in {target} ({fixture['recorded']['attempts']} attempts)"
 
     def _heal(self) -> bool:
         """The self-healing cycle first (`bt_scheduler_healing`: diagnose each open stop in a closed taxonomy and apply the

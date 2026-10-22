@@ -113,7 +113,7 @@ def start(rdir: Path | str) -> str:
 def status(rdir: Path | str) -> dict[str, Any]:
     data = load(rdir)
     return {"enabled": enabled(rdir), "actions": data["actions"], "limits": limits(),
-            "cases": {sig: {k: entry.get(k) for k in ("id", "task", "class", "status", "repair", "applied", "revision")}
+            "cases": {sig: {k: entry.get(k) for k in ("id", "task", "class", "status", "repair", "applied", "revision", "evidence")}
                       for sig, entry in data["cases"].items()}}
 
 

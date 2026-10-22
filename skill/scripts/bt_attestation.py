@@ -18,6 +18,11 @@ person-free pass rested on an attestation and which one.
 Honest limit: the key sits on the same machine as the agents. The seal protects against edits and mix-ups, not against an
 agent with full filesystem access that sets out to forge it; the evidence text and the run's audit trail are what a review
 checks. `scheduler-op REQ attest TASK` is the only supported way to mint one.
+
+Key rotation (`bitacora.py attestation-key rotate`): a new key seals from then on and the previous one is kept as
+`attestation.key.prev`, so receipts already minted still verify for one generation; a second rotation drops it, and every
+receipt sealed under it stops verifying (the task asks for its manual check again). Rotate when the key may have leaked (a
+copy of the state directory left the machine); `attestation-key status` shows when each key was written.
 """
 from __future__ import annotations
 
@@ -72,6 +77,59 @@ def _key(path: Path | None = None, *, create: bool = False) -> bytes | None:
     return path.read_bytes()
 
 
+def _previous(path: Path) -> Path:
+    return path.with_name(path.name + ".prev")
+
+
+def _keys(path: Path | None = None) -> list[bytes]:
+    """The current key, then the one before the last rotation (receipts sealed under it still verify)."""
+    path = path or key_path()
+    keys: list[bytes] = []
+    for candidate in (path, _previous(path)):
+        try:
+            key = candidate.read_bytes()
+        except OSError:
+            continue
+        if len(key) >= 32:
+            keys.append(key)
+    return keys
+
+
+def rotate(key_file: Path | None = None) -> Path:
+    """A new key from now on; the one it replaces stays as `.prev` for one generation. Returns the key's path."""
+    path = key_file or key_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    current = path.read_bytes() if path.is_file() else b""
+    if len(current) >= 32:
+        previous = _previous(path)
+        fd = os.open(previous, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        try:
+            os.write(fd, current)
+        finally:
+            os.close(fd)
+    fresh = path.with_name(path.name + ".new")
+    fd = os.open(fresh, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.write(fd, os.urandom(32))
+    finally:
+        os.close(fd)
+    os.replace(fresh, path)
+    return path
+
+
+def key_status(key_file: Path | None = None) -> list[str]:
+    path = key_file or key_path()
+    lines = []
+    for label, candidate in (("current", path), ("previous", _previous(path))):
+        try:
+            usable = len(candidate.read_bytes()) >= 32
+            when = time.strftime("%Y-%m-%d %H:%M", time.localtime(candidate.stat().st_mtime))
+            lines.append(f"{label}: {candidate} ({'valid' if usable else 'DAMAGED'}, written {when}, mode {oct(candidate.stat().st_mode & 0o777)})")
+        except OSError:
+            lines.append(f"{label}: none")
+    return lines
+
+
 def binding(task_id: str, purpose: str, value: str, expected: str = "", attempt: str = "") -> str:
     """What a receipt is about, as one digest. A receipt bound to an attempt (REQ-029 A11) covers only the work that attempt
     produced: a redone task needs a new attestation. Without an attempt the digest is the original one."""
@@ -115,16 +173,17 @@ def verify(rdir: Path | str, task_id: str, purpose: str, value: str, expected: s
     for exactly that attempt), else None."""
     bound = binding(task_id, purpose, value, expected, attempt)
     path = receipt_path(rdir, task_id, bound)
-    key = _key(key_file)
+    keys = _keys(key_file)
     try:
         raw = path.read_bytes()
         body = json.loads(raw)
     except (OSError, ValueError):
         return None
-    if key is None or not isinstance(body, dict) or body.get("schema") != SCHEMA or body.get("binding") != bound:
+    if not keys or not isinstance(body, dict) or body.get("schema") != SCHEMA or body.get("binding") != bound:
         return None
     seal = body.get("seal")
-    if not isinstance(seal, str) or not hmac.compare_digest(seal, _seal({k: v for k, v in body.items() if k != "seal"}, key)):
+    unsealed = {k: v for k, v in body.items() if k != "seal"}
+    if not isinstance(seal, str) or not any(hmac.compare_digest(seal, _seal(unsealed, key)) for key in keys):
         return None
     if body.get("task") != task_id or body.get("purpose") != purpose or body.get("attempt", "") != attempt or len(str(body.get("evidence", "")).strip()) < MIN_EVIDENCE:
         return None

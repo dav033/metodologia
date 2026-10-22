@@ -519,6 +519,12 @@ def _recovery(s: dict, base: str, token: str) -> str:
             f'{"<ul>" + "".join(cycles) + "</ul>" if cycles else "<p class=muted>Ningún ciclo todavía: se abre solo cuando los reintentos y remediaciones ordinarios se agotan.</p>"}</div>')
 
 
+def _evidence(lines) -> str:
+    """What the diagnosis was based on, one short quoted line per piece of evidence (escaped: it comes from run files)."""
+    shown = [str(line).strip()[:200] for line in (lines if isinstance(lines, list) else []) if str(line).strip()][:3]
+    return f'<details><summary>Evidencia</summary><ul>{"".join(f"<li>{e(line)}</li>" for line in shown)}</ul></details>' if shown else ""
+
+
 def _healing(s: dict, base: str, token: str) -> str:
     """Autocuración: what the scheduler fixed by itself, what it gave up on, and the owner's stop / revert (REQ-029 R7).
     Every text comes from run files, so everything is escaped."""
@@ -537,7 +543,8 @@ def _healing(s: dict, base: str, token: str) -> str:
             if c.get("revision") and c.get("status") != "reverted" else ""
         cases.append(f'<li><b>{e(str(c.get("task")))}</b> · {e(str(c.get("class")))} · '
                      f'<span class="pill">{e(str(c.get("status")))}</span> {e(str(c.get("repair") or "sin reparación segura"))}'
-                     f'{" · r" + e(str(c["revision"])) if c.get("revision") else ""} {undo}</li>')
+                     f'{" · r" + e(str(c["revision"])) if c.get("revision") else ""} {undo}'
+                     f'{_evidence(c.get("evidence"))}</li>')
     recent = []
     for r in h.get("recent") or []:
         recent.append(f'<li>{e(str(r.get("task") or "—"))} · {e(str(r.get("class")))} · '

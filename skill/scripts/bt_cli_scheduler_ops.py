@@ -18,6 +18,8 @@ def register(subparsers) -> None:
     evolve.add_argument("--apply", action="store_true", help="aplicar los cambios de bajo riesgo que el A/B sobre las réplicas probó")
     evolve.add_argument("--revert", action="store_true", help="deshacer los cambios que la evolución aplicó")
     evolve.add_argument("--capture", default="", metavar="REQ", help="guardar la réplica de un run (su plan y sus tiempos) para futuros A/B")
+    key = subparsers.add_parser("attestation-key", help="la clave que sella las atestaciones de checks manuales: ver su estado o rotarla")
+    key.add_argument("action", choices=("status", "rotate"))
     op = subparsers.add_parser("scheduler-op", help="mover un plan en marcha: cancelar intento, reabrir tarea, revisar el plan")
     op.add_argument("req", help="REQ-NNN")
     op.add_argument("action", choices=ACTIONS)
@@ -110,6 +112,14 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
 
     if args.cmd == "scheduler-evolve":
         return evolve(args, project, pdir)
+    if args.cmd == "attestation-key":
+        import bt_attestation
+
+        if args.action == "rotate":
+            print(f"new attestation key in {bt_attestation.rotate()}; receipts under the one before still verify until the next rotation")
+        for line in bt_attestation.key_status():
+            print(line)
+        return 0
 
     import bt_scheduler_ops as ops
 

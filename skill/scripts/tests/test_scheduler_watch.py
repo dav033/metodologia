@@ -35,6 +35,7 @@ class WatchTests(unittest.TestCase):
         self.clock = [0.0]
         self.sleeps: list[float] = []
         self.notes: list[str] = []
+        self.logged: list[str] = []
         self.spawned: list[bool] = []
         self.codes: list[int] = []
         patcher = patch.object(adapter, "authority", return_value=adapter.AUTHORITY)
@@ -47,7 +48,7 @@ class WatchTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def watch(self, free=10 << 30):
+    def watch(self, free=10 << 30, capture=lambda: ""):
         def sleep(seconds):
             self.sleeps.append(seconds)
             self.clock[0] += seconds
@@ -57,12 +58,35 @@ class WatchTests(unittest.TestCase):
             return FakeOwner(self.codes.pop(0))
 
         return watch.Watch("p", "REQ-001", self.rdir, now=lambda: self.clock[0], sleep=sleep, spawn=spawn,
-                           free_bytes=lambda: free, notify=lambda title, text: self.notes.append(text), log=lambda t: None)
+                           free_bytes=lambda: free, notify=lambda title, text: self.notes.append(text), log=self.logged.append,
+                           capture=capture)
 
     def test_terminal_run_ends_the_watch_without_restart(self):
         self.codes = [0]
         self.assertEqual(self.watch().run(), 0)
         self.assertEqual(self.spawned, [True])
+
+    def test_a_finished_run_saves_its_replica_and_says_so(self):
+        self.codes = [0]
+        self.assertEqual(self.watch(capture=lambda: "replica of REQ-001 saved").run(), 0)
+        self.assertIn("replica of REQ-001 saved", self.logged)
+
+    def test_a_replica_that_cannot_be_saved_never_changes_how_the_run_ends(self):
+        def broken():
+            raise OSError("disk full")
+
+        self.codes = [0]
+        self.assertEqual(self.watch(capture=broken).run(), 0)
+        self.assertTrue(any("replica not saved (OSError" in line for line in self.logged))
+
+    def test_only_a_run_with_every_task_completed_is_captured(self):
+        states = {"T1": "completed", "T2": "cancelled"}
+        for given, expected in ((states, True), ({**states, "T3": "blocked"}, False), ({}, False)):
+            with patch.object(ops, "status", return_value={"task_states": given}), \
+                    patch("bt_scheduler_replica.extract", return_value={"recorded": {"attempts": 3}}) as extract:
+                watcher = watch.Watch("p", "REQ-001", self.rdir.parent / "requirements" / "REQ-001-x")
+                self.assertEqual(bool(watcher._capture()), expected)
+                self.assertEqual(extract.called, expected)
 
     def test_an_audits_remediation_request_is_applied_and_the_owner_runs_again(self):
         import bt_remediation

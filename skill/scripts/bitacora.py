@@ -370,7 +370,7 @@ def main() -> None:
         sys.exit(bt_cli_planner.dispatch(a, project, cwd, ROOT))
     elif a.cmd == "launch":
         bt_cli_launch.dispatch(a, project)
-    elif a.cmd in ("scheduler-watch", "scheduler-op", "scheduler-evolve"):
+    elif a.cmd in ("scheduler-watch", "scheduler-op", "scheduler-evolve", "attestation-key"):
         sys.exit(bt_cli_scheduler_ops.dispatch(a, project, pdir))
     elif a.cmd == "scheduler-run":
         sys.exit(bt_cli_scheduler_run.dispatch(a, project, pdir))

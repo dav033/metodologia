@@ -60,6 +60,17 @@ class Views(unittest.TestCase):
         self.assertIn('value="start"', off)
         self.assertEqual(pages._healing({"project": "demo", "req_id": "REQ-001", "healing": None}, "/b", "tok"), "")
 
+    def test_each_case_shows_the_evidence_it_was_diagnosed_from_escaped(self):
+        self.case(evidence=["att-0087 waits in verifying: the verifier refused its order 20 times", "<b>raw</b>", "", "c", "d"])
+        html = pages._healing({"project": "d", "req_id": "R", "healing": api.healing_state(self.rdir)}, "/b", "t")
+        self.assertIn("Evidencia", html)
+        self.assertIn("refused its order 20 times", html)
+        self.assertIn("&lt;b&gt;raw", html)
+        self.assertNotIn("<b>raw", html)
+        self.assertNotIn("<li>d</li>", html)                              # at most three lines
+        self.case()
+        self.assertNotIn("Evidencia", pages._healing({"project": "d", "req_id": "R", "healing": api.healing_state(self.rdir)}, "/b", "t"))
+
     def test_a_reverted_case_offers_no_second_undo(self):
         self.case(status="reverted")
         html = pages._healing({"project": "d", "req_id": "R", "healing": api.healing_state(self.rdir)}, "/b", "t")
