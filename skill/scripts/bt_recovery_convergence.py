@@ -10,6 +10,7 @@ import hashlib
 import json
 import re
 
+import bt_recovery_cycle
 from bt_scheduler_recovery.conflict_contracts import (
     ConflictLineageFacts,
     ConflictObservation,
@@ -411,6 +412,8 @@ def plan_conflict_convergence(plan, observation, strategy) -> dict:
         "integration": {"command_only": True, "independent_audit_required": True,
                         "cross_check_required": True, "max_corrective_tasks": 8,
                         "ordinary_attempt_limits_inherited": True}}
+    if 1 + len(rebuilt) > bt_recovery_cycle.POLICY["max_corrective_tasks"]:
+        raise ConvergenceError("recovery would add more corrective tasks than the cycle allows")
     return {"schema_version": SCHEMA, "convergence_task": convergence, "rebuilt_tasks": rebuilt,
             "consumer_updates": consumer_updates, "bootstrap": bootstrap,
             "replaced_task_ids": replaced_ids,

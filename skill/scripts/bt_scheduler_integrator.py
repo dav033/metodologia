@@ -544,6 +544,7 @@ class PredecessorIntegrator:
         commits = [(t, c) for t, c in maximal if not (c in seen or seen.add(c))]      # drop what another snapshot already holds
         current_task, current = commits[0]
         members = [current_task]                           # the tasks whose work `current` holds
+        ancestry: list[str] = []                           # earlier results a side was built on (REQ-029 G4: carry ancestry)
         for tid, sha in commits[1:]:
             if sha == current or contains(sha, current):
                 continue                                    # already part of what we have
@@ -552,14 +553,16 @@ class PredecessorIntegrator:
                 continue
             done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", current, sha, check=False)
             if done.returncode == 1:
-                done = self._merge_over_earlier_result(repo, contains, current, sha, owners, snapshot_of) or done
+                done = self._merge_over_earlier_result(repo, contains, current, sha, owners, snapshot_of, ancestry) or done
             if done.returncode == 1:
                 files = tuple(sorted(set(line.strip() for line in done.stdout.splitlines()[1:] if line.strip())))
                 # Keep the historical operator string bounded, but attach the exact merge-tree result first.
                 merge_base = _git(repo, "merge-base", current, sha).stdout.strip()
                 conflict_data = {"task_id": task_id, "sides": ((current_task, current), (tid, sha)),
                                  "paths": files, "merge_base": merge_base,
-                                 "trees": (done.stdout.splitlines()[0].strip(),), "carry_ancestry": ()}
+                                 "trees": (done.stdout.splitlines()[0].strip(),),
+                                 "carry_ancestry": tuple(sorted({hashlib.sha256(prior.encode()).hexdigest()
+                                                                 for prior in ancestry}))[:128]}
                 detail = f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"
                 raise IntegrationError("INTEGRATION_CONFLICT", detail[:170], conflict_data=conflict_data)
             if done.returncode:
@@ -625,7 +628,8 @@ class PredecessorIntegrator:
         finally:
             shutil.rmtree(index.parent, ignore_errors=True)
 
-    def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, owners, snapshot_of):
+    def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, owners, snapshot_of,
+                                   ancestry: list[str] | None = None):
         """A clash can be a redone task meeting work built on the result it replaced: both then changed the same lines of
         that earlier result. Any prerequisite of the task being integrated may be the redone one, so each earlier result
         of each of them is tried as the merge base, when one side was built on it. Merging over it keeps the fix and
@@ -642,6 +646,8 @@ class PredecessorIntegrator:
                     continue
                 if prior not in newest:
                     newest.append(prior)
+                    if ancestry is not None:
+                        ancestry.append(prior)
                 done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={prior}",
                             current, sha, check=False)
                 if done.returncode == 0:

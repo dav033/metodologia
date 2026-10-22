@@ -77,6 +77,24 @@ class Receipt(unittest.TestCase):
         self.assertTrue(find(SimpleNamespace(task_id="T9"), spec).startswith("sha256:"))
         self.assertIsNone(find(SimpleNamespace(task_id="T3"), spec))
 
+    def test_a_receipt_bound_to_an_attempt_does_not_cover_the_redone_task(self):
+        args = ("T9", "voice works on a phone", "open it on a phone", "it renders")
+        att.mint(self.rdir, *args, EVIDENCE, "coordinator", attempt="att-1", key_file=self.key)
+        self.assertTrue(att.verify(self.rdir, *args, attempt="att-1", key_file=self.key).startswith("sha256:"))
+        self.assertIsNone(att.verify(self.rdir, *args, attempt="att-2", key_file=self.key))    # the task was redone
+        self.assertIsNone(att.verify(self.rdir, *args, key_file=self.key))                      # and it is not an unbound receipt
+        find = att.lookup(self.rdir, bind_attempt=True, key_file=self.key)
+        spec = SimpleNamespace(purpose=args[1], command=args[2], expected=args[3])
+        self.assertIsNotNone(find(SimpleNamespace(task_id="T9", attempt_id="att-1"), spec))
+        self.assertIsNone(find(SimpleNamespace(task_id="T9", attempt_id="att-2"), spec))
+
+    def test_an_unbound_receipt_is_not_accepted_when_the_gate_binds_attempts(self):
+        self.mint()                                                       # the original, task-and-check-only receipt
+        spec = SimpleNamespace(purpose="voice works on a phone", command="open it on a phone", expected="it renders")
+        order = SimpleNamespace(task_id="T9", attempt_id="att-1")
+        self.assertIsNotNone(att.lookup(self.rdir, key_file=self.key)(order, spec))                   # gate off: as before
+        self.assertIsNone(att.lookup(self.rdir, bind_attempt=True, key_file=self.key)(order, spec))   # gate on: needs the attempt
+
 
 class Operator(unittest.TestCase):
     def test_attest_writes_a_receipt_per_manual_check_and_requeues_the_open_review(self):
@@ -87,7 +105,8 @@ class Operator(unittest.TestCase):
                                                  {"type": "manual", "value": "phone", "purpose": "voice works", "expected": "ok"},
                                                  {"type": "manual", "value": "prod", "purpose": "deployed", "expected": ""}])
             plan = SimpleNamespace(task=lambda t: task)
-            store = SimpleNamespace(open_reviews_of=lambda t: ("key-1",), retried=[], closed=False)
+            store = SimpleNamespace(open_reviews_of=lambda t: ("key-1",), open_review_attempts=lambda t: ("att-1",),
+                                    retried=[], closed=False)
             store.retry_attested = lambda key, by, why: store.retried.append((key, by))
             store.close = lambda: setattr(store, "closed", True)
             key = Path(tmp) / "state" / "attestation.key"
@@ -97,7 +116,7 @@ class Operator(unittest.TestCase):
                     patch("bt_run_stores.paths", return_value={"m6": Path(tmp) / "m6.sqlite3"}), \
                     patch.object(att, "mint", lambda *a, **k: real_mint(*a, **{**k, "key_file": key})):
                 lines = ops.attest("p", "REQ-001", rdir, "T9", "", EVIDENCE)
-                self.assertEqual(sum(1 for line in lines if line.startswith("attested T9")), 2)
+                self.assertEqual(sum(1 for line in lines if line.startswith("attested T9@att-1")), 2)
                 self.assertEqual(store.retried, [("key-1", "coordinator")])
                 self.assertTrue(store.closed)
                 self.assertTrue(any("requeued" in line for line in lines))
@@ -105,6 +124,9 @@ class Operator(unittest.TestCase):
                 self.assertEqual(sum(1 for line in only if line.startswith("attested")), 1)
                 with self.assertRaises(adapter.core.SchedulerError):
                     ops.attest("p", "REQ-001", rdir, "T9", "nothing like this", EVIDENCE)
+                store.open_review_attempts = lambda t: ()                       # nothing is waiting: no attempt to bind to
+                with self.assertRaises(adapter.core.SchedulerError):
+                    ops.attest("p", "REQ-001", rdir, "T9", "", EVIDENCE)
                 with self.assertRaises(adapter.core.SchedulerError):
                     ops.attest("p", "REQ-001", rdir, "T9", "", "too short")
 

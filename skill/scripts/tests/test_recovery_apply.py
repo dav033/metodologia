@@ -92,6 +92,15 @@ class RecoveryApplyTests(unittest.TestCase):
         self.assertFalse(apply.journal_path(self.rdir).exists())
         self.assertEqual(len(bt_plan_adapter.revisions(self.rdir)), 1)
 
+    def test_a_plan_with_more_corrective_tasks_than_the_cycle_allows_is_refused_before_any_write(self):
+        tasks = [{"id": f"R{n}", "recovery_task": True} for n in range(9)]
+        over = {**self.compiled, "plan": {**self.compiled_plan, "tasks": [*self.compiled_plan["tasks"], *tasks]}}
+        with self.assertRaises(apply.RecoveryApplyError) as caught:
+            apply.apply_recovery_revision(self.rdir, over, self.key, current_base=lambda: sha("base"))
+        self.assertEqual(caught.exception.code, "CORRECTIVE_LIMIT")
+        self.assertFalse(apply.journal_path(self.rdir).exists())
+        self.assertEqual(len(bt_plan_adapter.revisions(self.rdir)), 1)
+
     def test_crash_after_freeze_adopts_the_same_revision_and_commits_once(self):
         with ExitStack() as stack:
             for item in self._patch_runtime():

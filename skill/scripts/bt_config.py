@@ -80,6 +80,9 @@ DEFAULTS: dict = {
               # an action that would send back more ACCEPTED tasks than this (an audit rejection, `scheduler-op rework`,
               # `scheduler-op revise`) needs the owner's confirmation (`--confirm`) and says what it costs; 0 = no ceiling
               "rework_confirm_over": 3,
+              # a manual-check receipt (`scheduler-op attest`) covers only the attempt that was being verified: a redone task
+              # is attested again (REQ-029 A11); false = the older receipts, bound to task and check only
+              "attestation_bind_attempt": True,
               # `scheduler-op revise` onto a new plan revision: "content" keeps every accepted task whose own content did not
               # change (what depends on a redone task is merged with the redo, like `rework_scope: named`; checks and audits
               # over redone work are redone); "downstream" resets everything that depended on a reset task
@@ -88,7 +91,9 @@ DEFAULTS: dict = {
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
     # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
     # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
-    "healing": {"enabled": True, "max_per_task": 2, "max_actions": 40},
+    # model_diagnosis (REQ-029 R3/R4): a stop the rules cannot repair (or place) is answered with the diagnosing model's validated option,
+    # only `retry` / `retry_with_note`, once per signature, never an owner-only decision or a review; off until the owner opts in
+    "healing": {"enabled": True, "max_per_task": 2, "max_actions": 40, "model_diagnosis": False},
     # exclusive_scopes: plan `scope` values whose tasks run alone in their repository. Empty since REQ-030: what keeps two
     # tasks apart is the overlap of their declared `expected_paths` / `shared_resources` (and a task that declares neither
     # is serialised anyway), not how big the task is. REQ-020 and REQ-029 ran ~1x serial because nearly every task is

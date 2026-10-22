@@ -146,6 +146,16 @@ def classify(request: dict, *, verify: str = "", failures=(), plan=None, doc: di
     return None
 
 
+def unplaced(request: dict, *, verify: str = "", failures=()) -> Case:
+    """A stop the rules do not place, as a case of class `unknown`: the signature is the task plus the decisive error, so the same
+    failure coming back is recognised. Only the model step of the healing may act on it (REQ-029 R3/R4)."""
+    error = last_error(request, verify, failures)
+    reason = str(request.get("reason") or "")
+    lines = tuple(e for e in (f"unplaced error: {error[:200]}" if error else "", f"reason code: {reason}" if reason else "") if e)
+    return Case(request.get("id", ""), request.get("task", ""), "unknown", lines or ("no evidence text",),
+                signature=signature(request.get("task", ""), "unknown", error or reason))
+
+
 def _first(pattern: re.Pattern, text: str) -> str:
     match = pattern.search(text or "")
     return match.group(0)[:100] if match else ""

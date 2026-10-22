@@ -72,9 +72,11 @@ def _key(path: Path | None = None, *, create: bool = False) -> bytes | None:
     return path.read_bytes()
 
 
-def binding(task_id: str, purpose: str, value: str, expected: str = "") -> str:
-    """What a receipt is about, as one digest."""
-    return hashlib.sha256(json.dumps([task_id, purpose, value, expected], ensure_ascii=False).encode()).hexdigest()
+def binding(task_id: str, purpose: str, value: str, expected: str = "", attempt: str = "") -> str:
+    """What a receipt is about, as one digest. A receipt bound to an attempt (REQ-029 A11) covers only the work that attempt
+    produced: a redone task needs a new attestation. Without an attempt the digest is the original one."""
+    parts = [task_id, purpose, value, expected] + ([attempt] if attempt else [])
+    return hashlib.sha256(json.dumps(parts, ensure_ascii=False).encode()).hexdigest()
 
 
 def receipt_path(rdir: Path | str, task_id: str, bound: str) -> Path:
@@ -86,7 +88,7 @@ def _seal(body: dict[str, Any], key: bytes) -> str:
 
 
 def mint(rdir: Path | str, task_id: str, purpose: str, value: str, expected: str, evidence: str, by: str,
-         *, key_file: Path | None = None, now: Callable[[], float] = time.time) -> Path:
+         *, attempt: str = "", key_file: Path | None = None, now: Callable[[], float] = time.time) -> Path:
     """Write the receipt for one manual check. `evidence` says what was done and seen (at least a sentence)."""
     evidence = (evidence or "").strip()
     if len(evidence) < MIN_EVIDENCE:
@@ -94,9 +96,9 @@ def mint(rdir: Path | str, task_id: str, purpose: str, value: str, expected: str
                                "done and what was seen")
     if not by.strip():
         raise AttestationError("an attestation names who attests")
-    bound = binding(task_id, purpose, value, expected)
+    bound = binding(task_id, purpose, value, expected, attempt)
     body = {"schema": SCHEMA, "task": task_id, "purpose": purpose, "value": value, "expected": expected,
-            "binding": bound, "by": by.strip(), "at": round(now(), 3), "evidence": evidence[:4000],
+            **({"attempt": attempt} if attempt else {}), "binding": bound, "by": by.strip(), "at": round(now(), 3), "evidence": evidence[:4000],
             "evidence_sha256": hashlib.sha256(evidence.encode()).hexdigest()}
     body["seal"] = _seal({k: v for k, v in body.items() if k != "seal"}, _key(key_file, create=True))
     path = receipt_path(rdir, task_id, bound)
@@ -108,9 +110,10 @@ def mint(rdir: Path | str, task_id: str, purpose: str, value: str, expected: str
 
 
 def verify(rdir: Path | str, task_id: str, purpose: str, value: str, expected: str = "",
-           *, key_file: Path | None = None) -> str | None:
-    """`sha256:<digest of the receipt file>` when a valid receipt holds for exactly this check, else None."""
-    bound = binding(task_id, purpose, value, expected)
+           *, attempt: str = "", key_file: Path | None = None) -> str | None:
+    """`sha256:<digest of the receipt file>` when a valid receipt holds for exactly this check (and, when `attempt` is given,
+    for exactly that attempt), else None."""
+    bound = binding(task_id, purpose, value, expected, attempt)
     path = receipt_path(rdir, task_id, bound)
     key = _key(key_file)
     try:
@@ -123,15 +126,18 @@ def verify(rdir: Path | str, task_id: str, purpose: str, value: str, expected: s
     seal = body.get("seal")
     if not isinstance(seal, str) or not hmac.compare_digest(seal, _seal({k: v for k, v in body.items() if k != "seal"}, key)):
         return None
-    if body.get("task") != task_id or body.get("purpose") != purpose or len(str(body.get("evidence", "")).strip()) < MIN_EVIDENCE:
+    if body.get("task") != task_id or body.get("purpose") != purpose or body.get("attempt", "") != attempt or len(str(body.get("evidence", "")).strip()) < MIN_EVIDENCE:
         return None
     return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
-def lookup(rdir: Path | str, *, key_file: Path | None = None) -> Callable[[Any, Any], str | None]:
-    """The port the verifier is given: (order, check spec) -> receipt digest or None."""
+def lookup(rdir: Path | str, *, bind_attempt: bool = False, key_file: Path | None = None
+           ) -> Callable[[Any, Any], str | None]:
+    """The port the verifier is given: (order, check spec) -> receipt digest or None. With `bind_attempt` a receipt counts only
+    for the attempt the order verifies (`gates.attestation_bind_attempt`)."""
     def find(order, spec) -> str | None:
-        return verify(rdir, order.task_id, spec.purpose, spec.command, spec.expected, key_file=key_file)
+        return verify(rdir, order.task_id, spec.purpose, spec.command, spec.expected,
+                      attempt=order.attempt_id if bind_attempt else "", key_file=key_file)
     return find
 
 

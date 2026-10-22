@@ -220,12 +220,18 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   strategy twice); `healing.max_per_task` and `healing.max_actions` bound it, `PER_CYCLE` bounds one pass. State and history are in
   `RUN.healing.json`, every intervention (automatic or by hand) in `RUN.interventions.jsonl` (`bt_interventions`).
   `scheduler-op REQ heal status|stop|start|run|revert CASE` is the owner's hand on it: `stop` switches it off at once, `revert`
-  freezes a revision without the repair task and moves the run onto it. It never touches attempt counters;
+  freezes a revision without the repair task and moves the run onto it. It never touches attempt counters. It never touches attempt counters.
+  **Model step** (REQ-029 R3/R4, `healing.model_diagnosis`, off by default): a stop the rules cannot repair, or cannot place (class
+  `unknown`), takes the validated option of the diagnosing model (`bt_block_agent`, `diagnosis.*`) — only `retry` / `retry_with_note`,
+  only a task stop the owner could answer with a plain retry (never an owner-only decision or a review), never when the model is
+  `baja` or its note is thinner than 20 characters (that becomes a plain `retry`), once per signature, then the owner decides.
+  `gates.attestation_bind_attempt` (default on, REQ-029 A11): a manual-check receipt (`scheduler-op REQ attest`) covers only the attempt
+  being verified, so a redone task has to be attested again; attesting needs a verification waiting for evidence;
 - **structural recovery** (REQ-029, `bt_recovery_*`, `bt_scheduler_recovery_lifecycle`): for a conflict or an audit the ordinary budgets
   could not close, one bounded cycle per run and lineage: complete evidence (`conflict-observation/1` published before clipping),
   a constrained revision with convergence work (`convergence-work/1`), a run-scoped grant and a journaled application through one
   generic M1 primitive; only independent verification on the resulting integrated tree closes it. The plan page and the /flow feed show
-  it with a stop control. Details and rollback: `scripts/bt_scheduler_recovery/reviews/req029-rollout.md`;
+  it with a stop control (a cycle's state change is a `recovery_cycle` event in the feed). The conflict observation carries the earlier results a side was built on (`carry_ancestry`); a recovery plan adds at most 8 corrective tasks (checked when it is compiled and again when it is applied, `CORRECTIVE_LIMIT`). The model-authored structural revision is not built: until it is, an exhausted lineage ends its cycle in the durable blocker `diagnostic_pipeline_unavailable` and the model step of the self-healing above is what acts. Details and rollback: `scripts/bt_scheduler_recovery/reviews/req029-rollout.md`;
 - **evolution** (REQ-030, `bt_evolution`, `scheduler-evolve [--propose|--apply|--revert|--capture REQ]`): a deterministic analysis of the
   interventions of a project turns repeated patterns into proposals with their evidence; HIGH-risk ones become numbered `P-NNN` items
   in PENDING.md, LOW-risk ones (an allowlist of bounded settings) are applied only if an A/B on the replicas saves time on one and

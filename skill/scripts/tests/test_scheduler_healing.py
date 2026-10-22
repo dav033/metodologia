@@ -173,6 +173,76 @@ class Cycle(unittest.TestCase):
             self.assertEqual(self.run_cycle([request()]), 0)
         self.assertEqual(self.answers, [])
 
+    # --- REQ-029 R3/R4: the diagnosing model, as a last resort -------------------------------------------------------
+    def model_card(self, **agent):
+        done = {"state": "done", "option": "retry_with_note", "note": "Fix the ledger path first, then run the audit again.",
+                "confidence": "alta", "kind": "code", "headline": "the audit checks the wrong ledger", "model": "haiku"}
+        return request(agent={**done, **agent}, reason="m5:attempts_exhausted")
+
+    def with_model(self, on=True):
+        def get(key, default=None):
+            return on if key == "healing.model_diagnosis" else False if key == "diagnosis.auto" else default
+        patcher = patch("bt_config.get", side_effect=get)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_an_unplaced_stop_follows_the_models_validated_option_once_when_the_owner_opted_in(self):
+        self.verify = "an error the taxonomy has never seen"
+        self.with_model()
+        self.assertEqual(self.run_cycle([self.model_card()]), 1)
+        self.assertEqual(self.answers[0][:2], ("T7:3", "retry_with_note"))
+        self.assertIn("Fix the ledger path first", self.answers[0][2])
+        self.assertIn("model diagnosis", self.answers[0][2])
+        row = list(bt_interventions.read(self.rdir))[0]
+        self.assertEqual((row["class"], row["source"], row["result"]), ("unknown", "auto", "fixed"))
+        self.run_cycle([self.model_card()])                                                  # the same failure again: never repeated
+        self.assertEqual(len(self.answers), 1)
+        self.assertEqual(next(iter(healing.load(self.rdir)["cases"].values()))["status"], "exhausted")
+
+    def test_the_models_option_is_ignored_unless_it_is_a_plain_retry_confident_and_offered(self):
+        self.verify = "an error the taxonomy has never seen"
+        self.with_model()
+        for agent in ({"option": "stop"}, {"option": "revise"}, {"option": "review_pass"}, {"confidence": "baja"},
+                      {"state": "failed"}):
+            self.assertEqual(self.run_cycle([self.model_card(**agent)]), 0, agent)
+            healing.save(self.rdir, {"cases": {}, "actions": 0})
+        self.assertEqual(self.answers, [])
+        card = self.model_card()
+        card["options"] = [{"id": "stop"}]                                                   # retry is not offered
+        self.assertEqual(self.run_cycle([card]), 0)
+        self.assertEqual(self.answers, [])
+
+    def test_an_owner_only_decision_and_a_review_are_never_answered_by_the_model(self):
+        self.verify = "an error the taxonomy has never seen"
+        self.with_model()
+        for over in ({"unskippable": True}, {"source": "review", "options": [{"id": "retry"}, {"id": "review_pass"}]}):
+            self.assertEqual(self.run_cycle([{**self.model_card(), **over}]), 0, over)
+        self.assertEqual(self.answers, [])
+
+    def test_the_model_step_is_off_by_default_and_a_thin_note_becomes_a_plain_retry(self):
+        self.verify = "an error the taxonomy has never seen"
+        self.assertEqual(self.run_cycle([self.model_card()]), 0)                              # off by default
+        self.with_model()
+        self.assertEqual(self.run_cycle([self.model_card(note="redo")]), 1)
+        self.assertEqual(self.answers[0][1], "retry")
+
+    def test_a_stop_the_rules_cannot_repair_falls_through_to_the_model_and_a_missing_diagnosis_is_asked_for(self):
+        self.with_model()
+        self.verify = "an error the taxonomy has never seen"
+        asked = []
+        with patch("bt_block_agent.spawn", side_effect=lambda *a: asked.append(a) or True), \
+                patch("bt_config.get", side_effect=lambda key, default=None: key in ("healing.model_diagnosis", "diagnosis.auto") or default):
+            waiting = self.run_cycle([request()])                                            # no diagnosis yet: ask for it, record nothing
+        self.assertEqual((waiting, len(asked), self.answers), (0, 1, []))
+        self.assertEqual(healing.load(self.rdir)["actions"], 0)
+
+    def test_a_placed_stop_with_no_rule_repair_also_falls_through_to_the_model(self):
+        self.verify = "EROFS: read-only file system, mkdir node_modules"                      # environment, but no known note to retry with
+        self.with_model()
+        self.assertEqual(self.run_cycle([self.model_card()]), 1)
+        self.assertEqual(self.answers[0][1], "retry_with_note")
+        self.assertEqual(list(bt_interventions.read(self.rdir))[0]["class"], "environment")
+
     def test_an_unplaced_stop_is_left_alone(self):
         self.verify = "an error the taxonomy has never seen"
         self.assertEqual(self.run_cycle([request()]), 0)

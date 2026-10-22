@@ -2,6 +2,7 @@
 no network), then the same through the real core + executor with the fake provider binaries."""
 from __future__ import annotations
 
+import hashlib
 import os
 import subprocess
 import sys
@@ -142,6 +143,8 @@ class Unit(unittest.TestCase):
         with self.assertRaises(integ.IntegrationError) as caught:
             self.bound(spec).base_ref("T3")
         self.assertEqual(caught.exception.code, "INTEGRATION_CONFLICT")
+        ancestry = caught.exception.conflict_data["carry_ancestry"]                  # REQ-029 G4: the earlier result is named
+        self.assertEqual(ancestry, (hashlib.sha256(self.snaps["att-T1-v1"].encode()).hexdigest(),))
 
     def carried_case(self, own_line):
         lines = [f"line{n}" for n in range(1, 21)]

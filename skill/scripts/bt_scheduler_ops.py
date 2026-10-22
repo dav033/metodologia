@@ -16,6 +16,7 @@ import time
 import uuid
 from pathlib import Path
 
+import bt_config
 import bt_core
 import bt_scheduler_adapter as adapter
 
@@ -536,10 +537,23 @@ def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: 
     if not picked:
         raise core.SchedulerError("NOT_ALLOWED", f"{task} has no manual check{f' matching {which!r}' if which else ''} to attest")
     lines = []
+    attempts: tuple[str, ...] = ("",)
+    if bt_config.get("gates.attestation_bind_attempt", True) is True:
+        # the receipt covers the attempt being verified: a redone task has to be attested again (REQ-029 A11)
+        probe = QualityStore(bt_run_stores.paths(rdir)["m6"])
+        try:
+            attempts = probe.open_review_attempts(task)
+        finally:
+            probe.close()
+        if not attempts:
+            raise core.SchedulerError("NOT_ALLOWED", f"{task} has no verification waiting for evidence: a receipt covers the attempt "
+                                      "being verified, so attest once the verifier asks")
     try:
         for check in picked:
-            path = bt_attestation.mint(rdir, task, check["purpose"], check["value"], check["expected"], evidence, by)
-            lines.append(f"attested {task}: «{check['purpose'][:80]}» -> {path.name}")
+            for attempt in attempts:
+                path = bt_attestation.mint(rdir, task, check["purpose"], check["value"], check["expected"], evidence, by,
+                                           attempt=attempt)
+                lines.append(f"attested {task}{'@' + attempt if attempt else ''}: «{check['purpose'][:80]}» -> {path.name}")
     except bt_attestation.AttestationError as exc:
         raise core.SchedulerError("NOT_ALLOWED", str(exc)) from exc
     with hold(rdir, f"attestation of {task}"):

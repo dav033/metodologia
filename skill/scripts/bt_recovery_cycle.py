@@ -23,6 +23,12 @@ def digest(value: object) -> str:
                                      allow_nan=False).encode()).hexdigest()
 
 
+def corrective_tasks(plan: dict) -> list[str]:
+    """Ids of the tasks a recovery plan adds: the convergence task and the rebuilt descendants carry these markers."""
+    return [str(t.get("id")) for t in plan.get("tasks", []) if isinstance(t, dict)
+            and (t.get("recovery_task") or t.get("unaccepted_until_independent_checks"))]
+
+
 def strategy_identity(strategy: dict, evidence: dict) -> str:
     """Structure plus semantic digests only: word choice (names, prose) never changes the identity."""
     return digest({"dag": sorted(map(list, strategy.get("dag", ()))),

@@ -352,6 +352,20 @@ class QualityStore:
                 continue
         return tuple(found)
 
+    def open_review_attempts(self, task_id: str) -> tuple[str, ...]:
+        """The attempts that the open reviews of `task_id` verify (each once, oldest first)."""
+        found: list[str] = []
+        for key in self.open_reviews_of(task_id):
+            with self._lock:
+                row = self._connection.execute("SELECT request_json FROM requests WHERE idempotency_key = ?", (key,)).fetchone()
+            try:
+                attempt = json.loads(row["request_json"]).get("attempt_id") if row else None
+            except ValueError:
+                continue
+            if isinstance(attempt, str) and attempt and attempt not in found:
+                found.append(attempt)
+        return tuple(found)
+
     def retry_attested(self, request_key: str, operator: str, reason: str) -> None:
         """Requeue one open review that only waited for manual evidence, now attested (see `recovery.retry_attested`)."""
         _validate_operator(operator, reason, "FAIL")

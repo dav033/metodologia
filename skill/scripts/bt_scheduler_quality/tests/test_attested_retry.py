@@ -32,6 +32,8 @@ class AttestedRetry(unittest.TestCase):
             self.assertEqual(first["status"], "NEEDS_REVIEW")
             self.assertEqual(store.open_reviews_of("T-001"), ("verify:T-001:att-1",))
             self.assertEqual(store.open_reviews_of("T-999"), ())
+            self.assertEqual(store.open_review_attempts("T-001"), ("att-1",))               # what a receipt binds to (REQ-029 A11)
+            self.assertEqual(store.open_review_attempts("T-999"), ())
             receipts["check 1 holds"] = "sha256:abc"
             store.retry_attested("verify:T-001:att-1", "david", "attested: opened it on a phone and saw it render")
             self.assertEqual(store.open_reviews_of("T-001"), ())

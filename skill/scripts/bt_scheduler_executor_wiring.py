@@ -301,7 +301,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 unresolved_check=getattr(integrate, "unresolved", None),
                 revert_check=getattr(integrate, "reverted", None),
                 remediate=bt_remediation.hook(rdir, bt_audit_gate.policy_from(bt_config.get)),
-                attestations=bt_attestation.lookup(rdir),
+                attestations=bt_attestation.lookup(rdir, bind_attempt=bt_config.get("gates.attestation_bind_attempt", True) is True),
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)),
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(

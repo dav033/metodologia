@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 import bt_recovery_authorization as authorization
+import bt_recovery_cycle
 
 JOURNAL = "RUN.recovery-apply.json"
 DEFAULT_BARRIER_SECONDS = 60.0
@@ -186,6 +187,8 @@ def apply_recovery_revision(rdir: str | Path, compiled: dict, grant_key: str, *,
         if any(audit_grant.get(name) != value for name, value in expected_audit.items()) or \
                 audit_grant.get("audit_lineage") != compiled.get("audit_lineage"):
             raise RecoveryApplyError("AUDIT_GRANT_MISMATCH", "supplementary audit grant does not match this recovery cycle")
+    if len(bt_recovery_cycle.corrective_tasks(plan)) > bt_recovery_cycle.POLICY["max_corrective_tasks"]:
+        raise RecoveryApplyError("CORRECTIVE_LIMIT", "the plan adds more corrective tasks than a recovery cycle allows")
     plan_hash = _plan_hash(plan)
     if plan_hash != grant.get("target_sha256"):
         raise RecoveryApplyError("TARGET_HASH_MISMATCH", "compiled plan does not match its grant")

@@ -48,6 +48,8 @@ SETTLE = {"transient": 45.0, "quota": 900.0}      # seconds a stop must have bee
 REPEATS = {"integration_defect": 3, "transient": 2, "quota": 2}   # times one signature may be repaired (default 1)
 REVISING = ("regression", "plan_defect", "criterion_unmapped")    # classes whose repair changes the plan: capped per task
 MAX_NOTE = 1500
+MODEL_OPTIONS = ("retry", "retry_with_note")      # what a model's diagnosis may do on its own: both are the owner's own, reversible moves
+MIN_MODEL_NOTE = 20
 
 
 # ------------------------------------------------------------------------------------------------ settings and state
@@ -148,6 +150,8 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             continue
         case = classify_mod.classify(request, verify=context.get("verify", ""), failures=context.get("failures", ()),
                                      plan=plan, doc=doc)
+        if case is None and model_enabled() and model_eligible(request):
+            case = classify_mod.unplaced(request, verify=context.get("verify", ""), failures=context.get("failures", ()))
         if case is None or _too_fresh(case, request, doc, now()):
             continue
         if case.signature not in state["cases"] and len(state["cases"]) >= MAX_CASES:
@@ -167,6 +171,10 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
                      f"{case.task} already had {task_actions} automatic plan repairs")
             continue
         outcome = _repair(project, req, rdir, request, case, context, plan, doc, answer, revise)
+        if outcome["repair"] == "none" and model_enabled() and model_eligible(request):
+            outcome = model_repair(project, req, rdir, request, case, answer)
+            if outcome["repair"] == "wait":            # the diagnosis is not there yet: ask again next cycle, nothing is recorded
+                continue
         entry["history"] = [*entry["history"], {"at": round(now(), 3), "repair": outcome["repair"],
                                                 "result": outcome["result"]}][-MAX_HISTORY:]
         if outcome["repair"] == "none":
@@ -183,6 +191,52 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
         save(rdir, state)
     save(rdir, state)
     return done
+
+
+def model_enabled() -> bool:
+    return _config("model_diagnosis", False) is True
+
+
+def model_eligible(request: dict) -> bool:
+    """Only a task stop the owner could answer with a plain retry: never an owner-only decision and never a review (a verdict on
+    the work is not a model's to give)."""
+    return request.get("source") == "task" and request.get("unskippable") is not True
+
+
+def model_repair(project: str, req: str, rdir: Path, request: dict, case, answer) -> dict[str, Any]:
+    """REQ-029 R3/R4 as a last resort. The diagnosing model (`bt_block_agent`, config `diagnosis.*`) has read the same evidence the
+    owner would and picked an offered option; its JSON was validated by `bt_block_agent.parse`. It is acted on only when that option
+    is one of `MODEL_OPTIONS`, is offered, the model is not unsure, and a note says something. The model never authorises scope,
+    commands or state: it chooses between two moves of the owner's. One try per signature (`REPEATS`), then the owner decides."""
+    import bt_block_agent
+
+    options = _options(request)
+    agent = request.get("agent")
+    if agent is None:
+        try:
+            import bt_config
+
+            if not bt_config.get("diagnosis.auto"):
+                return {"repair": "none", "result": "pending"}      # nobody asks the model: the card stays for a person
+            bt_block_agent.spawn(project, req, Path(rdir), request["id"])
+        except Exception:  # noqa: BLE001 - no model to ask: the card stays for a person
+            return {"repair": "none", "result": "pending"}
+        return {"repair": "wait", "result": "pending"}
+    if agent.get("state") == "running":
+        return {"repair": "wait", "result": "pending"}
+    option, note = agent.get("option"), str(agent.get("note") or "").strip()
+    if agent.get("state") != "done" or option not in MODEL_OPTIONS or option not in options or agent.get("confidence") == "baja":
+        return {"repair": "none", "result": "pending"}
+    if option == "retry_with_note" and len(note) < MIN_MODEL_NOTE:
+        option = "retry"
+    reason = (f"{note}\n\n" if option == "retry_with_note" else "") + \
+        f"automatic (model diagnosis, {agent.get('kind', 'unknown')}, confidence {agent.get('confidence', '?')}): {str(agent.get('headline') or '')[:200]}"
+    try:
+        answer(request["id"], option, reason[:MAX_NOTE])
+    except Exception as error:  # noqa: BLE001 - a failed move leaves the card for a person
+        return {"repair": f"model diagnosis: {type(error).__name__}: {str(error)[:200]}", "result": "failed"}
+    return {"repair": f"{option} chosen by the diagnosing model ({agent.get('model', '?')}): {str(agent.get('headline') or '')[:120]}",
+            "result": "fixed"}
 
 
 def _too_fresh(case: classify_mod.Case, request: dict, doc: dict, now: float) -> bool:
