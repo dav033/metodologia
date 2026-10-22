@@ -92,7 +92,7 @@ def partial_live_receipt() -> dict:
         "frontend_url": "https://flow-remote.example.test",
         "steps": [{"name": "live-probes", "command": "python smoke.py --live", "exit_code": 0}],
         "checks": {
-            "signin-start": {"ok": True, "detail": "Public OAuth start and cookie policies were checked."},
+            "signin-start": {"ok": False, "detail": "OAuth start and state cookie were checked; owner session cookie was not observed."},
             "negative-paths": {"ok": True, "detail": "Bad state, unauthenticated API and missing CSRF were checked."},
             "sse": {"ok": False, "detail": "Owner session was unavailable; authenticated reconnect was not attempted."},
             "telegram-delivery": {"ok": False, "detail": "Not attempted because credentials were unavailable."},
@@ -177,16 +177,17 @@ class ReceiptVerifierTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("public-health", result.stderr)
 
-    def test_live_receipt_can_validate_independent_passed_checks(self):
+    def test_live_receipt_can_validate_only_observed_passed_checks(self):
         receipt = partial_live_receipt()
-        result = self.run_verifier(receipt, "--check", "signin-start")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         result = self.run_verifier(receipt, "--check", "negative-paths")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.run_verifier(receipt, "--check", "signin-start")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("signin-start", result.stderr)
 
     def test_live_receipt_reports_unpassed_named_checks(self):
         receipt = partial_live_receipt()
-        for name in ("sse", "telegram-delivery"):
+        for name in ("signin-start", "sse", "telegram-delivery"):
             result = self.run_verifier(receipt, "--check", name)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(name, result.stderr)

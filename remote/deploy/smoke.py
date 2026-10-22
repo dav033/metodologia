@@ -89,20 +89,24 @@ def live_smoke() -> int:
             and params.get("redirect_uri") == [frontend + "/api/auth/callback"]
             and {"secure", "httponly", "samesite=lax"}.issubset(attrs)
         )
+        oauth_start_ok = start_ok
         # The deployed gateway revision is the source of truth for the session-cookie policy.
         deployed_server = subprocess.check_output(
             ["git", "show", f"{release_sha}:remote/gateway/server.py"],
             cwd=DEPLOY.parents[1], text=True,
         )
         session_policy_ok = "SameSite=Strict" in deployed_server and "SESSION_COOKIE}={token}" in deployed_server
-        start_ok = start_ok and session_policy_ok
+        # A live session cookie is emitted only after owner sign-in, which this headless
+        # run is not authorized to perform. Source inspection is not runtime evidence.
+        session_cookie_observed = False
+        start_ok = start_ok and session_policy_ok and session_cookie_observed
         checks["signin-start"] = check(
             start_ok,
             f"GET {frontend}/ returned HTTP {page_status}; gateway /healthz returned HTTP {gateway_status} "
             f"with {'matching' if gateway_ok else 'non-matching'} release SHA; OAuth start returned HTTP {login_status} to github.com; "
-            f"OAuth client id, state and frontend callback {'were' if start_ok else 'were not fully'} present; "
-            "state cookie attributes checked without recording the state value; deployed release source sets the "
-            f"session cookie Secure, HttpOnly and SameSite=Strict: {session_policy_ok}.",
+            f"OAuth client id, state, frontend callback and state-cookie attributes {'were' if oauth_start_ok else 'were not fully'} observed; "
+            f"deployed source declares Secure, HttpOnly and SameSite=Strict for the session cookie: {session_policy_ok}; "
+            "the session cookie emitted after owner sign-in was not observed because this run cannot use owner credentials.",
         )
 
         bad_state_status, _, _ = open_response(Request(
