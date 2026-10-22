@@ -86,16 +86,32 @@ def due(rdir: Path | str, task: str, doc: dict) -> int:
     return count if count >= int(last.get("failures", 0) or 0) + (REANALYZE_AFTER if last.get("state") else 1) else 0
 
 
+def _spec(plan: Any, task: str) -> dict[str, Any]:
+    """The task of the approved plan as plain data. The plan is the scheduler's `Plan` (TaskSpec objects); a dict is accepted too."""
+    if plan is None:
+        return {}
+    if isinstance(plan, dict):
+        found = next((t for t in plan.get("tasks", []) if isinstance(t, dict) and t.get("id") == task), None)
+        return {k: found[k] for k in ("id", "title", "objective", "acceptance_criteria", "expected_paths", "verification", "after")
+                if found and found.get(k)}
+    try:
+        spec = plan.task(task)
+    except Exception:  # noqa: BLE001 - a task the plan does not know is analysed without its text
+        return {}
+    meta = getattr(spec, "meta", {}) or {}
+    data = {"id": spec.id, "title": meta.get("title"), "objective": meta.get("objective"), "acceptance_criteria": spec.acceptance_criteria,
+            "expected_paths": spec.expected_paths, "verification": spec.verification, "after": spec.after}
+    return {k: v for k, v in data.items() if v}
+
+
 def bundle(rdir: Path, task: str, doc: dict, plan: dict | None) -> str:
     import bt_attempt_history
     import bt_scheduler_decisions as decisions
 
     parts = []
-    spec = next((t for t in (plan or {}).get("tasks", []) if isinstance(t, dict) and t.get("id") == task), None)
+    spec = _spec(plan, task)
     if spec:
-        parts.append("THE TASK (from the approved plan):\n" + json.dumps({k: spec.get(k) for k in (
-            "id", "title", "objective", "acceptance_criteria", "expected_paths", "verification", "after") if spec.get(k)},
-            ensure_ascii=False, indent=1)[:5000])
+        parts.append("THE TASK (from the approved plan):\n" + json.dumps(spec, ensure_ascii=False, indent=1, default=str)[:5000])
     for label, text in (("HISTORY OF THE ATTEMPTS", bt_attempt_history.prompt(rdir, task, doc)),
                         ("LAST VERIFICATION NOTE", decisions.verify_notes(rdir, task)),
                         ("AUDIT NOTES", decisions.audit_notes(rdir, task)),

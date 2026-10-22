@@ -83,6 +83,20 @@ class Answer(Base):
         self.assertIn("OUTSIDE what this task may change", analyst.prompt(self.rdir, "T1"))
 
 
+class Bundle(Base):
+    def test_the_task_text_comes_from_a_scheduler_plan_object_and_from_a_dict(self):
+        spec = SimpleNamespace(id="T1", meta={"title": "Title", "objective": "Do it"}, acceptance_criteria=["works"], expected_paths=["a.py"],
+                               verification=[{"type": "command", "value": "npm test"}], after=[])
+        plan = SimpleNamespace(task=lambda tid: spec)
+        with patch("bt_scheduler_decisions.verify_notes", return_value=""), patch("bt_scheduler_decisions.audit_notes", return_value=""), \
+                patch("bt_scheduler_decisions.operator_notes", return_value=""):
+            text = analyst.bundle(self.rdir, "T1", doc_with(3), plan)
+            self.assertIn('"objective": "Do it"', text)
+            self.assertIn("npm test", text)
+            self.assertIn('"title": "t"', analyst.bundle(self.rdir, "T1", doc_with(3), {"tasks": [{"id": "T1", "title": "t"}]}))
+            self.assertNotIn("THE TASK", analyst.bundle(self.rdir, "T1", doc_with(3), SimpleNamespace(task=lambda tid: 1 / 0)))
+
+
 class Cycle(Base):
     def test_one_start_per_due_task_marked_before_it_starts_and_nothing_when_off(self):
         started = []
