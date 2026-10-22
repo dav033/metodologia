@@ -71,6 +71,20 @@ class Taxonomy(unittest.TestCase):
         alone = classify(request(), verify="FAIL: test_x (test_unowned.Case.test_x)", plan=plan, doc=doc)
         self.assertEqual(alone.kind, "plan_defect")
 
+    def test_a_failing_command_names_the_file_it_runs_so_the_owner_of_that_file_is_found(self):
+        """REQ-020 T14a: the project's e2e runner prints `[FAIL] asesor M1: ...`, no test-runner format. The command that failed
+        (`exit code 1`) names the script; the manual checks that never ran (`exit code None`) name nothing."""
+        verify = ("$ Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --live` with .env.local\nexit code None\n\n"
+                  "$ ASESOR_TEST_DATABASE_URL=postgresql://rag@127.0.0.1:5432/rag npx tsx --conditions=react-server "
+                  "scripts/e2e/asesor/run.ts --start --fake-model --milestone M1\nexit code 1\n"
+                  "[FAIL] asesor M1: Expected values to be strictly equal: 'error' !== 'final'\n")
+        plan = core_plan(spec("T7", ["scripts/e2e/asesor/run.ts", "docs/m1.md"]), spec("T14a", ["docs/req-020/results.json"], kind="test"))
+        doc = {"tasks": {"T7": {"state": "completed"}, "T14a": {"state": "blocked"}}}
+        got = classify(request(task="T14a", reason="m5:attempts_exhausted"), verify=verify, failures=[verify], plan=plan, doc=doc)
+        self.assertEqual((got.kind, got.owners, got.failing), ("regression", ("T7",), ("scripts/e2e/asesor/run.ts",)))
+        manual_only = "$ Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --live`\nexit code None\n"
+        self.assertEqual(taxonomy.failing_tests(manual_only), ())
+
     def test_the_signature_ignores_volatile_parts_and_keeps_the_kind(self):
         a = taxonomy.signature("T7", "transient", "ROUTE_INVALID att-0104 decision 2e7a754a87e5 at /tmp/x/1234")
         b = taxonomy.signature("T7", "transient", "ROUTE_INVALID att-0138 decision 91bc55aa09f1 at /var/y/99")
@@ -221,7 +235,8 @@ class Cycle(unittest.TestCase):
 
     def test_the_model_step_is_off_by_default_and_a_thin_note_becomes_a_plain_retry(self):
         self.verify = "an error the taxonomy has never seen"
-        self.assertEqual(self.run_cycle([self.model_card()]), 0)                              # off by default
+        with patch("bt_config.get", side_effect=lambda key, default=None: default):             # the shipped default, not this machine's config
+            self.assertEqual(self.run_cycle([self.model_card()]), 0)                          # off by default
         self.with_model()
         self.assertEqual(self.run_cycle([self.model_card(note="redo")]), 1)
         self.assertEqual(self.answers[0][1], "retry")

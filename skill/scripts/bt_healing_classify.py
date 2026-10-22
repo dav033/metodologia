@@ -33,6 +33,10 @@ QUOTA = re.compile(r"usage limit|rate[- ]?limit(?:ed)?|quota (?:exceeded|exhaust
 FAIL_LINE = re.compile(r"^(?:FAIL|ERROR):\s*(?P<test>\S+)\s*\((?P<where>[\w.]+)\)", re.M)
 FAIL_FILE = re.compile(r"(?:FAIL|✖|✗|not ok)\s+(?P<file>[\w./-]+\.(?:test|spec)\.\w+|[\w./-]*test_[\w]+\.py)")
 TRACE_FILE = re.compile(r'File "(?P<file>[^"]+?(?:test_[\w]+|[\w]+_test)\.py)"')
+# the verifier prints each failed check as `$ <command>` and `exit code N`: the script a failing command runs is the failing file
+# for projects whose output has no unittest/node test-runner format (REQ-020: `[FAIL] asesor M1: ...` from scripts/e2e/asesor/run.ts)
+FAILED_COMMAND = re.compile(r"^\$ (?P<command>.+)\nexit code (?P<code>-?\d+)\b", re.M)
+SCRIPT_FILE = re.compile(r"^[\w@./-]+\.(?:ts|tsx|js|mjs|cjs|py|sh|rb)$")
 
 
 # what `bt_block_diagnosis` calls a cause -> the class of the taxonomy (for the interventions an owner makes by hand)
@@ -85,7 +89,24 @@ def failing_tests(text: str) -> tuple[str, ...]:
         found.append(next((part for part in parts if part.startswith("test_")), parts[0]))
     found += [m["file"] for m in FAIL_FILE.finditer(text)]
     found += [m["file"] for m in TRACE_FILE.finditer(text)]
+    found += failing_command_files(text)
     return tuple(dict.fromkeys(f for f in found if f))
+
+
+def failing_command_files(text: str) -> list[str]:
+    """Script files named by the commands that ran and failed (`exit code` is a number: a check that never ran says `None`)."""
+    import shlex
+
+    files: list[str] = []
+    for match in FAILED_COMMAND.finditer(text):
+        if match["code"] == "0":
+            continue
+        try:
+            tokens = shlex.split(match["command"])
+        except ValueError:
+            continue
+        files += [t for t in tokens if "/" in t and SCRIPT_FILE.match(t) and not t.startswith(("/", "-"))]
+    return files
 
 
 def owners_of(failing, plan, doc: dict, task: str) -> tuple[str, ...]:

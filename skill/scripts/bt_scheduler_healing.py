@@ -420,6 +420,26 @@ def repair_task(project, req, rdir, request, case, context, plan, revise) -> dic
             "track": {**track, "lines": lines[-2:]}}
 
 
+_SIGNAL = re.compile(r"FAIL|ERROR|Error|error|Expected|Assertion|!==|not ok|✖|✗|Cannot|cannot|Traceback|Exception")
+
+
+def excerpt(text: str, limit: int = 700) -> str:
+    """What failed, for the objective of a repair task: the commands that RAN and failed (a numeric exit code; a check that never ran
+    says `None` and is not this task's to fix) with the few lines that say why. A real note carries pages of server logs; the planner
+    refuses an objective that repeats the same words, and an agent does not need the logs to know what to fix."""
+    blocks = re.split(r"(?m)^(?=\$ )", str(text or ""))
+    out: list[str] = []
+    for block in blocks:
+        head, _, body = block.partition("\n")
+        code = re.match(r"exit code (-?\d+)\b", body.lstrip())
+        if not head.startswith("$ ") or not code or code.group(1) == "0":
+            continue
+        lines = [line.strip()[:160] for line in body.splitlines()[1:]
+                 if _SIGNAL.search(line) and not line.lstrip().startswith(("{", "npm notice"))]
+        out.append(head[:200] + f"\nexit code {code.group(1)}" + ("".join("\n" + line for line in dict.fromkeys(lines[:6]))))
+    return "\n".join(out)[:limit] or str(text or "")[:min(limit, 400)]
+
+
 def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, context: dict) -> tuple[dict, str, list[str]] | None:
     """(revised plan, new task id, the target's previous `after`) or None when the evidence cannot make a sound task."""
     import bt_remediation
@@ -430,11 +450,11 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
         return None
     owners = [o for o in case.owners if o in by_id]
     named = owners or [task_id]
-    failure = (context.get("verify") or next((f for f in reversed(context.get("failures") or ()) if f), ""))[:MAX_NOTE]
+    failure = excerpt(context.get("verify") or next((f for f in reversed(context.get("failures") or ()) if f), ""))
     summary = (f"{task_id} cannot pass its checks: " + (f"tests of {', '.join(owners)} fail ({', '.join(case.failing[:4])})"
                                                         if owners else f"it only runs and records, and {', '.join(case.failing[:4]) or 'its checks'} fail"))
     finding = {"id": "H1", "severity": "high", "summary": summary[:300], "tasks": named,
-               "evidence": failure, "status": "open"}
+               "evidence": "the failing command and its output, quoted once in the objective above", "status": "open"}
     chunk = [finding]
     new_id = bt_remediation._next_ids(set(by_id), task_id, 1)[0]
     spec_ref = str(plan.get("spec_ref") or "SPEC.md").split(":")[-1]
@@ -446,8 +466,8 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     if fix is None:
         return None
     own = [v for v in target.get("verification", ()) if v.get("type") == "command"]
-    for check in own:
-        purpose = f"{task_id}'s own check passes: {check['value'][:140]}"
+    for number, check in enumerate(own, 1):
+        purpose = f"{task_id}'s own check {number} passes: {check['value'][:140]}"
         fix["acceptance_criteria"].append(purpose)
         fix["verification"].append({**check, "purpose": purpose, "category": check.get("category") or "functional"})
     fix["title"] = f"Repair what blocks {task_id}"[:120]

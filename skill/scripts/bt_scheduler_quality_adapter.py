@@ -470,9 +470,11 @@ class QualityVerificationPort:
         """The failing checks of an M6 result, with the tail of what each printed: what the agent must read to fix them."""
         seen: set[tuple] = set()
         blocks = []
-        for check in result.get("checks") or ():
-            if not isinstance(check, Mapping) or check.get("status") == "pass":
-                continue
+        # what really FAILED first: the plan's order put two manual checks and a deferred one ahead of the e2e that failed, and the
+        # three-block cap then hid the failure itself from the agent, the diagnosis and the self-healing (REQ-020 T14a, 14 attempts)
+        ordered = sorted((c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"),
+                         key=lambda c: 0 if c.get("status") == "fail" else 1)
+        for check in ordered:
             key = (check.get("command"), check.get("stderr_ref"), check.get("stdout_ref"))
             if key in seen:
                 continue

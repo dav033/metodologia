@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_config
 import bt_plan_adapter as adapter
 
-GOLDEN = Path(__file__).resolve().parents[1] / "bt_planner" / "tests" / "golden" / "input-1.2.0.json"
+GOLDEN = Path(adapter.planner.__file__).parent / "tests" / "golden" / "input-1.2.0.json"   # the adapter is the only door to the planner
 
 
 class MappingGate(unittest.TestCase):
