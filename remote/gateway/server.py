@@ -5,6 +5,7 @@ from __future__ import annotations
 import hmac
 import json
 import logging
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
@@ -68,6 +69,11 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
 
         def do_GET(self) -> None:
             route = urlsplit(self.path)
+            if route.path == "/healthz":
+                # Resolve the current symlink so the response identifies the release serving this request.
+                release_sha = Path(__file__).resolve().parents[1].name
+                self._json(200, {"status": "ok", "release_sha": release_sha})
+                return
             if handle_remote_get(self, service, runtime, route):
                 return
             if route.path in {"/api/auth/login", "/api/auth/github"}:
