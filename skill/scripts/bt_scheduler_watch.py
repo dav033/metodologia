@@ -216,6 +216,12 @@ class Watch:
         except Exception as error:  # noqa: BLE001 - the structural cycle is opt-in and bounded: its failure never stops the watch
             self.log(f"recovery cycle failed ({type(error).__name__}: {error})")
         try:
+            import bt_attempt_analyst
+
+            bt_attempt_analyst.cycle(self.project, self.req, self.rdir, log=self.log)     # reads and advises only: never a reason to loop
+        except Exception as error:  # noqa: BLE001 - an extra: its failure never stops the watch
+            self.log(f"analyst failed ({type(error).__name__}: {error})")
+        try:
             import bt_coordinator
 
             if bt_coordinator.cycle(self.project, self.req, self.rdir, log=self.log):

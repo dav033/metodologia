@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "diagnose", "recovery-preview", "recovery-status", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator", "heal", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "recovery-preview", "recovery-status", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator", "analyze", "heal", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -170,7 +170,7 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         return 0
     if args.action == "heal":
         return _heal(project, args, rdir)
-    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator"} and not args.target:
+    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator", "analyze"} and not args.target:
         print(f"{args.action} needs a target (attempt id, or task id(s) for reopen, retry and rework)")
         return 2
     try:
@@ -178,6 +178,13 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
             ops.hold_path(rdir).write_text('{"why": "operator stop"}\n', encoding="utf-8")
             print(f"owner stopped: {ops.stop_owner(project, args.req)}; held — `scheduler-op {args.req} resume` releases it")
             return 0
+        if args.action == "analyze":
+            import bt_attempt_analyst
+
+            result = bt_attempt_analyst.analyze(project, rdir, args.target)
+            print(json.dumps({k: result.get(k) for k in ("state", "failures", "confidence", "not_the_task", "cause", "solution", "error")},
+                             ensure_ascii=False, indent=1))
+            return 0 if result.get("state") == "done" else 1
         if args.action == "coordinator":
             import bt_coordinator
 

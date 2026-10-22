@@ -99,10 +99,19 @@ def _with_owner_notes(rdir, plan, base):
         except Exception:  # noqa: BLE001 - a prompt without its history is still a prompt
             return ""
 
+    def _analysis(task_id: str) -> str:
+        try:
+            import bt_attempt_analyst
+
+            return bt_attempt_analyst.prompt(rdir, task_id)
+        except Exception:  # noqa: BLE001 - an opinion that cannot be read is simply not in the prompt
+            return ""
+
     def notes(request):
         parts = [bt_scheduler_decisions.operator_notes(rdir, request.task_id),
                  bt_scheduler_decisions.audit_notes(rdir, request.task_id),
                  _history(request.task_id),
+                 _analysis(request.task_id),
                  bt_scheduler_decisions.verify_notes(rdir, request.task_id)]
         try:
             task = plan.task(request.task_id)

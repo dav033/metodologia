@@ -34,6 +34,7 @@ py-modules = [
   "bt_agents",
   "bt_agy",
   "bt_attempt_facts",
+  "bt_attempt_analyst",
   "bt_attempt_history",
   "bt_attempt_log",
   "bt_attestation",
