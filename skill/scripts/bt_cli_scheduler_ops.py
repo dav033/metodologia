@@ -13,6 +13,11 @@ def register(subparsers) -> None:
     watch = subparsers.add_parser("scheduler-watch", help="vigilar un plan: reanuda el scheduler si muere, hasta que termine")
     watch.add_argument("req", help="REQ-NNN")
     watch.add_argument("--detach", action="store_true", help="correr en segundo plano (log en .state/watch/)")
+    evolve = subparsers.add_parser("scheduler-evolve", help="aprender de las intervenciones: analizar, proponer, probar con A/B y aplicar lo seguro")
+    evolve.add_argument("--propose", action="store_true", help="escribir las propuestas de riesgo alto como P-NNN en PENDING.md")
+    evolve.add_argument("--apply", action="store_true", help="aplicar los cambios de bajo riesgo que el A/B sobre las réplicas probó")
+    evolve.add_argument("--revert", action="store_true", help="deshacer los cambios que la evolución aplicó")
+    evolve.add_argument("--capture", default="", metavar="REQ", help="guardar la réplica de un run (su plan y sus tiempos) para futuros A/B")
     op = subparsers.add_parser("scheduler-op", help="mover un plan en marcha: cancelar intento, reabrir tarea, revisar el plan")
     op.add_argument("req", help="REQ-NNN")
     op.add_argument("action", choices=ACTIONS)
@@ -61,8 +66,50 @@ def _heal(project: str, args: argparse.Namespace, rdir) -> int:
     return 0
 
 
+def evolve(args: argparse.Namespace, project: str, pdir) -> int:
+    """`scheduler-evolve`: the deterministic analysis of the project's interventions (see `bt_evolution`)."""
+    from pathlib import Path
+
+    import bt_config
+    import bt_core
+    import bt_evolution as evolution
+
+    state_dir = Path(bt_core.STATE)
+    replicas_dir = Path(pdir) / "replicas"
+    if args.capture:
+        import bt_scheduler_replica as replica
+        rdir = bt_core.find_req(pdir, args.capture)
+        replicas_dir.mkdir(parents=True, exist_ok=True)
+        fixture = replica.extract(adapter.run_db_path(rdir), rdir / "PLAN.json", name=args.capture)
+        target = replicas_dir / f"{args.capture}.json"
+        target.write_text(json.dumps(fixture, indent=1, sort_keys=True), encoding="utf-8")
+        print(f"replica of {args.capture} saved in {target} ({fixture['recorded']['attempts']} attempts)")
+        return 0
+    setter = bt_config.set_value
+    if args.revert:
+        for line in evolution.revert(state_dir, setter) or ["nothing to revert"]:
+            print(line)
+        return 0
+    replicas = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(replicas_dir.glob("*.json"))]
+    current = {key: bt_config.get(key) for key in ("scheduler.max_parallel_tasks", "scheduler.exclusive_scopes")}
+    rows = evolution.collect(pdir)
+    proposals = evolution.analyse(rows, plans=replicas, current=current)
+    ab = evolution.propose_settings(replicas, current)
+    print(json.dumps({"interventions": len(rows), "by_class": evolution.summary(rows), "proposals": proposals, "ab": ab},
+                     indent=1, ensure_ascii=False, default=str))
+    if args.apply:
+        for line in evolution.apply_proven(ab, state_dir, setter) or ["nothing proven by the A/B: no setting changed"]:
+            print(line)
+    if args.propose:
+        print("filed:", ", ".join(evolution.file_proposals(pdir, proposals)) or "nothing new")
+    return 0
+
+
 def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
     from bt_core import find_req
+
+    if args.cmd == "scheduler-evolve":
+        return evolve(args, project, pdir)
 
     import bt_scheduler_ops as ops
 

@@ -236,13 +236,11 @@ def _fix_mapping(project, req, rdir, request, case, plan, answer, revise) -> dic
         return {"repair": "accept: every criterion proved, only an extra check unmapped", "result": "fixed"}
     if plan is None:
         return {"repair": "none", "result": "pending"}
-    import bt_plan_adapter
-
-    latest = bt_plan_adapter.latest_plan(rdir)
+    latest = _latest_plan(rdir)
     revised = remap_purposes(latest, request["task"]) if latest else None
     if revised is None:
         return {"repair": "none", "result": "pending"}
-    bt_plan_adapter.freeze_revision(rdir, revised, "healing")
+    _freeze(rdir, revised, "healing")
     lines = revise(f"healing: give the checks of {request['task']} the exact text of their criteria")
     return {"repair": f"plan r{revised['revision']}: checks of {request['task']} renamed to their criteria", "result": "fixed",
             "track": {"revision": revised["revision"], "lines": lines[-2:]}}
@@ -289,7 +287,7 @@ def repair_task(project, req, rdir, request, case, context, plan, revise) -> dic
     blocked task's to fix: insert a REPAIR task before it, built from the evidence, and revise the run onto the new plan."""
     import bt_plan_adapter
 
-    latest = bt_plan_adapter.latest_plan(rdir)
+    latest = _latest_plan(rdir)
     if latest is None:
         return {"repair": "none", "result": "pending"}
     built = build_fix_revision(latest, request["task"], case, context)
@@ -299,7 +297,7 @@ def repair_task(project, req, rdir, request, case, context, plan, revise) -> dic
     errors = bt_plan_adapter.plan_errors(revised)
     if errors:
         return {"repair": f"revision invalid: {errors[0][:160]}", "result": "failed"}
-    bt_plan_adapter.freeze_revision(rdir, revised, "healing")
+    _freeze(rdir, revised, "healing")
     lines = revise(f"healing: {new_id} repairs what blocks {request['task']} ({case.kind})")
     return {"repair": f"plan r{revised['revision']}: repair task {new_id} before {request['task']}", "result": "fixed",
             "track": {"revision": revised["revision"], "task_added": new_id, "after_restored": restored,
@@ -360,7 +358,7 @@ def revert(project: str, req: str, rdir: Path | str, case_id: str, *,
         raise ValueError(f"case {case_id} made no plan revision to revert (see `scheduler-op REQ heal status`)")
     if entry.get("status") == "reverted":
         return [f"case {case_id} was already reverted"]
-    latest = bt_plan_adapter.latest_plan(rdir)
+    latest = _latest_plan(rdir)
     if latest is None:
         raise ValueError("no frozen plan to revert on")
     revised = copy.deepcopy(latest)
@@ -374,7 +372,7 @@ def revert(project: str, req: str, rdir: Path | str, case_id: str, *,
     errors = bt_plan_adapter.plan_errors(revised)
     if errors:
         raise ValueError(f"the reverted plan is not valid: {errors[0][:200]}")
-    bt_plan_adapter.freeze_revision(rdir, revised, "healing-revert")
+    _freeze(rdir, revised, "healing-revert")
     lines = (revise or (lambda why: _revise(project, req, rdir, why)))(f"healing revert of case {case_id}")
     entry["status"] = "reverted"
     save(rdir, state)
@@ -382,6 +380,18 @@ def revert(project: str, req: str, rdir: Path | str, case_id: str, *,
                             repair=f"plan r{revised['revision']} without {entry['task_added']}", result="fixed", case=case_id)
     return [f"plan r{revised['revision']}: {entry['task_added']} removed, {entry.get('target')} back to its previous prerequisites",
             *lines]
+
+
+def _latest_plan(rdir: Path):
+    import bt_plan_adapter
+
+    return bt_plan_adapter.latest_plan(rdir)
+
+
+def _freeze(rdir: Path, plan: dict, source: str):
+    import bt_plan_adapter
+
+    return bt_plan_adapter.freeze_revision(rdir, plan, source)
 
 
 def _revise(project: str, req: str, rdir: Path, reason: str) -> list[str]:

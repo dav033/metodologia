@@ -1,0 +1,1267 @@
+{
+ "now": 1000000.0,
+ "scenarios": [
+  {
+   "context": {},
+   "doc": {},
+   "expect": {
+    "auto": true,
+    "class": "integration_defect",
+    "repair": "restored"
+   },
+   "id": "S01",
+   "kind": "files_lost",
+   "night": {
+    "human": 1,
+    "minutes": 38.0,
+    "option": "review_fail"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {},
+   "source": "REQ-020 T14 (att-0080)",
+   "title": "Files of sibling tasks lost by the integration merge"
+  },
+  {
+   "context": {
+    "failures": [
+     "start rejected: ROUTE_INVALID: the decision was replaced by 2e7a754a87e5ead3"
+    ],
+    "verify": ""
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T8.4": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "transient",
+    "repair": "retry"
+   },
+   "id": "S02",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 10.6,
+    "option": "retry"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "start rejected: ROUTE_INVALID: the decision was replaced by 2e7a754a87e5ead3",
+    "evidence": [],
+    "id": "T8.4:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:execution_unsettled",
+    "source": "task",
+    "task": "T8.4"
+   },
+   "source": "REQ-029 T8.4 att-0109",
+   "title": "Start rejected: the route's decision was replaced"
+  },
+  {
+   "context": {
+    "failures": [],
+    "verify": "SANDBOX_UNAVAILABLE"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T6": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "verifying"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "transient",
+    "repair": "retry"
+   },
+   "id": "S03",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 692.0,
+    "option": "review_fail"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "",
+    "evidence": [
+     "SANDBOX_UNAVAILABLE: The required operating-system sandbox could not be established.",
+     "criterio UNKNOWN: it works"
+    ],
+    "id": "verify:T6:att-9",
+    "options": [
+     {
+      "id": "review_fail"
+     },
+     {
+      "id": "review_pass"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "needs_review",
+    "source": "review",
+    "task": "T6"
+   },
+   "source": "REQ-029 T6 (review)",
+   "title": "Verifier sandbox unavailable: the task was never judged"
+  },
+  {
+   "context": {
+    "failures": [],
+    "verify": "CHECK_UNMAPPED"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T10": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "verifying"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "criterion_unmapped",
+    "repair": "accept"
+   },
+   "id": "S04",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 133.2,
+    "option": "review_pass"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "",
+    "evidence": [
+     "CHECK_UNMAPPED: A verification check does not map exactly to an acceptance criterion.",
+     "criterio PASS: asesor responds in under 3 s",
+     "criterio PASS: login works",
+     "npm run asesor:test \u2192 pass",
+     "npm run gate \u2192 pass"
+    ],
+    "id": "verify:T10:att-9",
+    "options": [
+     {
+      "id": "review_fail"
+     },
+     {
+      "id": "review_pass"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "needs_review",
+    "source": "review",
+    "task": "T10"
+   },
+   "source": "REQ-020 T10 (att-0018)",
+   "title": "Every criterion passed; only the generic check is unmapped"
+  },
+  {
+   "context": {
+    "failures": [],
+    "verify": "CHECK_UNMAPPED"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T14a": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "verifying"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "criterion_unmapped",
+    "repair": "accept"
+   },
+   "id": "S05",
+   "kind": "stop",
+   "night": {
+    "human": 0,
+    "minutes": 49.8,
+    "option": "review_pass"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "",
+    "evidence": [
+     "CHECK_UNMAPPED: A verification check does not map exactly to an acceptance criterion.",
+     "criterio PASS: asesor responds in under 3 s",
+     "criterio PASS: login works",
+     "npm run asesor:test \u2192 pass",
+     "npm run gate \u2192 pass"
+    ],
+    "id": "verify:T14a:att-9",
+    "options": [
+     {
+      "id": "review_fail"
+     },
+     {
+      "id": "review_pass"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "needs_review",
+    "source": "review",
+    "task": "T14a"
+   },
+   "source": "REQ-020 T14a (att-0033)",
+   "title": "The same unmapped check, again, on another task"
+  },
+  {
+   "context": {
+    "failures": [
+     "start rejected: INTEGRATION_CONFLICT: T12 vs T13 for T14: src/lib/asesor/agent.ts"
+    ],
+    "verify": ""
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T14": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "integration_defect",
+    "repair": "redo"
+   },
+   "id": "S06",
+   "kind": "stop",
+   "night": {
+    "human": 0,
+    "minutes": 0.1,
+    "option": "rework_conflict"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {
+     "confidence": "alta",
+     "headline": "Conflicto de c\u00f3digo entre T12 y T13",
+     "kind": "conflict",
+     "option": "rework_conflict"
+    },
+    "error": "start rejected: INTEGRATION_CONFLICT: T12 vs T13 for T14: src/lib/asesor/agent.ts",
+    "evidence": [],
+    "id": "T14:3",
+    "options": [
+     {
+      "id": "rework_conflict"
+     },
+     {
+      "id": "retry"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:identity_unverified",
+    "source": "task",
+    "task": "T14"
+   },
+   "source": "REQ-020 T14 att (T12 vs T13)",
+   "title": "Two parallel tasks clash on the same lines"
+  },
+  {
+   "context": {
+    "failures": [
+     "FAIL: test_apply_control (test_scheduler_run_controls.Controls.test_apply_control)\nAssertionError: PLAN_MISMATCH"
+    ],
+    "verify": "FAIL: test_apply_control (test_scheduler_run_controls.Controls.test_apply_control)\nAssertionError: PLAN_MISMATCH"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T4": {
+      "attempts": [],
+      "state": "completed"
+     },
+     "T6": {
+      "attempts": [],
+      "state": "completed"
+     },
+     "T7": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "regression",
+    "repair": "plan r2"
+   },
+   "id": "S07",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 1.5,
+    "option": "retry_with_note"
+   },
+   "plan_json": {
+    "milestones": [
+     {
+      "acceptance_criteria": [
+       "Everything is delivered"
+      ],
+      "id": "M1",
+      "title": "Base"
+     }
+    ],
+    "plan_id": "REQ-X",
+    "requirements": [
+     "R1"
+    ],
+    "revision": 1,
+    "schema_version": "1.2.0",
+    "spec_ref": "SPEC.md",
+    "tasks": [
+     {
+      "acceptance_criteria": [
+       "T4 behaves as described"
+      ],
+      "after": [],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T4"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T4"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T4"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T4"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T4"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T4"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_run.py",
+       "skill/scripts/tests/test_scheduler_run_controls.py"
+      ],
+      "id": "T4",
+      "kind": "implement",
+      "milestone_id": "M1",
+      "objective": "Deliver task T4 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T4",
+      "verification": [
+       {
+        "category": "functional",
+        "purpose": "T4 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest tests.test_scheduler_run_controls"
+       }
+      ]
+     },
+     {
+      "acceptance_criteria": [
+       "T6 behaves as described"
+      ],
+      "after": [
+       "T4"
+      ],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T6"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T6"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T6"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T6"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T6"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T6"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_x.py"
+      ],
+      "id": "T6",
+      "kind": "implement",
+      "milestone_id": "M1",
+      "objective": "Deliver task T6 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T6",
+      "verification": [
+       {
+        "category": "functional",
+        "purpose": "T6 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest tests.test_x"
+       }
+      ]
+     },
+     {
+      "acceptance_criteria": [
+       "T7 behaves as described"
+      ],
+      "after": [
+       "T6"
+      ],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T7"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T7"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T7"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T7"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T7"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T7"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+      ],
+      "id": "T7",
+      "kind": "test",
+      "milestone_id": "M1",
+      "objective": "Deliver task T7 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T7",
+      "verification": [
+       {
+        "category": "regression",
+        "purpose": "T7 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest discover -s tests"
+       }
+      ]
+     }
+    ]
+   },
+   "plan_tasks": [
+    {
+     "expected_paths": [
+      "skill/scripts/bt_run.py",
+      "skill/scripts/tests/test_scheduler_run_controls.py"
+     ],
+     "id": "T4",
+     "kind": "implement"
+    },
+    {
+     "expected_paths": [
+      "skill/scripts/bt_x.py"
+     ],
+     "id": "T6",
+     "kind": "implement"
+    },
+    {
+     "expected_paths": [
+      "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+     ],
+     "id": "T7",
+     "kind": "test"
+    }
+   ],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "FAIL: test_apply_control (test_scheduler_run_controls.Controls.test_apply_control)\nAssertionError: PLAN_MISMATCH",
+    "evidence": [],
+    "id": "T7:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:attempts_exhausted",
+    "source": "task",
+    "task": "T7"
+   },
+   "source": "REQ-029 T7 (att-0094 ff.)",
+   "title": "A rework of T4 broke a test of another task, found by the regression task"
+  },
+  {
+   "context": {
+    "failures": [
+     "FAIL: test_orphan_check (test_orphan.Case.test_orphan_check)\nAssertionError: 3 != 4"
+    ],
+    "verify": "FAIL: test_orphan_check (test_orphan.Case.test_orphan_check)\nAssertionError: 3 != 4"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T4": {
+      "attempts": [],
+      "state": "completed"
+     },
+     "T6": {
+      "attempts": [],
+      "state": "completed"
+     },
+     "T7": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "plan_defect",
+    "repair": "plan r2"
+   },
+   "id": "S08",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 78.8,
+    "option": "retry_with_note"
+   },
+   "plan_json": {
+    "milestones": [
+     {
+      "acceptance_criteria": [
+       "Everything is delivered"
+      ],
+      "id": "M1",
+      "title": "Base"
+     }
+    ],
+    "plan_id": "REQ-X",
+    "requirements": [
+     "R1"
+    ],
+    "revision": 1,
+    "schema_version": "1.2.0",
+    "spec_ref": "SPEC.md",
+    "tasks": [
+     {
+      "acceptance_criteria": [
+       "T4 behaves as described"
+      ],
+      "after": [],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T4"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T4"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T4"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T4"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T4"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T4"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_run.py",
+       "skill/scripts/tests/test_scheduler_run_controls.py"
+      ],
+      "id": "T4",
+      "kind": "implement",
+      "milestone_id": "M1",
+      "objective": "Deliver task T4 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T4",
+      "verification": [
+       {
+        "category": "functional",
+        "purpose": "T4 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest tests.test_scheduler_run_controls"
+       }
+      ]
+     },
+     {
+      "acceptance_criteria": [
+       "T6 behaves as described"
+      ],
+      "after": [
+       "T4"
+      ],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T6"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T6"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T6"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T6"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T6"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T6"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_x.py"
+      ],
+      "id": "T6",
+      "kind": "implement",
+      "milestone_id": "M1",
+      "objective": "Deliver task T6 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T6",
+      "verification": [
+       {
+        "category": "functional",
+        "purpose": "T6 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest tests.test_x"
+       }
+      ]
+     },
+     {
+      "acceptance_criteria": [
+       "T7 behaves as described"
+      ],
+      "after": [
+       "T6"
+      ],
+      "classification_evidence": {
+       "complexity": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "One module with a known pattern in T7"
+       },
+       "confidence": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Similar changes were made before in T7"
+       },
+       "coupling": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Shares one contract with its neighbours in T7"
+       },
+       "duration": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "About half an hour of careful work in T7"
+       },
+       "risk": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "Moderate: other code depends on it in T7"
+       },
+       "scope": {
+        "evidence": [
+         "spec:SPEC.md"
+        ],
+        "justification": "A single focused change to behaviour in T7"
+       }
+      },
+      "complexity": "medium",
+      "confidence": "medium",
+      "coupling": "medium",
+      "covers": [
+       "R1"
+      ],
+      "estimate_rationale": "Known pattern in this module",
+      "estimated_minutes": 30,
+      "expected_paths": [
+       "skill/scripts/bt_scheduler_recovery/reviews/req029-m1-checks.md"
+      ],
+      "id": "T7",
+      "kind": "test",
+      "milestone_id": "M1",
+      "objective": "Deliver task T7 completely",
+      "repository": "app",
+      "risk": "medium",
+      "scope": "small_change",
+      "shared_resources": [
+       "contract"
+      ],
+      "title": "Task T7",
+      "verification": [
+       {
+        "category": "regression",
+        "purpose": "T7 behaves as described",
+        "type": "command",
+        "value": "python3 -m unittest discover -s tests"
+       }
+      ]
+     }
+    ]
+   },
+   "plan_tasks": [
+    {
+     "expected_paths": [
+      "skill/scripts/bt_run.py"
+     ],
+     "id": "T4",
+     "kind": "implement"
+    },
+    {
+     "expected_paths": [
+      "skill/scripts/bt_x.py"
+     ],
+     "id": "T6",
+     "kind": "implement"
+    },
+    {
+     "expected_paths": [
+      "req029-m1-checks.md"
+     ],
+     "id": "T7",
+     "kind": "test"
+    }
+   ],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "FAIL: test_orphan_check (test_orphan.Case.test_orphan_check)\nAssertionError: 3 != 4",
+    "evidence": [],
+    "id": "T7:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:same_cause_limit",
+    "source": "task",
+    "task": "T7"
+   },
+   "source": "REQ-029 T7 (attempts 17-20)",
+   "title": "A run-and-record task over code nobody repairs"
+  },
+  {
+   "context": {
+    "failures": [
+     "EROFS: read-only file system"
+    ],
+    "verify": "EROFS: read-only file system, mkdir '/work/node_modules'"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T1": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "environment",
+    "repair": "retry with a note"
+   },
+   "id": "S09",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 1.4,
+    "option": "retry_with_note"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {
+     "kind": "environment",
+     "note": "The verification sandbox mounts node_modules read-only. Do not install dependencies in checks."
+    },
+    "error": "EROFS: read-only file system, mkdir '/work/node_modules'",
+    "evidence": [],
+    "id": "T1:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:attempts_exhausted",
+    "source": "task",
+    "task": "T1"
+   },
+   "source": "REQ-020 T1 (att-0003)",
+   "title": "Verification installs dependencies on a read-only mount"
+  },
+  {
+   "context": {
+    "failures": [],
+    "verify": "audit gate: 11 open blocking finding(s): F3 (high), F4 (high)"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T8": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": false,
+    "class": null,
+    "repair": "none"
+   },
+   "id": "S10",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 44.6,
+    "option": "rework_findings"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "audit gate: 11 open blocking finding(s): F3 (high), F4 (high), F5 (high)",
+    "evidence": [],
+    "id": "T8:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "rework_impact",
+    "source": "task",
+    "task": "T8"
+   },
+   "source": "REQ-029 T8 (rework_limit)",
+   "title": "An audit asks to send back 23 accepted tasks"
+  },
+  {
+   "context": {
+    "failures": [
+     "next build: ENOSPC: no space left on device, write"
+    ],
+    "verify": "ENOSPC: no space left on device"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T3": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": false,
+    "class": "environment",
+    "repair": "none"
+   },
+   "id": "S11",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 25.0,
+    "option": "retry"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "next build: ENOSPC: no space left on device, write",
+    "evidence": [],
+    "id": "T3:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:attempts_exhausted",
+    "source": "task",
+    "task": "T3"
+   },
+   "source": "REQ-020 verifier (workspace 1 GiB)",
+   "title": "The disk or the verifier workspace is full"
+  },
+  {
+   "context": {
+    "failures": [
+     "agent stopped: usage limit 429",
+     "start rejected: ROUTE_INVALID: the decision was replaced by 91bc55aa"
+    ],
+    "verify": "quota 429 usage limit"
+   },
+   "doc": {
+    "attempts": {
+     "att-9": {
+      "state": "rejected",
+      "updated_at": 996400.0
+     }
+    },
+    "tasks": {
+     "T8.4": {
+      "attempts": [
+       "att-9"
+      ],
+      "state": "blocked"
+     }
+    }
+   },
+   "expect": {
+    "auto": true,
+    "class": "transient",
+    "repair": "retry"
+   },
+   "id": "S12",
+   "kind": "stop",
+   "night": {
+    "human": 1,
+    "minutes": 10.6,
+    "option": "retry"
+   },
+   "plan_json": null,
+   "plan_tasks": [],
+   "request": {
+    "attempt": "att-9",
+    "diagnosis": {},
+    "error": "usage limit and 429 appear in an old log line",
+    "evidence": [],
+    "id": "T8.4:3",
+    "options": [
+     {
+      "id": "retry"
+     },
+     {
+      "id": "retry_with_note"
+     },
+     {
+      "id": "stop"
+     }
+    ],
+    "reason": "m5:execution_unsettled",
+    "source": "task",
+    "task": "T8.4"
+   },
+   "source": "REQ-029 T8.4 diagnosis",
+   "title": "A quota word in the bundle hid the real error"
+  }
+ ],
+ "version": "recovery-scenarios/1"
+}
