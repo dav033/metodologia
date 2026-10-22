@@ -48,7 +48,7 @@ class WatchTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def watch(self, free=10 << 30, capture=lambda: "", coordinate=lambda: False):
+    def watch(self, free=10 << 30, capture=lambda: "", heal=None):
         def sleep(seconds):
             self.sleeps.append(seconds)
             self.clock[0] += seconds
@@ -59,28 +59,28 @@ class WatchTests(unittest.TestCase):
 
         return watch.Watch("p", "REQ-001", self.rdir, now=lambda: self.clock[0], sleep=sleep, spawn=spawn,
                            free_bytes=lambda: free, notify=lambda title, text: self.notes.append(text), log=self.logged.append,
-                           capture=capture, coordinate=coordinate)
+                           capture=capture, heal=heal)
 
     def test_terminal_run_ends_the_watch_without_restart(self):
         self.codes = [0]
         self.assertEqual(self.watch().run(), 0)
         self.assertEqual(self.spawned, [True])
 
-    def test_the_coordinator_gets_its_turn_while_the_owner_is_still_alive(self):
+    def test_the_healing_turn_runs_while_the_owner_waits_for_a_person(self):
         turns = []
         alive = [[1], [1], [1], [1], [1], [1], [1], []]                      # the owner is alive for 7 polls (35 s), then gone
         with patch.object(ops, "owner_pids", side_effect=lambda *a: alive.pop(0)):
-            self.watch(coordinate=lambda: turns.append(self.clock[0]) or True)._wait_owner_gone()
+            self.watch(heal=lambda: turns.append(self.clock[0]) or True)._wait_owner_gone()
         self.assertEqual(len(turns), 1)                                      # one turn after 30 s, none before
 
-    def test_a_coordinator_that_fails_while_waiting_does_not_stop_the_watch(self):
+    def test_a_healing_turn_that_fails_while_waiting_does_not_stop_the_watch(self):
         def broken():
             raise RuntimeError("no env file")
 
         alive = [[1]] * 7 + [[]]
         with patch.object(ops, "owner_pids", side_effect=lambda *a: alive.pop(0)):
-            self.watch(coordinate=broken)._wait_owner_gone()
-        self.assertTrue(any("coordinator failed (RuntimeError" in line for line in self.logged))
+            self.watch(heal=broken)._wait_owner_gone()
+        self.assertTrue(any("healing failed while the owner waits (RuntimeError" in line for line in self.logged))
 
     def test_a_finished_run_saves_its_replica_and_says_so(self):
         self.codes = [0]
