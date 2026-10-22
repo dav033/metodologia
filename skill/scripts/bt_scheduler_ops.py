@@ -198,6 +198,42 @@ def recovery_status(rdir: Path) -> dict:
                 "cycles": []}
 
 
+def recovery_enable(rdir: Path, preview_digest: str, stop_generation: int, by: str = "owner-control") -> dict:
+    """Opt ONE existing run into diagnostic recovery from the web control (REQ-029 R7/R9): bound to the run's identity, the
+    preview the owner saw and the stop generation. A stale digest, a stop in force or a paused/cancelled run refuses; opening a
+    view never calls this."""
+    import tempfile
+    import uuid
+
+    preview = recovery_preview(rdir)
+    if "identity" not in preview or "preview_digest" not in preview:
+        return {"enabled": False, "blocker": preview.get("blocker", "preview_unavailable")}
+    identity = preview["identity"]
+    if preview["preview_digest"] != preview_digest or identity.get("stop_generation") != stop_generation:
+        return {"enabled": False, "blocker": "stale_preview_or_stop_generation"}
+    if identity.get("paused") or identity.get("cancelled") or on_hold(rdir):
+        return {"enabled": False, "blocker": "owner_stop_or_hold"}
+    record = {"schema_version": "recovery-policy/1", "run_id": preview["run_id"], "identity": {
+        "plan_id": identity.get("plan_id"), "revision": identity.get("revision"), "plan_sha256": identity.get("source_sha256"),
+        "stop_generation": identity.get("stop_generation"), "accepted_map_digest": identity.get("accepted_map_digest"),
+        "paused": False, "cancelled": False, "live_attempts": identity.get("live_attempts", [])},
+        "preview_digest": preview_digest, "authorization_ref": f"owner-control:{uuid.uuid4().hex}", "by": by,
+        "limits": {"diagnoses": 1, "corrective_tasks": 8, "supplemental_audits_per_lineage": 1}}
+    target = Path(rdir) / "RUN.recovery-policy.json"
+    fd, temp = tempfile.mkstemp(prefix=".recovery-policy-", dir=target.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(record, stream, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, target)
+    finally:
+        Path(temp).unlink(missing_ok=True)
+    return {"enabled": True, "authorization_ref": record["authorization_ref"]}
+
+
 def recovery_preview(rdir: Path) -> dict:
     """Read current M1, M5/M6 and audit-observation identities without activation or diagnosis."""
     try:

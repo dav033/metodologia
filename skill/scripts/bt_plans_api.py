@@ -69,7 +69,45 @@ def status_of(root: Path, project: str, req: str) -> dict[str, Any]:
     status["decisions"] = open_decisions(rdir)
     status["open_rounds"] = open_rounds(rdir)
     status["healing"] = healing_state(rdir)
+    status["recovery"] = recovery_state(rdir)
     return status
+
+
+def recovery_state(rdir: Path) -> dict[str, Any] | None:
+    """Diagnostic recovery of the run for its page: whether it is on, the durable cycles and their exact blockers, and what the
+    owner needs to opt in or stop it (the preview digest and the stop generation the controls are bound to)."""
+    if not (rdir / scheduler_.PROJECTION).is_file():
+        return None
+    try:
+        import bt_scheduler_ops as ops
+        status, preview = ops.recovery_status(rdir), ops.recovery_preview(rdir)
+        return {"cycles": status.get("cycles") or [], "blocker": status.get("blocker") or preview.get("blocker"),
+                "active": bool(preview.get("activation_present")), "preview_digest": preview.get("preview_digest"),
+                "stop_generation": (preview.get("identity") or {}).get("stop_generation"),
+                "held": ops.on_hold(rdir)}
+    except Exception:  # noqa: BLE001 - the plan page renders even when recovery state cannot be read
+        return None
+
+
+def recovery_control(root: Path, project: str, req: str, action: str, preview_digest: str = "",
+                     stop_generation: str = "") -> str:
+    """Stop or opt in the diagnostic recovery of one run from the page, through the same moves as `scheduler-op`."""
+    import bt_scheduler_ops as ops
+    rdir = req_dir(root, project, req)
+    try:
+        if action == "stop":
+            ops.apply(project, req, rdir, "stop", reason="stop from the plan page", keep_held=True)
+            return "Detenido: el run queda retenido y nada se aplica ni despacha hasta que lo reanudes."
+        if action == "enable":
+            result = ops.recovery_enable(rdir, preview_digest, int(stop_generation or -1), by="plan-page")
+            if not result.get("enabled"):
+                raise PlanError(f"No se activó: {result.get('blocker')}. Vuelve a abrir la página y revisa la vista previa.")
+            return "Recuperación diagnóstica activada para este run."
+    except ValueError as exc:
+        raise PlanError(str(exc)) from exc
+    except scheduler_.core.SchedulerError as exc:
+        raise PlanError(str(exc)) from exc
+    raise PlanError("Acción de recuperación desconocida.")
 
 
 def healing_state(rdir: Path) -> dict[str, Any] | None:

@@ -480,8 +480,43 @@ def detail_page(s: dict, token: str, msg: str = "") -> str:
     body = (f'<div class="pl"><a class="back" href="/plans">← Planes</a> <span class="live-dot" id="live-dot"></span>{_flash(msg)}'
             f'<div id="live" data-api="/api/plans/{quote(project)}/{quote(req)}?html=1" '
             f'data-events="/events?plan={quote(project)}/{quote(req)}" data-event="plan">{detail_fragment(s)}</div>'
-            f'{_decisions(s, base, token)}{_healing(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
+            f'{_decisions(s, base, token)}{_recovery(s, base, token)}{_healing(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
     return layout(f"{req} · Plan", body, [("Planes", "/plans"), (project, f"/p/{quote(project)}")])
+
+
+RECOVERY_STATE_ES = {"diagnosing": "diagnosticando", "applying": "preparando correcciones", "executing": "ejecutando",
+                     "auditing": "reauditando", "succeeded": "resuelto", "blocked": "bloqueado", "escalated": "te necesita",
+                     "stopped": "detenido"}
+
+
+def _recovery(s: dict, base: str, token: str) -> str:
+    """Diagnostic recovery (REQ-029 R7): the durable cycles with their exact blocker, and the owner's stop / opt-in controls,
+    both bound to the run's stop generation. Text comes from run files: all escaped."""
+    r = s.get("recovery")
+    if not r:
+        return ""
+    form = lambda action, label, extra="", cls="": (  # noqa: E731
+        f'<form method="post" action="{base}/recovery" style="display:inline"><input type="hidden" name="token" value="{e(token)}">'
+        f'<input type="hidden" name="action" value="{action}"><input type="hidden" name="stop_generation" '
+        f'value="{e(str(r.get("stop_generation")))}">{extra}<button type="submit" class="{cls}">{label}</button></form>')
+    cycles = []
+    for c in r.get("cycles") or []:
+        result = c.get("result") or {}
+        state = "detenido" if r.get("held") and c.get("state") in ("diagnosing", "applying", "executing", "auditing") \
+            else RECOVERY_STATE_ES.get(str(c.get("state")), str(c.get("state")))
+        why = result.get("blocker") or ", ".join(result.get("blockers") or ())
+        cycles.append(f'<li><span class="pill">{e(state)}</span> caso <code>{e(str(c.get("lineage_id"))[:12])}</code> · ciclo '
+                      f'<code>{e(str(c.get("cycle_token"))[:12])}</code>{" · " + e(str(why)) if why else ""}</li>')
+    enable = ""
+    if not r.get("active") and r.get("preview_digest"):
+        enable = form("enable", "Activar para este run", f'<input type="hidden" name="preview" value="{e(str(r["preview_digest"]))}">')
+    stop = form("stop", "Detener recuperación", cls="danger") if r.get("active") else ""
+    note = "" if r.get("active") else ('<p class="muted">Vista previa: abrir esta página no activa nada. Activarlo exige este botón, '
+                                       'ligado a la vista previa de arriba y a la generación de stop actual.</p>')
+    blocker = f'<p class="muted">{e(str(r["blocker"]))}</p>' if r.get("blocker") else ""
+    return (f'<h2 id="recovery">Recuperación diagnóstica</h2><div class="ask"><p>{_pill("", "activa" if r.get("active") else "solo vista previa")} '
+            f'{enable}{stop}</p>{note}{blocker}'
+            f'{"<ul>" + "".join(cycles) + "</ul>" if cycles else "<p class=muted>Ningún ciclo todavía: se abre solo cuando los reintentos y remediaciones ordinarios se agotan.</p>"}</div>')
 
 
 def _healing(s: dict, base: str, token: str) -> str:
