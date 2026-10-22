@@ -95,6 +95,9 @@ class Taxonomy(unittest.TestCase):
 
 class Cycle(unittest.TestCase):
     def setUp(self):
+        spawn = patch("bt_block_agent.spawn", return_value=True)      # the model step must not start a real `scheduler-op diagnose`
+        spawn.start()
+        self.addCleanup(spawn.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.rdir = Path(self.tmp.name)
@@ -360,6 +363,32 @@ class PlanRepairs(unittest.TestCase):
         from bt_plan_adapter import plan_errors
         self.assertEqual(plan_errors(revised), [])
         self.assertEqual(self.plan()["revision"], 1)                                           # the input is untouched
+
+    def test_the_analysts_cause_and_advice_reach_the_repair_tasks_objective(self):
+        case = taxonomy.Case("T3:1", "T3", "regression", ("independent analysis",), signature="s2")
+        analysis = "Independent failure analysis (after 5 failed attempts): Cause: check-findings.ts ignores the positional path"
+        revised, new_id, _ = healing.build_fix_revision(self.plan(), "T3", case, {"verify": "FAIL: x", "analysis": analysis})
+        objective = {t["id"]: t for t in revised["tasks"]}[new_id]["objective"]
+        self.assertIn("check-findings.ts ignores the positional path", objective)
+        self.assertIn("the cause lies outside it", objective)
+        from bt_plan_adapter import plan_errors
+        self.assertEqual(plan_errors(revised), [])
+
+    def test_only_a_finished_confident_analysis_that_blames_something_else_places_a_stop(self):
+        import bt_attempt_analyst as analyst
+
+        with tempfile.TemporaryDirectory() as tmp:
+            rdir = Path(tmp)
+            req = {"id": "r1", "task": "T3"}
+            self.assertIsNone(healing.analyst_case(rdir, req))                                  # nothing analysed yet
+            analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": False, "cause": "c", "solution": "s"})
+            self.assertIsNone(healing.analyst_case(rdir, req))                                  # it blames the task itself
+            analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": True, "confidence": "baja", "cause": "c", "solution": "s"})
+            self.assertIsNone(healing.analyst_case(rdir, req))                                  # not sure
+            analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": True, "confidence": "media", "cause": "the checker is unreachable", "solution": "s"})
+            case = healing.analyst_case(rdir, req)
+            self.assertEqual((case.kind, case.task), ("regression", "T3"))
+            self.assertIn("the checker is unreachable", case.evidence[0])
 
     def test_nothing_is_built_for_a_task_the_plan_does_not_have(self):
         self.assertIsNone(healing.build_fix_revision(self.plan(), "T99", self.case(), {}))

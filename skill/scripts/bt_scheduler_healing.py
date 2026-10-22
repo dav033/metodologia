@@ -163,6 +163,10 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             continue
         case = classify_mod.classify(request, verify=context.get("verify", ""), failures=context.get("failures", ()),
                                      plan=plan, doc=doc)
+        analysis = analyst_case(rdir, request) if case is None else None
+        if analysis is not None:
+            case = analysis
+            context = {**context, "analysis": _analysis_text(rdir, request["task"])}
         if case is None and model_enabled() and model_eligible(request):
             case = classify_mod.unplaced(request, verify=context.get("verify", ""), failures=context.get("failures", ()))
         if case is None or _too_fresh(case, request, doc, now()):
@@ -497,6 +501,27 @@ def excerpt(text: str, limit: int = 700) -> str:
     return "\n".join(out)[:limit] or str(text or "")[:min(limit, 400)]
 
 
+def _analysis_text(rdir: Path | str, task: str) -> str:
+    import bt_attempt_analyst
+
+    return bt_attempt_analyst.prompt(rdir, task)
+
+
+def analyst_case(rdir: Path | str, request: dict) -> classify_mod.Case | None:
+    """P-138: the rules did not place the stop, but the failure analyst read the whole history of the task and says the cause lies
+    OUTSIDE it (another task's work, a check that cannot pass by construction). That is a regression for the repair task to carry,
+    with the analyst's cause and advice in its objective. An analysis that blames the task itself places nothing."""
+    import bt_attempt_analyst
+
+    data = bt_attempt_analyst.load(rdir, request.get("task", ""))
+    if data.get("state") != "done" or data.get("not_the_task") is not True or data.get("confidence") == "baja":
+        return None
+    cause = str(data.get("cause") or "")
+    return classify_mod.Case(request.get("id", ""), request.get("task", ""), "regression",
+                             (f"independent analysis after {data.get('failures')} failures: {cause[:200]}",),
+                             signature=classify_mod.signature(request.get("task", ""), "regression", cause))
+
+
 def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, context: dict) -> tuple[dict, str, list[str]] | None:
     """(revised plan, new task id, the target's previous `after`) or None when the evidence cannot make a sound task."""
     import bt_remediation
@@ -508,8 +533,10 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     owners = [o for o in case.owners if o in by_id]
     named = owners or [task_id]
     failure = excerpt(context.get("verify") or next((f for f in reversed(context.get("failures") or ()) if f), ""))
+    analysis = str(context.get("analysis") or "")
     summary = (f"{task_id} cannot pass its checks: " + (f"tests of {', '.join(owners)} fail ({', '.join(case.failing[:4])})"
-                                                        if owners else f"it only runs and records, and {', '.join(case.failing[:4]) or 'its checks'} fail"))
+                                                        if owners else "the cause lies outside it (independent analysis below)" if analysis
+                                                        else f"it only runs and records, and {', '.join(case.failing[:4]) or 'its checks'} fail"))
     finding = {"id": "H1", "severity": "high", "summary": summary[:300], "tasks": named,
                "evidence": "the failing command and its output, quoted once in the objective above", "status": "open"}
     chunk = [finding]
@@ -530,7 +557,7 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     fix["title"] = f"Repair what blocks {task_id}"[:120]
     fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
                         f"tests unless the test itself is the defect, and say which one was. Evidence from the last "
-                        f"verification:\n{failure}\n" + fix["objective"].split("\n", 1)[-1])[:6000]
+                        f"verification:\n{failure}\n" + (f"\n{analysis}\n" if analysis else "") + fix["objective"].split("\n", 1)[-1])[:6000]
     fix["kind"] = "implement"
     revised = copy.deepcopy(plan)
     revised["revision"] = int(plan.get("revision") or 0) + 1
