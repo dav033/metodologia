@@ -85,6 +85,18 @@ class Taxonomy(unittest.TestCase):
         manual_only = "$ Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --live`\nexit code None\n"
         self.assertEqual(taxonomy.failing_tests(manual_only), ())
 
+    def test_a_command_that_ran_and_failed_outranks_the_verifiers_doubt_about_the_mapping(self):
+        """REQ-020 T14a after the coordinator: the open review carries CRITERION_MANUAL / CHECK_UNMAPPED AND the live command's failure
+        in the note. The mapping branch used to win and the real failure was never repaired."""
+        card = request(task="T14a", source="review", evidence=["CRITERION_MANUAL: only manual evidence", "CHECK_UNMAPPED: no criterion"])
+        verify = ("The coordinator ran the live check and it FAILED, so nothing was attested:\n\n$ npx tsx --conditions=react-server "
+                  "scripts/e2e/asesor/run.ts --start --live --milestone M2\nexit code 1\n[FAIL] asesor M2: correction did not regenerate the summary\n")
+        plan = core_plan(spec("T7", ["scripts/e2e/asesor/run.ts"]), spec("T14a", ["docs/req-020/results.json"], kind="test"))
+        doc = {"tasks": {"T7": {"state": "completed"}, "T14a": {"state": "blocked"}}}
+        got = classify(card, verify=verify, plan=plan, doc=doc)
+        self.assertEqual((got.kind, got.owners), ("regression", ("T7",)))
+        self.assertEqual(classify(card, verify="$ Coordinator runs `x`\nexit code None\n").kind, "criterion_unmapped")   # never ran: still the mapping
+
     def test_the_signature_ignores_volatile_parts_and_keeps_the_kind(self):
         a = taxonomy.signature("T7", "transient", "ROUTE_INVALID att-0104 decision 2e7a754a87e5 at /tmp/x/1234")
         b = taxonomy.signature("T7", "transient", "ROUTE_INVALID att-0138 decision 91bc55aa09f1 at /var/y/99")

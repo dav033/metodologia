@@ -93,6 +93,13 @@ def failing_tests(text: str) -> tuple[str, ...]:
     return tuple(dict.fromkeys(f for f in found if f))
 
 
+def _ran_and_failed(text: str) -> bool:
+    """A command of the verification note RAN and exited non-zero (the coordinator's live check, a failed gate). That is a fact about the
+    work; the verifier's doubt about how a manual check maps to a criterion is not, and must not hide it (REQ-020 T14a: the open review
+    carried both, the mapping branch won and the real failure was never repaired)."""
+    return any(match["code"] != "0" for match in FAILED_COMMAND.finditer(text or ""))
+
+
 def failing_command_files(text: str) -> list[str]:
     """Script files named by the commands that ran and failed (`exit code` is a number: a check that never ran says `None`)."""
     import shlex
@@ -143,7 +150,7 @@ def classify(request: dict, *, verify: str = "", failures=(), plan=None, doc: di
         return case("integration_defect", f"integration evidence in the last error: {_first(INTEGRATION, text)}")
     if TRANSIENT.search(text) or diagnosis.get("kind") in ("cancelled", "transient"):
         return case("transient", f"transient signature: {_first(TRANSIENT, text) or diagnosis.get('kind')}")
-    if CRITERION.search(text):
+    if CRITERION.search(text) and not _ran_and_failed(verify):
         return case("criterion_unmapped", f"verifier doubt about the mapping of evidence: {_first(CRITERION, text)}")
     if PLAN.search(text) or diagnosis.get("kind") == "plan":
         return case("plan_defect", f"a check of the plan cannot work as written: {_first(PLAN, text) or diagnosis.get('headline', '')}")
