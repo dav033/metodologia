@@ -230,9 +230,11 @@ def _top(values, order):
 
 
 def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, dict], after: list[str],
-          round_no: int, spec_ref: str, plan: dict) -> dict | None:
+          round_no: int, spec_ref: str, plan: dict, commands: list[list[dict]] | None = None) -> dict | None:
+    """`commands` (one list of {"command": ...} per finding) replaces the coverage calculation: the self-healing repair task
+    (`bt_scheduler_healing`) states its own checks."""
     named = list(dict.fromkeys(t for f in chunk for t in f.get("tasks") or () if t in tasks))
-    commands = [_command_for(f, plan) for f in chunk]
+    commands = commands if commands is not None else [_command_for(f, plan) for f in chunk]
     if not named or any(not command for command in commands):
         return None
     repositories = [tasks[t].get("repository") for t in named if tasks[t].get("repository")]
