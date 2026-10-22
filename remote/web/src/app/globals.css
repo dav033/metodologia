@@ -79,6 +79,7 @@ h1 span { color: var(--ctp-lavender); }
 .run-list { display: grid; gap: 16px; }
 .run-card { min-width: 0; border: 1px solid rgb(205 214 244 / 10%); border-radius: 16px; background: rgb(24 24 37 / 74%); padding: 22px; box-shadow: 0 16px 45px rgb(0 0 0 / 12%); }
 .run-top h2 { font-size: 24px; }
+.run-top > div, .row-heading > strong { min-width: 0; overflow-wrap: anywhere; }
 .last-seen { margin: 10px 0 0; color: var(--ctp-subtext0); font-size: 13px; line-height: 1.6; }
 .actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-top: 16px; }
 .actions form { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; min-width: 0; }
@@ -92,8 +93,12 @@ h1 span { color: var(--ctp-lavender); }
 .task-list h3 { margin: 0; color: var(--ctp-subtext1); font-size: 14px; }
 .task-card { min-width: 0; border: 1px solid rgb(205 214 244 / 8%); border-radius: 11px; background: rgb(49 50 68 / 38%); padding: 14px; }
 .row-heading strong { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.state { max-width: 100%; flex-shrink: 1; overflow-wrap: anywhere; white-space: normal; }
 .task-card .state { font-size: 10px; }
 .task-card .last-seen { margin-top: 6px; font-size: 12px; }
+.failure-review, .failure-section { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.failure-section p, .failure-section li { overflow-wrap: anywhere; }
+.review-scroll { min-width: 0; max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }
 .activity-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 15px; border: 1px solid rgb(203 166 247 / 20%); border-radius: 10px; background: rgb(203 166 247 / 6%); padding: 10px 12px; color: var(--ctp-subtext1); font-size: 12px; }
 .activity-module, .feed-route { color: var(--ctp-mauve); font-family: var(--font-code); font-size: 11px; }
 .activity-module { border: 1px solid rgb(203 166 247 / 30%); border-radius: 999px; padding: 3px 8px; }

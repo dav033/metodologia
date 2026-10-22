@@ -63,6 +63,31 @@ async function cdp(socket, method, params = {}) {
   return response;
 }
 
+async function assertNoHorizontalOverflow(socket, screen) {
+  const evaluated = await cdp(socket, "Runtime.evaluate", {
+    expression: `(() => {
+      const viewport = 360;
+      const elements = [...document.querySelectorAll('html, body, body *')].flatMap((element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        const escapesViewport = rect.left < -1 || rect.right > viewport + 1;
+        const visibleContentOverflow = style.overflowX === 'visible' && element.scrollWidth > element.clientWidth + 1;
+        if (rect.width === 0 || rect.height === 0 || style.display === 'none' || style.visibility === 'hidden' || (!escapesViewport && !visibleContentOverflow)) return [];
+        return [{ element: element.tagName.toLowerCase(), className: String(element.className?.baseVal ?? element.className ?? ''), left: Math.round(rect.left), right: Math.round(rect.right), width: element.clientWidth, scrollWidth: element.scrollWidth, overflowX: style.overflowX, text: element.textContent?.trim().slice(0, 60) ?? '' }];
+      });
+      const roots = [document.documentElement, document.body].map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { element: element.tagName, left: rect.left, right: rect.right, width: rect.width, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth };
+      });
+      return { viewport, innerWidth: window.innerWidth, documentWidth: document.documentElement.scrollWidth, roots, elements };
+    })()`,
+    returnByValue: true,
+  });
+  const dimensions = evaluated.result?.value;
+  assert.equal(dimensions?.documentWidth, 360, `${screen} document width exceeded 360 px: ${JSON.stringify(dimensions)}`);
+  assert.deepEqual(dimensions?.elements, [], `${screen} has elements outside the 360 px viewport: ${JSON.stringify(dimensions?.elements)}`);
+}
+
 test("real panel entrypoint renders every contract run and refreshes live snapshots at 360 px", { timeout: 90_000 }, async (context) => {
   const browserCheck = spawnSync(chromiumPath, ["--version"], { stdio: "ignore" });
   if (browserCheck.error || browserCheck.status !== 0) {
@@ -82,6 +107,10 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
   let debugReservation;
   try {
     gateway = await createMockGatewayServer();
+    const mobileFixture = JSON.parse(gateway.snapshot);
+    mobileFixture.runs[0].tasks[1].title = `Failure review screen ${"verylongtitle".repeat(8)}`;
+    mobileFixture.runs[0].tasks[1].state = `rejected-${"verylongstate".repeat(8)}`;
+    gateway.snapshot = JSON.stringify(mobileFixture);
     const mockGatewayHandler = gateway.listeners("request")[0];
     gateway.removeAllListeners("request");
     gateway.on("request", (request, response) => {
@@ -99,7 +128,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await new Promise((resolve, reject) => reservation.close((error) => error ? reject(error) : resolve()));
     const frontendOrigin = `http://127.0.0.1:${frontendPort}`;
     next = spawn(process.execPath, [join(root, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(frontendPort)], {
-      cwd: root, env: { ...process.env, FLOW_GATEWAY_ORIGIN: `http://127.0.0.1:${gatewayPort}` }, stdio: "ignore",
+      cwd: root, env: { ...process.env, GATEWAY_ORIGIN: `http://127.0.0.1:${gatewayPort}` }, stdio: "ignore",
     });
     await waitForNext(frontendOrigin, next);
 
@@ -133,6 +162,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (const expected of ["Ejecuciones", "REQ-027", "REQ-018", "running", "paused", "Última señal de vida", "M3", "Tarea T15a", "T15c · Failure review screen", "rejected", "Intento att-0008", "Cancelar intento", "Reabrir", "Criterios de aceptación", "Cancelar plan", "Eliminar plan", "Aprobar plan", "Rondas abiertas", "¿Qué prioridad prefieres?", "Esperando tu decisión", "Crea otro intento y consume una oportunidad.", "Pausa el scheduler hasta que lo reanudes."]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render ${expected}`);
     }
+    await assertNoHorizontalOverflow(socket, "runs list fixture");
     for (const expected of ["Cuotas en vivo", "Five hour", "27% usado", "Seven day", "64% usado"]) {
       assert.ok(browserState?.text?.includes(expected), `real panel should render each live quota window: ${expected}`);
     }
@@ -148,6 +178,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       await delay(100);
     }
     assert.ok(fixtureReview.includes("Fallo de fixture en rejected"), `fixture rejected task should load its reviewAttempt through the real review route within 30 seconds: ${fixtureReview}`);
+    await assertNoHorizontalOverflow(socket, "failure review fixture");
     await cdp(socket, "Page.navigate", { url: frontendOrigin });
     for (let attempt = 0; attempt < 70; attempt += 1) {
       const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -164,6 +195,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.ok(browserState?.text?.includes("×2"), "SSE messages should render through the /flow grouping logic");
     assert.equal(browserState.viewport, 360);
     assert.equal(browserState.width, 360, `page overflowed horizontally at 360 px: ${browserState.width}px`);
+    await assertNoHorizontalOverflow(socket, "run view fixture");
     const waitForText = async (expected) => {
       for (let attempt = 0; attempt < 70; attempt += 1) {
         const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
@@ -260,7 +292,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       for (let attempt = 0; attempt < 70; attempt += 1) {
         const evaluated = await cdp(socket, "Runtime.evaluate", { expression: "document.body.innerText", returnByValue: true });
         lastText = evaluated.result?.value ?? "";
-        if (lastText.includes("Fallo de fixture en rejected")) return lastText;
+        if (lastText.includes("att-rejected-1") && lastText.includes("Fallo de fixture en rejected")) return lastText;
         await delay(100);
       }
       assert.fail(`failure review route did not load the rejected task's reviewAttempt: ${lastText}`);
@@ -312,6 +344,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await waitForText("Historial de comandos");
     await waitForText("Origen · Web");
     await waitForText("Resultado · accepted");
+    await assertNoHorizontalOverflow(socket, "control sheet fixture");
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.disabled === false", returnByValue: true });
       if (ready.result?.value) break;

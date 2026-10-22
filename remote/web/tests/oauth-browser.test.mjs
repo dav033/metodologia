@@ -103,7 +103,7 @@ test("OAuth browser round-trip keeps state and session cookies on the frontend h
       join(root, "node_modules/next/dist/bin/next"), "dev", "--hostname", "127.0.0.1", "--port", String(frontendPort),
     ], {
       cwd: root,
-      env: { ...process.env, FLOW_GATEWAY_ORIGIN: `http://127.0.0.1:${gatewayPort}` },
+      env: { ...process.env, GATEWAY_ORIGIN: `http://127.0.0.1:${gatewayPort}` },
       stdio: "ignore",
     });
     await waitForNext(frontendOrigin, next);
