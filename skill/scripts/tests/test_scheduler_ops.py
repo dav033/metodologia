@@ -103,7 +103,7 @@ class RetryTests(unittest.TestCase):
         ])
         moves = []
         with patch.object(ops, "status", side_effect=lambda *a: next(views)), \
-                patch.object(ops, "apply", side_effect=lambda p, r, d, action, target, why: moves.append((action, target)) or [action]), \
+                patch.object(ops, "apply", side_effect=lambda p, r, d, action, target, why, **kw: moves.append((action, target)) or [action]), \
                 patch.object(ops.time, "sleep"):
             lines = ops.retry("p", "REQ-001", rdir, "T3", "why")
         self.assertEqual(moves, [("cancel-attempt", "att-0007"), ("reopen", "T3")])
@@ -123,7 +123,8 @@ class RetryTests(unittest.TestCase):
                                                          "task_states": {"T3": "recovering"}}), \
                 patch.object(ops, "apply", return_value=["reopen"]) as apply, patch.object(ops.time, "sleep") as sleep:
             lines = ops.retry("p", "REQ-001", Path("/nonexistent"), "T3", "why")
-        apply.assert_called_once_with("p", "REQ-001", Path("/nonexistent"), "reopen", "T3", "why")
+        apply.assert_called_once_with("p", "REQ-001", Path("/nonexistent"), "reopen", "T3", "why",
+                                      expected_task="T3", expected_task_state=None)
         self.assertEqual(lines, ["reopen"])
         sleep.assert_not_called()
 

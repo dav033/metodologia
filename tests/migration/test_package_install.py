@@ -112,7 +112,7 @@ class InstalledRuntimeTests(PackageCase):
             "handlers=commands.dispatch_handlers();"
             "assert 'retry' in handlers and 'edit-brief' in handlers;"
             "assert bt_route_pins.normalize({'route':'route-a'})=={'route':'route-a'};"
-            "\ntry: handlers['retry']('bad-target',{'task':'T1'})\nexcept ValueError: pass\nelse: raise AssertionError('retry dispatch did not validate its target');"
+            "\ntry: handlers['retry']('bad-target',{'task':'T1'},None)\nexcept ValueError: pass\nelse: raise AssertionError('retry dispatch did not validate its target');"
             "\ntry: handlers['edit-brief']('demo/REQ-001',{})\nexcept ValueError: pass\nelse: raise AssertionError('edit dispatch did not require confirmation');"
             "print(bt_route_pins.__file__,bt_remote_edit.__file__)"
         ))
