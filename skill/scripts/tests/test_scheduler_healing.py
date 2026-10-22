@@ -396,6 +396,38 @@ class PlanRepairs(unittest.TestCase):
         from bt_plan_adapter import plan_errors
         self.assertEqual(plan_errors(revised), [])
 
+    def test_a_live_check_that_failed_becomes_a_coordinator_check_of_the_repair_itself(self):
+        verify = ("The coordinator ran the live check and it FAILED, so nothing was attested:\n\n$ npx tsx --conditions=react-server "
+                  "scripts/e2e/asesor/run.ts --start --live --milestone M2\nexit code 1\n[FAIL] asesor M2: correction did not regenerate the summary\n")
+        revised, new_id, _ = healing.build_fix_revision(self.plan(), "T3", self.case(), {"verify": verify})
+        fix = {t["id"]: t for t in revised["tasks"]}[new_id]
+        manual = [v for v in fix["verification"] if v["type"] == "manual"]
+        self.assertEqual(len(manual), 1)
+        self.assertIn("Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2`", manual[0]["value"])
+        self.assertIn(manual[0]["purpose"], fix["acceptance_criteria"])                      # the check maps to exactly one criterion
+        import bt_coordinator
+        self.assertEqual(bt_coordinator.commands_of(manual[0]["value"]), ["npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2"])
+        from bt_plan_adapter import plan_errors
+        self.assertEqual(plan_errors(revised), [])
+        # an ordinary failure (no coordinator run) adds no manual check
+        plain, plain_id, _ = healing.build_fix_revision(self.plan(), "T3", self.case(), {"verify": "FAIL: test_a boom"})
+        self.assertFalse([v for v in {t["id"]: t for t in plain["tasks"]}[plain_id]["verification"] if v["type"] == "manual"])
+
+    def test_an_analysis_that_quotes_the_failure_does_not_make_the_objective_repeat_itself(self):
+        """REQ-020 T14.4a: the real analysis quoted the same command and `[FAIL]` line as the evidence, and the planner refused the
+        objective ('repeats the same words')."""
+        command = "$ npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2\nexit code 1\n"
+        fail = "[FAIL] asesor M2: correction did not regenerate the summary\n"
+        analysis = ("Independent failure analysis (after 15 failed attempts; confidence media): Cause: the live command "
+                    "`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` fails with "
+                    "`[FAIL] asesor M2: correction did not regenerate the summary` because Gemini returns functionCall parts "
+                    "that the client concatenates as text. What to do differently: 1. read the parts of the response.")
+        case = taxonomy.Case("T3:1", "T3", "regression", ("e",), owners=("T1",), failing=("run.ts",), signature="s3")
+        revised, new_id, _ = healing.build_fix_revision(self.plan(), "T3", case, {"verify": command + fail * 3, "analysis": analysis})
+        from bt_plan_adapter import plan_errors
+        self.assertEqual(plan_errors(revised), [])
+        self.assertIn("functionCall parts", {t["id"]: t for t in revised["tasks"]}[new_id]["objective"])
+
     def test_only_a_finished_confident_analysis_that_blames_something_else_places_a_stop(self):
         import bt_attempt_analyst as analyst
 

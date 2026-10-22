@@ -527,6 +527,9 @@ def analyst_case(rdir: Path | str, request: dict) -> classify_mod.Case | None:
                              signature=classify_mod.signature(request.get("task", ""), "regression", cause))
 
 
+LIVE_FAILURE = re.compile(r"The coordinator ran the live check and it FAILED[^\n]*\n\n\$ (?P<command>[^\n`]+)\nexit code [1-9]\d*")
+
+
 def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, context: dict) -> tuple[dict, str, list[str]] | None:
     """(revised plan, new task id, the target's previous `after`) or None when the evidence cannot make a sound task."""
     import bt_remediation
@@ -538,7 +541,9 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     owners = [o for o in case.owners if o in by_id]
     named = owners or [task_id]
     failure = excerpt(context.get("verify") or next((f for f in reversed(context.get("failures") or ()) if f), ""))
-    analysis = str(context.get("analysis") or "")
+    analysis = str(context.get("analysis") or "")[:1800]
+    if analysis:      # the analysis quotes the failure itself: the excerpt keeps only the command, or the planner refuses repeated words
+        failure = "\n".join(failure.splitlines()[:2])
     summary = (f"{task_id} cannot pass its checks: " + (f"tests of {', '.join(owners)} fail ({', '.join(case.failing[:4])})"
                                                         if owners else "the cause lies outside it (independent analysis below)" if analysis
                                                         else f"it only runs and records, and {', '.join(case.failing[:4]) or 'its checks'} fail"))
@@ -559,6 +564,16 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
         purpose = f"{task_id}'s own check {number} passes: {check['value'][:140]}"
         fix["acceptance_criteria"].append(purpose)
         fix["verification"].append({**check, "purpose": purpose, "category": check.get("category") or "functional"})
+    live = LIVE_FAILURE.search(str(context.get("verify") or ""))
+    if live:
+        # The repair cannot reproduce a failure that only shows with the real services, so its own offline checks may all pass while the
+        # live one still fails (REQ-020 T14.3a: accepted, M2 still red). The command that failed live becomes a check of the repair itself:
+        # the coordinator (authorized projects) runs it on the repair's snapshot, and a failure goes back to the agent WITH the live output.
+        purpose = f"The live check that failed for {task_id} now passes: {live['command'][:140]}"
+        fix["acceptance_criteria"].append(purpose)
+        fix["verification"].append({"type": "manual", "value": f"Coordinator runs `{live['command']}` with .env.local and records redacted evidence.",
+                                    "purpose": purpose, "expected": "The coordinator's live run exits 0 and its redacted evidence is recorded.",
+                                    "category": "integration"})
     fix["title"] = f"Repair what blocks {task_id}"[:120]
     fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
                         f"tests unless the test itself is the defect, and say which one was. Evidence from the last "
