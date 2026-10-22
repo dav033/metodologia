@@ -360,15 +360,15 @@ def hook(rdir: Path, policy):
     return remediate
 
 
-def apply(rdir: Path) -> dict | None:
+def apply(rdir: Path, hold_token: str | None = None) -> dict | None:
     """Turn the pending request into the next frozen plan revision and clear it. Returns {audit, round, tasks, revision} or
     None when there was nothing to apply or the revision cannot be built (the request is then dropped: the next rejection
     of the audit sends the named tasks back). The caller rebases the run onto the new revision."""
     import bt_plan_adapter
     import bt_scheduler_ops
 
-    if bt_scheduler_ops.on_hold(rdir):
-        return None
+    if bt_scheduler_ops.on_hold(rdir) and not bt_scheduler_ops.owns_hold(rdir, hold_token):
+        return None                    # a hold that is not the caller's own is an operator's stop: nothing is frozen under it
 
     request = read_request(rdir)
     if request is None:

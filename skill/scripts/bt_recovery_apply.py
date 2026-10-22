@@ -295,6 +295,12 @@ def apply_recovery_revision(rdir: str | Path, compiled: dict, grant_key: str, *,
         project = rdir.parent.parent.name if rdir.parent.name == "requirements" else ""
         req = rdir.name
         operator_stop = False
+        _clear_stale_recovery_hold(rdir)
+        if bt_scheduler_ops.on_hold(rdir):                 # a stop landed after the first check: it must not be overwritten
+            journal.update(stage="blocked", blocker="operator stop requested during recovery application")
+            _write(path, journal)
+            return {"status": "blocked", "reason": journal["blocker"],
+                    "stop_generation": bt_scheduler_adapter.revision_identity(rdir)["stop_generation"]}
         with bt_scheduler_ops.hold(rdir, "recovery revision") as recovery_hold_token:
             if project:
                 bt_scheduler_ops.stop_owner(project, req)

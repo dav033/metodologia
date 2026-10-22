@@ -21,7 +21,7 @@ from typing import Any
 import bt_lock
 import bt_planstatus as ps
 import bt_scheduler_adapter as scheduler_
-from bt_core import find_req, set_front
+from bt_core import find_req, req_id, set_front
 
 TRASH_DIR = ".trash"  # per project, under the bitácora root: change here to change the retention policy
 PLAN_ARTIFACTS = ("PLAN.md", "PLAN.json", "plan-revisions", "HANDOFF.md", "RUN.json", scheduler_.PROJECTION)
@@ -68,7 +68,42 @@ def status_of(root: Path, project: str, req: str) -> dict[str, Any]:
     status["run_action"] = run_action(project, req, rdir)
     status["decisions"] = open_decisions(rdir)
     status["open_rounds"] = open_rounds(rdir)
+    status["healing"] = healing_state(rdir)
     return status
+
+
+def healing_state(rdir: Path) -> dict[str, Any] | None:
+    """The self-healing of the run for its page (REQ-029 R7 / REQ-030): on/off, budget, every case with what was done, and the
+    last interventions. None for a plan that never ran; the page must render when the files cannot be read."""
+    if not (rdir / scheduler_.PROJECTION).is_file():
+        return None
+    try:
+        import bt_interventions
+        import bt_scheduler_healing as healing
+        state = healing.status(rdir)
+        recent = list(bt_interventions.read(rdir))[-8:]
+        state["recent"] = [{k: row.get(k) for k in ("at", "class", "source", "task", "repair", "result", "minutes_lost")}
+                           for row in reversed(recent)]
+        return state
+    except Exception:  # noqa: BLE001 - an unreadable record is not a reason to hide the plan
+        return None
+
+
+def heal_control(root: Path, project: str, req: str, action: str, case: str = "") -> str:
+    """The owner's hand on the self-healing from the page: stop, start or revert one case (same moves as
+    `scheduler-op REQ heal`). Raises PlanError for anything else."""
+    import bt_scheduler_healing as healing
+    rdir = req_dir(root, project, req)
+    try:
+        if action == "stop":
+            return healing.stop(rdir)
+        if action == "start":
+            return healing.start(rdir)
+        if action == "revert" and case:
+            return " · ".join(healing.revert(project, req, rdir, case))
+    except ValueError as exc:
+        raise PlanError(str(exc)) from exc
+    raise PlanError("Acción de autocuración desconocida.")
 
 
 def open_decisions(rdir: Path) -> list[dict[str, Any]]:

@@ -30,7 +30,7 @@ import bt_scheduler_adapter as scheduler_
 VERSION = 1
 PARTIES = ("planner", "M1", "M2", "M3", "M4", "M5", "M6", "web", "owner")
 LIMIT = 2000                                    # rows per store per cycle: bounded work, the cursor catches up
-STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6")
+STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal")
 
 
 # What each module's database holds and what the bus does with it. A table nobody classified here fails
@@ -326,6 +326,28 @@ def _m4_incidents(run: str, path: Path | None, after: int) -> list[dict]:
     return out
 
 
+def _heal_events(run: str, rdir: Path, after: int) -> list[dict]:
+    """Every intervention on the run (REQ-030: `RUN.interventions.jsonl`), automatic ones from the scheduler's own recovery and
+    manual ones from the owner, as feed events. The id is the line number, so the cursor resumes where it stopped."""
+    import bt_interventions
+
+    out = []
+    rows = list(bt_interventions.read(rdir))           # a damaged line is skipped, so ids count the readable rows
+    for number, row in enumerate(rows, 1):
+        if number <= after:
+            continue
+        auto = row.get("source") == "auto"
+        at = float(row.get("at") or 0.0)
+        result = {"fixed": "resuelto", "failed": "no resuelto", "pending": "pendiente"}.get(row.get("result"), "")
+        who = "recuperación automática" if auto else "el dueño"
+        text = f'{who}: {row.get("class")} · {str(row.get("repair") or "")[:120]}{" · " + result if result else ""}'
+        out.append(event(run, "heal", number, at, "M5" if auto else "owner", "M1", "recovery_intervention", text,
+                         task=row.get("task") or "", from_part="M5.recovery" if auto else "",
+                         data={"class": row.get("class"), "source": row.get("source"), "result": row.get("result"),
+                               "minutes_lost": row.get("minutes_lost"), "case": row.get("case")}))
+    return out
+
+
 def _m5_events(run: str, path: Path | None, after: int, ctx: Ctx) -> list[dict]:
     out = []
     for row in _rows(path, "SELECT seq, task_id, attempt_id, cause, action FROM decisions WHERE seq > ? ORDER BY seq "
@@ -398,6 +420,11 @@ def sources(rdir: Path, project: str) -> dict[str, tuple[str, int]]:
         except OSError:
             out[name] = (str(path), 0)
     out["m4i"] = out["m4"]
+    interventions = Path(rdir) / "RUN.interventions.jsonl"
+    try:
+        out["heal"] = (str(interventions), interventions.stat().st_ino)
+    except OSError:
+        out["heal"] = (str(interventions), 0)
     return out
 
 
@@ -423,6 +450,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
         "m4i": _m4_incidents(run, paths.get("m4"), cur["m4i"]),
         "m5": _m5_events(run, paths.get("m5"), cur["m5"], ctx),
         "m6": _m6_events(run, paths.get("m6"), cur["m6"]),
+        "heal": _heal_events(run, rdir, cur["heal"]),
     }
     merged = []
     for name, items in events.items():

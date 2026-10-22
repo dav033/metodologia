@@ -480,8 +480,40 @@ def detail_page(s: dict, token: str, msg: str = "") -> str:
     body = (f'<div class="pl"><a class="back" href="/plans">← Planes</a> <span class="live-dot" id="live-dot"></span>{_flash(msg)}'
             f'<div id="live" data-api="/api/plans/{quote(project)}/{quote(req)}?html=1" '
             f'data-events="/events?plan={quote(project)}/{quote(req)}" data-event="plan">{detail_fragment(s)}</div>'
-            f'{_decisions(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
+            f'{_decisions(s, base, token)}{_healing(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
     return layout(f"{req} · Plan", body, [("Planes", "/plans"), (project, f"/p/{quote(project)}")])
+
+
+def _healing(s: dict, base: str, token: str) -> str:
+    """Autocuración: what the scheduler fixed by itself, what it gave up on, and the owner's stop / revert (REQ-029 R7).
+    Every text comes from run files, so everything is escaped."""
+    h = s.get("healing")
+    if not h:
+        return ""
+    on = bool(h.get("enabled"))
+    limits = h.get("limits") or {}
+    toggle = "stop" if on else "start"
+    form = lambda action, label, extra="", cls="": (  # noqa: E731
+        f'<form method="post" action="{base}/heal" style="display:inline"><input type="hidden" name="token" value="{e(token)}">'
+        f'<input type="hidden" name="action" value="{action}">{extra}<button type="submit" class="{cls}">{label}</button></form>')
+    cases = []
+    for cid, c in sorted((h.get("cases") or {}).items(), key=lambda kv: str(kv[1].get("task"))):
+        undo = form("revert", "Deshacer", f'<input type="hidden" name="case" value="{e(cid)}">') \
+            if c.get("revision") and c.get("status") != "reverted" else ""
+        cases.append(f'<li><b>{e(str(c.get("task")))}</b> · {e(str(c.get("class")))} · '
+                     f'<span class="pill">{e(str(c.get("status")))}</span> {e(str(c.get("repair") or "sin reparación segura"))}'
+                     f'{" · r" + e(str(c["revision"])) if c.get("revision") else ""} {undo}</li>')
+    recent = []
+    for r in h.get("recent") or []:
+        recent.append(f'<li>{e(str(r.get("task") or "—"))} · {e(str(r.get("class")))} · '
+                      f'{"automático" if r.get("source") == "auto" else "a mano"} · {e(str(r.get("repair") or ""))[:140]} · '
+                      f'{e(str(r.get("result")))}'
+                      f'{" · " + e(str(round(r["minutes_lost"]))) + " min" if r.get("minutes_lost") else ""}</li>')
+    return (f'<h2 id="healing">Autocuración</h2><div class="ask"><p>{_pill("", "activa" if on else "detenida")} '
+            f'{e(str(h.get("actions", 0)))}/{e(str(limits.get("actions", "—")))} acciones · '
+            f'tope {e(str(limits.get("per_task", "—")))} cambios de plan por tarea {form(toggle, "Detener" if on else "Activar", cls="primary" if not on else "")}</p>'
+            f'{"<ul>" + "".join(cases) + "</ul>" if cases else "<p class=muted>Sin casos todavía.</p>"}'
+            f'{"<details><summary>Últimas intervenciones</summary><ul>" + "".join(recent) + "</ul></details>" if recent else ""}</div>')
 
 
 def _confirm_form(base: str, action: str, token: str, req: str, label: str, warning: str) -> str:

@@ -350,7 +350,10 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
         existing_hold = None
     nested_recovery_stop = (action == "stop" and isinstance(existing_hold, dict)
                             and existing_hold.get("why") == "recovery revision")
-    with hold(rdir, why, keep=keep_held):
+    if action == "remediate" and existing_hold is not None:
+        # an operator's stop is already in force: freezing a revision now would consume the correction under it (REQ-029 F15)
+        return ["remediation waits: the run is held by an operator move (`scheduler-op REQ resume` releases it)"]
+    with hold(rdir, why, keep=keep_held) as hold_token:
         lines.append(f"owner stopped: {stop_owner(project, req)} process(es)")
         if action == "stop":
             if not nested_recovery_stop:
@@ -358,7 +361,7 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
             return lines
         if action == "remediate":
             import bt_remediation
-            built = bt_remediation.apply(rdir)
+            built = bt_remediation.apply(rdir, hold_token=hold_token)
             if built is None:
                 return [*lines, "nothing to remediate (no request, or its tasks cannot be built: the named tasks are "
                                 "sent back by the next rejection)"]
