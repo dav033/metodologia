@@ -27,6 +27,25 @@ REQUIRED_CHECKS = {
     "other-hosts-unchanged",
     "rollback-rehearsed",
 }
+GATEWAY_STEPS = [
+    "snapshot-before",
+    "release-archive",
+    "hash-locked-install",
+    "database-migration",
+    "atomic-current-switch",
+    "services-enabled-active",
+    "tunnel-replacement",
+    "public-smoke",
+    "rollback-rehearsal",
+    "other-hosts-check",
+]
+GATEWAY_CHECKS = {
+    "release-active",
+    "listeners-and-tunnel",
+    "public-health",
+    "rollback-rehearsed",
+    "other-hosts-unchanged",
+}
 
 
 def head_sha() -> str:
@@ -45,6 +64,22 @@ def valid_receipt() -> dict:
         "checks": {
             name: {"ok": True, "detail": "Recorded offline evidence: passed"}
             for name in REQUIRED_CHECKS
+        },
+    }
+
+
+def valid_gateway_receipt() -> dict:
+    return {
+        "schema_version": 1,
+        "name": "gateway-release",
+        "deployed_git_sha": head_sha(),
+        "steps": [
+            {"name": name, "command": "recorded redacted deployment operation", "exit_code": 0}
+            for name in GATEWAY_STEPS
+        ],
+        "checks": {
+            name: {"ok": True, "detail": "Recorded offline evidence: passed"}
+            for name in GATEWAY_CHECKS
         },
     }
 
@@ -107,6 +142,23 @@ class ReceiptVerifierTest(unittest.TestCase):
         result = self.run_verifier(receipt)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("service-layout", result.stderr)
+
+    def test_gateway_release_requires_all_acceptance_checks(self):
+        receipt = valid_gateway_receipt()
+        result = self.run_verifier(receipt, "--check", "release-active")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        del receipt["checks"]["listeners-and-tunnel"]
+        result = self.run_verifier(receipt)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("listeners-and-tunnel", result.stderr)
+
+    def test_gateway_release_rejects_failed_acceptance_check(self):
+        receipt = valid_gateway_receipt()
+        receipt["checks"]["public-health"] = {"ok": False, "detail": "health probe not run"}
+        result = self.run_verifier(receipt)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("public-health", result.stderr)
 
 
 if __name__ == "__main__":

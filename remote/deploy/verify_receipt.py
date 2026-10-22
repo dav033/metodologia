@@ -28,6 +28,25 @@ REQUIRED_CHECKS = {
     "other-hosts-unchanged",
     "rollback-rehearsed",
 }
+GATEWAY_RELEASE_STEPS = {
+    "snapshot-before",
+    "release-archive",
+    "hash-locked-install",
+    "database-migration",
+    "atomic-current-switch",
+    "services-enabled-active",
+    "tunnel-replacement",
+    "public-smoke",
+    "rollback-rehearsal",
+    "other-hosts-check",
+}
+GATEWAY_RELEASE_CHECKS = {
+    "release-active",
+    "listeners-and-tunnel",
+    "public-health",
+    "rollback-rehearsed",
+    "other-hosts-unchanged",
+}
 VERCEL_FRONTEND_STEPS = {
     "project-create-or-link",
     "project-settings",
@@ -141,6 +160,9 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
             raise ReceiptError("environment_variable_names must be an array of names")
         if env_names != ["GATEWAY_ORIGIN"]:
             raise ReceiptError("only GATEWAY_ORIGIN may be configured")
+    elif receipt["name"] == "gateway-release":
+        required_steps = GATEWAY_RELEASE_STEPS
+        required_checks = GATEWAY_RELEASE_CHECKS
     else:
         required_steps = REQUIRED_STEPS
         required_checks = REQUIRED_CHECKS
