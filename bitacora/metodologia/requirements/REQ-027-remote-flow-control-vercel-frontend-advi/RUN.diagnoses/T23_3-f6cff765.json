@@ -1,0 +1,23 @@
+{
+ "request": "T23:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T23 falló 3 veces: falta el recibo remote/deploy/receipts/gateway-release.json",
+ "origin": "Los tres intentos fallaron en las cinco comprobaciones con el mismo error: \"receipt invalid: receipt not found: /workspace/remote/deploy/receipts/gateway-release.json\". La verificación corre sobre una copia limpia de los archivos finales, así que el recibo no estaba en el resultado final del agente. La evidencia no dice si el despliegue llegó a ejecutarse ni por qué no se guardó el recibo. Además, T23 depende de T18b, que la auditoría devolvió, así que hay que rehacerla sobre el nuevo resultado.",
+ "steps": [
+  "Revisa att-0448 y los intentos siguientes para saber si el despliegue llegó a ejecutarse y dónde quedó el recibo (la evidencia no lo dice).",
+  "Rehaz T23 sobre el nuevo resultado de T18b y confirma que sigue cumpliendo de extremo a extremo.",
+  "Escribe remote/deploy/receipts/gateway-release.json dentro del repo, con el esquema que valida verify_receipt.py, y comprueba que .gitignore no lo excluye.",
+  "Ejecuta los cinco checks de verify_receipt.py y no des la tarea por cerrada si alguno falla."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous three attempts all failed because remote/deploy/receipts/gateway-release.json was not in the final files (verifier: 'receipt not found'). Before anything else, check whether the deploy was actually executed in earlier attempts and report that truthfully. Then write the receipt INSIDE the repo at remote/deploy/receipts/gateway-release.json, matching the schema that remote/deploy/verify_receipt.py expects: steps with redacted commands and exit codes, named checks with ok/detail, and the deployed git sha. Make sure .gitignore does not exclude remote/deploy/receipts/. Do not put secrets in the receipt or in argv. Redo T23 on top of the new T18b result. Then run the five verify_receipt.py checks.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T20:32:30",
+ "seconds": 16.7
+}

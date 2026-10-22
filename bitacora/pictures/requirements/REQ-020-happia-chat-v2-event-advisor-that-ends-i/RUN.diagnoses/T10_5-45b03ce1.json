@@ -1,0 +1,23 @@
+{
+ "request": "T10:5",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Falta el módulo local './photos' que importa el test del asesor",
+ "origin": "El test scripts/test/asesor/agent.test.ts importa './photos', una ruta relativa dentro del repo y no un paquete, y la copia limpia del verificador no lo tiene: `Error: Cannot find module './photos'`. Instalar dependencias con npm ci no crea un archivo local, así que la guía de dependencias del verificador no aplica aquí. El mismo fallo se repitió en los intentos, por eso el sistema marcó same_cause_limit.",
+ "steps": [
+  "Comprueba en el worktree de T10 si existe el módulo que importa agent.test.ts (`ls scripts/test/asesor/` y busca photos).",
+  "Si no existe o no está versionado (`git ls-files | grep photos`; revisa también .gitignore), no lo crees en esta tarea: es un defecto de T8/T9 y debe devolverse allí.",
+  "Si existe y está versionado, corrige solo la ruta del import para que apunte a él, sin tocar la configuración del gate.",
+  "Ejecuta `npm run gate` y confirma que el test pasa sin el error de './photos' antes de reintentar."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous attempts all failed with `Cannot find module './photos'` from scripts/test/asesor/agent.test.ts. This is a relative local import, not a package: do not run npm ci and do not change package.json. Check whether the photos module exists and is tracked by git (not gitignored). If it exists under the expected path, fix only the import path. If it is missing, do not create it in this task: a missing source module belongs to T8/T9 and must be returned there. Then run npm run gate and confirm the photos import error is gone.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T20:54:36",
+ "seconds": 25.4
+}

@@ -73,6 +73,13 @@
    "sha256": "1cc2c541d9310e97781e315b2855bb59bcc4d771eed6ddcb2b87f558086b33e7",
    "frozen_at": "2026-10-21T15:43:37",
    "source": "remediation"
+  },
+  {
+   "revision": 12,
+   "sha256": "3ec5dcc5d5861beb6b32554272d0a2677d3a174e707e4965ddbfaa66b40493b1",
+   "frozen_at": "2026-10-21T20:55:13",
+   "source": "approval",
+   "plan_md_sha256": "cb8a04c9d4c03aff4d4a8a981849819870a798e4e1906be873ffc393e1019765"
   }
  ]
 }

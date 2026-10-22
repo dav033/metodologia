@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r2:att-0054:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Faltan en el código los scripts de evaluación del asesor; no es un paso manual pendiente",
+ "origin": "La auditoría (F5) confirma que no están en el árbol actual scripts/eval/asesor/run.ts, scripts/eval/asesor/scenarios.json, scripts/test/asesor/prompt.test.ts ni scripts/e2e/asesor/scenarios/m3.ts, aunque docs/req-020/m2-deployment.md dice que las evaluaciones de T14 existen. Los dos intentos anteriores (att-0023 y att-0026) se aceptaron y luego se devolvieron por esto. El aviso «manual» viene de que el criterio solo tiene evidencia manual y de que las comprobaciones apuntan a esos archivos inexistentes, no de una comprobación real que falte.",
+ "steps": [
+  "No apruebes a mano: los archivos que las comprobaciones necesitan no existen en el árbol actual, así que la aprobación repetiría el fallo anterior.",
+  "Implementa en el árbol actual los cuatro archivos que faltan (run.ts, scenarios.json, prompt.test.ts y m3.ts) y comprueba que pasan `npm run asesor:test`, `npx tsx --conditions=react-server --test scripts/test/asesor/prompt.test.ts` y `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`.",
+  "Corrige docs/req-020/m2-deployment.md para que no afirme que las evaluaciones de T14 existen hasta que estén en el repositorio.",
+  "Deja la ejecución `run.ts --live` (con .env.local) como evidencia manual redactada que registra el coordinador. Si las dos líneas [manual] idénticas del plan causan el aviso CHECK_UNMAPPED, cambiarlas es una nueva revisión: sube revision en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige revise."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T21:49:37",
+ "seconds": 19.2
+}

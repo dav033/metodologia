@@ -1,0 +1,23 @@
+{
+ "request": "T24:6",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T24 bloqueada: el smoke en vivo necesita credenciales del owner que no puede usar",
+ "origin": "Tres comprobaciones fallan por falta de credenciales que la tarea prohíbe leer: la cookie de sesión tras iniciar sesión (signin-start), el SSE autenticado con reconexión (sse) y el envío de Telegram (telegram-delivery). El verificador responde \"this run cannot use owner credentials\" y \"this task explicitly forbids reading or using credentials\". La parte pública sí pasó: HTTP 200, redirección a github.com, client id, state y atributos de cookie. Reintentar repetiría el mismo fallo porque el bloqueo está en el acceso, no en el código.",
+ "steps": [
+  "Aporta el token del bot y el chat id de Telegram en `~/.config/flow/secrets.env` (modo 600), o confirma que el envío de Telegram lo haces tú a mano.",
+  "Inicia sesión en https://flow-remote.vercel.app en tu navegador y verifica manualmente la cookie de sesión (Secure, HttpOnly, SameSite=Strict) y la reconexión SSE con Last-Event-ID; anota el resultado para el receipt.",
+  "Decide si esas tres comprobaciones pasan a verificación manual. Si cambias el contrato, sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project metodologia plan-json freeze REQ-027` y elige la opción `revise`.",
+  "Relanza T24 cuando tengas la evidencia del owner o el plan revisado."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T21:15:59",
+ "seconds": 15.7
+}

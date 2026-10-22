@@ -1,0 +1,22 @@
+{
+ "request": "T24:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T24: la comprobación signin-start del recibo live-smoke no pasa; se agotaron los intentos",
+ "origin": "Los tres intentos fallaron igual: el verificador rechaza el recibo con \"receipt invalid: check signin-start did not pass\", así que la causa está en esa comprobación del recibo `remote/deploy/receipts/live-smoke.json` o en la redirección real del gateway que debe reflejar. La evidencia no muestra el detalle del check, así que no se sabe si falla el client id, el state, el callback o las cookies. Las notas de auditoría sobre T15c/FailureReviewPanel son de otra tarea y no explican este fallo.",
+ "steps": [
+  "Ejecuta `cd remote/deploy && python verify_receipt.py live-smoke --check signin-start` y copia el detalle exacto del fallo antes de cambiar nada.",
+  "Compara la redirección real de `remote/deploy/smoke.py --live` con lo que exige el check: client id de la OAuth App, state, callback del gateway y cookies Secure, HttpOnly y SameSite=Strict.",
+  "Corrige solo el registro del recibo si refleja mal un valor verificado; si el gateway responde distinto, no toques el código de T24: deja el check en fallo, anota el valor observado y para."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not repeat the previous attempts. First run `cd remote/deploy && python verify_receipt.py live-smoke --check signin-start` and record its exact failure detail. Then check the live sign-in start (client id, state, gateway callback, Secure/HttpOnly/SameSite=Strict cookies) against what verify_receipt.py requires, and write the receipt with the observed values and redacted commands and exit codes. Do not change code in this task and do not print secrets. Ignore the T15c/FailureReviewPanel audit notes, which belong to another task. If the live gateway itself returns a different result, keep the check failed, report the observed value and stop.",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T20:44:53",
+ "seconds": 18.5
+}

@@ -5,9 +5,9 @@ execution_contract: requirements-v1
 # REQ-029 — Autonomous recovery from repeated audit and integration failures
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: approved · ejecución: blocked · hitos 0/3 · tareas 11/35 · generado: 2026-10-21T17:41:32-05:00
+> Bloque generado, no editar a mano. Plan: approved · ejecución: blocked · hitos 0/3 · tareas 13/35 · generado: 2026-10-21T21:17:07-05:00
 
-**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 11/25
+**M1 — Bounded evidence-driven recovery runtime** · dificultad alta · 13/25
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -22,9 +22,9 @@ execution_contract: requirements-v1
 | T4a | Build provenance-preserving executable convergence strategy | alta | completada | gpt-6-luna | codex-luis | 6 |
 | T5 | Wire bounded recovery into existing owner and watch lifecycle | alta | completada | gpt-6-luna | codex-2 | 7 |
 | T5a | Implement pinned runtime staging and conditional host activation | alta | completada | gpt-6-luna | codex-2 | 8 |
-| T6 | Author offline real CLI recovery integration harness | alta | bloqueada | gpt-6-luna | codex-luis | 12 |
-| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | pendiente | gpt-6-luna | codex-2 | 4 |
-| T7 | Run backend regression and entrypoint acceptance | media | pendiente | gpt-6-luna | codex-2 | 11 |
+| T6 | Author offline real CLI recovery integration harness | alta | completada | sonnet | claude-work | 13 |
+| T6a | Author REQ027 structural conflict replay through shipped entrypoints | alta | completada | gpt-6-luna | codex-1 | 5 |
+| T7 | Run backend regression and entrypoint acceptance | media | bloqueada | gpt-6-luna | codex-1 | 14 |
 | T8 | Audit backend recovery authority and evidence | alta | pendiente | gpt-6.1-sol | codex-1 | 9 |
 | T9 | Cross-check backend recovery independently | alta | pendiente | — | — | 0 |
 | T8.1 | Remediate T8 findings F1, F2, F3, F4 | alta | pendiente | gpt-6-luna | codex-2 | 1 |

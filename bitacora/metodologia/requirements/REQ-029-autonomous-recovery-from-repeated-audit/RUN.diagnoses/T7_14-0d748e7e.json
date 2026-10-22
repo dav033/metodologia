@@ -1,0 +1,23 @@
+{
+ "request": "T7:14",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7 agotó sus intentos: la regresión completa falla en dos tests de fronteras de importación",
+ "origin": "La verificación independiente ejecuta `python3 -m unittest discover -s tests` y falla en test_only_the_adapter_imports_the_core y test_only_the_recovery_adapter_imports_the_m5_package_in_production. El assert decisivo es `['skill/scripts/tests/recovery_entrypoints_prerequisite.py'] != []`: ese archivo auxiliar importa el núcleo o el paquete m5 fuera del adaptador, y los 9 intentos repitieron el mismo fallo. La nota del dueño sobre test_codex_structured no aparece en la lista de fallos de la última verificación, así que no es la causa de este bloqueo. T7 prohíbe reparar código, así que la reparación queda a decisión del dueño.",
+ "steps": [
+  "Abre `skill/scripts/tests/recovery_entrypoints_prerequisite.py` y busca cualquier import de `bt_scheduler_core` o del paquete m5.",
+  "Quita ese import directo y pasa la llamada por el adaptador de recuperación, sin tocar los tests de fronteras.",
+  "Ejecuta sin cambios los 7 comandos de verificación de T7 y registra cada código de salida.",
+  "Si el import no se puede quitar dentro del alcance de T7, deja el fallo exacto anotado y devuélvelo a la tarea implementadora dueña de ese archivo."
+ ],
+ "option": "retry_with_note",
+ "note": "The two failing boundary tests (test_only_the_adapter_imports_the_core and test_only_the_recovery_adapter_imports_the_m5_package_in_production) report that skill/scripts/tests/recovery_entrypoints_prerequisite.py imports bt_scheduler_core or the m5 package directly. Remove that direct import by routing the call through the recovery adapter. Do not edit the boundary tests. Then run all seven verification commands unchanged and record each exit code and the actual output. Ignore the TZ note for test_codex_structured unless it appears again in the output.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T21:17:35",
+ "seconds": 23.7
+}

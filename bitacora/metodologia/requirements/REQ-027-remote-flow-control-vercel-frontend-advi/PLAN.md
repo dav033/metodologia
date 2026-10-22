@@ -6,7 +6,7 @@ created: 2026-10-19
 # Plan — REQ-027 — Remote flow control: Vercel frontend, AdvIn API, local or VPS execution
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 5/6 · tareas 42/45 · generado: 2026-10-21T16:43:46-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: done · hitos 6/6 · tareas 46/46 · generado: 2026-10-21T21:30:49-05:00
 
 **M1 — Contracts** · dificultad extrema · 2/2
 
@@ -73,15 +73,16 @@ created: 2026-10-19
 | T18.1b | Remediate T18b findings F31 | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T18.2b | Remediate T18b findings F32 | alta | completada | gpt-6-luna | codex-luis | 1 |
 
-**M6 — Production environment** · dificultad alta · 2/5
+**M6 — Production environment** · dificultad alta · 6/6
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T20 | Create the AdvIn production environment: service user, directories, units and Caddy block | alta | completada | gpt-6-luna | codex-2 | 4 |
 | T21 | Create the Vercel project and deploy the frontend to production | media | completada | gpt-6-luna | codex-2 | 1 |
-| T22 | Create the identity and messaging prerequisites and place the secrets | media | bloqueada | gpt-6-luna | codex-2 | 3 |
-| T23 | Release the gateway and the Telegram bot to AdvIn and switch them on | alta | pendiente | — | — | 0 |
-| T24 | Live smoke test of the production environment and handover | media | pendiente | — | — | 0 |
+| T22 | Create the identity and messaging prerequisites and place the secrets | media | completada | gpt-6-luna | codex-1 | 4 |
+| T23 | Release the gateway and the Telegram bot to AdvIn and switch them on | alta | completada | gpt-6-luna | codex-1 | 4 |
+| T24a | Fix the horizontal overflow of the web app at 360 px | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T24 | Live smoke test of the production environment and handover | media | completada | gpt-6-luna | codex-2 | 7 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -109,7 +110,7 @@ while offline (rejected by the owner).
 ## Global constraints
 - Execution never leaves the laptop; AdvIn holds no Claude/Codex credentials (SPEC §Out of scope).
 - The local panel keeps its behavior and tests (R18); the laptop never listens beyond `127.0.0.1`.
-- T1-T19 never edit `bitacora/`, never merge to `main`, never deploy, never ssh to AdvIn: notes go to `remote/docs/`. M6 (T20-T24) may ssh to AdvIn and deploy to Vercel, only as its criteria describe (owner decision 2026-10-19, D-078).
+- T1-T19 never edit `bitacora/`, never merge to `main`, never deploy, never ssh to AdvIn: notes go to `remote/docs/`. M6 (T20-T24a) may ssh to AdvIn and deploy to Vercel, only as its criteria describe (owner decision 2026-10-19, D-078).
 - Secrets only in mode-600 env files and Vercel env vars, never in git or the bitácora (R16). Gitleaks stays on.
 - Every command: idempotency key + precondition; no queue while offline (R6, R7).
 - UI: Spanish copy, Catppuccin Mocha + mauve `#cba6f7`, JetBrainsMono (local font files), 360 px without horizontal
@@ -170,8 +171,16 @@ while offline (rejected by the owner).
 ### M5 — Go-live kit and audit
 - [ ] T16 — Go-live kit: systemd unit, Caddy block, env example, deploy and rollback scripts, runbook · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T14b, T15f, T9 · verify: `cd remote/deploy && python -m unittest discover -s tests -p test_kit.py` · covers: R16, R3 · kind: implement
 - [ ] T17 — Offline end-to-end: real laptop API, gateway and built web wired locally on loopback · repo: skill · files: remote/e2e/** · after: T16 · verify: `cd remote/e2e && python -m unittest discover -s tests -p test_local_e2e.py` · covers: R1, R4, R5, R6, R7, R10, R11, R12, R18 · kind: test
-- [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md, remote/docs/audit.findings.json · after: T17 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
-- [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17, T18 · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T18 — Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit.md, remote/docs/audit.findings.json · after: T17, T18.3, T18.4, T18.6 · verify: `test -s remote/docs/audit.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T18b — Cross-check audit of T18: Independent security and spec audit by another provider · repo: skill · files: remote/docs/audit-crosscheck.md, remote/docs/audit-crosscheck.findings.json · after: T17, T18, T18.1b, T18.2b · verify: `test -s remote/docs/audit-crosscheck.md` · covers: R1, R2, R3, R16, R17 · kind: audit
+- [ ] T18.1 — Remediate T18 findings F1, F2, F3, F4 · repo: skill · files: remote/web/**, remote/gateway/** · after: T17 · verify: `cd remote/web && npm run verify` · covers: R1, R15, R4, R5, R6, R7, R8 · kind: implement
+- [ ] T18.2 — Remediate T18 findings F5, F6, F7, F8 · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/tests/test_remote_api.py, remote/web/**, remote/gateway/**, skill/scripts/bt_remote_events.py, skill/scripts/tests/test_remote_events.py · after: T17, T18.1 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py` · covers: R1, R10, R11, R12, R13, R14, R15, R4, R5, R7, R8, R9 · kind: implement
+- [ ] T18.3 — Remediate T18 findings F9, F10 · repo: skill · files: skill/scripts/bt_remote_events.py, skill/scripts/tests/test_remote_events.py, skill/scripts/bt_remote_api.py, skill/scripts/tests/test_remote_review.py, remote/gateway/** · after: T17, T18.2 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py` · covers: R10, R11, R17, R2, R9 · kind: implement
+- [ ] T18.4 — Remediate T18 findings F19 · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T17 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R15, R5, R6 · kind: implement
+- [ ] T18.5 — Remediate T18 findings F1, F2, F3, F4 · repo: skill · files: skill/scripts/bt_remote_events.py, skill/scripts/tests/test_remote_events.py, remote/gateway/**, skill/scripts/bt_remote_api.py, skill/scripts/tests/test_remote_api.py, remote/web/**, skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T17, T18.3, T18.4 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_events.py` · covers: R10, R11, R4, R5, R6, R7, R8, R9 · kind: implement
+- [ ] T18.6 — Remediate T18 findings F14 · repo: skill · files: skill/scripts/bt_remote_api.py, skill/scripts/bt_server.py, skill/scripts/tests/test_remote_api.py · after: T17, T18.3, T18.4, T18.5 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_api.py` · covers: R18, R3 · kind: implement
+- [ ] T18.1b — Remediate T18b findings F31 · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T17, T18 · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R15, R5, R6 · kind: implement
+- [ ] T18.2b — Remediate T18b findings F32 · repo: skill · files: skill/scripts/bt_remote_commands.py, skill/scripts/tests/test_remote_commands.py · after: T17, T18, T18.1b · verify: `cd skill/scripts && python -m unittest discover -s tests -p test_remote_commands.py` · covers: R15, R5, R6 · kind: implement
 - [ ] T19 — Documentation: remote README, references and TOOLS entries to copy at go-live · repo: skill · files: remote/README.md, remote/docs/tools-entries.md · after: T18, T18b · verify: `test -s remote/docs/tools-entries.md` · covers: R16, R18 · kind: docs
 
 ### M6 — Production environment
@@ -179,7 +188,8 @@ while offline (rejected by the owner).
 - [ ] T21 — Create the Vercel project and deploy the frontend to production · repo: skill · files: remote/deploy/** · after: T20 · verify: `cd remote/deploy && python verify_receipt.py vercel-frontend --check project-linked` · covers: R16, R19 · kind: implement
 - [ ] T22 — Create the identity and messaging prerequisites and place the secrets · repo: skill · files: remote/deploy/** · after: T21 · verify: `cd remote/deploy && python verify_receipt.py identity --check oauth-app` · covers: R16, R1, R19 · kind: implement
 - [ ] T23 — Release the gateway and the Telegram bot to AdvIn and switch them on · repo: skill · files: remote/deploy/**, remote/docs/runbook.md · after: T22 · verify: `cd remote/deploy && python verify_receipt.py gateway-release --check release-active` · covers: R3, R16, R17, R19 · kind: implement
-- [ ] T24 — Live smoke test of the production environment and handover · repo: skill · files: remote/deploy/receipts/** · after: T23 · verify: `cd remote/deploy && python verify_receipt.py live-smoke --check signin-start` · covers: R1, R2, R10, R19 · kind: test
+- [ ] T24a — Fix the horizontal overflow of the web app at 360 px · repo: skill · files: remote/web/** · after: T23 · verify: `cd remote/web && npm run verify` · covers: R14 · kind: implement
+- [ ] T24 — Live smoke test of the production environment and handover · repo: skill · files: remote/deploy/receipts/**, remote/deploy/verify_receipt.py, remote/deploy/tests/** · after: T23, T24a · verify: `cd remote/deploy && python verify_receipt.py live-smoke --check signin-start` · covers: R1, R2, R10, R19 · kind: test
 
 ## Go-live with the owner (superseded by milestone M6 where noted)
 _Steps 2-5 are now tasks T20-T24; steps 1 and 6 (merge to `main`, copy the notes) stay with the owner._
