@@ -258,6 +258,36 @@ class Cycle(unittest.TestCase):
         self.assertEqual(self.answers[0][1], "retry_with_note")
         self.assertEqual(list(bt_interventions.read(self.rdir))[0]["class"], "environment")
 
+    def test_a_verification_the_verifier_keeps_refusing_is_reported_once_not_looped_in_silence(self):
+        """REQ-020 T14.1a: ORDER_INVALID on every re-send, every 5 minutes, for 100+ minutes, and nobody was told."""
+        self.doc = {"tasks": {"T7": {"state": "active", "attempts": ["att-9"]}},
+                    "attempts": {"att-9": {"updated_at": NOW - 3600, "state": "verifying", "task_id": "T7"}}}
+        with patch.object(healing, "verify_rejections", return_value=["ORDER_INVALID"] * 4):
+            self.assertEqual(self.run_cycle([]), 0)
+            self.run_cycle([])                                                                   # the second cycle says nothing more
+        self.assertEqual(len(self.notes), 1)
+        self.assertIn("ORDER_INVALID", self.notes[0])
+        row = list(bt_interventions.read(self.rdir))[0]
+        self.assertEqual((row["class"], row["result"], row["task"]), ("plan_defect", "failed", "T7"))
+        with patch.object(healing, "verify_rejections", return_value=["ORDER_INVALID", "ORDER_INVALID"]):
+            self.assertEqual(healing.stuck_verifications(self.rdir, self.doc), [])   # two is not a pattern yet
+
+    def test_the_rejections_are_read_from_the_runs_own_audit_log(self):
+        import sqlite3
+        import bt_scheduler_adapter as adapter
+        db = self.rdir / "run.db"
+        conn = sqlite3.connect(db)
+        conn.execute("CREATE TABLE audit (seq INTEGER PRIMARY KEY, at REAL, kind TEXT, plan_id TEXT, task_id TEXT, attempt_id TEXT, detail TEXT, incident_event_id TEXT)")
+        rows = [("dispatch_rejected", "att-1", {"kind": "verify", "detail": "ORDER_INVALID"}), ("dispatch_rejected", "att-1", {"kind": "start", "detail": "X"}),
+                ("dispatch_rejected", "att-2", {"kind": "verify", "detail": "OTHER"}), ("lease_expired", "att-1", {})]
+        for n, (kind, attempt, detail) in enumerate(rows, 1):
+            conn.execute("INSERT INTO audit VALUES (?, 0, ?, 'P', 'T1', ?, ?, NULL)", (n, kind, attempt, json.dumps(detail)))
+        conn.commit()
+        conn.close()
+        with patch.object(adapter, "run_db_path", return_value=db):
+            self.assertEqual(healing.verify_rejections(self.rdir, "att-1"), ["ORDER_INVALID"])     # only verify rejections of that attempt
+            self.assertEqual(healing.verify_rejections(self.rdir, "att-9"), [])
+
     def test_an_unplaced_stop_is_left_alone(self):
         self.verify = "an error the taxonomy has never seen"
         self.assertEqual(self.run_cycle([request()]), 0)

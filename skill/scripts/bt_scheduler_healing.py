@@ -141,6 +141,19 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
     revise = revise or (lambda reason: _revise(project, req, rdir, reason))
     state, bound = load(rdir), limits()
     done = 0
+    for task_id, attempt_id, detail, times in stuck_verifications(rdir, doc):
+        if attempt_id in state.setdefault("stuck", []):
+            continue
+        state["stuck"] = [*state["stuck"], attempt_id][-50:]
+        bt_interventions.record(rdir, kind="plan_defect", source="auto", task=task_id,
+                                evidence=f"{attempt_id} waits in verifying: the verifier refused its order {times} times ({detail})",
+                                repair="none: the owner is told (a plan revision or a fix of the order generator is needed)",
+                                result="failed", run=f"{project}-{req}")
+        log(f"healing {task_id}: {attempt_id} is stuck in verifying, the verifier refuses its order ({detail}, {times} times)")
+        if notify:
+            notify(f"Bitácora · {task_id}", f"La verificación de {task_id} ({attempt_id}) no avanza: el verificador rechaza su orden "
+                                           f"({detail}) y se reenvía cada pocos minutos. Hace falta una revisión del plan o un arreglo.")
+        save(rdir, state)
     for request in found:
         if done >= PER_CYCLE or state["actions"] >= bound["actions"]:
             break
@@ -191,6 +204,50 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
         save(rdir, state)
     save(rdir, state)
     return done
+
+
+STUCK_VERIFY_REJECTIONS = 3        # the verifier refusing the same order this many times is not going to change its mind
+
+
+def verify_rejections(rdir: Path, attempt_id: str) -> list[str]:
+    """The details of every `dispatch_rejected` of kind `verify` the run's audit log holds for one attempt (oldest first)."""
+    import sqlite3
+
+    import bt_scheduler_adapter as adapter
+
+    try:
+        conn = sqlite3.connect(f"file:{adapter.run_db_path(Path(rdir))}?mode=ro", uri=True, timeout=2)
+        try:
+            rows = conn.execute("SELECT detail FROM audit WHERE kind = 'dispatch_rejected' AND attempt_id = ? ORDER BY seq",
+                                (attempt_id,)).fetchall()
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return []
+    out = []
+    for (raw,) in rows:
+        try:
+            row = json.loads(raw)
+        except (TypeError, ValueError):
+            continue
+        if isinstance(row, dict) and row.get("kind") == "verify":
+            out.append(str(row.get("detail") or ""))
+    return out
+
+
+def stuck_verifications(rdir: Path, doc: dict, rejections=None) -> list[tuple[str, str, str, int]]:
+    """(task, attempt, detail, times) of the attempts that wait in `verifying` because the verifier keeps refusing the order itself
+    (ORDER_INVALID, ORDER_DIFFERS_FROM_APPROVED_PLAN...). The core re-sends the order at every lease expiry, forever: REQ-020's T14.1a
+    spent 100+ minutes that way, silently. Seeing it is the first thing; the owner or a plan revision fixes the order."""
+    rejections = rejections or verify_rejections
+    found = []
+    for attempt_id, att in (doc.get("attempts") or {}).items():
+        if att.get("state") != "verifying":
+            continue
+        details = rejections(rdir, attempt_id)
+        if len(details) >= STUCK_VERIFY_REJECTIONS and len(set(details[-STUCK_VERIFY_REJECTIONS:])) == 1:
+            found.append((att.get("task_id", ""), attempt_id, details[-1], len(details)))
+    return found
 
 
 def model_enabled() -> bool:
