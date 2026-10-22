@@ -1,0 +1,23 @@
+{
+ "request": "REQ-029:r6:att-0138:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El verificador no pudo vincular dos criterios de T6b (entrypoints y discover) a ningún check.",
+ "origin": "El fallo está en el plan, no en el código. El criterio de aceptación pide que pasen test_recovery_entrypoints.py y el discover completo, pero los comandos de verificación solo cubren tres tests: test_scheduler_integration.py, test_scheduler_recovery_cli.py y test_recovery_convergence.py. Por eso el sistema marcó CRITERION_UNVERIFIABLE y CHECK_UNMAPPED, no por un error de ejecución. En el intento att-0104 el coordinador ejecutó test_recovery_entrypoints.py a mano (31 tests OK) y los tres checks pasaron; el discover completo corresponde a la tarea T7.",
+ "steps": [
+  "Ejecuta en el worktree de este intento: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y confirma exit 0 con 31 tests OK.",
+  "Comprueba en ese mismo worktree que los tres checks del plan pasan (test_scheduler_integration.py, test_scheduler_recovery_cli.py y test_recovery_convergence.py); si alguno falla, no apruebes.",
+  "Si todo pasa, elige review_pass e indica en el motivo lo que comprobaste a mano; el discover completo queda para T7.",
+  "Para evitar que se repita en otras tareas, añade el check de test_recovery_entrypoints.py al PLAN.json de T6b como revisión nueva (revision +1, `bitacora.py --project metodologia plan-json freeze REQ-029` y opción revise)."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T03:57:11",
+ "seconds": 16.8
+}

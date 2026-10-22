@@ -1,0 +1,23 @@
+{
+ "request": "T7:20",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "T7 bloqueada: la suite completa falla en test_scheduler_run_controls tras 16 intentos",
+ "origin": "La última verificación limpia falló en un único test, test_scheduler_run_controls, en test_adapter_maps_controls_to_m1_and_opens_existing_database_read_write, y la salida capturada no trae traceback, así que la causa exacta no consta en la evidencia. La nota del dueño apunta a test_codex_structured (zona horaria), pero el verificador no reportó ese test; no conviene asumirlo sin reproducirlo. Además, la auditoría F14 (bloqueante, compartida con T6a y T7) exige trabajo de replay estructural fuera del alcance de T7, que no repara código.",
+ "steps": [
+  "Reproducir el test sin entorno y en la copia limpia: cd skill/scripts && env -i PATH=$PATH python3 -m unittest -v tests.test_scheduler_run_controls, y leer el traceback completo.",
+  "Si el test escribe en la base de datos dentro del árbol fuente, cambiarlo para usar una copia temporal; no tocar el parser.",
+  "Repetir cd skill/scripts && python3 -m unittest discover -s tests y registrar exit code y salida reales.",
+  "Dejar en el informe de T7 la F14 como abierta, compartida con T6a y T7."
+ ],
+ "option": "retry_with_note",
+ "note": "The last verifier run failed only on tests.test_scheduler_run_controls ... test_adapter_maps_controls_to_m1_and_opens_existing_database_read_write, with no traceback captured. Reproduce it with an empty environment: `cd skill/scripts && env -i PATH=$PATH python3 -m unittest -v tests.test_scheduler_run_controls`, read the full traceback, and fix its cause in the test (for example, use a temp-dir copy of the database if it writes into the source tree). Do not change the parser. Do not act on the owner note about test_codex_structured unless it reproduces. Then rerun `cd skill/scripts && python3 -m unittest discover -s tests` and record the exit code and actual output. Keep audit finding F14 open and report it as shared with T6a and T7.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T06:27:15",
+ "seconds": 23.3
+}

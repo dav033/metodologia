@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-21 21:51 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-22 11:44 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-21
+**Last activity:** 2026-10-22
 
 ## Workspace
 
@@ -42,25 +42,25 @@ _Generated 2026-10-21 21:51 by `bitacora.py index`. Do not edit by hand._
 | [REQ-026](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/SPEC.md) | DEMO — Illustrative plan with every plan feature (test only) | `in-progress` | [in-progress](requirements/REQ-026-demo-illustrative-plan-with-every-plan-f/PLAN.md) |  |
 | [REQ-027](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/SPEC.md) | Remote flow control: Vercel frontend, AdvIn API, local or VPS execution | `planned` | [launched](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/PLAN.md) |  |
 | [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `in-progress` | — |  |
-| [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit and integration failures | `draft` | [approved](requirements/REQ-029-autonomous-recovery-from-repeated-audit/PLAN.md) |  |
+| [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit and integration failures | `done` | — |  |
 
 ## Top pending (urgency, then complexity)
 
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/st · high/S
+- P-155 · REQ-020 T14a needs its LIVE checks run by the coordinator (`run.ts --live` and `--live --d · high/S
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
 - P-138 · Failure analyst (owner rule 2026-10-21): a task that fails more than twice goes to an anal · high/M
 - P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
-- P-003 · Visual review of the local web UI · med/S
 
 ## Recent decisions
 
-- D-115 — The scheduler answers plain integration clashes itself (at most three times per task)
-- D-114 — Remediation tasks of one round run one after another
-- D-113 — A result that puts undeclared files back to an older version is rejected
-- D-112 — The give-way ceiling counts only the integration gate's own give-ways
-- D-111 — A fix reaches the audit only through the tasks between it and the audit
+- D-120 — Self-healing and evolution are capabilities of the scheduler
+- D-119 — Proportional verification, mixed evidence and attestation receipts
+- D-118 — Minimal rework: a ceiling, content-based rebase, real finding text
+- D-117 — Tasks are kept apart by declared surface, not by size (only on the line)
+- D-116 — The integration line is the default, and no integrated tree may silently lose an accepted task's file
 
 ## Artifacts
 
@@ -77,6 +77,6 @@ _Generated 2026-10-21 21:51 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

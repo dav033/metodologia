@@ -1,0 +1,23 @@
+{
+ "request": "T10:6",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T10 falla siempre en el mismo check: el runner E2E solo acepta --milestone M1",
+ "origin": "El último error es `Error: This runner currently supports only --milestone M1.` en `scripts/e2e/asesor/run.ts:24`, al ejecutar el check `--fake-model --milestone M2`. Ese runner es código de T8/T9, no de este despliegue, y los criterios de T10 indican que los defectos de fuente deben devolverse a T8/T9 y no repararse aquí. Además, los dos checks `[manual]` están en la lista de comandos y terminan con `exit code None`, porque el sandbox no puede ejecutarlos; eso también es un defecto del plan. La nota del dueño sobre `./photos` no aparece en el error actual y no debe tomarse como causa de este fallo.",
+ "steps": [
+  "Abre `scripts/e2e/asesor/run.ts` en la rama de T8/T9 y añade soporte para `--milestone M2` (hoy la línea 24 solo acepta \"M1\"). Hazlo en T8/T9, no en T10.",
+  "En el PLAN.json de T10, quita los dos checks `[manual]` de la lista de comandos y deja su evidencia como tarea del coordinador; sube `revision` en 1.",
+  "Ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json freeze REQ-020` y acepta la nueva revisión del plan.",
+  "Cuando T8/T9 esté integrado, reintenta T10 para que el check `--fake-model --milestone M2` pueda pasar."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T22:46:21",
+ "seconds": 21.1
+}

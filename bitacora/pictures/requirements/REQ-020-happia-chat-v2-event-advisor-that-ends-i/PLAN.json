@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 2,
+  "revision": 6,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -372,8 +372,8 @@
           "type": "manual",
           "value": "Coordinator runs `npm run asesor:migrate` with .env.local against Supabase (transaction pooler) and records the applied migrations.",
           "purpose": "The real Supabase schema matches the migrations.",
-          "category": "functional",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "functional"
         },
         {
           "type": "command",
@@ -386,8 +386,8 @@
           "type": "manual",
           "value": "Coordinator confirms the attempt base contains origin/main 54d176a3 (the sandbox copy has no git metadata).",
           "purpose": "At the T1 gate, origin/main is an ancestor of the implementation worktree HEAD.",
-          "category": "static",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "static"
         }
       ],
       "covers": [
@@ -1114,8 +1114,8 @@
           "type": "manual",
           "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The new CLI --start builds/starts the shipped Next application with npm run start, waits for readiness, drives browser/HTTP login to persisted approval and admin visibility against disposable Postgres, and closes child processes on success or failure.",
-          "category": "integration",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "integration"
         },
         {
           "type": "command",
@@ -1159,8 +1159,8 @@
           "type": "manual",
           "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The M1 scenario checks same-device reload, corrected summary, admin denial, provider failure and one real Gemini text conversation; required live dependencies missing or any required skipped step cause nonzero exit, never a green report.",
-          "category": "integration",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "integration"
         },
         {
           "type": "command",
@@ -1426,6 +1426,110 @@
       "kind": "implement"
     },
     {
+      "id": "T10a",
+      "milestone_id": "M2",
+      "title": "Extend the e2e runner with the M2 photo and voice scenarios",
+      "objective": "T10's offline check `run.ts --start --fake-model --milestone M2` fails because scripts/e2e/asesor/run.ts rejects every milestone except M1 and the planned scenarios/photos.ts and scenarios/voice.ts do not exist. Add --milestone M2 to the runner (keep M1 and --task behavior unchanged), add scenarios/photos.ts and scenarios/voice.ts built on the T8 and T9 modules, and a combined M2 scenario (photo + voice -> reload -> corrected/approved brief -> admin) that works in --fake-model mode with a scripted model and a stubbed transcription service, and in --live mode with the real services. Reports hold outcomes only, no customer data. Do not change the T8/T9 production code except to fix a defect the scenarios expose, and name it.",
+      "repository": "pictures",
+      "after": [
+        "T8",
+        "T9"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "medium",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 90 minutes: runner flag and dispatch 20, photo and voice scenarios on existing modules 50, combined flow and offline stubs 20. Engineering estimate only.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/app/api/voz/transcribir/route.ts",
+            "file:src/lib/voz/transcribir.ts",
+            "file:src/lib/voz/config.ts",
+            "file:src/lib/voz/limites.ts",
+            "file:src/lib/auth/request.ts"
+          ],
+          "justification": "Advisor voice crosses an existing synchronous auth dependency, the outer proxy and remote Whisper behavior; high instead of medium because a simple component reuse does not establish dual-session authorization."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/app/api/voz/transcribir/route.ts",
+            "file:src/lib/voz/transcribir.ts",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "The shared route authorization adapter, advisor transcript handling and media tests complete one voice-note feature without replacing Whisper."
+        },
+        "duration": {
+          "evidence": [
+            "file:src/app/api/voz/transcribir/route.ts",
+            "file:src/lib/voz/transcribir.ts",
+            "assumption:Provisional engineering breakdown, not an empirically calibrated duration; external provisioning wait excluded."
+          ],
+          "justification": "Provisional 180 minutes: dual-session route integration 70, transcript/idempotency and error UX 55, route regression/live voice checks 55; VPS service provisioning wait is excluded."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/app/api/voz/transcribir/route.ts",
+            "file:src/lib/voz/transcribir.ts",
+            "spec:SPEC.md#edge-cases-errors"
+          ],
+          "justification": "Accepting advisor sessions incorrectly on the shared voice endpoint can open unauthenticated transcription or regress existing Pictures access."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "spec:PLAN.md#interfaces"
+          ],
+          "justification": "T2 supplies advisor-session-contract and proxy behavior; T4 owns advisor-media-ui-contract; the existing voice-transcription-contract must still serve APP_PASSWORD callers."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/app/api/voz/transcribir/route.ts",
+            "file:src/lib/voz/transcribir.ts",
+            "file:src/lib/voz/config.ts",
+            "file:src/lib/voz/limites.ts",
+            "file:src/lib/auth/request.ts",
+            "spec:PLAN.md#evidence-and-estimation-limits"
+          ],
+          "justification": "The actual voice handler, flags and 60-second/2-MB limits were read, but the external voz-decoracion container and keys have not been inspected or tested here."
+        }
+      },
+      "expected_paths": [
+        "scripts/e2e/asesor/run.ts",
+        "scripts/e2e/asesor/scenarios/photos.ts",
+        "scripts/e2e/asesor/scenarios/voice.ts",
+        "scripts/e2e/asesor/scenarios/m2.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The e2e runner accepts --milestone M2 and, in --fake-model mode against the disposable Postgres, drives the combined photo and voice phone flow (photo kept as received, voice stored as its transcript, both surviving reload, feeding an approved brief and shown in admin) with scripted model and transcription, failing on any broken step."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "created_by": "T1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "The e2e runner accepts --milestone M2 and, in --fake-model mode against the disposable Postgres, drives the combined photo and voice phone flow (photo kept as received, voice stored as its transcript, both surviving reload, feeding an approved brief and shown in admin) with scripted model and transcription, failing on any broken step.",
+          "created_by": "T10a",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R7",
+        "R8",
+        "R11"
+      ],
+      "kind": "implement"
+    },
+    {
       "id": "T10",
       "milestone_id": "M2",
       "title": "M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy",
@@ -1433,7 +1537,8 @@
       "repository": "pictures",
       "after": [
         "T8",
-        "T9"
+        "T9",
+        "T10a"
       ],
       "complexity": "high",
       "scope": "small_change",
@@ -1516,8 +1621,8 @@
           "type": "manual",
           "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "On a phone viewport a camera/gallery photo and a real voice note survive reload, feed a corrected/approved brief and appear in admin; the photo is retained as received and the stored voice message is the transcript.",
-          "category": "integration",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "integration"
         },
         {
           "type": "command",
@@ -1547,13 +1652,6 @@
           "type": "manual",
           "value": "Use the deployed advisor on a phone; record permission, keyboard, reload and brief/admin observations without customer data.",
           "purpose": "The M2 deployment uses the tested revision and configured VOZ_* variables; phone microphone/camera permissions and a failure/retry path are recorded with redacted evidence.",
-          "expected": "The milestone criteria are observed on the deployed tested revision; inaccessible service, permission or required assertion is a failure, not an accepted skip.",
-          "category": "product"
-        },
-        {
-          "type": "manual",
-          "value": "Use the deployed advisor on a phone; record permission, keyboard, reload and brief/admin observations without customer data.",
-          "purpose": "Operational changes and verification are recorded; source defects are returned to T8/T9 or their named prerequisite rather than silently repaired in this deployment task.",
           "expected": "The milestone criteria are observed on the deployed tested revision; inaccessible service, permission or required assertion is a failure, not an accepted skip.",
           "category": "product"
         },
@@ -1925,7 +2023,8 @@
       "repository": "pictures",
       "after": [
         "T12",
-        "T13"
+        "T13",
+        "T10"
       ],
       "complexity": "high",
       "scope": "large_change",
@@ -2020,15 +2119,15 @@
           "type": "manual",
           "value": "Coordinator runs `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "Versioned birthday, corporate, school, undecided, photo-led, contact/address refusal, off-topic and prompt-injection scenarios run against the already selected real model and record outcomes separately from deterministic fake-ChatPort tests.",
-          "category": "product",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "product"
         },
         {
           "type": "manual",
           "value": "Coordinator runs `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "Scenario assertions check completeness, approval gating, photo confirmation and only sourced direction/package IDs and prices; they do not assert exact free-form model wording or treat a single run as a quality metric.",
-          "category": "product",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "product"
         },
         {
           "type": "command",
@@ -2055,7 +2154,8 @@
       "repository": "pictures",
       "after": [
         "T10",
-        "T14"
+        "T14",
+        "T14.1a"
       ],
       "complexity": "low",
       "scope": "full_feature",
@@ -2134,10 +2234,10 @@
       "verification": [
         {
           "type": "manual",
-          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone all` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
-          "category": "integration",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "integration"
         },
         {
           "type": "command",
@@ -2177,10 +2277,10 @@
         },
         {
           "type": "manual",
-          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone all` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
+          "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
           "purpose": "Exercise the deployed revision and check protected happie paths/contracts against the captured implementation-base ref; no required case may be skipped.",
-          "category": "integration",
-          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause."
+          "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+          "category": "integration"
         },
         {
           "type": "command",
@@ -2191,7 +2291,14 @@
         },
         {
           "type": "command",
-          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone all",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
+          "created_by": "T14a",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
           "purpose": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
           "created_by": "T14a",
           "category": "integration"
@@ -2478,6 +2585,300 @@
         "R14"
       ],
       "kind": "audit"
+    },
+    {
+      "id": "T14.1a",
+      "milestone_id": "M4",
+      "title": "Repair what blocks T14a",
+      "objective": "T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1\nexit code 1\nEarlier error lines:\n[FAIL] asesor M1: Expected values to be strictly equal:\n'error' !== 'final'\n- H1 (high; owned by T1, T7, T10a, T14): T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T10",
+        "T14"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T1, T7, T10a, T14, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "package.json",
+        "scripts/test/gate.mjs",
+        ".env.example",
+        "src/lib/asesor/db.ts",
+        "src/lib/asesor/repository.ts",
+        "scripts/migrate-asesor.ts",
+        "scripts/migrations-asesor/001_initial.sql",
+        "scripts/test/asesor/run.ts",
+        "scripts/test/asesor/db.test.ts",
+        "scripts/integration/asesor-db.test.ts",
+        "scripts/e2e/asesor/run.ts",
+        "scripts/e2e/asesor/check-findings.ts",
+        "scripts/e2e/asesor/scenarios/m1.ts",
+        "docs/req-020/deployment.md",
+        "scripts/test/asesor/harness.test.ts",
+        "scripts/e2e/asesor/scenarios/photos.ts",
+        "scripts/e2e/asesor/scenarios/voice.ts",
+        "scripts/e2e/asesor/scenarios/m2.ts",
+        "src/lib/asesor/prompts/catalogue.ts",
+        "scripts/eval/asesor/run.ts",
+        "scripts/eval/asesor/scenarios.json",
+        "scripts/test/asesor/prompt.test.ts",
+        "scripts/e2e/asesor/scenarios/m3.ts"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "advisor-direction-contract",
+        "advisor-package-contract",
+        "advisor-persistence-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+        "T14a's own check 1 passes: npm run gate",
+        "T14a's own check 2 passes: npm run happie:test-webhook",
+        "T14a's own check 3 passes: npm run lint",
+        "T14a's own check 4 passes: npm run build --workspaces --if-present",
+        "T14a's own check 5 passes: npx tsc --noEmit",
+        "T14a's own check 6 passes: npm run build",
+        "T14a's own check 7 passes: npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+        "T14a's own check 8 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+        "T14a's own check 9 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/db.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/harness.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/prompt.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
+          "expected": "pass",
+          "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "T14a's own check 1 passes: npm run gate",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "T14a's own check 2 passes: npm run happie:test-webhook",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "T14a's own check 3 passes: npm run lint",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "T14a's own check 4 passes: npm run build --workspaces --if-present",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "T14a's own check 5 passes: npx tsc --noEmit",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "T14a's own check 6 passes: npm run build",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "purpose": "T14a's own check 7 passes: npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "created_by": "T7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "T14a's own check 8 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+          "created_by": "T14a",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "T14a's own check 9 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+          "created_by": "T14a",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
     }
   ]
 }

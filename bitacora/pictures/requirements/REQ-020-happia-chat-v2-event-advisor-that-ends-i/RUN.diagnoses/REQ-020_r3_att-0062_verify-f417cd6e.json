@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r3:att-0062:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "T14 pide revisión humana: la comprobación en vivo es manual y no casa con el criterio",
+ "origin": "El verificador no puede dar veredicto porque el criterio de aceptación exige evidencia en vivo con el modelo real, y solo una persona puede aportarla (CRITERION_MANUAL). El plan además lista dos veces la misma comprobación manual `run.ts --live`, así que las comprobaciones no corresponden una a una con los criterios (CHECK_UNMAPPED). El fallo viene de la definición del plan, no del código: en att-0055 la coordinación ya ejecutó la prueba en vivo y dejó 8/8 escenarios ok.",
+ "steps": [
+  "Confirma en la evidencia redactada de att-0055 que `run.ts --live` dio 8/8 escenarios ok, con 0 bloqueantes y 0 observados.",
+  "Confirma que los archivos de evaluación (scripts/eval/asesor/run.ts, scenarios.json, scripts/test/asesor/prompt.test.ts) están en el árbol.",
+  "Elige «Aprobar a mano» indicando que la evidencia en vivo es la de att-0055.",
+  "Después, en PLAN.json de T14 elimina la línea duplicada de `run.ts --live`, sube revision en 1 y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T00:51:03",
+ "seconds": 13.3
+}

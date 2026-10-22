@@ -1,0 +1,56 @@
+{
+ "actions": 1,
+ "cases": {
+  "71aa926b82606c04": {
+   "applied": 0,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/23e70c3383d9944e781f4e1d9f4fbef84a2a27dd2a611dc0ccb50d7b4486e262",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792684654.784,
+   "history": [
+    {
+     "at": 1792684654.784,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "71aa926b82606c04",
+   "status": "unrepairable",
+   "task": "T14a"
+  },
+  "e2cc469d7a69cbd7": {
+   "after_restored": [
+    "T10",
+    "T14"
+   ],
+   "applied": 1,
+   "at": 1792689653.915,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/run.ts belong to accepted T1, T7, T10a, T14",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792689653.176,
+   "history": [
+    {
+     "at": 1792689653.915,
+     "repair": "plan r6: repair task T14.1a before T14a",
+     "result": "fixed"
+    }
+   ],
+   "id": "e2cc469d7a69cbd7",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r5 → r6: kept 15, redo 3, new 1, removed 0"
+   ],
+   "repair": "plan r6: repair task T14.1a before T14a",
+   "revision": 6,
+   "status": "applied",
+   "target": "T14a",
+   "task": "T14a",
+   "task_added": "T14.1a"
+  }
+ }
+}

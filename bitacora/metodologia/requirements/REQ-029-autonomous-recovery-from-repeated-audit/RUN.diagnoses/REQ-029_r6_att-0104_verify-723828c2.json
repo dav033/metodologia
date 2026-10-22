@@ -1,0 +1,23 @@
+{
+ "request": "REQ-029:r6:att-0104:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Faltan checks del verificador para test_recovery_entrypoints y el discover completo",
+ "origin": "El criterio de aceptación exige que test_recovery_entrypoints.py y el discover completo pasen, y el objetivo de T6b los pide. Pero las verification commands sólo listan tres ejecuciones (test_scheduler_integration, test_scheduler_recovery_cli y test_recovery_convergence). Por eso el verificador no puede emparejar criterio y checks (CRITERION_UNVERIFIABLE, CHECK_UNMAPPED) y pide revisión humana. No hay intentos fallidos ni error de entorno en la evidencia, así que el código no está probado como roto.",
+ "steps": [
+  "Revisa el PLAN.json de REQ-029 (T6b): añade a verification commands `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y `cd skill/scripts && python3 -m unittest discover -s tests`, o quita esos requisitos del criterio si no deben estar.",
+  "Ejecuta esos comandos a mano en el repo y anota los códigos de salida para confirmar que pasan.",
+  "Sube \"revision\" en 1 y corre `python3 ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia plan-json freeze REQ-029`.",
+  "Desde la terminal, reanuda con la opción revise (`scheduler-op REQ-029 decide <id> revise --reason \"...\"`) o relanza la tarea."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T22:25:48",
+ "seconds": 22.1
+}

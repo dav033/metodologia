@@ -1,0 +1,23 @@
+{
+ "request": "T8:10",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La auditoría T8 sigue con 11 hallazgos altos abiertos en el ledger de M1",
+ "origin": "T8 es una auditoría de solo lectura: no corrige código, solo reporta. Su verificación falla con \"audit gate: 11 open blocking finding(s): F3 (high), F4 (high), F5 (high), F6 (high), F7 (high), F8 (high), F12 (high), F13 (high), F14 (high), F15 (high), F22 (high)\", y los arreglos corresponden a las tareas de implementación que el ledger señala, no a T8. Tu decisión anterior (rework_findings sobre F3–F8, F12, F14) no cerró esos hallazgos, y T2 ya fue devuelta dos veces, por lo que el sistema no la reabre sola (rework_limit).",
+ "steps": [
+  "Abre `skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json` y copia cada hallazgo abierto (F3 a F22) con su evidencia en `RUN.notes/<tarea>.audit.md` de la tarea responsable que indica el ledger.",
+  "Antes de devolver nada, resuelve T2: ya agotó gates.max_reworks. Decide si subes ese límite en la configuración o si corriges T2 a mano; si no, la devolución puede quedar bloqueada.",
+  "Pulsa «Devolver … para que los arreglen» (rework_findings), o por terminal: `scheduler-op REQ-029 rework T2,T3a,T3b,T4,T4b,T4c,T4a,T5,T6a,T7,T13,T17,T3,T5a,T6,T6b,T8.1,T8.2,T8.3,T8.4,T8.5,T8.6,T8.7,T8.8,T8.9 --only --reason \"hallazgos F3 (high) … F22 (high)\"`.",
+  "Cuando las tareas terminen, ejecuta `python3 skill/scripts/tests/recovery_acceptance.py audit --ledger skill/scripts/bt_scheduler_recovery/reviews/req029-m1-audit.findings.json --tasks T1,T2,T3,T4,T5,T5a,T6,T7,T3a,T3b,T4a,T6a,T4b,T4c` y comprueba que no quede ningún hallazgo bloqueante."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T00:23:39",
+ "seconds": 21.3
+}

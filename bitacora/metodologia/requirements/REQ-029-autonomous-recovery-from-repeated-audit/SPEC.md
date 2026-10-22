@@ -1,6 +1,6 @@
 ---
 id: REQ-029
-status: draft
+status: done
 created: 2026-10-20
 track: standard
 ---
@@ -109,3 +109,23 @@ A convergence task cannot start with both conflicting snapshots as ordinary prer
 
 ## Amendment assumptions and constraints
 The conditional authorization described in R9 remains a candidate policy for one REQ-027 activation only after resumed owner approval and the final system/offline gates. Planning this amendment does not consume that authorization. REQ-027 semantic resolution is not promised before convergence proof; a genuine specific authority/product/evidence blocker is an allowed system outcome. Full paths missing from clipped historic strings must be reconstructed in a disposable replay from hash-bound official sources, never guessed from the card. The failed T4 attempt is unaccepted reusable material only; T1–T3 definitions and accepted behavior stay unchanged.
+
+
+## Reduction 2026-10-22 (REQ-030)
+- R9 (conditional rollout on REQ-027) is withdrawn: REQ-027 completed 46/46 and was merged to main (a5854d5f6), so there is nothing to activate. Plan r7 removes milestone M3 (T16-T19) and interface IF-6; accepted T5a stays as it is (its staging code is harmless and unreferenced).
+- Covered by the scheduler itself since REQ-030 (`bt_scheduler_healing`, `bt_healing_classify`, `bt_interventions`, `bt_integration_invariant`, `bt_recovery_benchmark`): R5 (corrections through plan revisions, on the integrated tree), R6 (cases by signature, no repeated failed strategy, bounded: `healing.*`), R14's one-bounded-cycle rule (per-signature repeats), part of R7 (CLI stop/revert; no web view yet) and of R11 (full conflict paths unclipped in `RUN.conflicts.jsonl`).
+- Still REQ-029's own: R2/R3/R4 (evidence bundle across ledgers, diagnosis of what previous corrections changed, validated model diagnostics), R8 (verification coverage of actual changed paths), R12/R13 (structural convergence), R10/R16 (offline replay), R7's web view. Its accepted work (T1-T6a, T8.1-T8.9) is kept; the open audit findings F3-F8, F12-F15, F21, F22 are judged by its own independent audit.
+
+## Closure 2026-10-22 (closed with documented gaps)
+Closed by direct implementation on `main` (owner: not through the scheduler; run held, never resumed). Delivered and tested (full suite 1999 OK):
+- R1/R2/R3: durable cases, evidence kept across ledgers; `bt_recovery_export` writes the five records the collector reads from the real stores (the plan document is the frozen plan's bytes; a verdict of another revision is refused) and `bt_recovery_evidence` collects them (checked on a real REQ-029 run).
+- R4: the model's answer is untrusted JSON; only the compiler (`bt_recovery_compiler`) turns it into a plan revision; the self-healing's model step (`healing.model_diagnosis`, off by default) can only choose `retry` / `retry_with_note`.
+- R5/R6/R14: the audit cycle (`bt_recovery_pipeline`, opt-in with `scheduler-op REQ recovery-enable`): the owner queues, the watchdog diagnoses once, compiles, grants and applies through the journaled `bt_recovery_apply`, follows the ordinary scheduler and closes only with the five-way proof of the resulting tree; at most 8 corrective tasks (`CORRECTIVE_LIMIT`). Replayed offline in `test_recovery_pipeline` with a controlled model.
+- R10/R12/R13/R16 (conflict lineage, shared ownership): facts derived from the records (`bt_recovery_lineage`), the model judges compatibility and writes the oracle, the oracle's red step runs in the verifier sandbox on an accepted side (`bt_recovery_oracle`), one convergence writer replaces the two sides for the consumers and starts from a merge in progress of both accepted sides (`PredecessorIntegrator`), then the audit path's progress and proof. Replayed offline with a real git clash in `test_recovery_conflict`.
+- R7: plan-page panel, /flow feed (`recovery_cycle`), stop control, token-gated controls (`test_recovery_supervision_e2e`).
+- R8: verification coverage of the actual changed paths; independent proof of the resulting tree.
+- R11/R15: full conflict observation before clipping (`carry_ancestry` filled), journaled apply with CAS/stop-generation, hold semantics.
+- A11: manual-check receipts bound to the attempt (`gates.attestation_bind_attempt`).
+Nothing of REQ-029's requirements is left as a proposal: the stale-only clash is the ordinary redo's by the compiler's own contract, and a future order defect needs evidence no record produces (P-152, closed as by design). The live trial with the real provider CLI is in P-154; both recovery cycles and `healing.model_diagnosis` are opt-in.
+
+Plan removed 2026-10-22 at the owner's request: PLAN.json, PLAN.md, PLAN-REVIEW.md and plan-revisions/ (r1-r7) are no longer needed because the work is on `main`. A copy is kept at `~/bitacora/.state/backup/REQ-029-plan-2026-10-22.tar.gz` (local, not versioned).

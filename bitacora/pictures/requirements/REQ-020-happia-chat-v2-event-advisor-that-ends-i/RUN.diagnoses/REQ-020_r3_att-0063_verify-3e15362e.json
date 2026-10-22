@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r3:att-0063:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "npm run gate falla: las rutas /api nuevas del asesor (fotos, voz) no están clasificadas",
+ "origin": "El último intento falló al ejecutar `npm run gate` con «RUTAS /api SIN CLASIFICAR»: las rutas nuevas de fotos y voz no están en RUTAS_FLUJO (con conRegistro) ni en RUTAS_EXCLUIDAS (con motivo). Por eso el verificador no puede dar veredicto, y la pista de cuota del diagnóstico automático no aplica. Además, el criterio del teléfono (cámara, micrófono, recarga) solo tiene evidencia manual, así que el verificador también pide una persona. Aprobar a mano ahora daría por bueno un gate en rojo.",
+ "steps": [
+  "En el worktree de la tarea, ejecuta `npm ci --offline`.",
+  "Busca el archivo que define las listas con `grep -rn RUTAS_FLUJO`. Clasifica cada ruta /api de fotos y voz: con conRegistro en RUTAS_FLUJO, o con motivo en RUTAS_EXCLUIDAS. No debilites el gate.",
+  "Ejecuta `npm run gate` hasta que pase, y corrige lo que imprima (incluido el «Missing module ./photos» de las indicaciones del dueño).",
+  "Para el criterio del teléfono, registra la evidencia manual redactada y aprueba a mano solo después de que el gate pase."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T01:48:17",
+ "seconds": 16.9
+}

@@ -14,6 +14,32 @@
    "frozen_at": "2026-10-20T12:37:34",
    "source": "approval",
    "plan_md_sha256": "e39ddab1c95e34faffd1b9c6835f219faea81054fbad8ac2bdc9cf9e86bb61a5"
+  },
+  {
+   "revision": 3,
+   "sha256": "9ebf9bb2d4e574786a65aeccfd351cde164d2b3e0ffe0e8868c0628d7d8163f7",
+   "frozen_at": "2026-10-21T22:47:49",
+   "source": "approval",
+   "plan_md_sha256": "a6e3c43421ac40bc01cd52332804f22e336510b9d63ab0f70f741e1909a27fc5"
+  },
+  {
+   "revision": 4,
+   "sha256": "cef044665d553dc3f570b6895f3c3d82be6988edec3bab15d246e68d459428bd",
+   "frozen_at": "2026-10-22T03:10:56",
+   "source": "approval",
+   "plan_md_sha256": "3d9d002a75b76299b901e347327ef8040739456116cd57935a1b68f8fbaadd23"
+  },
+  {
+   "revision": 5,
+   "sha256": "2b7a4a3327bf9b8e0cc2f2fc83a9ce7ad504a2a1daac293eb00fb7649972b083",
+   "frozen_at": "2026-10-22T11:00:59",
+   "source": "healing"
+  },
+  {
+   "revision": 6,
+   "sha256": "a03b8f36d75b203059281a4f8cf80bc6ba309c9464b803ff558b74a3bd1e165f",
+   "frozen_at": "2026-10-22T12:20:53",
+   "source": "healing"
   }
  ]
 }

@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r3:att-0061:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "npm run gate falla: las rutas /api nuevas de fotos y voz no están clasificadas",
+ "origin": "La última verificación ejecutó `npm run gate` y salió con código 1 por \"RUTAS /api SIN CLASIFICAR (añádelas a RUTAS_FLUJO con conRegistro, o a RUTAS_EXCLUIDAS con el motivo)\". Es un fallo del código: las rutas nuevas del asesor (fotos y voz) no están registradas en las listas que controla el gate. El diagnóstico por cuota del sistema no tiene soporte en la evidencia, y el propio dueño lo corrigió. El `review_pass` sugerido aprobaría código que no pasa el gate, y el criterio de teléfono sigue siendo solo manual.",
+ "steps": [
+  "Ejecuta `grep -rn RUTAS_FLUJO` para localizar el archivo que define las listas. Añade cada ruta /api de fotos y voz a RUTAS_FLUJO con conRegistro, o a RUTAS_EXCLUIDAS con el motivo. No debilites el gate.",
+  "En el worktree ejecuta `npm ci --offline` y luego `npm run gate`. Corrige todo lo que imprima hasta que termine con código 0.",
+  "Si el verificador sigue marcando CRITERION_MANUAL o CHECK_UNMAPPED, es un cambio de plan: sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción `revise`.",
+  "Haz la prueba en el teléfono con la app desplegada (permisos de cámara y micrófono, teclado, recarga, brief y admin) y registra la evidencia sin datos de clientes. Solo entonces puede aprobarse a mano."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T00:43:12",
+ "seconds": 19.3
+}

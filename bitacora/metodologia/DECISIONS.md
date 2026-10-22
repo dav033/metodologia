@@ -1033,3 +1033,41 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + the largest class of owner cards disappears. − three clashes per task is a heuristic; the lasting fix is the integration line (P-134) which removes the clashes at their source. Verification reviews where every criterion and check passed and only `CHECK_UNMAPPED` remains (REQ-020 T11) still wait for the owner: asked whether the system may approve those too.
 - **Source:** [day log](2026-10/W4/2026-10-20.md) · owner question 2026-10-21
 
+
+## D-116 — The integration line is the default, and no integrated tree may silently lose an accepted task's file
+
+- **Date:** 2026-10-22 · **Status:** Accepted · **Refines:** D-089, D-113 · **Closes:** P-134
+- **Context:** REQ-020's T14 started from a predecessor merge that kept T10's `voice.ts` and dropped T12's `directions.ts` and T13's `packages.ts` (a snapshot that is a git ancestor of another is assumed to be already inside it, even when its tree dropped the file); three attempts went on rediscovering it. Reproduced in `tests/test_integration_invariant.py::Req020Replica`.
+- **Decision:** `gates.integration_line` is on for every new run. After every integration (predecessor merge and line fold) `bt_integration_invariant` checks that each file an accepted task left is in the tree with its content (exempt: another task also changed it; a deletion the deleter declares in `expected_paths`; a deletion by a task built on the owner). A violation is restored from the owner's snapshot as one repair commit and recorded; a repair that does not hold is `INTEGRATION_FILES_LOST`; a candidate that deletes siblings' files undeclared is rejected at verification. A run in flight migrates to the line at its next start only if a dry-run fold holds all its accepted tasks (`gates.integration_line_migrate`); else `RUN.integration-line.skipped` says why. The full clashing path list is kept unclipped in `RUN.conflicts.jsonl` (REQ-029 R11).
+- **Consequences:** + no silent incomplete tree. − measured on the live runs: REQ-020 would NOT migrate (line holds 5 of 15 accepted tasks: their lineage was built on older results of their predecessors) and REQ-029 holds 7 of 22, so both stay on the predecessor merge, protected by the invariant (no false alarm on either: 0 events). New runs get the line from the start.
+- **Source:** REQ-030 (mission prompt-scheduler-hardening)
+
+## D-117 — Tasks are kept apart by declared surface, not by size (only on the line)
+
+- **Date:** 2026-10-22 · **Status:** Accepted · **Refines:** D-114
+- **Context:** both nights ran at ratio 1.00 (minutes of attempt / wall): `exclusive_scopes` serialised every `large_change`/`full_feature`/`full_system` task. Replaying the recorded plans and attempt times through the real core (`bt_scheduler_replica`): REQ-020 1.00 -> 1.14 (wall 1587 -> 1397 min, -12 %, equal to the DAG's own bound), REQ-029 1.00 -> 1.01 (34 of 36 tasks claim the resource `recovery-case-v1`, which is always exclusive); 4 or 6 slots change nothing on either, so `max_parallel_tasks` stays 3. The wall time of the night was 2530 min against 1587 of first-pass attempts: the loss is rejected and redone attempts, not idle slots.
+- **Decision:** `scheduler.exclusive_scopes` defaults to `[]`; `gates.remediation_parallel` defaults to true. Both take effect only on a run on the line: a run in flight without `RUN.integration-line` keeps the legacy scopes and chained remediation (D-114 stands for it). An explicit owner setting always wins.
+- **Consequences:** + new runs overlap whatever declares disjoint paths. − gain depends on the plan's graph; the planner's habit of tagging almost every task with one shared resource is filed as a Proposal.
+- **Source:** REQ-030
+
+## D-118 — Minimal rework: a ceiling, content-based rebase, real finding text
+
+- **Date:** 2026-10-22 · **Status:** Accepted · **Refines:** D-087, D-091
+- **Context:** REQ-029: 22 rework requests, 140 task redos, ~870 accepted minutes thrown away, one request sending back 23 tasks; its plan revisions reset 74 accepted tasks when 40 had changed content (r2->r6 replay).
+- **Decision:** `gates.rework_confirm_over` (3): an audit rejection that would discard more accepted tasks blocks the audit with `rework_impact` (the findings notes are written anyway, with evidence); `scheduler-op rework|revise` refuse with count and estimated minutes until `--confirm`. `gates.rebase_cascade: content` (default): `revise` keeps every accepted task whose own content (objective, scope, checks) did not change; `test`/`audit` tasks over reset work are redone.
+- **Consequences:** + ~46 % fewer redos on the recorded revisions. − accepted dependents of a redone task are no longer reset, so correctness relies on the line merge and the redone test/audit tasks.
+- **Source:** REQ-030
+
+## D-119 — Proportional verification, mixed evidence and attestation receipts
+
+- **Date:** 2026-10-22 · **Status:** Accepted
+- **Decision:** M6 reuses a passing check on the same git tree + command + environment (never a failure), runs expensive checks last and skips them once a cheaper one failed (`CHECK_DEFERRED`), accepts a criterion backed by several checks (`mixed_evidence`), and settles a manual check with an HMAC-sealed coordinator receipt (`scheduler-op REQ attest TASK --reason …`, bound to task + purpose + value + expected; digest in the evidence manifest; the open review is requeued once). `verifier.max_workspace_mb` and `scheduler.min_free_mb` are configurable and the diagnosis names the cause of ENOSPC.
+- **Consequences:** + fewer minutes per rejected attempt, fewer cards for manual evidence. − the receipt key sits on the same machine as the agents: it protects against edits and mix-ups, not against a forger with full filesystem access (documented in `bt_attestation`).
+- **Source:** REQ-030
+
+## D-120 — Self-healing and evolution are capabilities of the scheduler
+
+- **Date:** 2026-10-22 · **Status:** Accepted · **Refines:** D-115, D-097
+- **Decision:** the watchdog runs `bt_scheduler_healing.cycle` over the open stops: closed taxonomy (plan defect, integration defect, regression, environment, criterion without mapping, quota, transient) from the LAST real error; smallest safe repair per class (retry, redo the stale side, retry with a note citing the evidence, accept an all-PASS review with an unmapped extra check, rename a check's purpose to its criterion, insert a repair task before an execute-only task); signature-keyed (idempotent), bounded (`healing.*`, per-cycle cap), never repeats a failed strategy, records in `RUN.healing.json` and `RUN.interventions.jsonl`; `scheduler-op REQ heal stop|revert`. `scheduler-evolve` aggregates the interventions into proposals (HIGH risk -> numbered P- items), applies a LOW-risk setting only after an A/B on replicas, and `bt_recovery_benchmark` (12 stops of the night, versioned results) must not get worse between versions: night 10 human interventions / 1086 min waiting, v1 2 / 76 (minutes = time until the recovery action, not until the work is redone). The quota rule now reads only the last error (REQ-029 called a replaced route "quota").
+- **Consequences:** + the same stops no longer wait for a person. − the two stops left for a person are a mass rework and a full disk, by design.
+- **Source:** REQ-030

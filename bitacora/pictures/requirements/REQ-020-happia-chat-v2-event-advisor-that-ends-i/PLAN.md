@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 1/4 · tareas 12/17 · generado: 2026-10-21T21:48:54-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 15/19 · generado: 2026-10-22T12:21:08-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -20,30 +20,32 @@ created: 2026-10-20
 | T6 | Admin monitor `/asesor/admin`: conversation list (status, progress, last question, 5 s refresh) and read-only detail (transcript, brief); `user` gets 403 | media | completada | gpt-6-luna | codex-2 | 2 |
 | T7 | M1 acceptance: e2e script (login → conversation → approved brief → visible to admin), one real Gemini conversation, `/happie` regression (`npm run happie:test-webhook`), env vars on Vercel + VPS, deploy | alta | completada | gpt-6-luna | codex-luis | 2 |
 
-**M2 — Photos and voice notes (~Fri 6 Nov)** · dificultad alta · 2/3
+**M2 — Photos and voice notes (~Fri 6 Nov)** · dificultad alta · 4/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T8 | Photo upload from camera/gallery (`capture` + gallery), `preparar-foto`, bytea storage, inline to the model for first look, confirm + likes/dislikes per photo, venue photo flag, photos in brief/admin | alta | completada | gpt-6-luna | codex-1 | 4 |
 | T9 | Voice notes: `BotonVoz`/`useDictado` + `/api/voz/transcribir` for advisor sessions (VOZ_* env from the `voz-decoracion` container), transcript stored as the customer's text | alta | completada | gpt-6-luna | codex-1 | 2 |
-| T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | bloqueada | gpt-6-luna | codex-luis | 5 |
+| T10a | Extend the e2e runner with the M2 photo and voice scenarios | media | completada | gpt-6-luna | codex-luis | 1 |
+| T10 | M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy | alta | completada | gpt-6-luna | codex-2 | 13 |
 
-**M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 3/4
+**M3 — Directions, themed items and standard packages (~Thu 19 Nov)** · dificultad alta · 4/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T11 | Happia catalogue daily cache in Postgres (refresh when older than 24 h) + fallback list seeded from the last good read; read-only reuse of `HappiaClient` | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T12 | Directions: editable config of 12 decorations from `biblioteca-sempertex/decoraciones.json` (with photos) + themed items, tool to show them to undecided customers | media | completada | gpt-6-luna | codex-2 | 6 |
-| T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | verificando | gpt-6-luna | codex-2 | 3 |
+| T12 | Directions: editable config of 12 decorations from `biblioteca-sempertex/decoraciones.json` (with photos) + themed items, tool to show them to undecided customers | media | completada | gpt-6-luna | codex-luis | 8 |
+| T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | gpt-6-luna | codex-2 | 9 |
+| T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | completada | gpt-6-luna | codex-1 | 10 |
 
-**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 0/3
+**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 0/4
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | gpt-6-luna | codex-2 | 5 |
+| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | gpt-6-luna | codex-2 | 14 |
 | T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-1 | 5 |
 | T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
+| T14.1a | Repair what blocks T14a | alta | en curso | gpt-6-luna | codex-1 | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -83,6 +85,7 @@ Paths below are planned outputs relative to the pictures implementation checkout
 | T7 | `scripts/e2e/asesor/run.ts`, `scripts/e2e/asesor/check-findings.ts`, `scripts/e2e/asesor/scenarios/m1.ts`, `docs/req-020/deployment.md`, `scripts/test/asesor/harness.test.ts` | Build the real-entry-point acceptance harness, complete M1 deployment configuration and verify the text flow against the approved production dependencies. |
 | T8 | `src/lib/asesor/photos.ts`, `src/app/api/asesor/photos/route.ts`, `src/app/api/asesor/photos/[id]/route.ts`, `scripts/test/asesor/photos.test.ts`, `scripts/e2e/asesor/scenarios/photos.ts` | Accept inspiration/venue photos, preserve original bytes, collect first-look confirmation and per-photo preferences, and include them in durable briefs and monitoring. |
 | T9 | `src/app/api/voz/transcribir/route.ts`, `src/lib/asesor/voice.ts`, `scripts/test/asesor/voice.test.ts`, `scripts/e2e/asesor/scenarios/voice.ts` | Authorize advisor dictation through the existing Whisper route and persist its transcript as an ordinary customer turn with text-only replies. |
+| T10a | `scripts/e2e/asesor/run.ts`, `scripts/e2e/asesor/scenarios/photos.ts`, `scripts/e2e/asesor/scenarios/voice.ts`, `scripts/e2e/asesor/scenarios/m2.ts` | Make the e2e runner support --milestone M2 with the photo, voice and combined scenarios in fake-model and live modes. |
 | T10 | `docs/req-020/m2-deployment.md` | Complete the approved M2 deployment using the combined photo/voice phone flow and record reproducible operational checks. |
 | T11 | `src/lib/asesor/catalogue.ts`, `src/lib/asesor/catalogue-fallback.json`, `scripts/migrations-asesor/002_catalogue.sql`, `scripts/test/asesor/catalogue.test.ts` | Serve a validated daily Happia catalogue snapshot from advisor Postgres and a seeded last-good fallback without modifying the shared Happia package. |
 | T12 | `src/lib/asesor/directions.ts`, `src/lib/asesor/directions.json`, `scripts/test/asesor/directions.test.ts`, `scripts/e2e/asesor/scenarios/directions.ts` | Offer undecided customers twelve editable curated directions with photos and only verified themed catalogue items. |
@@ -165,6 +168,7 @@ Acceptance: A phone customer sends inspiration/venue photos and voice notes; fir
   Focused verification: `npx tsx --conditions=react-server --test scripts/test/asesor/photos.test.ts` [functional, created by T8].
 
 - [ ] T9 — Voice notes: `BotonVoz`/`useDictado` + `/api/voz/transcribir` for advisor sessions (VOZ_* env from the `voz-decoracion` container), transcript stored as the customer's text · repo: pictures · after: T7 · verify: `npm run asesor:test` · files: src/app/api/voz/transcribir/route.ts, src/lib/asesor/voice.ts, scripts/test/asesor/voice.test.ts, scripts/e2e/asesor/scenarios/voice.ts · resources: advisor-session-contract, voice-transcription-contract · covers: R8, R6, R13 · kind: implement
+- [ ] T10a — Extend the e2e runner with the M2 photo and voice scenarios · repo: pictures · after: T8, T9 · verify: `npm run asesor:test` · files: scripts/e2e/asesor/run.ts, scripts/e2e/asesor/scenarios/photos.ts, scripts/e2e/asesor/scenarios/voice.ts, scripts/e2e/asesor/scenarios/m2.ts · covers: R7, R8, R11 · kind: implement
 
   Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 180 min (provisional). Advisor voice crosses an existing synchronous auth dependency, the outer proxy and remote Whisper behavior; high instead of medium because a simple component reuse does not establish dual-session authorization.
 
@@ -172,7 +176,7 @@ Acceptance: A phone customer sends inspiration/venue photos and voice notes; fir
 
   Focused verification: `npx tsx --conditions=react-server --test scripts/test/asesor/voice.test.ts` [functional, created by T9].
 
-- [ ] T10 — M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy · repo: pictures · after: T8, T9 · verify: `npm run gate` · files: docs/req-020/m2-deployment.md · resources: pictures-production-deployment, advisor-media-ui-contract · covers: R7, R8, R11 · kind: implement
+- [ ] T10 — M2 acceptance on a phone viewport (photo + voice conversation to brief), deploy · repo: pictures · after: T8, T9, T10a · verify: `npm run gate` · files: docs/req-020/m2-deployment.md · resources: pictures-production-deployment, advisor-media-ui-contract · covers: R7, R8, R11 · kind: implement
 
   Classification: complexity high; scope small_change; risk high; coupling high; confidence medium; estimate 150 min (provisional). Advisor media deployment combines browser permissions, image transport and an external voice service; high instead of medium because local unit success cannot establish the phone-to-VPS flow.
 
@@ -208,7 +212,7 @@ Acceptance: Undecided customers receive twelve editable photo directions and ver
 
   Focused verification: `npx tsx --conditions=react-server --test scripts/test/asesor/packages.test.ts` [functional, created by T13].
 
-- [ ] T14 — Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps · repo: pictures · after: T12, T13 · verify: `npm run asesor:test` · files: src/lib/asesor/prompts/catalogue.ts, scripts/eval/asesor/run.ts, scripts/eval/asesor/scenarios.json, scripts/test/asesor/prompt.test.ts, scripts/e2e/asesor/scenarios/m3.ts · resources: advisor-direction-contract, advisor-package-contract · covers: R3, R7, R9, R10, R13 · kind: implement
+- [ ] T14 — Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps · repo: pictures · after: T12, T13, T10 · verify: `npm run asesor:test` · files: src/lib/asesor/prompts/catalogue.ts, scripts/eval/asesor/run.ts, scripts/eval/asesor/scenarios.json, scripts/test/asesor/prompt.test.ts, scripts/e2e/asesor/scenarios/m3.ts · resources: advisor-direction-contract, advisor-package-contract · covers: R3, R7, R9, R10, R13 · kind: implement
 
   Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 240 min (provisional). Advisor real-model evaluations must connect direction/package tools, image context and refusal/approval rules without hiding nondeterminism; high rather than medium because fixtures alone cannot establish model behavior.
 

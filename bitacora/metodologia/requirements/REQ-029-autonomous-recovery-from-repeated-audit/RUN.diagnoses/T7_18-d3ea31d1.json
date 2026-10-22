@@ -1,0 +1,23 @@
+{
+ "request": "T7:18",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T7 agotada: 3 tests del adaptador M6/M1 fallan en bt_scheduler_quality tras 13 intentos",
+ "origin": "La última verificación ejecutó `cd skill/scripts && python3 -m unittest discover -s bt_scheduler_quality/tests`, que salió con código 1 y tres fallos en test_adapter.M6M1AdapterTests, todos con `AssertionError: False is not true`. Afectan al rechazo de resultados que chocan con trabajo aceptado, a resultados con marcas de conflicto y a tareas con reintentos pendientes. Esos fallos están en el código del adaptador, que T7 no puede corregir. Además, la auditoría F14 (replay estructural sin convergencia automática) es un hallazgo compartido con T6a. T7 no puede cerrarla. Las líneas de npm ci en el registro no coinciden con el fallo de Python que se reporta; no las uso como causa.",
+ "steps": [
+  "Detener T7 sin más reintentos: repetir la tarea no cambia el código del adaptador que falla.",
+  "Revisar el estado del run con `bitacora.py --project metodologia scheduler-op REQ-029 status` y devolver los tres tests de test_adapter.M6M1AdapterTests a la tarea dueña del adaptador M6/M1 en bt_scheduler_quality.",
+  "Dar la nota de zona horaria de tests/test_codex_structured.py a su propia tarea si el dueño la confirma. No es el fallo de esta verificación.",
+  "Reabrir T7 cuando esos tests pasen en la tarea dueña y el hallazgo F14 esté cerrado por su responsable."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T05:19:44",
+ "seconds": 22.3
+}

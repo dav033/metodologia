@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r2:att-0055:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "El verificador pide revisión porque faltan los archivos de evaluación de T14 en el árbol.",
+ "origin": "La comprobación manual no es la causa de fondo. La auditoría T15 (F5) confirma que scripts/eval/asesor/run.ts, scripts/eval/asesor/scenarios.json, scripts/test/asesor/prompt.test.ts y scripts/e2e/asesor/scenarios/m3.ts no existen en el checkout, aunque docs/req-020/m2-deployment.md afirma que sí. Por eso el intento att-0054 falló la verificación y las comprobaciones CHECK_UNMAPPED y CRITERION_MANUAL no pueden cerrarse con una aprobación a mano. La regla automática («haz la comprobación y aprueba») contradice esta evidencia.",
+ "steps": [
+  "Confirma en el repo con `git ls-files scripts/eval/asesor scripts/test/asesor scripts/e2e/asesor/scenarios/m3.ts`. Si aparecen los cuatro archivos listados, no hay falta de código y conviene revisar el mapeo de comprobaciones antes de decidir.",
+  "Si faltan, pulsa «Rechazar» y escribe que hay que crear run.ts, scenarios.json, prompt.test.ts y m3.ts en el árbol actual, que cada comprobación del plan se mapee exactamente a un criterio y que se corrija docs/req-020/m2-deployment.md para no afirmar evaluaciones inexistentes.",
+  "La ejecución real `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --live` queda como evidencia manual redactada, sin datos de clientes. No la uses como sustituto de los archivos que faltan."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T22:10:59",
+ "seconds": 20.1
+}

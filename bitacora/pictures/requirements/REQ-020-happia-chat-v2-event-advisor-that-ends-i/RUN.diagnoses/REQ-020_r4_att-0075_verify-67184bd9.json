@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r4:att-0075:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "npm run gate falla por rutas /api del asesor sin clasificar; falta revisión manual",
+ "origin": "La última verificación ejecuta `npm run gate` y termina con código 1: \"RUTAS /api SIN CLASIFICAR\". Las rutas nuevas de fotos y voz del asesor no están en `RUTAS_FLUJO` ni en `RUTAS_EXCLUIDAS`, así que el diagnóstico de cuota es incorrecto. Además, el criterio de teléfono (permisos, teclado, recarga, brief y admin) y la M2 viva con Whisper real solo los puede verificar una persona, por eso la tarea queda en revisión.",
+ "steps": [
+  "Busca la lista con `grep -rn RUTAS_FLUJO` en el repo de pictures y añade cada ruta /api nueva del asesor (fotos y voz) a `RUTAS_FLUJO` con `conRegistro`, o a `RUTAS_EXCLUIDAS` con el motivo.",
+  "Ejecuta `npm run gate` y corrige todo lo que imprima, sin debilitar el gate.",
+  "Haz en un teléfono la comprobación de permisos, teclado, recarga y brief/admin; si la M2 viva con Whisper real no se hizo, déjala registrada como pendiente P-123 antes de aprobar.",
+  "Aprueba a mano solo si lo viste y el gate pasa; si no, rechaza diciendo qué falló."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T05:11:10",
+ "seconds": 22.7
+}

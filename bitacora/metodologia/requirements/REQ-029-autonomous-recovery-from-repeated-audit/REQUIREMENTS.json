@@ -1,26 +1,27 @@
 {
   "goal": "Implement automatic bounded recovery for recurring audit and structural integration conflicts, without coordinator product fixes.",
-  "scope": "Approved revision 5: R1–R16, 35 tasks, three milestones. M1 (bt_scheduler_core) keeps only one generic apply_plan_revision primitive; recovery cases, compiler, authorization ledger and apply live outside M1 (T4b, T4c). Preserve accepted work per rebase r4→r5. Add full conflict evidence, validated structural classification, authorized executable convergence and both-side independent proof within existing recovery machinery.",
-  "requirements": "Canonical SPEC.md and PLAN.md R1–R16 plus reviewed conflict evidence and candidate delta. Distinguish stale lineage, actual scope/ordering defects and semantic incompatibility; never infer scope escape from ordered overlap alone.",
+  "scope": "Approved revision 6 (r5 plus implement task T6b that repairs two import-boundary test failures found by the T7 regression; 36 tasks): R1–R16, 35 tasks, three milestones. M1 (bt_scheduler_core) keeps only one generic apply_plan_revision primitive; recovery cases, compiler, authorization ledger and apply live outside M1 (T4b, T4c). Preserve accepted work per rebase r4→r5. Add full conflict evidence, validated structural classification, authorized executable convergence and both-side independent proof within existing recovery machinery.",
+  "requirements": "Canonical SPEC.md and PLAN.md R1–R16 plus reviewed conflict evidence and candidate delta. Distinguish stale lineage, actual scope/ordering defects and semantic incompatibility; never infer scope escape from ordered overlap alone.\n\nREQ-030 reduction (2026-10-22): R9 (conditional rollout on REQ-027) withdrawn because REQ-027 completed and merged; plan r7 drops milestone M3 (T16-T19) and IF-6. See SPEC.md section 'Reduction 2026-10-22'.",
   "limits": "One diagnosis and at most eight corrective implementation tasks per correlated cycle; preserve ordinary counters, accepted provenance, stop authority, permissions and CAS/idempotency. No silent acceptance, arbitrary snapshot override or fabricated owner decision. REQ027 activation only after independent gates and fresh preview.",
   "acceptance": "Execute all three milestones and independent audits, including full exact evidence, authorized bootstrap, both-side convergence proof, offline real-entrypoint replay, visual supervision and pinned-runtime conditional activation. Existing evidence proves plan readiness only.",
-  "approval": "Owner confirmed in chat on 2026-10-21 that M1 must not carry recovery/patch logic, approved revising the plan while it runs ('si a todo'), asked to apply r5 held and to resume with the new plan ('renauda con el nuevo plan'), and explicitly authorized this requirements re-record ('autorizado'). Earlier approval of revision 2 (2026-10-20) retained. Owner explicitly approved revision 2 and resumed in chat on 2026-10-20: apruebo, ademas hacer que t15a se debloquee mientras para que vaya corriendo mientras que hace el req20. Owner additionally requested no relay and bounded quota use. Temporary REQ027 unblock separately uses supported owner operator actions.",
+  "approval": "Owner confirmed in chat on 2026-10-21 that M1 must not carry recovery/patch logic, approved revising the plan while it runs ('si a todo'), asked to apply r5 held and to resume with the new plan ('renauda con el nuevo plan'), and explicitly authorized this requirements re-record ('autorizado'). Earlier approval of revision 2 (2026-10-20) retained. Owner explicitly approved revision 2 and resumed in chat on 2026-10-20: apruebo, ademas hacer que t15a se debloquee mientras para que vaya corriendo mientras que hace el req20. Owner additionally requested no relay and bounded quota use. Temporary REQ027 unblock separately uses supported owner operator actions. Owner's /loop instruction of 2026-10-21 ('todo lo que pida mi aprobacion asume que si a todo') authorizes revision 6 (T6b boundary repair only; no scope change) and this re-record. On 2026-10-22 the owner's REQ-030 mission (goal /prompt-scheduler-hardening) delegated to the coordinator absorbing REQ-029 into the scheduler and resuming it with a reduced plan; this re-record applies that reduction (no accepted work is reset: rebase kept 22, removed only the four unstarted rollout tasks).",
   "evidence": [
     "SPEC.md",
     "PLAN.md",
     "CONFLICT-INVESTIGATION.md",
     "conflict-amendment/DELTA.md",
     "conflict-amendment/REVIEW.md",
-    "plan-revisions/R5-CHANGES.md"
+    "plan-revisions/R5-CHANGES.md",
+    "../../DECISIONS.md"
   ],
   "unresolved": [],
   "schema": 1,
-  "reviewed_at": "2026-10-21T14:10:51.640471+00:00",
+  "reviewed_at": "2026-10-22T12:45:38.331639+00:00",
   "fingerprints": {
-    "../../DECISIONS.md": "56597dc9406bab650b4a4650793b4e62bf843527e3ca4d576f5ee7f6bcde81ae",
+    "../../DECISIONS.md": "576dee687514e3a833399fa351e51a8385a1fe74d9c781439d131875a9fa4c8f",
     "CONFLICT-INVESTIGATION.md": "d4b3687391f4968f97b86fc3e7c8abbdd6a2e398a1e6d88e75df14ce4cb44f1d",
-    "PLAN.md": "33846e8be284aefda815b6af692b1b1174a5397d5d47445ca1613cc837903154",
-    "SPEC.md": "01bd5496bc87dceeb8b9e151a9a8c652bdba18db94011555ddbf923618c1e88a",
+    "PLAN.md": "e99ed796692311c5e3bbc0f0463fb9b2d7de83010d7fdc1a5b5bd729d883bae4",
+    "SPEC.md": "34b8b39a322814e8c6d1a7796695e1a4d7a082c2069cb0e5848062253b862d6e",
     "conflict-amendment/DELTA.md": "d3ddd1ba6aeb70e08f2dab4f5d9d459f502e02bc6818008a6c1913a16f6f3ac8",
     "conflict-amendment/REVIEW.md": "812823f5e821aa5dbcb01e125f850dd66dc25b18d0ef4029a5830c566b7e94fd",
     "plan-revisions/R5-CHANGES.md": "664695b3e75d6b9c2b41282663ace37357edf6dd131d2cb0fb7f5daaee3a16c1"

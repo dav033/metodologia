@@ -1,0 +1,22 @@
+{
+ "request": "T8.4:2",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T8.4 no arrancó: su decisión de ruta fue reemplazada por otra (ROUTE_INVALID)",
+ "origin": "El arranque del intento att-0109 fue rechazado con ROUTE_INVALID: \"the decision was replaced by 2e7a754a87e5ead3\". La ruta de la tarea apuntaba a una decisión que la decisión 2e7a754a87e5ead3 sustituyó, así que el agente nunca llegó a trabajar. Como no hubo ejecución, el executor no puede confirmar si terminó (execution_unsettled); la regla automática no reconoció esta causa.",
+ "steps": [
+  "Ejecuta `bitacora.py --project metodologia scheduler-op REQ-029 status` y `bitacora.py --project metodologia scheduler-op REQ-029 decisions` para ver la decisión vigente 2e7a754a87e5ead3 y la ruta que rechazó el arranque.",
+  "Comprueba que T8.4 apunta a la decisión vigente. Si la ruta sigue apuntando a la anterior, corrígela con `scheduler-op REQ-029 decide <id> <option> --reason \"...\"` antes de reintentar.",
+  "Pulsa retry para que T8.4 arranque de nuevo sobre la decisión vigente. Recuerda que las findings F3, F4, F5, F6, F7, F8, F12 y F14 siguen abiertas en req029-m1-audit.findings.json y el rework debe hacerse con la integración activa (gates.integration_line)."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T23:16:48",
+ "seconds": 16.9
+}

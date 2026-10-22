@@ -1,0 +1,22 @@
+{
+ "request": "T14:9",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T14 agotó sus intentos: falta el módulo ./directions y choca con T13",
+ "origin": "Los tests de scripts/test/asesor (admin, agent, brief) fallan con «Cannot find module './directions'». Es un import relativo, no un paquete de npm, así que el archivo no existe en el árbol final de T14. El último intento se rechazó al arrancar por INTEGRATION_CONFLICT entre T10+T12 y T13, y los rework_conflict anteriores de T14 vienen del mismo choque de código. La sugerencia de npm ci y de declarar ./directions en package.json no aplica.",
+ "steps": [
+  "No ejecutes npm ci ni cambies los imports: el problema no es una dependencia.",
+  "Integra en T14 el módulo ./directions de T13 junto al trabajo ya aceptado de T10 y T12, en la carpeta que importan los tests de scripts/test/asesor.",
+  "Reintenta T14 y comprueba con npm run asesor:test que admin, agent y brief cargan sin «Cannot find module»."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not run npm ci or edit the test imports. './directions' is a relative import in scripts/test/asesor/*.test.ts, so the file is missing from the final tree. It belongs to T13 and conflicts with T10+T12 (INTEGRATION_CONFLICT at start). Rebuild T14 on top of the current T10+T12 and T13 work so the directions module exists where the tests import it, then run npm run asesor:test.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T05:35:18",
+ "seconds": 19.7
+}

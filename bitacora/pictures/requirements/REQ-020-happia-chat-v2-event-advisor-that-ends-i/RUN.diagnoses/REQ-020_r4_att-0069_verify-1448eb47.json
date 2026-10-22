@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r4:att-0069:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "npm run gate falla: las rutas /api nuevas del asesor no están clasificadas",
+ "origin": "El último intento falló en `npm run gate` con «RUTAS /api SIN CLASIFICAR»: las rutas nuevas de fotos y voz del asesor no están en RUTAS_FLUJO ni en RUTAS_EXCLUIDAS. Es un defecto del código y de la lista de rutas, no de la cuota como sugería el diagnóstico automático. Los criterios de teléfono y el M2 en vivo solo los puede comprobar una persona, y hoy no tienen evidencia.",
+ "steps": [
+  "Busca la lista con `grep -rn RUTAS_FLUJO` y añade cada ruta nueva de fotos y voz a RUTAS_FLUJO con conRegistro, o a RUTAS_EXCLUIDAS con su motivo.",
+  "En el worktree ejecuta `npm ci --offline` y luego `npm run gate`; corrige lo que imprima sin debilitar el gate.",
+  "Confirma que el módulo `./photos` que importa scripts/test/asesor/agent.test.ts existe en su ruta de origen.",
+  "Haz la prueba en el teléfono y el M2 en vivo, o deja P-123 para el owner, y registra la evidencia sin datos de clientes."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T03:56:54",
+ "seconds": 19.5
+}

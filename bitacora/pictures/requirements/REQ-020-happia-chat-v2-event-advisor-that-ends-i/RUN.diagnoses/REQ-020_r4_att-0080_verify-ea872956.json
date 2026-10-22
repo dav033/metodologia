@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r4:att-0080:verify",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "Faltan archivos de tareas hermanas (directions, packages) y fallan los tests del asesor",
+ "origin": "El fallo es real y viene de la integración de T10, T12 y T13 en T14: el árbol de partida perdió `src/lib/asesor/directions.ts` y `src/lib/asesor/packages.ts`. Por eso `npm run asesor:test` da 3 fallos con `Error: Cannot find module './directions'`. Es un import de archivo local, no de paquete, así que `npm ci --offline` no lo arregla. Los avisos CRITERION_MANUAL y CHECK_UNMAPPED vienen de que el criterio solo tiene evidencia manual y no se mapea a una comprobación, no de la causa del fallo.",
+ "steps": [
+  "No apruebes a mano: rechaza la revisión (review_fail) para que el agente restaure los archivos antes de seguir.",
+  "Que restaure cada archivo perdido desde el último snapshot que lo tenga: `git log --all --oneline -- <ruta>` y luego `git checkout <commit> -- <ruta>`. Debe revisar también src/lib/asesor, scripts/test/asesor, scripts/e2e/asesor y docs/req-020 contra T10, T11, T12 y T13, y dejar en la descripción de la tarea qué archivos restauró.",
+  "Que ejecute `npm run asesor:test` y `npm run gate` y que todos los tests pasen juntos.",
+  "Si vuelve con CRITERION_MANUAL o CHECK_UNMAPPED: añade una comprobación automática al criterio de T14 con una nueva revisión de PLAN.json (sube `revision` en 1, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y luego elige `revise`)."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T06:08:56",
+ "seconds": 16.3
+}

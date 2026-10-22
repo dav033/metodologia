@@ -54,6 +54,13 @@ _Agents run without permission prompts and may ship to production with these on 
 ### ssh
 - Hosts above (`advin`, `marketplace`); non-interactive: `ssh -o BatchMode=yes <alias> '<command>'`
 
+### flow-remote (panel + remote control in production)
+- **Public:** https://flow-remote.vercel.app (Vercel project `flow-remote`, root dir `remote/web`; deploy from the repo root with `vercel --prod`; env `GATEWAY_ORIGIN`, `PANEL_PROXY=1`). Login: GitHub OAuth App `flow-remote`, only `dav033`.
+- **Gateway (AdvIn, `ssh advin`):** `flow-gateway.service` + `flow-bot.service`, code in `/opt/flow-gateway/releases/<git sha>` (`current`/`previous` symlinks, switch with `ln -sfn` + `mv -T`), listens on 172.20.0.1:8790 behind the Caddy block `flow-api.185-147-157-25.sslip.io`; env file `/etc/flow-gateway/env` (600; never print). `curl -s http://172.20.0.1:8790/healthz` returns the release sha.
+- **Laptop:** user services `bitacora-remote-api.service` (127.0.0.1:8766, gateway key, runs a pinned copy `~/.local/share/bitacora-remote/<sha>/skill` chosen in `bitacora-remote-api.service.d/exec.conf`) and `advin-bitacora-tunnel.service` (reverse SSH, AdvIn 127.0.0.1:18765 -> laptop 8766; keepalive, Restart=always, linger on). Key in `~/.config/bitacora/remote.env` (600).
+- **What it serves:** the whole local panel (`/`, `/p/...`, `/flow`, `/plans`, `/metrics`, `/live`...) plus `/remote`; writes need a typed CONFIRMAR; every action is logged in `STATE/remote-panel-audit.jsonl`. Details: `remote/docs/runbook.md` (section "Full panel in production").
+- **Rollback:** gateway: point `current` at `previous` and `systemctl restart flow-gateway flow-bot`; laptop: restore the previous `exec.conf` path; web: remove `PANEL_PROXY` and redeploy.
+
 ## Storage & data
 
 _None registered yet._

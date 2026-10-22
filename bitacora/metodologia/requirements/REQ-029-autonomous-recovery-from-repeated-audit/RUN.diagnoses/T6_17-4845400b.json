@@ -1,0 +1,23 @@
+{
+ "request": "T6:17",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La prueba de recuperación falla: el scheduler descarta recovery_task de la tarea T6",
+ "origin": "El test test_shipped_watch_starts_the_scheduler_run_child_and_exposes_durable_state falla en test_recovery_entrypoints.py línea 120. Espera recovery_task=True en TaskSpec.meta, pero el meta solo trae title, objective y kind: 'scheduler dropped recovery_task from TaskSpec.meta'. Es el mismo fallo en los 12 intentos, por eso se activó same_cause_limit. La nota del dueño sobre disco lleno (MIN_FREE_BYTES) no encaja con esta evidencia: el test ya llegó a la aserción de metadatos, así que el watch sí arrancó.",
+ "steps": [
+  "No sigas la hipótesis de disco lleno ni subas timeouts: la aserción falla después de arrancar el watch.",
+  "Busca en el scheduler dónde se construye TaskSpec.meta a partir de la tarea del plan y haz que recovery_task se conserve hasta el TaskSpec.",
+  "Si recovery_task debe venir declarado en PLAN.json, comprueba que la tarea T6 lo tenga; si cambia un check o una tarea, sube la revisión en 1 y ejecuta bitacora.py --project metodologia plan-json freeze REQ-029 antes de elegir revise.",
+  "Vuelve a correr: cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py"
+ ],
+ "option": "retry_with_note",
+ "note": "Do not pursue the disk-space hypothesis (MIN_FREE_BYTES, BITACORA_WATCH_MIN_FREE_BYTES): the failing assertion is test_recovery_entrypoints.py line 120, which runs after the watch starts. The test sees TaskSpec.meta = {title, objective, kind} without recovery_task. Find where the scheduler builds TaskSpec.meta from the plan task and make recovery_task pass through to it. Do not change the test expectation or the recovery, M1, revision application, integration or verification modules. If recovery_task must come from PLAN.json, raise the revision by 1 and run plan-json freeze REQ-029 before choosing revise.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T03:12:20",
+ "seconds": 21.9
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T14a:8",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T14a agotó sus intentos: el gate no encuentra el módulo @/lib/asesor/voice",
+ "origin": "`npm run gate` falla en `scripts/test/asesor/auth.test.ts` con `Cannot find module '@/lib/asesor/voice'`. Es un alias del proyecto, no un paquete npm, así que el archivo de voz falta en la copia limpia que verifica el sandbox o nunca se creó; el aviso genérico de dependencias no encaja aquí. Los dos chequeos manuales salen con `exit code None` porque necesitan .env.local y no se ejecutan en el sandbox.",
+ "steps": [
+  "Ejecuta `git ls-files src/lib/asesor` y revisa el alias `@/` en tsconfig para ver si `voice` existe en el repo.",
+  "Si el archivo no está versionado, repórtalo como tarea dueña del fallo y no lo crees dentro de T14a; T14a no debe crear código ni tests.",
+  "Ejecuta `npm ci --offline` y después `npm run gate` en tu worktree para confirmar que el error desaparece o queda identificado.",
+  "Aplica la nota del propietario sobre `--check-results` (sin `--strict`), regenera docs/req-020/integration-results.json y corre `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json`."
+ ],
+ "option": "retry_with_note",
+ "note": "The gate fails with Cannot find module '@/lib/asesor/voice' in scripts/test/asesor/auth.test.ts. First check whether that file is tracked (git ls-files src/lib/asesor, tsconfig '@/' alias). If it is missing from the repo, do not create it or add tests/config: report it as the failed owning task. Run npm ci --offline before npm run gate. Record the two live/deployed coordinator runs as coordinator-pending with exit code not run; do not force them in the sandbox. Apply the owner's --check-results change without --strict, regenerate docs/req-020/integration-results.json, and make the non-strict check pass.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T02:54:41",
+ "seconds": 22.2
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T14a:14",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "La verificación exige pasos manuales del coordinador que la sandbox no puede ejecutar",
+ "origin": "El fallo viene del plan, no del código. Dos entradas de verificación de T14a son instrucciones manuales (`Coordinator runs npx tsx ... --start --live --milestone M1`, y la de `--deployed`), no comandos que la sandbox pueda ejecutar; salen con `exit code None`, y `npm run gate` aparece como `[M6] not run` porque una comprobación anterior falló. Además, la nota del dueño pide cambiar `run.ts` y su prueba, pero el criterio de T14a dice que no crea tests ni configuración y no aplica arreglos, así que esa decisión no cabe en este intento.",
+ "steps": [
+  "No reintentes: la misma verificación volverá a fallar con el plan actual.",
+  "Edita el PLAN.json de REQ-020 (T14a): quita de `verification` las dos líneas [manual] y deja solo los comandos [command]. Decide con el dueño si `--check-results` debe ser de integridad o estricto, porque cambia un criterio.",
+  "Sube `revision` en 1 y ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json freeze REQ-020`.",
+  "Ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-020 decisions` para obtener el id y luego `decide <id> revise --reason \"...\"`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T11:56:26",
+ "seconds": 26.8
+}

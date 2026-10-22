@@ -1,0 +1,23 @@
+{
+ "request": "REQ-029:r6:att-0148:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "El plan no tiene verificación para entrypoints ni para el discover completo",
+ "origin": "El código no es el problema: en dos intentos (att-0104 y att-0138) el coordinador ejecutó test_recovery_entrypoints.py con 31 tests OK y los tres checks mapeados pasaron. El fallo está en PLAN.json: la lista de verificación de T6b solo tiene test_scheduler_integration, test_scheduler_recovery_cli y test_recovery_convergence, pero el criterio exige también las entrypoints y el discover completo. El verificador responde CRITERION_UNVERIFIABLE y CHECK_UNMAPPED porque esas partes no tienen check. Las dos aprobaciones previas con review_pass acabaron devueltas, así que repetirlas no resuelve nada.",
+ "steps": [
+  "Elige ahora la opción stop para detener el bucle: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia scheduler-op REQ-029 decide <id> stop --reason \"Gap de mapeo en PLAN.json de T6b\"`, con el id de esta decisión.",
+  "En PLAN.json de REQ-029, en T6b, añade los checks que faltan: `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y `cd skill/scripts && python3 -m unittest discover -s tests`, y mapea cada parte del criterio a un check.",
+  "Sube \"revision\" en 1 y congela el plan: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project metodologia plan-json freeze REQ-029`.",
+  "Cuando aparezca la opción revise en la decisión, elígela y relanza T6b para que el verificador pueda mapear el criterio completo."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T05:48:55",
+ "seconds": 20.5
+}

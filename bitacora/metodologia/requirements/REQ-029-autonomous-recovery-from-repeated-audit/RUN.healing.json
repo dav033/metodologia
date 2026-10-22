@@ -1,0 +1,26 @@
+{
+ "actions": 1,
+ "cases": {
+  "cff15827da8330f5": {
+   "applied": 1,
+   "at": 1792674483.941,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_UNVERIFIABLE",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792674483.668,
+   "history": [
+    {
+     "at": 1792674483.941,
+     "repair": "accept by elimination: one criterion, every command check passed",
+     "result": "fixed"
+    }
+   ],
+   "id": "cff15827da8330f5",
+   "repair": "accept by elimination: one criterion, every command check passed",
+   "status": "applied",
+   "task": "T6b"
+  }
+ }
+}

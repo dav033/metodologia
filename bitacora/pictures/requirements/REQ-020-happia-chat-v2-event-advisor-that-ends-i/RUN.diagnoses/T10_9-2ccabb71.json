@@ -1,0 +1,23 @@
+{
+ "request": "T10:9",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "npm run gate falla: hay rutas /api sin clasificar y falta el módulo ./photos",
+ "origin": "La última verificación independiente ejecuta `npm run gate` y termina con exit code 1 y el error «RUTAS /api SIN CLASIFICAR»: hay rutas /api nuevas que no están en RUTAS_FLUJO ni en RUTAS_EXCLUIDAS. Es un fallo de código del repo, no de cuota: el texto de error no menciona límite de uso, así que la sugerencia automática de cuota no coincide con la evidencia. El dueño también señaló que scripts/test/asesor/agent.test.ts importa un módulo `./photos` que no existe, un problema que aparece en intentos anteriores.",
+ "steps": [
+  "Ejecuta `npm ci --offline` y luego `npm run gate` en el worktree para ver la lista completa de rutas /api sin clasificar; la salida que tienes está cortada.",
+  "Por cada ruta de esa lista, añádela a RUTAS_FLUJO con conRegistro si pertenece al flujo de foto/voz de M2, o a RUTAS_EXCLUIDAS con su motivo. No edites los tests para esquivar el chequeo.",
+  "Localiza el archivo que importa `./photos` en scripts/test/asesor/agent.test.ts, encuentra el módulo real en su ruta de código fuente de M2 y restáuralo o créalo allí.",
+  "Vuelve a ejecutar `npm run gate` hasta que termine con exit 0 y deja el resultado anotado en la bitácora."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous attempt failed `npm run gate` with 'RUTAS /api SIN CLASIFICAR' (output truncated) and the owner reported a missing './photos' module imported by scripts/test/asesor/agent.test.ts. Run `npm ci --offline`, then `npm run gate` in the worktree, and read the full list of unclassified /api routes. Classify each one: add it to RUTAS_FLUJO with conRegistro if it belongs to the M2 photo/voice flow, or to RUTAS_EXCLUIDAS with a reason. Do not edit tests to avoid the check. Verify that './photos' resolves to a real source file in its owning M2 path; restore or create it there if it is missing. Finish only when `npm run gate` exits 0.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-21T23:54:55",
+ "seconds": 20.3
+}

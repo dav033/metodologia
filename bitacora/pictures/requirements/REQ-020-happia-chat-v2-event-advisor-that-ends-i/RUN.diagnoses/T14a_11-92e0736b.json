@@ -1,0 +1,23 @@
+{
+ "request": "T14a:11",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "La verificación pide --milestone all y run.ts solo acepta M1 o M2; se agotaron los intentos",
+ "origin": "El verificador ejecuta `ASESOR_TEST_DATABASE_URL=... run.ts --start --fake-model --milestone all` y falla con `Supported milestones are --milestone M1 and --milestone M2.` (scripts/e2e/asesor/run.ts:29). Ningún cambio de código puede arreglarlo sin que `all` signifique en silencio solo M1. Las dos líneas `[manual]` (`--start --live` y `--live --deployed`) aparecen con `exit code None` porque el verificador solo ejecuta comandos; no pueden pasar en esa sandbox. Por tanto, reintentar con el mismo plan repetiría el fallo.",
+ "steps": [
+  "Revisa PLAN.json de REQ-020 (T14a): cambia el comando fake-model a `--milestone M1` (o al milestone que el runner realmente soporte) y saca las dos líneas `[manual]` de los comandos del verificador, dejándolas como evidencia del coordinador en docs/req-020/integration-results.json.",
+  "Sube \"revision\" en 1 y ejecuta `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures plan-json freeze REQ-020`.",
+  "Aplica el cambio de --check-results que pidió el dueño en scripts/e2e/asesor/run.ts y su test, regenera docs/req-020/integration-results.json y comprueba que la verificación sin --strict sale con código 0.",
+  "Cuando el plan revisado esté congelado, elige `revise` y relanza T14a con `scheduler-op REQ-020 resume`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T08:09:57",
+ "seconds": 27.5
+}

@@ -1,0 +1,22 @@
+{
+ "request": "REQ-029:r7:att-0152:verify",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "Faltan comprobaciones en el plan para entrypoints y el discover completo",
+ "origin": "El criterio de aceptación de T6b pide también test_recovery_entrypoints.py y el discover completo, pero el plan solo lista tres comandos. El verificador no puede mapear esas partes y devuelve CRITERION_UNVERIFIABLE y CHECK_UNMAPPED, así que es un fallo del plan, no del código. En los intentos anteriores (att-0104, att-0138, att-0148) las tres comprobaciones mapeadas pasaron, y el coordinador ejecutó test_recovery_entrypoints.py con 31 tests OK.",
+ "steps": [
+  "Ejecuta en el árbol actual `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y `cd skill/scripts && python3 -m unittest discover -s tests`, y anota los códigos de salida.",
+  "Si ambos pasan, elige review_pass y deja en la bitácora de REQ-029 que entrypoints y el discover completo se comprobaron a mano, con sus códigos de salida.",
+  "Después corrige el plan: sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project metodologia plan-json freeze REQ-029` y añade checks para entrypoints y discover (o recorta el criterio) antes de T7."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T07:58:22",
+ "seconds": 20.0
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T6:16",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "El test no ve arrancar el owner: el watch espera porque el disco está casi lleno.",
+ "origin": "El test `test_shipped_watch_starts_the_scheduler_run_child_and_exposes_durable_state` agota el tiempo esperando el estado \"owner started\". El log del watch muestra `disk almost full: waiting before restarting the owner`, así que `scheduler-watch` no lanza el owner por una comprobación de espacio en disco. Por eso `scheduler database exists=False`: el run nunca llega a crear la base. El aviso `notify-send` no está en la evidencia como causa. Los fallos previos repiten el mismo timeout, así que el problema es el entorno o la precondición del harness, no la espera en sí.",
+ "steps": [
+  "Confirma en el log del test la línea `disk almost full: waiting before restarting the owner` y mide el espacio libre del directorio temporal del harness con `df -h` en el mismo entorno de la verificación.",
+  "Busca en el código de `scheduler-watch` la comprobación de espacio libre y su umbral; si el umbral se configura en el config temporal (BITACORA_ROOT/config), fíjalo en el fixture del harness con un valor explícito para la prueba.",
+  "No subas los timeouts ni cambies el umbral de producción. Haz que cada espera coincida con un estado real del log del watch y no avances mientras el watch siga esperando por disco.",
+  "Vuelve a ejecutar `cd skill/scripts && python3 -m unittest discover -s tests -p test_recovery_entrypoints.py` y comprueba que `scheduler database` se crea tras el arranque del owner."
+ ],
+ "option": "retry_with_note",
+ "note": "The verifier log shows 'disk almost full: waiting before restarting the owner' and 'scheduler database exists=False', so scheduler-watch never starts the owner in the sandbox. Do not raise timeouts or change the production free-space threshold. Find the free-space check used by scheduler-watch, set its threshold explicitly in the temporary BITACORA_ROOT/config fixture (or use a fixture directory with enough space), and make the owner-started wait match a real watch-log state. Then rerun the discovery command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T02:52:32",
+ "seconds": 16.8
+}
