@@ -40,6 +40,18 @@
    "sha256": "a03b8f36d75b203059281a4f8cf80bc6ba309c9464b803ff558b74a3bd1e165f",
    "frozen_at": "2026-10-22T12:20:53",
    "source": "healing"
+  },
+  {
+   "revision": 7,
+   "sha256": "41392f2206e4b478bf10f84728b5998697c2e18370a2f883423f6827bb7e6e96",
+   "frozen_at": "2026-10-22T15:15:00",
+   "source": "owner-authorized-local-integration-2026-10-22"
+  },
+  {
+   "revision": 8,
+   "sha256": "157ea8b81f794bdf62758eaac364813b5766a6e04cb4bceab09316c9e9122331",
+   "frozen_at": "2026-10-22T17:34:59",
+   "source": "healing"
   }
  ]
 }

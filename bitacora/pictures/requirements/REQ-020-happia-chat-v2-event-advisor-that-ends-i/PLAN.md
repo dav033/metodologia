@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 15/19 · generado: 2026-10-22T12:41:03-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 17/21 · generado: 2026-10-22T17:55:41-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -38,14 +38,16 @@ created: 2026-10-20
 | T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | gpt-6-luna | codex-2 | 9 |
 | T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | completada | gpt-6-luna | codex-1 | 10 |
 
-**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 0/4
+**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 2/6
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | gpt-6-luna | codex-2 | 14 |
+| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | pendiente | sonnet | claude-work | 17 |
 | T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-1 | 5 |
 | T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
-| T14.1a | Repair what blocks T14a | alta | verificando | gpt-6-luna | codex-1 | 1 |
+| T14.1a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
+| T14.2a | Integrate reviewed summary lifecycle and deployed evidence correction | media | completada | gpt-6-luna | codex-luis | 1 |
+| T14.3a | Repair what blocks T14a | alta | verificando | sonnet | claude-work | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -316,3 +318,5 @@ Deterministic validation: the project plan-json check was run after enrichment a
 - 2026-10-20 Contract classification added against inspected local code; approved scope and existing status/revision preserved. No approval, freeze, handoff, launch or implementation performed.
 - 2026-10-20 12:14 plan APPROVED (terminal)
 - 2026-10-20 12:14 launched Scheduler supervisor from HQ in `/home/david/dev`
+
+- 2026-10-22 Owner requested integration: local commit 915a75af, antagonist: 2 fixed, 0 deferred, 0 dropped; re-review SOUND. Plan r7 adds T14.2a to import the reviewed diff after accepted T14.1a and before T14a; no requirement expansion. Rebase kept16 accepted, reset3 pending, added1. Old T14a att-0089 superseded; new att-0090 running.

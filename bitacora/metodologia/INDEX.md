@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-22 11:44 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-22 17:56 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -51,16 +51,16 @@ _Generated 2026-10-22 11:44 by `bitacora.py index`. Do not edit by hand._
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
-- P-138 · Failure analyst (owner rule 2026-10-21): a task that fails more than twice goes to an anal · high/M
-- P-017 · REQ-007 migration: T2 closed by D-015; T5/T6 done; T7 and F-M1-01 closed 2026-10-14; remai · high/L
+- P-138 · [closed 2026-10-22 by session 81c84684: bt_attempt_analyst] Failure analyst (owner rule 20 · high/M
+- P-159 · [closed 2026-10-22 by session 81c84684] Make rejected verification delivery visible and bo · high/M
 
 ## Recent decisions
 
+- D-121 — The coordinator, the failure analyst and the mapped-checks gate are on
 - D-120 — Self-healing and evolution are capabilities of the scheduler
 - D-119 — Proportional verification, mixed evidence and attestation receipts
 - D-118 — Minimal rework: a ceiling, content-based rebase, real finding text
 - D-117 — Tasks are kept apart by declared surface, not by size (only on the line)
-- D-116 — The integration line is the default, and no integrated tree may silently lose an accepted task's file
 
 ## Artifacts
 

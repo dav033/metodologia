@@ -1,0 +1,45 @@
+{
+  "schema": "integration-results/1",
+  "milestone": "M2",
+  "task": "T7",
+  "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+  "mode": "live",
+  "invocation": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2 --task T7",
+  "startedAt": "2026-10-22T19:38:39.079Z",
+  "completedAt": "2026-10-22T19:39:49.865Z",
+  "commands": [
+    "npm run build --workspaces --if-present",
+    "npm run build",
+    "npm run start",
+    "scripts/e2e/asesor/run.ts --start --live --milestone M2 --task T7"
+  ],
+  "runs": [
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run build --workspaces --if-present",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run build",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run start",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "scripts/e2e/asesor/run.ts --start --live --milestone M2 --task T7",
+      "outcome": "failed"
+    }
+  ],
+  "outcome": "failed",
+  "checks": [],
+  "failure": "correction did not invalidate the previous summary\n+ actual - expected\n\n+ {\n+   briefVersion: 10,\n+   text: 'Evento: corporate\\n' +\n+     'Fecha: 2026-11-14\\n' +\n+     'Horario: 18:00\\n' +\n+     'Invitados: 24\\n' +\n+     'Lugar: sal\u00f3n, Bogot\u00e1\\n' +\n+     'Presupuesto: sin especificar\\n' +\n+     'Empresa: Empresa de prueba\\n' +\n+     'Tema: Terraza azul\\n' +\n+     'Direcci\u00f3n autorizada: Direcci\u00f3n de prueba\\n' +\n+     'Contacto autorizado: Contacto de prueba\\n' +\n+     'Correo autorizado: m2@example.invalid',\n+   version: 3\n+ }\n- null\n"
+}

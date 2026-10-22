@@ -399,3 +399,10 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Decision:** Scheduler run and T2 cancelled; worktrees att-0006..att-0012 and review replays removed; coordinator-authored reference code deleted and declared invalid as flow evidence. T1 acceptance (att-0001..0005) and review reports are retained. Canonical Pictures and other repos were never modified by this pass.
 - **Role rule:** in flow experiments the assistant supervises and reports; it does not write product code.
 - **Addendum (2026-10-18, owner):** the REQ-018 plan files (PLAN.md/PLAN.json) were also deleted: canonical `requirements/REQ-018-category-based-recommendations-of-assemb/`, `artifacts/REQ-018-replan-20261018/{before,after}/`, the run's frozen copy under `.state/req018-full-mwvocojr/`, and 8 temp simulation copies under `~/.local/tmp`. SPEC.md and rounds/ are kept. Canonical and `before/` copies are in git history; the frozen run copy and temp copies were never versioned. The REQ-018 index link to the draft plan is now dangling.
+
+## D-064 — Observe release identity and version deployed advisor evidence
+
+- **Date:** 2026-10-22 · **Status:** Accepted.
+- **Decision:** Preserve local report contract; add deployed-integration-results/1 with strict shared validation and GET /api/asesor/login asesor-deployment/1 backed by existing release metadata. Verify exact full SHA before credentials and after the scenario; unknown/local identity fails closed.
+- **Consumers/rollback:** Remote runner and shared CLI checker; POST authentication unchanged. Revert 915a75af via normal release controls; remote acceptance then remains unavailable.
+- **ADR:** ~/dev/cerebro/pictures/decisiones/20261022-deployed-evidence.md.

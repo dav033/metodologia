@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 6,
+  "revision": 8,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2155,7 +2155,9 @@
       "after": [
         "T10",
         "T14",
-        "T14.1a"
+        "T14.1a",
+        "T14.2a",
+        "T14.3a"
       ],
       "complexity": "low",
       "scope": "full_feature",
@@ -2802,6 +2804,446 @@
           "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14 fail (scripts/e2e/asesor/run.ts)",
           "expected": "pass",
           "created_by": "T14.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "T14a's own check 1 passes: npm run gate",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "T14a's own check 2 passes: npm run happie:test-webhook",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "T14a's own check 3 passes: npm run lint",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "T14a's own check 4 passes: npm run build --workspaces --if-present",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "T14a's own check 5 passes: npx tsc --noEmit",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "T14a's own check 6 passes: npm run build",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "purpose": "T14a's own check 7 passes: npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "created_by": "T7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "T14a's own check 8 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+          "created_by": "T14a",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "T14a's own check 9 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+          "created_by": "T14a",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14.2a",
+      "milestone_id": "M4",
+      "title": "Integrate reviewed summary lifecycle and deployed evidence correction",
+      "objective": "Owner authorized local integration on 2026-10-22. Import reviewed local commit 915a75af07dd33151508cea3c871f7bae4ed8986 onto accepted T14.1a snapshot 4b0b2450d624af99acf2ef67acf31a05e5101199, using the bounded diff between those commits. Do not overwrite unrelated work. Preserve accepted --check-results implementation. The feature branch already contains this code; scheduler acceptance must be earned independently on this task snapshot. No push, deployment, fabricated acceptance or manual receipts. Report imported revision and actual checks.",
+      "repository": "pictures",
+      "after": [
+        "T10",
+        "T14",
+        "T14.1a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Bounded import: 10 minutes reconciliation and 30 minutes regressions, lint and build; engineering estimate, not measured history.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Reconcile two existing runner entry points and summary lifecycle changes while preserving published identity checks; no new algorithm is designed."
+        },
+        "scope": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Only the reviewed source diff from accepted T14.1a to the local correction is imported; the approved feature scope does not expand."
+        },
+        "duration": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Budget 10 minutes for import and 30 minutes for deterministic checks and the production build; provisional estimate with existing tests available."
+        },
+        "risk": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Summary approval and authentication entry points are affected; regression and identity tests bound the impact before final acceptance."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Summary tools, scenario assertions and report producer/consumer must remain compatible across the accepted T3/T7/T14.1a owners."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3",
+            "task:T7",
+            "task:T14.1a",
+            "file:src/lib/asesor/agent.ts"
+          ],
+          "justification": "Exact source commit and accepted predecessor are available locally, with 63 passing unit tests, passing lint/build and an independent SOUND re-review."
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/deployment.md",
+        "scripts/e2e/asesor/check-findings.ts",
+        "scripts/e2e/asesor/deployed-report.ts",
+        "scripts/e2e/asesor/deployed.ts",
+        "scripts/e2e/asesor/run.ts",
+        "scripts/e2e/asesor/scenarios/m1.ts",
+        "scripts/e2e/asesor/scenarios/m2.ts",
+        "scripts/test/asesor/deployed.test.ts",
+        "scripts/test/asesor/deployment-version.test.ts",
+        "scripts/test/asesor/run.ts",
+        "scripts/test/asesor/summary-flow.test.ts",
+        "src/app/api/asesor/login/route.ts",
+        "src/lib/asesor/agent.ts",
+        "src/lib/asesor/prompts/base.ts",
+        "src/lib/asesor/tools.ts"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "advisor-direction-contract",
+        "advisor-package-contract",
+        "advisor-persistence-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "Complete facts produce a summary; complete correction produces a new version and renewed approval, without redundant provider requests after successful summary operations.",
+        "Deployed reports validate through the shared CLI and require observed full release SHA before credentials and after the scenario; unknown or mismatched identity fails.",
+        "Imported changes preserve accepted report validation and pass deterministic regressions, lint, types and production build without skipped failures."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "Complete facts produce a summary; complete correction produces a new version and renewed approval, without redundant provider requests after successful summary operations.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node --conditions=react-server --import tsx --test scripts/test/asesor/deployed.test.ts scripts/test/asesor/deployment-version.test.ts scripts/test/asesor/harness.test.ts",
+          "purpose": "Deployed reports validate through the shared CLI and require observed full release SHA before credentials and after the scenario; unknown or mismatched identity fails.",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "Imported changes preserve accepted report validation and pass deterministic regressions, lint, types and production build without skipped failures.",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "Imported changes preserve accepted report validation and pass deterministic regressions, lint, types and production build without skipped failures.",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R11",
+        "R14"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T14.3a",
+      "milestone_id": "M4",
+      "title": "Repair what blocks T14a",
+      "objective": "T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2\nexit code 1\n[FAIL] asesor M2: correction did not regenerate the summary\n- H1 (high; owned by T1, T7, T10a, T14, T14.1a, T14.2a): T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T10",
+        "T14",
+        "T14.1a",
+        "T14.2a"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T1, T7, T10a, T14, T14.1a, T14.2a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "package.json",
+        "scripts/test/gate.mjs",
+        ".env.example",
+        "src/lib/asesor/db.ts",
+        "src/lib/asesor/repository.ts",
+        "scripts/migrate-asesor.ts",
+        "scripts/migrations-asesor/001_initial.sql",
+        "scripts/test/asesor/run.ts",
+        "scripts/test/asesor/db.test.ts",
+        "scripts/integration/asesor-db.test.ts",
+        "scripts/e2e/asesor/run.ts",
+        "scripts/e2e/asesor/check-findings.ts",
+        "scripts/e2e/asesor/scenarios/m1.ts",
+        "docs/req-020/deployment.md",
+        "scripts/test/asesor/harness.test.ts",
+        "scripts/e2e/asesor/scenarios/photos.ts",
+        "scripts/e2e/asesor/scenarios/voice.ts",
+        "scripts/e2e/asesor/scenarios/m2.ts",
+        "src/lib/asesor/prompts/catalogue.ts",
+        "scripts/eval/asesor/run.ts",
+        "scripts/eval/asesor/scenarios.json",
+        "scripts/test/asesor/prompt.test.ts",
+        "scripts/e2e/asesor/scenarios/m3.ts",
+        "scripts/e2e/asesor/deployed-report.ts",
+        "scripts/e2e/asesor/deployed.ts",
+        "scripts/test/asesor/deployed.test.ts",
+        "scripts/test/asesor/deployment-version.test.ts",
+        "scripts/test/asesor/summary-flow.test.ts",
+        "src/app/api/asesor/login/route.ts",
+        "src/lib/asesor/agent.ts",
+        "src/lib/asesor/prompts/base.ts",
+        "src/lib/asesor/tools.ts"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "advisor-direction-contract",
+        "advisor-package-contract",
+        "advisor-persistence-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+        "T14a's own check 1 passes: npm run gate",
+        "T14a's own check 2 passes: npm run happie:test-webhook",
+        "T14a's own check 3 passes: npm run lint",
+        "T14a's own check 4 passes: npm run build --workspaces --if-present",
+        "T14a's own check 5 passes: npx tsc --noEmit",
+        "T14a's own check 6 passes: npm run build",
+        "T14a's own check 7 passes: npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+        "T14a's own check 8 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r",
+        "T14a's own check 9 passes: ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/r"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/db.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/harness.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/prompt.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node --conditions=react-server --import tsx --test scripts/test/asesor/deployed.test.ts scripts/test/asesor/deployment-version.test.ts scripts/test/asesor/harness.test.ts",
+          "purpose": "H1 (high) is fixed: T14a cannot pass its checks: tests of T1, T7, T10a, T14, T14.1a, T14.2a fail (scripts/e2e/asesor/run.ts)",
+          "created_by": "T14.3a",
           "category": "functional"
         },
         {

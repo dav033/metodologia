@@ -1,0 +1,162 @@
+diff --git a/docs/req-020/deployment.md b/docs/req-020/deployment.md
+index 828e1a0b..8414368e 100644
+--- a/docs/req-020/deployment.md
++++ b/docs/req-020/deployment.md
+@@ -16,6 +16,8 @@ Configure the same names on Vercel Production and the VPS service:
+ 
+ `ASESOR_E2E_USER_PASSWORD`, `ASESOR_E2E_ADMIN_PASSWORD`, `ASESOR_TEST_DATABASE_URL`, `ASESOR_E2E_FAKE_MODEL`, and `ASESOR_E2E_PROVIDER_FAILURE_TOKEN` are acceptance-test inputs only. Do not configure them in Vercel or the VPS service. The local runner creates its fake credentials and failure token in memory; the live runner reads its E2E passwords from the coordinator's environment and does not print them.
+ 
++For deployed acceptance, run `scripts/e2e/asesor/run.ts --live --deployed --milestone M1` (then M2) with `ASESOR_E2E_DEPLOYED_URL`, `ASESOR_E2E_DEPLOYED_REVISION` (the exact published SHA), and the coordinator's E2E passwords. M2 also needs `ASESOR_E2E_AUDIO_FILE`. This mode sends requests to the published origin and never builds or starts a local server. A redirect from `/asesor/login` fails before any password is sent. Local provider-failure injection remains a local-only check; deployed reports enumerate only the checks actually performed.
++
+ ## Release gate and revision pinning
+ 
+ Run every gate on one commit and deploy that exact commit or immutable build artifact:
+diff --git a/scripts/e2e/asesor/run.ts b/scripts/e2e/asesor/run.ts
+index 4113c99c..9e079457 100644
+--- a/scripts/e2e/asesor/run.ts
++++ b/scripts/e2e/asesor/run.ts
+@@ -9,6 +9,7 @@ import { runM1Scenario } from "./scenarios/m1";
+ import { runM2Scenario } from "./scenarios/m2";
+ import { loadLiveScenarioAudio } from "./scenarios/voice";
+ import { firmarPedido } from "@/lib/voz/firma";
++import { runDeployed } from "./deployed";
+ 
+ type Mode = "fake-model" | "live";
+ type Options = { start: boolean; mode: Mode; milestone: string; reportPath: string; task: string };
+@@ -247,9 +248,16 @@ export async function run(options: Options): Promise<void> {
+ }
+ 
+ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
++  if (process.argv.includes("--deployed")) {
++    runDeployed(process.argv.slice(2)).catch((error: unknown) => {
++      console.error(error instanceof Error ? error.message : "Deployed check failed");
++      process.exitCode = 1;
++    });
++  } else {
+   const options = parseArgs(process.argv.slice(2));
+   run(options).catch((error: unknown) => {
+     console.error(`[FAIL] asesor ${options.milestone}: ${error instanceof Error ? error.message : "unknown error"}`);
+     process.exitCode = 1;
+   });
++  }
+ }
+diff --git a/scripts/e2e/asesor/scenarios/m1.ts b/scripts/e2e/asesor/scenarios/m1.ts
+index 061a9ec5..8aa4f9ff 100644
+--- a/scripts/e2e/asesor/scenarios/m1.ts
++++ b/scripts/e2e/asesor/scenarios/m1.ts
+@@ -6,7 +6,7 @@ type ScenarioOptions = {
+   userPassword: string;
+   adminPassword: string;
+   live: boolean;
+-  providerFailureToken: string;
++  providerFailureToken?: string;
+ };
+ 
+ type SseEvent = { type: string; data: Record<string, unknown> };
+@@ -161,7 +161,7 @@ export async function runM1Scenario(options: ScenarioOptions): Promise<{ checks:
+   assert.equal(adminPage.status, 200, "admin monitor page did not load");
+   checks.push("admin login sees approved brief");
+ 
+-  {
++  if (options.providerFailureToken) {
+     const failureConversation = await fetch(`${options.origin}/api/asesor/conversations`, {
+       method: "POST",
+       headers: { "content-type": "application/json", origin: options.origin, cookie: userCookie },
+--- /dev/null
++++ b/scripts/e2e/asesor/deployed.ts
+@@ -0,0 +1,65 @@
++import { mkdir, writeFile } from "node:fs/promises";
++import path from "node:path";
++import { loadEnvConfig } from "@next/env";
++import { runM1Scenario } from "./scenarios/m1";
++import { runM2Scenario } from "./scenarios/m2";
++import { loadLiveScenarioAudio } from "./scenarios/voice";
++
++export function deployedOptions(args: string[], env: Readonly<Record<string, string | undefined>>) {
++  if (!args.includes("--deployed") || !args.includes("--live") || args.includes("--start") || args.includes("--fake-model")) {
++    throw new Error("Deployed checks require --live --deployed and cannot start a local server.");
++  }
++  const value = (key: string) => {
++    const index = args.indexOf(key);
++    return args.find((item) => item.startsWith(`${key}=`))?.slice(key.length + 1)
++      ?? (index >= 0 ? args[index + 1] : undefined);
++  };
++  const milestone = value("--milestone");
++  if (milestone !== "M1" && milestone !== "M2") throw new Error("Supported milestones are M1 and M2.");
++  const url = new URL(value("--origin") ?? env.ASESOR_E2E_DEPLOYED_URL ?? "");
++  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
++  if ((url.protocol !== "https:" && !(loopback && url.protocol === "http:"))
++      || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
++    throw new Error("Deployed origin must be an HTTPS origin without credentials, path, query or fragment.");
++  }
++  const revision = value("--revision") ?? env.ASESOR_E2E_DEPLOYED_REVISION;
++  if (!revision || !/^[0-9a-f]{40}$/.test(revision)) throw new Error("An exact deployed revision is required.");
++  const userPassword = env.ASESOR_E2E_USER_PASSWORD;
++  const adminPassword = env.ASESOR_E2E_ADMIN_PASSWORD;
++  if (!userPassword || !adminPassword) throw new Error("Advisor E2E user/admin passwords are required.");
++  return { origin: url.origin, revision, milestone, userPassword, adminPassword,
++    reportPath: path.resolve(value("--report") ?? `reports/e2e/asesor/deployed-${milestone}.json`) };
++}
++
++export async function runDeployed(args: string[]): Promise<void> {
++  loadEnvConfig(process.cwd());
++  const options = deployedOptions(args, process.env);
++  const startedAt = new Date().toISOString();
++  const command = `scripts/e2e/asesor/run.ts --live --deployed --milestone ${options.milestone}`;
++  let checks: string[] = [];
++  let failure: string | undefined;
++  let outcome: "passed" | "failed" = "failed";
++  try {
++    const ready = await fetch(`${options.origin}/asesor/login`, { redirect: "manual", signal: AbortSignal.timeout(15_000) });
++    if (ready.status !== 200) throw new Error(`Deployed advisor login returned HTTP ${ready.status}; no credentials sent.`);
++    const scenario = options.milestone === "M1"
++      ? await runM1Scenario({ ...options, live: true })
++      : await runM2Scenario({ ...options, live: true,
++        audio: await loadLiveScenarioAudio(process.env.ASESOR_E2E_AUDIO_FILE ?? "") });
++    checks = scenario.checks;
++    outcome = "passed";
++  } catch (error) {
++    failure = error instanceof Error ? error.message : "Unknown deployed check failure";
++    throw error;
++  } finally {
++    await mkdir(path.dirname(options.reportPath), { recursive: true });
++    await writeFile(options.reportPath, JSON.stringify({
++      schema: "integration-results/1", task: "T14a", revision: options.revision,
++      milestone: options.milestone, mode: "live", target: "deployed", origin: options.origin,
++      invocation: command, startedAt, completedAt: new Date().toISOString(),
++      commands: [command], runs: [{ revision: options.revision, task: "T14a", command, outcome }],
++      outcome, checks, ...(failure ? { failure } : {}),
++    }, null, 2) + "\n", { mode: 0o600 });
++    console.log(`Deployed ${options.milestone} ${outcome}; evidence: ${options.reportPath}`);
++  }
++}
+--- /dev/null
++++ b/scripts/test/asesor/deployed.test.ts
+@@ -0,0 +1,27 @@
++import assert from "node:assert/strict";
++import { test } from "node:test";
++import { deployedOptions } from "../../e2e/asesor/deployed";
++
++const env = { ASESOR_E2E_USER_PASSWORD: "test-user", ASESOR_E2E_ADMIN_PASSWORD: "test-admin",
++  ASESOR_E2E_DEPLOYED_URL: "https://example.invalid", ASESOR_E2E_DEPLOYED_REVISION: "a".repeat(40) };
++const args = ["--live", "--deployed", "--milestone", "M1"];
++
++test("deployed mode resolves a remote origin and exact release", () => {
++  const options = deployedOptions(args, env);
++  assert.equal(options.origin, env.ASESOR_E2E_DEPLOYED_URL);
++  assert.equal(options.revision, env.ASESOR_E2E_DEPLOYED_REVISION);
++  assert.equal(options.milestone, "M1");
++});
++
++test("deployed mode cannot silently run locally or use fake providers", () => {
++  for (const extra of ["--start", "--fake-model"]) assert.throws(() => deployedOptions([...args, extra], env));
++  assert.throws(() => deployedOptions(args.filter((item) => item !== "--live"), env));
++});
++
++test("deployed mode validates target and credentials before HTTP", () => {
++  for (const url of ["http://example.invalid", "https://user:password@example.invalid", "https://example.invalid/path", "https://example.invalid?token=x"]) {
++    assert.throws(() => deployedOptions(args, { ...env, ASESOR_E2E_DEPLOYED_URL: url }));
++  }
++  assert.throws(() => deployedOptions(args, { ...env, ASESOR_E2E_DEPLOYED_REVISION: "main" }));
++  assert.throws(() => deployedOptions(args, { ...env, ASESOR_E2E_ADMIN_PASSWORD: "" }));
++});

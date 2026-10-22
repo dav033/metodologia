@@ -1,6 +1,25 @@
 {
- "actions": 1,
+ "actions": 2,
  "cases": {
+  "6f18906b7e10dffd": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792707745.275,
+   "history": [
+    {
+     "at": 1792707745.278,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "6f18906b7e10dffd",
+   "status": "unrepairable",
+   "task": "T14a"
+  },
   "71aa926b82606c04": {
    "applied": 0,
    "class": "unknown",
@@ -51,6 +70,40 @@
    "target": "T14a",
    "task": "T14a",
    "task_added": "T14.1a"
+  },
+  "e62c6d602097f2f5": {
+   "after_restored": [
+    "T10",
+    "T14",
+    "T14.1a",
+    "T14.2a"
+   ],
+   "applied": 1,
+   "at": 1792708499.954,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/run.ts belong to accepted T1, T7, T10a, T14, T14.1a, T14.2a",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792708499.04,
+   "history": [
+    {
+     "at": 1792708499.954,
+     "repair": "plan r8: repair task T14.3a before T14a",
+     "result": "fixed"
+    }
+   ],
+   "id": "e62c6d602097f2f5",
+   "lines": [
+    "att-0092: cancelled",
+    "rebase r7 → r8: kept 17, redo 3, new 1, removed 0"
+   ],
+   "repair": "plan r8: repair task T14.3a before T14a",
+   "revision": 8,
+   "status": "applied",
+   "target": "T14a",
+   "task": "T14a",
+   "task_added": "T14.3a"
   }
  }
 }

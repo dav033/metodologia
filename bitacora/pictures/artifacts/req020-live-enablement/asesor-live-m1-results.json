@@ -1,0 +1,45 @@
+{
+  "schema": "integration-results/1",
+  "milestone": "M1",
+  "task": "T7",
+  "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+  "mode": "live",
+  "invocation": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1 --task T7",
+  "startedAt": "2026-10-22T19:37:22.997Z",
+  "completedAt": "2026-10-22T19:38:03.457Z",
+  "commands": [
+    "npm run build --workspaces --if-present",
+    "npm run build",
+    "npm run start",
+    "scripts/e2e/asesor/run.ts --start --live --milestone M1 --task T7"
+  ],
+  "runs": [
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run build --workspaces --if-present",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run build",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "npm run start",
+      "outcome": "passed"
+    },
+    {
+      "revision": "71a8f78400d437f09423cac1b51ca38120b8f6c7",
+      "task": "T7",
+      "command": "scripts/e2e/asesor/run.ts --start --live --milestone M1 --task T7",
+      "outcome": "failed"
+    }
+  ],
+  "outcome": "failed",
+  "checks": [],
+  "failure": "initial summary was not proposed"
+}

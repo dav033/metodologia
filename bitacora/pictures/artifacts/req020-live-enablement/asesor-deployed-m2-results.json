@@ -1,0 +1,26 @@
+{
+  "schema": "integration-results/1",
+  "task": "T14a",
+  "revision": "2d924c106cf33fc1bdb0776b5087aba4d1accf51",
+  "milestone": "M2",
+  "mode": "live",
+  "target": "deployed",
+  "origin": "https://185-147-157-25.sslip.io",
+  "invocation": "scripts/e2e/asesor/run.ts --live --deployed --milestone M2",
+  "startedAt": "2026-10-22T19:40:10.549Z",
+  "completedAt": "2026-10-22T19:40:11.000Z",
+  "commands": [
+    "scripts/e2e/asesor/run.ts --live --deployed --milestone M2"
+  ],
+  "runs": [
+    {
+      "revision": "2d924c106cf33fc1bdb0776b5087aba4d1accf51",
+      "task": "T14a",
+      "command": "scripts/e2e/asesor/run.ts --live --deployed --milestone M2",
+      "outcome": "failed"
+    }
+  ],
+  "outcome": "failed",
+  "checks": [],
+  "failure": "Deployed advisor login returned HTTP 307; no credentials sent."
+}
