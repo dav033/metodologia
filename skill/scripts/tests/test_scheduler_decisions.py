@@ -341,3 +341,12 @@ class WatchWaits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StartAndVerifyRejections(unittest.TestCase):
+    def test_a_refused_start_or_order_is_the_systems_own_evidence_not_an_owner_only_decision(self):
+        import bt_scheduler_decisions as decisions
+        for code in ("start_rejected_integration_conflict", "verify_rejected_order_invalid"):
+            what, unskippable, option = decisions._start_rejected(code)
+            self.assertEqual((unskippable, option), (False, "retry"), code)
+        self.assertIsNone(decisions._start_rejected("identity_unverified"))

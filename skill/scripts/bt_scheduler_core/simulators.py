@@ -101,9 +101,12 @@ class FakeVerifier:
     def __init__(self):
         self.requests: dict[str, VerifyOrder] = {}
         self.deliveries: dict[str, int] = {}
+        self.reject: Ack | None = None            # when set, every request is answered with this rejection
 
     def request(self, order: VerifyOrder) -> Ack:
         self.deliveries[order.idempotency_key] = self.deliveries.get(order.idempotency_key, 0) + 1
+        if self.reject is not None:
+            return self.reject
         duplicate = order.attempt_id in self.requests
         self.requests.setdefault(order.attempt_id, order)
         return Ack("duplicate" if duplicate else "accepted")

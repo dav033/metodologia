@@ -46,3 +46,18 @@ class UnmappedChecks(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DominantResources(unittest.TestCase):
+    def plan(self, claims):
+        return {"tasks": [{"id": f"T{n}", "shared_resources": list(res)} for n, res in enumerate(claims, 1)]}
+
+    def test_a_resource_most_of_the_plan_claims_is_named_with_its_count(self):
+        found = quality.dominant_shared_resources(self.plan([["db"]] * 5 + [[]] * 3))
+        self.assertEqual(len(found), 1)
+        self.assertIn("'db' is claimed by 5 of 8 tasks", found[0])
+
+    def test_few_claims_or_a_small_plan_are_left_alone(self):
+        self.assertEqual(quality.dominant_shared_resources(self.plan([["db"]] * 3 + [[]] * 5)), [])        # under the minimum
+        self.assertEqual(quality.dominant_shared_resources(self.plan([["db"]] * 4 + [[]] * 8)), [])        # under the share
+        self.assertEqual(quality.dominant_shared_resources({"tasks": []}), [])

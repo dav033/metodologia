@@ -250,6 +250,7 @@ class VerifyOrder:
 class Ack:
     status: str                     # accepted | duplicate | rejected
     detail: str = ""
+    permanent: bool = False         # a rejection that will not change by asking again (the order itself is refused)
 
 
 class PortNotReady(Exception):

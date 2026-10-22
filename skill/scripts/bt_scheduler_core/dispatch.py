@@ -119,6 +119,10 @@ class Dispatcher:
             item.status = "void"
             if kind == "start" and A(att.state) in ATTEMPT_LIVE:
                 end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {ack.detail[:200]}")
+            elif kind == "verify" and ack.permanent and A(att.state) == A.VERIFYING:
+                # the verifier refuses the ORDER itself: asking again at every lease expiry never changes that (REQ-020 att-0087 waited
+                # 99 minutes and 20 re-sends). The attempt ends; whatever the executor kept of its work stays there for the retry
+                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"verify rejected: {ack.detail[:200]}")
             return 1
         mark_delivered(ctx, attempt_id, kind)
         ctx.audit("dispatch_delivered", att.task_id, attempt_id, kind=kind, ack=ack.status)

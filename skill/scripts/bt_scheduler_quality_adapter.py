@@ -168,16 +168,16 @@ class QualityVerificationPort:
             parsed = VerifyRequest.from_mapping(_order_mapping(order))
         except (QualityError, TypeError, ValueError) as error:
             code = error.code if isinstance(error, QualityError) else "ORDER_INVALID"
-            return m1.Ack("rejected", code)
+            return m1.Ack("rejected", code, permanent=True)          # the order is malformed: sending it again changes nothing
         if not _matches_approved_plan(self.core, order, parsed):
-            return m1.Ack("rejected", "ORDER_DIFFERS_FROM_APPROVED_PLAN")
+            return m1.Ack("rejected", "ORDER_DIFFERS_FROM_APPROVED_PLAN", permanent=True)
         try:
             state, _ = self.store.reserve(
                 parsed, max_pending=self.policy.max_pending_requests
             )
         except QualityError as error:
             if error.code in {"IDEMPOTENCY_CONFLICT", "QUALITY_BUSY", "ORDER_INVALID"}:
-                return m1.Ack("rejected", error.code)
+                return m1.Ack("rejected", error.code, permanent=error.code != "QUALITY_BUSY")   # only a busy store may answer later
             raise
         self._wake.set()
         return m1.Ack("duplicate" if state != "new" else "accepted", "durably admitted")

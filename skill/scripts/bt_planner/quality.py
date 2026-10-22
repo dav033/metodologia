@@ -410,6 +410,21 @@ def unmapped_checks(plan: dict) -> list[dict[str, object]]:
     return found
 
 
+def dominant_shared_resources(plan: dict, share: float = 0.6, minimum: int = 4) -> list[str]:
+    """A shared resource is always exclusive: two tasks that claim the same one never run side by side. One that most of a plan claims
+    (REQ-029: nearly every task) makes the plan a chain whatever its graph says. Warn with the count, so the author declares it only on
+    the tasks that really need it alone."""
+    tasks = [t for _, t in _plan_tasks(plan)]
+    counts: dict[str, int] = {}
+    for task in tasks:
+        for resource in set(_strs(task.get("shared_resources"))):
+            counts[resource] = counts.get(resource, 0) + 1
+    return [f"shared_resources: {resource!r} is claimed by {count} of {len(tasks)} tasks; a shared resource is exclusive, so those "
+            "tasks never run side by side: declare it only on the tasks that need it alone"
+            for resource, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+            if tasks and count >= minimum and count / len(tasks) >= share]
+
+
 def verification_report(plan: dict) -> dict[str, object]:
     """Stable Planner report fields for T10 to expose without changing legacy analysis output."""
     return {"verification_categories": verification_categories(plan),

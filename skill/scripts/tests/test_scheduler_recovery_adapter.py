@@ -62,6 +62,13 @@ class RecoveryPortContract(unittest.TestCase):
                 proposal = self.port.propose(self.context)
                 self.assertEqual((proposal.action, proposal.reason), ("block", reason))
 
+    def test_a_refused_verification_order_blocks_with_its_code_even_though_the_executor_has_its_record(self):
+        """The retry would send the same refused order again: it blocks with `verify_rejected_<code>`, and the attempt's snapshot stays."""
+        self.port._official = lambda _c: {"current": True, "manual_cancel": False, "evidence": "",
+                                          "failure": "verify rejected: ORDER_INVALID: verification entry has missing or unapproved fields"}
+        proposal = self.port.propose(self.context)                                              # self.facts is a complete executor record
+        self.assertEqual((proposal.action, proposal.reason), ("block", "m5:verify_rejected_order_invalid"))
+
     def test_uncovered_recovery_surface_blocks_under_the_same_verification_case(self):
         context = replace(self.context, cause="verification_rejected")
         self.port._official = lambda _context: {"current": True, "manual_cancel": False,

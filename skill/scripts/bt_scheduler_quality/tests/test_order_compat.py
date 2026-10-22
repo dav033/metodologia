@@ -28,6 +28,7 @@ class LegacyRepairAdmissionTests(unittest.TestCase):
         attempts = self._start_attempts(core, executor, root, ("T1",))
         response = adapter.request(fixtures._order_from_plan(core, "T1", attempts["T1"]))
         self.assertEqual((response.status, response.detail), ("rejected", "ORDER_INVALID"))
+        self.assertTrue(response.permanent)                         # the core ends the attempt instead of re-sending a refused order
         self.assertEqual(store.pending_requests(), ())
         self.assertEqual(adapter.engine.runner.calls, [])
 

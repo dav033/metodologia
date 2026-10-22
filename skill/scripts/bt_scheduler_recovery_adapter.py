@@ -127,12 +127,12 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             facts = self.describe(context.attempt_id) or {}
             if not isinstance(facts, Mapping):
                 raise TypeError("invalid evidence object")
-            started = re.match(r"start rejected: ([A-Z][A-Z_]+)", str(official.get("failure") or ""))
-            if not facts and started:
-                # the scheduler itself refused to start the attempt (an integration clash, a predecessor that is not accepted...): the
-                # executor never had a record BY DESIGN, and the evidence is the scheduler's own. It was filed as `identity_unverified`
-                # (an integrity anomaly nobody answers for): 39 of its 44 real blocks were these, and a person had to look at each one
-                return sched.core.RecoveryProposal("block", f"m5:start_rejected_{started.group(1).lower()}")
+            started = re.match(r"(start|verify) rejected: ([A-Z][A-Z_]+)", str(official.get("failure") or ""))
+            if started and (started.group(1) == "verify" or not facts):
+                # the scheduler itself refused to start the attempt, or the verifier refused its order: a fact of its own records, not an
+                # integrity anomaly. A start rejection never had an executor record by design (39 of 44 real `identity_unverified` blocks);
+                # a refused order is sent again unchanged by a retry, so it blocks with its code and the snapshot waits for `continue-from`
+                return sched.core.RecoveryProposal("block", f"m5:{started.group(1)}_rejected_{started.group(2).lower()}")
             case = self._case(context, official, facts)
             decision = self._open().decide(case, self.policy)
         except Exception as error:  # noqa: BLE001 - a broken recovery store must not enable the core retry fallback

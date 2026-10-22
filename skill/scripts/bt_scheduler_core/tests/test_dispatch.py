@@ -146,6 +146,25 @@ class PortFailures(unittest.TestCase):
         h.core.step()
         self.assertEqual(h.state("T1"), "blocked")                         # one-attempt budget, no recovery module
 
+    def test_a_permanent_verify_rejection_fails_the_attempt_instead_of_resending_it_forever(self):
+        """REQ-020 att-0087: ORDER_INVALID answered 20 times over 99 minutes, the attempt `verifying` all along."""
+        h = Harness([indep("T1")])
+        h.verifier.reject = sc.Ack("rejected", "ORDER_INVALID", permanent=True)
+        h.core.step()
+        h.send("T1", "execution_finished")
+        h.core.step()
+        self.assertEqual(h.core.snapshot().tasks["T1"]["attempt_state"], "failed")
+        self.assertIn("verify rejected: ORDER_INVALID", h.core.read(lambda c: [a.failure for a in c.state.attempts.values()][0]))
+        self.assertEqual(h.verifier.deliveries and sum(h.verifier.deliveries.values()), 1)       # asked once
+
+    def test_a_transient_verify_rejection_keeps_the_attempt_waiting_for_the_next_lease(self):
+        h = Harness([indep("T1")])
+        h.verifier.reject = sc.Ack("rejected", "QUALITY_BUSY")
+        h.core.step()
+        h.send("T1", "execution_finished")
+        h.core.step()
+        self.assertEqual(h.core.snapshot().tasks["T1"]["attempt_state"], "verifying")
+
     def test_a_delivery_that_keeps_failing_is_abandoned_visibly(self):
         h = Harness([indep("T1")])
         h.executor.fail_next_starts = 100

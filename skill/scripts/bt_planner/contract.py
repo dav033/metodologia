@@ -373,6 +373,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     if not report.errors or all("cycle" not in e for e in report.errors):
         (report.errors if strict else report.warnings).extend(quality.conflicts(plan))
         report.warnings.extend(quality.shared_unordered(plan))
+        report.warnings.extend(quality.dominant_shared_resources(plan))
         report.warnings.extend(quality.unconsumed_results(plan))
         report.warnings.extend(quality.redundant_edges(plan))
         report.warnings.extend(quality.file_hotspots(plan))

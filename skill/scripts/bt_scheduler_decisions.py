@@ -251,12 +251,13 @@ def _manual_closure(rdir: Path, attempt_id: str) -> str:
 
 
 def _start_rejected(code: str):
-    """The scheduler itself refused to start the attempt (`start rejected: <CODE>`): its own evidence, not an integrity anomaly, so it is
-    not an owner-only decision and the self-healing may answer it (an integration clash is redone on the stale result)."""
-    if not code.startswith("start_rejected_"):
-        return None
-    return (f"El scheduler no pudo arrancar el intento: {code[len('start_rejected_'):].upper()}. La evidencia es del propio scheduler "
-            "(no un fallo de integridad), y el error de abajo dice qué choca o qué falta.", False, "retry")
+    """The scheduler refused to start the attempt (`start rejected: <CODE>`) or the verifier refused its order (`verify rejected: <CODE>`): its
+    own evidence, not an integrity anomaly, so it is not an owner-only decision and the self-healing may answer it."""
+    for prefix, what in (("start_rejected_", "arrancar el intento"), ("verify_rejected_", "aceptar la orden de verificación")):
+        if code.startswith(prefix):
+            return (f"El scheduler no pudo {what}: {code[len(prefix):].upper()}. La evidencia es del propio sistema (no un fallo de "
+                    "integridad), y el error de abajo dice qué choca o qué falta; el trabajo terminado se conserva.", False, "retry")
+    return None
 
 
 def _blocked(doc: dict, rdir: Path) -> list[dict]:

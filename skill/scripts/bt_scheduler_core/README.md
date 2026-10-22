@@ -218,3 +218,6 @@ semantics.
 
 Run the module's suite from anywhere: `python -I -m unittest discover -s <path>/bt_scheduler_core/tests`; the isolation test
 runs it again from a lone copy of the package.
+
+## A refused verification order ends the attempt
+`Ack(status, detail, permanent=False)`. A verification port that answers `rejected` with `permanent=True` (the order itself is refused: malformed, or different from the approved plan) ends the attempt `failed` with `verify rejected: <detail>`, the same way a rejected start does; without it the order was re-sent at every lease expiry for ever (REQ-020 att-0087: 20 re-sends over 99 minutes). A transient rejection (a busy store) leaves the attempt `verifying` and the next lease asks again. What the executor kept of the attempt's work is not touched, so the retry or `continue-from` starts from it.
