@@ -56,7 +56,7 @@ class QualityVerificationPort:
         integration_retries: int = 0,
         integration_rework_limit: int = 6,
         unresolved_check: Callable[[str, str], tuple[str, ...]] | None = None,
-        revert_check: Callable[[str, str], tuple[str, ...]] | None = None,
+        revert_check: Callable[..., tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
     ):
         self.core = core
@@ -404,7 +404,7 @@ class QualityVerificationPort:
             left = self.unresolved_check(order.task_id, source.snapshot_sha) if self.unresolved_check else ()
             if left:
                 return UNRESOLVED + ", ".join(left[:6])
-            back = self.revert_check(order.task_id, source.snapshot_sha) if self.revert_check else ()
+            back = self.revert_check(order.task_id, source.snapshot_sha, base=source.base_sha) if self.revert_check else ()
             if back:
                 return REVERTED + ", ".join(back[:6])
             return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) \

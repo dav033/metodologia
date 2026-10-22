@@ -206,6 +206,36 @@ class Unit(unittest.TestCase):
         owned._bound["plan"].spec["T1"].expected_paths = ("edit.py",)                       # the task owns the file: its call
         self.assertEqual(owned.reverted("T1", reverted), ())
 
+    def test_a_stale_snapshot_does_not_silently_remove_a_fix_the_other_side_restored(self):
+        anc = snapshot(self.app, self.head, {"api.py": "has challenges\n"})
+        removed = snapshot(self.app, anc, {"api.py": "no challenges\n"})                  # T6 removed the handler
+        newer = snapshot(self.app, removed, {"api.py": "has challenges\n"})              # T17 restored it exactly
+        stale = snapshot(self.app, anc, {"api.py": "no challenges\n", "own.py": "T18.1\n"})
+        spec = {"T1": ([], "app"), "T2": ([], "app"), "T3": (["T1", "T2"], "app")}
+        self.accept("T1", newer)
+        self.accept("T2", stale)
+        merged = self.bound(spec).base_ref("T3")
+        self.assertEqual(git(self.app, "show", f"{merged}:api.py"), "has challenges")        # the restored fix survives
+        self.assertEqual(git(self.app, "show", f"{merged}:own.py"), "T18.1")                  # the stale task's own work too
+        diverged = snapshot(self.app, anc, {"api.py": "has challenges\nand a new line\n", "own.py": "T18.1\n"})
+        self.accept("T2", diverged)
+        self.assertEqual(git(self.app, "show", f"{self.bound(spec).base_ref('T3')}:api.py"), "has challenges\nand a new line")
+
+    def test_a_continued_attempt_is_judged_against_the_snapshot_it_started_from_not_its_first_parent(self):
+        v1 = snapshot(self.app, self.head, {"edit.py": "old version\n"})
+        v2 = snapshot(self.app, v1, {"edit.py": "new version with the fix\n"})
+        carried = snapshot(self.app, v2, {"edit.py": "<<<<<<< ours\nx\n>>>>>>> theirs\n"})   # the carry left markers
+        resolved = snapshot(self.app, carried, {"edit.py": "old version\n"})                  # first attempt took the old side
+        integrator = self.bound({"T1": ([], "app")})
+        self.assertEqual(integrator.reverted("T1", resolved), ("edit.py",))                     # against snapshot^1: a revert
+        same = resolved                                                                         # a continuation that changed nothing
+        self.assertEqual(integrator.reverted("T1", same, base=resolved), ())
+        self.assertEqual(integrator.reverted("T1", snapshot(self.app, resolved, {"own.py": "x\n"}), base=resolved), ())
+        back = snapshot(self.app, resolved, {"edit.py": "old version\n\n"})
+        self.assertEqual(integrator.reverted("T1", back, base=resolved), ())                  # a new blob is not a revert
+        self.assertEqual(integrator.reverted("T1", snapshot(self.app, resolved, {"edit.py": "new version with the fix\n"}),
+                                             base=resolved), ("edit.py",))                      # a real revert still is
+
     def test_a_clash_caused_by_a_common_ancestor_that_was_redone_is_merged_over_its_earlier_result(self):
         lines = [f"line{n}" for n in range(1, 21)]
         base = snapshot(self.app, self.head, {"up.txt": "\n".join(lines) + "\n"})

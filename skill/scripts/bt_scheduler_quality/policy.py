@@ -69,18 +69,18 @@ class QualityPolicy:
     max_concurrent: int = 2
     max_pending_requests: int = 128
     max_checks: int = MAX_CHECKS
-    max_command_seconds: int = 1500
-    max_total_seconds: int = 3600
+    max_command_seconds: int = 3000  # REQ-029 T6 harness drives the real CLI and needs more than 1500 s with several runs competing
+    max_total_seconds: int = 5400
     max_cpu_seconds: int = 3600
     max_output_bytes: int = 262_144
     max_snapshot_bytes: int = 536_870_912
     max_snapshot_files: int = 20_000
-    max_workspace_bytes: int = 1_073_741_824
+    max_workspace_bytes: int = 2_147_483_648  # tmpfs: source + `next build` output already use ~80% of 1 GiB
     max_tmp_bytes: int = 134_217_728
     max_address_space_bytes: int = 0  # 0 = unlimited: V8 and Chromium reserve far more address space than they use
     max_data_bytes: int = 12_884_901_888  # RLIMIT_DATA: what a check may really allocate (reservations do not count)
     max_open_files: int = 1024
-    max_processes: int = 512
+    max_processes: int = 4096  # RLIMIT_NPROC counts threads: `next build` peaks near 500; at 512 Node aborts (SIGABRT) when a thread cannot start
     toolchain: bool = True  # mount the operator's Node install, Playwright browsers and the attempt's node_modules
     provision_dependencies: bool = True  # an attempt with no node_modules gets the lockfile's, installed offline
     rerun_failed_checks: int = 0  # a check that fails is run again this many times; a pass on the rerun counts (flaky)

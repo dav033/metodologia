@@ -493,7 +493,7 @@ class M6M1AdapterTests(unittest.TestCase):
         task["verification"][0]["category"] = "functional"
         notes = []
         root, core, _, executor, _, _ = self._system(
-            [task], max_attempts=2, schema_version="1.2.0", revert_check=lambda task_id, snapshot: ("edit.py",),
+            [task], max_attempts=2, schema_version="1.2.0", revert_check=lambda task_id, snapshot, **_: ("edit.py",),
             rework_notes=lambda task_id, text: text and notes.append((task_id, text)))
         self._start_attempts(core, executor, root, ("T1",))
         core.step()

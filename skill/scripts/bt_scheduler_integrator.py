@@ -22,7 +22,9 @@ import hashlib
 import logging
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
@@ -200,9 +202,12 @@ class PredecessorIntegrator:
         files -= {line.split(":", 1)[1] for line in known.stdout.splitlines() if ":" in line}
         return tuple(sorted(files))
 
-    def reverted(self, task_id: str, snapshot: str, depth: int = 40, limit: int = 200) -> tuple[str, ...]:
-        """Files the result changed BACK to an older version of themselves than the one it started from (the first
-        parent of the snapshot), outside the files the task declares. A task that resolves a merge by taking the stale
+    def reverted(self, task_id: str, snapshot: str, depth: int = 40, limit: int = 200,
+                 base: str | None = None) -> tuple[str, ...]:
+        """Files the result changed BACK to an older version of themselves than the one it started from (`base`, the
+        trusted start of the attempt; the first parent of the snapshot when not given), outside the files the task
+        declares. An attempt that continues from an earlier snapshot starts from that snapshot, not from `snapshot^1`
+        (REQ-027 T17: a no-change attempt was rejected for a file its predecessor had already resolved). A task that resolves a merge by taking the stale
         side hands every later merge a regression: REQ-027's T15f carried the old `bt_remote_edit.py` (57 lines) over
         T8a's fix (103 lines), so the fix never reached the tasks built after it and the audit found it five rounds."""
         bound = self._bound
@@ -210,7 +215,7 @@ class PredecessorIntegrator:
         if not path:
             return ()
         repo = Path(path)
-        parent = f"{snapshot}^1"
+        parent = base if base and SHA.fullmatch(base) else f"{snapshot}^1"
         diff = _git(repo, "diff", "--name-only", "--no-renames", parent, snapshot, check=False)
         if diff.returncode:
             return ()
@@ -413,12 +418,66 @@ class PredecessorIntegrator:
                                        f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"[:170])
             if done.returncode:
                 raise IntegrationError("INTEGRATION_GIT", f"merge-tree: {(done.stderr or done.stdout).strip()[:300]}")
-            tree = done.stdout.splitlines()[0].strip()
+            tree = self._keep_newer_versions(repo, done.stdout.splitlines()[0].strip(), current, sha)
             current = _git(repo, "commit-tree", "--no-gpg-sign", tree, "-p", current, "-p", sha, "-m",
                            f"m3 integration of {current_task} + {tid} for {task_id}").stdout.strip()
             current_task = f"{current_task}+{tid}"
             members.append(tid)
         return current
+
+    def _keep_newer_versions(self, repo: Path, tree: str, a: str, b: str, depth: int = 40, limit: int = 400) -> str:
+        """A clean merge can still lose a fix. Snapshots are whole trees, so a stale one (built before a redo) carries
+        the old content of files it never touched; merged over the git ancestor, "the stale side removed what the
+        ancestor had, the new side left it alone" resolves to the removal. REQ-027's T18 audit found the same fixes
+        open five rounds running: `/challenges` (T5b) and `bt_remote_edit.py` (T8a, 108 -> 47 lines) vanished that way.
+        A file whose merged content is exactly one side's, while that content is an older version already in the
+        other side's history, takes the other side's (newer) version. A real divergence (merged equals neither side)
+        is never touched. Any git trouble returns the merged tree unchanged."""
+        diff = _git(repo, "diff", "--name-only", "--no-renames", a, b, check=False)
+        if diff.returncode:
+            return tree
+        fixes: dict[str, str] = {}
+        for name in diff.stdout.splitlines()[:limit]:
+            blobs = {}
+            for key, ref in (("a", a), ("b", b), ("m", tree)):
+                got = _git(repo, "rev-parse", "--verify", f"{ref}:{name}", check=False)
+                blobs[key] = got.stdout.strip() if got.returncode == 0 else None
+            if not (blobs["a"] and blobs["b"] and blobs["m"]) or blobs["a"] == blobs["b"]:
+                continue
+            for loser, winner in (("b", "a"), ("a", "b")):
+                if blobs["m"] != blobs[loser]:
+                    continue
+                other = a if winner == "a" else b
+                history = _git(repo, "log", f"-n{depth}", "--format=%H", other, "--", name, check=False)
+                older = set()
+                for commit in history.stdout.split()[1:]:
+                    got = _git(repo, "rev-parse", "--verify", f"{commit}:{name}", check=False)
+                    if got.returncode == 0:
+                        older.add(got.stdout.strip())
+                if blobs[loser] in older:
+                    fixes[name] = blobs[winner]
+                break
+        if not fixes:
+            return tree
+        index = Path(tempfile.mkdtemp(prefix="m3-keepnewer-")) / "index"
+        try:
+            env = {**os.environ, "GIT_INDEX_FILE": str(index)}
+            read = subprocess.run(["git", "-C", str(repo), "read-tree", tree], env=env, capture_output=True, text=True)
+            if read.returncode:
+                return tree
+            for name, blob in fixes.items():
+                mode = _git(repo, "ls-tree", a if blob == _git(repo, "rev-parse", f"{a}:{name}", check=False).stdout.strip() else b,
+                            "--", name, check=False).stdout.split()
+                if not mode:
+                    return tree
+                upd = subprocess.run(["git", "-C", str(repo), "update-index", "--cacheinfo", f"{mode[0]},{blob},{name}"],
+                                     env=env, capture_output=True, text=True)
+                if upd.returncode:
+                    return tree
+            written = subprocess.run(["git", "-C", str(repo), "write-tree"], env=env, capture_output=True, text=True)
+            return written.stdout.strip() if written.returncode == 0 and written.stdout.strip() else tree
+        finally:
+            shutil.rmtree(index.parent, ignore_errors=True)
 
     def _merge_over_earlier_result(self, repo: Path, contains, current: str, sha: str, owners, snapshot_of):
         """A clash can be a redone task meeting work built on the result it replaced: both then changed the same lines of
