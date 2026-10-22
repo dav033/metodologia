@@ -76,7 +76,7 @@ def status_of(root: Path, project: str, req: str) -> dict[str, Any]:
 def recovery_state(rdir: Path) -> dict[str, Any] | None:
     """Diagnostic recovery of the run for its page: whether it is on, the durable cycles and their exact blockers, and what the
     owner needs to opt in or stop it (the preview digest and the stop generation the controls are bound to)."""
-    if not (rdir / scheduler_.PROJECTION).is_file():
+    if not _has_run(rdir):
         return None
     try:
         import bt_scheduler_ops as ops
@@ -110,10 +110,18 @@ def recovery_control(root: Path, project: str, req: str, action: str, preview_di
     raise PlanError("Acción de recuperación desconocida.")
 
 
+def _has_run(rdir: Path) -> bool:
+    """A scheduler run exists (its database) or its read model was written: only then are recovery and healing worth showing."""
+    try:
+        return (rdir / scheduler_.PROJECTION).is_file() or scheduler_.authority(rdir) == scheduler_.AUTHORITY
+    except Exception:  # noqa: BLE001 - an unreadable run directory shows nothing
+        return False
+
+
 def healing_state(rdir: Path) -> dict[str, Any] | None:
     """The self-healing of the run for its page (REQ-029 R7 / REQ-030): on/off, budget, every case with what was done, and the
     last interventions. None for a plan that never ran; the page must render when the files cannot be read."""
-    if not (rdir / scheduler_.PROJECTION).is_file():
+    if not _has_run(rdir):
         return None
     try:
         import bt_interventions
