@@ -213,17 +213,48 @@ def _repair(project, req, rdir, request, case, context, plan, doc, answer, revis
                 answer(request_id, "rework_conflict", "automatic: " + str(diagnosis.get("headline") or "integration clash"))
                 return {"repair": "redo the task built on the stale result", "result": "fixed"}
         elif kind == "environment":
+            if _workspace_full(rdir, case) and "retry" in options:
+                import bt_config
+
+                now = bt_config.get("verifier.max_workspace_mb", 2048)
+                bigger = min(int(now) * 2, WORKSPACE_CAP_MB) if isinstance(now, int) else 4096
+                if bigger > now:
+                    bt_config.set_value("verifier.max_workspace_mb", bigger)
+                    answer(request_id, "retry", f"automatic: the verifier workspace was full; max_workspace_mb {now} -> {bigger}")
+                    return {"repair": f"verifier.max_workspace_mb {now} -> {bigger}, retry", "result": "fixed"}
             note = (request.get("diagnosis") or {}).get("note")
             if note and "retry_with_note" in options:
                 answer(request_id, "retry_with_note", f"{note}\n\nEvidence the system found: {cite}")
                 return {"repair": "retry with a note that cites the evidence", "result": "fixed"}
         elif kind == "criterion_unmapped":
             return _fix_mapping(project, req, rdir, request, case, plan, answer, revise)
+        elif kind == "regression" and "audit gate:" in context.get("verify", "") + str(request.get("error")):
+            import bt_remediation
+
+            if "retry" in options and bt_remediation.grant_round(rdir, request["task"]):
+                answer(request_id, "retry", "automatic: one more remediation round for the audit instead of sending accepted tasks back")
+                return {"repair": "one more remediation round, then the audit looks again", "result": "fixed"}
         elif kind in ("regression", "plan_defect"):
             return repair_task(project, req, rdir, request, case, context, plan, revise)
     except Exception as error:  # noqa: BLE001 - a repair that fails leaves the card for a person
         return {"repair": f"{kind}: {type(error).__name__}: {str(error)[:200]}", "result": "failed"}
     return {"repair": "none", "result": "pending"}
+
+
+WORKSPACE_CAP_MB = 8192
+
+
+def _workspace_full(rdir: Path, case) -> bool:
+    """ENOSPC while the HOST has room: the verifier's private workspace (a tmpfs) is the one that is full, and that is a
+    setting, not the owner's disk. A really full disk is never "repaired" (nothing of the owner's is deleted)."""
+    import shutil
+
+    if not any("ENOSPC" in e or "No space left" in e or "space" in e for e in case.evidence):
+        return False
+    try:
+        return shutil.disk_usage(rdir).free > 5 << 30
+    except OSError:
+        return False
 
 
 def _fix_mapping(project, req, rdir, request, case, plan, answer, revise) -> dict[str, Any]:

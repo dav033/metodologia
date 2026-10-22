@@ -49,14 +49,19 @@ def _attempt(scenario: dict, now: float) -> dict[str, Any]:
         return {"class": None, "auto": False, "repair": "none", "wait": None}
     answers: list[tuple] = []
     plan_json, frozen = scenario.get("plan_json"), []
-    original = (healing._latest_plan, healing._freeze)
+    import bt_config
+    import bt_remediation
+
+    original = (healing._latest_plan, healing._freeze, bt_config.set_value, bt_remediation.grant_round)
+    bt_config.set_value = lambda key, value: None                     # the benchmark never writes the machine's settings
+    bt_remediation.grant_round = lambda rdir, audit, limit=1: True
     healing._latest_plan = lambda rdir: plan_json
     healing._freeze = lambda rdir, plan_, source: frozen.append(plan_) or plan_
     try:
         outcome = healing._repair("bench", "REQ-0", Path("."), request, case, context, plan, doc,
                                   lambda *args: answers.append(args) or ["ok"], lambda why: ["rebased"])
     finally:
-        healing._latest_plan, healing._freeze = original
+        healing._latest_plan, healing._freeze, bt_config.set_value, bt_remediation.grant_round = original
     auto = outcome["repair"] != "none" and outcome["result"] == "fixed"
     wait = healing.SETTLE.get(case.kind, 0.0) + POLL_SECONDS if auto else None
     return {"class": case.kind, "auto": auto, "repair": outcome["repair"], "wait": wait}

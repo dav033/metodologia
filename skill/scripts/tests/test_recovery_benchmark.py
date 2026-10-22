@@ -30,15 +30,15 @@ class Benchmark(unittest.TestCase):
         self.assertEqual(bench.regressions(recorded, result["totals"]), [],
                          "the code is worse than the last recorded version: fix it, or record a new version only if it is better")
 
-    def test_the_night_needed_ten_people_and_the_current_code_two(self):
+    def test_the_night_needed_ten_people_and_the_current_code_none(self):
         totals = bench.run()["totals"]
-        self.assertEqual((totals["human_interventions_night"], totals["human_interventions"]), (10, 2))
+        self.assertEqual((totals["human_interventions_night"], totals["human_interventions"]), (10, 0))
         self.assertLess(totals["minutes_to_recovery"], totals["minutes_to_recovery_night"] / 10)
         self.assertEqual(totals["as_expected"], totals["scenarios"])
 
-    def test_the_two_stops_that_still_need_a_person_are_the_ones_that_should(self):
+    def test_no_recorded_stop_is_left_for_a_person(self):
         asking = {row["id"] for row in bench.run()["scenarios"] if not row["auto"]}
-        self.assertEqual(asking, {"S10", "S11"})                                         # a mass rework and a full disk: the owner's call
+        self.assertEqual(asking, set())
 
     def test_a_worse_version_is_reported(self):
         base = {"human_interventions": 2, "minutes_to_recovery": 76.3, "classified": 11, "as_expected": 12}
