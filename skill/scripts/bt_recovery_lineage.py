@@ -28,6 +28,7 @@ from typing import Any
 import bt_recovery_convergence as conv
 import bt_recovery_diagnosis as dg
 
+DIFF_BYTES = 30 * 1024
 ACTIONS = ("converge_owned_paths", "inherit_additive_checks")
 MARKER_CHECK = "awk '/^" + "[\\x3c\\x3e]" * 7 + " /{{exit 1}}' {path}"        # exit 1 when the file holds a marker line, 0 when it is clean
 
@@ -144,9 +145,20 @@ def view(facts: dict) -> dict[str, Any]:
     def side(index: int) -> dict:
         s, name = facts["sides"][index], facts["sides"][index]["task_id"]
         task = facts["tasks"][name]
+        diff = _git(s["repository"], "diff", "--no-color", "--no-renames", s["base_sha"], s["snapshot_sha"], "--", *facts["files"][:20])
         return {"task": name, "title": task.get("title"), "objective": task.get("objective"), "requirements": facts["owners"][name]["requirements"],
-                "checks": task.get("verification"), "changed_paths": s["delta"][:200]}
+                "checks": task.get("verification"), "changed_paths": s["delta"][:200],
+                "diff_of_the_clashing_files": diff[:DIFF_BYTES] + ("\n[clipped]" if len(diff) > DIFF_BYTES else "")}
+    first = facts["sides"][0]
+    names = [n for n in _git(first["repository"], "ls-tree", "-r", "--name-only", first["snapshot_sha"]).splitlines()
+             if re.search(r"(^|/)(tests?|spec|__tests__)(/|$)|test_|_test\.|\.test\.|\.spec\.", n)][:60]
+    sample = {}
+    for name in names[:6]:                                   # what an oracle command can run: the tests that already exist
+        body = subprocess.run(["git", "-C", first["repository"], "show", f"{first['snapshot_sha']}:{name}"], capture_output=True, text=True,
+                              timeout=30, check=False).stdout
+        sample[name] = body[:3000]
     return {"clash": {"consumer": facts["consumer"], "paths": facts["files"]}, "sides": [side(0), side(1)],
+            "existing_test_files": names, "test_file_contents": sample,
             "consumer": {"id": facts["consumer"], "title": facts["tasks"][facts["consumer"]].get("title")}}
 
 

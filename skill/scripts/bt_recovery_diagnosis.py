@@ -38,9 +38,9 @@ Reply with ONE JSON object and nothing else (schema recovery-proposal/1):
     {{"type": "correct_tasks", "owner_task_id": "T4", "task_ids": ["T4"],
       "replacements": [{{"id": "T4", "objective": "…new objective that fixes the cause…", "acceptance_criteria": ["every old one, plus new"],
                         "verification": [ every existing check unchanged, plus new {{"type": "command", "value": "python3 -m unittest tests.test_x",
-                                         "purpose": "…", "created_by": "T4"}} ]}}]}},
+                                         "purpose": "…", "category": "regression", "created_by": "T4"}} ]}}]}},
     {{"type": "repair_verification", "owner_task_id": "T4", "task_ids": ["T4"],
-      "verification": [{{"type": "command", "value": "…", "purpose": "…", "created_by": "T4"}}]}},
+      "verification": [{{"type": "command", "value": "…", "purpose": "…", "category": "regression", "created_by": "T4"}}]}},
     {{"type": "refresh_integrated_audit", "owner_task_id": "<the audit task>", "after": ["T4"]}} ],
   "symptom_oracle": {{"symptom": "one sentence: the observable failure", "red_command": "a command that FAILS on the broken source",
                      "command": "the same behaviour as a command that PASSES once corrected"}} }}
@@ -49,7 +49,8 @@ Rules the validator enforces (a proposal that breaks one is refused whole, and y
 - only these three action types; every task id must exist in the plan below; `task_ids` must stay inside `owner_task_id`'s paths;
 - a replacement keeps the task's kind, repository, milestone, `covers`, `expected_paths`, `shared_resources` and every existing
   acceptance criterion and verification check unchanged; it may only add criteria and checks;
-- every NEW check is `{{"type": "command", ...}}` with `created_by` = the task id it belongs to, one argv: no pipes, `;`, `&&`, `||`,
+- every NEW check is `{{"type": "command", ...}}` with a `purpose` (the criterion it proves, in its words), a `category` (one of static,
+  functional, integration, regression, product: the plan is refused without it) and `created_by` = the task id it belongs to, one argv: no pipes, `;`, `&&`, `||`,
   redirections, backticks or `$(`; never `sh -c`, `python -c`, `rm`, `sudo`; audits cannot be replaced;
 - name an action for EVERY task that owns a changed path listed in `changed_paths`; at most {limit} tasks in total;
 - `symptom_oracle` is mandatory and falsifiable: `red_command` must reproduce the failure and `command` must prove the fix.

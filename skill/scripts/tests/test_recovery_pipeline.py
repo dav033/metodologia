@@ -235,6 +235,13 @@ class Cycle(unittest.TestCase):
         for folder in (self.rdir / pipeline.DIR).glob("cycle-*"):
             shutil.rmtree(folder)
 
+    def test_the_prompt_asks_for_what_the_planner_contract_refuses_a_plan_without(self):
+        """Found with a real model: a new check without `category` is a refused plan; the prompt now says it is required."""
+        self.assertIn("category", dg.PROMPT)
+        for name in ("static", "functional", "integration", "regression", "product"):
+            self.assertIn(name, dg.PROMPT)
+
+
     def test_garbage_from_the_model_is_data_that_fails_not_text_that_is_repaired(self):
         payload = self.blocked(FakeCli(stdout=b"Sure! Here is my plan: ..."))
         self.assertEqual(payload["blocker"], "diagnosis_invalid_json")

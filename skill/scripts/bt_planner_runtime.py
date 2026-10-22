@@ -390,6 +390,13 @@ def invoke_diagnostic(request: PlannerRequest, private_dir: Path, *,
         raise PlannerRuntimeError(f"Profile '{request.profile}' provider executable is unavailable. Nothing was sent.")
     probe_diagnostic_sandbox(request.provider, executable, env, private, runner=probe_runner)
     _require_native_agent(scoped, spec, home or Path.home())
+    # `--setting-sources project` hides the user's agents, and the private directory is the only project there is: the generated
+    # (marker-checked) Planner agent is made available there, as the project agent the CLI looks for (found with the real CLI)
+    native = _native_agent_path(request.provider, spec, home or Path.home())
+    if native is not None and request.provider == "claude":
+        project_agent = private / ".claude" / "agents" / native.name
+        project_agent.parent.mkdir(parents=True, exist_ok=True)
+        project_agent.write_text(native.read_text(encoding="utf-8"), encoding="utf-8")
     mcp_config = private / "mcp-empty.json"
     mcp_config.write_text('{"mcpServers": {}}', encoding="utf-8")
     argv = [executable, "--agent", PLANNER_AGENT, "--model", request.model, "--print", CLAUDE_STDIN_PROMPT,

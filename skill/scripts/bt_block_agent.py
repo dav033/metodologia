@@ -303,7 +303,8 @@ def diagnose_recovery(project: str, evidence: dict, request_identity: dict, rout
         text = str(exc)
         return finish(_blocked("timeout" if "timed out" in text else "unavailable", text[:400], provenance))
     if result.returncode:
-        return finish(_blocked("unavailable", f"planner exited with status {result.returncode}", provenance))
+        return finish(_blocked("unavailable", f"planner exited with status {result.returncode}: "
+                                                f"{' '.join((result.stderr or '').split())[-240:]}", provenance))
     if len(result.stdout) > runtime.MAX_DIAGNOSTIC_OUTPUT_BYTES:
         return finish(_blocked("invalid_json", "diagnostic output exceeds the bound", provenance))
     try:

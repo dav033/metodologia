@@ -164,6 +164,16 @@ class Conflict(unittest.TestCase):
             lineage.gather(self.rdir, "demo", {**row, "left": "T1+T5"})
         self.assertEqual(many.exception.code, "conflict_sides_not_two_tasks")
 
+    def test_the_model_reads_what_each_side_changed_and_which_tests_already_exist(self):
+        """Found with a real model: without the diffs and the existing tests it answered `unknown`, rightly."""
+        facts = lineage.gather(self.rdir, "demo", lineage.latest_conflict(self.rdir, "T3"))
+        shown = lineage.view(facts)
+        self.assertIn("LEFT", shown["sides"][0]["diff_of_the_clashing_files"])
+        self.assertIn("RIGHT", shown["sides"][1]["diff_of_the_clashing_files"])
+        self.assertIn("tests/test_page.py", shown["existing_test_files"])
+        self.assertIn("LEFT", shown["test_file_contents"]["tests/test_page.py"])
+
+
     # ---- the whole cycle
     def compiled(self, cli=None):
         self.queue()

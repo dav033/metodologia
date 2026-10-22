@@ -104,6 +104,24 @@ class RecoveryDiagnosisTests(unittest.TestCase):
         self.assertEqual(stored["provenance"]["authorization_status"], "authorized")
         self.assertEqual(stored["provenance"]["evidence_sha256"], "e" * 64)
 
+    def test_the_generated_planner_agent_is_a_project_agent_of_the_private_directory(self):
+        """Found with the real CLI: `--setting-sources project` hides the user's agents, so `--agent planner` was "not found"."""
+        seen = []
+        cli = FakeCli()
+        real = cli.run
+
+        def run(argv, **kw):
+            seen.append((Path(kw["cwd"]) / ".claude" / "agents" / "planner.md").read_text())   # the directory is private to this call
+            return real(argv, **kw)
+        cli.run = run
+        self.call(cli)
+        self.assertIn(runtime.GENERATED_AGENT_MARKER, seen[0])                                   # the marker-checked file, nothing else
+
+    def test_a_failed_planner_run_says_why_in_its_blocker(self):
+        cli = FakeCli(stdout=b"", returncode=1)
+        cli.run = lambda argv, **kw: subprocess.CompletedProcess(argv, 1, b"", b"--agent 'planner' not found")
+        self.assertIn("not found", self.call(cli)["blocker"])
+
     def test_builtin_write_and_mcp_write_cannot_be_invoked(self):
         cli = FakeCli(attempt_writes=True)
         self.assertEqual(self.call(cli)["outcome"], "ok")
