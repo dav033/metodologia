@@ -168,7 +168,7 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
     if match:
         return _conflict(request, doc, plan, match, req)
     gate = AUDIT_GATE.search(last)
-    if gate and code.endswith("rework_limit"):
+    if gate and code.endswith(("rework_limit", "rework_impact")):
         return _findings(request, gate, refused or {}, req,
                          lineage_between(doc, plan, request["task"], [str(t) for t in (refused or {}).get("named") or []]))
     if "not a git repository" in text:

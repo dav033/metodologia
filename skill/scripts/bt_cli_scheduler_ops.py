@@ -24,6 +24,8 @@ def register(subparsers) -> None:
                     help="the option to take, for decide; the accepted attempt to continue from, for continue-from")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
     op.add_argument("--hold", action="store_true", help="leave the run stopped; `resume` releases it")
+    op.add_argument("--confirm", action="store_true",
+                    help="rework and revise: go ahead although it would throw away more accepted tasks than gates.rework_confirm_over")
     op.add_argument("--only", action="store_true",
                     help="rework: send back only the tasks named, not what depends on them")
 
@@ -86,7 +88,7 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
             print(ops.resume(project, args.req, rdir))
             return 0
         for line in ops.apply(project, args.req, rdir, args.action, args.target, args.reason, keep_held=args.hold,
-                           only=args.only, option=args.option):
+                           only=args.only, option=args.option, confirm=args.confirm):
             print(line)
     except adapter.core.SchedulerError as exc:
         print(f"{exc.code}: {exc}")

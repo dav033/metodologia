@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import bt_integration_invariant as invariant
 from bt_scheduler_integrator import SAFE, SHA, IntegrationError, _git
 
 REF_PREFIX = "refs/m3/line"
@@ -55,13 +56,16 @@ class Line:
     def __init__(self, *, plan, accepted: Callable[[], Mapping[str, str]], snapshot_of: Callable[[str], str | None],
                  repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
                  base_of: Callable[[str], str] = lambda role: "HEAD",
-                 start_base_of: Callable[[str], str | None] | None = None, ref_prefix: str = REF_PREFIX):
+                 start_base_of: Callable[[str], str | None] | None = None, ref_prefix: str = REF_PREFIX,
+                 on_event: Callable[..., None] | None = None, check_files: bool = True):
         """`accepted()` -> {task_id: accepted attempt id}; `snapshot_of(attempt)` -> its snapshot sha (None: no handoff).
         `base_of(role)` is where the run began (pinned under `<ref>-base` the first time, so a moving HEAD cannot shift the
         line). `start_base_of(attempt)` -> the commit that attempt started from; by default the snapshot's first parent."""
         self.plan, self.accepted, self.snapshot_of, self.repo_of = plan, accepted, snapshot_of, repo_of
         self.default, self.identity = default_repository, SAFE.sub("-", identity) or "run"
         self.base_of, self.start_base_of, self.ref_prefix = base_of, start_base_of, ref_prefix.rstrip("/")
+        self.on_event, self.check_files = on_event, check_files
+        self._announced: set[tuple[str, str]] = set()
         self._before_ref_update: Callable[[], None] | None = None          # test seam: a crash between objects and ref
         self._states: dict[str, tuple[Any, LineState]] = {}
 
@@ -142,6 +146,49 @@ class Line:
     def _role(self, task_id: str) -> str:
         return self.plan.task(task_id).repository or self.default
 
+    def _ancestors(self, task_id: str) -> set[str]:
+        seen: set[str] = set()
+        stack = list(self.plan.task(task_id).after)
+        while stack:
+            current = stack.pop()
+            if current not in seen:
+                seen.add(current)
+                stack.extend(self.plan.task(current).after)
+        return seen
+
+    def _declared(self, task_id: str) -> tuple[str, ...]:
+        return tuple(getattr(self.plan.task(task_id), "expected_paths", ()) or ())
+
+    def _guard(self, repo: Path, tip: str, contributions: list[Contribution], applied: list[str]) -> str:
+        """The tip never silently loses a file an applied task left (`bt_integration_invariant`): what a fold dropped is
+        put back from its owner, once, as one repair commit, and reported. A repair that does not hold leaves the tip as
+        the fold produced it and the lost files are reported, so the consumer decides (nothing is guessed here)."""
+        if not self.check_files or not applied:
+            return tip
+        items = [invariant.Item(c.task, c.start_base, c.snapshot) for c in contributions if c.task in applied and c.start_base]
+        report = invariant.check(_git, repo, tip, items, self._declared, self._ancestors)
+        if report.ok:
+            return tip
+        fixed = invariant.restore(_git, repo, tip, items, report)
+        ok = bool(fixed) and invariant.check(_git, repo, fixed, items, self._declared, self._ancestors).ok
+        self._announce(report, "fixed" if ok else "failed")
+        if not ok:
+            return tip
+        return _git(repo, "commit-tree", "--no-gpg-sign", fixed, "-p", tip, "-m",
+                    f"m3 line repair: restored {report.describe(3)}"[:200]).stdout.strip()
+
+    def _announce(self, report, result: str) -> None:
+        key = (report.describe(50), result)
+        if self.on_event is None or key in self._announced:
+            return
+        self._announced.add(key)
+        try:
+            self.on_event("files_lost", task=next(iter(report.files()), ""),
+                          evidence=f"the integration line lost files of accepted tasks: {report.describe()}",
+                          repair="restored from the owners' snapshots" if result == "fixed" else "could not restore", result=result)
+        except Exception:  # noqa: BLE001 - a listener never stops the line
+            pass
+
     def _repo(self, role: str) -> Path:
         path = self.repo_of(role)
         if not path:
@@ -178,7 +225,7 @@ class Line:
                 applied.append(item.task)
             else:
                 applied.append(item.task)                  # already part of the tip: nothing to add
-        return tip, applied, unresolved
+        return self._guard(repo, tip, contributions, applied), applied, unresolved
 
     @staticmethod
     def _apply_one(repo: Path, tip: str, item: Contribution) -> tuple[str | None, tuple[str, ...]]:
@@ -191,6 +238,17 @@ class Line:
             raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{item.task}: no start base for snapshot {item.snapshot[:12]}")
         done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={item.start_base}",
                     tip, item.snapshot, check=False)
+        if done.returncode == 1:
+            # An attempt that continued from an earlier one (a retry carries the rejected snapshot) started from a commit the
+            # tip never held: its own work is then everything since the last commit the tip and it share. Tried second, so
+            # a result that really clashes (REQ-027's stale T15f) is still reported, not merged over.
+            common = _git(repo, "merge-base", item.start_base, tip, check=False)
+            origin = common.stdout.strip()
+            if common.returncode == 0 and SHA.fullmatch(origin) and origin != item.start_base:
+                again = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={origin}",
+                             tip, item.snapshot, check=False)
+                if again.returncode == 0:
+                    done = again
         lines = done.stdout.splitlines()
         if done.returncode == 1:
             return None, tuple(line.strip() for line in lines[1:] if line.strip()) or ("?",)

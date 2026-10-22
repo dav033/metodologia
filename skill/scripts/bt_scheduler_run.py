@@ -32,6 +32,11 @@ class RuntimeErrorCode(RuntimeError):
         self.code = code
 
 
+def _ceiling() -> int:
+    import bt_rework_impact
+    return bt_rework_impact.ceiling()
+
+
 def _run_config():
     """Operating limits of a run. A run without a human needs retries: three attempts per task unless configured."""
     import bt_config
@@ -44,7 +49,8 @@ def _run_config():
     scopes = tuple(s for s in scopes if isinstance(s, str) and s) if isinstance(scopes, list) else ()
     return adapter.core.Config(max_attempts=number("scheduler.max_attempts", 3),
                                max_parallel_tasks=number("scheduler.max_parallel_tasks", 3), exclusive_scopes=scopes,
-                               max_reworks=number("gates.max_reworks", 2))
+                               max_reworks=number("gates.max_reworks", 2),
+                               rework_confirm_over=_ceiling())
 
 
 def _executor_config():

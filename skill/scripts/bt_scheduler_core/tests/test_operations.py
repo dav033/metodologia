@@ -197,7 +197,7 @@ class Rework(unittest.TestCase):
     """An audit rejected work built on accepted tasks: the system sends them back, never completes anything itself."""
 
     def chain(self, **kw):
-        h = Harness([indep("T1"), indep("T2", ["T1"]), indep("T3", ["T2"]), indep("T9")], parallel=2, max_attempts=2, **kw)
+        h = Harness([indep("T1"), indep("T2", ["T1"]), indep("T3", ["T2"]), indep("T9")], **{"parallel": 2, "max_attempts": 2, **kw})
         h.core.step()
         h.finish_and_accept("T1")
         h.finish_and_accept("T2")
@@ -325,6 +325,26 @@ class Rework(unittest.TestCase):
         states = self.states(h)
         self.assertEqual((states["T1"], states["T2"]), ("completed", "blocked"))
         self.assertEqual(h.core.snapshot().tasks["T2"]["reason"], "rework_limit")
+
+    def test_a_rework_that_would_throw_away_more_accepted_tasks_than_the_ceiling_needs_the_owner(self):
+        h = self.chain(config=sc.Config(max_parallel_tasks=2, max_attempts=2, rework_confirm_over=1))
+        self.assertEqual(h.core.rework_impact(("T1",), ("T3",)), ("T1", "T2"))              # what would be thrown away
+        self.assertTrue(h.core.rework_problem(("T1",), ("T3",), True).startswith("impact:"))
+        result, moved = self.reject(h, "T3", ("T1",))                                      # the system does not do it alone
+        self.assertEqual((result.status, moved), ("applied", ()))
+        states = self.states(h)
+        self.assertEqual((states["T1"], states["T2"], states["T3"]), ("completed", "completed", "blocked"))
+        self.assertEqual(h.core.snapshot().tasks["T3"]["reason"], "rework_impact")
+        self.assertIn("rework_refused", h.audit_kinds())
+        with self.assertRaises(sc.SchedulerError) as caught:
+            h.core.rework(("T1",), "operator", "why")                                      # nor does an unconfirmed operator
+        self.assertIn("impact:", str(caught.exception))
+        self.assertEqual(h.core.rework(("T1",), "operator", "why", confirmed=True), ("T1", "T2", "T3"))
+        self.assertEqual(h.core.rework(("T2",), "operator", "alone", cascade=False), ())       # nothing accepted left to throw away
+
+    def test_no_ceiling_by_default_so_nothing_changes_for_existing_users(self):
+        h = self.chain()
+        self.assertEqual(h.core.rework_problem(("T1",), ("T3",), True), "")
 
     def test_the_owner_may_rework_past_the_limit(self):
         h = Harness([indep("T1"), indep("T2", ["T1"])], parallel=1, max_attempts=3,

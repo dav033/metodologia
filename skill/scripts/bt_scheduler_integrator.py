@@ -29,6 +29,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
+import bt_integration_invariant as invariant
+
 IDENT = {"GIT_AUTHOR_NAME": "m3-integrator", "GIT_AUTHOR_EMAIL": "m3@localhost",
          "GIT_COMMITTER_NAME": "m3-integrator", "GIT_COMMITTER_EMAIL": "m3@localhost",
          # a fixed date makes the same parents give the same commit: a retried order sees the same base
@@ -46,7 +48,7 @@ SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 # error there leaves the attempt `uncertain` (a human decision about identity). Rejected with its cause, the task blocks
 # and says which prerequisites do not fit the integrated tree.
 PERMANENT = frozenset({"INTEGRATION_CONFLICT", "PREDECESSOR_NOT_ACCEPTED", "PREDECESSOR_HANDOFF_MISSING",
-                       "INTEGRATION_REPOSITORY", "PREDECESSOR_NEEDS_RESOLUTION"})
+                       "INTEGRATION_REPOSITORY", "PREDECESSOR_NEEDS_RESOLUTION", "INTEGRATION_FILES_LOST"})
 
 
 class IntegrationError(Exception):
@@ -84,19 +86,24 @@ class PredecessorIntegrator:
         self.fallback, self.ref_prefix = fallback, ref_prefix.rstrip("/")
         self._bound: dict[str, Any] | None = None
         self._memo: dict[str, str] = {}
+        self._announced: set[tuple[str, str, str, str]] = set()
         self.line = None                                   # bt_integration_line.Line when gates.integration_line is on
+        self.check_files = True                            # gates.integration_check_files: the invariant of bt_integration_invariant
 
     def bind(self, *, plan, accepted: Callable[[], Mapping[str, str]], snapshot_of: Callable[[str], str | None],
              repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
-             earlier_of: Callable[[str], list[str]] | None = None) -> None:
+             earlier_of: Callable[[str], list[str]] | None = None,
+             start_base_of: Callable[[str], str | None] | None = None,
+             on_event: Callable[..., None] | None = None) -> None:
         """`accepted()` -> {task_id: accepted attempt id} (read once per call); `snapshot_of(attempt_id)` -> its snapshot commit sha
         (None when the handoff has none; the sha of an EMPTY handoff is the base itself and merges as a no-op).
         `earlier_of(task_id)` -> the attempts whose accepted results an audit sent back, newest first: when a redone task
         clashes with a dependent that was built on its earlier result, that result is the merge base that tells the fix
-        from the dependent's own work."""
+        from the dependent's own work. `start_base_of(attempt)` -> the commit that attempt started from (default: the snapshot's
+        first parent); `on_event(kind, **fields)` hears about every repair the invariant makes (`bt_interventions`)."""
         self._bound = {"plan": plan, "accepted": accepted, "snapshot_of": snapshot_of, "repo_of": repo_of,
                        "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
-                       "earlier_of": earlier_of}
+                       "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event}
 
     def attach_line(self, line) -> None:
         """Make the integration line authoritative (REQ-028): new attempts start from its tip and acceptance is checked
@@ -262,6 +269,9 @@ class PredecessorIntegrator:
         bound = self._bound
         if bound is None or not SHA.fullmatch(snapshot or ""):
             return ""
+        gone = self._foreign_deletions(task_id, attempt_id, snapshot)
+        if gone:
+            return gone
         if self.line is not None:
             clash = self._line_conflict(task_id, attempt_id, snapshot)
             if clash is not None:
@@ -287,6 +297,30 @@ class PredecessorIntegrator:
                     continue                                # the same clash exists with its previous result: not its doing
                 return error.detail
         return self._clash_with_built_on(task_id, snapshot, accepted, overlay, current, before)
+
+    def _foreign_deletions(self, task_id: str, attempt_id: str, snapshot: str) -> str:
+        """'' or the cause: the candidate deletes files other accepted tasks left without declaring them in its
+        `expected_paths` (an undeclared deletion is what loses work silently, so it is rejected, not repaired)."""
+        bound = self._bound
+        if not self.check_files:
+            return ""
+        role = self._role(task_id)
+        path = bound["repo_of"](role)
+        if not path:
+            return ""
+        repo = Path(path)
+        accepted = {t: a for t, a in dict(bound["accepted"]()).items() if t != task_id and self._role(t) == role}
+        rows = []
+        for tid, attempt in accepted.items():
+            sha = bound["snapshot_of"](attempt)
+            if sha and SHA.fullmatch(sha):
+                rows.append((tid, attempt, sha))
+        mine = self._items(repo, [(task_id, attempt_id, snapshot)])[0]
+        found = invariant.foreign_deletions(_git, repo, mine, self._items(repo, rows), self._declared, self.ancestors)
+        if not found:
+            return ""
+        text = "; ".join(f"{owner}: {', '.join(names[:4])}" for owner, names in found.items())
+        return f"INTEGRATION_FILES_LOST {task_id} deletes files of accepted tasks it does not declare ({text})"[:170]
 
     def _line_base(self, task_id: str) -> str | None:
         """The line's tip for a task that has same-repository prerequisites, without the task's own earlier result (a
@@ -389,10 +423,59 @@ class PredecessorIntegrator:
                 raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{tid}: snapshot {sha[:12]} is not in {repo.name}")
             commits.append((tid, sha))
         merged = self._merge(repo, task_id, commits, same_repo, snapshot_of)
+        merged = self._guarantee(repo, task_id, merged, self._items(repo, [(t, accepted[t], sha) for t, sha in commits]))
         if write_ref:
             ref = f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}"
             _git(repo, "update-ref", ref, merged)
         return merged
+
+    def _items(self, repo: Path, rows: list[tuple[str, str, str]]) -> list[invariant.Item]:
+        """(task, attempt, snapshot) -> the invariant's view: where each attempt started and what it left."""
+        start_of = self._bound.get("start_base_of")
+        items = []
+        for tid, attempt, sha in rows:
+            start = (start_of(attempt) if start_of else None) or f"{sha}^1"
+            if not SHA.fullmatch(start):
+                resolved = _git(repo, "rev-parse", "--verify", "--quiet", f"{start}^{{commit}}", check=False)
+                start = resolved.stdout.strip() if resolved.returncode == 0 else ""
+            items.append(invariant.Item(tid, start, sha))
+        return items
+
+    def _declared(self, task_id: str) -> tuple[str, ...]:
+        try:
+            return tuple(getattr(self._bound["plan"].task(task_id), "expected_paths", ()) or ())
+        except Exception:  # noqa: BLE001 - an unknown task declares nothing
+            return ()
+
+    def _guarantee(self, repo: Path, task_id: str, merged: str, items: list[invariant.Item]) -> str:
+        """No integrated tree silently loses an accepted task's file (`bt_integration_invariant`). A violation is repaired
+        with the owner's own version, recorded, and the repaired commit is what the task starts from; a repair that does
+        not hold is a stated error, never an incomplete tree."""
+        if not self.check_files:
+            return merged
+        report = invariant.check(_git, repo, merged, items, self._declared, self.ancestors)
+        if report.ok:
+            return merged
+        fixed = invariant.restore(_git, repo, merged, items, report)
+        again = invariant.check(_git, repo, fixed, items, self._declared, self.ancestors) if fixed else report
+        if not fixed or not again.ok:
+            self._announce("files_lost", task_id, report, "failed")
+            raise IntegrationError("INTEGRATION_FILES_LOST", f"{task_id}: {report.describe()}"[:170])
+        self._announce("files_lost", task_id, report, "fixed")
+        return _git(repo, "commit-tree", "--no-gpg-sign", fixed, "-p", merged, "-m",
+                    f"m3 integration repair for {task_id}: restored {report.describe(3)}"[:200]).stdout.strip()
+
+    def _announce(self, kind: str, task_id: str, report, result: str) -> None:
+        notify = self._bound.get("on_event")
+        key = (kind, task_id, report.describe(50), result)
+        if notify is None or key in self._announced:
+            return
+        self._announced.add(key)
+        try:
+            notify(kind, task=task_id, evidence=f"integrated tree for {task_id} lost files of accepted tasks: {report.describe()}",
+                   repair="restored from the owners' snapshots" if result == "fixed" else "could not restore", result=result)
+        except Exception:  # noqa: BLE001 - a listener never stops an integration
+            LOGGER.debug("integration event listener failed", exc_info=True)
 
     def _merge(self, repo: Path, task_id: str, commits: list[tuple[str, str]], owners=(), snapshot_of=None) -> str:
         def contains(ancestor: str, descendant: str) -> bool:

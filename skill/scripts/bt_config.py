@@ -51,8 +51,14 @@ DEFAULTS: dict = {
               # held to `max_reworks`); past this the clash is rejected on the task that caused it
               "integration_rework_limit": 6,
               # REQ-028: one integration line per run (refs/m3/line/...) holds the integrated tree; new attempts start from
-              # it and acceptance applies the candidate to it. Off = the predecessor merge of snapshots, as before
-              "integration_line": False,
+              # it and acceptance applies the candidate to it (on by default since REQ-030: the predecessor merge lost
+              # files of parallel branches). Off = the predecessor merge of snapshots, as before
+              "integration_line": True,
+              # a run that began without the line moves onto it when it can hold every accepted task cleanly; else it
+              # stays as it was and RUN.integration-line.skipped says why
+              "integration_line_migrate": True,
+              # every integrated tree is checked: no file of an accepted task is missing from it (bt_integration_invariant)
+              "integration_check_files": True,
               # what an audit rejection sends back: "named" = the tasks its findings name plus the tests over them (what
               # depends on them keeps its result and is merged with the fix); "downstream" = also everything that
               # depends on them (a finding on a root task then redoes the whole plan)
@@ -62,15 +68,23 @@ DEFAULTS: dict = {
               # tasks are sent back as before
               "audit_remediation": True, "remediation_rounds": 2,
               # remediation tasks of one round run one after another (False) or side by side when their findings sit in
-              # different components (True); side by side they kept sending each other back over shared files
-              "remediation_parallel": False,
+              # different components (True, the default since REQ-030: components share no task, path or resource, the
+              # core keeps any two that claim the same surface apart, and the integration invariant protects the rest)
+              "remediation_parallel": True,
               # an audit that sends back more tasks than this at once found a defect of the plan or the integration,
               # not of each builder: the attempt log records those tasks as redone, not as failed (bt_attempt_log)
-              "attribute_max_tasks": 3},   # a plan with an audit also needs an independent cross-check audit
+              "attribute_max_tasks": 3,
+              # an action that would send back more ACCEPTED tasks than this (an audit rejection, `scheduler-op rework`,
+              # `scheduler-op revise`) needs the owner's confirmation (`--confirm`) and says what it costs; 0 = no ceiling
+              "rework_confirm_over": 3},   # a plan with an audit also needs an independent cross-check audit
     # max_turns: turns one Claude attempt may use under the Scheduler (the legacy marathon keeps 45); an attempt that uses
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
+    # exclusive_scopes: plan `scope` values whose tasks run alone in their repository. Empty since REQ-030: what keeps two
+    # tasks apart is the overlap of their declared `expected_paths` / `shared_resources` (and a task that declares neither
+    # is serialised anyway), not how big the task is. REQ-020 and REQ-029 ran ~1x serial because nearly every task is
+    # `large_change` or `full_feature`. Put the old list back (["large_change", "full_feature", "full_system"]) to restore it.
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120, "max_turns": 120,
-                  "exclusive_scopes": ["large_change", "full_feature", "full_system"]},
+                  "exclusive_scopes": []},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

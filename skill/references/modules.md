@@ -172,18 +172,27 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   fallback tries the earlier result of every prerequisite as merge base. Tasks whose prerequisites are
   still completed become `ready` at once; the scheduler redoes them, and the audit runs again at the end. Nothing is
   completed by the rework: each redone task needs a new independent verdict;
-- an **integration line** (`gates.integration_line`, default off; REQ-028 part 1, `bt_integration_line`): the predecessor merge
+- an **integration line** (`gates.integration_line`, **default on since REQ-030**; REQ-028 part 1, `bt_integration_line`): the predecessor merge
   above keeps, per accepted task, the version of every file it was built on, so a redone task's fix can be lost behind a
-  dependent that still carries the old text (REQ-027: T8a v3 never reached the audit through T15f). With the flag on, each
+  dependent that still carries the old text (REQ-027: T8a v3 never reached the audit through T15f). With the flag on (the default), each
   repository role of the run has one ref `refs/m3/line/<run>/<role>` holding the integrated tree, a deterministic fold (plan
   order) of every accepted task's own work (`start_base -> snapshot`, merge-tree with that merge base; objects only; the
   run base is pinned in `<ref>-base`). A new attempt starts from the tip without the task's own earlier result;
   acceptance applies the candidate to the tip, and a clash is the usual `integration gate:` rejection (`T vs line for T:
   files`), so the existing carry/resolve retry resolves it on top of the current tip. A task whose accepted result no longer
   fits after a redo is listed by `Line.needs_resolution` and left out of the tip (never silently resolved or dropped); its
-  dependents are rejected with `PREDECESSOR_NEEDS_RESOLUTION` (permanent: a transient error would leave the attempt `uncertain`). The line applies only to a run that began with the flag on (`RUN.integration-line` marker): a run that already accepted tasks without it never integrated them with each other, so it stays on the predecessor merge. `recompute()` rebuilds the refs from persisted facts at
+  dependents are rejected with `PREDECESSOR_NEEDS_RESOLUTION` (permanent: a transient error would leave the attempt `uncertain`). A run that began with the flag on keeps it (`RUN.integration-line` marker). A run that already accepted tasks without it is **migrated** at the next start only when a dry-run fold (`bt_scheduler_executor_wiring._migration_probe`, in memory) holds every accepted contribution cleanly (`gates.integration_line_migrate`, default on); otherwise it stays on the predecessor merge and `RUN.integration-line.skipped` says which task does not fit. `recompute()` rebuilds the refs from persisted facts at
   owner start-up. If git fails the integrator falls back to the predecessor merge for that call and logs. Not done yet:
   a `resolve` attempt started by the line itself for an already accepted task (part 2), pinning each attempt's real start base;
+- the **integration invariant** (`gates.integration_check_files`, default on; REQ-030, `bt_integration_invariant`): after every
+  integration (predecessor merge and line fold) each file an accepted task left (`start_base -> snapshot`, added or changed)
+  must be in the tree, and a file only that task changed must not be back at its old content. Exempt: a file another
+  accepted task also changed (a merge may combine them), and a deletion that the deleting task declares in `expected_paths`
+  or that a task built on the owner makes (the plan's own order). Anything else was lost silently (REQ-020 T14: a merge that
+  trusted git ancestry dropped `directions.ts` and `packages.ts`); it is restored from the owner's snapshot as one repair
+  commit, reported through `bt_interventions` (class `files_lost`), and a repair that does not hold is
+  `INTEGRATION_FILES_LOST` (permanent), never an incomplete tree. A candidate that deletes sibling files it does not
+  declare is rejected at verification (`would_conflict`) with the owners and files;
 - **remediation** (`gates.audit_remediation`, default on; REQ-028, `bt_remediation`): a rejected audit does not reopen the tasks its blocking findings name. The gate records the findings (`RUN.remediation.json`), the owner exits, and the watcher turns them into the next plan revision: remediation tasks (`T18.1`, `T18.2`, ...; `T18.1b` for a second auditor) are appended on the tree the run already integrated, findings that share a task or overlapping paths are grouped and chained (up to 4 per task), independent groups run side by side, each finding is checked by the command of the task that owns it, and the audit is moved after them. The run is rebased (accepted work is kept) and the audit runs again from scratch. Each finding is still charged to the tasks that own it in the attempt log. An audit gets `gates.remediation_rounds` (default 2) rounds; with none left, or when a task cannot be built soundly (a finding names no task of the plan with a command), the named tasks are sent back as before. `scheduler-op REQ remediate` applies a pending request by hand. A task that is accepted clears the notes earlier rounds left for it;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
   reset); the redo must prove each fix with a test over the real entry point;

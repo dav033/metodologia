@@ -29,6 +29,7 @@ class OpsTests(unittest.TestCase):
         self.sch = Mock()
         self.sch.resolve_attempt.return_value = "cancelled"
         self.sch.read.return_value = [("att-0001", "T1", "running")]
+        self.sch.rework_impact.return_value = ()
 
         def stop(project, req, **kw):
             self.calls.append(f"stop held={ops.on_hold(self.rdir)}")
@@ -62,7 +63,7 @@ class OpsTests(unittest.TestCase):
     def test_rework_sends_the_listed_tasks_back_through_m1(self):
         self.sch.rework.return_value = ("T1", "T2")
         lines = ops.apply("p", "REQ-001", self.rdir, "rework", "T1, T2", "audit found it")
-        self.sch.rework.assert_called_once_with(("T1", "T2"), ops.OPERATOR, "audit found it", cascade=True)
+        self.sch.rework.assert_called_once_with(("T1", "T2"), ops.OPERATOR, "audit found it", cascade=True, confirmed=True)
         self.assertIn("sent back for rework: T1, T2", lines)
 
     def test_withdraw_rework_takes_the_listed_tasks_back_through_m1(self):
@@ -92,13 +93,59 @@ class OpsTests(unittest.TestCase):
     def test_rework_only_does_not_cascade(self):
         self.sch.rework.return_value = ("T1",)
         ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "just this one", only=True)
-        self.sch.rework.assert_called_once_with(("T1",), ops.OPERATOR, "just this one", cascade=False)
+        self.sch.rework.assert_called_once_with(("T1",), ops.OPERATOR, "just this one", cascade=False, confirmed=True)
         self.assertFalse(ops.on_hold(self.rdir))
+
+    def test_rework_past_the_ceiling_is_refused_with_its_cost_until_the_owner_confirms(self):
+        self.sch.rework_impact.return_value = ("T1", "T2", "T3", "T4")
+        with patch("bt_rework_impact.ceiling", return_value=3), patch("bt_rework_impact.estimate",
+                                                                    return_value={"tasks": ["T1", "T2", "T3", "T4"], "minutes": 95,
+                                                                                  "recorded": 4}), \
+                patch.object(ops, "bound_plan", return_value=None):
+            with self.assertRaises(adapter.core.SchedulerError) as caught:
+                ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "everything")
+            self.assertIn("4 accepted tasks", str(caught.exception))
+            self.assertIn("95 minutes", str(caught.exception))
+            self.assertIn("--confirm", str(caught.exception))
+            self.sch.rework.assert_not_called()
+            self.assertFalse(ops.on_hold(self.rdir))
+            self.sch.rework.return_value = ("T1",)
+            ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "everything", confirm=True)
+            self.sch.rework.assert_called_once()
+            self.sch.rework_impact.return_value = ("T1", "T2", "T3")                 # at the ceiling: no confirmation needed
+            ops.apply("p", "REQ-001", self.rdir, "rework", "T1", "three")
+
+    def test_a_revision_that_would_redo_many_accepted_tasks_needs_the_owner_to_confirm(self):
+        done = ("T1", "T2", "T3", "T4", "T5")
+        with patch.object(ops, "_revise_impact", return_value=(6, done)), patch("bt_rework_impact.ceiling", return_value=3), \
+                patch.object(ops, "bound_plan", return_value=None), patch("bt_rework_impact.estimate",
+                                                                         return_value={"tasks": list(done), "minutes": 300,
+                                                                                       "recorded": 5}), \
+                patch.object(adapter, "rebase_to_latest") as rebase:
+            with self.assertRaises(adapter.core.SchedulerError) as caught:
+                ops.apply("p", "REQ-001", self.rdir, "revise")
+            self.assertIn("revise r6", str(caught.exception))
+            rebase.assert_not_called()
+            self.assertEqual(self.calls, ["stop held=True"])                         # nothing was cancelled before the refusal
+
+    def test_the_cost_is_the_recorded_minutes_of_the_accepted_attempts(self):
+        import bt_rework_impact as impact
+        db = self.rdir / "SCHEDULER.db"
+        with contextlib.closing(sqlite3.connect(db)) as conn:
+            conn.execute("CREATE TABLE audit (at REAL, kind TEXT, task_id TEXT, attempt_id TEXT, detail TEXT)")
+            for at, kind, task, attempt, detail in ((0, "reserved", "T1", "a1", "{}"),
+                                                    (600, "attempt_transition", "T1", "a1", '{"to": "accepted"}'),
+                                                    (0, "reserved", "T2", "a2", "{}"),
+                                                    (300, "attempt_transition", "T2", "a2", '{"to": "rejected"}')):
+                conn.execute("INSERT INTO audit VALUES (?,?,?,?,?)", (at, kind, task, attempt, detail))
+            conn.commit()
+        cost = impact.estimate(db, ["T1", "T2"], SimpleNamespace(task=lambda t: SimpleNamespace(meta={"estimated_minutes": 60})))
+        self.assertEqual((cost["minutes"], cost["recorded"]), (40, 1))                 # T1 recorded 10, T2 half of 60
 
     def test_revise_cancels_live_attempts_then_rebases(self):
         report = SimpleNamespace(from_revision=6, to_revision=7, kept=["T1"], reset=[], added=[], removed=[])
         with patch.object(adapter, "rebase_to_latest", return_value=report) as rebase, \
-                patch("bt_scheduler_run.rebind_runtime") as rebind:
+                patch("bt_scheduler_run.rebind_runtime") as rebind, patch.object(ops, "_revise_impact", return_value=(6, ())):
             lines = ops.apply("p", "REQ-001", self.rdir, "revise")
         self.assertEqual(self.calls, ["stop held=True", "kill att-0001"])
         rebase.assert_called_once_with(self.rdir)
@@ -109,7 +156,7 @@ class OpsTests(unittest.TestCase):
     def test_a_move_rewrites_the_read_model_even_while_the_run_is_held(self):
         report = SimpleNamespace(from_revision=2, to_revision=3, kept=[], reset=["T3"], added=[], removed=[])
         with patch.object(adapter, "rebase_to_latest", return_value=report), patch("bt_scheduler_run.rebind_runtime"), \
-                patch.object(adapter, "write_projection") as write:
+                patch.object(adapter, "write_projection") as write, patch.object(ops, "_revise_impact", return_value=(2, ())):
             ops.apply("p", "REQ-001", self.rdir, "revise", keep_held=True)
         write.assert_called_once_with(self.rdir, self.sch)
         self.assertTrue(ops.on_hold(self.rdir))

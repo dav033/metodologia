@@ -486,6 +486,14 @@ def _snapshot_sha(executor, attempt_id: str) -> str | None:
     return handoff.get("snapshot_sha") if handoff.get("status") == "captured" else None
 
 
+def _start_base_sha(executor, attempt_id: str) -> str | None:
+    """The commit the attempt started from (its handoff's `base_sha`): what its own work is measured against."""
+    described = executor.describe(attempt_id)
+    handoff = (described or {}).get("handoff") or {}
+    base = handoff.get("base_sha")
+    return base if isinstance(base, str) and base else None
+
+
 def _sibling_snapshot_sha(root: Path, attempt_id: str) -> str | None:
     birth = root.name.rpartition("-")[2]
     if not birth.isdigit():

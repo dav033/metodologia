@@ -233,14 +233,22 @@ class SchedulerCore:
         return self.read(lambda c: operations.rework_scope(c, (*task_ids, *also), cascade))
 
     def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True, *,
-                       owner: bool = False) -> str:
+                       owner: bool = False, confirmed: bool = False) -> str:
         """Why `reject_and_rework` would be refused right now ('' when it would not). `owner` asks the same of an
         operator-style `rework`, which is not held to `max_reworks`."""
-        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), owner=owner, cascade=cascade))
+        return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), owner=owner, cascade=cascade,
+                                                             confirmed=confirmed))
 
-    def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "", cascade: bool = True) -> tuple[str, ...]:
-        """Operator move: send accepted work back (see `operations.rework`)."""
-        out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True, cascade=cascade))
+    def rework_impact(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True) -> tuple[str, ...]:
+        """The accepted tasks a rework of `task_ids` (with `also`, the task whose verdict asks for it) would throw away."""
+        return self.read(lambda c: operations.rework_impact(c, operations.rework_scope(c, (*task_ids, *also), cascade), tuple(also)))
+
+    def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "", cascade: bool = True, *,
+               confirmed: bool = False) -> tuple[str, ...]:
+        """Operator move: send accepted work back (see `operations.rework`). Past `Config.rework_confirm_over` accepted
+        tasks it is refused (`impact:`) unless `confirmed`."""
+        out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True, cascade=cascade,
+                                                     confirmed=confirmed))
         self._wake.set()
         return out
 
@@ -257,7 +265,8 @@ class SchedulerCore:
         `busy` (live attempts in scope) defers everything — the verdict is NOT applied, status `deferred`, and the
         caller offers it again later; `limit` applies the verdict and BLOCKS the rejected task at once with reason
         `rework_limit` (retrying the rejected task cannot fix work that was already sent back too often: the owner
-        decides); `cancelled` just applies the verdict."""
+        decides); `impact` does the same with reason `rework_impact` (it would throw away more accepted tasks than
+        `Config.rework_confirm_over`: only the owner can confirm that); `cancelled` just applies the verdict."""
         if verdict.accepted:
             raise SchedulerError("NOT_ALLOWED", "only a rejecting verdict can ask for rework")
 
@@ -271,11 +280,12 @@ class SchedulerCore:
                 return result, ()
             if problem:
                 ctx.audit("rework_refused", verdict.task_id, verdict.attempt_id, why=problem, named=list(ids))
-                if problem.startswith("limit"):
+                if problem.startswith(("limit", "impact")):
+                    code = "rework_limit" if problem.startswith("limit") else "rework_impact"
                     rec = ctx.state.tasks[verdict.task_id]
                     if rec.state == T.RECOVERING.value:
-                        rec.reason = "rework_limit"
-                        set_task(ctx, verdict.task_id, T.BLOCKED, reason="rework_limit")
+                        rec.reason = code
+                        set_task(ctx, verdict.task_id, T.BLOCKED, reason=code)
                 return result, ()
             return result, operations.rework(ctx, ids, by, reason, also=(verdict.task_id,), cascade=cascade)
 
