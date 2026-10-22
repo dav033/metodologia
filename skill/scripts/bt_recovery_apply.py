@@ -296,7 +296,7 @@ def apply_recovery_revision(rdir: str | Path, compiled: dict, grant_key: str, *,
         if remaining_expiries:
             journal["barrier_expiries"] = remaining_expiries
         project = rdir.parent.parent.name if rdir.parent.name == "requirements" else ""
-        req = rdir.name
+        req = "-".join(rdir.name.split("-")[:2]) if rdir.name.startswith("REQ-") else rdir.name   # the id the owner was started with
         operator_stop = False
         _clear_stale_recovery_hold(rdir)
         if bt_scheduler_ops.on_hold(rdir):                 # a stop landed after the first check: it must not be overwritten

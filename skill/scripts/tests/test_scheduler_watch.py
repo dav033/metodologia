@@ -131,6 +131,18 @@ class WatchTests(unittest.TestCase):
             self.assertFalse(watcher.heal())
         self.assertEqual(answers, [])
 
+    def test_the_watchdog_advances_an_active_recovery_cycle_when_healing_has_nothing_to_do(self):
+        import bt_recovery_pipeline
+        import bt_scheduler_healing
+        import bt_scheduler_decisions as decisions
+        with patch.object(bt_scheduler_healing, "cycle", return_value=0), patch.object(decisions, "open_requests", return_value=[]), \
+                patch.object(bt_recovery_pipeline, "advance", return_value=True) as advance:
+            self.assertTrue(self.watch().heal())
+        self.assertEqual(advance.call_args.args[:2], ("p", "REQ-001"))
+        with patch.object(bt_scheduler_healing, "cycle", return_value=0), patch.object(decisions, "open_requests", return_value=[]), \
+                patch.object(bt_recovery_pipeline, "advance", side_effect=RuntimeError("boom")):
+            self.assertFalse(self.watch().heal())                                       # a failing cycle never stops the watch
+
     def test_a_failed_automatic_answer_leaves_the_card_for_a_person(self):
         import bt_scheduler_decisions as decisions
 

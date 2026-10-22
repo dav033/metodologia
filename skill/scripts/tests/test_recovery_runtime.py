@@ -189,6 +189,23 @@ class ProductionSources(unittest.TestCase):
             status = self.adapter(root).recovery_status()
             self.assertEqual([c["state"] for c in status["cycles"]], ["blocked"])
 
+    def test_the_stop_the_structural_cycle_is_about_and_its_route_come_from_the_run(self):
+        import bt_recovery_runtime
+        card = {"id": "T8:5", "task": "T8", "attempt": "att-9", "source": "task", "reason": "m5:rework_impact", "unskippable": False,
+                "options": [{"id": "retry"}, {"id": "rework_findings", "target": "T4,T5"}]}
+        route = {"role": "planner", "verified": True, "provider": "claude", "profile": "claude", "model": "haiku",
+                 "authorization_ref": "profile:claude@demo"}
+        with tempfile.TemporaryDirectory() as temp, patch("bt_recovery_diagnosis.route", return_value=route), \
+                patch("bt_scheduler_decisions.open_requests", return_value=[card]):
+            found = bt_recovery_runtime.sources(Path(temp), "run-1")
+        self.assertEqual(found["diagnosis_target"], {"request": "T8:5", "task": "T8", "attempt": "att-9", "reason": "rework_impact",
+                                                     "named": ["T4", "T5"]})
+        self.assertEqual((found["evidence_available"], found["planner_route"]), (True, route))
+        with tempfile.TemporaryDirectory() as temp, patch("bt_recovery_diagnosis.route", return_value=None), \
+                patch("bt_scheduler_decisions.open_requests", return_value=[card]):
+            found = bt_recovery_runtime.sources(Path(temp), "run-1")
+        self.assertIsNone(found["planner_route"])                                       # no authorized profile: the cycle says so, exactly
+
     def test_a_healing_case_that_gave_up_counts_as_exhausted_ordinary_recovery(self):
         import bt_recovery_runtime
         import bt_scheduler_healing as healing

@@ -326,7 +326,8 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                 if callable(recovery_tick):
                     recovery_result = recovery_tick()
                     if recovery_result.get("state") not in {"preview_only", "ordinary_path_first",
-                                                               "waiting_ordinary_remediation"}:
+                                                               "waiting_ordinary_remediation"} \
+                            and not recovery_result.get("duplicate"):
                         print(f"SCHEDULER_RECOVERY: {recovery_result.get('state')}: "
                               f"{recovery_result.get('blocker', recovery_result.get('cycle_token', ''))}",
                               file=sys.stderr)

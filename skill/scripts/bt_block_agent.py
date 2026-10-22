@@ -230,7 +230,8 @@ def _reject_json_constant(value: str) -> None:
 
 
 def diagnose_recovery(project: str, evidence: dict, request_identity: dict, route: dict, *, store: Path,
-                      timeout_seconds: int, runner=None, probe_runner=None, home: Path | None = None) -> dict:
+                      timeout_seconds: int, runner=None, probe_runner=None, home: Path | None = None,
+                      prompt: str | None = None) -> dict:
     """One persisted, read-only Planner diagnostic per cycle. Returns {outcome, blocker, raw, provenance}.
 
     `route` comes from the caller's M2 role policy: {role: "planner", verified: True, provider, profile, model,
@@ -287,8 +288,8 @@ def diagnose_recovery(project: str, evidence: dict, request_identity: dict, rout
         sections = None
     if sections is None:
         return finish(_blocked("evidence_incomplete", f"evidence exceeds {EVIDENCE_BYTES} bytes; not truncated", provenance))
-    prompt = RECOVERY_PROMPT.format(identity=json.dumps(request_identity, sort_keys=True, default=str),
-                                    count=len(sections), sections="\n\n".join(sections))
+    prompt = (prompt or RECOVERY_PROMPT).format(identity=json.dumps(request_identity, sort_keys=True, default=str),
+                                                count=len(sections), sections="\n\n".join(sections))
     try:
         with tempfile.TemporaryDirectory(prefix="bt-recovery-diagnosis-") as work:
             result = runtime.invoke_diagnostic(

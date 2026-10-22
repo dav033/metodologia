@@ -167,6 +167,13 @@ class Watch:
                 return True
         except Exception as error:  # noqa: BLE001 - healing is an extra: a failure in it never stops the watch
             self.log(f"healing failed ({type(error).__name__}: {error})")
+        try:
+            import bt_recovery_pipeline
+
+            if bt_recovery_pipeline.advance(self.project, self.req, self.rdir, log=self.log):
+                return True
+        except Exception as error:  # noqa: BLE001 - the structural cycle is opt-in and bounded: its failure never stops the watch
+            self.log(f"recovery cycle failed ({type(error).__name__}: {error})")
         return self._heal_conflicts()
 
     def _heal_conflicts(self) -> bool:
