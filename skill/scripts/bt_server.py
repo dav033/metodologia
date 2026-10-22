@@ -5,6 +5,8 @@ from the same origin, so no other web page can approve a plan and launch an agen
 """
 from __future__ import annotations
 
+import hmac
+import json
 import mimetypes
 import secrets
 import signal
@@ -29,6 +31,16 @@ SIMULATE_MAX_BYTES = 256 * 1024     # a demonstration, not a way to make the ser
 SIMULATE_MAX_TASKS = 60
 
 
+MAX_FORM_BYTES = 64 * 1024
+
+
+def _local_host(host: str) -> bool:
+    """The server answers only to its own loopback names: a page served under an attacker's DNS name (rebinding) can neither
+    read the token nor post with it."""
+    name = host.rsplit(":", 1)[0].strip("[]").lower() if not host.startswith("[") else host.split("]")[0].strip("[").lower()
+    return name in {"127.0.0.1", "localhost", "::1"}
+
+
 def token() -> str:
     f = STATE / "server-token"
     if not f.exists():
@@ -47,6 +59,8 @@ def safe_path(base: Path, rel: str) -> Path | None:
 
 
 class Handler(BaseHTTPRequestHandler):
+    strict_host = True          # the local panel answers only to its own loopback names (the remote handler has its own login)
+
     def log_message(self, *args):  # quiet
         pass
 
@@ -79,6 +93,8 @@ class Handler(BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------ GET
     def do_GET(self):
+        if self.strict_host and not _local_host(self.headers.get("Host") or ""):
+            return self.send("Forbidden", 403, "text/plain")
         try:
             self.route_get()
         except SystemExit as exc:
@@ -168,11 +184,16 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         u = urlparse(self.path)
         parts = [unquote(p) for p in u.path.strip("/").split("/") if p]
-        length = int(self.headers.get("Content-Length") or 0)
-        form = {k: v[0] for k, v in parse_qs(self.rfile.read(length).decode("utf-8")).items()}
-        origin = self.headers.get("Origin") or ""
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = -1
         host = self.headers.get("Host") or ""
-        if form.get("token") != token() or (origin and urlparse(origin).netloc != host):
+        if not 0 <= length <= MAX_FORM_BYTES or (self.strict_host and not _local_host(host)):            # before reading anything the caller sent
+            return self.send("Forbidden", 403, "text/plain")
+        form = {k: v[0] for k, v in parse_qs(self.rfile.read(length).decode("utf-8", "replace")).items()}
+        origin = self.headers.get("Origin") or ""
+        if not hmac.compare_digest(form.get("token", ""), token()) or (origin and urlparse(origin).netloc != host):
             return self.send("Forbidden", 403, "text/plain")
         if parts == ["api", "flow", "decision"]:
             import bt_plans_api as api
@@ -368,6 +389,7 @@ class Handler(BaseHTTPRequestHandler):
 # ---------------------------------------------------------------- lifecycle
 
 class RemoteHandler(Handler):
+    strict_host = False
     """Expose only the versioned machine API on the separately forwarded listener."""
 
     def _remote_path_allowed(self) -> bool:

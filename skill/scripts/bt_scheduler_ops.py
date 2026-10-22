@@ -49,9 +49,15 @@ def owns_hold(rdir: Path, token: str | None) -> bool:
 
 @contextlib.contextmanager
 def hold(rdir: Path, why: str, keep: bool = False):
-    """Keep the watchdog from restarting the owner while a move is in progress."""
+    """Keep the watchdog from restarting the owner while a move is in progress. A hold that was already there (an operator's
+    stop) is never destroyed: it is put back on exit, and a stop that lands DURING the move (the marker no longer carries our
+    token) is left as it is. The stop always wins."""
     path = hold_path(rdir)
     path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        prior = path.read_text(encoding="utf-8")
+    except OSError:
+        prior = None
     token = uuid.uuid4().hex
     path.write_text(json.dumps({"why": why, "pid": os.getpid(), "at": time.time(), "token": token}) + "\n",
                     encoding="utf-8")
@@ -59,7 +65,10 @@ def hold(rdir: Path, why: str, keep: bool = False):
         yield token
     finally:
         if not keep and owns_hold(rdir, token):
-            path.unlink(missing_ok=True)
+            if prior is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_text(prior, encoding="utf-8")
 
 
 def _processes(match) -> list[int]:
@@ -386,7 +395,7 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
         existing_hold = None
     nested_recovery_stop = (action == "stop" and isinstance(existing_hold, dict)
                             and existing_hold.get("why") == "recovery revision")
-    if action == "remediate" and existing_hold is not None:
+    if action == "remediate" and (existing_hold is not None or on_hold(rdir)):
         # an operator's stop is already in force: freezing a revision now would consume the correction under it (REQ-029 F15)
         return ["remediation waits: the run is held by an operator move (`scheduler-op REQ resume` releases it)"]
     with hold(rdir, why, keep=keep_held) as hold_token:

@@ -30,6 +30,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -41,6 +42,8 @@ import bt_interventions
 FILE = "RUN.healing.json"
 OFF = "RUN.healing.off"
 PER_CYCLE = 2
+MAX_CASES = 200                 # cases kept in RUN.healing.json (an agent chooses the error text, hence the signatures)
+MAX_HISTORY = 10
 SETTLE = {"transient": 45.0, "quota": 900.0}      # seconds a stop must have been open before it is answered
 REPEATS = {"integration_defect": 3, "transient": 2, "quota": 2}   # times one signature may be repaired (default 1)
 REVISING = ("regression", "plan_defect", "criterion_unmapped")    # classes whose repair changes the plan: capped per task
@@ -74,8 +77,17 @@ def load(rdir: Path | str) -> dict[str, Any]:
         data = json.loads((Path(rdir) / FILE).read_text(encoding="utf-8"))
     except (OSError, ValueError):
         data = {}
-    data.setdefault("cases", {})
-    data.setdefault("actions", 0)
+    if not isinstance(data, dict):
+        data = {}
+    if not isinstance(data.get("cases"), dict):
+        data["cases"] = {}
+    data["cases"] = {k: v for k, v in data["cases"].items() if isinstance(k, str) and isinstance(v, dict)}
+    for entry in data["cases"].values():
+        entry["applied"] = entry["applied"] if isinstance(entry.get("applied"), int) else 0
+        entry["history"] = [h for h in entry.get("history", []) if isinstance(h, dict)][-MAX_HISTORY:] \
+            if isinstance(entry.get("history"), list) else []
+    if not isinstance(data.get("actions"), int) or isinstance(data["actions"], bool):
+        data["actions"] = 0
     return data
 
 
@@ -138,22 +150,27 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
                                      plan=plan, doc=doc)
         if case is None or _too_fresh(case, request, doc, now()):
             continue
+        if case.signature not in state["cases"] and len(state["cases"]) >= MAX_CASES:
+            continue                                   # a flood of distinct error texts cannot grow the record without bound
         entry = state["cases"].setdefault(case.signature, {
             "id": case.signature, "task": case.task, "class": case.kind, "status": "open", "applied": 0,
             "evidence": list(case.evidence), "first_at": round(now(), 3), "history": []})
         task_actions = sum(e["applied"] for e in state["cases"].values()
                            if e["task"] == case.task and e["class"] in REVISING)
-        if entry["status"] in ("exhausted", "reverted"):
+        if entry["status"] in ("exhausted", "reverted", "unrepairable"):
             continue
+        if ops.on_hold(rdir):                      # an operator's stop landed since the cycle began: it wins, nothing more is done
+            break
         if entry["applied"] >= REPEATS.get(case.kind, 1) or (case.kind in REVISING and task_actions >= bound["per_task"]):
             _give_up(rdir, state, entry, case, request, doc, now(), notify, log,
                      "the same failure came back after its repair" if entry["applied"] else
                      f"{case.task} already had {task_actions} automatic plan repairs")
             continue
         outcome = _repair(project, req, rdir, request, case, context, plan, doc, answer, revise)
-        entry["history"].append({"at": round(now(), 3), "repair": outcome["repair"], "result": outcome["result"]})
+        entry["history"] = [*entry["history"], {"at": round(now(), 3), "repair": outcome["repair"],
+                                                "result": outcome["result"]}][-MAX_HISTORY:]
         if outcome["repair"] == "none":
-            entry["status"] = "unrepairable"
+            entry["status"] = "unrepairable"           # terminal: the card stays for a person and the case is not looked at again
             continue
         state["actions"] += 1
         done += 1
@@ -339,10 +356,14 @@ def repair_task(project, req, rdir, request, case, context, plan, revise) -> dic
     if errors:
         return {"repair": f"revision invalid: {errors[0][:160]}", "result": "failed"}
     _freeze(rdir, revised, "healing")
-    lines = revise(f"healing: {new_id} repairs what blocks {request['task']} ({case.kind})")
+    track = {"revision": revised["revision"], "task_added": new_id, "after_restored": restored, "target": request["task"]}
+    try:
+        lines = revise(f"healing: {new_id} repairs what blocks {request['task']} ({case.kind})")
+    except Exception as error:  # noqa: BLE001 - the revision is frozen but not applied: keep what `revert` needs to undo it
+        return {"repair": f"plan r{revised['revision']} frozen but not applied: {type(error).__name__}: {str(error)[:160]}",
+                "result": "failed", "track": track}
     return {"repair": f"plan r{revised['revision']}: repair task {new_id} before {request['task']}", "result": "fixed",
-            "track": {"revision": revised["revision"], "task_added": new_id, "after_restored": restored,
-                      "target": request["task"], "lines": lines[-2:]}}
+            "track": {**track, "lines": lines[-2:]}}
 
 
 def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, context: dict) -> tuple[dict, str, list[str]] | None:
@@ -406,13 +427,20 @@ def revert(project: str, req: str, rdir: Path | str, case_id: str, *,
     latest = _latest_plan(rdir)
     if latest is None:
         raise ValueError("no frozen plan to revert on")
+    added = entry["task_added"]
+    by_id = {t["id"]: t for t in latest.get("tasks", []) if isinstance(t, dict)}
+    if added not in by_id or not re.fullmatch(r"T[0-9]+\.[0-9]+[a-z]?", str(added)):
+        raise ValueError(f"{added} is not a repair task of the current plan: nothing to revert")
+    if by_id[added].get("recovery_task") is not True and "Repair what blocks" not in str(by_id[added].get("title", "")) \
+            and "Remediate" not in str(by_id[added].get("title", "")):
+        raise ValueError(f"{added} was not made by the self-healing: refusing to remove it")
+    if _is_accepted(rdir, added):
+        raise ValueError(f"{added} is already accepted: its work stays; reopen the plan by hand if it must go")
     revised = copy.deepcopy(latest)
-    revised["tasks"] = [t for t in revised["tasks"] if t["id"] != entry["task_added"]]
-    for task in revised["tasks"]:
-        if task["id"] == entry.get("target"):
-            task["after"] = list(entry.get("after_restored") or ())
-        elif entry["task_added"] in (task.get("after") or ()):
-            task["after"] = [a for a in task["after"] if a != entry["task_added"]]
+    revised["tasks"] = [t for t in revised["tasks"] if t["id"] != added]
+    for task in revised["tasks"]:                  # only the repair task leaves the prerequisites: every other edge stays as it is now
+        if added in (task.get("after") or ()):
+            task["after"] = [a for a in task["after"] if a != added]
     revised["revision"] = int(latest.get("revision") or 0) + 1
     errors = bt_plan_adapter.plan_errors(revised)
     if errors:
@@ -425,6 +453,16 @@ def revert(project: str, req: str, rdir: Path | str, case_id: str, *,
                             repair=f"plan r{revised['revision']} without {entry['task_added']}", result="fixed", case=case_id)
     return [f"plan r{revised['revision']}: {entry['task_added']} removed, {entry.get('target')} back to its previous prerequisites",
             *lines]
+
+
+def _is_accepted(rdir: Path, task_id: str) -> bool:
+    """True when the run already accepted `task_id` (the state is read from the run's own database)."""
+    try:
+        import bt_scheduler_decisions
+
+        return bt_scheduler_decisions._state(Path(rdir)).get("tasks", {}).get(task_id, {}).get("state") == "completed"
+    except Exception:  # noqa: BLE001 - no readable run, nothing accepted
+        return False
 
 
 def _latest_plan(rdir: Path):

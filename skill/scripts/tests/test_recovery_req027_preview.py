@@ -82,7 +82,11 @@ class Req027History(unittest.TestCase):
         self.assertEqual(again["digest"], self.result["digest"])                         # deterministic
         self.assertEqual((self.result["writes"], self.result["diagnosis_invoked"]), (0, False))
         self.assertEqual(hashlib.sha256(FIXTURE.read_bytes()).hexdigest(), before)
-        self.assertNotIn("bt_block_agent", sys.modules)                                  # nothing asked a model
+        import subprocess
+        probe = subprocess.run([sys.executable, "-c", "import sys, bt_recovery_preview as p; "
+                                "sys.exit(1 if {'bt_block_agent', 'bt_scheduler_recovery'} & set(sys.modules) else 0)"],
+                               cwd=HERE.parent, capture_output=True)
+        self.assertEqual(probe.returncode, 0, probe.stderr)                              # nothing asked a model, no M5 import
 
     def test_att_0196_changed_a_web_page_with_backend_only_checks_and_the_preview_says_so(self):
         gaps = preview.coverage_gaps(self.data["coverage_gap"])

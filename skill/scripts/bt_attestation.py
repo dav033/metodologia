@@ -49,12 +49,22 @@ def key_path() -> Path:
 def _key(path: Path | None = None, *, create: bool = False) -> bytes | None:
     path = path or key_path()
     try:
-        return path.read_bytes()
+        key = path.read_bytes()
+        if len(key) >= 32:
+            return key                      # a shorter file is a damaged key (an empty one would seal anything): never used
     except OSError:
-        if not create:
-            return None
+        pass
+    if not create:
+        return None
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:                 # another minter was first, or the file is damaged: replace a damaged one
+        if len(path.read_bytes()) >= 32:
+            return path.read_bytes()
+        path.write_bytes(os.urandom(32))
+        os.chmod(path, 0o600)
+        return path.read_bytes()
     try:
         os.write(fd, os.urandom(32))
     finally:

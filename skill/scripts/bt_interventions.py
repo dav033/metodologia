@@ -51,17 +51,46 @@ def record(run_dir: Path | str, *, kind: str, source: str = "auto", task: str = 
     return row
 
 
+MAX_BYTES = 2_000_000        # the feed and the page read at most this much from the END of the file
+
+
+def _clean(row: dict[str, Any]) -> dict[str, Any] | None:
+    """A row an agent could have forged is reduced to known fields of the right type; anything else is dropped."""
+    import math
+
+    at = row.get("at")
+    if isinstance(at, bool) or not isinstance(at, (int, float)) or not math.isfinite(at):
+        return None
+    minutes = row.get("minutes_lost")
+    minutes = float(minutes) if isinstance(minutes, (int, float)) and not isinstance(minutes, bool) and math.isfinite(minutes) else None
+    text = lambda key: str(row.get(key) or "")[:MAX_TEXT]  # noqa: E731
+    return {**{k: v for k, v in row.items() if k not in ("at", "minutes_lost", "class", "source", "result")},
+            "at": float(at), "minutes_lost": minutes, "class": row["class"] if row.get("class") in CLASSES else "unknown",
+            "source": row["source"] if row.get("source") in SOURCES else "auto",
+            "result": row["result"] if row.get("result") in RESULTS else "pending",
+            "task": text("task"), "evidence": text("evidence"), "repair": text("repair"), "run": text("run")}
+
+
 def read(run_dir: Path | str) -> Iterator[dict[str, Any]]:
-    """Every readable row, oldest first. A damaged line is skipped, never fatal."""
+    """Every readable, well-formed row, oldest first (the last `MAX_BYTES` of the file at most). A damaged or forged line is
+    skipped, never fatal."""
     try:
-        lines = (Path(run_dir) / FILE).read_text(encoding="utf-8").splitlines()
+        with open(Path(run_dir) / FILE, "rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            size = handle.tell()
+            handle.seek(max(0, size - MAX_BYTES))
+            raw = handle.read()
     except OSError:
         return
+    lines = raw.decode("utf-8", "replace").splitlines()
+    if size > MAX_BYTES:
+        lines = lines[1:]                              # the first line of a tail may be cut in half
     for line in lines:
         try:
             row = json.loads(line)
         except ValueError:
             continue
         if isinstance(row, dict) and row.get("class"):
-            yield row
-
+            clean = _clean(row)
+            if clean is not None:
+                yield clean

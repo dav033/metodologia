@@ -16,9 +16,6 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from bt_scheduler_recovery.diagnostic_contracts import FindingOccurrence, FindingRelation, ProgressSnapshot
-from bt_scheduler_recovery.progress import assess_progress
-
 STRONG, WEAK = 0.45, 0.25
 STOP = frozenset("""still that with this from have does without into their there which when then than been were also only more
 most must each other another because before after while whose about above below under over such same both just like some none""".split())
@@ -40,46 +37,53 @@ def score(previous: Mapping[str, Any], current: Mapping[str, Any]) -> float:
     return round(value, 3)
 
 
-def _occurrence(ledger: Mapping[str, Any], finding: Mapping[str, Any]) -> FindingOccurrence:
-    digest = str(ledger["ledger_sha256"])
-    return FindingOccurrence(digest, str(finding["id"]), "open" if finding["status"] == "open" else
-                             ("fixed" if finding["status"] == "fixed" else "accepted"), (f"ledger:{digest}",))
+def _state(finding: Mapping[str, Any]) -> str:
+    return "open" if finding["status"] == "open" else ("fixed" if finding["status"] == "fixed" else "accepted")
 
 
 def compare(previous: Mapping[str, Any], current: Mapping[str, Any]) -> dict[str, Any]:
     """Progress from one audit ledger to the next: persisted / fixed / new / regressed / uncertain (occurrence ids) plus how each
-    relation was decided."""
-    old = [f for f in previous["findings"]]
-    new = [f for f in current["findings"]]
+    relation was decided. Same vocabulary and rules as the M5 `assess_progress` (a related finding persists, is fixed or
+    regressed; an unrelated one is fixed (already marked so) or new; an open finding nobody relates to is uncertain)."""
+    old, new = list(previous["findings"]), list(current["findings"])
     pairs = sorted(((score(o, n), o["id"], n["id"]) for o in old for n in new), reverse=True)
     used_old: set[str] = set()
     used_new: set[str] = set()
-    relations, weak, why = [], [], {}
+    strong: dict[str, str] = {}                              # current id -> previous id
+    weak: dict[str, tuple[str, float]] = {}
     for value, o_id, n_id in pairs:
         if o_id in used_old or n_id in used_new or value < WEAK:
             continue
         used_old.add(o_id)
         used_new.add(n_id)
         if value >= STRONG:
-            relations.append((o_id, n_id, value))
+            strong[n_id] = o_id
         else:
-            weak.append((o_id, n_id, value))
-    prev_snap = [_occurrence(previous, f) for f in old]
-    cur_snap = [_occurrence(current, f) for f in new]
-    links = tuple(FindingRelation(f"{previous['ledger_sha256']}:{o}", f"{current['ledger_sha256']}:{n}", "same_finding",
-                                  (f"ledger:{current['ledger_sha256']}",)) for o, n, _ in relations)
-    progress = assess_progress(ProgressSnapshot(tuple(prev_snap)), ProgressSnapshot(tuple(cur_snap), links))
-    for o, n, value in relations:
-        why[f"{current['ledger_sha256']}:{n}"] = {"previous": o, "score": value, "decision": "related"}
-    for o, n, value in weak:
-        why[f"{current['ledger_sha256']}:{n}"] = {"previous": o, "score": value, "decision": "uncertain: weak evidence"}
-    uncertain = sorted({*progress.uncertain, *(f"{current['ledger_sha256']}:{n}" for _, n, _ in weak)})
-    # a weak match is neither persistence nor novelty: it leaves the "new" list and waits for a person
-    def keep(ids):
-        return [i for i in ids if i not in uncertain]
-    return {"persisted": keep(progress.persisted), "fixed": keep(progress.fixed), "new": keep(progress.new),
-            "regressed": keep(progress.regressed), "uncertain": uncertain, "relations": why,
-            "counts": {"previous": len(old), "current": len(new)}}
+            weak[n_id] = (o_id, value)
+    by_old = {f["id"]: f for f in old}
+    cur, prev = current["ledger_sha256"], previous["ledger_sha256"]
+    groups: dict[str, list[str]] = {"persisted": [], "fixed": [], "new": [], "regressed": [], "uncertain": []}
+    why: dict[str, dict] = {}
+    for finding in new:
+        key = f"{cur}:{finding['id']}"
+        if finding["id"] in weak:
+            groups["uncertain"].append(key)
+            why[key] = {"previous": weak[finding["id"]][0], "score": weak[finding["id"]][1], "decision": "uncertain: weak evidence"}
+        elif finding["id"] in strong:
+            before = by_old[strong[finding["id"]]]
+            why[key] = {"previous": before["id"], "score": score(before, finding), "decision": "related"}
+            if _state(before) == "fixed" and _state(finding) == "open":
+                groups["regressed"].append(key)
+            elif _state(finding) == "fixed":
+                groups["fixed"].append(key)
+            else:
+                groups["persisted"].append(key)
+        else:
+            groups["fixed" if _state(finding) == "fixed" else "new"].append(key)
+    matched = {*strong.values(), *(o for o, _ in weak.values())}
+    groups["uncertain"] += [f"{prev}:{f['id']}" for f in old if _state(f) == "open" and f["id"] not in matched]
+    groups = {k: sorted(set(v)) for k, v in groups.items()}
+    return {**groups, "relations": why, "counts": {"previous": len(old), "current": len(new)}}
 
 
 def label(ledger: Mapping[str, Any], occurrence: str) -> str:

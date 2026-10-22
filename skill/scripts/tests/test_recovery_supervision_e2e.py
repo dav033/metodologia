@@ -120,6 +120,20 @@ class SupervisionE2E(unittest.TestCase):
             except urllib.error.HTTPError as error:
                 return error.code, error.headers.get("Location", "")
 
+        import http.client
+        for host in ("evil.example", f"evil.example:{port}"):                             # DNS rebinding: a foreign Host name
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+            conn.request("GET", "/plans/e2e/REQ-001", headers={"Host": host})
+            self.assertEqual(conn.getresponse().status, 403)
+            conn.request("POST", "/plans/e2e/REQ-001/heal", body=f"token={token}&action=stop",
+                         headers={"Host": host, "Content-Type": "application/x-www-form-urlencoded"})
+            self.assertEqual(conn.getresponse().status, 403)
+            conn.close()
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)                  # an oversized body is refused unread
+        conn.request("POST", "/plans/e2e/REQ-001/heal", body=b"x", headers={"Content-Length": str(10 << 20)})
+        self.assertEqual(conn.getresponse().status, 403)
+        conn.close()
+        self.assertFalse((self.rdir / "RUN.healing.off").exists())
         self.assertEqual(post("heal", action="stop")[0], 403)                            # no token: refused
         self.assertFalse((self.rdir / "RUN.healing.off").exists())
         self.assertEqual(post("heal", token=token, action="stop")[0], 303)
