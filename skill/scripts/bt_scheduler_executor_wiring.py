@@ -239,6 +239,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
         if quality_store_path is not None:
             import bt_attempt_history
+            import bt_attestation
             import bt_audit_gate
             import bt_config
             import bt_remediation
@@ -271,6 +272,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 unresolved_check=getattr(integrate, "unresolved", None),
                 revert_check=getattr(integrate, "reverted", None),
                 remediate=bt_remediation.hook(rdir, bt_audit_gate.policy_from(bt_config.get)),
+                attestations=bt_attestation.lookup(rdir),
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)),
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(

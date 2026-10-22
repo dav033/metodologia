@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -19,7 +19,8 @@ def register(subparsers) -> None:
     op.add_argument("target", nargs="?", default="",
                     help="attempt id for cancel-attempt, task id for reopen and retry, comma-separated task ids for rework "
                          "(they and everything downstream go back to be redone; with --only just them) and withdraw-rework "
-                         "(take the rework back for tasks that redid nothing), request id for decide and diagnose (diagnose: a cheap model reads why it stopped, config diagnosis.*)")
+                         "(take the rework back for tasks that redid nothing), task id for attest (--reason is the evidence: what you did and saw; "
+                         "the optional second argument picks one manual check by purpose text or number), request id for decide and diagnose (diagnose: a cheap model reads why it stopped, config diagnosis.*)")
     op.add_argument("option", nargs="?", default="",
                     help="the option to take, for decide; the accepted attempt to continue from, for continue-from")
     op.add_argument("--reason", default="", help="why (kept in the run's audit trail)")
@@ -74,13 +75,18 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
     if args.action == "resume":
         print(ops.resume(project, args.req, rdir))
         return 0
-    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from"} and not args.target:
+    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest"} and not args.target:
         print(f"{args.action} needs a target (attempt id, or task id(s) for reopen, retry and rework)")
         return 2
     try:
         if args.action == "stop":
             ops.hold_path(rdir).write_text('{"why": "operator stop"}\n', encoding="utf-8")
             print(f"owner stopped: {ops.stop_owner(project, args.req)}; held — `scheduler-op {args.req} resume` releases it")
+            return 0
+        if args.action == "attest":
+            for line in ops.attest(project, args.req, rdir, args.target, args.option, args.reason):
+                print(line)
+            print(ops.resume(project, args.req, rdir))
             return 0
         if args.action == "retry":
             for line in ops.retry(project, args.req, rdir, args.target, args.reason):

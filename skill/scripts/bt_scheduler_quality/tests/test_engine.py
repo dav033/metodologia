@@ -181,7 +181,7 @@ class QualityEngineTests(unittest.TestCase):
                 self.assertEqual(result["status"], expected)
                 self.assertNotIn("CHECK_UNMAPPED", {item["code"] for item in result.get("issues", ())})
 
-    def test_multiple_checks_for_one_criterion_are_ambiguous(self):
+    def test_multiple_checks_for_one_criterion_are_ambiguous_when_mixed_evidence_is_off(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             _, source, _, _ = _make_snapshot(root)
@@ -190,7 +190,7 @@ class QualityEngineTests(unittest.TestCase):
             )
             runner = ScriptedRunner()
             with QualityStore(":memory:") as store:
-                result = QualityEngine(QualityPolicy(), store, runner=runner).verify(
+                result = QualityEngine(QualityPolicy(mixed_evidence=False), store, runner=runner).verify(
                     self.raw, source
                 )
 
@@ -200,6 +200,34 @@ class QualityEngineTests(unittest.TestCase):
             "CRITERION_AMBIGUOUS", {item["code"] for item in result["issues"]}
         )
         self.assertEqual(len(runner.calls), 2)
+
+    def test_several_checks_for_one_criterion_all_have_to_hold_with_mixed_evidence(self):
+        for outcome, code, expected in (("pass", 0, "PASS"), ("fail", 3, "FAIL")):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as temporary:
+                _, source, _, _ = _make_snapshot(Path(temporary))
+                self.raw["verification"] = [self.raw["verification"][0],
+                                            dict(self.raw["verification"][0], value="python3 another.py")]
+                with QualityStore(":memory:") as store:
+                    result = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner(outcome, code)).verify(self.raw, source)
+                self.assertEqual((result["status"], result["criteria"][0]["status"]), (expected, outcome))
+
+    def test_a_manual_check_with_a_valid_attestation_receipt_settles_its_criterion_without_a_person(self):
+        manual = {"type": "manual", "value": "open it on a phone", "purpose": "unit tests pass", "expected": "it renders"}
+        for receipt, expected in (("sha256:abc", "PASS"), (None, "NEEDS_REVIEW")):
+            with self.subTest(receipt=receipt), tempfile.TemporaryDirectory() as temporary:
+                _, source, _, _ = _make_snapshot(Path(temporary))
+                self.raw["verification"] = [self.raw["verification"][0], manual]       # a command AND a manual check
+                asked = []
+                with QualityStore(":memory:") as store:
+                    result = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner(),
+                                           attestations=lambda order, spec: asked.append(spec.kind) or receipt
+                                           if spec.kind == "manual" else None).verify(self.raw, source)
+                    manifest = store.get_result_manifest(result["evidence_manifest"])
+                self.assertEqual(result["status"], expected)
+                self.assertEqual(asked, ["manual"])
+                self.assertEqual(b"attestations" in manifest, receipt is not None)         # the receipt is part of the evidence
+                if receipt is None:
+                    self.assertIn("CRITERION_MANUAL", {item["code"] for item in result["issues"]})
 
     def test_the_same_command_serving_several_criteria_runs_once(self):
         with tempfile.TemporaryDirectory() as temporary:

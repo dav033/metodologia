@@ -185,7 +185,8 @@ def note_for(gate: Gate, task_id: str, audit_task_id: str) -> str:
     """What a task sent back for rework must read in its next prompt: the findings that name it, or why it was reset."""
     own = [f for f in gate.blocking if task_id in f["tasks"]]
     if own:
-        lines = [f"- {f['id']} ({f['severity']}): {f['summary']}" for f in own]
+        lines = [f"- {f['id']} ({f['severity']}): {f['summary']}"
+                 + (f"\n  Evidence from the audit: {f['evidence']}" if f.get("evidence") else "") for f in own]
         return (f"The independent audit {audit_task_id} rejected the accepted result of this task. Fix these confirmed "
                 "findings and prove each one with a test that exercises the real entry point, not only the module in "
                 "isolation:\n" + "\n".join(lines))

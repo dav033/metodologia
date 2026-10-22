@@ -131,6 +131,21 @@ def write_audit_notes(rdir: Path, task: str, text: str) -> None:
     path.write_text(text.strip() + "\n", encoding="utf-8")
 
 
+def append_audit_notes(rdir: Path, task: str, text: str) -> None:
+    """Add the owner's words to what the system already wrote from the audit's findings (never replace the findings)."""
+    text = text.strip()
+    if not text:
+        return
+    path = audit_notes_path(rdir, task)
+    try:
+        existing = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        existing = ""
+    if text in existing:
+        return
+    write_audit_notes(rdir, task, f"{existing}\n\nOwner's note:\n{text}" if existing else text)
+
+
 def verify_notes_path(rdir: Path, task: str) -> Path:
     return Path(rdir) / NOTES / f"{task}.verify.md"
 
@@ -450,7 +465,7 @@ def answer(project: str, req: str, rdir: Path, request_id: str, option: str, rea
         target = next(o["target"] for o in request["options"] if o["id"] == option)
         if option == "rework_findings":                 # the findings the owner wrote reach each task's next prompt
             for name in target.split(","):
-                write_audit_notes(rdir, name, f"The independent audit {task} still finds, in the current tree:\n{reason.strip()}")
+                append_audit_notes(rdir, name, f"The independent audit {task} still finds, in the current tree:\n{reason.strip()}")
         result = ops.apply(project, req, rdir, "rework", target, reason or f"decision {request_id}: redo {target} on the "
                            f"current work it clashed with", only=True)
         if task in ops.status(project, req, rdir)["blocked_tasks"]:

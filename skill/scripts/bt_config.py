@@ -76,7 +76,11 @@ DEFAULTS: dict = {
               "attribute_max_tasks": 3,
               # an action that would send back more ACCEPTED tasks than this (an audit rejection, `scheduler-op rework`,
               # `scheduler-op revise`) needs the owner's confirmation (`--confirm`) and says what it costs; 0 = no ceiling
-              "rework_confirm_over": 3},   # a plan with an audit also needs an independent cross-check audit
+              "rework_confirm_over": 3,
+              # `scheduler-op revise` onto a new plan revision: "content" keeps every accepted task whose own content did not
+              # change (what depends on a redone task is merged with the redo, like `rework_scope: named`; checks and audits
+              # over redone work are redone); "downstream" resets everything that depended on a reset task
+              "rebase_cascade": "content"},   # a plan with an audit also needs an independent cross-check audit
     # max_turns: turns one Claude attempt may use under the Scheduler (the legacy marathon keeps 45); an attempt that uses
     # them all is `incomplete_output` and is retried from its snapshot, so a low value costs attempts, not work
     # exclusive_scopes: plan `scope` values whose tasks run alone in their repository. Empty since REQ-030: what keeps two
@@ -92,6 +96,7 @@ ALLOWED: dict[str, tuple] = {
     "routing.quality_protection": ("critical", "always", "off"),
     "audit.mode": ("milestone", "off"),
     "gates.rework_scope": ("named", "downstream"),
+    "gates.rebase_cascade": ("content", "downstream"),
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),
 }

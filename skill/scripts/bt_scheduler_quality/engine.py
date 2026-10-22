@@ -6,11 +6,13 @@ import dataclasses
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 from .contracts import QualityError, VerifyRequest
 from .criteria import CheckResult, CriterionResult, evaluate_criteria, overall_status
 from .evidence import build_evidence, sha256_bytes, validate_result_contract
+from . import reuse
 from .policy import CheckSpec, QualityPolicy, compile_verification
 from .review import ReviewerPort, validate_reviewer_evidence
 from .runner import CommandOutcome, SandboxRunner
@@ -41,6 +43,7 @@ _ISSUE_DETAILS = {
     "CRITERION_AMBIGUOUS": "More than one verification check maps to this acceptance criterion.",
     "CRITERION_MANUAL": "This acceptance criterion has only manual evidence.",
     "CHECK_UNKNOWN": "The check did not produce a determinate result.",
+    "CHECK_DEFERRED": "An expensive check was not run because a cheaper one failed first.",
 }
 
 
@@ -63,7 +66,11 @@ class QualityEngine:
         runner: SandboxRunner | None = None,
         resolver: SnapshotResolver | None = None,
         reviewer: ReviewerPort | None = None,
+        attestations: Callable[[VerifyRequest, CheckSpec], str | None] | None = None,
     ):
+        """`attestations(order, spec)` -> the digest of a valid receipt the coordinator left for that manual check, or None
+        (a receipt is minted and verified outside this package; M6 only learns whether one holds)."""
+        self.attestations = attestations
         self.policy = policy
         self.store = store
         self.runner = runner or SandboxRunner(policy)
@@ -99,7 +106,15 @@ class QualityEngine:
         checks, artifact_bodies = _build_check_results(
             execution.specs, execution.outcomes
         )
-        criteria = evaluate_criteria(order, checks)
+        receipts: dict[str, str] = {}
+
+        def attested(spec: CheckSpec) -> bool:
+            receipt = self.attestations(order, spec) if self.attestations else None
+            if receipt:
+                receipts[spec.id] = receipt
+            return bool(receipt)
+
+        criteria = evaluate_criteria(order, checks, mixed=self.policy.mixed_evidence, attested=attested)
         mapped = {
             item.spec.purpose
             for item in checks
@@ -127,6 +142,7 @@ class QualityEngine:
             extra_manifest={
                 **execution.manifest_context,
                 "mapped_criteria": sorted(mapped),
+                **({"attestations": dict(sorted(receipts.items()))} if receipts else {}),
                 **({"independent_review": review_manifest} if review_manifest else {}),
             },
         )
@@ -182,7 +198,8 @@ class QualityEngine:
         with self.resolver.materialize(source) as snapshot:
             specs = compile_verification(order, snapshot.directory, self.policy)
             outcomes, issue_codes = self._run_checks(
-                specs, snapshot.directory, started, source.worktree, source.repository
+                specs, snapshot.directory, started, source.worktree, source.repository,
+                tree=reuse.tree_id(source.repository, snapshot.snapshot_sha),
             )
             return _ExecutionEvidence(
                 specs,
@@ -226,12 +243,15 @@ class QualityEngine:
         started: float,
         worktree: Path | None = None,
         repository: Path | None = None,
+        tree: str | None = None,
     ) -> tuple[dict[str, CommandOutcome], list[str]]:
         outcomes: dict[str, CommandOutcome] = {}
         issue_codes: list[str] = []
         mounts = attempt_mounts(self.policy, worktree, repository, snapshot_root)
         done: dict[tuple[tuple[str, ...], str], CommandOutcome] = {}
-        for spec in specs:
+        fingerprint = reuse.environment_fingerprint(self.policy)
+        failed = False
+        for spec in self._cheap_first(specs):
             if spec.kind == "manual":
                 outcomes[spec.id] = _unknown("CHECK_MANUAL")
                 continue
@@ -245,18 +265,47 @@ class QualityEngine:
             same = (spec.argv, spec.cwd)
             outcome = done.get(same)
             if outcome is None:
-                outcome = self.runner.run(
-                    spec,
-                    snapshot_root,
-                    timeout_seconds=min(self.policy.max_command_seconds, remaining),
-                    mounts=mounts,
-                )
-                outcome = self._rerun_if_flaky(spec, snapshot_root, outcome, remaining, mounts, started)
+                if failed and self.policy.defer_expensive and self._is_expensive(spec):
+                    outcome = dataclasses.replace(_unknown("CHECK_DEFERRED"), stderr=(
+                        b"[M6] not run: a cheaper check of this task failed first. Fix that one and this check runs "
+                        b"again with the next attempt.\n"))
+                    issue_codes.append("CHECK_DEFERRED")
+                else:
+                    outcome = self._run_or_reuse(spec, snapshot_root, remaining, mounts, started, tree, fingerprint)
                 done[same] = outcome
             outcomes[spec.id] = outcome
-            if outcome.issue_code:
+            failed = failed or outcome.status == "fail"
+            if outcome.issue_code and outcome.issue_code != "CHECK_DEFERRED":
                 issue_codes.append(outcome.issue_code)
         return _complete_outcomes(specs, outcomes, issue_codes)
+
+    def _is_expensive(self, spec: CheckSpec) -> bool:
+        return reuse.is_expensive(spec, self.store.last_check_ms(reuse.command_key(spec)), self.policy)
+
+    def _cheap_first(self, specs: tuple[CheckSpec, ...]) -> list[CheckSpec]:
+        """Plan order, except that expensive checks run after the cheaper ones (so a failure of a cheap one can spare them)."""
+        if not self.policy.defer_expensive:
+            return list(specs)
+        costly = {spec.id for spec in specs if spec.kind != "manual" and self._is_expensive(spec)}
+        return [spec for spec in specs if spec.id not in costly] + [spec for spec in specs if spec.id in costly]
+
+    def _run_or_reuse(self, spec, snapshot_root, remaining, mounts, started, tree, fingerprint) -> CommandOutcome:
+        key = reuse.pass_key(tree, spec, fingerprint) if tree else None
+        if key:
+            hit = self.store.cached_pass(key, self.policy.cache_seconds, time.time())
+            if hit is not None:
+                note = (f"[M6] not run again: this exact tree already passed this check {int(time.time() - hit['created_at'])} "
+                        "seconds ago (same command, same environment); its recorded output follows\n").encode()
+                return CommandOutcome("pass", hit["exit_code"], 0, hit["stdout"], note + hit["stderr"], None, True)
+        outcome = self.runner.run(spec, snapshot_root, timeout_seconds=min(self.policy.max_command_seconds, remaining),
+                                  mounts=mounts)
+        outcome = self._rerun_if_flaky(spec, snapshot_root, outcome, remaining, mounts, started)
+        if outcome.status in ("pass", "fail") and outcome.sandboxed:
+            self.store.record_check_ms(reuse.command_key(spec), outcome.duration_ms, time.time())
+        if key and outcome.status == "pass" and outcome.sandboxed and not outcome.output_truncated \
+                and not outcome.stderr.startswith(b"[M6] this check failed once"):
+            self.store.remember_pass(key, outcome.exit_code, outcome.duration_ms, outcome.stdout, outcome.stderr, time.time())
+        return outcome
 
     def _apply_review(
         self,

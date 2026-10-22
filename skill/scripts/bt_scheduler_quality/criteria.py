@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Literal
 
@@ -36,8 +37,15 @@ class CriterionResult:
 
 
 def evaluate_criteria(
-    order: VerifyRequest, checks: tuple[CheckResult, ...]
+    order: VerifyRequest,
+    checks: tuple[CheckResult, ...],
+    *,
+    mixed: bool = False,
+    attested: Callable[[CheckSpec], bool] = lambda spec: False,
 ) -> tuple[CriterionResult, ...]:
+    """`mixed`: a criterion may be backed by several checks (commands and manual ones) with its exact text as purpose; it
+    passes when every command passes and every manual check carries a valid attestation receipt (`attested(spec)`), fails
+    when a command fails, and is otherwise undetermined. Without it one criterion needs exactly one check."""
     results: list[CriterionResult] = []
     for criterion in order.acceptance_criteria:
         matches = [item for item in checks if item.spec.purpose == criterion]
@@ -45,6 +53,8 @@ def evaluate_criteria(
             results.append(
                 CriterionResult(criterion, "unknown", (), "CRITERION_UNVERIFIABLE")
             )
+        elif len(matches) != 1 and mixed:
+            results.append(_combine(criterion, matches, attested))
         elif len(matches) != 1:
             results.append(
                 CriterionResult(
@@ -56,7 +66,9 @@ def evaluate_criteria(
             )
         else:
             match = matches[0]
-            if match.spec.kind == "manual":
+            if match.spec.kind == "manual" and mixed and attested(match.spec):
+                results.append(CriterionResult(criterion, "pass", (match.spec.id,)))
+            elif match.spec.kind == "manual":
                 results.append(
                     CriterionResult(
                         criterion, "unknown", (match.spec.id,), "CRITERION_MANUAL"
@@ -76,6 +88,24 @@ def evaluate_criteria(
                     CriterionResult(criterion, match.outcome.status, (match.spec.id,))
                 )
     return tuple(results)
+
+
+def _combine(criterion: str, matches: list[CheckResult], attested: Callable[[CheckSpec], bool]) -> CriterionResult:
+    ids = tuple(item.spec.id for item in matches)
+    states: list[tuple[str, str]] = []
+    for item in matches:
+        if item.spec.kind == "manual":
+            states.append(("pass", "") if attested(item.spec) else ("unknown", "CRITERION_MANUAL"))
+        elif item.outcome.status == "unknown":
+            states.append(("unknown", item.outcome.issue_code or "CHECK_UNKNOWN"))
+        else:
+            states.append((item.outcome.status, ""))
+    if any(status == "fail" for status, _ in states):
+        return CriterionResult(criterion, "fail", ids)
+    unknown = next((code for status, code in states if status == "unknown"), "")
+    if unknown:
+        return CriterionResult(criterion, "unknown", ids, unknown)
+    return CriterionResult(criterion, "pass", ids)
 
 
 def overall_status(

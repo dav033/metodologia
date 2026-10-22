@@ -107,6 +107,7 @@ class M6M1AdapterTests(unittest.TestCase):
         rework_notes=None,
         verify_notes=None,
         audit_policy=None,
+        rework_confirm_over=0,
     ):
         temporary = tempfile.TemporaryDirectory(prefix="m6-m1-")
         self.addCleanup(temporary.cleanup)
@@ -126,7 +127,7 @@ class M6M1AdapterTests(unittest.TestCase):
         core = m1.SchedulerCore(
             plan,
             m1.InMemoryRepository(),
-            config=m1.Config(max_parallel_tasks=4, max_attempts=max_attempts),
+            config=m1.Config(max_parallel_tasks=4, max_attempts=max_attempts, rework_confirm_over=rework_confirm_over),
             ports=ports,
         )
         core.start()
@@ -194,7 +195,7 @@ class M6M1AdapterTests(unittest.TestCase):
 
     # ---- audit gate: the ledger decides, and the system sends the named work back -------------------------------
     def _audit_system(self, ledger, notes, *, declare_ledger=True, policy=None, changes=(), remediate=None,
-                      runner=None, audit_command="test -s audit.md"):
+                      runner=None, audit_command="test -s audit.md", rework_confirm_over=0, second_builder=False):
         implement = _task("T1", "python3 build.py")
         implement.update(kind="implement")
         implement["verification"][0]["category"] = "functional"
@@ -202,8 +203,15 @@ class M6M1AdapterTests(unittest.TestCase):
         audit.update(kind="audit", after=["T1"], expected_paths=["docs/audit.md"]
                      + (["docs/audit.findings.json"] if declare_ledger else []))
         audit["verification"][0]["category"] = "functional"
+        tasks = [implement, audit]
+        if second_builder:                                # T3: a second accepted builder the audit also names
+            other = _task("T3", "python3 build.py")
+            other.update(kind="implement", after=["T1"])
+            other["verification"][0]["category"] = "functional"
+            audit["after"] = ["T1", "T3"]
+            tasks = [implement, other, audit]
         system = self._system(
-            [implement, audit],
+            tasks,
             max_attempts=2,
             schema_version="1.2.0",
             read_ledger=ledger,
@@ -212,6 +220,7 @@ class M6M1AdapterTests(unittest.TestCase):
             audit_policy=policy,
             remediate=remediate,
             runner=runner,
+            rework_confirm_over=rework_confirm_over,
         )
         root, core, _, executor, _, _ = system
         self._start_attempts(core, executor, root, ("T1",))
@@ -219,6 +228,10 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertTrue(
             _wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed")
         )
+        if second_builder:
+            self._start_attempts(core, executor, root, ("T3",))
+            core.step()
+            self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T3"]["state"] == "completed"))
         self._start_attempts(core, executor, root, ("T2",))
         core.step()
         return core
@@ -314,6 +327,23 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertIn("the gateway never listens", dict(notes)["T1"])
         kinds = [entry.kind for entry in core.audit_log()]
         self.assertIn("rework_requested", kinds)
+
+    def test_an_audit_that_would_send_back_more_accepted_tasks_than_the_ceiling_blocks_with_the_findings_written(self):
+        notes = []
+        findings = [{"id": "F1", "severity": "high", "status": "open", "summary": "login 404", "tasks": ["T1"],
+                     "evidence": "curl -i /login returns 404"},
+                    {"id": "F2", "severity": "high", "status": "open", "summary": "no CSRF check", "tasks": ["T3"]}]
+        core = self._audit_system(lambda order, path: self._ledger(*findings), notes, rework_confirm_over=1, second_builder=True,
+                                  remediate=lambda *args: False)
+        self.assertTrue(_wait_for(lambda: core.snapshot().tasks["T2"]["state"] == "blocked"))
+        states = {t: v["state"] for t, v in core.snapshot().tasks.items()}
+        self.assertEqual((states["T1"], states["T3"]), ("completed", "completed"))          # nothing accepted was thrown away
+        self.assertEqual(core.snapshot().tasks["T2"]["reason"], "rework_impact")
+        self.assertIn("rework_refused", [e.kind for e in core.audit_log()])
+        written = dict(notes)
+        self.assertIn("login 404", written["T1"])                                          # the real finding text is kept for
+        self.assertIn("curl -i /login returns 404", written["T1"])                         # whoever decides to rework later
+        self.assertIn("no CSRF check", written["T3"])
 
     def test_an_audit_that_changes_source_is_rejected_and_the_builders_work_is_not_hidden(self):
         core = self._audit_system(lambda order, path: self._ledger(), [],
