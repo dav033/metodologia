@@ -82,7 +82,7 @@ class Views(unittest.TestCase):
         import bt_server
         source = Path(bt_server.__file__).read_text()
         self.assertIn('"heal": lambda p, r: api.heal_control(', source)
-        self.assertIn('form.get("token") != token()', source)                          # the shared guard runs before any action
+        self.assertIn('hmac.compare_digest(form.get("token", ""), token())', source)                    # constant-time check before any action
 
 
 class RecoveryPanel(Views):
