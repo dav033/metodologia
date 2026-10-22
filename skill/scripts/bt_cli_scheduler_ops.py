@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "diagnose", "recovery-preview", "recovery-status", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "heal", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "recovery-preview", "recovery-status", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator", "heal", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -160,13 +160,20 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         return 0
     if args.action == "heal":
         return _heal(project, args, rdir)
-    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest"} and not args.target:
+    if args.action in {"cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "coordinator"} and not args.target:
         print(f"{args.action} needs a target (attempt id, or task id(s) for reopen, retry and rework)")
         return 2
     try:
         if args.action == "stop":
             ops.hold_path(rdir).write_text('{"why": "operator stop"}\n', encoding="utf-8")
             print(f"owner stopped: {ops.stop_owner(project, args.req)}; held — `scheduler-op {args.req} resume` releases it")
+            return 0
+        if args.action == "coordinator":
+            import bt_coordinator
+
+            for line in bt_coordinator.attest_task(project, args.req, rdir, args.target):
+                print(line)
+            print(ops.resume(project, args.req, rdir))
             return 0
         if args.action == "attest":
             for line in ops.attest(project, args.req, rdir, args.target, args.option, args.reason):

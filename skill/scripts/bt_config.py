@@ -96,6 +96,9 @@ DEFAULTS: dict = {
     # a criterion no check carries, is refused (they stop the run for a person on every attempt); --force approves anyway. Off by default:
     # `plan-json check` always warns, and the Planner agent is told the rule
     "planner": {"require_mapped_checks": False},
+    # coordinator (P-157): the projects whose manual LIVE checks («Coordinator runs `cmd` with .env.local») the scheduler runs itself
+    # and attests; each one is the owner's explicit authorization (it uses that project's credentials and real services)
+    "coordinator": {"projects": [], "command_seconds": 1800},
     # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
     # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
     # model_diagnosis (REQ-029 R3/R4): a stop the rules cannot repair (or place) is answered with the diagnosing model's validated option,

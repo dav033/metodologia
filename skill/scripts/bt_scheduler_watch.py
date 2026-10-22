@@ -174,6 +174,13 @@ class Watch:
                 return True
         except Exception as error:  # noqa: BLE001 - the structural cycle is opt-in and bounded: its failure never stops the watch
             self.log(f"recovery cycle failed ({type(error).__name__}: {error})")
+        try:
+            import bt_coordinator
+
+            if bt_coordinator.cycle(self.project, self.req, self.rdir, log=self.log):
+                return True
+        except Exception as error:  # noqa: BLE001 - opt-in per project: its failure never stops the watch
+            self.log(f"coordinator failed ({type(error).__name__}: {error})")
         return self._heal_conflicts()
 
     def _heal_conflicts(self) -> bool:
