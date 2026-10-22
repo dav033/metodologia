@@ -205,7 +205,26 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
                                  f"{failed['command']}\nexit code {failed['exit_code']}\n" + "\n".join(failed["tail"]))
     bt_interventions.record(rdir, kind="regression", source="auto", task=task, evidence=_evidence(attempt, snapshot, results)[:600],
                             repair="none: the live check failed, the note carries it", result="failed", run=stamp)
-    return [f"{task}@{attempt}: `{failed['command'][:100]}` exited {failed['exit_code']}; not attested, the failure is in the verification note"]
+    lines = [f"{task}@{attempt}: `{failed['command'][:100]}` exited {failed['exit_code']}; not attested, the failure is in the verification note"]
+    if failed["exit_code"] > 0:
+        # the command ran and said no: the work is what failed, so the review is rejected and the next attempt starts from the note.
+        # A command that could not run (timeout -1, not started -2) leaves the review for a person: nothing was proven either way.
+        try:
+            lines += decisions.answer(project, req, rdir, request_of(rdir, task), "review_fail",
+                                      f"Coordinator live check failed: `{failed['command'][:120]}` exit {failed['exit_code']}: "
+                                      + " | ".join(failed["tail"][-3:])[:400])
+        except Exception as error:  # noqa: BLE001 - the card stays for a person
+            lines.append(f"{task}: the review could not be rejected automatically ({type(error).__name__}: {str(error)[:120]})")
+    return lines
+
+
+def request_of(rdir: Path, task: str) -> str:
+    import bt_scheduler_decisions as decisions
+
+    for request in decisions.open_requests(rdir):
+        if request.get("source") == "review" and request.get("task") == task:
+            return str(request["id"])
+    raise LookupError(f"{task} has no open review")
 
 
 STATE = "RUN.coordinator.json"

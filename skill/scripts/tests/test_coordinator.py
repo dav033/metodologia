@@ -118,6 +118,29 @@ class Attest(unittest.TestCase):
         self.assertIn("not attested", lines[0])
         self.assertEqual(list(bt_interventions.read(self.rdir))[-1]["result"], "failed")
 
+    def test_a_command_that_ran_and_failed_rejects_the_review_with_its_output_and_one_that_could_not_run_does_not(self):
+        answers = []
+        with patch.object(decisions, "answer", side_effect=lambda *a: answers.append(a) or ["review rejected"]), \
+                patch.object(coord, "request_of", return_value="REQ-001:r1:att-7:verify"):
+            run, _ = self.runner([0, 1])
+            lines = coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+            (call,) = answers
+            self.assertEqual(call[3:5], ("REQ-001:r1:att-7:verify", "review_fail"))
+            self.assertIn("exit 1", call[5])
+            self.assertNotIn(SECRET, call[5])
+            self.assertIn("review rejected", lines)
+            answers.clear()
+            run, _ = self.runner([0, -1])                                                    # a timeout proves nothing either way
+            coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+            self.assertEqual(answers, [])
+
+    def test_a_review_that_cannot_be_rejected_is_left_for_a_person_and_said(self):
+        with patch.object(decisions, "answer", side_effect=ValueError("already answered")), \
+                patch.object(coord, "request_of", return_value="r"):
+            run, _ = self.runner([1, 0])
+            lines = coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertTrue(any("could not be rejected automatically (ValueError" in line for line in lines))
+
     def test_the_first_failure_stops_the_rest(self):
         run, calls = self.runner([2, 0])
         coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
