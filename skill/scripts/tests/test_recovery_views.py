@@ -2,6 +2,7 @@
 revert a plan change; legacy cards stay."""
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -81,7 +82,77 @@ class Views(unittest.TestCase):
         import bt_server
         source = Path(bt_server.__file__).read_text()
         self.assertIn('"heal": lambda p, r: api.heal_control(', source)
-        self.assertIn('form.get("token") != token()', source)                          # the shared guard runs before any action
+        self.assertIn('hmac.compare_digest(form.get("token", ""), token())', source)                    # constant-time check before any action
+
+
+class RecoveryPanel(Views):
+    PREVIEW = {"schema_version": "recovery-preview/1", "run_id": "run-1", "preview_digest": "d" * 64, "activation_present": False,
+               "identity": {"plan_id": "P", "revision": 7, "source_sha256": "a" * 64, "stop_generation": 3,
+                            "accepted_map_digest": "b" * 64, "paused": False, "cancelled": False, "live_attempts": []}}
+
+    def test_cycles_are_shown_with_their_state_and_exact_blocker_and_escaped(self):
+        state = {"cycles": [{"lineage_id": "l" * 40, "cycle_token": "t" * 40, "state": "blocked",
+                             "result": {"blocker": "authorized_planner_route_unavailable <b>x</b>"}},
+                            {"lineage_id": "m" * 40, "cycle_token": "u" * 40, "state": "executing", "result": {}}],
+                 "blocker": None, "active": True, "preview_digest": "d" * 64, "stop_generation": 3, "held": False}
+        html = pages._recovery({"recovery": state}, "/p/demo/req/REQ-001", "tok")
+        self.assertIn("bloqueado", html)
+        self.assertIn("ejecutando", html)
+        self.assertIn("authorized_planner_route_unavailable &lt;b&gt;", html)
+        self.assertNotIn("<b>x</b>", html)
+        self.assertIn('value="stop"', html)                                              # active: a stop, no opt-in button
+        self.assertNotIn('value="enable"', html)
+        held = pages._recovery({"recovery": {**state, "held": True}}, "/b", "tok")
+        self.assertIn("detenido", held)                                                  # a live cycle under a stop shows as stopped
+
+    def test_an_existing_run_is_preview_only_until_the_owner_presses_the_bound_button(self):
+        state = {"cycles": [], "blocker": None, "active": False, "preview_digest": "d" * 64, "stop_generation": 3, "held": False}
+        html = pages._recovery({"recovery": state}, "/p/demo/req/REQ-001", "tok")
+        self.assertIn("solo vista previa", html)
+        self.assertIn('value="enable"', html)
+        self.assertIn('name="preview" value="' + "d" * 64, html)                         # bound to the preview shown
+        self.assertIn('name="stop_generation" value="3"', html)                          # and to the stop generation
+        self.assertEqual(pages._recovery({"recovery": None}, "/b", "tok"), "")
+
+    def test_enabling_is_refused_for_a_stale_preview_a_moved_stop_generation_or_a_stop_in_force(self):
+        import bt_scheduler_ops as ops
+        with patch.object(ops, "recovery_preview", return_value=self.PREVIEW), patch.object(ops, "on_hold", return_value=False):
+            self.assertEqual(ops.recovery_enable(self.rdir, "0" * 64, 3)["blocker"], "stale_preview_or_stop_generation")
+            self.assertEqual(ops.recovery_enable(self.rdir, "d" * 64, 4)["blocker"], "stale_preview_or_stop_generation")
+            self.assertFalse((self.rdir / "RUN.recovery-policy.json").exists())
+        with patch.object(ops, "recovery_preview", return_value=self.PREVIEW), patch.object(ops, "on_hold", return_value=True):
+            self.assertEqual(ops.recovery_enable(self.rdir, "d" * 64, 3)["blocker"], "owner_stop_or_hold")
+        with patch.object(ops, "recovery_preview", return_value=self.PREVIEW), patch.object(ops, "on_hold", return_value=False):
+            done = ops.recovery_enable(self.rdir, "d" * 64, 3)
+        self.assertTrue(done["enabled"])
+        record = json.loads((self.rdir / "RUN.recovery-policy.json").read_text())
+        self.assertEqual((record["run_id"], record["identity"]["stop_generation"], record["limits"]["corrective_tasks"]), ("run-1", 3, 8))
+        self.assertRegex(record["authorization_ref"], r"^owner-control:[0-9a-f]{32}$")
+
+    def test_the_page_controls_stop_and_enable_through_the_same_moves(self):
+        import bt_scheduler_ops as ops
+        with patch.object(ops, "apply", return_value=["held"]) as moved:
+            self.assertIn("Detenido", api.recovery_control(self.root, "demo", "REQ-001", "stop"))
+            self.assertEqual(moved.call_args.args[3], "stop")
+            self.assertTrue(moved.call_args.kwargs["keep_held"])
+        with patch.object(ops, "recovery_enable", return_value={"enabled": False, "blocker": "stale_preview_or_stop_generation"}):
+            with self.assertRaises(api.PlanError):
+                api.recovery_control(self.root, "demo", "REQ-001", "enable", "x", "3")
+        with patch.object(ops, "recovery_enable", return_value={"enabled": True}) as enable:
+            self.assertIn("activada", api.recovery_control(self.root, "demo", "REQ-001", "enable", "d" * 64, "3"))
+            self.assertEqual(enable.call_args.args[1:3], ("d" * 64, 3))
+        with self.assertRaises(api.PlanError):
+            api.recovery_control(self.root, "demo", "REQ-001", "explode")
+
+    def test_the_recovery_state_reads_the_durable_ledger_and_is_absent_for_a_plan_that_never_ran(self):
+        import bt_scheduler_ops as ops
+        status = {"cycles": [{"lineage_id": "l", "cycle_token": "t", "state": "blocked", "result": {"blocker": "x"}}]}
+        with patch.object(ops, "recovery_status", return_value=status), patch.object(ops, "recovery_preview", return_value=self.PREVIEW), \
+                patch.object(ops, "on_hold", return_value=False):
+            state = api.recovery_state(self.rdir)
+        self.assertEqual((state["active"], state["stop_generation"], len(state["cycles"])), (False, 3, 1))
+        (self.rdir / scheduler_.PROJECTION).unlink()
+        self.assertIsNone(api.recovery_state(self.rdir))
 
 
 if __name__ == "__main__":

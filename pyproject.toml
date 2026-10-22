@@ -138,6 +138,7 @@ py-modules = [
   "bt_recovery_cycle",
   "bt_recovery_evidence",
   "bt_recovery_m1_bridge",
+  "bt_recovery_preview",
   "bt_recovery_rollout",
   "bt_remote_api",
   "bt_remote_commands",

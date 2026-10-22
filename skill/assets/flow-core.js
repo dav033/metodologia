@@ -13,7 +13,7 @@
     start_order: 'run', dispatch_ack: 'run', execution_started: 'run', execution_finished: 'run', executor_event: 'run',
     cancel_order: 'run', dispatch_voided: 'run', reconciled: 'run', reconcile_redeliver: 'run', lease_expired: 'run',
     delivery_abandoned: 'run', verify_order: 'verify', verdict: 'verify', recommendation: 'recover', recovery: 'recover',
-    manual_resolution: 'recover', state_change: 'state', task_state: 'state', run_paused: 'state', run_resumed: 'state',
+    manual_resolution: 'recover', recovery_intervention: 'recover', state_change: 'state', task_state: 'state', run_paused: 'state', run_resumed: 'state',
     run_cancelled: 'state', housekeeping: 'state', incident: 'warn', incident_detected: 'warn',
     observation_ignored: 'warn', port_error: 'warn', port_invalid: 'warn', unknown: 'bad', dispatch_rejected: 'bad',
     message_rejected: 'bad', stream: 'stream', digest: 'stream'
@@ -28,7 +28,7 @@
     execution_started: 'empieza a ejecutar', execution_finished: 'termina de ejecutar', executor_event: 'evento del ejecutor',
     cancel_order: 'cancela', dispatch_voided: 'anula la orden', reconciled: 'reconcilia', reconcile_redeliver: 'reenvía',
     lease_expired: 'vence el permiso', delivery_abandoned: 'abandona la entrega', verify_order: 'pide verificar',
-    verdict: 'veredicto', recommendation: 'recomendación', recovery: 'recuperación', manual_resolution: 'resolución manual',
+    verdict: 'veredicto', recommendation: 'recomendación', recovery: 'recuperación', recovery_intervention: 'intervención', manual_resolution: 'resolución manual',
     state_change: 'estado del intento', task_state: 'estado de la tarea', run_paused: 'pausa', run_resumed: 'reanuda',
     run_cancelled: 'cancela la ejecución', housekeeping: 'mantenimiento', incident: 'incidente',
     incident_detected: 'detecta incidente', observation_ignored: 'ignora una observación', port_error: 'error de puerto',

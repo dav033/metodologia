@@ -1,0 +1,729 @@
+{
+ "coverage_gap": {
+  "attempt": "att-0196",
+  "changed_paths": [
+   "remote/web/src/app/page.tsx"
+  ],
+  "checks": [
+   "python3 -m unittest discover -s remote/gateway/tests"
+  ],
+  "note": "changed web page.tsx while carrying backend-only checks; introduced the type predicate later reported as F19",
+  "task": "T18.5"
+ },
+ "expected": {
+  "fixed": [
+   "Caddy"
+  ],
+  "new": [
+   "typecheck",
+   "OAuth"
+  ],
+  "persistent": [
+   "E2E"
+  ]
+ },
+ "rounds": [
+  {
+   "attempt": "att-0185",
+   "findings": [
+    {
+     "id": "F1",
+     "severity": "high",
+     "status": "open",
+     "summary": "Deployment kit proxies container loopback and binds gateway to host loopback, contradicting the approved Docker Caddy-to-host 172.20.0.1:8790 topology; all public API access fails.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F2",
+     "severity": "high",
+     "status": "open",
+     "summary": "Required local E2E command exits 1: forced failure never reaches fake Telegram. Harness does not isolate/seed the separate authoritative retry-context read used by production events.",
+     "tasks": [
+      "T17"
+     ]
+    },
+    {
+     "id": "F3",
+     "severity": "medium",
+     "status": "open",
+     "summary": "First-install runbook restarts the gateway before installing its unit and starts a tunnel without instructions to start/configure the laptop remote API listener.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F4",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway request logger mistakes the full HTTP request line for status and logs OAuth code/state query values.",
+     "tasks": [
+      "T11a"
+     ]
+    },
+    {
+     "id": "F5",
+     "severity": "medium",
+     "status": "open",
+     "summary": "GET logout mutates sessions without Origin/header checks; POST guard accepts arbitrary nonempty X-Flow-Request values instead of requiring 1.",
+     "tasks": [
+      "T11a",
+      "T15a"
+     ]
+    },
+    {
+     "id": "F6",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Telegram task retry pins run state, while the real laptop compares task state, causing valid failed-task retries to be rejected as stale.",
+     "tasks": [
+      "T14b"
+     ]
+    },
+    {
+     "id": "F7",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Advertised note command is accepted by the web/gateway but has no laptop dispatcher and returns COMMAND_NOT_IMPLEMENTED.",
+     "tasks": [
+      "T8",
+      "T15f"
+     ]
+    },
+    {
+     "id": "F8",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Phone brief editor omits the required task, offers no criteria edit, hides editing on launched plans, and uses plan-state preconditions against an active run-state reader.",
+     "tasks": [
+      "T15f",
+      "T8a"
+     ]
+    },
+    {
+     "id": "F9",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Run-level reopen form sends no task although the laptop reopen dispatcher requires params.task, so Reabrir ejecucion fails.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F10",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Ordinary plans waiting for approval emit no plan.waiting event unless they also have a scheduler decision request.",
+     "tasks": [
+      "T6",
+      "T14"
+     ]
+    },
+    {
+     "id": "F11",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway restart loses offline snapshots/read caches and resets SSE sequence IDs, suppressing new events behind an old Last-Event-ID without resynchronization.",
+     "tasks": [
+      "T12"
+     ]
+    },
+    {
+     "id": "F12",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway SSE history, notification outbox/history and abandoned expired sessions grow without bounded retention or the promised 90-day history pruning.",
+     "tasks": [
+      "T11",
+      "T12",
+      "T14a"
+     ]
+    },
+    {
+     "id": "F13",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Failed probes overwrite snapshot cachedAt, there is no stable offlineSince, and the web omits the required outage-start time.",
+     "tasks": [
+      "T12",
+      "T15b"
+     ]
+    },
+    {
+     "id": "F14",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Laptop remote failure-review redaction recognizes only four credential names; synthetic provider API key assignments and bearer authorization text reach the control plane unchanged.",
+     "tasks": [
+      "T7",
+      "T6"
+     ]
+    },
+    {
+     "id": "F15",
+     "severity": "medium",
+     "status": "open",
+     "summary": "T9 socket-preserving reload is absent: stale server is terminated/restarted and serve creates a new listening socket.",
+     "tasks": [
+      "T9"
+     ]
+    },
+    {
+     "id": "F16",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Web discards unknown-outcome command envelopes and generates a new idempotency key on each retry, with no same-key reconciliation/retry path.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F17",
+     "severity": "low",
+     "status": "open",
+     "summary": "Published command schema describes the gateway envelope as the laptop body, disagrees on key length, and omits answer-decision and the required round selector.",
+     "tasks": [
+      "T3"
+     ]
+    }
+   ],
+   "ledger_sha256": "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e",
+   "round": 1
+  },
+  {
+   "attempt": "att-0202",
+   "findings": [
+    {
+     "id": "F1",
+     "severity": "high",
+     "status": "fixed",
+     "summary": "The prior Caddy container-loopback upstream defect is corrected in the supplied prerequisite tree.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F2",
+     "severity": "high",
+     "status": "open",
+     "summary": "The E2E fixture still yields no failure event and its supposedly valid cancel command pins running against a reserved attempt; full E2E also stops at the web build.",
+     "tasks": [
+      "T17"
+     ]
+    },
+    {
+     "id": "F3",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Runbook still omits installing/configuring the private laptop API and reverse tunnel; public Caddy hostname remains an unexplained placeholder.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F4",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Request logging still writes OAuth code/state query values into the status field.",
+     "tasks": [
+      "T11a"
+     ]
+    },
+    {
+     "id": "F5",
+     "severity": "medium",
+     "status": "open",
+     "summary": "GET logout bypasses mutation guards, and the CSRF marker accepts any nonempty value rather than 1.",
+     "tasks": [
+      "T11a",
+      "T15a"
+     ]
+    },
+    {
+     "id": "F6",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Telegram retry and alert action/deep-link integration are missing; the previous bad retry envelope was removed rather than repaired.",
+     "tasks": [
+      "T14a",
+      "T14b"
+     ]
+    },
+    {
+     "id": "F7",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The advertised note command remains accepted by validators but has no laptop dispatcher.",
+     "tasks": [
+      "T5a"
+     ]
+    },
+    {
+     "id": "F8",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Task brief editing now supplies the task and run precondition, but the phone still cannot edit acceptance criteria.",
+     "tasks": [
+      "T15f"
+     ]
+    },
+    {
+     "id": "F9",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Run-level Reabrir ejecuci\u00f3n still sends no task to a dispatcher that requires one.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F10",
+     "severity": "medium",
+     "status": "open",
+     "summary": "An ordinary plan waiting for approval still emits no plan.waiting event without a scheduler decision.",
+     "tasks": [
+      "T6"
+     ]
+    },
+    {
+     "id": "F11",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Restart still loses the cached snapshot and resets SSE IDs without a resynchronization protocol.",
+     "tasks": [
+      "T12"
+     ]
+    },
+    {
+     "id": "F12",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway event history, delivered/dropped outbox/history and abandoned expired sessions remain unbounded.",
+     "tasks": [
+      "T11",
+      "T12",
+      "T14a"
+     ]
+    },
+    {
+     "id": "F13",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Failed probes relabel cached data with the current time; offline start time is not exposed to the phone.",
+     "tasks": [
+      "T12",
+      "T15b"
+     ]
+    },
+    {
+     "id": "F14",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Laptop redaction still misses provider API-key assignments and bearer authorization text before transmission.",
+     "tasks": [
+      "T7",
+      "T6"
+     ]
+    },
+    {
+     "id": "F15",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "The earlier absence of an inherited-listener path is corrected in the supplied prerequisite tree.",
+     "tasks": [
+      "T9"
+     ]
+    },
+    {
+     "id": "F16",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The web still discards unknown-outcome envelopes and generates a fresh key on every retry.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F17",
+     "severity": "low",
+     "status": "open",
+     "summary": "Published command/event schemas still disagree with production dialects, field names and key limits.",
+     "tasks": [
+      "T3"
+     ]
+    },
+    {
+     "id": "F18",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Browser checks still share Next.js output/configuration, and serial execution now reveals a stale answer-round contract assertion.",
+     "tasks": [
+      "T15",
+      "T15e"
+     ]
+    },
+    {
+     "id": "F19",
+     "severity": "high",
+     "status": "open",
+     "summary": "The current run-history parser does not typecheck, preventing the production build and every built-web E2E scenario.",
+     "tasks": [
+      "T15a"
+     ]
+    },
+    {
+     "id": "F20",
+     "severity": "high",
+     "status": "open",
+     "summary": "Successful real OAuth sessions cannot load the phone panel because the gateway and web disagree on the session response.",
+     "tasks": [
+      "T15a"
+     ]
+    },
+    {
+     "id": "F21",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The real phone feed cannot connect or decode production events despite mock SSE coverage.",
+     "tasks": [
+      "T4a",
+      "T6",
+      "T15b"
+     ]
+    },
+    {
+     "id": "F22",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Filling the required env-example values still leaves blank optional settings that prevent gateway startup.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F23",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Phone command history drops the stored web/telegram origin and displays target/command in its place.",
+     "tasks": [
+      "T15d"
+     ]
+    }
+   ],
+   "ledger_sha256": "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610",
+   "round": 2
+  },
+  {
+   "attempt": "att-0258",
+   "findings": [
+    {
+     "id": "F1",
+     "severity": "high",
+     "status": "fixed",
+     "summary": "Caddy used container loopback instead of the host Docker bridge upstream.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F2",
+     "severity": "high",
+     "status": "open",
+     "summary": "The required built-web E2E still fails: its forced-failure fixture produces no failure event or notification.",
+     "tasks": [
+      "T17"
+     ]
+    },
+    {
+     "id": "F3",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The runbook restarts an uninstalled gateway unit on first install and reloads host Caddy although the approved service is containerized.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F4",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway request logging exposes OAuth code/state query values in its purported status field.",
+     "tasks": [
+      "T11a"
+     ]
+    },
+    {
+     "id": "F5",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The mutation marker accepts arbitrary nonempty values, and GET logout clears the cookie without guards or revoking its server session.",
+     "tasks": [
+      "T11a",
+      "T15a"
+     ]
+    },
+    {
+     "id": "F6",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Telegram alerts still omit a working review URL and safe inline actions, and retry callbacks remain unsupported.",
+     "tasks": [
+      "T14a",
+      "T14b"
+     ]
+    },
+    {
+     "id": "F7",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The public note command is still advertised and validated without a laptop dispatcher.",
+     "tasks": [
+      "T5a"
+     ]
+    },
+    {
+     "id": "F8",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The phone brief form still cannot edit acceptance criteria.",
+     "tasks": [
+      "T15f"
+     ]
+    },
+    {
+     "id": "F9",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Run-level Reabrir ejecuci\u00f3n supplies no task identity to a task-scoped operation.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F10",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "Ordinary plans waiting for approval previously emitted no plan.waiting event without a scheduler decision.",
+     "tasks": [
+      "T6"
+     ]
+    },
+    {
+     "id": "F11",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway restart loses the last cached snapshot and restarts SSE IDs without a reset/resynchronization protocol.",
+     "tasks": [
+      "T12"
+     ]
+    },
+    {
+     "id": "F12",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Gateway event replay memory, delivered/dropped outbox history and abandoned expired sessions remain unbounded.",
+     "tasks": [
+      "T11",
+      "T12",
+      "T14a"
+     ]
+    },
+    {
+     "id": "F13",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The stable cachedAt repair remains, but no stable offline-start timestamp reaches the phone.",
+     "tasks": [
+      "T12",
+      "T15b"
+     ]
+    },
+    {
+     "id": "F14",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "Laptop-side redaction previously missed provider-key assignments and bearer authorization text before transmission.",
+     "tasks": [
+      "T7",
+      "T6"
+     ]
+    },
+    {
+     "id": "F15",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "The local panel previously had no inherited systemd listener implementation.",
+     "tasks": [
+      "T9"
+     ]
+    },
+    {
+     "id": "F16",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The phone still discards unknown-outcome command envelopes and creates a fresh idempotency key on resubmission.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F17",
+     "severity": "low",
+     "status": "open",
+     "summary": "The public command schema still disagrees with production commands and key limits; event target normalization has been repaired.",
+     "tasks": [
+      "T3"
+     ]
+    },
+    {
+     "id": "F18",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "The required browser verification previously failed and asserted obsolete singular round answers.",
+     "tasks": [
+      "T15",
+      "T15e"
+     ]
+    },
+    {
+     "id": "F19",
+     "severity": "high",
+     "status": "fixed",
+     "summary": "The integrated phone app previously failed strict typing and production build due to overlapping implementations.",
+     "tasks": [
+      "T15a",
+      "T15c",
+      "T15d"
+     ]
+    },
+    {
+     "id": "F20",
+     "severity": "high",
+     "status": "fixed",
+     "summary": "The phone previously rejected the real gateway's successful {login:'dav033'} session response.",
+     "tasks": [
+      "T15a"
+     ]
+    },
+    {
+     "id": "F21",
+     "severity": "medium",
+     "status": "open",
+     "summary": "The phone still opens an SSE route the production gateway does not serve and does not resume using its replay IDs.",
+     "tasks": [
+      "T4a",
+      "T6",
+      "T15b"
+     ]
+    },
+    {
+     "id": "F22",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "The earlier env-startup allegation assumed blank optional settings despite the current runbook requiring every uncommented key to be filled.",
+     "tasks": [
+      "T16"
+     ]
+    },
+    {
+     "id": "F23",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "Overlapping phone command-history implementations previously broke compilation and mislabeled origin.",
+     "tasks": [
+      "T15d"
+     ]
+    },
+    {
+     "id": "F24",
+     "severity": "high",
+     "status": "fixed",
+     "summary": "Installed planning-command preconditions previously failed because bt_remote_preconditions was absent from distributions.",
+     "tasks": [
+      "T18.6"
+     ]
+    },
+    {
+     "id": "F25",
+     "severity": "medium",
+     "status": "fixed",
+     "summary": "The failed-task link previously opened only an unrelated static review fixture.",
+     "tasks": [
+      "T15c"
+     ]
+    },
+    {
+     "id": "F26",
+     "severity": "high",
+     "status": "open",
+     "summary": "Rejected failure review is now reachable, but authoritative rejected tasks still cannot be recovered from the phone.",
+     "tasks": [
+      "T4a",
+      "T5",
+      "T15f"
+     ]
+    },
+    {
+     "id": "F27",
+     "severity": "low",
+     "status": "open",
+     "summary": "Command rate limits remain shared by owner login across sessions rather than per session as R17 specifies.",
+     "tasks": [
+      "T11a"
+     ]
+    },
+    {
+     "id": "F28",
+     "severity": "high",
+     "status": "open",
+     "summary": "The command ledger checks preconditions before its effect lock and accepts a second concurrently stale command.",
+     "tasks": [
+      "T5"
+     ]
+    },
+    {
+     "id": "F29",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Production snapshots omit the timestamp fields the phone uses for last signal of life and discard plan detail/revision metadata.",
+     "tasks": [
+      "T4a"
+     ]
+    },
+    {
+     "id": "F30",
+     "severity": "medium",
+     "status": "open",
+     "summary": "Stalled-attempt notifications start after 15 minutes although the specification requires more than 10 minutes.",
+     "tasks": [
+      "T6"
+     ]
+    },
+    {
+     "id": "F31",
+     "severity": "low",
+     "status": "open",
+     "summary": "An already authenticated SSE connection continues to deliver after the session expires.",
+     "tasks": [
+      "T11",
+      "T12"
+     ]
+    },
+    {
+     "id": "F32",
+     "severity": "high",
+     "status": "open",
+     "summary": "Every phone pinned-retry command is rejected because the gateway forwards a route object to a laptop validator requiring string selectors.",
+     "tasks": [
+      "T13"
+     ]
+    }
+   ],
+   "ledger_sha256": "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6",
+   "round": 3
+  }
+ ],
+ "schema": "recovery-req027-preview/1",
+ "source": "REQ-027 T18 audit ledgers (remote/docs/audit.findings.json) at three accepted-audit snapshots; sanitized: ids, severities, owner tasks and the first 240 characters of each summary, no logs or secrets"
+}

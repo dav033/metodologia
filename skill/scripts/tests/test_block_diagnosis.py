@@ -29,6 +29,32 @@ def request(**extra):
     return {**base, **extra}
 
 
+class GateConflicts(unittest.TestCase):
+    """REQ-029 T10: a clash found by the M6 integration gate is a conflict of integration, not a task that could not start."""
+
+    def explain(self, error):
+        return rules.explain(request(task="T7", error=error, reason="m5:identity_unverified"), {"tasks": {}, "attempts": {}},
+                             failures=[error])
+
+    def test_the_gate_prefix_is_recognised_and_does_not_say_the_task_could_not_start(self):
+        diagnosis, extra = self.explain("integration gate: T4 vs T6 for T7: src/a.py, src/b.py")
+        self.assertEqual((diagnosis["kind"], diagnosis["option"]), ("conflict", "rework_conflict"))
+        self.assertTrue(diagnosis["headline"].startswith("Conflicto de integración"))
+        self.assertIn("pasó sus comprobaciones", diagnosis["origin"])
+        self.assertNotIn("no puede arrancar", diagnosis["origin"])
+        self.assertEqual(extra[0]["id"], "rework_conflict")
+
+    def test_a_clash_with_the_line_redoes_the_candidate_itself(self):
+        diagnosis, extra = self.explain("integration gate: T7 vs line for T7: src/a.py")
+        self.assertEqual(extra[0]["target"], "T7")
+        self.assertIn("línea de integración", diagnosis["headline"])
+
+    def test_the_start_rejection_keeps_its_original_wording(self):
+        diagnosis, _ = self.explain("start rejected: INTEGRATION_CONFLICT: T9+T14a vs T14b for T7: a.py")
+        self.assertTrue(diagnosis["headline"].startswith("Conflicto de código"))
+        self.assertIn("no puede arrancar", diagnosis["origin"])
+
+
 class LastRealError(unittest.TestCase):
     """REQ-030: the rules read the LAST error, not every word of the bundle (a stop was called "quota" over an unclassified route)."""
 

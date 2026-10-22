@@ -1,0 +1,378 @@
+{
+ "coverage_gaps": [
+  {
+   "attempt": "att-0196",
+   "path": "remote/web/src/app/page.tsx",
+   "reason": "no carried check runs over this changed surface",
+   "task": "T18.5"
+  }
+ ],
+ "diagnosis_invoked": false,
+ "digest": "f54b9612bfd897e1c0ea4e49d035c729e374be85282774539a07281a65e6a853",
+ "labels": {
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F1": "Caddy used container loopback instead of the host Docker bridge upstream.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F10": "Ordinary plans waiting for approval previously emitted no plan.waiting event without a scheduler decision.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F11": "Gateway restart loses the last cached snapshot and restarts SSE IDs without a reset/resynchronization protocol.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F12": "Gateway event replay memory, delivered/dropped outbox history and abandoned expired sessions remain unbounded.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F13": "The stable cachedAt repair remains, but no stable offline-start timestamp reaches the phone.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F14": "Laptop-side redaction previously missed provider-key assignments and bearer authorization text before transmission.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F15": "The local panel previously had no inherited systemd listener implementation.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F16": "The phone still discards unknown-outcome command envelopes and creates a fresh idempotency key on resubmission.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F17": "The public command schema still disagrees with production commands and key limits; event target normalization has been repaired.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F18": "The required browser verification previously failed and asserted obsolete singular round answers.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F19": "The integrated phone app previously failed strict typing and production build due to overlapping implementations.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F2": "The required built-web E2E still fails: its forced-failure fixture produces no failure event or notification.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F20": "The phone previously rejected the real gateway's successful {login:'dav033'} session response.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F21": "The phone still opens an SSE route the production gateway does not serve and does not resume using its replay IDs.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F22": "The earlier env-startup allegation assumed blank optional settings despite the current runbook requiring every uncommented key to be filled.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F23": "Overlapping phone command-history implementations previously broke compilation and mislabeled origin.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F24": "Installed planning-command preconditions previously failed because bt_remote_preconditions was absent from distributions.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F25": "The failed-task link previously opened only an unrelated static review fixture.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F26": "Rejected failure review is now reachable, but authoritative rejected tasks still cannot be recovered from the phone.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F27": "Command rate limits remain shared by owner login across sessions rather than per session as R17 specifies.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F28": "The command ledger checks preconditions before its effect lock and accepts a second concurrently stale command.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F29": "Production snapshots omit the timestamp fields the phone uses for last signal of life and discard plan detail/revision metadata.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F30": "Stalled-attempt notifications start after 15 minutes although the specification requires more than 10 minutes.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F31": "An already authenticated SSE connection continues to deliver after the session expires.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F32": "Every phone pinned-retry command is rejected because the gateway forwards a route object to a laptop validator requiring string selectors.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F4": "Gateway request logging exposes OAuth code/state query values in its purported status field.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F5": "The mutation marker accepts arbitrary nonempty values, and GET logout clears the cookie without guards or revoking its server session.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F6": "Telegram alerts still omit a working review URL and safe inline actions, and retry callbacks remain unsupported.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F7": "The public note command is still advertised and validated without a laptop dispatcher.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F8": "The phone brief form still cannot edit acceptance criteria.",
+  "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F9": "Run-level Reabrir ejecuci\u00f3n supplies no task identity to a task-scoped operation.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F1": "The prior Caddy container-loopback upstream defect is corrected in the supplied prerequisite tree.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F10": "An ordinary plan waiting for approval still emits no plan.waiting event without a scheduler decision.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F11": "Restart still loses the cached snapshot and resets SSE IDs without a resynchronization protocol.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F12": "Gateway event history, delivered/dropped outbox/history and abandoned expired sessions remain unbounded.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F13": "Failed probes relabel cached data with the current time; offline start time is not exposed to the phone.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F14": "Laptop redaction still misses provider API-key assignments and bearer authorization text before transmission.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F16": "The web still discards unknown-outcome envelopes and generates a fresh key on every retry.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F17": "Published command/event schemas still disagree with production dialects, field names and key limits.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F18": "Browser checks still share Next.js output/configuration, and serial execution now reveals a stale answer-round contract assertion.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F19": "The current run-history parser does not typecheck, preventing the production build and every built-web E2E scenario.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F20": "Successful real OAuth sessions cannot load the phone panel because the gateway and web disagree on the session response.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F21": "The real phone feed cannot connect or decode production events despite mock SSE coverage.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F22": "Filling the required env-example values still leaves blank optional settings that prevent gateway startup.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F23": "Phone command history drops the stored web/telegram origin and displays target/command in its place.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F3": "Runbook still omits installing/configuring the private laptop API and reverse tunnel; public Caddy hostname remains an unexplained placeholder.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F4": "Request logging still writes OAuth code/state query values into the status field.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F5": "GET logout bypasses mutation guards, and the CSRF marker accepts any nonempty value rather than 1.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F6": "Telegram retry and alert action/deep-link integration are missing; the previous bad retry envelope was removed rather than repaired.",
+  "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F9": "Run-level Reabrir ejecuci\u00f3n still sends no task to a dispatcher that requires one."
+ },
+ "ledgers": [
+  {
+   "attempt": "att-0185",
+   "findings": 17,
+   "ledger_sha256": "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e",
+   "round": 1
+  },
+  {
+   "attempt": "att-0202",
+   "findings": 23,
+   "ledger_sha256": "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610",
+   "round": 2
+  },
+  {
+   "attempt": "att-0258",
+   "findings": 32,
+   "ledger_sha256": "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6",
+   "round": 3
+  }
+ ],
+ "schema_version": "recovery-history-preview/1",
+ "steps": [
+  {
+   "counts": {
+    "current": 23,
+    "previous": 17
+   },
+   "fixed": [
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F1"
+   ],
+   "from": 1,
+   "new": [
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F18",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F19",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F20",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F21",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F22",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F23",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F6"
+   ],
+   "persisted": [
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F10",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F11",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F12",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F13",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F14",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F16",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F17",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F3",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F4",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F5",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F9"
+   ],
+   "regressed": [],
+   "relations": {
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F1": {
+     "decision": "related",
+     "previous": "F1",
+     "score": 0.482
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F10": {
+     "decision": "related",
+     "previous": "F10",
+     "score": 0.523
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F11": {
+     "decision": "related",
+     "previous": "F11",
+     "score": 0.533
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F12": {
+     "decision": "related",
+     "previous": "F12",
+     "score": 0.612
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F13": {
+     "decision": "related",
+     "previous": "F13",
+     "score": 0.526
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F14": {
+     "decision": "related",
+     "previous": "F14",
+     "score": 0.6
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F15": {
+     "decision": "uncertain: weak evidence",
+     "previous": "F15",
+     "score": 0.4
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F16": {
+     "decision": "related",
+     "previous": "F16",
+     "score": 0.7
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F17": {
+     "decision": "related",
+     "previous": "F17",
+     "score": 0.45
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F2": {
+     "decision": "uncertain: weak evidence",
+     "previous": "F2",
+     "score": 0.434
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F3": {
+     "decision": "related",
+     "previous": "F3",
+     "score": 0.496
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F4": {
+     "decision": "related",
+     "previous": "F4",
+     "score": 0.647
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F5": {
+     "decision": "related",
+     "previous": "F5",
+     "score": 0.478
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F7": {
+     "decision": "uncertain: weak evidence",
+     "previous": "F7",
+     "score": 0.327
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F8": {
+     "decision": "uncertain: weak evidence",
+     "previous": "F8",
+     "score": 0.35
+    },
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F9": {
+     "decision": "related",
+     "previous": "F9",
+     "score": 0.657
+    }
+   },
+   "to": 2,
+   "uncertain": [
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F15",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F2",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F7",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F8",
+    "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e:F15",
+    "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e:F2",
+    "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e:F6",
+    "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e:F7",
+    "94a917a012a65d24474cb2eb3ad3580752a96f655b6627d38f3d3fc90236544e:F8"
+   ]
+  },
+  {
+   "counts": {
+    "current": 32,
+    "previous": 23
+   },
+   "fixed": [
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F1",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F10",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F14",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F15",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F18",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F19",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F20",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F22",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F23",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F24",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F25"
+   ],
+   "from": 2,
+   "new": [
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F26",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F27",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F28",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F29",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F30",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F31",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F32"
+   ],
+   "persisted": [
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F11",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F12",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F13",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F16",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F17",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F2",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F21",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F4",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F5",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F6",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F7",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F8",
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F9"
+   ],
+   "regressed": [],
+   "relations": {
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F1": {
+     "decision": "related",
+     "previous": "F1",
+     "score": 0.56
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F10": {
+     "decision": "related",
+     "previous": "F10",
+     "score": 0.782
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F11": {
+     "decision": "related",
+     "previous": "F11",
+     "score": 0.727
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F12": {
+     "decision": "related",
+     "previous": "F12",
+     "score": 0.908
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F13": {
+     "decision": "related",
+     "previous": "F13",
+     "score": 0.506
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F14": {
+     "decision": "related",
+     "previous": "F14",
+     "score": 0.8
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F15": {
+     "decision": "related",
+     "previous": "F15",
+     "score": 0.486
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F16": {
+     "decision": "related",
+     "previous": "F16",
+     "score": 0.631
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F17": {
+     "decision": "related",
+     "previous": "F17",
+     "score": 0.541
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F18": {
+     "decision": "related",
+     "previous": "F18",
+     "score": 0.455
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F2": {
+     "decision": "related",
+     "previous": "F2",
+     "score": 0.482
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F20": {
+     "decision": "related",
+     "previous": "F20",
+     "score": 0.625
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F21": {
+     "decision": "related",
+     "previous": "F21",
+     "score": 0.467
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F22": {
+     "decision": "related",
+     "previous": "F22",
+     "score": 0.514
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F23": {
+     "decision": "related",
+     "previous": "F23",
+     "score": 0.55
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F3": {
+     "decision": "uncertain: weak evidence",
+     "previous": "F3",
+     "score": 0.446
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F4": {
+     "decision": "related",
+     "previous": "F4",
+     "score": 0.815
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F5": {
+     "decision": "related",
+     "previous": "F5",
+     "score": 0.612
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F6": {
+     "decision": "related",
+     "previous": "F6",
+     "score": 0.452
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F7": {
+     "decision": "related",
+     "previous": "F7",
+     "score": 0.7
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F8": {
+     "decision": "related",
+     "previous": "F8",
+     "score": 0.727
+    },
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F9": {
+     "decision": "related",
+     "previous": "F9",
+     "score": 0.618
+    }
+   },
+   "to": 3,
+   "uncertain": [
+    "07245a54e5c4ad971bbfe33de06ba83dff77285f800743c43c707e5503be67d6:F3",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F19",
+    "717955fab53677f34780a1d4841af7f38c1074ed6673097479b66b7865c0a610:F3"
+   ]
+  }
+ ],
+ "writes": 0
+}

@@ -29,7 +29,7 @@ KINDS = {
     "integrity": ("Integridad", "bad"),
     "unknown": ("Sin identificar", "muted"),
 }
-CONFLICT = re.compile(r"INTEGRATION_CONFLICT:\s*(?P<left>[\w.+-]+) vs (?P<right>[\w.-]+) for (?P<task>[\w.-]+):\s*(?P<files>.*)")
+CONFLICT = re.compile(r"(?:INTEGRATION_CONFLICT|integration gate):\s*(?P<left>[\w.+-]+) vs (?P<right>[\w.-]+) for (?P<task>[\w.-]+):\s*(?P<files>.*)")
 ENV_VAR = re.compile(r"\b([A-Z][A-Z0-9]*_[A-Z0-9_]{2,})\b[^\n]{0,40}?\b(?:is not set|not set|is missing|missing|"
                      r"undefined|is required|required)\b|(?:missing|undefined|required|falta)[^\n]{0,30}?\b([A-Z][A-Z0-9]*_[A-Z0-9_]{2,})\b")
 MODULE = re.compile(r"Cannot find (?:module|package) ['\"](?P<name>[^'\"]+)['\"]|No module named ['\"]?(?P<py>[\w.]+)")
@@ -73,21 +73,33 @@ def conflict_target(doc: dict, plan, members: list[str]) -> str:
 
 def _conflict(request: dict, doc: dict, plan, match: re.Match, req: str) -> tuple[dict, list[dict]]:
     left, right, files = match["left"].split("+"), match["right"], match["files"].strip(" ,…")
-    members = [*left, right]
-    target = conflict_target(doc, plan, members)
-    others = " y ".join(m for m in members if m != target)
     task = request["task"]
-    origin = (f"{task} no puede arrancar: para darle su base hay que combinar el trabajo de {' + '.join(left)} con el "
-              f"de {right}, y los dos cambiaron las mismas líneas ({files}). {target} se construyó sobre un resultado "
-              f"anterior de {others}, que después se rehízo; ni combinándolos sobre ese resultado anterior se resuelve.")
+    gate = match.group(0).startswith("integration gate")
+    if right == "line":                                    # the result does not apply on the integration line's tip
+        members, target = left, task
+    else:
+        members = [*left, right]
+        target = conflict_target(doc, plan, members)
+    others = " y ".join(m for m in members if m != target) or "el trabajo ya integrado"
+    if gate:                                               # it passed its checks: it did start, the combination is what fails
+        origin = (f"El resultado de {task} pasó sus comprobaciones, pero no se puede combinar con el trabajo aceptado "
+                  f"({' + '.join(members) if right != 'line' else 'la línea de integración'}): cambiaron las mismas líneas ({files}). "
+                  f"{target} se construyó sobre un resultado anterior de {others}, que después se rehízo.")
+    else:
+        origin = (f"{task} no puede arrancar: para darle su base hay que combinar el trabajo de {' + '.join(left)} con el "
+                  f"de {right}, y los dos cambiaron las mismas líneas ({files}). {target} se construyó sobre un resultado "
+                  f"anterior de {others}, que después se rehízo; ni combinándolos sobre ese resultado anterior se resuelve.")
     option = {"id": "rework_conflict", "target": target,
               "label": f"Rehacer {target} sobre el trabajo actual",
-              "consequence": f"{target} vuelve a hacerse encima del resultado vigente de {others}; {task} espera a "
-                             f"que termine y arranca sobre la base combinada. No gasta intentos de {task}."}
+              "consequence": f"{target} vuelve a hacerse encima del resultado vigente de {others}; "
+                             + (f"{task} se verifica de nuevo cuando termine. " if gate else
+                                f"{task} espera a que termine y arranca sobre la base combinada. ")
+                             + f"No gasta intentos de {task}."}
     steps = [f"Pulsa «{option['label']}»: el sistema devuelve {target} (solo esa tarea) para rehacerla.",
-             f"Cuando {target} se acepte, {task} arranca sola sobre la base combinada.",
+             f"Cuando {target} se acepte, {task} " + ("se vuelve a verificar." if gate else "arranca sola sobre la base combinada."),
              f"Por terminal: `scheduler-op {req} rework {target} --only --reason \"conflicto con {others}\"`."]
-    return _diag("conflict", f"Conflicto de código entre {' + '.join(left)} y {right}", origin, steps,
+    return _diag("conflict", f"Conflicto de integración: {' + '.join(left)} y {'la línea de integración' if right == 'line' else right}"
+                 if gate else f"Conflicto de código entre {' + '.join(left)} y {right}", origin, steps,
                  "rework_conflict"), [option]
 
 
