@@ -28,6 +28,7 @@ VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
 LEGACY_OPAQUE_KEYS = ("title", "objective", "complexity", "scope", "estimated_minutes", "risk", "coupling",
                       "confidence", "estimate_rationale", "classification_evidence")
 OPAQUE_KEYS = (*LEGACY_OPAQUE_KEYS, "kind")
+RECOVERY_META_KEYS = ("recovery_task", "recovery_case_id", "recovery_owner_tasks", "bootstrap")
 
 
 @dataclass(frozen=True, eq=False)
@@ -103,6 +104,19 @@ def _strings(value: object) -> bool:
 
 def _int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _task_meta(item: dict[str, Any], schema_1_2: bool) -> dict[str, Any]:
+    """Keep compiler-owned recovery metadata opaque, and only on an explicitly generated recovery task."""
+    keys = OPAQUE_KEYS if schema_1_2 else LEGACY_OPAQUE_KEYS
+    meta = {key: item[key] for key in keys if key in item}
+    if item.get("recovery_task") is not True:
+        return meta
+    meta["recovery_task"] = True
+    for key in RECOVERY_META_KEYS[1:]:
+        if key in item:
+            meta[key] = item[key]
+    return meta
 
 
 def load_plan(source: str | bytes, *, approved_sha256: str, plan_id: str | None = None,
@@ -193,7 +207,6 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
                                   f"{', '.join(sorted(VERIFICATION_CATEGORIES))}")
         if len(set(item.get("after", []) if _strings(item.get("after", [])) else [])) != len(item.get("after", [])):
             issues.append(f"{tid}: duplicate entries in after")
-        meta_keys = OPAQUE_KEYS if schema_1_2 else LEGACY_OPAQUE_KEYS
         tasks.append(TaskSpec(
             id=tid, milestone_id=str(item.get("milestone_id", "")), after=tuple(item.get("after", ())) if _strings(item.get("after", [])) else (),
             repository=str(item.get("repository", "")).strip(),
@@ -201,7 +214,7 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
             expected_paths=tuple(item.get("expected_paths", ())) if _strings(item.get("expected_paths", [])) else (),
             acceptance_criteria=tuple(item.get("acceptance_criteria", ())) if _strings(item.get("acceptance_criteria", [])) else (),
             verification=tuple(json.loads(json.dumps(v)) for v in verification),
-            meta={k: item[k] for k in meta_keys if k in item}))
+            meta=_task_meta(item, schema_1_2)))
     for task in tasks:
         for dep in task.after:
             if dep not in seen:

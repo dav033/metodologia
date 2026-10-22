@@ -5,13 +5,14 @@ copied here beyond its identity (plan_id, revision, sha256): the plan says what 
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
 from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 2
+STATE_SCHEMA = 3
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -78,6 +79,8 @@ class RunState:
     paused: bool = False
     cancel_requested: bool = False
     routing_complete: bool = False
+    revision_barrier: dict[str, Any] | None = None
+    revision_applications: dict[str, dict[str, Any]] = field(default_factory=dict)
     schema: int = STATE_SCHEMA
 
     def has_seen(self, message_id: str) -> bool:
@@ -96,6 +99,8 @@ class RunState:
             "schema": self.schema, "plan_id": self.plan_id, "revision": self.revision, "plan_sha256": self.plan_sha256,
             "created_at": self.created_at, "paused": self.paused, "cancel_requested": self.cancel_requested,
             "routing_complete": self.routing_complete,
+            "revision_barrier": dict(self.revision_barrier) if self.revision_barrier is not None else None,
+            "revision_applications": {key: dict(value) for key, value in self.revision_applications.items()},
             "counters": dict(self.counters), "seen_events": list(self.seen_events),
             "rejected_recent": list(self.rejected_recent),
             "tasks": {k: vars(v).copy() for k, v in self.tasks.items()},
@@ -107,15 +112,44 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") not in {1, STATE_SCHEMA}:
+            if not isinstance(data, dict) or data.get("schema") not in {1, 2, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
             routing_complete = data.get("routing_complete", False)
             if not isinstance(routing_complete, bool):
                 raise ValueError("routing_complete must be boolean")
+            barrier = data.get("revision_barrier")
+            applications = data.get("revision_applications", {})
+            barrier_keys = {"operation_key", "source", "target", "deadline"}
+            extended_barrier_keys = barrier_keys | {"accepted_map_digest", "accepted_map", "live_attempt_ids"}
+            if barrier is not None and (not isinstance(barrier, dict) or
+                    frozenset(barrier) not in {frozenset(barrier_keys), frozenset(extended_barrier_keys)} or
+                    not isinstance(barrier["operation_key"], str) or not isinstance(barrier["source"], str) or
+                    not isinstance(barrier["target"], str) or not isinstance(barrier["deadline"], (int, float)) or
+                    isinstance(barrier["deadline"], bool) or
+                    (set(barrier) == extended_barrier_keys and
+                     (not isinstance(barrier["accepted_map_digest"], str) or
+                      re.fullmatch(r"[0-9a-f]{64}", barrier["accepted_map_digest"]) is None or
+                      not isinstance(barrier["accepted_map"], dict) or
+                      any(not isinstance(task_id, str) or not isinstance(attempt_id, str)
+                          for task_id, attempt_id in barrier["accepted_map"].items()) or
+                      not isinstance(barrier["live_attempt_ids"], list) or
+                      any(not isinstance(attempt_id, str) for attempt_id in barrier["live_attempt_ids"]) or
+                      len(barrier["live_attempt_ids"]) != len(set(barrier["live_attempt_ids"]))))):
+                raise ValueError("revision barrier is invalid")
+            if not isinstance(applications, dict) or any(
+                    not isinstance(key, str) or not isinstance(value, dict) or
+                    set(value) != {"source", "target", "report", "at"} or
+                    not isinstance(value["source"], str) or not isinstance(value["target"], str) or
+                    not isinstance(value["report"], dict) or not isinstance(value["at"], (int, float)) or
+                    isinstance(value["at"], bool)
+                    for key, value in applications.items()):
+                raise ValueError("revision applications are invalid")
             state = cls(plan_id=data["plan_id"], revision=data["revision"], plan_sha256=data["plan_sha256"],
                         created_at=data["created_at"], paused=bool(data["paused"]),
                         cancel_requested=bool(data["cancel_requested"]), routing_complete=routing_complete,
                         counters=dict(data["counters"]), schema=STATE_SCHEMA,
+                        revision_barrier=dict(barrier) if barrier is not None else None,
+                        revision_applications={key: dict(value) for key, value in applications.items()},
                         seen_events=list(data["seen_events"]), rejected_recent=list(data.get("rejected_recent", [])))
             state.tasks = {}
             for task_id, value in data["tasks"].items():

@@ -52,6 +52,10 @@ IGNORED_TABLES = {
     "m1_outbox": "M4 delivery queue to M1: the delivery shows as M1's incident_observed",
     "m4_extension_meta": "schema bookkeeping", "m4_retention_health": "M4 housekeeping",
     "metric_samples": "M4 derived samples of the stream events already emitted",
+    "recovery_cases": "M5 normalized case inputs; durable decisions are the flow source",
+    "recovery_events": "M5 internal transition history; the final decision is the flow source",
+    "recovery_leases": "M5 short-lived worker leases; operational bookkeeping, not a user-visible flow event",
+    "application_checkpoints": "M5 idempotency checkpoints for application; the associated decision is the flow source",
     "schema_meta": "schema bookkeeping", "size_fixture": "M4 test fixture table", "source_cursors": "M4 read positions",
     "store_limits": "M4 configuration", "stream_gaps": "M4 loss accounting (surfaces as incidents)",
     "unrelated": "test fixture table", "artifacts": "M6 evidence blobs, referenced by the verdict",
@@ -231,6 +235,8 @@ M1_RULES: dict[str, Callable] = {
     "rework_refused": _m1("rework_refused", "M6", "M1", "No se pudo devolver el trabajo tras la auditoría ({why})"),
     "audit_gate_skipped": _m1("audit_gate", "M6", "M1", "Auditoría de {task} sin ledger: el gate se omite (configurado)"),
     "run_rebased": _m1("run_rebased", "planner", "M1", "La ejecución pasa a la revisión nueva"),
+    "revision_barrier": _m1("revision_barrier", "planner", "M1", "Se bloquean nuevas reservas para aplicar la revisión {operation_key}"),
+    "revision_applied": _m1("revision_applied", "planner", "M1", "La revisión {to_rev} se aplicó conservando el trabajo no afectado"),
 }
 
 

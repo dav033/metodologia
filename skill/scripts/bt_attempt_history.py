@@ -27,6 +27,48 @@ def path(rdir: Path, task: str) -> Path:
     return Path(rdir) / NOTES / f"{task}.history.jsonl"
 
 
+def observation_path(rdir: Path, task: str) -> Path:
+    return Path(rdir) / NOTES / f"{task}.audit-observations.jsonl"
+
+
+def record_observation(rdir: Path, task: str, attempt: str, observation: dict) -> None:
+    """Append one complete validated observation; reusing an attempt with different data is refused."""
+    if not attempt or not isinstance(observation, dict):
+        raise ValueError("invalid audit observation")
+    target = observation_path(rdir, task)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    observation_bytes = json.dumps(observation, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+    encoded = json.dumps({"attempt": attempt, "observation": observation,
+                          "sha256": hashlib.sha256(observation_bytes).hexdigest()}, sort_keys=True,
+                         ensure_ascii=False, separators=(",", ":"))
+    try:
+        for line in target.read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            if isinstance(row, dict) and row.get("attempt") == attempt:
+                if line != encoded:
+                    raise ValueError("audit observation is immutable")
+                return
+    except FileNotFoundError:
+        pass
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(encoded + "\n")
+
+
+def _observations(rdir: Path, task: str) -> list[dict]:
+    out = []
+    try:
+        for line in observation_path(rdir, task).read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            if isinstance(row, dict) and isinstance(row.get("observation"), dict):
+                payload = json.dumps(row["observation"], sort_keys=True, ensure_ascii=False,
+                                     separators=(",", ":")).encode()
+                if row.get("sha256") == hashlib.sha256(payload).hexdigest():
+                    out.append({"attempt": row.get("attempt"), **row["observation"]})
+    except (OSError, ValueError):
+        return []
+    return out
+
+
 def signature(text: str) -> str:
     """The same failure gives the same signature across attempts: commands and error lines, without the numbers,
     hashes and paths that change from one attempt to the next."""
@@ -49,6 +91,7 @@ def record(rdir: Path, task: str, attempt: str, text: str, kind: str = "verifica
         target.parent.mkdir(parents=True, exist_ok=True)
         with target.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps({"attempt": attempt, "kind": kind, "at": time.time(), "signature": signature(text),
+                                     "signature_authority": "informational_only",
                                      "text": text.strip()[:MAX_TEXT]}, ensure_ascii=False) + "\n")
     except OSError:
         pass
@@ -88,7 +131,8 @@ def entries(rdir: Path, task: str, doc: dict) -> list[dict]:
         else:
             outcome, text = ("cancelled" if state == "cancelled" else "failed"), failure
         out.append({"attempt": attempt, "number": number, "outcome": outcome, "text": text,
-                    "signature": recorded.get(attempt, {}).get("signature") or (signature(text) if text else "")})
+                    "signature": recorded.get(attempt, {}).get("signature") or (signature(text) if text else ""),
+                    "signature_authority": "informational_only"})
     return out
 
 
@@ -119,8 +163,16 @@ def prompt(rdir: Path, task: str, doc: dict) -> str:
     history = entries(rdir, task, doc)
     if not history:
         return ""
+    observations = doc.get("audit_observations")
+    if not isinstance(observations, list) or not observations:
+        observations = _observations(rdir, task)
     lines = ["Earlier attempts of this task (oldest first). Read them before you change anything: do not repeat an "
              "approach that already failed."]
+    if isinstance(observations, list) and observations:
+        lines.append("Structured audit observations (authoritative when validated):")
+        for observation in observations:
+            if isinstance(observation, dict):
+                lines.append("- " + json.dumps(observation, sort_keys=True, ensure_ascii=False, separators=(",", ":")))
     hidden = len(history) - SHOWN
     if hidden > 0:
         lines.append(f"- ({hidden} older attempt(s) not shown)")
@@ -129,15 +181,16 @@ def prompt(rdir: Path, task: str, doc: dict) -> str:
         first = seen.get(h["signature"])
         if h["outcome"] == "accepted":
             detail = "accepted, later sent back (rework, audit or plan revision)"
-        elif first is not None and first != h["number"]:
+        elif not observations and first is not None and first != h["number"]:
             detail = f"{h['outcome']}: the same failure as attempt #{first}"
         else:
             detail = f"{h['outcome']}: {_excerpt(h['text'])}"
             if h["signature"]:
                 seen[h["signature"]] = h["number"]
         lines.append(f"- #{h['number']} {h['attempt']}: {detail}")
+    lines.append("Text signatures are heuristic hints only; they are not authoritative evidence of audit recurrence.")
     same = repeats(history)
-    if same >= 2:
+    if not observations and same >= 2:
         lines.append(f"WARNING: the last {same} attempts failed in exactly the same way. Doing the same again will fail "
                      "again. Find the root cause first; it may be outside the code you wrote (the environment, a "
                      "dependency, the verification command, the plan). If it cannot be fixed within this task, say so "

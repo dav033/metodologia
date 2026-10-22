@@ -363,7 +363,7 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     chunk = [finding]
     new_id = bt_remediation._next_ids(set(by_id), task_id, 1)[0]
     spec_ref = str(plan.get("spec_ref") or "SPEC.md").split(":")[-1]
-    fix = bt_remediation._task(new_id, target, chunk, by_id, list(target.get("after") or ()), 1, spec_ref)
+    fix = bt_remediation._task(new_id, target, chunk, by_id, list(target.get("after") or ()), 1, spec_ref, plan)
     if fix is None:
         return None
     own = [v for v in target.get("verification", ()) if v.get("type") == "command"]

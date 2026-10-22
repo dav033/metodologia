@@ -7,11 +7,13 @@ restart it at once, so a move first puts a `hold` on the run; the watchdog honou
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
 import os
 import signal
 import sqlite3
 import time
+import uuid
 from pathlib import Path
 
 import bt_core
@@ -34,16 +36,29 @@ def on_hold(rdir: Path) -> bool:
     return hold_path(rdir).exists()
 
 
+def owns_hold(rdir: Path, token: str | None) -> bool:
+    """Whether the caller's hold still owns the marker after a nested operator action."""
+    if not isinstance(token, str) or not token:
+        return False
+    try:
+        data = json.loads(hold_path(rdir).read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return isinstance(data, dict) and data.get("token") == token
+
+
 @contextlib.contextmanager
 def hold(rdir: Path, why: str, keep: bool = False):
     """Keep the watchdog from restarting the owner while a move is in progress."""
     path = hold_path(rdir)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"why": why, "pid": os.getpid(), "at": time.time()}) + "\n", encoding="utf-8")
+    token = uuid.uuid4().hex
+    path.write_text(json.dumps({"why": why, "pid": os.getpid(), "at": time.time(), "token": token}) + "\n",
+                    encoding="utf-8")
     try:
-        yield
+        yield token
     finally:
-        if not keep:
+        if not keep and owns_hold(rdir, token):
             path.unlink(missing_ok=True)
 
 
@@ -166,6 +181,68 @@ def status(project: str, req: str, rdir: Path) -> dict:
     return out
 
 
+def recovery_status(rdir: Path) -> dict:
+    """Read the M5 adapter's diagnostic ledger without opening the owner or mutating stores."""
+    import bt_run_stores
+    import bt_scheduler_recovery_adapter as recovery
+
+    try:
+        marker = json.loads(bt_run_stores.runtime_marker(adapter.run_db_path(rdir)).read_text(encoding="utf-8"))
+        run_id = marker.get("runtime_id") if isinstance(marker, dict) else None
+        if not isinstance(run_id, str) or not run_id:
+            raise ValueError("runtime identity missing")
+        path = bt_run_stores.module_stores(adapter.run_db_path(rdir), run_id)["m5"]
+        return recovery.read_cycle_status(path, run_id=run_id)
+    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+        return {"schema_version": "recovery-status/1", "blocker": f"recovery_status_unavailable:{type(error).__name__}",
+                "cycles": []}
+
+
+def recovery_preview(rdir: Path) -> dict:
+    """Read current M1, M5/M6 and audit-observation identities without activation or diagnosis."""
+    try:
+        import bt_run_stores
+
+        identity = adapter.revision_identity(rdir)
+        marker = json.loads(bt_run_stores.runtime_marker(adapter.run_db_path(rdir)).read_text(encoding="utf-8"))
+        run_id = marker.get("runtime_id") if isinstance(marker, dict) else None
+        if not isinstance(run_id, str) or not run_id:
+            raise ValueError("runtime identity missing")
+        stores = bt_run_stores.module_stores(adapter.run_db_path(rdir), run_id)
+        source_digests = {}
+        for name in ("m5", "m6"):
+            path = stores[name]
+            if path.is_file():
+                source_digests[name] = hashlib.sha256(path.read_bytes()).hexdigest()
+        observations = []
+        for path in sorted(Path(rdir).glob("RUN.notes/*.audit-observations.jsonl")):
+            observations.append({"task": path.stem.split(".", 1)[0],
+                                 "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
+        source_facts = {"module_store_digests": source_digests, "audit_observation_digests": observations}
+        activation_path = Path(rdir) / "RUN.recovery-policy.json"
+        lifecycle_identity = {"plan_id": identity.get("plan_id"), "revision": identity.get("revision"),
+                              "plan_sha256": identity.get("source_sha256"),
+                              "stop_generation": identity.get("stop_generation"),
+                              "accepted_map_digest": identity.get("accepted_map_digest"),
+                              "paused": identity.get("paused", False), "cancelled": identity.get("cancelled", False),
+                              "live_attempts": identity.get("live_attempts", [])}
+        source_digest = hashlib.sha256(json.dumps(source_facts, sort_keys=True, separators=(",", ":"),
+                                                  allow_nan=False).encode()).hexdigest()
+        preview_body = {"schema_version": "recovery-preview/1", "run_id": run_id,
+                        "identity": lifecycle_identity, "source_digest": source_digest, "sources": source_facts,
+                        "activation_present": activation_path.is_file()}
+        digest = hashlib.sha256(json.dumps(preview_body, sort_keys=True, separators=(",", ":"),
+                                           allow_nan=False).encode()).hexdigest()
+        return {"schema_version": "recovery-preview/1", "run_id": run_id, "identity": identity,
+                "sources": source_facts,
+                "activation_present": activation_path.is_file(), "preview_digest": digest,
+                "diagnosis_invoked": False, "decision_answered": False}
+    except Exception as error:  # noqa: BLE001 - read-only preview reports unavailable M1 state
+        return {"schema_version": "recovery-preview/1", "status": "unavailable",
+                "blocker": f"recovery_preview_unavailable:{type(error).__name__}",
+                "diagnosis_invoked": False, "decision_answered": False}
+
+
 def kill_agent(project: str, req: str, attempt_id: str) -> int:
     """Stop what the executor started for this attempt (shim, process group, stragglers in its worktree)."""
     import bt_scheduler_executor_adapter as executor
@@ -266,9 +343,18 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
+    hold_path_before = hold_path(rdir)
+    try:
+        existing_hold = json.loads(hold_path_before.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        existing_hold = None
+    nested_recovery_stop = (action == "stop" and isinstance(existing_hold, dict)
+                            and existing_hold.get("why") == "recovery revision")
     with hold(rdir, why, keep=keep_held):
         lines.append(f"owner stopped: {stop_owner(project, req)} process(es)")
         if action == "stop":
+            if not nested_recovery_stop:
+                adapter.apply_control(rdir, "stop", by=OPERATOR)
             return lines
         if action == "remediate":
             import bt_remediation

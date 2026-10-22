@@ -23,6 +23,7 @@ def _who(by: object, reason: object) -> tuple[str, str]:
 def pause(ctx: Ctx, by: str, reason: str = "") -> None:
     by, reason = _who(by, reason)
     ctx.state.paused = True
+    ctx.state.next("stop")
     ctx.audit("run_paused", by=by, reason=reason)
 
 
@@ -38,6 +39,7 @@ def cancel(ctx: Ctx, by: str, reason: str = "") -> None:
     by, reason = _who(by, reason)
     state = ctx.state
     state.cancel_requested = True
+    state.next("stop")
     ctx.audit("run_cancel_requested", by=by, reason=reason)
     for spec in ctx.plan.tasks:
         rec = state.tasks[spec.id]

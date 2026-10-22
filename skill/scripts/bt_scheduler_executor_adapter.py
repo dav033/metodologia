@@ -40,6 +40,7 @@ import bt_core
 import bt_driver
 import bt_profiles
 import bt_scheduler_adapter as sched
+from bt_scheduler_recovery_adapter import start_rejection_detail
 import bt_scheduler_executor as m3
 from bt_scheduler_executor import gitutil  # noqa: F401 - re-exported: the only door to the executor module
 from bt_scheduler_executor.workspace import dirname_of  # noqa: F401 - re-exported, same reason
@@ -337,7 +338,7 @@ class CoreExecutionPort:
         except integrator.IntegrationError as error:
             if not error.permanent:                         # a hiccup says nothing about the plan: retry, don't burn an attempt
                 raise RuntimeError(f"{error.code}: {error.detail}"[:300]) from None
-            return core.Ack("rejected", f"{error.code}: {error.detail}"[:300])   # never run on a tree that lacks the work
+            return core.Ack("rejected", start_rejection_detail(error))   # never run without accepted predecessor work
         request = m3.StartRequest(
             idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
             attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,

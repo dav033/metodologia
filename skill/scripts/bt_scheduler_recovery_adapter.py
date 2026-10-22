@@ -12,8 +12,13 @@ import math
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
+from bt_scheduler_recovery_lifecycle import DiagnosticRecoveryLifecycle, read_cycle_status
+
 import bt_scheduler_adapter as sched
 import bt_scheduler_recovery as m5
+from bt_scheduler_recovery.conflict_contracts import ConflictObservation
+from bt_scheduler_recovery.conflict_delivery import (EvidenceUnavailable, integration_problem,
+                                                     refusal_detail, publish_or_raise, start_rejection_detail)
 
 SCHEMA = "m5.executor-facts/1"
 CAUSES = frozenset({"quota_exhausted", "connection_lost", "agent_error", "timeout", "killed", "incomplete_output",
@@ -26,15 +31,26 @@ def opaque_ref(kind: str, value: object) -> str:
     return f"{kind}:{digest}"
 
 
-class RecoveryAdapter:
+class RecoveryAdapter(DiagnosticRecoveryLifecycle):
     """Advice only. Source or persistence failures block visibly rather than letting absent evidence authorize retry."""
 
     def __init__(self, path: Path | str, *, scheduler, run_id: str,
-                 describe: Callable[[str], Mapping[str, object] | None], policy: Mapping[str, object] | None = None):
+                 describe: Callable[[str], Mapping[str, object] | None], policy: Mapping[str, object] | None = None,
+                 rdir: Path | str | None = None, recovery_sources: Callable[[], Mapping[str, object]] | None = None,
+                 diagnostic_pipeline: Callable[[Mapping[str, object]], Mapping[str, object]] | None = None):
         self.scheduler, self.run_id, self.describe = scheduler, run_id, describe
         self.policy = m5.Policy(**dict(policy or {}))
         self.path = Path(path)
+        self.rdir = Path(rdir) if rdir is not None else None
+        self.recovery_sources = recovery_sources
+        self.diagnostic_pipeline = diagnostic_pipeline
         self.store = None
+
+    def _validate_conflict_observation(self, observation):
+        validate_conflict_observation(observation)
+
+    def _parse_conflict_observation(self, observation):
+        return parse_conflict_observation(observation)
 
     def _open(self):
         if self.store is None:
@@ -104,6 +120,9 @@ class RecoveryAdapter:
             official = self._official(context)
             if official is None or not official["current"] or official["manual_cancel"]:
                 return sched.core.RecoveryProposal("block", "m5_stale_or_cancelled")
+            if context.cause == "verification_rejected" and str(official.get("evidence", "")).startswith(
+                    "verification_replan/blocked:"):
+                return sched.core.RecoveryProposal("block", "verification_replan_blocked")
             facts = self.describe(context.attempt_id) or {}
             if not isinstance(facts, Mapping):
                 raise TypeError("invalid evidence object")
@@ -134,3 +153,19 @@ class RecoveryAdapter:
 def inspect_store(path: Path | str, *, metrics: bool = False):
     """Operational reads use the module's read-only API; they never create an empty store."""
     return m5.inspect_store(path, metrics=metrics)
+
+
+
+def validate_conflict_observation(observation: Mapping[str, object]) -> None:
+    """Validate a plain conflict observation through the sole M5 package boundary."""
+    ConflictObservation.from_dict(dict(observation))
+
+
+def parse_verification_map(value: object):
+    """Parse the shared M5 verification-map/1 contract without leaking its package boundary."""
+    return m5.VerificationMap.from_dict(value)
+
+
+def parse_conflict_observation(value: Mapping[str, object]):
+    """Parse the T3a conflict envelope at the sole M5 package boundary."""
+    return ConflictObservation.from_dict(dict(value))

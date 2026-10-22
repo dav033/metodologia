@@ -15,6 +15,13 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 
 
 class RecoveryOperationalCLI(unittest.TestCase):
+    # The pure compiler consumes validated M5 contract types directly. Routing it through
+    # the operational adapter would also load its scheduler lifecycle, changing behavior
+    # and coupling compilation to runtime wiring. This is the sole production exemption.
+    PRODUCTION_IMPORT_EXEMPTIONS = {
+        "bt_recovery_convergence.py": frozenset({"bt_scheduler_recovery.conflict_contracts"}),
+    }
+
     def invoke(self, cwd, *args):
         script = (f"import sys,runpy;sys.path.insert(0,{str(SCRIPTS)!r});"
                   f"sys.argv=['bitacora']+{list(args)!r};runpy.run_module('bitacora',run_name='__main__')")
@@ -52,9 +59,11 @@ class RecoveryOperationalCLI(unittest.TestCase):
         for path in SCRIPTS.glob("*.py"):
             if path.name == "bt_scheduler_recovery_adapter.py":
                 continue
+            exempt_imports = self.PRODUCTION_IMPORT_EXEMPTIONS.get(path.name, frozenset())
             for node in ast.walk(ast.parse(path.read_text())):
                 names = [alias.name for alias in node.names] if isinstance(node, ast.Import) else \
                     [node.module or ""] if isinstance(node, ast.ImportFrom) else []
-                if any(name == "bt_scheduler_recovery" or name.startswith("bt_scheduler_recovery.") for name in names):
+                if any((name == "bt_scheduler_recovery" or name.startswith("bt_scheduler_recovery."))
+                       and name not in exempt_imports for name in names):
                     offenders.append((path.name, node.lineno))
         self.assertEqual(offenders, [])

@@ -34,6 +34,37 @@ CREATE INDEX cause_history ON decisions(run_id, task_id, cause, attempt_id);
 CREATE INDEX last_task ON decisions(run_id, task_id, seq);
 """
 
+DIAGNOSTIC_SCHEMA = """
+CREATE TABLE recovery_cases (
+    trigger_id TEXT PRIMARY KEY,
+    generation INTEGER NOT NULL CHECK(generation >= 0),
+    case_json TEXT NOT NULL
+);
+CREATE TABLE recovery_events (
+    seq INTEGER PRIMARY KEY,
+    event_id TEXT UNIQUE NOT NULL,
+    trigger_id TEXT NOT NULL REFERENCES recovery_cases(trigger_id),
+    generation INTEGER NOT NULL CHECK(generation >= 0),
+    event_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    created_at REAL NOT NULL
+);
+CREATE INDEX recovery_events_by_case ON recovery_events(trigger_id, seq);
+CREATE TABLE recovery_leases (
+    trigger_id TEXT PRIMARY KEY REFERENCES recovery_cases(trigger_id),
+    generation INTEGER NOT NULL CHECK(generation >= 0),
+    owner_id TEXT NOT NULL,
+    expires_at REAL NOT NULL
+);
+CREATE TABLE application_checkpoints (
+    checkpoint_id TEXT PRIMARY KEY,
+    trigger_id TEXT NOT NULL REFERENCES recovery_cases(trigger_id),
+    generation INTEGER NOT NULL CHECK(generation >= 0),
+    checkpoint_json TEXT NOT NULL,
+    created_at REAL NOT NULL
+);
+"""
+
 
 def _json(value: object) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -70,7 +101,20 @@ def _private_path(path: Path) -> None:
 
 def _check_schema(connection: sqlite3.Connection) -> None:
     require(connection.execute("PRAGMA application_id").fetchone()[0] == APP_ID, "STORE_SCHEMA")
-    require(connection.execute("PRAGMA user_version").fetchone()[0] == 1, "STORE_SCHEMA")
+    # Read-only inspection may still encounter a pre-migration schema-1 store.
+    require(connection.execute("PRAGMA user_version").fetchone()[0] in (1, 2), "STORE_SCHEMA")
+
+
+def _migrate_schema(connection: sqlite3.Connection) -> None:
+    version = connection.execute("PRAGMA user_version").fetchone()[0]
+    require(connection.execute("PRAGMA application_id").fetchone()[0] == APP_ID, "STORE_SCHEMA")
+    if version == 1:
+        for statement in DIAGNOSTIC_SCHEMA.split(";"):
+            if statement.strip():
+                connection.execute(statement)
+        connection.execute("PRAGMA user_version=2")
+    else:
+        require(version == 2, "STORE_SCHEMA")
 
 
 def _latest(connection: sqlite3.Connection, run_id: str | None, task_id: str | None) -> dict | None:
@@ -114,6 +158,7 @@ class DecisionStore:
                         self.connection.execute(statement)
                 self.connection.execute(f"PRAGMA application_id={APP_ID}")
                 self.connection.execute("PRAGMA user_version=1")
+            _migrate_schema(self.connection)
             _check_schema(self.connection)
             self.connection.commit()
         except (OSError, sqlite3.Error) as error:

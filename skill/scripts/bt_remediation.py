@@ -14,13 +14,16 @@ built soundly, and the caller then falls back to sending the named tasks back). 
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
+import os
 import re
 import time
 from pathlib import Path
 
 REQUEST = "RUN.remediation.json"
 LOG = "RUN.remediation.jsonl"
+APPLY_JOURNAL = "RUN.remediation.apply.json"
 MAX_PER_TASK = 4                 # findings one remediation task takes; a bigger set is chained into several
 DEFAULT_ROUNDS = 2               # remediation rounds one audit gets before the owner is asked
 MINUTES_PER_FINDING = 40
@@ -29,6 +32,22 @@ COMPLEXITY = ("low", "medium", "high", "extreme")
 LEVELS = ("low", "medium", "high")
 ID = re.compile(r"T([0-9]+)(?:\.[0-9]+)?([a-z]?)\Z")
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+
+
+def _atomic_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, indent=1, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, path)
+    if os.name != "nt":
+        fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(fd)
+        finally:
+            os.close(fd)
 
 
 def request_path(rdir: Path) -> Path:
@@ -55,9 +74,7 @@ def write_request(rdir: Path, audit: str, attempt: str, findings: list[dict]) ->
     """The gate's record of what to remediate: the audit, the attempt that found it and its blocking findings."""
     payload = {"audit": audit, "attempt": attempt, "at": time.time(), "findings": findings}
     path = request_path(rdir)
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
-    tmp.replace(path)
+    _atomic_json(path, payload)
 
 
 def clear_request(rdir: Path) -> None:
@@ -115,6 +132,8 @@ def record(rdir: Path, audit: str, round_no: int, new_tasks: list[str], findings
            "findings": [{"id": f.get("id"), "severity": f.get("severity"), "tasks": f.get("tasks") or []} for f in findings]}
     with log_path(rdir).open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(row) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 def events(rdir: Path) -> list[dict]:
@@ -188,13 +207,21 @@ def _number(identifier) -> int:
     return int(match.group(1)) if match else 0
 
 
-def _command_for(finding: dict, tasks: dict[str, dict]) -> dict | None:
-    """The check that proves the area of a finding still works: the first command of the first task it names."""
-    for name in finding.get("tasks") or ():
-        for item in (tasks.get(name) or {}).get("verification") or ():
-            if isinstance(item, dict) and item.get("type") == "command" and item.get("value"):
-                return item
-    return None
+def _command_for(finding: dict, plan: dict) -> list[dict] | None:
+    """Use T4b's coverage calculation for every declared owner path."""
+    import bt_recovery_compiler
+    from bt_recovery_compiler_verification import RecoveryCompilationError
+
+    tasks = {task.get("id"): task for task in plan.get("tasks", []) if isinstance(task, dict)}
+    owners = list(dict.fromkeys(name for name in finding.get("tasks") or () if name in tasks))
+    paths = list(dict.fromkeys(path for owner in owners for path in tasks[owner].get("expected_paths", [])))
+    if not owners or not paths:
+        return None
+    try:
+        coverage = bt_recovery_compiler.coverage_checks(plan, owners, paths, "remediation verification")
+    except RecoveryCompilationError:
+        return None
+    return coverage or None
 
 
 def _top(values, order):
@@ -203,20 +230,23 @@ def _top(values, order):
 
 
 def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, dict], after: list[str],
-          round_no: int, spec_ref: str) -> dict | None:
+          round_no: int, spec_ref: str, plan: dict) -> dict | None:
     named = list(dict.fromkeys(t for f in chunk for t in f.get("tasks") or () if t in tasks))
-    commands = [_command_for(f, tasks) for f in chunk]
-    if not named or any(command is None for command in commands):
+    commands = [_command_for(f, plan) for f in chunk]
+    if not named or any(not command for command in commands):
         return None
     repositories = [tasks[t].get("repository") for t in named if tasks[t].get("repository")]
     repository = max(set(repositories), key=repositories.count) if repositories else audit_spec.get("repository")
     ids = ", ".join(f.get("id", "?") for f in chunk)
     criteria, verification = [], []
-    for finding, command in zip(chunk, commands):
+    for finding, owner_checks in zip(chunk, commands):
         criterion = f"{finding.get('id')} ({finding.get('severity')}) is fixed: {str(finding.get('summary'))[:200]}".strip()
         criteria.append(criterion)
-        verification.append({"type": "command", "value": command["value"], "purpose": criterion,
-                             "category": command.get("category") or "functional"})
+        for command in owner_checks:
+            row = {"type": "command", "value": command["command"], "purpose": criterion,
+                   "expected": "pass", "created_by": task_id, "category": "functional"}
+            if row not in verification:
+                verification.append(row)
     details = "\n".join(
         f"- {f.get('id')} ({f.get('severity')}; owned by {', '.join(f.get('tasks') or ()) or 'no task'}): {f.get('summary')}"
         + (f" Evidence from the audit: {f.get('evidence')}" if f.get("evidence") else "") for f in chunk)
@@ -290,7 +320,7 @@ def build_revision(plan: dict, audit: str, findings: list[dict], *, round_no: in
         for chunk in chain:
             task_id = next(cursor)
             task = _task(task_id, spec, chunk, by_id, [*base_after, *([previous] if previous else [])], round_no,
-                         str(plan.get("spec_ref") or "SPEC.md").split(":")[-1])
+                         str(plan.get("spec_ref") or "SPEC.md").split(":")[-1], plan)
             if task is None:
                 return None
             created.append(task)
@@ -333,6 +363,10 @@ def apply(rdir: Path) -> dict | None:
     None when there was nothing to apply or the revision cannot be built (the request is then dropped: the next rejection
     of the audit sends the named tasks back). The caller rebases the run onto the new revision."""
     import bt_plan_adapter
+    import bt_scheduler_ops
+
+    if bt_scheduler_ops.on_hold(rdir):
+        return None
 
     request = read_request(rdir)
     if request is None:
@@ -341,13 +375,57 @@ def apply(rdir: Path) -> dict | None:
     plan = latest_plan(rdir)
     audit, findings = str(request["audit"]), list(request["findings"])
     round_no = rounds_used(rdir, audit) + 1
-    revised = build_revision(plan, audit, findings, round_no=round_no, parallel=parallel_for(rdir)) if plan else None
-    if revised is None:
-        clear_request(rdir)
-        return None
-    bt_plan_adapter.freeze_revision(rdir, revised, "remediation")
+    request_id = hashlib.sha256(json.dumps({"audit": audit, "attempt": request.get("attempt"),
+        "findings": findings}, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    journal_path = Path(rdir) / APPLY_JOURNAL
+    try:
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        revised = build_revision(plan, audit, findings, round_no=round_no,
+                                    parallel=parallel_for(rdir)) if plan else None
+        if revised is None:
+            clear_request(rdir)
+            return None
+        journal = {"schema": "remediation-apply/1", "request_id": request_id, "stage": "prepared",
+                   "audit": audit, "round": round_no, "revision": revised["revision"], "plan": revised}
+        _atomic_json(journal_path, journal)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("remediation apply journal is unreadable") from exc
+    if journal.get("request_id") != request_id:
+        if journal.get("stage") != "committed":
+            raise RuntimeError("a different remediation request owns the apply journal")
+        revised = build_revision(plan, audit, findings, round_no=round_no,
+                                    parallel=parallel_for(rdir)) if plan else None
+        if revised is None:
+            clear_request(rdir)
+            return None
+        journal = {"schema": "remediation-apply/1", "request_id": request_id, "stage": "prepared",
+                   "audit": audit, "round": round_no, "revision": revised["revision"], "plan": revised}
+        _atomic_json(journal_path, journal)
+    round_no = journal.get("round")
+    if type(round_no) is not int or round_no < 1:
+        raise RuntimeError("remediation apply journal has an invalid round")
+    revised = journal.get("plan")
+    if not isinstance(revised, dict) or revised.get("revision") != journal.get("revision"):
+        raise RuntimeError("remediation apply journal has no valid frozen candidate")
+    if plan is None:
+        raise RuntimeError("remediation base plan is unavailable")
+    if plan.get("revision") >= revised["revision"]:
+        plan = bt_plan_adapter.planner_revisions.load_revision(rdir, revised["revision"] - 1)
+    frozen = bt_plan_adapter.freeze_revision(rdir, revised, "remediation")
+    journal.update(stage="frozen", revision=frozen["revision"], sha256=frozen["sha256"])
+    _atomic_json(journal_path, journal)
     old = {t["id"] for t in plan["tasks"]}
     added = [t["id"] for t in revised["tasks"] if t["id"] not in old]
-    record(rdir, audit, round_no, added, findings)
+    if not any(row.get("request_id") == request_id for row in history(rdir)):
+        row = {"at": time.time(), "audit": audit, "round": round_no, "tasks": added,
+               "findings": [{"id": f.get("id"), "severity": f.get("severity"), "tasks": f.get("tasks") or []}
+                            for f in findings], "request_id": request_id}
+        with log_path(rdir).open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(row) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+    journal["stage"] = "committed"
+    _atomic_json(journal_path, journal)
     clear_request(rdir)
     return {"audit": audit, "round": round_no, "tasks": added, "revision": revised["revision"]}

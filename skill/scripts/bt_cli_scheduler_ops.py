@@ -6,7 +6,7 @@ import json
 
 import bt_scheduler_adapter as adapter
 
-ACTIONS = ("status", "decisions", "decide", "diagnose", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "heal", "revise", "remediate")
+ACTIONS = ("status", "decisions", "decide", "diagnose", "recovery-preview", "recovery-status", "stop", "resume", "cancel-attempt", "reopen", "retry", "rework", "withdraw-rework", "continue-from", "attest", "heal", "revise", "remediate")
 
 
 def register(subparsers) -> None:
@@ -122,6 +122,12 @@ def dispatch(args: argparse.Namespace, project: str, pdir) -> int:
         return 2
     if args.action == "status":
         print(json.dumps(ops.status(project, args.req, rdir), indent=1))
+        return 0
+    if args.action == "recovery-preview":
+        print(json.dumps(ops.recovery_preview(rdir), ensure_ascii=False, indent=1))
+        return 0
+    if args.action == "recovery-status":
+        print(json.dumps(ops.recovery_status(rdir), ensure_ascii=False, indent=1))
         return 0
     if args.action == "decisions":
         import bt_scheduler_decisions as decisions

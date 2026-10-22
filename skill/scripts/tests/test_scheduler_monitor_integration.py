@@ -45,6 +45,9 @@ class SchedulerMonitorBoundaryTests(unittest.TestCase):
         self.assertIn("bt_scheduler_monitor_adapter", self._imports(SCRIPTS / "bt_scheduler_m4_stream_bridge.py"))
         self.assertIn("bt_scheduler_monitor_adapter", self._imports(SCRIPTS / "bt_scheduler_monitor_recovery.py"))
 
+    def test_only_the_methodology_monitor_adapter_imports_the_m4_package(self):
+        self.test_only_methodology_monitor_adapter_imports_the_m4_package()
+
     def test_m1_m2_m3_and_operator_apis_are_exposed_by_the_adapter(self):
         for name in ("REQUIRED_M1_CONTRACT", "IncidentDeliveryReport", "deliver_incident_outbox",
                      "read_metric_snapshots", "operator_query", "ExecutionOutputFrame", "ProcessIdentity",

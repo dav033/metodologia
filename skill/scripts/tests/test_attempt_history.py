@@ -1,6 +1,7 @@
 """A retry knows what earlier attempts tried and how they failed, and is told plainly when they keep failing the same way."""
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -54,6 +55,30 @@ class History(unittest.TestCase):
         text = history.prompt(self.rdir, "T15", doc(("att-1", "rejected", "m6://a"), ("att-2", "rejected", "m6://b")))
         self.assertNotIn("WARNING", text)
 
+    def test_structured_audit_observations_replace_signature_recurrence_claims(self):
+        history.record(self.rdir, "T15", "att-1", ESLINT.format(run="x", n=1))
+        history.record(self.rdir, "T15", "att-2", ESLINT.format(run="y", n=2))
+        run = doc(("att-1", "rejected", "m6://a"), ("att-2", "rejected", "m6://b"))
+        run["audit_observations"] = [{"progress": {"persisted": ["sha:F7"], "fixed": []}, "audit_gate": "not_run"}]
+        text = history.prompt(self.rdir, "T15", run)
+        self.assertIn("Structured audit observations", text)
+        self.assertIn('"persisted":["sha:F7"]', text)
+        self.assertIn("not authoritative evidence of audit recurrence", text)
+        self.assertNotIn("WARNING: the last", text)
+
+    def test_audit_observations_are_append_only_and_digest_checked_before_prompt_use(self):
+        observation = {"schema_version": "audit-observation/1", "gate_status": "not_run",
+                       "findings": [{"id": "F7", "summary": "complete evidence"}]}
+        history.record_observation(self.rdir, "T15", "att-1", observation)
+        with self.assertRaisesRegex(ValueError, "immutable"):
+            history.record_observation(self.rdir, "T15", "att-1", {**observation, "gate_status": "evaluated"})
+        text = history.prompt(self.rdir, "T15", doc(("att-1", "rejected", "m6://x")))
+        self.assertIn("complete evidence", text)
+        path = history.observation_path(self.rdir, "T15")
+        path.write_text(path.read_text().replace("complete evidence", "tampered"))
+        text = history.prompt(self.rdir, "T15", doc(("att-1", "rejected", "m6://x")))
+        self.assertNotIn("tampered", text)
+
     def test_an_accepted_result_later_sent_back_and_old_attempts_are_summarised(self):
         rows = [(f"att-{n}", "cancelled", "cancelled by operator: wrong base") for n in range(8)]
         rows.append(("att-8", "accepted", ""))
@@ -73,6 +98,28 @@ class History(unittest.TestCase):
 
 
 class Wiring(unittest.TestCase):
+    def test_quality_adapter_publishes_full_validated_observation_when_prerequisite_fails(self):
+        from bt_scheduler_quality_adapter import QualityVerificationPort
+
+        findings = [{"id": f"F{index}", "severity": "low", "status": "open", "summary": "full finding " + "x" * 800,
+                     "tasks": [], "evidence": "complete"} for index in range(1, 4)]
+        task = SimpleNamespace(meta={"kind": "audit"}, expected_paths=("reviews/audit.findings.json",))
+        port = QualityVerificationPort.__new__(QualityVerificationPort)
+        port.core = SimpleNamespace(plan=SimpleNamespace(task=lambda _task_id: task,
+                              tasks=[SimpleNamespace(id="T8")]))
+        port.audit_policy = __import__("bt_audit_gate").Policy()
+        port._read_ledger = lambda _order, _path: json.dumps({"schema": "audit-findings/1", "findings": findings}).encode()
+        port._snapshot_source = lambda _order: SimpleNamespace(snapshot_sha="a" * 40)
+        port._read_changes = lambda _order: ()
+        published = []
+        port.publish_audit_observation = lambda *_args: published.append(_args[-1])
+        order = SimpleNamespace(task_id="T8", attempt_id="att-7", plan_id="REQ-029", revision=1)
+        self.assertIsNone(port._audit_gate(order, evaluate_gate=False, check_status="FAIL"))
+        self.assertEqual(len(published[0]["findings"]), 3)
+        self.assertEqual(len(published[0]["findings"][0]["summary"]), 813)
+        self.assertEqual(published[0]["gate_status"], "not_run")
+        self.assertEqual(published[0]["not_run_checks"], ["audit_gate_evaluation"])
+
     def test_m6_rejections_are_recorded_with_their_attempt(self):
         from bt_scheduler_quality_adapter import QualityVerificationPort
         seen, notes = [], []
