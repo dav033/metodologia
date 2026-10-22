@@ -47,6 +47,13 @@ GATEWAY_RELEASE_CHECKS = {
     "rollback-rehearsed",
     "other-hosts-unchanged",
 }
+LIVE_SMOKE_CHECKS = {
+    "signin-start",
+    "negative-paths",
+    "sse",
+    "telegram-delivery",
+    "manual-handover",
+}
 VERCEL_FRONTEND_STEPS = {
     "project-create-or-link",
     "project-settings",
@@ -163,6 +170,11 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
     elif receipt["name"] == "gateway-release":
         required_steps = GATEWAY_RELEASE_STEPS
         required_checks = GATEWAY_RELEASE_CHECKS
+    elif receipt["name"] == "live-smoke":
+        required_steps = {"live-probes"}
+        required_checks = LIVE_SMOKE_CHECKS
+        if receipt.get("status") not in {"partial", "complete", "blocked"}:
+            raise ReceiptError("live-smoke status must be partial, complete, or blocked")
     else:
         required_steps = REQUIRED_STEPS
         required_checks = REQUIRED_CHECKS
@@ -211,7 +223,7 @@ def validate_receipt(receipt: Any) -> dict[str, Any]:
             raise ReceiptError(f"check {name} must be an object")
         if not isinstance(check.get("ok"), bool):
             raise ReceiptError(f"check {name}.ok must be a boolean")
-        if not identity_receipt and check.get("ok") is not True:
+        if not identity_receipt and receipt["name"] != "live-smoke" and check.get("ok") is not True:
             raise ReceiptError(f"check {name} did not pass")
         _required_text(check, "detail", f"checks.{name}")
 

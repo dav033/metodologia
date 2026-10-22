@@ -46,8 +46,6 @@ GATEWAY_CHECKS = {
     "rollback-rehearsed",
     "other-hosts-unchanged",
 }
-
-
 def head_sha() -> str:
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=DEPLOY, text=True).strip()
 
@@ -80,6 +78,25 @@ def valid_gateway_receipt() -> dict:
         "checks": {
             name: {"ok": True, "detail": "Recorded offline evidence: passed"}
             for name in GATEWAY_CHECKS
+        },
+    }
+
+
+def partial_live_receipt() -> dict:
+    return {
+        "schema_version": 1,
+        "name": "live-smoke",
+        "status": "partial",
+        "deployed_git_sha": head_sha(),
+        "gateway_url": "https://flow-api.example.test",
+        "frontend_url": "https://flow-remote.example.test",
+        "steps": [{"name": "live-probes", "command": "python smoke.py --live", "exit_code": 0}],
+        "checks": {
+            "signin-start": {"ok": True, "detail": "Public OAuth start and cookie policies were checked."},
+            "negative-paths": {"ok": True, "detail": "Bad state, unauthenticated API and missing CSRF were checked."},
+            "sse": {"ok": False, "detail": "Owner session was unavailable; authenticated reconnect was not attempted."},
+            "telegram-delivery": {"ok": False, "detail": "Not attempted because credentials were unavailable."},
+            "manual-handover": {"ok": True, "detail": "Owner manual checks remain outside acceptance."},
         },
     }
 
@@ -159,6 +176,33 @@ class ReceiptVerifierTest(unittest.TestCase):
         result = self.run_verifier(receipt)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("public-health", result.stderr)
+
+    def test_live_receipt_can_validate_independent_passed_checks(self):
+        receipt = partial_live_receipt()
+        result = self.run_verifier(receipt, "--check", "signin-start")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.run_verifier(receipt, "--check", "negative-paths")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_live_receipt_reports_unpassed_named_checks(self):
+        receipt = partial_live_receipt()
+        for name in ("sse", "telegram-delivery"):
+            result = self.run_verifier(receipt, "--check", name)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(name, result.stderr)
+
+    def test_live_receipt_requires_named_checks_and_partial_status(self):
+        receipt = partial_live_receipt()
+        del receipt["checks"]["telegram-delivery"]
+        result = self.run_verifier(receipt)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("telegram-delivery", result.stderr)
+
+        receipt = partial_live_receipt()
+        receipt["status"] = "unknown"
+        result = self.run_verifier(receipt)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("status", result.stderr)
 
 
 if __name__ == "__main__":

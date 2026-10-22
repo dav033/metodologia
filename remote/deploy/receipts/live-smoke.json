@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "name": "live-smoke",
+  "status": "partial",
+  "deployed_git_sha": "baeedd983a574318813f26d1f1f8fb0c730ceeaf",
+  "gateway_url": "https://flow-api.185-147-157-25.sslip.io",
+  "frontend_url": "https://flow-remote.vercel.app",
+  "evidence_source": "Public production probes from smoke.py --live. No credentials were read or recorded.",
+  "steps": [
+    {
+      "name": "live-probes",
+      "command": "python remote/deploy/smoke.py --live (public HTTPS probes; credential-dependent checks recorded as blocked)",
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "signin-start": {
+      "ok": true,
+      "detail": "GET https://flow-remote.vercel.app/ returned HTTP 200; gateway /healthz returned HTTP 200 with matching release SHA; OAuth start returned HTTP 302 to github.com; OAuth client id, state and frontend callback were present; state cookie attributes checked without recording the state value; deployed release source sets the session cookie Secure, HttpOnly and SameSite=Strict: True."
+    },
+    "negative-paths": {
+      "ok": true,
+      "detail": "bad-state callback HTTP 400 (expected 400); unauthenticated API HTTP 401 (expected 401); state-changing POST without X-Flow-Request HTTP 403 (expected 403)."
+    },
+    "sse": {
+      "ok": false,
+      "detail": "Vercel stream probe with Last-Event-ID returned HTTP 401; authenticated connect and reconnect require the owner's signed-in browser session, which this task's credential restriction does not permit the executor to obtain."
+    },
+    "telegram-delivery": {
+      "ok": false,
+      "detail": "Not attempted: sending requires the owner's Telegram bot token and chat id; this task explicitly forbids reading or using credentials. No message was sent."
+    },
+    "manual-handover": {
+      "ok": true,
+      "detail": "Per the 2026-10-22 owner ruling, phone sign-in at 360 px and refusal of a foreign GitHub account remain manual handover steps and are not acceptance gates."
+    }
+  },
+  "rollback": "Follow remote/docs/runbook.md Step 7, then Steps 6 to 3 in order if sign-in or snapshot fail."
+}
