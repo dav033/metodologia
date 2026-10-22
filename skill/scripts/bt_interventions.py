@@ -64,3 +64,22 @@ def read(run_dir: Path | str) -> Iterator[dict[str, Any]]:
             continue
         if isinstance(row, dict) and row.get("class"):
             yield row
+
+
+CONFLICTS = "RUN.conflicts.jsonl"
+MAX_FILES = 2000
+
+
+def record_conflict(run_dir: Path | str, *, task: str, left: str, right: str, files: list[str], run: str = "") -> None:
+    """The FULL observation of an integration clash (REQ-029 R11): the message the core keeps is clipped to six files and 170
+    characters, which is not enough to repair it, so every path is written here, unclipped, before any clipping."""
+    row = {"at": round(time.time(), 3), "run": run, "task": task, "left": left, "right": right, "files": files[:MAX_FILES],
+           "file_count": len(files)}
+    try:
+        fd = os.open(Path(run_dir) / CONFLICTS, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o644)
+        try:
+            os.write(fd, (json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8"))
+        finally:
+            os.close(fd)
+    except OSError:
+        pass

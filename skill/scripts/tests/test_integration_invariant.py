@@ -1,13 +1,16 @@
 """REQ-030 step 1: an integrated tree never silently loses the work of an accepted task (bt_integration_invariant)."""
 from __future__ import annotations
 
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_integration_invariant as inv
+import bt_interventions
 import bt_scheduler_integrator as integ
 from scheduler_executor_support import git
 import test_scheduler_integrator as base_tests
@@ -123,6 +126,34 @@ class OnTheLine(Base):
         self.assertEqual(self.probe(spec), "")
         self.accept("T3", snapshot(self.app, self.head, {"two.ts": "other 2\n"}))     # T3 and T2 both create two.ts
         self.assertIn("does not fit the integrated tree", self.probe(spec))
+
+
+class FullConflictEvidence(Base):
+    def test_every_clashing_path_is_kept_unclipped_while_the_error_stays_short(self):
+        names = {f"src/file{n:02d}.ts": "left\n" for n in range(1, 11)}
+        s1 = snapshot(self.app, self.head, names)
+        s2 = snapshot(self.app, self.head, {name: "right\n" for name in names})
+        self.accept("T1", s1)
+        self.accept("T2", s2)
+        seen = []
+        integrator = self.bound({"T1": ([], "app"), "T2": ([], "app"), "T3": (["T1", "T2"], "app")})
+        integrator._bound["on_conflict"] = lambda **fields: seen.append(fields)
+        with self.assertRaises(integ.IntegrationError) as caught:
+            integrator.base_ref("T3")
+        self.assertLessEqual(len(caught.exception.detail), 170 + 30)
+        self.assertEqual(len(seen), 1)
+        self.assertEqual((seen[0]["task"], seen[0]["left"], seen[0]["right"]), ("T3", "T1", "T2"))
+        self.assertEqual(sorted(seen[0]["files"]), sorted(names))                             # all ten, not six
+        with self.assertRaises(integ.IntegrationError):
+            integrator.base_ref("T3")
+        self.assertEqual(len(seen), 1)                                                        # the same clash is kept once
+
+    def test_the_conflict_log_is_append_only_json_lines(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            bt_interventions.record_conflict(tmp, task="T3", left="T1", right="T2", files=["a", "b"], run="p-REQ-1")
+            bt_interventions.record_conflict(tmp, task="T4", left="T1", right="T2", files=["c"])
+            rows = [json.loads(line) for line in (Path(tmp) / bt_interventions.CONFLICTS).read_text().splitlines()]
+        self.assertEqual([(r["task"], r["file_count"]) for r in rows], [("T3", 2), ("T4", 1)])
 
 
 class Rules(Base):

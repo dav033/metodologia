@@ -110,7 +110,7 @@ From the web UI, the plan-approval form launches it for you. Follow progress wit
 durable run; it never approves a plan or creates a replacement run. To run unattended use
 `bitacora.py --project <p> scheduler-watch REQ-NNN --detach`: the watchdog resumes the owner whenever it dies (backoff,
 gives up with a notification after 5 failures in 30 min) and login autostart launches it. Moves on a live run are
-commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|rework T1,T2|revise` (stop the owner
+commands, not scripts: `scheduler-op REQ-NNN status|stop|resume|cancel-attempt ATT|reopen TASK|rework T1,T2|revise|attest TASK|heal …` (stop the owner
 under a hold, apply through M1, kill the attempt's agent, release the hold; `revise` cancels live attempts and rebases onto
 the latest frozen plan revision). When a run cannot go on alone (a blocked task, an open verifier review) it asks:
 `scheduler-op REQ-NNN decisions` lists the requests (what happened, evidence, closed options with their consequence, a
@@ -125,7 +125,15 @@ a check M6 cannot run (git in a sandbox without .git, a command form it refuses)
 module or variable, a service down, quota, a cancellation, the same failure repeated. The watchdog also asks a cheap
 model to diagnose each new request (`bt_block_agent`, config `diagnosis.profile|model|effort`, default Claude Haiku;
 `scheduler-op REQ-NNN diagnose <request>` by hand); its answer is cached in `RUN.diagnoses/` and both show on the card
-in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. A retry's prompt also lists the task's earlier attempts and how each failed (D-099, `bt_attempt_history`, `RUN.notes/<task>.history.jsonl`) and warns when the last ones failed the same way. Cancelling a scheduler plan (web "Planes" view,
+in /flow and the plan page, with the recommended option first and a «Pedir diagnóstico al agente» button. A retry's prompt also lists the task's earlier attempts and how each failed (D-099, `bt_attempt_history`, `RUN.notes/<task>.history.jsonl`) and warns when the last ones failed the same way. **Self-healing (REQ-030).** Most stops no longer wait for a person: the watchdog's `heal` places each open stop in a closed
+taxonomy (plan defect, integration defect, regression, environment, criterion without a mapped check, quota, transient) from the
+last real error and applies the smallest safe repair of its class, bounded and recorded (`RUN.healing.json`, `RUN.interventions.jsonl`;
+`modules.md` §self-healing). `scheduler-op REQ-NNN heal status|stop|start|run|revert CASE` is the owner's control: `stop` switches it
+off for that run at once, `revert` undoes a plan revision it made. A manual check is settled with `scheduler-op REQ-NNN attest TASK
+--reason "what you did and saw"` (a sealed receipt the verifier accepts; the task's open review is requeued). `rework` and
+`revise` that would throw away more accepted tasks than `gates.rework_confirm_over` (3) refuse with the count and the estimated
+minutes until `--confirm`. `bitacora.py scheduler-evolve [--propose|--apply|--revert|--capture REQ]` turns the interventions of a project into
+proposals (PENDING.md) and, if a replay of earlier nights proves it, one bounded setting change. Cancelling a scheduler plan (web "Planes" view,
 confirm with the REQ id) is irreversible. The routing (model, effort and the escalation after a failed attempt) is the
 router's job and is recorded per attempt, not set here (`agents.md`, `modules.md` §Scheduler core).
 

@@ -138,6 +138,13 @@ class Cycle(unittest.TestCase):
             self.assertEqual(self.run_cycle(many), 1)                                        # only one action left in the budget
             self.assertEqual(self.run_cycle(many), 0)
 
+    def test_nothing_is_repaired_while_an_operator_move_holds_the_run(self):
+        import bt_scheduler_ops as ops
+        ops.hold_path(self.rdir).parent.mkdir(parents=True, exist_ok=True)
+        with patch.object(ops, "on_hold", return_value=True):
+            self.assertEqual(self.run_cycle([request()]), 0)
+        self.assertEqual(self.answers, [])
+
     def test_an_unplaced_stop_is_left_alone(self):
         self.verify = "an error the taxonomy has never seen"
         self.assertEqual(self.run_cycle([request()]), 0)

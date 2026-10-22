@@ -87,6 +87,7 @@ class PredecessorIntegrator:
         self._bound: dict[str, Any] | None = None
         self._memo: dict[str, str] = {}
         self._announced: set[tuple[str, str, str, str]] = set()
+        self._conflicts_seen: set[tuple] = set()
         self.line = None                                   # bt_integration_line.Line when gates.integration_line is on
         self.check_files = True                            # gates.integration_check_files: the invariant of bt_integration_invariant
 
@@ -94,7 +95,8 @@ class PredecessorIntegrator:
              repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
              earlier_of: Callable[[str], list[str]] | None = None,
              start_base_of: Callable[[str], str | None] | None = None,
-             on_event: Callable[..., None] | None = None) -> None:
+             on_event: Callable[..., None] | None = None,
+             on_conflict: Callable[..., None] | None = None) -> None:
         """`accepted()` -> {task_id: accepted attempt id} (read once per call); `snapshot_of(attempt_id)` -> its snapshot commit sha
         (None when the handoff has none; the sha of an EMPTY handoff is the base itself and merges as a no-op).
         `earlier_of(task_id)` -> the attempts whose accepted results an audit sent back, newest first: when a redone task
@@ -103,7 +105,8 @@ class PredecessorIntegrator:
         first parent); `on_event(kind, **fields)` hears about every repair the invariant makes (`bt_interventions`)."""
         self._bound = {"plan": plan, "accepted": accepted, "snapshot_of": snapshot_of, "repo_of": repo_of,
                        "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
-                       "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event}
+                       "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event,
+                       "on_conflict": on_conflict}
 
     def attach_line(self, line) -> None:
         """Make the integration line authoritative (REQ-028): new attempts start from its tip and acceptance is checked
@@ -496,7 +499,9 @@ class PredecessorIntegrator:
             if done.returncode == 1:
                 done = self._merge_over_earlier_result(repo, contains, current, sha, owners, snapshot_of) or done
             if done.returncode == 1:
-                files = [line for line in done.stdout.splitlines()[1:] if line.strip()][:6]
+                every = [line.strip() for line in done.stdout.splitlines()[1:] if line.strip()]
+                self._conflict_seen(task_id, current_task, tid, every)
+                files = every[:6]
                 raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: who clashes comes first
                                        f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"[:170])
             if done.returncode:
@@ -507,6 +512,19 @@ class PredecessorIntegrator:
             current_task = f"{current_task}+{tid}"
             members.append(tid)
         return current
+
+    def _conflict_seen(self, task_id: str, left: str, right: str, files: list[str]) -> None:
+        """Hand the FULL list of clashing files to whoever keeps evidence, once per distinct clash (the message that travels is
+        clipped; the repair needs every path)."""
+        notify = (self._bound or {}).get("on_conflict")
+        key = (task_id, left, right, tuple(files))
+        if notify is None or key in self._conflicts_seen:
+            return
+        self._conflicts_seen.add(key)
+        try:
+            notify(task=task_id, left=left, right=right, files=files)
+        except Exception:  # noqa: BLE001 - evidence keeping never stops an integration
+            LOGGER.debug("conflict listener failed", exc_info=True)
 
     def _keep_newer_versions(self, repo: Path, tree: str, a: str, b: str, depth: int = 40, limit: int = 400) -> str:
         """A clean merge can still lose a fix. Snapshots are whole trees, so a stale one (built before a redo) carries

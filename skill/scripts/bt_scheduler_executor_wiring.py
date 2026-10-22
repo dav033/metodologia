@@ -212,7 +212,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                            accepted=lambda: api._accepted_attempts(scheduler),
                            snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                            earlier_of=lambda task: api._earlier_attempts(scheduler, task),
-                           start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard)
+                           start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                           on_conflict=lambda **fields: bt_interventions.record_conflict(rdir, run=identity, **fields))
             port.base_ref = integrate.base_ref
             import bt_config
             integrate.check_files = bt_config.get("gates.integration_check_files", True) is not False

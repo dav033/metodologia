@@ -37,8 +37,21 @@ def _ceiling() -> int:
     return bt_rework_impact.ceiling()
 
 
-def _run_config():
-    """Operating limits of a run. A run without a human needs retries: three attempts per task unless configured."""
+LEGACY_EXCLUSIVE_SCOPES = ("large_change", "full_feature", "full_system")
+
+
+def _in_flight_without_line(rdir: Path | None) -> bool:
+    """A run that already accepted work through the predecessor merge (no `RUN.integration-line`): its tasks were never
+    integrated with each other, so letting large tasks overlap would multiply the clashes the line is there to resolve."""
+    if rdir is None or (Path(rdir) / "RUN.integration-line").exists():
+        return False
+    return adapter.authority(rdir) == adapter.AUTHORITY and adapter.run_db_path(rdir).exists()
+
+
+def _run_config(rdir: Path | None = None):
+    """Operating limits of a run. A run without a human needs retries: three attempts per task unless configured. With
+    `scheduler.exclusive_scopes` empty (the default since REQ-030) a run in flight on the predecessor merge keeps the
+    legacy exclusive scopes until it is on the integration line (an explicit owner setting always wins)."""
     import bt_config
 
     def number(key: str, default: int) -> int:
@@ -47,6 +60,9 @@ def _run_config():
 
     scopes = bt_config.get("scheduler.exclusive_scopes", [])
     scopes = tuple(s for s in scopes if isinstance(s, str) and s) if isinstance(scopes, list) else ()
+    explicit = isinstance(bt_config._stored().get("scheduler"), dict) and "exclusive_scopes" in bt_config._stored()["scheduler"]
+    if not scopes and not explicit and _in_flight_without_line(rdir):
+        scopes = LEGACY_EXCLUSIVE_SCOPES
     return adapter.core.Config(max_attempts=number("scheduler.max_attempts", 3),
                                max_parallel_tasks=number("scheduler.max_parallel_tasks", 3), exclusive_scopes=scopes,
                                max_reworks=number("gates.max_reworks", 2),
@@ -83,7 +99,7 @@ def _wire(project: str, rdir: Path):
         wiring = composition.wire(
             rdir, project=project, assignment=assignment, m2_ledger=ledger,
             repos=bt_workspace.repos(bt_core.ROOT, project, False), autostart=True,
-            config=_run_config(), executor_config=_executor_config(),
+            config=_run_config(rdir), executor_config=_executor_config(),
             integrate_predecessors=True,
             monitor_store_path=stores["m4"], recovery_store_path=stores["m5"],
             quality_store_path=stores["m6"],

@@ -113,6 +113,10 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
     if not enabled(rdir):
         return 0
     import bt_scheduler_decisions as decisions
+    import bt_scheduler_ops as ops
+
+    if ops.on_hold(rdir):               # an operator's move is in progress (REQ-029 F15: nothing is frozen under a hold)
+        return 0
 
     try:
         found = requests if requests is not None else decisions.open_requests(rdir)

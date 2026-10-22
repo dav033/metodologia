@@ -247,6 +247,18 @@ class RuntimeTests(unittest.TestCase):
 
 
 class RunLimits(unittest.TestCase):
+    def test_a_run_in_flight_on_the_predecessor_merge_keeps_the_legacy_exclusive_scopes_until_it_has_the_line(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(runtime.adapter, "authority", return_value=runtime.adapter.AUTHORITY), \
+                patch.object(runtime.adapter, "run_db_path", return_value=Path(tmp) / "run.db"):
+            rdir = Path(tmp) / "REQ-1"
+            rdir.mkdir()
+            self.assertEqual(runtime._run_config(rdir).exclusive_scopes, ())                      # no run database yet: a fresh run
+            (Path(tmp) / "run.db").write_text("")
+            self.assertEqual(runtime._run_config(rdir).exclusive_scopes, runtime.LEGACY_EXCLUSIVE_SCOPES)   # in flight, no line
+            (rdir / "RUN.integration-line").write_text("on")
+            self.assertEqual(runtime._run_config(rdir).exclusive_scopes, ())                      # on the line: parallel by surface
+            self.assertEqual(runtime._run_config().exclusive_scopes, ())
+
     def test_parallelism_and_exclusive_scopes_reach_the_core_and_the_executor_ceiling(self):
         import bt_config
         import bt_scheduler_run as run

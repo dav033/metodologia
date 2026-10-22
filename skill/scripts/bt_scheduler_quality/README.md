@@ -80,6 +80,19 @@ is covered and all provenance/integration guards pass. A completed nonzero comma
 dependency, missing evidence or unavailable sandbox is NEEDS_REVIEW. M1 rejection/error remains in the M6 outbox
 until reconciled or is marked stale with the actual M1 response.
 
+## Proportional verification (REQ-030)
+
+- **Pass cache** (`reuse.py`, `QualityPolicy.cache_seconds`, default one day): a check that passed on this exact git tree
+  with the same command and the same operator environment is not run again; its recorded output is returned with a note.
+  Failures are never reused. **Expensive checks last** (`defer_expensive`, `expensive_check_seconds`): a check that took
+  that long the last time, or that looks like a whole suite (`unittest discover -s tests`, `npm run gate`), runs after the
+  cheaper ones and is skipped (`CHECK_DEFERRED`) once one of them failed: the verdict is FAIL either way.
+- **Mixed evidence** (`mixed_evidence`, default on): a criterion may be backed by several checks with its exact text as
+  purpose; it passes when every command passes and every `manual` check carries an attestation receipt. The engine
+  learns about receipts through the `attestations(order, spec)` port; `bt_attestation` mints them (`scheduler-op REQ
+  attest TASK`, HMAC-sealed, bound to task + purpose + value + expected) and the receipt digests go into the evidence
+  manifest. `QualityStore.retry_attested` requeues an open review that only waited for manual evidence, once.
+
 ## Process isolation
 
 Command checks run in bubblewrap with unshared mount, network, PID, IPC and UTS namespaces, all capabilities dropped,
