@@ -55,3 +55,24 @@ Open the frontend origin, sign in as the allowed GitHub account, confirm the sna
 Check `journalctl -u bitacora-gateway -n 50`.
 
 Rollback: run the rollbacks of steps 6 to 3 in order if sign-in or the snapshot fail.
+
+## Full panel in production (panel parity)
+
+`https://flow-remote.vercel.app/` serves the same pages and actions as the local panel (`/`, `/p/<project>/...`, `/flow`,
+`/plans`, `/metrics`, `/learnings`, `/now`, `/live`, `/go/...`), behind the `dav033` GitHub login. The remote control
+stays at `/remote`; the panel pages carry a fixed "Remoto" link and the remote page has a "Panel" link.
+
+Path of a request: browser → Vercel (rewrites the panel paths to the gateway when `PANEL_PROXY=1`) → gateway
+(`panel_proxy.py`: session, rate limits, redaction, shim injection) → laptop listener `/api/remote/v1/panel/<path>`
+(`bt_remote_panel.py`: allow-list of GET pages and POST actions, then the panel's own handlers) → response.
+
+Guards, in order: no session → 302 to login (HTML) or 401; writes need the `X-Flow-Request` header, the frontend
+Origin and a typed `CONFIRMAR` bound to session, URL and body (single use, 120 s; 428 returns the challenge; the shim
+shows the prompt); the laptop only runs allow-listed routes, rejects traversal, caps POST bodies at 1 MB, keeps the
+panel's own token check and appends one line per action to `STATE/remote-panel-audit.jsonl`; responses go through a
+secret redactor. `tests/test_remote_panel.py` fails when a top-level route of `bt_server.py` has no entry in the
+allow-list, so a new panel page cannot ship without its production counterpart.
+
+Operate: `PANEL_PROXY=1` is a Vercel production env var (remove it and redeploy to return to the remote control only).
+Rollback of the gateway is the usual `previous` symlink; the laptop listener runs a pinned copy chosen in the
+`bitacora-remote-api.service.d/exec.conf` drop-in.
