@@ -246,7 +246,7 @@ def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, di
         criteria.append(criterion)
         for command in owner_checks:
             row = {"type": "command", "value": command["command"], "purpose": criterion,
-                   "expected": "pass", "created_by": task_id, "category": "functional"}
+                   "created_by": task_id, "category": "functional"}
             if row not in verification:
                 verification.append(row)
     details = "\n".join(

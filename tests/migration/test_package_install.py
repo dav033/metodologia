@@ -89,7 +89,7 @@ class WheelContentsTests(PackageCase):
                          "bt_scheduler_recovery/README.md", "bt_scheduler_recovery_adapter.py",
                          "bt_scheduler_quality/__init__.py", "bt_scheduler_quality/contracts.py",
                          "bt_scheduler_quality/api-contract.json", "bt_scheduler_quality/README.md",
-                         "bt_scheduler_quality_adapter.py",
+                         "bt_scheduler_quality_adapter.py", "bt_scheduler_quality_orders.py",
                          "bt_scheduler_executor_wiring.py", "bt_scheduler_retry.py", "bt_cli_scheduler_recovery.py"):
             self.assertIn(required, names)
         self.assertFalse([n for n in names if "/tests/" in n or n.startswith("tests/") or "ops_" in n])

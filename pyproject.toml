@@ -209,6 +209,7 @@ py-modules = [
   "bt_scheduler_plan_compat",
   "bt_scheduler_plan_routing",
   "bt_scheduler_quality_adapter",
+  "bt_scheduler_quality_orders",
   "bt_scheduler_quota_preflight",
   "bt_scheduler_recovery_adapter",
   "bt_scheduler_recovery_lifecycle",

@@ -25,6 +25,11 @@ import bt_audit_gate
 from bt_recovery_evidence import audit_observation_from_ledger, recovery_coverage_problems
 from bt_scheduler_quality.snapshot import SnapshotResolver, SnapshotSource
 from bt_scheduler_quality.store import QualityStore
+from bt_scheduler_quality_orders import (
+    matches_approved_plan as _matches_approved_plan,
+    order_mapping as _order_mapping,
+    to_m1_order as _to_m1_order,
+)
 from bt_scheduler_recovery_adapter import (EvidenceUnavailable, integration_problem, refusal_detail,
                                            publish_or_raise)
 
@@ -813,62 +818,6 @@ def _build_snapshot_source(
         )
     except (OSError, ValueError):
         return None
-
-
-def _order_mapping(order: m1.VerifyOrder) -> dict[str, object]:
-    if not isinstance(order, m1.VerifyOrder):
-        raise QualityError(
-            "ORDER_INVALID", "M1 supplied an invalid VerifyOrder instance"
-        )
-    return {
-        "idempotency_key": order.idempotency_key,
-        "plan_id": order.plan_id,
-        "revision": order.revision,
-        "task_id": order.task_id,
-        "attempt_id": order.attempt_id,
-        "token": order.token,
-        "acceptance_criteria": list(order.acceptance_criteria),
-        "verification": [
-            dict(item) if isinstance(item, Mapping) else item
-            for item in order.verification
-        ],
-    }
-
-
-def _to_m1_order(order: VerifyRequest) -> m1.VerifyOrder:
-    return m1.VerifyOrder(
-        order.idempotency_key,
-        order.plan_id,
-        order.revision,
-        order.task_id,
-        order.attempt_id,
-        order.token,
-        order.acceptance_criteria,
-        tuple(item.to_dict() for item in order.verification),
-    )
-
-
-def _matches_approved_plan(
-    core: m1.SchedulerCore, order: m1.VerifyOrder, parsed: VerifyRequest
-) -> bool:
-    plan = core.plan
-    if order.plan_id != plan.plan_id or order.revision != plan.revision:
-        return False
-    try:
-        task = plan.task(order.task_id)
-        expected = VerifyRequest.from_mapping(
-            {
-                **_order_mapping(order),
-                "acceptance_criteria": list(task.acceptance_criteria),
-                "verification": [dict(item) for item in task.verification],
-            }
-        )
-    except (QualityError, ValueError, TypeError):
-        return False
-    return (
-        parsed.acceptance_criteria == expected.acceptance_criteria
-        and parsed.verification == expected.verification
-    )
 
 
 def _retry_is_due(last_response: object, attempts: object, now: datetime) -> bool:

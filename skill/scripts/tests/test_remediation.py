@@ -57,6 +57,20 @@ BASE = plan(task("T1"), task("T2", ["T1"], paths=["src/two.py"]), task("T3", ["T
 
 
 class Build(unittest.TestCase):
+    def test_generated_repair_checks_are_admitted_by_m6(self):
+        from bt_scheduler_quality.contracts import VerifyRequest
+
+        revised = rem.build_revision(BASE, "T4", [finding("F1", ["T1"])])
+        repair = next(t for t in revised["tasks"] if t["id"].startswith("T4."))
+        request = VerifyRequest.from_mapping({
+            "idempotency_key": "repair-verify", "plan_id": revised["plan_id"],
+            "revision": revised["revision"], "task_id": repair["id"],
+            "attempt_id": "att-1", "token": 1,
+            "acceptance_criteria": repair["acceptance_criteria"],
+            "verification": repair["verification"],
+        })
+        self.assertEqual(len(request.verification), len(repair["verification"]))
+
     def test_findings_become_tasks_after_the_audits_prerequisites_and_the_audit_waits_for_them(self):
         revised = rem.build_revision(BASE, "T4", [finding("F1", ["T1"], summary="Login returns 404"),
                                                   finding("F2", ["T3"], severity="critical")])
