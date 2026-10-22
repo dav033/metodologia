@@ -139,11 +139,30 @@ class RetryTests(unittest.TestCase):
         ])
         moves = []
         with patch.object(ops, "status", side_effect=lambda *a: next(views)), \
-                patch.object(ops, "apply", side_effect=lambda p, r, d, action, target, why: moves.append((action, target)) or [action]), \
+                patch.object(ops, "apply", side_effect=lambda p, r, d, action, target, why, **kw: moves.append((action, target)) or [action]), \
                 patch.object(ops.time, "sleep"):
             lines = ops.retry("p", "REQ-001", rdir, "T3", "why")
         self.assertEqual(moves, [("cancel-attempt", "att-0007"), ("reopen", "T3")])
         self.assertEqual(lines, ["cancel-attempt", "reopen"])
+
+    def test_retry_accepts_a_task_already_ready_after_an_operator_reopen(self):
+        with patch.object(ops, "status", return_value={"live_attempts": [], "blocked_tasks": [],
+                                                         "task_states": {"T3": "ready"}}), \
+                patch.object(ops, "apply") as apply, patch.object(ops.time, "sleep") as sleep:
+            lines = ops.retry("p", "REQ-001", Path("/nonexistent"), "T3", "why")
+        self.assertEqual(lines, ["T3: already ready"])
+        apply.assert_not_called()
+        sleep.assert_not_called()
+
+    def test_retry_reopens_a_task_already_recovering_without_waiting_for_blocked(self):
+        with patch.object(ops, "status", return_value={"live_attempts": [], "blocked_tasks": [],
+                                                         "task_states": {"T3": "recovering"}}), \
+                patch.object(ops, "apply", return_value=["reopen"]) as apply, patch.object(ops.time, "sleep") as sleep:
+            lines = ops.retry("p", "REQ-001", Path("/nonexistent"), "T3", "why")
+        apply.assert_called_once_with("p", "REQ-001", Path("/nonexistent"), "reopen", "T3", "why",
+                                      expected_task="T3", expected_task_state=None)
+        self.assertEqual(lines, ["reopen"])
+        sleep.assert_not_called()
 
 
 class AgentKill(unittest.TestCase):

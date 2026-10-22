@@ -69,6 +69,7 @@ def _wire(project: str, rdir: Path):
     stores = _required_module_stores(db_path, run_id)
     import bt_plan_adapter
     assignment = adapter.DecisionAssignmentPort(project, ledger, laya_root=bt_core.ROOT / ".state" / "laya")
+    assignment.run_dir = rdir
     if hasattr(assignment, "classification_overlay"):      # M2 decides with the classification in force (amendments)
         assignment.classification_overlay = lambda: bt_plan_adapter.effective_overrides(rdir)
     wiring = None

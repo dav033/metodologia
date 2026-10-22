@@ -1,0 +1,21 @@
+# API host only. The browser never calls this host: Vercel rewrites same-origin /api/* on the frontend host to it.
+# GitHub's OAuth callback is registered on the FRONTEND origin (<FLOW_FRONTEND_ORIGIN>/api/auth/callback), never here,
+# because the state and session cookies are host-only cookies of the frontend host.
+flow-api.185-147-157-25.sslip.io {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+	request_body {
+		max_size 300KB
+	}
+	# Caddy runs in Docker; 127.0.0.1 would be the container itself.
+	reverse_proxy 172.20.0.1:8790 {
+		flush_interval -1
+		transport http {
+			response_header_timeout 0
+		}
+	}
+}

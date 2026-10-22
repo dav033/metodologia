@@ -20,6 +20,8 @@ class Boundary(unittest.TestCase):
 
     ALLOWED_USERS = {
         "bt_plan_adapter.py",
+        "bt_remote_edit.py",     # remote edit-brief is a planner client: it applies plan revisions through bt_planner
+        "test_remote_events.py", "test_remote_recovery.py",   # their fixtures build planner revisions
         "test_plan_adapter_evidence.py",
         "test_plan_boundary.py",
         "test_plan_integration.py",

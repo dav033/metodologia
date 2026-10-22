@@ -1,0 +1,14 @@
+[Unit]
+Description=Reverse SSH tunnel for the Bitacora remote API
+After=network-online.target bitacora-remote-api.service
+Wants=network-online.target
+Requires=bitacora-remote-api.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ssh -NT -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 127.0.0.1:18765:127.0.0.1:8766 advin
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

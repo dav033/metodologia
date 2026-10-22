@@ -61,7 +61,7 @@ class Boundary(unittest.TestCase):
     ALLOWED_USERS = frozenset({"bt_scheduler_adapter.py", "test_scheduler_integration.py",
                                "test_scheduler_decision_sources.py", "test_scheduler_decision_integration.py",
                                "test_plan_contract_compat.py",
-                               "test_package_install.py"})
+                               "test_package_install.py", "test_remote_commands.py", "test_remote_recovery.py"})
 
     def names_in(self, path: Path) -> set[str]:
         found = set()

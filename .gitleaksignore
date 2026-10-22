@@ -143,3 +143,9 @@ bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks/source-
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks/source-hashes-before.json:sumologic-access-token:3121
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks/source-hashes-before.json:sumologic-access-token:3129
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks/source-hashes-before.json:sumologic-access-token:607
+# Reviewed 2026-10-21 (REQ-027 merge): idempotency key fixture and synthetic values quoted in the audit document.
+remote/gateway/tests/test_telegram_bot.py:generic-api-key:124
+remote/docs/audit.md:generic-api-key:132
+remote/docs/audit.md:generic-api-key:590
+remote/docs/audit.md:generic-api-key:652
+remote/docs/audit.md:generic-api-key:669

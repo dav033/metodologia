@@ -16,3 +16,5 @@ bitacora/**/*.webp
 bitacora/**/*.gif
 # setuptools build output
 build/
+.vercel
+.env*

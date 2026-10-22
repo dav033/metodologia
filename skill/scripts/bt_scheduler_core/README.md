@@ -84,7 +84,7 @@ The outbox is bounded: past 1000 items, settled orders of closed attempts are pr
 
 ## States
 
-Task: `pending → ready → active → completed`; `active → recovering → ready | blocked`; `blocked → ready` only by an
+Task: `pending → ready → active → completed`; `active → recovering → ready | blocked`; `blocked` and `recovering` may move to `ready` by an
 authorised `reopen`; `completed → pending` only by `rework`; `cancelled`. *Attempt*: `reserved → dispatched → running → verifying → accepted`, or `failed |
 rejected | cancelled | uncertain`. Run: `running | paused | completed | blocked | cancelled` (derived).
 `completed` needs an **independent verdict, correlated to the current attempt, with evidence**; an executor's "finished"

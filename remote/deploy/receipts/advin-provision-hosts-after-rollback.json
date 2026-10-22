@@ -1,0 +1,117 @@
+{
+  "captured_at_utc": "2026-10-21T21:34:23+00:00",
+  "git_sha_observed": "430ea7e6cbb7fefef6493e2b3f0977791d10a4de",
+  "source": "Fresh HTTPS probes after restoring the timestamped Caddyfile backup, removing units, and restoring the original release main.py during rollback rehearsal",
+  "probe": "Same SNI GET / probe as snapshot-before; redirects disabled",
+  "hosts": [
+    {
+      "host": "api.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=api.marosconstruction.com",
+      "first_byte_seconds": 0.267009,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "marketplace.185-147-157-25.sslip.io",
+      "status": 401,
+      "tls_subject": "commonName=marketplace.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.266207,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "lotm.185-147-157-25.sslip.io",
+      "status": 200,
+      "tls_subject": "commonName=lotm.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.274043,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "lotm.marosconstruction.com",
+      "status": 200,
+      "tls_subject": "commonName=lotm.marosconstruction.com",
+      "first_byte_seconds": 0.291478,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "185-147-157-25.sslip.io",
+      "status": 307,
+      "tls_subject": "commonName=185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.284952,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "fichas-fotos.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=fichas-fotos.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.282711,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "training-api.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=training-api.marosconstruction.com",
+      "first_byte_seconds": 0.265495,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "training-mcp.marosconstruction.com",
+      "status": 404,
+      "tls_subject": "commonName=training-mcp.marosconstruction.com",
+      "first_byte_seconds": 0.264652,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "files.marosconstruction.com",
+      "status": 403,
+      "tls_subject": "commonName=files.marosconstruction.com",
+      "first_byte_seconds": 0.274814,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "api-decoracion.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=api-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.262879,
+      "challenge_detected": false,
+      "server": "Caddy"
+    },
+    {
+      "host": "voz-decoracion.185-147-157-25.sslip.io",
+      "status": 404,
+      "tls_subject": "commonName=voz-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.261601,
+      "challenge_detected": false,
+      "server": "Caddy"
+    },
+    {
+      "host": "almacen-decoracion.185-147-157-25.sslip.io",
+      "status": 403,
+      "tls_subject": "commonName=almacen-decoracion.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.263211,
+      "challenge_detected": false,
+      "server": ""
+    },
+    {
+      "host": "flow-api.185-147-157-25.sslip.io",
+      "status": 502,
+      "tls_subject": "commonName=flow-api.185-147-157-25.sslip.io",
+      "first_byte_seconds": 0.255529,
+      "challenge_detected": false,
+      "server": "Caddy"
+    }
+  ],
+  "comparison": {
+    "matched_status_and_tls_subject": true,
+    "changed_hosts": [],
+    "first_byte_timings_recorded": true
+  }
+}

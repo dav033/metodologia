@@ -28,6 +28,8 @@ class RuntimeTests(unittest.TestCase):
         self.scheduler.snapshot = lambda: SimpleNamespace(
             status="blocked", plan_id="REQ-042", revision=1, plan_sha256="a" * 64,
             tasks={}, attention=[])
+        self.scheduler.read = lambda fn: fn(SimpleNamespace(
+            config=SimpleNamespace(max_attempts=3), state=SimpleNamespace(tasks={})))
         self.scheduler._stalled = lambda snapshot: True
         self.scheduler.step = lambda: SimpleNamespace(progress=False)
         self.scheduler.audit_log = list

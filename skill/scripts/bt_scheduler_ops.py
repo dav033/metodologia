@@ -161,6 +161,8 @@ def status(project: str, req: str, rdir: Path) -> dict:
     except Exception:  # noqa: BLE001 - status must answer even when the run has no readable state
         out["open_decisions"] = []
     out["blocked_tasks"] = [t for t, r in doc.get("tasks", {}).items() if r.get("state") == "blocked"]
+    out["task_states"] = {task: record.get("state") for task, record in doc.get("tasks", {}).items()
+                          if isinstance(record, dict) and isinstance(record.get("state"), str)}
     return out
 
 
@@ -232,7 +234,8 @@ def direct_continuation(rdir: Path, sch, task_id: str, attempt_id: str) -> str:
 
 
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
-          keep_held: bool = False, only: bool = False, option: str = "") -> list[str]:
+          keep_held: bool = False, only: bool = False, option: str = "", *, expected_task: str = "",
+          expected_task_state: str | None = None, expected_attempt_state: str | None = None) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -251,6 +254,22 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
             action = "revise"
             why = f"{why}: {built['audit']} findings remediated by {', '.join(built['tasks'])}"
         with _opened(rdir) as sch:
+            if expected_task_state is not None:
+                actual_state = sch.read(lambda ctx: ctx.state.tasks.get(expected_task).state
+                                        if expected_task in ctx.state.tasks else None)
+                if actual_state != expected_task_state:
+                    raise core.SchedulerError(
+                        "STALE_PRECONDITION",
+                        f"task {expected_task} changed from {expected_task_state} to {actual_state}",
+                    )
+            if expected_attempt_state is not None:
+                actual_state = sch.read(lambda ctx: ctx.state.attempts[target].state
+                                        if target in ctx.state.attempts else None)
+                if actual_state != expected_attempt_state:
+                    raise core.SchedulerError(
+                        "STALE_PRECONDITION",
+                        f"attempt {target} changed from {expected_attempt_state} to {actual_state}",
+                    )
             if action == "cancel-attempt":
                 lines += cancel_attempts(project, req, rdir, sch, [target], why)
             elif action == "reopen":
@@ -292,19 +311,44 @@ def _refresh_projection(rdir: Path) -> bool:
     return True
 
 
-def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0) -> list[str]:
-    """Cancel the task's live attempt and have it tried again. M5 blocks a cancelled task once the owner runs, and only
-    then can it be reopened, so this waits for that and reopens it."""
-    attempts = [a["attempt"] for a in status(project, req, rdir)["live_attempts"] if a["task"] == task]
+def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0,
+          expected_task_state: str | None = None) -> list[str]:
+    """Cancel a live attempt and reopen its task once Scheduler makes it recoverable.
+
+    A task reopened by a separate operator move is already ready; preserve that state instead of waiting for a block
+    which will never arrive. A task already recovering can be reopened directly.
+    """
+    current = status(project, req, rdir)
+    task_state = current.get("task_states", {}).get(task)
+    if expected_task_state is not None and task_state != expected_task_state:
+        raise core.SchedulerError(
+            "STALE_PRECONDITION", f"task {task} changed from {expected_task_state} to {task_state}",
+        )
+    attempts = [a["attempt"] for a in current["live_attempts"] if a["task"] == task]
     lines = []
     for attempt in attempts:
-        lines += apply(project, req, rdir, "cancel-attempt", attempt, reason)
+        lines += apply(project, req, rdir, "cancel-attempt", attempt, reason,
+                       expected_task=task, expected_task_state=expected_task_state)
+        expected_task_state = None
+    if task_state == "ready":
+        return lines + [f"{task}: already ready"]
+    if task_state == "recovering":
+        return lines + apply(project, req, rdir, "reopen", task, reason,
+                             expected_task=task, expected_task_state=expected_task_state)
+    if task_state == "blocked" or task in current.get("blocked_tasks", []):
+        return lines + apply(project, req, rdir, "reopen", task, reason,
+                             expected_task=task, expected_task_state=expected_task_state)
     deadline = time.monotonic() + wait
-    while task not in status(project, req, rdir)["blocked_tasks"]:
+    while True:
+        current = status(project, req, rdir)
+        task_state = current.get("task_states", {}).get(task)
+        if task_state == "ready":
+            return lines + [f"{task}: already ready"]
+        if task_state == "recovering" or task_state == "blocked" or task in current.get("blocked_tasks", []):
+            return lines + apply(project, req, rdir, "reopen", task, reason)
         if time.monotonic() > deadline:
             return lines + [f"{task}: not blocked after {int(wait)} s; reopen it by hand if it needs to"]
         time.sleep(2)
-    return lines + apply(project, req, rdir, "reopen", task, reason)
 
 
 def resume(project: str, req: str, rdir: Path) -> str:

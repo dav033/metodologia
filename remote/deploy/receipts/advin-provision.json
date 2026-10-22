@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "name": "advin-provision",
+  "deployed_git_sha": "430ea7e6cbb7fefef6493e2b3f0977791d10a4de",
+  "steps": [
+    {
+      "name": "snapshot-before",
+      "command": "HTTPS GET / probe of all 13 live Caddy site hosts; record status, TLS subject, and first-byte seconds",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-backup",
+      "command": "cp -a /opt/edge-proxy/Caddyfile /opt/edge-proxy/Caddyfile.bak.20261021T213358Z",
+      "exit_code": 0
+    },
+    {
+      "name": "service-layout",
+      "command": "verify flow service user, release and state directories, empty mode-0600 env skeleton; install stopped systemd units",
+      "exit_code": 0
+    },
+    {
+      "name": "systemd-verify",
+      "command": "systemd-analyze verify /etc/systemd/system/flow-gateway.service /etc/systemd/system/flow-bot.service",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-validate",
+      "command": "docker exec caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile",
+      "exit_code": 0
+    },
+    {
+      "name": "caddy-reload",
+      "command": "docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile",
+      "exit_code": 0
+    },
+    {
+      "name": "other-hosts-check",
+      "command": "HTTPS GET / probes after reload; compare every pre-change host status and TLS subject",
+      "exit_code": 0
+    },
+    {
+      "name": "rollback-rehearsal",
+      "command": "restore timestamped Caddyfile backup, remove both units, validate and reload Caddy, compare hosts, then reinstall units stopped",
+      "exit_code": 0
+    }
+  ],
+  "checks": {
+    "snapshot-before": {
+      "ok": true,
+      "detail": "13 live Caddy site hosts recorded before changes, including status, TLS subject, and first-byte seconds. No captcha or Cloudflare challenge was detected."
+    },
+    "service-layout": {
+      "ok": true,
+      "detail": "flow is a no-login system user (uid 993); releases/current and SQLite state directories exist; env is mode 0600 and byte-identical to the empty tracked skeleton; gateway binds 172.20.0.1:8790, which had no listener; both hardened units pass systemd-analyze verify and remain inactive/disabled until T23."
+    },
+    "other-hosts-unchanged": {
+      "ok": true,
+      "detail": "All 13 pre-change hosts, including both lotm hostnames and the already-configured flow-api host, retained their HTTP status and TLS subject after Caddy reload. First-byte timings are recorded in both probe evidence files."
+    },
+    "rollback-rehearsed": {
+      "ok": true,
+      "detail": "Restored the timestamped Caddyfile backup, removed both units, validated and reloaded Caddy, and confirmed all 13 host statuses and TLS subjects still matched the snapshot. Reinstalled both units stopped and disabled for the final T20 state."
+    }
+  },
+  "evidence_files": [
+    "advin-provision-snapshot-before.json",
+    "advin-provision-hosts-after.json",
+    "advin-provision-hosts-after-rollback.json"
+  ],
+  "operational_notes": [
+    "The required flow-api Caddy block was already present in the live Caddyfile before this task's changes and matched upstream 172.20.0.1:8790 with flush_interval -1. It was backed up, validated, reloaded, and restored during the rollback rehearsal.",
+    "The gateway and bot units are installed but inactive and disabled. The gateway release main.py was updated to honor FLOW_RUN_BOT=0; the gateway unit sets that flag, while flow-bot.service runs bot_main.py."
+  ]
+}

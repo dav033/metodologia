@@ -123,6 +123,8 @@ def main() -> None:
     sub.add_parser("audit", help="prepare a read-only inventory for a workspace architecture audit")
     p_serve = sub.add_parser("serve", help="run the local web server in the foreground")
     p_serve.add_argument("--port", type=int)
+    p_remote_serve = sub.add_parser("serve-remote", help="run the loopback-only remote API listener")
+    p_remote_serve.add_argument("--port", type=int)
     p_graph = sub.add_parser("graph", help="open the trace graph of the project in the browser (starts the server)")
     p_graph.add_argument("--no-open", action="store_true")
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
@@ -177,8 +179,10 @@ def main() -> None:
         except Exception as exc:  # a broken hook must never break the session
             print(f"[bitácora] hook error: {exc}", file=sys.stderr)
         return
-    if a.cmd == "serve":
-        from bt_server import DEFAULT_PORT, serve
+    if a.cmd in ("serve", "serve-remote"):
+        from bt_server import DEFAULT_PORT, REMOTE_PORT, serve, serve_remote
+        if a.cmd == "serve-remote":
+            return serve_remote(a.port or REMOTE_PORT)
         return serve(a.port or DEFAULT_PORT)
     if a.cmd in ("web", "graph"):
         import webbrowser

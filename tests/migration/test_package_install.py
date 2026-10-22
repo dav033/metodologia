@@ -106,6 +106,19 @@ class WheelContentsTests(PackageCase):
 
 
 class InstalledRuntimeTests(PackageCase):
+    def test_installed_remote_retry_and_edit_dispatch_modules_are_present(self) -> None:
+        done = self.installed("-c", (
+            "import bt_remote_commands as commands,bt_route_pins,bt_remote_edit;"
+            "handlers=commands.dispatch_handlers();"
+            "assert 'retry' in handlers and 'edit-brief' in handlers;"
+            "assert bt_route_pins.normalize({'route':'route-a'})=={'route':'route-a'};"
+            "\ntry: handlers['retry']('bad-target',{'task':'T1'},None)\nexcept ValueError: pass\nelse: raise AssertionError('retry dispatch did not validate its target');"
+            "\ntry: handlers['edit-brief']('demo/REQ-001',{})\nexcept ValueError: pass\nelse: raise AssertionError('edit dispatch did not require confirmation');"
+            "print(bt_route_pins.__file__,bt_remote_edit.__file__)"
+        ))
+        self.assertEqual(done.returncode, 0, done.stderr)
+        self.assertTrue(all(Path(path).is_relative_to(self.site) for path in done.stdout.split()))
+
     def test_benchmark_module_and_entry_point_run_from_the_installed_wheel(self) -> None:
         done = self.installed("-m", "plan_bench", "rubric")
         self.assertEqual(done.returncode, 0, done.stderr)
