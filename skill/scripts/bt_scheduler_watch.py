@@ -25,6 +25,7 @@ import bt_scheduler_adapter as adapter
 import bt_scheduler_ops as ops
 
 POLL_SECONDS = 5.0
+COORDINATE_SECONDS = 30.0
 HEAL_LIMIT = 3                # automatic answers of one kind per task before a person is asked again
 BACKOFF_START = 5.0
 BACKOFF_CAP = 300.0
@@ -43,7 +44,7 @@ class Watch:
                  free_bytes: Callable[[], int] | None = None, notify: Callable[[str, str], None] = bt_notify.notify,
                  log: Callable[[str], None] | None = None, announce: Callable[[], object] | None = None,
                  pending: Callable[[], int] | None = None, heal: Callable[[], bool] | None = None,
-                 capture: Callable[[], str] | None = None):
+                 capture: Callable[[], str] | None = None, coordinate: Callable[[], bool] | None = None):
         self.project, self.req, self.rdir = project, req, Path(rdir)
         self.now, self.sleep, self.notify = now, sleep, notify
         self.spawn = spawn or self._spawn
@@ -52,6 +53,7 @@ class Watch:
         self.pending = pending or self._pending
         self.heal = heal or self._heal
         self.capture = capture or self._capture
+        self.coordinate = coordinate or self._coordinate
         self.log = log or (lambda text: print(f"{time.strftime('%H:%M:%S')} {text}", flush=True))
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
@@ -78,8 +80,23 @@ class Watch:
         return adapter.authority(self.rdir) == adapter.AUTHORITY
 
     def _wait_owner_gone(self) -> None:
+        """Wait for the owner to end. A verification that waits for the coordinator's manual evidence keeps the owner ALIVE, so the
+        coordinator's turn (opt-in per project) also runs here, every COORDINATE_SECONDS, not only between owners."""
+        last = self.now()
         while ops.owner_pids(self.project, self.req):
             self.sleep(POLL_SECONDS)
+            if self.now() - last >= COORDINATE_SECONDS:
+                last = self.now()
+                try:
+                    self.coordinate()
+                except Exception as error:  # noqa: BLE001 - an extra: its failure never stops the watch
+                    self.log(f"coordinator failed ({type(error).__name__}: {error})")
+                last = self.now()
+
+    def _coordinate(self) -> bool:
+        import bt_coordinator
+
+        return bt_coordinator.cycle(self.project, self.req, self.rdir, log=self.log)
 
     def _fail(self, why: str) -> bool:
         """Record one failed owner; True when the budget is spent."""
