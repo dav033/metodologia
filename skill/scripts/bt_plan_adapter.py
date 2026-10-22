@@ -49,6 +49,22 @@ def plan_schema_version(plan_path: Path) -> str | None:
     return version[0] if version is not None else None
 
 
+def validate_candidate(plan: object) -> tuple[str, ...]:
+    """Validate an in-memory plan revision through the Planner contract without filesystem effects."""
+    report = planner.validate(plan)
+    return tuple(report.errors)
+
+def second_auditor_required(plan: object) -> bool:
+    """Expose the owner cross-check gate to pure plan transformations."""
+    if not isinstance(plan, dict) or not isinstance(plan.get("schema_version"), str):
+        return False
+    match = _SCHEMA_VERSION_RE.fullmatch(plan["schema_version"])
+    if match is None or tuple(int(match.group(index)) for index in (1, 2, 3)) < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
+        return False
+    import bt_config
+    return bool(bt_config.get("gates.second_auditor", True))
+
+
 def plan_schema_version_details(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
     """Return the syntactically valid version and parsed components for downstream compatibility checks."""
     return _schema_version(plan_path)

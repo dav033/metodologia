@@ -51,6 +51,13 @@ class RecoveryPortContract(unittest.TestCase):
         self.assertEqual(self.scheduler.snapshot().tasks["T1"]["state"], "blocked")
         self.assertNotIn("secret-not-to-persist", json.dumps(self.port.latest()))
 
+    def test_uncovered_recovery_surface_blocks_under_the_same_verification_case(self):
+        context = replace(self.context, cause="verification_rejected")
+        self.port._official = lambda _context: {"current": True, "manual_cancel": False,
+            "evidence": "verification_replan/blocked: web/page.ts lacks an independent check"}
+        proposal = self.port.propose(context)
+        self.assertEqual((proposal.action, proposal.reason), ("block", "verification_replan_blocked"))
+
     def test_cooldown_then_retry_has_one_decision_per_logical_round(self):
         first = self.port.propose(self.context)
         self.assertEqual(first.action, "wait")

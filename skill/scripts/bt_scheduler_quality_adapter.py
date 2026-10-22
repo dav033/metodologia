@@ -22,8 +22,11 @@ from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.review import ReviewerPort
 from bt_scheduler_quality.runner import SandboxRunner
 import bt_audit_gate
+from bt_recovery_evidence import audit_observation_from_ledger, recovery_coverage_problems
 from bt_scheduler_quality.snapshot import SnapshotResolver, SnapshotSource
 from bt_scheduler_quality.store import QualityStore
+from bt_scheduler_recovery_adapter import (EvidenceUnavailable, integration_problem, refusal_detail,
+                                           publish_or_raise)
 
 m1 = scheduler_adapter.core
 m3 = executor_adapter.m3
@@ -59,6 +62,8 @@ class QualityVerificationPort:
         revert_check: Callable[..., tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
         attestations: Callable[..., str | None] | None = None,
+        publish_audit_observation: Callable[[str, str, dict], None] | None = None,
+        publish_conflict_observation: Callable[[VerifyRequest, str, str, str], str] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -74,6 +79,8 @@ class QualityVerificationPort:
         self.unresolved_check = unresolved_check          # (task, snapshot) -> files still holding merge conflict markers
         self.revert_check = revert_check                  # (task, snapshot) -> files changed back to an older version
         self.remediate = remediate                        # (audit, attempt, findings) -> True when they became remediation tasks
+        self.publish_audit_observation = publish_audit_observation
+        self.publish_conflict_observation = publish_conflict_observation
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -338,7 +345,8 @@ class QualityVerificationPort:
             raise RuntimeError("the audited snapshot could not be compared with its base")
         return tuple(name for name in done.stdout.decode("utf-8", "replace").split("\0") if name)
 
-    def _audit_gate(self, order: VerifyRequest) -> bt_audit_gate.Gate | None:
+    def _audit_gate(self, order: VerifyRequest, *, evaluate_gate: bool = True,
+                    check_status: str = "PASS") -> bt_audit_gate.Gate | None:
         """None when the task is not an audit; otherwise the judgment of its findings ledger, whatever the checks said."""
         try:
             task = self.core.plan.task(order.task_id)
@@ -355,10 +363,21 @@ class QualityVerificationPort:
             return bt_audit_gate.Gate(
                 False, (f"an audit task must declare one *{bt_audit_gate.LEDGER_SUFFIX} file",), (), ()
             )
+        raw_ledger = self._read_ledger(order, path)
         gate = bt_audit_gate.evaluate(
-            self._read_ledger(order, path), [spec.id for spec in self.core.plan.tasks], order.task_id,
+            raw_ledger, [spec.id for spec in self.core.plan.tasks], order.task_id,
             self.audit_policy,
         )
+        if not gate.problems and raw_ledger is not None and self.publish_audit_observation is not None:
+            try:
+                source = self._snapshot_source(order)
+                status = "evaluated" if evaluate_gate and check_status == "PASS" else "not_run"
+                observation = audit_observation_from_ledger(order, source, raw_ledger, gate_status=status)
+                self.publish_audit_observation(order.task_id, order.attempt_id, observation)
+            except (UnicodeDecodeError, ValueError, TypeError, KeyError) as error:
+                raise RuntimeError("validated audit observation could not be published") from error
+        if not evaluate_gate:
+            return None
         stray = bt_audit_gate.stray_changes(self._read_changes(order), task.expected_paths) \
             if self.audit_policy.read_only else ()
         if stray:
@@ -380,6 +399,16 @@ class QualityVerificationPort:
         failed = [c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"]
         return bool(failed) and all(str(c.get("command") or "").find(path) >= 0 for c in failed)
 
+    def _recovery_coverage_gate(self, order: VerifyRequest, result: Mapping[str, Any]) -> bt_audit_gate.Gate | None:
+        """Rechecks changed recovery surfaces against an M3 map and actual M6 check records."""
+        problems = recovery_coverage_problems(self.core, order, result, self._resolver, self._snapshot_source,
+                                              self._changes_from_snapshot)
+        if problems is None:
+            return None
+        if problems:
+            return bt_audit_gate.Gate(False, problems, (), ())
+        return None
+
     def _rework_plan(self, gate: bt_audit_gate.Gate, order: VerifyRequest) -> tuple[tuple[str, ...], bool]:
         """(tasks to send back, cascade). `downstream`: the named tasks and everything that depends on them. `named`
         (default): the named tasks plus the `kind: test` tasks over them, because their result no longer proves anything;
@@ -394,25 +423,9 @@ class QualityVerificationPort:
         return tuple(spec.id for spec in plan.tasks if spec.id in ids), False
 
     def _integration_problem(self, order: VerifyRequest) -> str:
-        """Why the verified result cannot be combined with the accepted work around it ('' when it can). A check that
-        cannot run (no snapshot yet) is not a verdict: it returns ''."""
-        if self.integration_check is None and self.unresolved_check is None and self.revert_check is None:
-            return ""
-        try:
-            source = self._snapshot_source(order)
-            if not source:
-                return ""
-            left = self.unresolved_check(order.task_id, source.snapshot_sha) if self.unresolved_check else ()
-            if left:
-                return UNRESOLVED + ", ".join(left[:6])
-            back = self.revert_check(order.task_id, source.snapshot_sha, base=source.base_sha) if self.revert_check else ()
-            if back:
-                return REVERTED + ", ".join(back[:6])
-            return self.integration_check(order.task_id, order.attempt_id, source.snapshot_sha) \
-                if self.integration_check else ""
-        except Exception as error:  # noqa: BLE001 - an outage is not a reason to reject work
-            LOGGER.warning("integration check skipped (%s)", type(error).__name__)
-            return ""
+        """Run the M6 structural check at its fail-closed boundary (a missing snapshot or an outage is NOT a pass)."""
+        return integration_problem(lambda: self._snapshot_source(order), order.task_id, order.attempt_id,
+                                   self.integration_check, self.unresolved_check, self.revert_check)
 
     def _write_note(self, task_ids, text: str) -> None:
         for task_id in task_ids if self.rework_notes is not None else ():
@@ -556,17 +569,35 @@ class QualityVerificationPort:
                 )
                 return "pending"
             self._write_verify_note(order, result)
+            coverage_gate = self._recovery_coverage_gate(order, result) if accepted and isinstance(result, Mapping) else None
+            gate = coverage_gate
+            audit_kind = False
+            try:
+                audit_kind = self.core.plan.task(order.task_id).meta.get("kind") == "audit"
+            except m1.SchedulerError:
+                pass
             deferred = not accepted and result.get("status") == "FAIL" and self._only_ledger_checks_failed(order, result)
-            gate = self._audit_gate(order) if accepted or deferred else None
+            audit_gate = (self._audit_gate(order, evaluate_gate=accepted or deferred, check_status=str(result.get("status")))
+                          if audit_kind and result.get("status") in {"PASS", "FAIL"} else None)
             if deferred:
                 # the gate judges the ledger (and turns blocking findings into remediation); a check that asked the same
-                # question as an exit code cannot also stop the audit before the gate speaks. With nothing against the
-                # ledger, the failure of the check stands.
-                if gate is not None and not gate.ok:
+                # question as an exit code cannot also stop the audit before the gate speaks
+                if audit_gate is not None and not audit_gate.ok:
                     accepted = True              # rejected below, by the gate, with its evidence and its remediation
                 else:
-                    gate = None
-            clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
+                    audit_gate = None
+            if gate is None:
+                gate = audit_gate
+            elif audit_gate is not None and not audit_gate.ok:
+                gate = bt_audit_gate.Gate(False, (*gate.problems, *audit_gate.problems), audit_gate.blocking,
+                                          audit_gate.rework)
+            try:
+                clash = self._integration_problem(order) if accepted and (gate is None or gate.ok) else ""
+            except EvidenceUnavailable as error:
+                if str(error).startswith("evidence_unavailable:"):
+                    self.store.finish_delivery(request_key, "pending", str(error))
+                    return "pending"
+                raise
             give_way: tuple[str, ...] = ()
             if clash:
                 give_way = self._dependents_to_redo(clash, order.task_id)
@@ -575,7 +606,13 @@ class QualityVerificationPort:
                     self._write_note(give_way, _give_way_note(order.task_id, clash))
                 else:
                     accepted = False
-                    evidence = f"integration gate: {clash} | M6 evidence: {evidence}"[:2000]
+                    refusal = refusal_detail(self.core, clash, order.task_id)
+                    reference = publish_or_raise(self.publish_conflict_observation, order, clash,
+                                                 "ordinary_rework_refused", refusal)
+                    if reference is None:
+                        evidence = f"integration gate: {clash} | rework refusal: {refusal} | M6 evidence: {evidence}"[:2000]
+                    else:
+                        evidence = f"integration conflict evidence: {reference} | M6 evidence: {evidence}"[:2000]
                     self._write_note((order.task_id,), _unresolved_note(clash) if clash.startswith(UNRESOLVED)
                                      else _reverted_note(clash) if clash.startswith(REVERTED)
                                      else _integration_note(clash))
@@ -588,7 +625,8 @@ class QualityVerificationPort:
             if gate is not None and not gate.ok:
                 accepted = False
                 tail = " | the findings become remediation tasks; this audit runs again after them" if remediating else ""
-                evidence = f"{gate.summary()}{tail} | M6 evidence: {evidence}"[:2000]
+                prefix = "verification_replan/blocked: " if coverage_gate is not None and not coverage_gate.ok else ""
+                evidence = f"{prefix}{gate.summary()}{tail} | M6 evidence: {evidence}"[:2000]
             else:
                 gate = None
             if accepted:

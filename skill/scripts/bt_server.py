@@ -281,6 +281,7 @@ class Handler(BaseHTTPRequestHandler):
                    "decide": lambda p, r: api.decide(ROOT, p, r, form.get("request", ""), form.get("option", ""),
                                                      form.get("reason", "")),
                    "diagnose": lambda p, r: api.diagnose(ROOT, p, r, form.get("request", "")),
+                   "heal": lambda p, r: api.heal_control(ROOT, p, r, form.get("action", ""), form.get("case", "")),
                    "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
                    "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
         try:

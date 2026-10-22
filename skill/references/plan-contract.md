@@ -124,3 +124,11 @@ An approved revision is immutable, but the work reveals things. Two mechanisms, 
 
 `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` (the module alone, isolated copy included) and the
 methodology suite `python3 -m unittest discover -s tests` from `skill/scripts`.
+
+
+## Recovery revisions (REQ-029, REQ-030)
+A revision made by recovery or by the scheduler's self-healing (`source` `recovery`, `remediation`, `healing`) is an ordinary frozen
+revision: it only adds tasks (`T7.1`, `kind: implement`, built from evidence, verified by the owners' own checks) and prerequisites, or
+renames a check's `purpose` to its criterion's exact text; it never lowers a check or drops a criterion. `scheduler-op REQ heal revert CASE`
+freezes the next revision without the added task. Rebasing onto it keeps every accepted task whose own content is unchanged
+(`gates.rebase_cascade: content`).

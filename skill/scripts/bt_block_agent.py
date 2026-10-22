@@ -175,3 +175,140 @@ def spawn(project: str, req: str, rdir: Path, request_id: str) -> bool:
 def forget(rdir: Path, request_id: str) -> None:
     """Drop the stored answer so the next ask runs the agent again."""
     path(rdir, request_id).unlink(missing_ok=True)
+
+
+# --- recovery diagnosis: Planner-role, read-only, structured transport (REQ-029 T3) ------------------------------------
+# Separate from the owner-card advice above: no `diagnosis.*` profile/model defaults, no fallback to card JSON. The
+# transport returns UNTRUSTED bytes; only the M5 adapter parses `recovery-proposal/1`.
+
+RECOVERY_DIR = "RECOVERY.diagnoses"        # lives in `store`, never in the target run
+SECTION_BYTES = 32 * 1024
+EVIDENCE_BYTES = 512 * 1024
+RECOVERY_PROMPT = """You are the Planner role diagnosing why an automated run's task repeatedly failed audit.
+You have NO tools and NO connectors: use only the evidence below. Do not run or suggest running anything on your own;
+suggested commands are text for a later, separately authorized step. Do not answer any owner decision.
+Reply with ONE JSON object and nothing else (schema recovery-proposal/1) covering: the causal history of the failure,
+a check against the integrated tree (or state that integrated-tree evidence is unavailable), references to the evidence
+sections you relied on, supported actions from retry, wait, block, rework_findings, ordered prerequisites, the expected
+outcome, and falsifiable checks that would prove or refute your diagnosis.
+Cite only evidence that is present; say so when the evidence cannot support a claim.
+
+Request identity: {identity}
+
+Evidence ({count} sections, in order):
+{sections}
+"""
+ROUTE_KEYS = ("provider", "profile", "model", "authorized_by")
+
+
+def _sections(evidence: dict) -> list[str] | None:
+    """Full evidence as ordered bounded sections, or None when the bound cannot hold it (never truncated)."""
+    blob = json.dumps(evidence, sort_keys=True, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
+    if len(blob.encode("utf-8")) > EVIDENCE_BYTES:
+        return None
+    pieces: list[str] = []
+    piece: list[str] = []
+    piece_bytes = 0
+    for character in blob:
+        char_bytes = len(character.encode("utf-8"))
+        if piece and piece_bytes + char_bytes > SECTION_BYTES:
+            pieces.append("".join(piece))
+            piece = []
+            piece_bytes = 0
+        piece.append(character)
+        piece_bytes += char_bytes
+    pieces.append("".join(piece))
+    return [f"## retained evidence [{n}/{len(pieces)}]\n{piece}" for n, piece in enumerate(pieces, 1)]
+
+
+def _blocked(outcome: str, blocker: str, provenance: dict, raw: bytes = b"") -> dict:
+    return {"outcome": outcome, "blocker": blocker, "raw": raw, "provenance": provenance}
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError(f"invalid JSON constant: {value}")
+
+
+def diagnose_recovery(project: str, evidence: dict, request_identity: dict, route: dict, *, store: Path,
+                      timeout_seconds: int, runner=None, probe_runner=None, home: Path | None = None) -> dict:
+    """One persisted, read-only Planner diagnostic per cycle. Returns {outcome, blocker, raw, provenance}.
+
+    `route` comes from the caller's M2 role policy: {role: "planner", verified: True, provider, profile, model,
+    effort?, authorized_by}. outcome is "ok" (raw = untrusted model bytes that are at least valid JSON) or one of
+    unauthorized_route, evidence_incomplete, unsupported_diagnostic_sandbox, unavailable, timeout, invalid_json,
+    already_invoked. Nothing is retried and nothing is written outside `store`.
+    """
+    import bt_planner_runtime as runtime
+    import bt_profiles
+
+    cycle = hashlib.sha256(json.dumps(request_identity, sort_keys=True, default=str).encode()).hexdigest()[:24]
+    target = Path(store) / RECOVERY_DIR / f"{cycle}.json"
+    provenance = {"cycle": cycle, "request_identity": request_identity,
+                  "evidence_sha256": evidence.get("evidence_sha256") if isinstance(evidence, dict) else None,
+                  "route": {k: route.get(k) for k in (*ROUTE_KEYS, "role", "effort", "verified")} if isinstance(route, dict) else None,
+                  "authorization_status": "pending"}
+
+    def finish(result: dict) -> dict:
+        record = {"outcome": result["outcome"], "blocker": result["blocker"], "provenance": provenance,
+                  "raw_sha256": hashlib.sha256(result["raw"]).hexdigest(), "raw_bytes": len(result["raw"]),
+                  "raw": result["raw"].decode("utf-8", "replace"), "at": time.strftime("%Y-%m-%dT%H:%M:%S")}
+        tmp = target.with_suffix(".tmp")
+        try:
+            tmp.write_text(json.dumps(record, ensure_ascii=False, indent=1), encoding="utf-8")
+            tmp.replace(target)
+        except OSError as exc:
+            return _blocked("unavailable", f"diagnostic result could not be persisted: {exc}"[:400], provenance,
+                            result["raw"])
+        return {**result, "provenance": provenance}
+
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open("x", encoding="utf-8") as claim:
+            claim.write(json.dumps({"outcome": "running", "provenance": provenance}, ensure_ascii=False))
+    except FileExistsError:
+        return _blocked("already_invoked", "this cycle already used its single diagnostic invocation", provenance)
+    except OSError as exc:
+        return _blocked("unavailable", f"could not reserve diagnostic cycle: {exc}"[:400], provenance)
+    if (not isinstance(route, dict) or route.get("role") != "planner" or route.get("verified") is not True
+            or any(not isinstance(route.get(k), str) or not route[k].strip() for k in ROUTE_KEYS)):
+        provenance["authorization_status"] = "rejected"
+        return finish(_blocked("unauthorized_route", "route is not a verified, authorized Planner-role route", provenance))
+    if not isinstance(evidence, dict) or evidence.get("diagnosable") is not True or evidence.get("missing_sources"):
+        return finish(_blocked("evidence_incomplete", "retained evidence is incomplete or not diagnosable", provenance))
+    try:
+        bt_profiles.authorize(route["profile"], project)
+    except (bt_profiles.ProfileError, KeyError, ValueError) as exc:
+        provenance["authorization_status"] = "rejected"
+        return finish(_blocked("unauthorized_route", f"profile is not authorized for this project: {exc}"[:400], provenance))
+    provenance["authorization_status"] = "authorized"
+    try:
+        sections = _sections(evidence)
+    except (TypeError, ValueError, OverflowError):
+        sections = None
+    if sections is None:
+        return finish(_blocked("evidence_incomplete", f"evidence exceeds {EVIDENCE_BYTES} bytes; not truncated", provenance))
+    prompt = RECOVERY_PROMPT.format(identity=json.dumps(request_identity, sort_keys=True, default=str),
+                                    count=len(sections), sections="\n\n".join(sections))
+    try:
+        with tempfile.TemporaryDirectory(prefix="bt-recovery-diagnosis-") as work:
+            result = runtime.invoke_diagnostic(
+                runtime.PlannerRequest(project=project, provider=route["provider"], profile=route["profile"],
+                                       model=route["model"], prompt=prompt, cwd=Path(work), effort=route.get("effort"),
+                                       timeout_seconds=timeout_seconds),
+                Path(work), runner=runner, probe_runner=probe_runner, home=home)
+    except runtime.UnsupportedDiagnosticSandbox as exc:
+        return finish(_blocked("unsupported_diagnostic_sandbox", str(exc)[:400], provenance))
+    except runtime.PlannerRuntimeError as exc:
+        text = str(exc)
+        return finish(_blocked("timeout" if "timed out" in text else "unavailable", text[:400], provenance))
+    if result.returncode:
+        return finish(_blocked("unavailable", f"planner exited with status {result.returncode}", provenance))
+    if len(result.stdout) > runtime.MAX_DIAGNOSTIC_OUTPUT_BYTES:
+        return finish(_blocked("invalid_json", "diagnostic output exceeds the bound", provenance))
+    try:
+        parsed = json.loads(result.stdout.decode("utf-8"), parse_constant=_reject_json_constant)
+        if not isinstance(parsed, dict):
+            raise ValueError("not an object")
+    except ValueError:
+        return finish(_blocked("invalid_json", "diagnostic output is not a JSON object", provenance, result.stdout))
+    return finish({"outcome": "ok", "blocker": None, "raw": result.stdout, "provenance": provenance})

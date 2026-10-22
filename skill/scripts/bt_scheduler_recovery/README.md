@@ -90,6 +90,24 @@ human intervention flag. Omit `--json` for text. Inspection never creates a data
 parent directory or schema; a missing file exits 2 with `STORE_MISSING`.
 `inspect_store(path, metrics=False)` provides the same read-only API.
 
+## Durable diagnostics and semantic progress
+
+`DiagnosticStore` adds schema 2 transactionally while retaining every schema-1 decision row and the
+existing `DecisionStore` retry/wait/block API. It stores `recovery-case/1` triggers, append-only
+events, generation-fenced leases and application checkpoints. Replaying the same trigger and case
+is idempotent; reusing its trigger with different case or proposal facts fails with
+`CASE_CONFLICT`. A transition requires the current generation and an unexpired lease owned by the
+caller, then appends its event and advances that generation in one transaction.
+
+Finding occurrence identity is `<ledger_digest>:<local_finding_id>`. A cross-ledger semantic match
+exists only as an explicit `same_finding` relation with evidence references; no F-number or prose
+signature is used to infer continuity. `assess_progress(previous, current)` reports persisted,
+fixed, new, regressed and uncertain occurrences, plus blocked prerequisite checks. Missing evidence
+or an unmatched prior open finding remains uncertain. `RecoveryProposal.from_dict` accepts only
+`recovery-proposal/1`. `VerificationMap` binds repository-relative changed paths and source digests
+to owner tasks, existing owner commands, symptom-specific checks and opaque verdict references;
+uncovered paths and checks remain explicit and cannot become an implicit pass.
+
 ## Independent verification
 
 ```bash
@@ -104,3 +122,12 @@ refs, read-only CLI and a copied package tested alone under `python -I` from an
 unrelated directory. No providers, credentials, paid requests or real sleeps are used.
 Cross-module acceptance, M1 application and the real executor handoff are adapter
 integration responsibilities tested outside this independent package.
+
+
+## Structural recovery (REQ-029)
+M5 stays advice-only. REQ-029 adds, outside it: evidence capture (`bt_recovery_evidence`), conflict observations published before
+clipping (`bt_recovery_conflicts`, `conflict_contracts/policy/delivery`), a constrained compiler and convergence work
+(`bt_recovery_compiler`, `bt_recovery_convergence`), a run-scoped authorization ledger (`bt_recovery_authorization`), journaled
+application through one generic M1 revision primitive (`bt_recovery_apply`) and the owner lifecycle (`bt_scheduler_recovery_lifecycle`).
+One cycle per run and lineage, at most eight corrective tasks, ordinary counters never reset. Boundary, migration and rollback:
+`reviews/req029-rollout.md`. The common stops are handled earlier by `bt_scheduler_healing` (`references/modules.md` §self-healing).

@@ -1,11 +1,12 @@
 """Opt-in composition of Scheduler ports; the executor adapter remains the single importer of M3."""
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
 import bt_scheduler_executor_adapter as api
-from bt_scheduler_recovery_adapter import RecoveryAdapter
+from bt_scheduler_recovery_adapter import EvidenceUnavailable, RecoveryAdapter
 from bt_scheduler_retry import RetryContinuation
 
 
@@ -212,8 +213,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                            accepted=lambda: api._accepted_attempts(scheduler),
                            snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
                            earlier_of=lambda task: api._earlier_attempts(scheduler, task),
-                           start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
-                           on_conflict=lambda **fields: bt_interventions.record_conflict(rdir, run=identity, **fields))
+                           start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard)
             port.base_ref = integrate.base_ref
             import bt_config
             integrate.check_files = bt_config.get("gates.integration_check_files", True) is not False
@@ -235,9 +235,15 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                              run_dir=rdir, integrator=integrate)
             wiring.recovery = RecoveryAdapter(
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
-                describe=continuation.describe, policy=recovery_policy)
+                describe=continuation.describe, policy=recovery_policy, rdir=rdir)
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
+            if integrate is not None:
+                integrate.bind(plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                               identity=api.run_identity(scheduler), accepted=lambda: api._accepted_attempts(scheduler),
+                               snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                               earlier_of=lambda task: api._earlier_attempts(scheduler, task),
+                               conflict_sink=wiring.recovery.publish_conflict_observation)
             port.base_ref = continuation.base_ref
             base_notes = continuation.notes
         executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
@@ -263,16 +269,33 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 role = task.repository or default_repository
                 return repo_of(role) if role else None
 
+            def publish_conflict_observation(order, clash, refusal, detail):
+                match = re.search(r"conflict evidence: (conflict:[0-9a-f]{64})", clash)
+                if match is None or wiring.recovery is None:
+                    raise EvidenceUnavailable("evidence_unavailable: M5 did not retain full conflict evidence")
+                observation = wiring.recovery.read_conflict_observation(match.group(1))
+                if observation is None:
+                    raise EvidenceUnavailable("evidence_unavailable: M5 conflict evidence is missing or invalid")
+                identity = (observation.get("plan_id"), observation.get("revision"), observation.get("task_id"),
+                            observation.get("attempt_id"), observation.get("plan_sha256"))
+                expected = (order.plan_id, order.revision, order.task_id, order.attempt_id, scheduler.plan.sha256)
+                if identity != expected or observation.get("ordinary_rework_refusal_detail") != detail:
+                    raise EvidenceUnavailable("evidence_unavailable: M6 conflict evidence identity is stale")
+                return match.group(1)
+
             wiring.verification_runtime = QualityVerificationPort(
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
                 attempts_root=executor.attempts_dir,
                 rework_notes=lambda task_id, text: bt_scheduler_decisions.write_audit_notes(rdir, task_id, text),
                 verify_notes=lambda task_id, text: bt_scheduler_decisions.write_verify_notes(rdir, task_id, text),
                 verify_history=lambda task_id, attempt, text: bt_attempt_history.record(rdir, task_id, attempt, text),
+                publish_audit_observation=lambda task_id, attempt, observation: bt_attempt_history.record_observation(
+                    rdir, task_id, attempt, observation),
                 audit_policy=bt_audit_gate.policy_from(bt_config.get),
                 integration_check=(integrate.would_conflict
                                    if integrate is not None and bt_config.get("gates.integration_check", True) is True
                                    else None),
+                publish_conflict_observation=publish_conflict_observation,
                 unresolved_check=getattr(integrate, "unresolved", None),
                 revert_check=getattr(integrate, "reverted", None),
                 remediate=bt_remediation.hook(rdir, bt_audit_gate.policy_from(bt_config.get)),

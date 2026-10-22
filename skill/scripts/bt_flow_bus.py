@@ -30,7 +30,7 @@ import bt_scheduler_adapter as scheduler_
 VERSION = 1
 PARTIES = ("planner", "M1", "M2", "M3", "M4", "M5", "M6", "web", "owner")
 LIMIT = 2000                                    # rows per store per cycle: bounded work, the cursor catches up
-STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6")
+STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal")
 
 
 # What each module's database holds and what the bus does with it. A table nobody classified here fails
@@ -52,6 +52,10 @@ IGNORED_TABLES = {
     "m1_outbox": "M4 delivery queue to M1: the delivery shows as M1's incident_observed",
     "m4_extension_meta": "schema bookkeeping", "m4_retention_health": "M4 housekeeping",
     "metric_samples": "M4 derived samples of the stream events already emitted",
+    "recovery_cases": "M5 normalized case inputs; durable decisions are the flow source",
+    "recovery_events": "M5 internal transition history; the final decision is the flow source",
+    "recovery_leases": "M5 short-lived worker leases; operational bookkeeping, not a user-visible flow event",
+    "application_checkpoints": "M5 idempotency checkpoints for application; the associated decision is the flow source",
     "schema_meta": "schema bookkeeping", "size_fixture": "M4 test fixture table", "source_cursors": "M4 read positions",
     "store_limits": "M4 configuration", "stream_gaps": "M4 loss accounting (surfaces as incidents)",
     "unrelated": "test fixture table", "artifacts": "M6 evidence blobs, referenced by the verdict",
@@ -231,6 +235,8 @@ M1_RULES: dict[str, Callable] = {
     "rework_refused": _m1("rework_refused", "M6", "M1", "No se pudo devolver el trabajo tras la auditoría ({why})"),
     "audit_gate_skipped": _m1("audit_gate", "M6", "M1", "Auditoría de {task} sin ledger: el gate se omite (configurado)"),
     "run_rebased": _m1("run_rebased", "planner", "M1", "La ejecución pasa a la revisión nueva"),
+    "revision_barrier": _m1("revision_barrier", "planner", "M1", "Se bloquean nuevas reservas para aplicar la revisión {operation_key}"),
+    "revision_applied": _m1("revision_applied", "planner", "M1", "La revisión {to_rev} se aplicó conservando el trabajo no afectado"),
 }
 
 
@@ -320,6 +326,28 @@ def _m4_incidents(run: str, path: Path | None, after: int) -> list[dict]:
     return out
 
 
+def _heal_events(run: str, rdir: Path, after: int) -> list[dict]:
+    """Every intervention on the run (REQ-030: `RUN.interventions.jsonl`), automatic ones from the scheduler's own recovery and
+    manual ones from the owner, as feed events. The id is the line number, so the cursor resumes where it stopped."""
+    import bt_interventions
+
+    out = []
+    rows = list(bt_interventions.read(rdir))           # a damaged line is skipped, so ids count the readable rows
+    for number, row in enumerate(rows, 1):
+        if number <= after:
+            continue
+        auto = row.get("source") == "auto"
+        at = float(row.get("at") or 0.0)
+        result = {"fixed": "resuelto", "failed": "no resuelto", "pending": "pendiente"}.get(row.get("result"), "")
+        who = "recuperación automática" if auto else "el dueño"
+        text = f'{who}: {row.get("class")} · {str(row.get("repair") or "")[:120]}{" · " + result if result else ""}'
+        out.append(event(run, "heal", number, at, "M5" if auto else "owner", "M1", "recovery_intervention", text,
+                         task=row.get("task") or "", from_part="M5.recovery" if auto else "",
+                         data={"class": row.get("class"), "source": row.get("source"), "result": row.get("result"),
+                               "minutes_lost": row.get("minutes_lost"), "case": row.get("case")}))
+    return out
+
+
 def _m5_events(run: str, path: Path | None, after: int, ctx: Ctx) -> list[dict]:
     out = []
     for row in _rows(path, "SELECT seq, task_id, attempt_id, cause, action FROM decisions WHERE seq > ? ORDER BY seq "
@@ -392,6 +420,11 @@ def sources(rdir: Path, project: str) -> dict[str, tuple[str, int]]:
         except OSError:
             out[name] = (str(path), 0)
     out["m4i"] = out["m4"]
+    interventions = Path(rdir) / "RUN.interventions.jsonl"
+    try:
+        out["heal"] = (str(interventions), interventions.stat().st_ino)
+    except OSError:
+        out["heal"] = (str(interventions), 0)
     return out
 
 
@@ -417,6 +450,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
         "m4i": _m4_incidents(run, paths.get("m4"), cur["m4i"]),
         "m5": _m5_events(run, paths.get("m5"), cur["m5"], ctx),
         "m6": _m6_events(run, paths.get("m6"), cur["m6"]),
+        "heal": _heal_events(run, rdir, cur["heal"]),
     }
     merged = []
     for name, items in events.items():

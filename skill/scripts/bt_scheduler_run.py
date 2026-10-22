@@ -322,6 +322,14 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
             while True:
                 report = scheduler.step()
                 steps += 1
+                recovery_tick = getattr(wiring.recovery, "tick_diagnostic_recovery", None)
+                if callable(recovery_tick):
+                    recovery_result = recovery_tick()
+                    if recovery_result.get("state") not in {"preview_only", "ordinary_path_first",
+                                                               "waiting_ordinary_remediation"}:
+                        print(f"SCHEDULER_RECOVERY: {recovery_result.get('state')}: "
+                              f"{recovery_result.get('blocker', recovery_result.get('cycle_token', ''))}",
+                              file=sys.stderr)
                 m4_runtime.drain_pending_streams(wiring, m1_run_id)
                 incident_report = m4_runtime.deliver_incidents(
                     wiring, f"scheduler-m4:{run_id}", now=time.time())

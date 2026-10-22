@@ -221,6 +221,11 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   `RUN.healing.json`, every intervention (automatic or by hand) in `RUN.interventions.jsonl` (`bt_interventions`).
   `scheduler-op REQ heal status|stop|start|run|revert CASE` is the owner's hand on it: `stop` switches it off at once, `revert`
   freezes a revision without the repair task and moves the run onto it. It never touches attempt counters;
+- **structural recovery** (REQ-029, `bt_recovery_*`, `bt_scheduler_recovery_lifecycle`): for a conflict or an audit the ordinary budgets
+  could not close, one bounded cycle per run and lineage: complete evidence (`conflict-observation/1` published before clipping),
+  a constrained revision with convergence work (`convergence-work/1`), a run-scoped grant and a journaled application through one
+  generic M1 primitive; only independent verification on the resulting integrated tree closes it. The plan page and the /flow feed show
+  it with a stop control. Details and rollback: `scripts/bt_scheduler_recovery/reviews/req029-rollout.md`;
 - **evolution** (REQ-030, `bt_evolution`, `scheduler-evolve [--propose|--apply|--revert|--capture REQ]`): a deterministic analysis of the
   interventions of a project turns repeated patterns into proposals with their evidence; HIGH-risk ones become numbered `P-NNN` items
   in PENDING.md, LOW-risk ones (an allowlist of bounded settings) are applied only if an A/B on the replicas saves time on one and

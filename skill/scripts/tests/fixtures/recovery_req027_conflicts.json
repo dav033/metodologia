@@ -1,0 +1,83 @@
+{
+  "schema": "recovery-req027-conflicts/2",
+  "reconstruction": {
+    "purpose": "Sanitized reconstruction inputs for deterministic offline structural replay.",
+    "method": "Hash official frozen plans, source notes and handoff manifests; preserve task scope and DAG from both plans. Exported runtime snapshots are represented separately from historical conflict-path claims.",
+    "historical_paths_are_authority": false,
+    "private_scheduler_state_included": false
+  },
+  "source_artifacts": [
+    {"id": "req027-plan-r7", "kind": "frozen_plan", "sha256": "17522cd6ebedff79ca9fefa0550e06518996f2067cee9d3071f0f83e68cc675a"},
+    {"id": "req027-plan-r9", "kind": "frozen_plan", "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c"},
+    {"id": "req027-t15a-start-diagnosis", "kind": "diagnosis", "sha256": "ee49c3868edd03644df9a709d044557e5e99b5af595c1bfff90a0269c6f77e13"},
+    {"id": "req027-t15a-m6-diagnosis", "kind": "diagnosis", "sha256": "d9dd1bea6c8d23537474e4e9dc0417a5d0cb27deefe3085e6c1240caa9929c63"},
+    {"id": "req027-t15a-notes", "kind": "run_note", "sha256": "bf2d977cdaabd2296fa4ce15fc2f57ef9da0282d98e112a642099d1d2e394bcb"},
+    {"id": "req027-t15a-history", "kind": "run_history", "sha256": "216fcceb8dc4c496fbcfdd56881b57fe35136288fb05808e8471bd19008b3ba0"},
+    {"id": "req029-conflict-evidence", "kind": "forensic-summary", "sha256": "c457011b0700a817a39c8af2b4856da492fd202b3133d9d42c188878e57bda36"},
+    {"id": "req029-conflict-amendment-delta", "kind": "provenance-note", "sha256": "d3ddd1ba6aeb70e08f2dab4f5d9d459f502e02bc6818008a6c1913a16f6f3ac8"},
+    {"id": "req027-r7-att-0142", "kind": "handoff_manifest", "sha256": "6288a3d9e064590c2dc81a62031753466282fb1e12035903d4c5c57d8cbb4aa6"},
+    {"id": "req027-r9-att-0204", "kind": "handoff_manifest", "sha256": "275ebd04b5c0d6dbf2bfd5a1ee1decbee07b3876c82f7cc38332aae496960de0"},
+    {"id": "req027-r9-att-0206", "kind": "handoff_manifest", "sha256": "3c83074574d39cea8fc605edae0bb77f31c5a3dcb3ce927e4b9d693c63599570"},
+    {"id": "req027-r9-att-0207", "kind": "handoff_manifest", "sha256": "71915eb07ba099a6565d6f97efd8bacf2b31c9af6af200310b261cd2ed1f9399"},
+    {"id": "req027-r9-att-0208", "kind": "handoff_manifest", "sha256": "bd23bcccf87d08c8bec86cbf2ef89d73bb16a9469053fdcebcc5a25792ee592b"}
+  ],
+  "ordered_dag": [
+    {"id": "T3", "after": ["T2"], "scope": ["remote/docs/contract.md", "remote/docs/architecture.md", "remote/contract/**"]},
+    {"id": "T15", "after": ["T3"], "scope": ["remote/web/**"]},
+    {"id": "T15a", "after": ["T15"], "scope": ["remote/web/**"]},
+    {"id": "T15b", "after": ["T15a"], "scope": ["remote/web/**"]},
+    {"id": "T15c", "after": ["T15b", "T7"], "scope": ["remote/web/**"]}
+  ],
+  "plan_revisions": [
+    {"revision": "r7", "sha256": "17522cd6ebedff79ca9fefa0550e06518996f2067cee9d3071f0f83e68cc675a", "tasks": [
+      {"id": "T3", "after": ["T2"], "scope": ["remote/docs/contract.md", "remote/docs/architecture.md", "remote/contract/**"]},
+      {"id": "T15", "after": ["T3"], "scope": ["remote/web/**"]},
+      {"id": "T15a", "after": ["T15"], "scope": ["remote/web/**"]},
+      {"id": "T15b", "after": ["T15a"], "scope": ["remote/web/**"]},
+      {"id": "T15c", "after": ["T15b", "T7"], "scope": ["remote/web/**"]}
+    ]},
+    {"revision": "r9", "sha256": "e2d7030f678abcca2c1e3f0cee1cba62f85fd471c1274c6171e7ad26f257510c", "tasks": [
+      {"id": "T3", "after": ["T2"], "scope": ["remote/docs/contract.md", "remote/docs/architecture.md", "remote/contract/**"]},
+      {"id": "T15", "after": ["T3"], "scope": ["remote/web/**"]},
+      {"id": "T15a", "after": ["T15"], "scope": ["remote/web/**"]},
+      {"id": "T15b", "after": ["T15a"], "scope": ["remote/web/**"]},
+      {"id": "T15c", "after": ["T15b", "T7"], "scope": ["remote/web/**"]}
+    ]}
+  ],
+  "run_policy": {
+    "max_reworks": 2,
+    "reworks_at_capture": {"T6": 3, "T7": 0, "T15a": 1, "T15b": 2},
+    "ordinary_give_way_refusal": "limit: T15b was already sent back 2 time(s)",
+    "edge_only_revision_is_insufficient": true
+  },
+  "source_attempt_lineage": [
+    {"task": "T3", "attempt": "att-0130", "state": "accepted", "manifest_sha256": "e658e63f1d0ee5ff188c6c8330f13ff46287b170283e904d6864615e4e970829", "base_sha": "cd42bd381ddbae74aac9b8fabb0870133e612a58", "snapshot_sha": "5f5eb8992add64332e737bbead83ebc36b78dee0", "changed_paths": ["remote/contract/command.schema.json", "remote/docs/contract.md", "skill/scripts/bt_server.py", "skill/scripts/tests/test_remote_listener.py"]},
+    {"task": "T15b", "attempt": "att-0142", "state": "accepted", "manifest_sha256": "6288a3d9e064590c2dc81a62031753466282fb1e12035903d4c5c57d8cbb4aa6", "base_sha": "f5e5a89a07a162083be78f98413f6e5c2d747593", "snapshot_sha": "9f5ab702d6c0786579e3ac8c87e75857c08f4cb5"},
+    {"task": "T15", "attempt": "att-0204", "state": "accepted", "manifest_sha256": "275ebd04b5c0d6dbf2bfd5a1ee1decbee07b3876c82f7cc38332aae496960de0", "base_sha": "5f5eb8992add64332e737bbead83ebc36b78dee0", "snapshot_sha": "ee9651bd70c4d00752a406be434d107634ef0e67"}
+  ],
+  "preserved_attempts": [
+    {"task": "T15b", "attempt": "att-0142", "state": "accepted", "base_sha": "f5e5a89a07a162083be78f98413f6e5c2d747593", "snapshot_sha": "9f5ab702d6c0786579e3ac8c87e75857c08f4cb5", "changed_paths": ["remote/web/mocks/gateway.mjs", "remote/web/src/app/page.tsx", "remote/web/tests/panel-browser.test.mjs"], "behavior_contract": ["Active module, task and attempt are visible", "Feed groups messages like /flow", "Updates arrive through SSE from the mock"]},
+    {"task": "T15", "attempt": "att-0204", "state": "accepted", "base_sha": "5f5eb8992add64332e737bbead83ebc36b78dee0", "snapshot_sha": "ee9651bd70c4d00752a406be434d107634ef0e67", "changed_paths": ["remote/web/.env.example", "remote/web/.gitignore", "remote/web/README.md", "remote/web/eslint.config.mjs", "remote/web/mocks/fixtures/snapshot.json", "remote/web/mocks/gateway.mjs", "remote/web/next-env.d.ts", "remote/web/next.config.ts", "remote/web/package-lock.json", "remote/web/package.json", "remote/web/postcss.config.mjs", "remote/web/public/apple-icon.svg", "remote/web/public/fonts/JetBrainsMono-400-latin.woff2", "remote/web/public/fonts/Manrope-400-latin.woff2", "remote/web/public/icon.svg", "remote/web/public/manifest.webmanifest", "remote/web/src/app/globals.css", "remote/web/src/app/layout.tsx", "remote/web/src/app/page.tsx", "remote/web/tests/mock-gateway.test.mjs", "remote/web/tests/scaffold.test.mjs", "remote/web/tsconfig.json"], "behavior_contract": ["npm run verify builds without network", "Theme tokens follow Catppuccin Mocha with mauve accent", "Mock gateway serves fixture snapshots"]}
+  ],
+  "conflict_sources": [
+    {
+      "id": "req027-r7-start-att-0124",
+      "source_type": "start",
+      "attempt": "att-0124",
+      "known": {"rejected_task": "T15b", "conflicting_tasks": ["T3", "T15a"], "recorded_context_paths": ["remote/contract/command.schema.json", "remote/contract/event.schema.json", "remote/docs/architecture.md", "remote/docs/contract.md"]},
+      "unknown": {"complete_merge_paths": "The start error was historically clipped; the context list is not a complete merge-tree path set.", "m1_attempt_map": "Not retained in the sanitized record.", "m3_conflict_tree": "Not retained in the sanitized record.", "m6_verdict": "Not applicable to a start-time refusal."}
+    },
+    {
+      "id": "req027-r9-m6-att-0206-0207-0208",
+      "source_type": "integration_gate",
+      "attempts": ["att-0206", "att-0207", "att-0208"],
+      "known": {"accepted_task_attempt": {"T15b": "att-0142", "T15": "att-0204"}, "gate_error": "T6+T7+T15a vs T15b for T15c", "ordinary_rework_refusal": "limit: T15b was already sent back 2 time(s)", "current_t15_is_ancestor_of_t15b_base": false, "gate_attempts": [{"attempt": "att-0206", "snapshot_sha": "2042712ff0a27bacca9a644c9855f61da268b47e", "changed_paths": ["remote/web/tests/login-runs-browser.test.mjs"]}, {"attempt": "att-0207", "snapshot_sha": "2042712ff0a27bacca9a644c9855f61da268b47e", "changed_paths": []}, {"attempt": "att-0208", "snapshot_sha": "4b65b6ed88bdfdafe5ec4ff6a0cd6f70083a44c2", "changed_paths": ["remote/web/tests/login-runs-browser.test.mjs"]}], "reported_context_paths": ["remote/web/README.md", "remote/web/mocks/fixtures/snapshot.json", "remote/web/mocks/gateway.mjs", "remote/web/src/app/globals.css"]},
+      "unknown": {"complete_merge_paths": "The M6 card clipped the conflict list. Reported context paths are not complete path authority.", "m6_source_record": "No full M6 source database row is exported; the official diagnosis and attempt manifests are hash-pinned."}
+    }
+  ],
+  "limitations": [
+    "No historical path list is promoted to complete evidence.",
+    "Historical handoff hashes and task contracts establish lineage but do not replace fresh behavioral checks.",
+    "The source manifests are sanitized; their private absolute paths and full transcripts are omitted."
+  ]
+}

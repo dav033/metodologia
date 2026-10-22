@@ -73,6 +73,9 @@ def claim(ctx: Ctx, assignment: Assignment) -> ClaimResult:
 
 def _refusal(ctx: Ctx, task_id: str) -> str:
     state = ctx.state
+    barrier = state.revision_barrier
+    if barrier is not None and barrier["deadline"] > ctx.now:
+        return "revision_pending"
     if state.cancel_requested:
         return "cancel_requested"
     if state.paused:

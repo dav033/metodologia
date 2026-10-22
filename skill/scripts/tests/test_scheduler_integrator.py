@@ -404,6 +404,22 @@ class Unit(unittest.TestCase):
         self.assertLessEqual(len(f"{caught.exception.code}: {caught.exception.detail}"), 200)
         self.assertTrue(caught.exception.permanent)
 
+    def test_structured_conflict_keeps_all_paths_before_legacy_detail_clipping(self):
+        left = {f"src/path-{index:02d}-" + "x" * 40 + ".py": f"left {index}\n" for index in range(8)}
+        right = {name: f"right {index}\n" for index, name in enumerate(left)}
+        s2 = snapshot(self.app, self.head, left)
+        s3 = snapshot(self.app, self.head, right)
+        self.accept("T2", s2)
+        self.accept("T3", s3)
+        with self.assertRaises(integ.IntegrationError) as caught:
+            self.bound({"T2": ([], "app"), "T3": ([], "app"), "T4": (["T2", "T3"], "app")}).base_ref("T4")
+        evidence = caught.exception.conflict_data
+        self.assertEqual(len(evidence["paths"]), 8)
+        self.assertLessEqual(len(caught.exception.detail), 170)
+        self.assertTrue(evidence["merge_base"])
+        with self.assertRaises(TypeError):
+            evidence["task_id"] = "T5"
+
     def test_an_unbound_integrator_says_so(self):
         with self.assertRaises(integ.IntegrationError) as caught:
             integ.PredecessorIntegrator().base_ref("T1")

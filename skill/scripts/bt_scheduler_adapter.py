@@ -30,6 +30,7 @@ import bt_scheduler_core as core
 import bt_scheduler_core.plan as m1_plan
 import bt_scheduler_decision_adapter as decision_sources
 import bt_scheduler_plan_compat as plan_compat
+import bt_scheduler_metadata as task_metadata
 from bt_scheduler_decision import (
     DecisionEngine,
     DecisionInputError,
@@ -246,7 +247,26 @@ def apply_control(rdir: Path, action: str, *, by: str = "web") -> None:
     if not db.is_file():
         raise SystemExit("La base Scheduler no está disponible; no se cambió el control.")
     try:
-        plan = approved_plan(rdir)
+        plan = None
+        try:
+            conn = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=1)
+            try:
+                row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
+            finally:
+                conn.close()
+            identity = json.loads(row[0]) if row else None
+            if (isinstance(identity, dict) and isinstance(identity.get("plan_id"), str) and identity["plan_id"] and
+                    type(identity.get("revision")) is int and identity["revision"] >= 1 and
+                    isinstance(identity.get("plan_sha256"), str) and
+                    _PLAN_SHA256.fullmatch(identity["plan_sha256"])):
+                plan_path = rdir / REVISIONS / f"PLAN.r{identity['revision']}.json"
+                if plan_path.is_file() and not plan_consumer_problem(rdir, plan_path=plan_path):
+                    plan = core.load_plan_file(plan_path, approved_sha256=identity["plan_sha256"],
+                                               plan_id=identity["plan_id"], revision=identity["revision"])
+        except (OSError, sqlite3.Error, TypeError, ValueError, KeyError, core.SchedulerError):
+            plan = None
+        if plan is None:
+            plan = approved_plan(rdir)
         repository = core.SqliteRepository(db, create=False)
         scheduler = core.SchedulerCore(plan, repository)
         scheduler.inspect()
@@ -332,13 +352,7 @@ class DecisionAssignmentPort:
     def effective_meta(self, task_id: str, meta: Any) -> Any:
         """The task's classification as it stands NOW: the plan's `meta` with the amendments in force laid over it.
         Only the next decision sees a change; an attempt already running keeps the route it was started with."""
-        if self.classification_overlay is None or not isinstance(meta, dict):
-            return meta
-        try:
-            changed = self.classification_overlay().get(task_id) or {}
-        except Exception:                      # an unreadable overlay never blocks assignment
-            return meta
-        return {**meta, **changed} if changed else meta
+        return task_metadata.effective_task_meta(task_id, meta, self.classification_overlay)
 
     @staticmethod
     def _route_metadata(decision_id: str, route, candidate) -> dict[str, str]:
@@ -617,3 +631,32 @@ def rebase_to_latest(rdir: Path) -> Any:
                               revision=doc["revision"])
     with owner_lock(rdir):
         return core.rebase_run(core.SqliteRepository(db), old, new, cascade=rebase_cascade())
+
+
+def revision_plan(rdir: Path, revision: int, sha256: str, plan_id: str) -> core.Plan:
+    """Load one known frozen revision by its exact M1 plan identity."""
+    if type(revision) is not int or revision < 1 or not _PLAN_SHA256.fullmatch(str(sha256)) or not plan_id:
+        raise core.SchedulerError("PLAN_MISMATCH", "revision plan identity is invalid")
+    path = Path(rdir) / REVISIONS / f"PLAN.r{revision}.json"
+    return core.load_plan_file(path, approved_sha256=sha256, plan_id=plan_id, revision=revision)
+
+
+def revision_identity(rdir: Path) -> dict[str, Any]:
+    """Fresh M1 identity used by the recovery CAS; read-only and independent of the projection."""
+    if authority(rdir) != AUTHORITY:
+        raise core.SchedulerError("NOT_ALLOWED", "no Scheduler run")
+    import bt_recovery_m1_bridge
+    return bt_recovery_m1_bridge.revision_identity(core, run_db_path(rdir))
+
+
+def apply_plan_revision(rdir: Path, old: core.Plan, new: core.Plan, guard: dict[str, Any]) -> dict[str, Any]:
+    """Thin M1 forward used only by journaled recovery application; ordinary rebase semantics are unchanged."""
+    import bt_recovery_m1_bridge
+    return bt_recovery_m1_bridge.apply_plan_revision(core, run_db_path(rdir), owner_lock, rdir, old, new, guard)
+
+
+def abort_revision_barrier(rdir: Path, operation_key: str, reason: str) -> bool:
+    if authority(rdir) != AUTHORITY:
+        return False
+    import bt_recovery_m1_bridge
+    return bt_recovery_m1_bridge.abort_revision_barrier(core, run_db_path(rdir), operation_key, reason)

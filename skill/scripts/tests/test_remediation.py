@@ -6,11 +6,13 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_attempt_log
 import bt_audit_gate
 import bt_plan_adapter as plans
+import bt_scheduler_ops
 import bt_remediation as rem
 
 
@@ -22,12 +24,15 @@ def evidence_for(tid):
 
 
 def task(tid, after=(), kind="implement", paths=None, command="pytest -q", category="functional", **over):
+    paths = paths if paths is not None else [f"src/{tid.lower()}.py"]
+    if command == "pytest -q":
+        command = f"pytest {paths[0]}"
     base = {"id": tid, "milestone_id": "M1", "title": f"Task {tid}", "objective": f"Deliver task {tid} completely",
             "repository": "app", "after": list(after), "complexity": "medium", "scope": "small_change",
             "estimated_minutes": 30, "risk": "medium", "coupling": "medium", "confidence": "medium",
             "estimate_rationale": "Known pattern in this module",
             "classification_evidence": evidence_for(tid),
-            "expected_paths": paths if paths is not None else [f"src/{tid.lower()}.py"], "shared_resources": ["contract"],
+            "expected_paths": paths, "shared_resources": ["contract"],
             "acceptance_criteria": [f"{tid} behaves as described"], "covers": ["R1"], "kind": kind,
             "verification": [{"type": "command", "value": command, "purpose": f"{tid} behaves as described",
                               "category": category}] if command else [{"type": "manual", "value": "look",
@@ -68,13 +73,14 @@ class Build(unittest.TestCase):
         self.assertEqual(BASE["revision"], 1)                                          # the input plan is not changed
 
     def test_each_criterion_is_checked_by_the_command_of_the_task_that_owns_the_finding(self):
-        spec = plan(task("T1", command="python -m unittest a"),
-                    task("T2", ["T1"], kind="test", category="integration", command="python -m unittest b"),
+        spec = plan(task("T1", command="python -m unittest a/a.py", paths=["a/a.py"]),
+                    task("T2", ["T1"], kind="test", category="integration", command="python -m unittest b/b.py",
+                         paths=["b/b.py"]),
                     task("T3", ["T2"], kind="audit", paths=["a.md", "a.findings.json"]))
         revised = rem.build_revision(spec, "T3", [finding("F1", ["T2"]), finding("F2", ["T1"])])
         fixed = [t for t in revised["tasks"] if t["id"].startswith("T3.")]
         commands = {v["purpose"].split(" ")[0]: v["value"] for t in fixed for v in t["verification"]}
-        self.assertEqual(commands, {"F1": "python -m unittest b", "F2": "python -m unittest a"})
+        self.assertEqual(commands, {"F1": "python -m unittest b/b.py", "F2": "python -m unittest a/a.py"})
         for t in fixed:
             self.assertEqual({v["purpose"] for v in t["verification"]}, set(t["acceptance_criteria"]))
 
@@ -151,6 +157,47 @@ class Files(unittest.TestCase):
         self.assertFalse(rem.hook(self.rdir, bt_audit_gate.Policy(remediate=False))("T4", "a", [finding("F1", ["T1"])]))
         self.assertFalse(rem.hook(self.rdir, self.policy)("T4", "a", [finding("F1", ["T99"])]))
         self.assertFalse(rem.requested(self.rdir) and rem.read_request(self.rdir) is None)
+
+    def test_owner_hold_preserves_the_pending_request_without_freezing_a_revision(self):
+        ask = rem.hook(self.rdir, self.policy)
+        self.assertTrue(ask("T4", "att-held", [finding("F1", ["T1"])]))
+        hold = bt_scheduler_ops.hold_path(self.rdir)
+        hold.parent.mkdir(parents=True, exist_ok=True)
+        hold.write_text('{"why":"owner stop"}\n', encoding="utf-8")
+        before = plans.latest_plan(self.rdir)
+        self.assertIsNone(rem.apply(self.rdir))
+        self.assertEqual(plans.latest_plan(self.rdir), before)
+        self.assertTrue(rem.requested(self.rdir))
+        self.assertEqual(plans.latest_plan(self.rdir)["revision"], 1)
+
+    def test_interruption_after_freeze_adopts_the_journaled_revision_once(self):
+        ask = rem.hook(self.rdir, self.policy)
+        self.assertTrue(ask("T4", "att-crash", [finding("F1", ["T1"])]))
+        original_freeze = plans.freeze_revision
+
+        def freeze_then_interrupt(rdir, revised, source):
+            original_freeze(rdir, revised, source)
+            raise RuntimeError("simulated interruption after freeze")
+
+        with patch.object(plans, "freeze_revision", side_effect=freeze_then_interrupt):
+            with self.assertRaisesRegex(RuntimeError, "simulated interruption"):
+                rem.apply(self.rdir)
+        self.assertTrue(rem.requested(self.rdir))
+        self.assertEqual(json.loads((self.rdir / rem.APPLY_JOURNAL).read_text())["stage"], "prepared")
+        built = rem.apply(self.rdir)
+        self.assertEqual((built["revision"], built["tasks"]), (2, ["T4.1"]))
+        self.assertEqual([item["revision"] for item in plans.revisions(self.rdir)], [1, 2])
+        self.assertEqual(rem.rounds_used(self.rdir, "T4"), 1)
+        self.assertFalse(rem.requested(self.rdir))
+
+    def test_committed_journal_accepts_a_later_remediation_request(self):
+        ask = rem.hook(self.rdir, self.policy)
+        self.assertTrue(ask("T4", "att-first", [finding("F1", ["T1"])]))
+        self.assertEqual(rem.apply(self.rdir)["revision"], 2)
+        self.assertTrue(ask("T4", "att-second", [finding("F2", ["T1"])]))
+        result = rem.apply(self.rdir)
+        self.assertEqual((result["revision"], result["tasks"]), (3, ["T4.2"]))
+        self.assertEqual([item["revision"] for item in plans.revisions(self.rdir)], [1, 2, 3])
 
     def test_each_remediated_finding_is_charged_to_the_tasks_that_own_it(self):
         rem.record(self.rdir, "T4", 1, ["T4.1"], [finding("F1", ["T1"]), finding("F2", ["T2", "T3"])])

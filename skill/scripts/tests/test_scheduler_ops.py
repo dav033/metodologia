@@ -142,6 +142,26 @@ class OpsTests(unittest.TestCase):
         cost = impact.estimate(db, ["T1", "T2"], SimpleNamespace(task=lambda t: SimpleNamespace(meta={"estimated_minutes": 60})))
         self.assertEqual((cost["minutes"], cost["recorded"]), (40, 1))                 # T1 recorded 10, T2 half of 60
 
+    def test_remediate_applies_under_its_own_hold_but_waits_under_an_operators_stop(self):
+        built = {"audit": "T9", "round": 1, "revision": 4, "tasks": ["T9.1"]}
+        seen = []
+
+        def apply(rdir, hold_token=None):
+            seen.append(ops.owns_hold(rdir, hold_token))
+            return built
+
+        report = SimpleNamespace(from_revision=3, to_revision=4, kept=[], reset=[], added=[], removed=[])
+        with patch("bt_remediation.apply", side_effect=apply), patch.object(adapter, "rebase_to_latest", return_value=report), \
+                patch("bt_scheduler_run.rebind_runtime"), patch.object(ops, "_revise_impact", return_value=(3, ())):
+            lines = ops.apply("p", "REQ-001", self.rdir, "remediate")
+            self.assertEqual(seen, [True])                                              # its own hold is recognised
+            self.assertTrue(any("remediation of T9 round 1" in line for line in lines))
+            ops.hold_path(self.rdir).write_text('{"why": "operator stop"}\n')             # an operator's stop is in force
+            lines = ops.apply("p", "REQ-001", self.rdir, "remediate")
+        self.assertEqual(seen, [True])                                                  # nothing was frozen under it
+        self.assertIn("remediation waits", lines[0])
+        self.assertTrue(ops.on_hold(self.rdir))                                         # and the stop is still there
+
     def test_revise_cancels_live_attempts_then_rebases(self):
         report = SimpleNamespace(from_revision=6, to_revision=7, kept=["T1"], reset=[], added=[], removed=[])
         with patch.object(adapter, "rebase_to_latest", return_value=report) as rebase, \

@@ -116,9 +116,10 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
-Run-state schema 2 adds the durable per-task route recommendation map and the completed-map marker. The loader upgrades
-schema-1 state in memory and writes schema 2 on the next state change; older M1 versions reject schema 2 rather than
-silently dropping route decisions.
+Run-state schema 3 adds guarded revision barriers and the bounded revision-application journal. The loader upgrades
+schema-1 and schema-2 state in memory and writes schema 3 on the next state change; older M1 versions reject schema 3
+rather than silently dropping revision state. Schema 2 introduced durable per-task route recommendations and the
+completed-map marker; those fields remain available after the additive upgrade.
 
 ## Dispatch and restart
 
@@ -166,6 +167,23 @@ new tasks start `pending`; removed tasks leave the run. A run with a live attemp
 another plan id, a revision that is not later, and a cancelled run; a run bound to another plan is `PLAN_MISMATCH`.
 Audit: `run_rebased {from_rev, to_rev, kept, reset, added, removed}` plus a `task_transition` (`decision: rebase`) per
 reset task. After it, `SchedulerCore(new_plan, repository).start()` binds the run to revision N+1.
+
+For a caller-owned base and accepted-map compare-and-set, use
+`apply_plan_revision(repository, old, new, guard, *, config=None, clock=time)`. `RevisionGuard` is frozen and binds an
+operation key, source and target hashes, `accepted_map_digest(state)`, `stop_generation(state)`, declared scope, base
+digest and optional current-base callable. The primitive returns `RevisionApplication` with `outcome` `applied`,
+`adopted`, `waiting` or `refused`; refusals include a stable `reason`, and a wait includes live attempt ids. It keeps
+attempt history, budget base, waits, reworks and hold time on reset tasks, while resetting their state and route. Changed
+task identity includes `expected_paths` and `shared_resources`; descendants in both DAGs are reset. Unrelated completed
+tasks remain untouched. A live attempt creates a bounded barrier, which refuses new reservations as `revision_pending`
+until it settles or the deadline expires. Applications are idempotent by operation key, with the newest 200 reports
+retained. Pause and cancel advance the stop generation, including a pause followed by resume between guard capture and
+application.
+
+Audit kinds: `revision_barrier {operation_key, source, target, deadline}` and
+`revision_applied {key, from_rev, to_rev, kept, reset, added, removed}`; each reset also has a
+`task_transition {decision: plan_revision}`. Ordinary `rebase_run`, `plan_rebase` and `fingerprint` retain their prior
+semantics.
 
 ## Errors (stable codes, `SchedulerError.code`)
 

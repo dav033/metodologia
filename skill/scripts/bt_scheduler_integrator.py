@@ -26,7 +26,9 @@ import shutil
 import subprocess
 import tempfile
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 import bt_integration_invariant as invariant
@@ -48,19 +50,30 @@ SAFE = re.compile(r"[^A-Za-z0-9._-]+")
 # error there leaves the attempt `uncertain` (a human decision about identity). Rejected with its cause, the task blocks
 # and says which prerequisites do not fit the integrated tree.
 PERMANENT = frozenset({"INTEGRATION_CONFLICT", "PREDECESSOR_NOT_ACCEPTED", "PREDECESSOR_HANDOFF_MISSING",
-                       "INTEGRATION_REPOSITORY", "PREDECESSOR_NEEDS_RESOLUTION", "INTEGRATION_FILES_LOST"})
+                       "INTEGRATION_REPOSITORY", "PREDECESSOR_NEEDS_RESOLUTION", "INTEGRATION_FILES_LOST",
+                       "INTEGRATION_EVIDENCE_UNAVAILABLE"})
 
 
 class IntegrationError(Exception):
     """The predecessors' work cannot be handed over; `code` is stable, `detail` is for the operator."""
 
-    def __init__(self, code: str, detail: str = ""):
+    def __init__(self, code: str, detail: str = "", *, conflict_data: Mapping[str, Any] | None = None):
         self.code, self.detail = code, detail
+        # Additive structured evidence; callers relying on code/detail and str(error) keep the old contract.
+        self.conflict_data = _freeze(conflict_data) if conflict_data is not None else None
         super().__init__(f"{code}: {detail}" if detail else code)
 
     @property
     def permanent(self) -> bool:
         return self.code in PERMANENT
+
+
+def _freeze(value):
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, (list, tuple)):
+        return tuple(_freeze(item) for item in value)
+    return value
 
 
 def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -87,7 +100,6 @@ class PredecessorIntegrator:
         self._bound: dict[str, Any] | None = None
         self._memo: dict[str, str] = {}
         self._announced: set[tuple[str, str, str, str]] = set()
-        self._conflicts_seen: set[tuple] = set()
         self.line = None                                   # bt_integration_line.Line when gates.integration_line is on
         self.check_files = True                            # gates.integration_check_files: the invariant of bt_integration_invariant
 
@@ -96,7 +108,8 @@ class PredecessorIntegrator:
              earlier_of: Callable[[str], list[str]] | None = None,
              start_base_of: Callable[[str], str | None] | None = None,
              on_event: Callable[..., None] | None = None,
-             on_conflict: Callable[..., None] | None = None) -> None:
+             conflict_context: Callable[[str, str, Mapping[str, Any]], Mapping[str, Any]] | None = None,
+             conflict_sink: Callable[[Mapping[str, Any]], str] | None = None) -> None:
         """`accepted()` -> {task_id: accepted attempt id} (read once per call); `snapshot_of(attempt_id)` -> its snapshot commit sha
         (None when the handoff has none; the sha of an EMPTY handoff is the base itself and merges as a no-op).
         `earlier_of(task_id)` -> the attempts whose accepted results an audit sent back, newest first: when a redone task
@@ -106,7 +119,7 @@ class PredecessorIntegrator:
         self._bound = {"plan": plan, "accepted": accepted, "snapshot_of": snapshot_of, "repo_of": repo_of,
                        "default": default_repository, "identity": SAFE.sub("-", identity) or "run",
                        "earlier_of": earlier_of, "start_base_of": start_base_of, "on_event": on_event,
-                       "on_conflict": on_conflict}
+                       "conflict_context": conflict_context, "conflict_sink": conflict_sink}
 
     def attach_line(self, line) -> None:
         """Make the integration line authoritative (REQ-028): new attempts start from its tip and acceptance is checked
@@ -291,14 +304,17 @@ class PredecessorIntegrator:
             if any(parent not in accepted for parent in self.ancestors(later)):
                 continue                                    # not about to start: some prerequisite is still open
             try:
-                self._integrate(later, accepted, overlay, write_ref=False)
+                self._integrate(later, accepted, overlay, write_ref=False, source_type="integration_gate")
             except IntegrationError as error:
+                if error.code == "INTEGRATION_EVIDENCE_UNAVAILABLE":
+                    raise
                 pair = error.detail.split(" for ")[0]
                 if error.code != "INTEGRATION_CONFLICT" or task_id not in re.split(r"\+| vs ", pair):
                     continue                                # a clash the candidate takes no part in
                 if before is not None and self._clashes_without(later, accepted, task_id, before):
                     continue                                # the same clash exists with its previous result: not its doing
-                return error.detail
+                reference = error.conflict_data.get("evidence_ref") if error.conflict_data else None
+                return f"{error.detail} | conflict evidence: {reference}" if reference else error.detail
         return self._clash_with_built_on(task_id, snapshot, accepted, overlay, current, before)
 
     def _foreign_deletions(self, task_id: str, attempt_id: str, snapshot: str) -> str:
@@ -390,18 +406,26 @@ class PredecessorIntegrator:
                     except IntegrationError as again:
                         if again.code == "INTEGRATION_CONFLICT":
                             continue                # it clashed with the previous result too: not this one's doing
-                return error.detail
+                self._publish_conflict(task_id, "integration_gate", error)
+                if error.conflict_data.get("evidence_unavailable"):
+                    raise IntegrationError("INTEGRATION_EVIDENCE_UNAVAILABLE",
+                                           "evidence_unavailable: integration conflict could not be published",
+                                           conflict_data=error.conflict_data) from None
+                reference = error.conflict_data.get("evidence_ref") if error.conflict_data else None
+                return f"{error.detail} | conflict evidence: {reference}" if reference else error.detail
         return ""
 
     def _clashes_without(self, later: str, accepted: dict, task_id: str, before_attempt: str) -> bool:
         """Does `later` clash even with the candidate's previous result (or the accepted result it replaces)?"""
         try:
-            self._integrate(later, {**accepted, task_id: before_attempt}, None, write_ref=False)
+            self._integrate(later, {**accepted, task_id: before_attempt}, None, write_ref=False,
+                            source_type="diagnostic")
         except IntegrationError as error:
             return error.code == "INTEGRATION_CONFLICT"
         return False
 
-    def _integrate(self, task_id: str, accepted_map=None, snapshot_of=None, *, write_ref: bool = True) -> str:
+    def _integrate(self, task_id: str, accepted_map=None, snapshot_of=None, *, write_ref: bool = True,
+                   source_type: str = "start") -> str:
         bound = self._bound
         role = self._role(task_id)
         same_repo = [t for t in self.ancestors(task_id) if self._role(t) == role]
@@ -425,7 +449,16 @@ class PredecessorIntegrator:
             if _git(repo, "cat-file", "-e", f"{sha}^{{commit}}", check=False).returncode:
                 raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{tid}: snapshot {sha[:12]} is not in {repo.name}")
             commits.append((tid, sha))
-        merged = self._merge(repo, task_id, commits, same_repo, snapshot_of)
+        try:
+            merged = self._merge(repo, task_id, commits, same_repo, snapshot_of)
+        except IntegrationError as error:
+            if error.code == "INTEGRATION_CONFLICT" and source_type != "diagnostic":
+                self._publish_conflict(task_id, source_type, error)
+                if source_type == "integration_gate" and error.conflict_data.get("evidence_unavailable"):
+                    raise IntegrationError("INTEGRATION_EVIDENCE_UNAVAILABLE",
+                                           "evidence_unavailable: integration conflict could not be published",
+                                           conflict_data=error.conflict_data) from None
+            raise
         merged = self._guarantee(repo, task_id, merged, self._items(repo, [(t, accepted[t], sha) for t, sha in commits]))
         if write_ref:
             ref = f"{self.ref_prefix}/{bound['identity']}/{self._ref_leaf(task_id)}"
@@ -480,6 +513,28 @@ class PredecessorIntegrator:
         except Exception:  # noqa: BLE001 - a listener never stops an integration
             LOGGER.debug("integration event listener failed", exc_info=True)
 
+    def _publish_conflict(self, task_id: str, source_type: str, error: IntegrationError) -> None:
+        bound = self._bound
+        if bound is None or bound.get("conflict_context") is None or bound.get("conflict_sink") is None:
+            return
+        try:
+            supplied = bound["conflict_context"](task_id, source_type, error.conflict_data or {})
+            if not isinstance(supplied, Mapping) or not isinstance(supplied.get("source_records"), Mapping):
+                raise ValueError("trusted conflict source context is incomplete")
+            from bt_recovery_conflicts import collect_conflict_evidence
+            observation = collect_conflict_evidence(supplied["source_records"], source_type=source_type,
+                                                    conflict=supplied.get("conflict", error.conflict_data or {}))
+            reference = bound["conflict_sink"](observation)
+            if not isinstance(reference, str) or not reference:
+                raise ValueError("conflict evidence sink returned no reference")
+        except Exception as cause:  # noqa: BLE001 - failure to publish must be visible and block automated repair
+            raise IntegrationError("INTEGRATION_EVIDENCE_UNAVAILABLE",
+                                   f"evidence_unavailable: conflict publication failed ({type(cause).__name__})",
+                                   conflict_data={"source_type": source_type, "task_id": task_id}) from None
+        # Keep the historical code/detail but make the trusted evidence reference available to the rejection boundary.
+        error.conflict_data = _freeze({**dict(error.conflict_data or {}), "evidence_ref": reference,
+                                       "observation": observation})
+
     def _merge(self, repo: Path, task_id: str, commits: list[tuple[str, str]], owners=(), snapshot_of=None) -> str:
         def contains(ancestor: str, descendant: str) -> bool:
             return _git(repo, "merge-base", "--is-ancestor", ancestor, descendant, check=False).returncode == 0
@@ -499,11 +554,14 @@ class PredecessorIntegrator:
             if done.returncode == 1:
                 done = self._merge_over_earlier_result(repo, contains, current, sha, owners, snapshot_of) or done
             if done.returncode == 1:
-                every = [line.strip() for line in done.stdout.splitlines()[1:] if line.strip()]
-                self._conflict_seen(task_id, current_task, tid, every)
-                files = every[:6]
-                raise IntegrationError("INTEGRATION_CONFLICT",       # the core keeps ~200 chars: who clashes comes first
-                                       f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"[:170])
+                files = tuple(sorted(set(line.strip() for line in done.stdout.splitlines()[1:] if line.strip())))
+                # Keep the historical operator string bounded, but attach the exact merge-tree result first.
+                merge_base = _git(repo, "merge-base", current, sha).stdout.strip()
+                conflict_data = {"task_id": task_id, "sides": ((current_task, current), (tid, sha)),
+                                 "paths": files, "merge_base": merge_base,
+                                 "trees": (done.stdout.splitlines()[0].strip(),), "carry_ancestry": ()}
+                detail = f"{current_task} vs {tid} for {task_id}: {', '.join(files)}"
+                raise IntegrationError("INTEGRATION_CONFLICT", detail[:170], conflict_data=conflict_data)
             if done.returncode:
                 raise IntegrationError("INTEGRATION_GIT", f"merge-tree: {(done.stderr or done.stdout).strip()[:300]}")
             tree = self._keep_newer_versions(repo, done.stdout.splitlines()[0].strip(), current, sha)
@@ -512,19 +570,6 @@ class PredecessorIntegrator:
             current_task = f"{current_task}+{tid}"
             members.append(tid)
         return current
-
-    def _conflict_seen(self, task_id: str, left: str, right: str, files: list[str]) -> None:
-        """Hand the FULL list of clashing files to whoever keeps evidence, once per distinct clash (the message that travels is
-        clipped; the repair needs every path)."""
-        notify = (self._bound or {}).get("on_conflict")
-        key = (task_id, left, right, tuple(files))
-        if notify is None or key in self._conflicts_seen:
-            return
-        self._conflicts_seen.add(key)
-        try:
-            notify(task=task_id, left=left, right=right, files=files)
-        except Exception:  # noqa: BLE001 - evidence keeping never stops an integration
-            LOGGER.debug("conflict listener failed", exc_info=True)
 
     def _keep_newer_versions(self, repo: Path, tree: str, a: str, b: str, depth: int = 40, limit: int = 400) -> str:
         """A clean merge can still lose a fix. Snapshots are whole trees, so a stale one (built before a redo) carries
