@@ -7,6 +7,12 @@
    "frozen_at": "2026-10-23T06:07:06",
    "source": "approval",
    "plan_md_sha256": "4e0d3c979845465ab4e4b798c0d648cbb14a4e3be5f5a2c83a937dddb8993f90"
+  },
+  {
+   "revision": 2,
+   "sha256": "801d53146ca6a3c8e5cb047c262f427a98cf25b7552d38b691ea44b2ba7e60ca",
+   "frozen_at": "2026-10-23T09:30:36",
+   "source": "monitor-generated-paths"
   }
  ]
 }

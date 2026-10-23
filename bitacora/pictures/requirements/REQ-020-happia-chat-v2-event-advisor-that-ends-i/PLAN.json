@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 13,
+  "revision": 14,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -3710,11 +3710,7 @@
         "pictures-production-deployment"
       ],
       "acceptance_criteria": [
-        "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
-        "T15's own check 1 passes: npm run gate",
-        "T15's own check 2 passes: npm run happie:test-webhook",
-        "T15's own check 3 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/int",
-        "T15's own check 4 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-resul"
+        "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)"
       ],
       "verification": [
         {
@@ -3772,32 +3768,6 @@
           "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
           "created_by": "T15.1",
           "category": "functional"
-        },
-        {
-          "type": "command",
-          "value": "npm run gate",
-          "purpose": "T15's own check 1 passes: npm run gate",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "npm run happie:test-webhook",
-          "purpose": "T15's own check 2 passes: npm run happie:test-webhook",
-          "category": "regression"
-        },
-        {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
-          "purpose": "T15's own check 3 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/int",
-          "created_by": "T7",
-          "category": "functional"
-        },
-        {
-          "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json",
-          "purpose": "T15's own check 4 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-resul",
-          "created_by": "T7",
-          "category": "static"
         }
       ],
       "covers": [

@@ -6,7 +6,7 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/7 · tareas 14/27 · generado: 2026-10-23T08:47:42-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/7 · tareas 18/27 · generado: 2026-10-23T09:30:52-05:00
 
 **M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
@@ -37,27 +37,27 @@ created: 2026-10-22
 | T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | completada | gpt-6-luna | codex-luis | 1 |
 
-**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 0/2
+**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 2/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | en curso | gpt-6-luna | codex-1 | 1 |
-| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | pendiente | — | — | 0 |
+| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | completada | gpt-6-luna | codex-1 | 1 |
+| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | completada | gpt-6-luna | codex-2 | 1 |
 
 **M5 — Bencho UI (12)** · dificultad alta · 0/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | pendiente | — | — | 0 |
+| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | en curso | gpt-6-luna | codex-2 | 4 |
 | T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | pendiente | — | — | 0 |
 
-**M6 — React Bits Free (32)** · dificultad alta · 0/3
+**M6 — React Bits Free (32)** · dificultad alta · 2/3
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | pendiente | — | — | 0 |
-| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | pendiente | — | — | 0 |
-| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | pendiente | — | — | 0 |
+| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | en curso | gpt-6-luna | codex-2 | 2 |
 
 **M7 — Agent index, deployment and acceptance** · dificultad alta · 0/6
 

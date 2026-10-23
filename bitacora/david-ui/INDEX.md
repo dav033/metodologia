@@ -1,6 +1,6 @@
 # Index — david-ui
 
-_Generated 2026-10-22 22:28 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-23 09:31 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/david-ui) · [graph](http://127.0.0.1:8765/p/david-ui/graph)  
@@ -14,7 +14,7 @@ _Generated 2026-10-22 22:28 by `bitacora.py index`. Do not edit by hand._
 
 | ID | Title | Spec | Plan | |
 |---|---|---|---|---|
-| [REQ-001](requirements/REQ-001-private-ui-kit-library-with-catalog-and/SPEC.md) | Private UI kit library with catalog and registry | `planned` | [draft](requirements/REQ-001-private-ui-kit-library-with-catalog-and/PLAN.md) |  |
+| [REQ-001](requirements/REQ-001-private-ui-kit-library-with-catalog-and/SPEC.md) | Private UI kit library with catalog and registry | `planned` | [launched](requirements/REQ-001-private-ui-kit-library-with-catalog-and/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 

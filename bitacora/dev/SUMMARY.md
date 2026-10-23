@@ -7,6 +7,7 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
+2026-10-23 08:57: david-ui REQ-001 running (14/27, parallel 3, window ends ~11:10); REQ-020 in production (c25a5f42), T15.1 repairing the audit checker (plan r14). Engine fixes P-165..P-174 in metodologia/PENDING.md; three Codex branches awaiting merge on integration/engine-fixes-0823.
 REQ-029 r2 approved/frozen and running T3a att-0005 with accepted T1–T3 retained. REQ-027 r9 progressed through T15a/T15b; owner-requested T15d repair applied via T15d:7 rework_conflict, rebuilding stale T15c before T15d. No open decisions/blocked tasks at inspection; watchdog active. P-137 closed. Pictures REQ-020 continues separately; last inspected T7 att-0013 verifying. No relay or continuous monitoring requested.
 
 ## Active focus
