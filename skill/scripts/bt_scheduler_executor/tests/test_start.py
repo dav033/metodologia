@@ -110,6 +110,17 @@ class Start(unittest.TestCase):
         self.assertEqual((r.status, r.code), ("rejected", "BASE_UNRESOLVED"))
         self.no_side_effects(w)
 
+    def test_a_repository_without_commits_gets_an_empty_root_commit_instead_of_blocking_the_first_task(self):
+        import subprocess
+        import tempfile
+
+        fresh = Path(tempfile.mkdtemp(prefix="bt-fresh-")) / "new"
+        fresh.mkdir()
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=fresh, check=True)
+        workspaces = ex.GitWorkspaces(Path(tempfile.mkdtemp(prefix="bt-ws-")), {"fresh": fresh})
+        self.assertRegex(workspaces.check(order(1, repo="fresh")), r"^[0-9a-f]{40,64}$")
+        self.assertEqual(support.git(fresh, "status", "--porcelain"), "")
+
     def test_a_base_that_looks_like_an_option_is_refused(self):
         w = self.quiet()
         r = w.x.start(order(1, base="--upload-pack=evil"))

@@ -58,7 +58,17 @@ class GitWorkspaces:
     def check(self, request: StartRequest) -> str:
         """Refuse an unknown repository or base before anything exists; returns the commit the base ref names NOW, so the
         executor can pin it (a queued order or a restart must not start from whatever branch is checked out later)."""
-        return self._base(self.repository(request.repository), request.base_ref)
+        repo = self.repository(request.repository)
+        self._root_commit(repo)
+        return self._base(repo, request.base_ref)
+
+    def _root_commit(self, repo: Path) -> None:
+        """A brand-new repository (a greenfield plan: david-ui REQ-001 T1) has no commit to start an attempt from: the run would block on
+        BASE_UNRESOLVED before the first task. One empty root commit gives it a base and changes no file."""
+        if gitutil.run(repo, ["rev-list", "-n", "1", "--all"], check=False):
+            return
+        gitutil.run(repo, ["-c", "user.name=Bitacora", "-c", "user.email=bitacora@localhost", "commit", "--allow-empty", "-q", "-m",
+                           "chore: root commit (the scheduler needs a base to start from)"], check=False)
 
     # ------------------------------------------------------------------------------------------ allocation
     @contextmanager
