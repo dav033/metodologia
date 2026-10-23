@@ -9,7 +9,7 @@ from bt_scheduler_quality.sandbox_mounts import attempt_mounts
 
 
 class NestedDependenciesTests(unittest.TestCase):
-    def test_nested_dependencies_are_read_only_inside_real_sandbox(self):
+    def test_nested_dependencies_are_writable_inside_real_sandbox_and_untouched_on_the_host(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             snapshot, worktree = root / 'snapshot', root / 'worktree'
@@ -22,9 +22,7 @@ class NestedDependenciesTests(unittest.TestCase):
             (app / 'probe.py').write_text(
                 "from pathlib import Path\n"
                 "assert Path('node_modules/marker').read_text() == 'installed'\n"
-                "try:\n    Path('node_modules/marker').write_text('changed')\n"
-                "except OSError:\n    pass\n"
-                "else:\n    raise AssertionError('dependencies are writable')\n"
+                "Path('node_modules/marker').write_text('changed')\n"
             )
             policy = QualityPolicy()
             mounts = attempt_mounts(policy, worktree, snapshot_root=snapshot)
@@ -32,8 +30,9 @@ class NestedDependenciesTests(unittest.TestCase):
                               ('python3', 'probe.py'), 'remote/web', 'nested dependency isolation')
             result = SandboxRunner(policy).run(check, snapshot, mounts=mounts)
             self.assertEqual((result.status, result.exit_code), ('pass', 0), result)
+            self.assertEqual((modules / 'marker').read_text(), 'installed')
 
-    def test_tools_can_write_their_config_bundle_under_node_modules_but_nothing_else(self):
+    def test_node_modules_is_writable_inside_the_sandbox_and_untouched_on_the_host(self):
         """david-ui REQ-001 T1: vitest bundles `vitest.config.mts` into `node_modules/.vite-temp` and died with EROFS (three attempts)."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -41,18 +40,20 @@ class NestedDependenciesTests(unittest.TestCase):
             snapshot.mkdir()
             (snapshot / "package.json").write_text("{}")
             (worktree / "node_modules").mkdir(parents=True)
+            (worktree / "node_modules" / "marker").write_text("installed")
             (snapshot / "probe.py").write_text(
                 "from pathlib import Path\n"
+                "Path('node_modules/.vite-temp').mkdir(exist_ok=True)\n"
                 "Path('node_modules/.vite-temp/config.mjs').write_text('x')\n"
-                "try:\n    Path('node_modules/other').write_text('x')\n"
-                "except OSError:\n    pass\n"
-                "else:\n    raise AssertionError('dependencies are writable')\n")
+                "Path('node_modules/other').write_text('x')\n"
+                "Path('node_modules/marker').write_text('changed')\n")
             policy = QualityPolicy()
             mounts = attempt_mounts(policy, worktree, snapshot_root=snapshot)
             check = CheckSpec("C1", "command", "python3 probe.py", ("python3", "probe.py"), ".", "scratch under node_modules")
             result = SandboxRunner(policy).run(check, snapshot, mounts=mounts)
             self.assertEqual((result.status, result.exit_code), ("pass", 0), result)
-            self.assertFalse((worktree / "node_modules" / ".vite-temp" / "config.mjs").exists())   # the write never reaches the host
+            self.assertEqual(sorted(p.name for p in (worktree / "node_modules").iterdir()), ["marker"])                 # nothing reached the host
+            self.assertEqual((worktree / "node_modules" / "marker").read_text(), "installed")
 
     def test_nested_app_mounts_its_installed_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:

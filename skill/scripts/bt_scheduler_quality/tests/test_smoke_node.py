@@ -86,10 +86,10 @@ class VerifierSmoke(unittest.TestCase):
         result = self.run_check("git", "rev-parse", "--abbrev-ref", "HEAD")
         self.assertEqual((result.status, result.stdout.decode().splitlines()[-1]), ("pass", "attempt"))
 
-    def test_the_sandbox_cannot_write_back_to_the_host(self):
+    def test_the_sandbox_writes_to_a_throwaway_overlay_never_the_host(self):
         write(self.snapshot / "write.js", "require('fs').writeFileSync('/workspace/node_modules/dep/index.js', 'x')")
         result = self.run_check("node", "write.js")
-        self.assertEqual(result.status, "fail")
+        self.assertEqual(result.status, "pass")      # the sandbox may write its own copy (overlay) ...
         self.assertEqual((self.repo / "node_modules/dep/index.js").read_text(), "module.exports = 'dep';")
 
 

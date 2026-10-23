@@ -81,7 +81,7 @@ class SandboxRunnerTests(unittest.TestCase):
 
         self.assertEqual((result.status, result.exit_code), ("pass", 0))
 
-    def test_attempt_dependencies_are_shown_inside_the_workspace_read_only(self):
+    def test_attempt_dependencies_are_shown_inside_the_workspace_and_writes_stay_in_the_sandbox(self):
         with tempfile.TemporaryDirectory() as directory:
             worktree = Path(directory) / "worktree"
             (worktree / "node_modules" / "dep").mkdir(parents=True)
@@ -91,13 +91,14 @@ class SandboxRunnerTests(unittest.TestCase):
             (root / "probe.py").write_text(
                 "import os, sys\n"
                 "if not os.path.exists('node_modules/dep/index.js'): sys.exit(2)\n"
-                "try:\n    open('node_modules/dep/new', 'w')\n    sys.exit(3)\n"
-                "except OSError:\n    pass\n",
+                "open('node_modules/dep/new', 'w').write('x')\n",
                 encoding="utf-8",
             )
             policy = QualityPolicy()
             mounts = attempt_mounts(policy, worktree)
             result = SandboxRunner(policy).run(_check("probe.py"), root, mounts=mounts)
+
+            self.assertFalse((worktree / "node_modules" / "dep" / "new").exists())      # the host's dependencies are never written
 
         self.assertEqual(len(mounts), 1)
         self.assertEqual((result.status, result.exit_code), ("pass", 0))

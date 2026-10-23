@@ -1,4 +1,4 @@
-"""An attempt that installed no dependencies gets the ones its lockfile pins, installed offline and mounted read-only."""
+"""An attempt that installed no dependencies gets the ones its lockfile pins, installed offline and mounted in the sandbox (writable there, never on the host)."""
 from __future__ import annotations
 
 import os
