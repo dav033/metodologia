@@ -1,9 +1,75 @@
 ---
 req: REQ-001
-status: approved
+status: launched
 created: 2026-10-22
 ---
 # Plan — Private UI kit library with catalog and registry
+
+<!-- bitacora:status:begin -->
+> Bloque generado, no editar a mano. Plan: launched · ejecución: — · hitos 0/7 · tareas 0/27 · generado: 2026-10-23T06:07:07-05:00
+
+**M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 0/6
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T1 | Scaffold `~/dev/david-ui`: Next 16 + TS strict + Tailwind 4 + shadcn init (Base UI style) + ESLint/Prettier + Vitest/Testing Library + Playwright/axe; scripts `verify`, `test`, `test:e2e`; `.gitignore` incl. `.evidence/`; `.env.example`; create private GitHub repo `dav033/david-ui` and push | alta | pendiente | — | — | 0 |
+| T2 | Compatibility and license spike: per each of the 22 enhancements and 7 capabilities, whether Animate UI ships a Base UI variant and its install path; Motion/React/Tailwind version matrix; Sonner vs Animate UI toast as single engine; licenses of shadcn, Animate UI, Bencho (per block) and React Bits; write `.evidence/T2-spike.md` and record the toast-engine and primitive rulings | alta | pendiente | — | — | 0 |
+| T3 | Design tokens and motion: `registry/david-ui/styles/tokens.css` (Catppuccin Latte/Mocha, mauve accent, radii, shadows, typography, spacing, motion durations/easings for subtle/natural/expressive), `ThemeProvider`, `MotionProfileProvider` (Motion `MotionConfig` + reduced motion), `useMotionProfile`; registry items for them | alta | pendiente | — | — | 0 |
+| T4 | Catalog manifest and license register: zod schema (R5), `catalog/entries.ts` with all 93 entries `pending` and the 22 enhancements linked to base entries, `catalog/licenses.ts` from T2, `npm run catalog:check` asserting counts, unique ids, base links and status/metadata rules | alta | pendiente | — | — | 0 |
+| T5 | Registry pipeline: `registry.json` generated from the manifest, `npm run registry:build` (`shadcn build` → `public/r/`), proof item `button`; integration script `scripts/registry-smoke.mjs` that creates a scratch Next app in a temp dir, installs `@david-ui/button` from a locally served registry and builds it | alta | pendiente | — | — | 0 |
+| T6 | Kit-only guard: ESLint `no-restricted-imports` outside `registry/` + `scripts/check-kit-only.ts` (forbidden imports and raw interactive JSX in `src/app`, `src/components`), with a test that plants violations | media | pendiente | — | — | 0 |
+
+**M2 — 30 P1 shadcn components with their Animate UI enhancements** · dificultad alta · 0/5
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T7 | Structure + forms: Button (+ variants), Card, Badge, Avatar, Field, Input, Textarea, Select*, Checkbox*, Switch*, Combobox* (* = Animate UI enhancement), demos with all states, manifest updated | alta | pendiente | — | — | 0 |
+| T8 | Navigation: Sidebar* (manual), Tabs*, Dropdown Menu*, Breadcrumb, Pagination* (manual) | alta | pendiente | — | — | 0 |
+| T9 | Overlays and disclosure: Dialog*, Alert Dialog*, Sheet*, Popover*, Tooltip*, Accordion* | alta | pendiente | — | — | 0 |
+| T10 | Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart | alta | pendiente | — | — | 0 |
+| T11 | P1 e2e and a11y suite: Playwright spec that opens every P1 demo, runs axe, exercises keyboard paths and repeats under `reducedMotion: 'reduce'`; promote passing entries to `validated` | alta | pendiente | — | — | 0 |
+
+**M3 — Private catalog application built with the kit** · dificultad alta · 0/3
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T12 | Catalog shell and browse: layout with kit Sidebar/Breadcrumb, home grid of entries, filters (source, category, priority, status, type), command-palette search (adds `Command` and any shadcn piece needed, e.g. Toggle Group, as catalog-driven additions), theme toggle | alta | pendiente | — | — | 0 |
+| T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | pendiente | — | — | 0 |
+| T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | pendiente | — | — | 0 |
+
+**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 0/2
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | pendiente | — | — | 0 |
+| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | pendiente | — | — | 0 |
+
+**M5 — Bencho UI (12)** · dificultad alta · 0/2
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | pendiente | — | — | 0 |
+| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | pendiente | — | — | 0 |
+
+**M6 — React Bits Free (32)** · dificultad alta · 0/3
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | pendiente | — | — | 0 |
+| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | pendiente | — | — | 0 |
+| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | pendiente | — | — | 0 |
+
+**M7 — Agent index, deployment and acceptance** · dificultad alta · 0/6
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | pendiente | — | — | 0 |
+| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | pendiente | — | — | 0 |
+| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | pendiente | — | — | 0 |
+| T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | pendiente | — | — | 0 |
+| T25 | Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | — | — | 0 |
+| T25b | Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | — | — | 0 |
+<!-- bitacora:status:end -->
 
 ## Approach
 Greenfield repo `~/dev/david-ui` (private GitHub `dav033/david-ui`): one Next.js 16 app that is both the private catalog
@@ -501,3 +567,4 @@ readiness and scope approval. No product lint, typecheck, build or behavior test
 - 2026-10-22: spec and plan written from the owner's inventory v4 and interview round 1.
 - Classification update: completed task metadata, traceability, typed evidence, owned paths and categorized exact-purpose verification; deterministic check exit 0, no errors; product checks remain planned and secret locations remain unresolved.
 - 2026-10-23 06:07 plan APPROVED (terminal)
+- 2026-10-23 06:07 launched Scheduler supervisor from HQ in `/home/david/dev/david-ui`
