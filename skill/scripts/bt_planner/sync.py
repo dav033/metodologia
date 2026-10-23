@@ -312,7 +312,8 @@ def _evidence_scope_problems(directory: Path, plan: dict, repo_roots: Mapping[st
 
 def check(directory: Path, plan: object | None = None, plan_id: str | None = None,
           repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
-          ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None) -> pc.Report:
+          ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
+          *, strict_publication: bool = True, ledger_command: str = "engine audit-ledger check") -> pc.Report:
     """Full publication gate: schema + graph rules + classification evidence, PLAN.md consistency, revision store and
     frozen-revision immutability. Pass `plan` to check an already parsed object (so a caller can freeze exactly what was
     checked) and `repo_roots` ({repository role: path}) to verify that `file:` evidence really exists; with
@@ -329,7 +330,8 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
         if version[0] == pc.SUPPORTED_MAJOR and version >= pc.EXTENSIONS_SINCE:
             spec_ids = traceability.read_spec_ids(directory, plan.get("spec_ref") or DEFAULT_SPEC_REF)
     inner = pc.validate(plan, _file_resolver(repo_roots) if repo_roots is not None else None, ref_exists,
-                        spec_ids=spec_ids, ignored_path=ignored_path)
+                        spec_ids=spec_ids, ignored_path=ignored_path, strict_publication=strict_publication,
+                        ledger_command=ledger_command)
     report.errors += inner.errors
     report.warnings += inner.warnings
     if isinstance(plan, dict):
@@ -364,7 +366,8 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
 def approve_freeze(directory: Path, plan_id: str | None = None,
                    approved_states: tuple[str, ...] = APPROVED_STATES,
                    repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
-                   ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None) -> dict:
+                   ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
+                   ledger_command: str = "engine audit-ledger check") -> dict:
     """Freeze the current PLAN.json as an immutable revision. Requires an approved PLAN.md status and a clean check."""
     status = plan_status(directory)
     if status not in approved_states:
@@ -372,10 +375,11 @@ def approve_freeze(directory: Path, plan_id: str | None = None,
     rev.list_revisions(directory)  # preserve the revision store's stable error code at the approval boundary
     plan, report = read_plan(directory)
     if plan is not None:
-        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path)  # the very object frozen below
+        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path,
+                       ledger_command=ledger_command)  # the very object frozen below
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
-    return rev.freeze(directory, plan, narrative=narrative_digest(directory))
+    return rev.freeze(directory, plan, narrative=narrative_digest(directory), ledger_command=ledger_command)
 
 
 def _next_id(taken: set[str], base: str) -> str:
@@ -474,13 +478,15 @@ def retrofit_audit(directory: Path, cross_check: bool = False) -> list[str]:
 def freeze_if_present(directory: Path, plan_id: str | None = None,
                       approved_states: tuple[str, ...] = APPROVED_STATES,
                       repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
-                      ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None) -> dict | None:
+                      ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
+                      ledger_command: str = "engine audit-ledger check") -> dict | None:
     """Opt-in contract, approval side. No PLAN.json -> None (legacy plan). With one and an approved PLAN.md, freeze it
     (idempotent; a new revision number is a new approval) or raise PlanContractError; a not-yet-approved plan is left
     alone. Launch paths use `bind_approved`, which never turns an unreviewed edit into a revision."""
     if not (Path(directory) / PLAN_JSON).exists() or plan_status(directory) not in approved_states:
         return None
-    return approve_freeze(directory, plan_id, approved_states, repo_roots, verify_files, ref_exists, ignored_path)
+    return approve_freeze(directory, plan_id, approved_states, repo_roots, verify_files, ref_exists, ignored_path,
+                          ledger_command=ledger_command)
 
 
 def bind_approved(directory: Path, plan_id: str | None = None, approved_states: tuple[str, ...] = APPROVED_STATES, *,
@@ -510,7 +516,8 @@ def bind_approved(directory: Path, plan_id: str | None = None, approved_states: 
             f"PLAN.md status is {status or 'missing'!r}; approve the plan before launching it"])
     plan, report = read_plan(directory)
     if plan is not None:
-        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path)
+        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path,
+                       strict_publication=False)
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
     digest = rev.sha256(pc.dumps(plan))

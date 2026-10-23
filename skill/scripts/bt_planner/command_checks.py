@@ -91,9 +91,10 @@ def input_findings(plan: dict, ignored: IgnoredPath | None) -> tuple[list[str], 
     return errors, warnings
 
 
-def project_ledger_checks(plan: dict) -> list[str]:
+def project_ledger_checks(plan: dict, ledger_command: str = "engine audit-ledger check") -> list[str]:
     warnings = []
     tasks = plan.get("tasks")
+    expected = tokens(ledger_command)
     for task in tasks if isinstance(tasks, list) else ():
         if not isinstance(task, dict) or task.get("kind") != "audit":
             continue
@@ -102,11 +103,24 @@ def project_ledger_checks(plan: dict) -> list[str]:
             if not isinstance(check, dict) or check.get("type") != "command":
                 continue
             words = tokens(str(check.get("value", "")))
-            if "audit-ledger" in words and "check" in words:
-                continue
-            ledger = any(".findings.json" in word or "audit-findings" in word for word in words)
-            script = any(re.search(r"\.(?:[cm]?[jt]sx?|py|sh)$", word) for word in words)
-            if ledger and script:
+            segments: list[list[str]] = [[]]
+            for word in words:
+                if word in ("&&", "||", ";", "|", "&"):
+                    segments.append([])
+                else:
+                    segments[-1].append(word)
+            private = False
+            for segment in segments:
+                program = segment[1:] if segment and re.fullmatch(r"python(?:3(?:\.\d+)?)?", posixpath.basename(segment[0])) else segment
+                normalized = [posixpath.basename(program[0]), *program[1:]] if program else []
+                engine = len(normalized) > len(expected) and normalized[:len(expected)] == expected
+                ledger = any(".findings.json" in word or "audit-findings" in word for word in segment)
+                private |= ledger and not engine
+            if private:
+                paths = task.get("expected_paths") or []
+                path = next((p for p in paths if isinstance(p, str) and p.endswith(".findings.json")), None)
+                path = path or next((w for w in words if ".findings.json" in w), "<report>.findings.json")
                 warnings.append(f"{task.get('id')}.verification[{index}]: project-specific audit ledger validator; "
-                                "use the engine's `audit-ledger check` command instead")
+                                f"replace with `{ledger_command} {shlex.quote(path)}`; "
+                                "the engine owns the ledger contract")
     return warnings

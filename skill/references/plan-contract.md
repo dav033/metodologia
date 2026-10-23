@@ -51,6 +51,9 @@ those keys). The scheduler run database is authority on state. A plan without a 
 
 `plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports what a legacy plan lacks
 (and any ambiguity in its PLAN.md). Schema 1.0.0/1.1.0 plans already frozen keep working; new revisions use 1.2.0.
+Publication-only rules reject new approvals and freezes, while consumer validation and binding of an already frozen
+plan keep those rules as advice. In particular, a private findings-ledger checker in an old plan remains loadable;
+`plan-json check` refuses it when preparing the next approval. `compat` does not rewrite or refreeze it.
 Do not approve, hand off, launch or resume a 1.2.0 plan until the T11 M1/M2/M6 compatibility migration and its
 fail-closed capability check are complete.
 
@@ -104,6 +107,23 @@ about components started together. So `plan-json check` refuses a plan with a `k
 - has no `kind: test` task with a command verification of category `integration` among the tasks it follows. That
   test must start the real entry points (server, worker, CLI) together and drive one real flow; importing the
   modules is not an integration test.
+
+At publication (`check`/approval/`freeze`), an audit command naming its findings ledger (or `*.findings.json`) must use
+`bitacora.py audit-ledger check <ledger-path>`; project-specific validators are an **error**, with the exact replacement
+in the diagnostic. The engine owns the ledger contract (`tasks`/`fixed` and compatible `taskReferences`/`closed`);
+two validators must not invent conflicting spellings. Merely putting `audit-ledger check` among another script's
+arguments, or adding an engine check before a private checker, does not exempt that checker.
+
+Evidence producer tasks declare their evidence file as an exact `expected_paths` entry in the same repository as the
+audit. Record optional `tree_digest` in the evidence JSON and ledger, and `integration_evidence: ["path/to/evidence.json"]`
+in the ledger. Generate both digests with `bitacora.py audit-ledger tree-digest <frozen-PLAN.json> --repository <git-root>
+--role <repository-role> --revision <commit>` after committing source changes. The digest covers tracked content and
+modes, excluding exact report outputs of that repository's test/audit tasks; see `modules.md` §Audit gate for the full
+algorithm, old `revision` fallback and stale-evidence rework. Report-only commits do not invalidate evidence; source
+changes send its declared producer back to regenerate it instead of spending more audit attempts. New JSON fields are
+optional and do not change `audit-findings/1` or plan schemas. The command prints provenance without modifying files.
+If the evidence producer has another task kind, add the same `--evidence <path>` to both digest commands (unless an
+audit already names the path with `--integration-results`), so the producer's own report cannot enter its digest.
 
 `plan-json retrofit-audit REQ-NNN [--cross-check]` fixes the first rule on a plan written before it existed: it gives each audit task its
 ledger path (next to its `.md` report) in PLAN.json (a new working revision) and on its PLAN.md `files:`. With `--cross-check` it also clones a lone audit into an independent second one (the owner's `gates.second_auditor`

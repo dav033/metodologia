@@ -108,6 +108,34 @@ class Isolated(unittest.TestCase):
 
 
 class Handoff(Isolated):
+    def test_handoff_consumes_an_unchanged_frozen_private_checker_but_publication_refuses_it(self):
+        from tests.scheduler_executor_support import freeze
+
+        self.set_status("approved")
+        plan = classified(self.rdir)
+        plan["tasks"][0]["kind"] = "test"
+        plan["tasks"][0]["verification"][0]["category"] = "integration"
+        audit = plan["tasks"][1]
+        audit.update(kind="audit", expected_paths=["docs/T2.findings.json"], verification=[
+            {"type": "command", "value": "npx tsx check-findings.ts docs/T2.findings.json",
+             "purpose": audit["acceptance_criteria"][0], "category": "functional"}])
+        plan["tasks"].append({**audit, "id": "T3", "title": "Cross-check ledger", "after": ["T1"],
+                              "expected_paths": ["docs/T3.findings.json"], "verification": [
+                                  {**audit["verification"][0], "value": "bitacora.py audit-ledger check docs/T3.findings.json"}]})
+        narrative = self.rdir / "PLAN.md"
+        narrative.write_text(narrative.read_text() + "- [ ] T3 — Cross-check ledger · repo: app · after: T1\n")
+        text = planner.dumps(plan)
+        (self.rdir / "PLAN.json").write_text(text)
+        freeze(self.rdir, text)
+        capabilities = self.compatibility_report()
+        self.assertEqual(adapter.handoff_problems(self.rdir, compatibility_report=capabilities), [])
+        messages = []
+        self.assertEqual(adapter.run_cli("check", self.rdir, emit=messages.append, compatibility_report=capabilities), 2)
+        self.assertTrue(any("bitacora.py audit-ledger check docs/T2.findings.json" in message for message in messages))
+        plan["revision"] = 2
+        (self.rdir / "PLAN.json").write_text(planner.dumps(plan))
+        self.assertTrue(any("audit-ledger check" in message for message in adapter.handoff_problems(self.rdir)))
+
     def test_plans_without_the_contract_are_untouched(self):
         self.assertEqual(adapter.handoff_problems(self.rdir), [])
         self.assertFalse(any("PLAN.json" in p for p in bt_handoff.assess("sample", self.rdir)["problems"]))
