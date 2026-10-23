@@ -25,11 +25,12 @@ from typing import Any, Callable
 
 STATE = "RUN.reviewer.json"
 MAX_COMMANDS = 8
-OUTPUT_CHARS = 3000
+ROUNDS = 3
+OUTPUT_CHARS = 12000
 TIMEOUT = 60
 FILE_TOOLS = {"ls", "cat", "head", "tail", "wc", "grep", "stat", "test", "diff"}
 GIT_SUBCOMMANDS = {"log", "show", "status", "diff", "ls-remote", "ls-files", "rev-parse", "branch", "remote", "cat-file", "rev-list",
-                   "describe", "tag", "config"}
+                   "describe", "tag", "config", "ls-tree", "grep", "blame", "shortlog"}
 GH_GROUPS = {"repo": {"view", "list"}, "pr": {"view", "list", "checks", "diff", "status"}, "run": {"view", "list"},
              "release": {"view", "list"}, "issue": {"view", "list"}, "api": None}
 WRITING_FLAGS = {"-X", "--method", "-f", "-F", "--field", "--raw-field", "--input", "-d", "--delete", "--edit", "-i"}
@@ -48,13 +49,20 @@ CRITERION (manual check): {purpose}
 HOW TO CHECK: {value}
 EXPECTED: {expected}
 REPOSITORY (cwd of git/gh): {repository}
-ROOTS you may read by absolute path: {roots}
+SNAPSHOT COMMIT under review: {snapshot} — the repository's HEAD is NOT the work: name this commit in git commands
+(`git show {snapshot}:path`, `git log {snapshot}`, `git ls-tree -r --name-only {snapshot}`).
+File readers (ls, cat, grep…) run in the extracted snapshot: use RELATIVE paths. Files of the snapshot (excluding dependencies):
+{files}
+ROOTS you may also read by absolute path: {roots}
 """
 
 JUDGE_PROMPT = """You review a manual acceptance criterion of a software task from command outputs the engine collected. Judge ONLY from them.
 `pass` needs outputs that prove every part of the criterion; anything missing, ambiguous, failed to run, or needing a human body or eyes
 is `unsure`; `fail` needs outputs that show it does NOT hold. Answer with ONE JSON object and nothing else:
-{{"verdict": "pass"|"fail"|"unsure", "confidence": "alta"|"media"|"baja", "evidence": "at most 5 sentences quoting the outputs that decide"}}
+{{"verdict": "pass"|"fail"|"unsure", "confidence": "alta"|"media"|"baja", "evidence": "at most 5 sentences quoting the outputs that decide",
+  "more_commands": ["read-only commands (same rules, relative paths, at most {limit}) whose output would settle an `unsure`; [] when none could"]}}
+Outputs longer than {chars} characters are cut in the middle: read a part with `head -n`, `sed -n` is NOT allowed, use `grep -n pattern file` or
+`tail -n`. You may ask for more at most {rounds} times, so ask for everything missing at once.
 
 TASK: {task}
 CRITERION: {purpose}
@@ -89,7 +97,8 @@ def vet(command: str, roots: list[Path], snapshot: Path, repository: Path) -> tu
         tokens = shlex.split(command)
     except ValueError:
         return None
-    if not tokens or any(ch in command for ch in "|;&`$<>\n") or len(tokens) > 40:
+    # no shell ever runs this (argv is exec'd), so `|` or `$` inside an argument is literal text (a grep pattern); only newlines are refused
+    if not tokens or "\n" in command or len(tokens) > 40:
         return None
     tool, rest = tokens[0], tokens[1:]
     if tool in FILE_TOOLS:
@@ -129,7 +138,9 @@ def run_command(argv: list[str], cwd: Path, secrets: list[str]) -> dict[str, Any
         text, code = f"{type(error).__name__}: {error}", -1
     for secret in secrets:
         text = text.replace(secret, "[redacted]")
-    return {"exit_code": code, "output": text[-OUTPUT_CHARS:]}
+    if len(text) > OUTPUT_CHARS:        # a document keeps its beginning and its end: the middle is what a review can do without
+        text = text[:OUTPUT_CHARS * 2 // 3] + "\n[…cut…]\n" + text[-OUTPUT_CHARS // 3:]
+    return {"exit_code": code, "output": text}
 
 
 def _env_secrets(repository: Path) -> list[str]:
@@ -137,6 +148,17 @@ def _env_secrets(repository: Path) -> list[str]:
 
     env_file = repository / ".env.local"
     return bt_coordinator.env_secrets(env_file) if env_file.is_file() else []
+
+
+def _listing(work: Path, limit: int = 200) -> str:
+    """The snapshot's files, evidence and documents first, so the model knows what there is to read."""
+    found: list[str] = []
+    for directory, children, files in os.walk(work):
+        children[:] = [c for c in children if c not in ("node_modules", ".git", ".next", "dist", "coverage")]
+        for name in files:
+            found.append(str((Path(directory) / name).relative_to(work)))
+    found.sort(key=lambda f: (not f.startswith((".evidence", "docs", "README", "AGENTS", "CLAUDE")), f))
+    return "\n".join(found[:limit]) + (f"\n… and {len(found) - limit} more" if len(found) > limit else "") or "(empty)"
 
 
 def _extract(repository: Path, snapshot: str, work: Path) -> None:
@@ -177,13 +199,15 @@ def _json(text: str) -> dict[str, Any]:
 
 
 def judge(task: str, check: dict, results: list[dict], ask_model: Callable[[str], str]) -> dict[str, Any]:
-    outputs = "\n\n".join(f"$ {r['command']}\n(exit {r['exit_code']})\n{r['output']}" for r in results) or "(no command could be run)"
-    data = _json(ask_model(JUDGE_PROMPT.format(task=task, purpose=check["purpose"], expected=check["expected"], outputs=outputs)))
+    outputs = "\n\n".join(f"$ {r['command']}\n(exit {r['exit_code']})\n{r['output']}" for r in results)[-90000:] or "(no command could be run)"
+    data = _json(ask_model(JUDGE_PROMPT.format(task=task, purpose=check["purpose"], expected=check["expected"], outputs=outputs,
+                                               limit=MAX_COMMANDS, chars=OUTPUT_CHARS, rounds=ROUNDS)))
     verdict = data.get("verdict") if data.get("verdict") in ("pass", "fail", "unsure") else "unsure"
     confidence = data.get("confidence") if data.get("confidence") in ("alta", "media", "baja") else "baja"
     if verdict != "unsure" and confidence == "baja":
         verdict = "unsure"                          # a verdict the reviewer itself doubts is not a verdict
-    return {"verdict": verdict, "confidence": confidence, "evidence": str(data.get("evidence") or "").strip()[:900]}
+    more = [str(c) for c in data.get("more_commands") or [] if isinstance(c, str)][:MAX_COMMANDS]
+    return {"verdict": verdict, "confidence": confidence, "evidence": str(data.get("evidence") or "").strip()[:900], "more": more}
 
 
 # ------------------------------------------------------------------------------------------------------------ the task
@@ -214,10 +238,11 @@ def review_task(project: str, req: str, rdir: Path, task: str, *, ask_model: Cal
         _extract(repository, snapshot_sha, work)
         roots = [work.resolve(), repository.resolve(), (home / "dev" / "cerebro").resolve(), (home / "bitacora" / project).resolve()]
         secrets = _env_secrets(repository)
+        files = _listing(work)
         for number, check in enumerate(checks, 1):
             asked = _json(ask_model(PLAN_PROMPT.format(
                 limit=MAX_COMMANDS, task=task, purpose=check["purpose"], value=check["value"], expected=check["expected"],
-                repository=repository, roots=", ".join(str(r) for r in roots[1:]))))
+                repository=repository, snapshot=snapshot_sha, files=files, roots=", ".join(str(r) for r in roots[1:]))))
             results: list[dict] = []
             for command in [str(c) for c in asked.get("commands") or []][:MAX_COMMANDS]:
                 vetted = vet(command, roots, work, repository)
@@ -229,6 +254,14 @@ def review_task(project: str, req: str, rdir: Path, task: str, *, ask_model: Cal
                 lines.append(f"{task}: «{check['purpose'][:70]}» has no evidence the reviewer can gather: it stays for its owner")
                 continue
             verdict = judge(task, check, results, ask_model)
+            for _ in range(ROUNDS - 1):              # an `unsure` that names what is missing gets it, then is judged again
+                if verdict["verdict"] != "unsure" or not verdict["more"]:
+                    break
+                for command in verdict["more"]:
+                    vetted = vet(command, roots, work, repository)
+                    results.append({"command": command, **run(vetted[0], vetted[1], secrets)} if vetted is not None else
+                                   {"command": command, "exit_code": -2, "output": "refused: not a read-only command the reviewer may run"})
+                verdict = judge(task, check, results, ask_model)
             stamp = f"{project}-{req}"
             evidence = f"{verdict['evidence']} [reviewer: {len(results)} command(s) on {attempt}, confidence {verdict['confidence']}]"
             if verdict["verdict"] == "pass":

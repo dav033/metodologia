@@ -31,8 +31,17 @@ class Vetting(unittest.TestCase):
     def test_nothing_that_writes_deletes_or_leaves_the_roots_is_allowed(self):
         for command in ("gh repo delete x", "gh api repos/a/b -X DELETE", "gh api repos/a/b -f x=1", "git push origin main",
                         "git branch -D x", "git remote add x y", "git config user.name x", "git log --output=/tmp/x", "rm -rf x",
-                        "cat /etc/passwd", "cat ../x", "ls | rm x", "cat a; rm b", "echo $(id)", "curl http://x"):
+                        "cat /etc/passwd", "cat ../x", "echo $(id)", "curl http://x", "rm -rf x"):
             self.assertIsNone(self.vet(command), command)
+
+
+class LiteralArguments(unittest.TestCase):
+    def test_a_pipe_inside_an_argument_is_a_grep_pattern_not_a_shell(self):
+        """The first real run refused `grep -rniE "license|clean-room"`: nothing here goes through a shell, so it is literal text."""
+        snap, repo = Path("/tmp/snap"), Path("/tmp/repo")
+        argv, cwd = reviewer.vet('grep -rniE "license|clean-room" docs', [snap, repo], snap, repo)
+        self.assertEqual(argv[-2:], ["license|clean-room", "docs"])
+        self.assertEqual(cwd, snap)
 
 
 class Judging(unittest.TestCase):
@@ -87,6 +96,14 @@ class Review(unittest.TestCase):
         note.assert_not_called()
         self.assertEqual(ran[0][:3], ["gh", "repo", "view"])
         self.assertTrue(lines[0].startswith("attested"))
+
+    def test_an_unsure_judge_that_names_what_is_missing_gets_it_and_then_decides(self):
+        lines, attest, note, record, ran = self.run_review([
+            '{"commands": ["cat a.md"]}',
+            '{"verdict": "unsure", "confidence": "media", "evidence": "the file is cut", "more_commands": ["grep -n license a.md"]}',
+            '{"verdict": "pass", "confidence": "alta", "evidence": "license text found"}'])
+        attest.assert_called_once()
+        self.assertEqual([a[0] for a in ran], ["cat", "grep"])
 
     def test_a_criterion_that_does_not_hold_goes_to_the_agent_as_a_verification_note_not_as_an_attestation(self):
         lines, attest, note, record, _ = self.run_review(['{"commands": ["gh repo view x"]}',
