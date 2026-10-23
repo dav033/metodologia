@@ -618,7 +618,7 @@ class PlanRepairs(unittest.TestCase):
             self.assertIsNone(healing.analyst_case(rdir, req))                                  # it blames the task itself
             analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": True, "confidence": "baja", "cause": "c", "solution": "s"})
             self.assertIsNone(healing.analyst_case(rdir, req))                                  # not sure
-            analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": True, "confidence": "media", "cause": "the checker is unreachable", "solution": "s"})
+            analyst._save(rdir, "T3", {"state": "done", "failures": 5, "not_the_task": True, "confidence": "media", "source_available": True, "cause": "the checker is unreachable", "solution": "s"})
             case = healing.analyst_case(rdir, req)
             self.assertEqual((case.kind, case.task), ("regression", "T3"))
             self.assertIn("the checker is unreachable", case.evidence[0])

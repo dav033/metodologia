@@ -62,6 +62,11 @@ class AnalystStops(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(self.moves, [])
 
+    def test_an_analysis_without_current_source_cannot_build_a_plan_repair(self):
+        self.analysis["source_available"] = False
+        analyst._save(self.rdir, "T1", self.analysis)
+        self.assertIsNone(healing.analyst_case(self.rdir, {"task": "T1", "id": "review-1"}))
+
     def test_a_ready_task_is_blocked_without_cancelling_its_earlier_attempt(self):
         self.doc["tasks"]["T1"]["state"] = "ready"
         self.doc["attempts"]["a1"]["state"] = "failed"

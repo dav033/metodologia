@@ -488,7 +488,7 @@ def analyst_case(rdir: Path | str, request: dict) -> classify_mod.Case | None:
     import bt_attempt_analyst
 
     data = bt_attempt_analyst.load(rdir, request.get("task", ""))
-    if data.get("state") != "done" or data.get("not_the_task") is not True or data.get("confidence") == "baja":
+    if data.get("state") != "done" or data.get("not_the_task") is not True or data.get("confidence") == "baja" or data.get("source_available") is not True:
         return None
     cause = str(data.get("cause") or "")
     return classify_mod.Case(request.get("id", ""), request.get("task", ""), "regression",
