@@ -1,0 +1,22 @@
+{
+ "request": "REQ-001:r1:att-0003:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta una comprobación manual: revisar que el repo david-ui sea privado y esté subido",
+ "origin": "El verificador ya no puede dar veredicto porque el criterio de GitHub (repo dav033/david-ui privado y commit subido) solo lo puede comprobar una persona con la CLI autenticada, no la sandbox. Antes, en el intento att-0002, `npm run test` falló con `EROFS: read-only file system` al escribir en `/workspace/node_modules/.vite-temp` (Vitest carga `vitest.config.mts` y necesita escribir ahí), así que conviene confirmar que esa falla ya no aparece en att-0003.",
+ "steps": [
+  "Comprueba en tu terminal: `gh repo view dav033/david-ui --json visibility,url` debe mostrar `\"visibility\":\"PRIVATE\"`, y `git -C ~/dev/david-ui status -sb` no debe mostrar `ahead` (el commit local está subido).",
+  "Revisa con `bitacora.py --project david-ui scheduler-op REQ-001 status` que build, test y eslint de att-0003 pasaron; si `npm run test` vuelve a dar EROFS, corrige `vitest.config.mts` (p. ej. `configLoader: 'runner'`) antes de aprobar.",
+  "Si todo se cumple, elige «Aprobar a mano» (review_pass) diciendo lo que viste; si no, rechaza indicando qué falló."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T06:20:56",
+ "seconds": 18.6
+}

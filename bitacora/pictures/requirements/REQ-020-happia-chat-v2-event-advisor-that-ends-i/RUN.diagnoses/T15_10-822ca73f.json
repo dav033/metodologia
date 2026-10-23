@@ -1,0 +1,23 @@
+{
+ "request": "T15:10",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T15 no arrancó: T14a se aceptó pero no dejó snapshot del que partir",
+ "origin": "El scheduler rechazó el arranque con PREDECESSOR_HANDOFF_MISSING: \"T14a (att-0101) was accepted but left no snapshot to build on\". El fallo está en el traspaso entre tareas, no en el código de T15, que no llegó a ejecutarse en este intento. Los fallos de verificación anteriores (ENOENT de integration-results.json en /workspace/reports/e2e/asesor/ y \"expected revision\" en --check-audit-diff) siguen pendientes en scripts/e2e/asesor/check-findings.ts y volverán a aparecer al reintentar.",
+ "steps": [
+  "Comprueba el estado de T14a en el scheduler: `bitacora.py --project pictures scheduler-op REQ-020 status`. Confirma si att-0101 tiene snapshot.",
+  "Si T14a no tiene snapshot, vuelve a ejecutar T14a. Sus comprobaciones desplegadas necesitan ~/.config/pictures/asesor-live.env y ASESOR_E2E_DEPLOYED_REVISION fijado al SHA publicado.",
+  "Cuando T14a tenga snapshot, pulsa retry_with_note en T15 para que el agente corrija check-findings.ts antes de verificar.",
+  "No cambies código de producto: T15 solo escribe su informe y su ledger."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not change product code or any product artifact; only the audit report and docs/req-020/T15.findings.json may change. Fix scripts/e2e/asesor/check-findings.ts so it runs in the verifier's clean copy without .git and without /workspace/reports: read the integration results from the path given by --integration-results (docs/req-020/integration-results.json) and never default to /workspace/reports/e2e/asesor/integration-results.json. When git is unavailable, take the expected revision from the findings ledger and make --check-audit-diff compare it with the revision recorded in docs/req-020/integration-results.json, reporting the mismatch explicitly. Record the deployed advisor finding (F1, the advisor not released to production, from T14a att-0097) as open with severity high, so acceptance is rejected and the affected producer tasks are named. Run the three verification commands and report their output as evidence.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T07:28:27",
+ "seconds": 19.5
+}

@@ -1,0 +1,22 @@
+{
+ "request": "T15:11",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T15 no arranca: T14a se aceptó pero no dejó snapshot del que partir",
+ "origin": "El scheduler rechaza el arranque con PREDECESSOR_HANDOFF_MISSING: \"T14a (att-0101) was accepted but left no snapshot to build on\". El fallo está en la entrega de T14a, no en el código de T15 ni en la verificación de sus intentos anteriores. Reintentar T15 sin tocar T14a repetiría el mismo rechazo, porque la comprobación ocurre antes de que empiece cualquier intento. Además, T14a fue aceptada con F1 (advisor no publicado en producción, severidad alta, att-0097), que no consta como resuelto.",
+ "steps": [
+  "Revisa el estado de REQ-020 con `bitacora.py --project pictures scheduler-op REQ-020 status` y confirma si T14a (att-0101) tiene snapshot.",
+  "Si no lo tiene, reabre T14a para que regenere su snapshot y registre F1 como abierto de severidad alta, o decide con el dueño si acepta T14a con F1 abierto.",
+  "Cuando T14a tenga snapshot, reintenta T15 con `retry`; las indicaciones del dueño (corregir scripts/e2e/asesor/check-findings.ts y registrar F1 como alto abierto) siguen vigentes."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T07:28:48",
+ "seconds": 15.4
+}

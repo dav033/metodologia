@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 11,
+  "revision": 13,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2332,7 +2332,8 @@
       "objective": "Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation.",
       "repository": "pictures",
       "after": [
-        "T14a"
+        "T14a",
+        "T15.1"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -2419,7 +2420,7 @@
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
           "purpose": "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
           "created_by": "T7",
           "category": "functional"
@@ -2551,7 +2552,7 @@
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
           "purpose": "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
           "created_by": "T7",
           "category": "functional"
@@ -3634,6 +3635,182 @@
         "R7",
         "R8",
         "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15.1",
+      "milestone_id": "M4",
+      "title": "Repair what blocks T15",
+      "objective": "Repair the findings checker scripts/e2e/asesor/check-findings.ts so the audit task T15 can be verified. T15 failed 14 attempts because the checker rejects the ledger the audit gate and the audit task actually write ('Malformed audit-findings/1 header or findings list'). Make it accept: top-level `tasks` OR `taskReferences` (non-empty list of task ids); per finding `tasks` OR `taskReferences`; finding statuses `open`, `closed`, `fixed` (same as closed) and `accepted`; severities critical|high|medium|low|info. Its defaults must not assume T7 or an ignored path: when git is unavailable (a clean verification snapshot) the expected revision is the ledger's own revision, `--integration-results <file>` is read from the given path and may hold integration-results/1 or deployed-integration-results/1, and a revision mismatch between ledger and integration evidence is reported with both values. Keep rejecting open critical/high findings, malformed data and edits outside the report and ledger under --check-audit-diff. Add regression tests for every alias and for the clean-snapshot case in scripts/test/asesor/harness.test.ts, and keep every behaviour that already works.",
+      "repository": "pictures",
+      "after": [
+        "T14a"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T7, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T7",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "scripts/e2e/asesor/run.ts",
+        "scripts/e2e/asesor/check-findings.ts",
+        "scripts/e2e/asesor/scenarios/m1.ts",
+        "docs/req-020/deployment.md",
+        "scripts/test/asesor/harness.test.ts"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+        "T15's own check 1 passes: npm run gate",
+        "T15's own check 2 passes: npm run happie:test-webhook",
+        "T15's own check 3 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/int",
+        "T15's own check 4 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-resul"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/harness.test.ts",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: tests of T7 fail (check-findings.ts)",
+          "created_by": "T15.1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "T15's own check 1 passes: npm run gate",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "T15's own check 2 passes: npm run happie:test-webhook",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
+          "purpose": "T15's own check 3 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/int",
+          "created_by": "T7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json",
+          "purpose": "T15's own check 4 passes: npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-resul",
+          "created_by": "T7",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6"
       ],
       "kind": "implement"
     }

@@ -1,0 +1,23 @@
+{
+ "request": "T15:12",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "check-findings.ts busca un registro en /workspace y rechaza el ledger de hallazgos",
+ "origin": "El script scripts/e2e/asesor/check-findings.ts lee por defecto /workspace/reports/e2e/asesor/integration-results.json, una ruta que no existe en la copia limpia del verificador (ENOENT). En el segundo comando, con --check-audit-diff --integration-results docs/req-020/integration-results.json, el script responde 'Malformed audit-findings/1 header or findings list', así que su lectura de argumentos o el formato del ledger no coinciden con lo que pide el plan. Como ambos checks fallan, el gate (npm run gate) no llegó a ejecutarse.",
+ "steps": [
+  "Edita scripts/e2e/asesor/check-findings.ts: elimina el valor por defecto en /workspace/reports y lee la ruta de --integration-results (docs/req-020/integration-results.json); acepta tanto 'check-findings.ts docs/req-020/T15.findings.json' como '... --check-audit-diff --integration-results docs/req-020/integration-results.json'.",
+  "Sin .git, toma la revisión esperada de la cabecera del ledger docs/req-020/T15.findings.json, compárala con la revisión de docs/req-020/integration-results.json e informa el desajuste de forma explícita.",
+  "Revisa la cabecera y la lista de hallazgos del ledger contra el formato audit-findings/1 que valida el script. Registra F1 según el estado documentado en RUN.notes/T15.md: ciérrala solo con esa evidencia; si no, déjala open con severidad high, como pide la nota del propietario.",
+  "Ejecuta los tres comandos de verificación en orden y deja su salida como evidencia; no toques código de producto ni artefactos fuera del informe y del ledger."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix scripts/e2e/asesor/check-findings.ts only (no product code or artifacts). Never default to /workspace/reports/e2e/asesor/integration-results.json: when --integration-results is absent, resolve docs/req-020/integration-results.json relative to the repo root, and fail with a clear message if it is missing. Make parseArgs accept exactly: 'check-findings.ts docs/req-020/T15.findings.json' and 'check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json'. Without .git, take the expected revision from the findings ledger header, compare it with the revision in docs/req-020/integration-results.json, and print the mismatch explicitly. Make sure docs/req-020/T15.findings.json matches the audit-findings/1 header and findings list format the script validates. Record F1 as closed only if RUN.notes/T15.md documents it; otherwise keep it open, severity high. Then run the three verification commands and report their full output.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T07:46:23",
+ "seconds": 21.3
+}

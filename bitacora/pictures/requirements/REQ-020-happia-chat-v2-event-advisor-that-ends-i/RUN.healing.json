@@ -1,6 +1,37 @@
 {
- "actions": 6,
+ "actions": 8,
  "cases": {
+  "267eec28de34dc09": {
+   "applied": 2,
+   "at": 1792758507.817,
+   "class": "integration_defect",
+   "evidence": [
+    "integration evidence in the last error: PREDECESSOR_HANDOFF_MISSING",
+    "reason code: m5:start_rejected_predecessor_handoff_missing"
+   ],
+   "first_at": 1792758441.196,
+   "history": [
+    {
+     "at": 1792758482.036,
+     "repair": "retry chosen by the diagnosing model (haiku): T15 no arrancó: T14a se aceptó pero no dejó snapshot para continuar.",
+     "result": "fixed"
+    },
+    {
+     "at": 1792758507.817,
+     "repair": "retry_with_note chosen by the diagnosing model (haiku): T15 no arrancó: T14a se aceptó pero no dejó snapshot del que partir",
+     "result": "fixed"
+    },
+    {
+     "at": 1792758533.288,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "267eec28de34dc09",
+   "repair": "retry_with_note chosen by the diagnosing model (haiku): T15 no arrancó: T14a se aceptó pero no dejó snapshot del que partir",
+   "status": "unrepairable",
+   "task": "T15"
+  },
   "49cc9be7a3eba583": {
    "after_restored": [
     "T10",
@@ -213,6 +244,25 @@
    "target": "T14a",
    "task": "T14a",
    "task_added": "T14.3a"
+  },
+  "f7d7aeb440f5a411": {
+   "applied": 0,
+   "class": "integration_defect",
+   "evidence": [
+    "integration evidence in the last error: PREDECESSOR_NEEDS_RESOLUTION",
+    "reason code: m5:start_rejected_predecessor_needs_resolution"
+   ],
+   "first_at": 1792758274.405,
+   "history": [
+    {
+     "at": 1792758294.613,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "f7d7aeb440f5a411",
+   "status": "unrepairable",
+   "task": "T14a"
   },
   "fb6658a974310d34": {
    "applied": 0,

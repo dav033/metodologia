@@ -1,0 +1,23 @@
+{
+ "request": "T15:9",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T15 no arrancó: T14a se aceptó pero no dejó snapshot para continuar.",
+ "origin": "El scheduler rechazó el arranque con PREDECESSOR_HANDOFF_MISSING: 'T14a (att-0101) was accepted but left no snapshot to build on'. El fallo está en la cadena entre tareas, no en el código de T15, que depende de T14a. Los intentos anteriores fallaron en la verificación por scripts/e2e/asesor/check-findings.ts: ENOENT en /workspace/reports/e2e/asesor/integration-results.json y un desajuste de revisión en --check-audit-diff. Esos problemas siguen pendientes. Además, el hallazgo F1 (alta, abierto: el asesor no está publicado en producción, según la evidencia de T14a) rechazará la aceptación aunque el arranque se resuelva.",
+ "steps": [
+  "Consulta el estado con `bitacora.py --project pictures scheduler-op REQ-020 status` y confirma si T14a (att-0101) tiene snapshot.",
+  "Si T14a no tiene snapshot, vuelve a ejecutar T14a antes de T15. Su M1/M2 local pasó; el despliegue falló con HTTP 307 y hay que publicar el asesor.",
+  "Reintenta T15 cuando T14a tenga snapshot. Si check-findings.ts vuelve a fallar, corrígelo con una revisión del plan (revision +1, `plan-json freeze REQ-020`, opción revise), no con un cambio de código.",
+  "Antes de aceptar R1-R14, resuelve el F1 alto: el asesor debe estar en producción. Si queda abierto, la aceptación se rechaza y vuelve a T14a para rework."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T07:27:42",
+ "seconds": 21.2
+}

@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/4 · tareas 20/22 · generado: 2026-10-22T22:26:14-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 20/23 · generado: 2026-10-23T08:17:05-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -38,17 +38,18 @@ created: 2026-10-20
 | T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | gpt-6-luna | codex-2 | 9 |
 | T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | completada | gpt-6-luna | codex-1 | 10 |
 
-**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 5/7
+**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 5/8
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | completada | gpt-6-luna | codex-luis | 19 |
-| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | bloqueada | gpt-6.1-sol | codex-1 | 8 |
+| T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | completada | gpt-6-luna | codex-luis | 20 |
+| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-1 | 14 |
 | T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
 | T14.1a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
 | T14.2a | Integrate reviewed summary lifecycle and deployed evidence correction | media | completada | gpt-6-luna | codex-luis | 1 |
 | T14.3a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 1 |
 | T14.4a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
+| T15.1 | Repair what blocks T15 | alta | en curso | gpt-6-luna | codex-luis | 1 |
 <!-- bitacora:status:end -->
 
 ## Approach

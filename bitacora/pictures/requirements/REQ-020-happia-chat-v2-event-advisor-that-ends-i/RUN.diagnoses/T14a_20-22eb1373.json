@@ -1,0 +1,23 @@
+{
+ "request": "T14a:20",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T14a no arranca: su predecesor T14.1a no encaja en el árbol integrado",
+ "origin": "El scheduler rechaza el arranque de T14a con PREDECESSOR_NEEDS_RESOLUTION: \"T14.1a is accepted but does not fit the integrated tree yet\". T14.1a está aceptada, pero su trabajo no encaja en el árbol integrado, así que el problema está en la dependencia y no en T14a. Los intentos #15 a #18 fueron cancelados y el #16 falló verificación sin comprobaciones registradas. El error \"Invalid URL\" viene de la comprobación live --deployed del coordinador, que es un problema aparte y no explica el bloqueo del arranque.",
+ "steps": [
+  "Revisa el estado y las decisiones con `bitacora.py --project pictures scheduler-op REQ-020 status` y `... decisions`, y localiza el conflicto de T14.1a con el árbol integrado.",
+  "Reintegra T14.1a sobre el trabajo actual de las tareas con las que choca (rework_conflict) y confirma que el arranque de T14a ya no devuelve PREDECESSOR_NEEDS_RESOLUTION.",
+  "Antes de reintentar, aplica la nota del dueño sobre `--check-results` en scripts/e2e/asesor/run.ts y regenera docs/req-020/integration-results.json.",
+  "Corrige la URL desplegada de .env.local, que es la causa probable de \"Invalid URL\", y vuelve a lanzar `--live --deployed --milestone M1` antes de reintentar T14a."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T07:24:54",
+ "seconds": 19.5
+}

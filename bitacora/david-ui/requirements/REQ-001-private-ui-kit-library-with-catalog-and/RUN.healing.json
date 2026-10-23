@@ -1,0 +1,64 @@
+{
+ "actions": 1,
+ "cases": {
+  "5442e3f21d1b8535": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792756709.006,
+   "history": [
+    {
+     "at": 1792756709.01,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "5442e3f21d1b8535",
+   "status": "unrepairable",
+   "task": "T2"
+  },
+  "79429a014c4867ce": {
+   "applied": 1,
+   "at": 1792759964.322,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/5fe6cc2013b7c6db26ad093dedeed615db481fc3e3a545899ad1cfe890664b99",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792759944.044,
+   "history": [
+    {
+     "at": 1792759964.322,
+     "repair": "retry_with_note chosen by the diagnosing model (haiku): La prueba del Button falla al instalar dependencias: npm sale con código 228",
+     "result": "fixed"
+    }
+   ],
+   "id": "79429a014c4867ce",
+   "repair": "retry_with_note chosen by the diagnosing model (haiku): La prueba del Button falla al instalar dependencias: npm sale con código 228",
+   "status": "applied",
+   "task": "T5"
+  },
+  "edcf4469d3fb1728": {
+   "applied": 0,
+   "class": "environment",
+   "evidence": [
+    "environment signature: EROFS",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792754437.678,
+   "history": [
+    {
+     "at": 1792754437.679,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "edcf4469d3fb1728",
+   "status": "unrepairable",
+   "task": "T1"
+  }
+ }
+}

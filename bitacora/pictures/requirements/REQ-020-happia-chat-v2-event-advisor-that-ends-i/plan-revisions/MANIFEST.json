@@ -70,6 +70,18 @@
    "sha256": "c0d6871b30ef4b8e55db8fc5fcd994267c35ead9a8d31c48b935c712b2fac359",
    "frozen_at": "2026-10-22T19:43:01",
    "source": "healing-revert"
+  },
+  {
+   "revision": 12,
+   "sha256": "49ee2f58409530ad886550af90c7b3bba0ba8c8bf5d6695aa086d4f9bafaa7f2",
+   "frozen_at": "2026-10-23T07:48:45",
+   "source": "monitor-plan-defect"
+  },
+  {
+   "revision": 13,
+   "sha256": "0f4dfdd2516d705f3d08808ed602f805e036f3a9d4afd9db97b0a9a7b6b50821",
+   "frozen_at": "2026-10-23T08:16:50",
+   "source": "monitor-checker-contract"
   }
  ]
 }
