@@ -39,7 +39,7 @@ class Gate(unittest.TestCase):
         self.planned()
         presence.record(self.root, {"session_id": SID, "hook_event_name": "PostToolUse", "tool_name": "Edit",
                                     "tool_input": {"file_path": "/b/p/requirements/REQ-007-y/PLAN.md"}}, "p")
-        self.assertEqual(presence.planned_reqs(self.root, SID), ["REQ-005", "REQ-007"])
+        self.assertEqual(presence.planned_reqs(self.root, SID), ["p:REQ-005", "p:REQ-007"])
 
     def test_an_unclassified_draft_keeps_the_session_from_ending_then_lets_go_after_the_limit(self):
         plan_dir(self.root)
@@ -50,6 +50,17 @@ class Gate(unittest.TestCase):
                 self.assertIn("REQ-005", why)
                 self.assertIn("plan-json check", why)
             self.assertIsNone(gate.hold_reason(self.root, "p", SID))
+
+    def test_the_plan_is_checked_in_its_own_project_not_in_the_one_the_session_is_bound_to(self):
+        """A session bound to `pictures` that launched david-ui's REQ-001 was held for pictures' old REQ-001 (no PLAN.json)."""
+        plan_dir(self.root)                                           # p/REQ-005 is a valid plan ...
+        other = self.root / "q" / "requirements" / "REQ-005-old"
+        other.mkdir(parents=True)
+        (other / "PLAN.md").write_text("---\nstatus: draft\n---\n# old\n")      # ... and q/REQ-005 an unrelated draft without one
+        self.planned()
+        ok = type("R", (), {"returncode": 0, "stdout": "OK"})()
+        with patch("bt_plan_gate.subprocess.run", return_value=ok):
+            self.assertIsNone(gate.hold_reason(self.root, "q", SID))
 
     def test_missing_plan_json_holds_too_and_a_passing_check_does_not(self):
         plan_dir(self.root, with_json=False)

@@ -58,7 +58,15 @@ def _planned_req(payload: dict) -> str | None:
     if not isinstance(command, str) or "bitacora" not in command or not _PLAN_CMD.search(command):
         return None
     found = re.search(r"\bREQ-\d+\b", command)
-    return found.group(0) if found else None
+    if not found:
+        return None
+    named = re.search(r"--project[ =]([A-Za-z0-9._-]+)", command)
+    return f"{named.group(1)}:{found.group(0)}" if named else found.group(0)
+
+
+def _path_project(file_path: str) -> str:
+    found = re.search(r"/([A-Za-z0-9._-]+)/requirements/REQ-\d+", file_path.replace("\\", "/"))
+    return found.group(1) if found else ""
 
 
 def _file_of(payload: dict) -> str:
@@ -103,7 +111,9 @@ def record(root: Path, payload: dict, project: str | None, agent: str = "", now:
         if asked:
             doc["planned"] = sorted({*(doc.get("planned") or []), asked})
         if target:
-            doc["planned"] = sorted({*(doc.get("planned") or []), target["req"]})
+            owner = _path_project(_file_of(payload))     # the project of the file, not of the session: a session bound to one
+            entry = f"{owner}:{target['req']}" if owner else target["req"]            # project can plan another's requirement
+            doc["planned"] = sorted({*(doc.get("planned") or []), entry})
             doc["activity"] = {"kind": "planning", **target, "at": now}
             _append_event(root, {"at": now, "session": sid, "project": doc["project"], "req": target["req"],
                                  "stage": target["stage"]})

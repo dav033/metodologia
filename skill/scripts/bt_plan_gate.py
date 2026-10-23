@@ -60,20 +60,22 @@ def hold_reason(root: Path, project: str, sid: str) -> str | None:
     """The Stop-hook text when this session must keep working on a plan, else None. Counts each hold."""
     holds = _holds(root, sid)
     found = []
-    for req in bt_presence.planned_reqs(root, sid):
+    for entry in bt_presence.planned_reqs(root, sid):
+        owner, _, req = entry.rpartition(":")      # "project:REQ-001"; a bare REQ belongs to the session's project
+        owner = owner or project
         try:
-            rdir = find_req(root / project, req)
-            why = problem(project, rdir)
+            rdir = find_req(root / owner, req)
+            why = problem(owner, rdir)
         except (SystemExit, OSError, subprocess.SubprocessError):
             continue
-        if why and holds.get(req, 0) < MAX_HOLDS:
-            holds[req] = holds.get(req, 0) + 1
-            found.append((req, why))
+        if why and holds.get(entry, 0) < MAX_HOLDS:
+            holds[entry] = holds.get(entry, 0) + 1
+            found.append((req, why, owner))
     if not found:
         return None
     _save_holds(root, sid, holds)
-    lines = "\n".join(f"- {why}" for _, why in found)
-    first = found[0][0]
+    lines = "\n".join(f"- {why}" for _, why, _ in found)
+    first, project = found[0][0], found[0][2]
     return ("[bitácora] The plan you wrote is not finished: it cannot be handed over without its classification "
             f"(difficulty, scope, risk, coupling, confidence, estimate, each with evidence).\n{lines}\n"
             f"Fill PLAN.json for every task (rubric: skill/scripts/bt_planner/README.md), then run "
