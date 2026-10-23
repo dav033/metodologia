@@ -23,6 +23,7 @@ from typing import Callable
 import bt_notify
 import bt_scheduler_adapter as adapter
 import bt_scheduler_ops as ops
+import bt_watch_reload as reload
 
 POLL_SECONDS = 5.0
 HEAL_SECONDS = 30.0
@@ -44,7 +45,8 @@ class Watch:
                  free_bytes: Callable[[], int] | None = None, notify: Callable[[str, str], None] = bt_notify.notify,
                  log: Callable[[str], None] | None = None, announce: Callable[[], object] | None = None,
                  pending: Callable[[], int] | None = None, heal: Callable[[], bool] | None = None,
-                 capture: Callable[[], str] | None = None):
+                 capture: Callable[[], str] | None = None, fingerprint: Callable[[], str] | None = None,
+                 reexec: Callable[[str, str], None] | None = None):
         self.project, self.req, self.rdir = project, req, Path(rdir)
         self.now, self.sleep, self.notify = now, sleep, notify
         self.spawn = spawn or self._spawn
@@ -53,6 +55,11 @@ class Watch:
         self.pending = pending or self._pending
         self.heal = heal or self._heal
         self.capture = capture or self._capture
+        self.fingerprint = fingerprint or reload.fingerprint
+        self.reexec = reexec or reload.reexec
+        self.started_with = self.fingerprint()
+        self._seen = self.started_with
+        self._pending_since: float | None = None
         self.log = log or (lambda text: print(f"{time.strftime('%H:%M:%S')} {text}", flush=True))
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
@@ -91,6 +98,32 @@ class Watch:
                 except Exception as error:  # noqa: BLE001 - an extra: its failure never stops the watch
                     self.log(f"healing failed while the owner waits ({type(error).__name__}: {error})")
                 last = self.now()
+                self._reload_check()
+
+    def _reload_check(self) -> None:
+        """A fix of the engine merged while the run lives reaches it by itself (see `bt_watch_reload`)."""
+        try:
+            current = self.fingerprint()
+            stable = current == self._seen
+            self._seen = current
+            owner_started_with = reload.read_marker(self.rdir)
+            changed_for_owner = bool(owner_started_with) and current != owner_started_with
+            if changed_for_owner and self._pending_since is None:
+                self._pending_since = self.now()
+            if not changed_for_owner:
+                self._pending_since = None
+            states = [a["state"] for a in ops.status(self.project, self.req, self.rdir).get("live_attempts", [])]
+            action = reload.decide(current=current, stable=stable, watcher_started_with=self.started_with,
+                                   owner_started_with=owner_started_with, owner_alive=bool(ops.owner_pids(self.project, self.req)),
+                                   live_states=states, waited=0.0 if self._pending_since is None else self.now() - self._pending_since)
+            if action == "restart_owner":
+                self.log("engine code changed: restarting the owner onto it (the run state is durable)")
+                ops.stop_owner(self.project, self.req)
+            elif action == "reexec":
+                self.log("engine code changed: the watchdog restarts itself onto it")
+                self.reexec(self.project, self.req)
+        except Exception as error:  # noqa: BLE001 - reloading is an extra: its failure never stops the watch
+            self.log(f"reload check failed ({type(error).__name__}: {error})")
 
     def _fail(self, why: str) -> bool:
         """Record one failed owner; True when the budget is spent."""
@@ -128,6 +161,9 @@ class Watch:
                 continue
             self.low_disk_notified = False
             started = self.now()
+            code = self.fingerprint()
+            if code != reload.DIRTY:
+                reload.write_marker(self.rdir, code)                     # the committed code this owner starts with
             owner = self.spawn(self._has_run())
             self.log(f"owner started (pid {owner.pid})")
             code = self._wait(owner)
