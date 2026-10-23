@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import evidence as ev
-from . import interfaces, quality, traceability, verification
+from . import command_checks, interfaces, quality, traceability, verification
 
 SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
 EVIDENCE_SINCE = (1, 1, 0)
@@ -287,7 +287,7 @@ def _check_graph(report: Report, tasks: list[dict], milestones: dict[str, int]) 
 
 
 def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists: ev.RefExists | None = None,
-             *, spec_ids: set[str] | None = None) -> Report:
+             *, spec_ids: set[str] | None = None, ignored_path: command_checks.IgnoredPath | None = None) -> Report:
     """Deterministic validation of a parsed PLAN.json; every error names the task/field that causes it.
     `file_exists(repository, path)` lets a caller that knows the repositories verify `file:` evidence and
     `ref_exists(kind, value, repository)` does the same for `command:` and `precedent:` references."""
@@ -370,6 +370,9 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.warnings.extend(quality.verification_findings(plan))
         report.errors.extend(quality.audit_findings(plan))
         report.warnings.extend(quality.audit_advice(plan))
+    command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
+    report.errors.extend(command_errors)
+    report.warnings.extend(command_warnings)
     return report
 
 

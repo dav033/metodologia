@@ -13,6 +13,7 @@ from pathlib import Path
 
 import bt_planner as planner
 from bt_plan_adapter_evidence import verify_command
+from bitacora_platform.plan_command_checks import ignore_resolver
 from bt_planner import cli as planner_cli
 from bt_planner import contract as planner_contract
 from bt_planner import quality as planner_quality
@@ -210,7 +211,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
         messages: list[str] = []
         code = planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
                                approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir),
-                               ref_exists=ref_verifier(rdir), emit=messages.append)
+                               ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir), emit=messages.append)
         if code:
             for message in messages:
                 emit(message)
@@ -234,7 +235,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
             emit(problem)
             return 2
     return planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
-                           approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir), ref_exists=ref_verifier(rdir),
+                           approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir), ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
                            cross_check=cross_check, emit=emit)
 
 
@@ -244,7 +245,7 @@ def handoff_problems(rdir: Path, limit: int = 5, *,
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return []
     errors = planner.check(rdir, plan_id=plan_id(rdir), repo_roots=repo_roots(rdir),
-                           ref_exists=ref_verifier(rdir)).errors
+                           ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir)).errors
     out = [f"PLAN.json: {e}" for e in errors[:limit]]
     if len(errors) > limit:
         out.append(f"PLAN.json: {len(errors) - limit} more error(s); run `bitacora.py plan-json check {plan_id(rdir)}`")
@@ -264,7 +265,7 @@ def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False,
         return problem
     try:
         planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=repo_roots(rdir), freeze=freeze,
-                              forced=forced, verify_files=True, ref_exists=ref_verifier(rdir))
+                              forced=forced, verify_files=True, ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
     except planner.PlanContractError as exc:
         more = f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else ""
         return (f"{exc.code}: PLAN.json cannot be launched: " + "; ".join(exc.issues[:5]) + more +
@@ -359,7 +360,7 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return None
     try:
         report = planner.check(rdir, plan_id=plan_id(rdir), repo_roots=repo_roots(rdir), verify_files=True,
-                               ref_exists=ref_verifier(rdir))
+                               ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
     except Exception as exc:  # noqa: BLE001 - fail closed
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
@@ -377,7 +378,7 @@ def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | Non
         raise SystemExit(problem)
     try:
         planner.freeze_if_present(rdir, plan_id(rdir), APPROVED_STATES, repo_roots(rdir), verify_files=True,
-                                  ref_exists=ref_verifier(rdir))
+                                  ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
     except planner.PlanContractError as exc:
         raise SystemExit(f"{exc.code}: approved PLAN.json could not be frozen: " + "; ".join(exc.issues[:5])) from exc
 
@@ -435,10 +436,10 @@ def latest_plan(rdir: Path) -> dict | None:
 DECISION_MAX_CHECKS = 32      # the scheduler's decision engine refuses a task with more checks (bt_scheduler_decision.validation)
 
 
-def plan_errors(plan: dict) -> list[str]:
+def plan_errors(plan: dict, *, roots: dict[str, Path] | None = None) -> list[str]:
     """The contract errors of a plan ([] when it is valid), including the limits the scheduler enforces when it dispatches: a plan
     the owner cannot route used to freeze fine and then stall the run in a loop (REQ-020 T14.5a had 42 checks)."""
-    errors = list(planner_contract.validate(plan).errors)
+    errors = list(planner_contract.validate(plan, ignored_path=ignore_resolver(roots)).errors)
     for task in plan.get("tasks", ()) if isinstance(plan, dict) else ():
         count = len(task.get("verification") or ()) if isinstance(task, dict) else 0
         if count > DECISION_MAX_CHECKS:
