@@ -157,6 +157,38 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
 - an open critical/high finding, a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
   PASS into a **rejecting verdict** (evidence `audit gate: …`); a snapshot that cannot be read leaves the verdict
   pending instead of judging the ledger;
+- **Evidence provenance is content, not commit identity.** An evidence JSON producer and the audit ledger may both
+  record an optional `tree_digest` (`sha256:<64 lowercase hex>`). Generate it with
+  `bitacora.py audit-ledger tree-digest <PLAN.json> --repository <git-root> --role <repository-role> --revision <commit>`.
+  This read-only command hashes sorted tracked entries (path, mode, blob/submodule object id). Its shared scope excludes
+  only exact report files (`.md/.json/.txt/.log/.csv/.html`, no globs) declared in `expected_paths` by **all** `test` and
+  `audit` tasks in that repository, following quality reuse's `own_outputs` rule. Source, tests and configurations
+  remain inputs. An evidence report produced by another task kind is also excluded when named by an audit's legacy
+  `--integration-results` argument or by the digest command's repeatable `--evidence <path>` option; it must still
+  be an exact report path owned by a task in that repository. For evidence named only in `integration_evidence`,
+  both producer and auditor pass the same `--evidence` options when its producer is not a `test`/`audit` task.
+  Commit any source edits before calculating provenance; the command reads a committed snapshot, not
+  the working directory. Use the same frozen plan for producer and auditor. Changing exclusions requires regenerating
+  the evidence; a different git revision alone does not.
+  The ledger's optional `integration_evidence: ["docs/integration-results.json"]` names evidence from its audited
+  repository. Without that field, old plans' `--integration-results <path>` or `--integration-results=<path>` command
+  arguments supply those paths. `bt_audit_gate.evidence_gate` checks the evidence against the actual verified snapshot;
+  a supplied ledger digest must also match that snapshot. Legacy evidence with only `revision` is compared by resolving
+  that full commit id's **content** with the same exclusions (mutable refs such as `HEAD` are not provenance).
+  A recorded digest takes precedence over a legacy revision.
+  Missing, malformed, unresolvable or different evidence produces a `STALE_EVIDENCE` finding naming the tasks whose
+  same-repository `expected_paths` contain that exact file. Those producers receive regeneration notes and go through
+  `reject_and_rework`, with the existing limits/policy; stale evidence bypasses new implementation tasks from
+  `bt_remediation`. The audit runs after regeneration. Undeclared ownership or an incorrect ledger digest rejects the
+  audit with an actionable contract problem. Snapshot/tree-read outages remain pending. Ledgers without either
+  provenance field or a legacy evidence argument keep their former behavior; no revision-string equality is imposed.
+  When a standalone legacy `check-findings`/`validate-findings` script has current evidence content and the complete engine ledger/read-only gate passes,
+  M6 records the engine's contract/provenance result in place of the private validator. Other commands still run,
+  including a whole suite deferred on the earlier stale attempt; their failures still reject the audit. Without
+  verified evidence provenance, a passing ledger gate does not override a failing command.
+  Compatibility substitution accepts only recognized interpreter prefixes and contract arguments (`--ledger`,
+  `--integration-results`, `--check-audit-diff`); unknown scripts, extra flags and compound commands still execute
+  normally. New approvals use the engine command directly.
 - when open findings name plan tasks, the same verdict calls `core.reject_and_rework(...)`: in one transaction M1
   rejects the audit attempt and sends back the named tasks, the `kind: test` tasks over them and the audit itself
   (`gates.rework_scope`: `named`, the default; `downstream` also resets **everything that depends on them**, which for a

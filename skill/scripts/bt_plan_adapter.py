@@ -21,6 +21,7 @@ from bt_planner import revisions as planner_revisions
 
 # What the methodology calls an approved plan; the module itself only has a default for these words.
 APPROVED_STATES = ("approved", "launched", "done", "merged")
+LEDGER_COMMAND = "bitacora.py audit-ledger check"
 PLAN_SCHEMA_CONSUMER_GATE_SINCE = (1, 2, 0)
 _SCHEMA_VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
 
@@ -238,7 +239,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
             return 2
     return planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,
                            approved_states=APPROVED_STATES, repo_roots=repo_roots(rdir), ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
-                           cross_check=cross_check, emit=emit)
+                           cross_check=cross_check, ledger_command=LEDGER_COMMAND, emit=emit)
 
 
 def handoff_problems(rdir: Path, limit: int = 5, *,
@@ -247,13 +248,24 @@ def handoff_problems(rdir: Path, limit: int = 5, *,
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return []
     errors = planner.check(rdir, plan_id=plan_id(rdir), repo_roots=repo_roots(rdir),
-                           ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir)).errors
+                           ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
+                           ledger_command=LEDGER_COMMAND, strict_publication=not _unchanged_frozen(rdir)).errors
     out = [f"PLAN.json: {e}" for e in errors[:limit]]
     if len(errors) > limit:
         out.append(f"PLAN.json: {len(errors) - limit} more error(s); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if not errors and (problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report)):
         out.append(f"PLAN.json: {problem}")
     return out
+
+
+def _unchanged_frozen(rdir: Path) -> bool:
+    try:
+        last = planner_revisions.latest(rdir)
+        plan = planner_contract.load(Path(rdir) / planner.PLAN_JSON)
+        return bool(last and plan.get("revision") == last["revision"]
+                    and planner_revisions.sha256(planner_contract.dumps(plan)) == last["sha256"])
+    except (planner.PlanContractError, OSError, ValueError):
+        return False
 
 
 def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False,
@@ -362,7 +374,8 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return None
     try:
         report = planner.check(rdir, plan_id=plan_id(rdir), repo_roots=repo_roots(rdir), verify_files=True,
-                               ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
+                               ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
+                               ledger_command=LEDGER_COMMAND)
     except Exception as exc:  # noqa: BLE001 - fail closed
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
@@ -380,7 +393,8 @@ def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | Non
         raise SystemExit(problem)
     try:
         planner.freeze_if_present(rdir, plan_id(rdir), APPROVED_STATES, repo_roots(rdir), verify_files=True,
-                                  ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
+                                  ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
+                                  ledger_command=LEDGER_COMMAND)
     except planner.PlanContractError as exc:
         raise SystemExit(f"{exc.code}: approved PLAN.json could not be frozen: " + "; ".join(exc.issues[:5])) from exc
 
@@ -451,7 +465,7 @@ def plan_errors(plan: dict, *, roots: dict[str, Path] | None = None) -> list[str
 
 def freeze_revision(rdir: Path, plan: dict, source: str) -> dict:
     """Freeze `plan` as the next revision and write it as the working PLAN.json."""
-    frozen = planner_revisions.freeze(rdir, plan, source)
+    frozen = planner_revisions.freeze(rdir, plan, source, ledger_command=LEDGER_COMMAND)
     (Path(rdir) / planner.PLAN_JSON).write_text(planner_contract.dumps(plan), encoding="utf-8")
     return frozen
 
