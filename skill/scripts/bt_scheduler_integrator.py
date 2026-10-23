@@ -136,7 +136,7 @@ class PredecessorIntegrator:
         try:
             self.line.recompute()
         except IntegrationError as error:
-            LOGGER.warning("integration line not recomputed (%s)", error.code)
+            LOGGER.warning("integration line not recomputed (%s: %s)", error.code, str(error)[:240])
 
     # ------------------------------------------------------------------------------------------------ public
     def base_ref(self, task_id: str) -> str:
@@ -429,7 +429,7 @@ class PredecessorIntegrator:
         try:
             _, conflicts = self.line.apply(role, task_id, attempt_id, snapshot)
         except IntegrationError as error:
-            LOGGER.warning("integration line cannot check %s (%s): using the predecessor check", task_id, error.code)
+            LOGGER.warning("integration line cannot check %s (%s: %s): using the predecessor check", task_id, error.code, str(error)[:240])
             return None
         return f"{task_id} vs line for {task_id}: {', '.join(conflicts[:6])}"[:170] if conflicts else ""
 
