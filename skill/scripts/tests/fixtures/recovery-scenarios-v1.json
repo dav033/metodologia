@@ -1102,9 +1102,10 @@
     }
    },
    "expect": {
-    "auto": true,
+    "auto": false,
     "class": "regression",
-    "repair": "one more remediation round"
+    "repair": "none",
+    "blocker": "producer_remediation_required"
    },
    "id": "S10",
    "kind": "stop",

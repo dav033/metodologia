@@ -1,4 +1,4 @@
-"""REQ-030 step 6: the recovery benchmark never gets worse between versions, and the evolution analysis proposes only with evidence."""
+"""Recovery metrics stay honest about unresolved cases; evolution proposes only with evidence."""
 from __future__ import annotations
 
 import json
@@ -17,7 +17,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 
 
 class Benchmark(unittest.TestCase):
-    def test_every_recorded_stop_is_handled_as_expected_and_no_version_is_worse_than_the_one_before(self):
+    def test_every_recorded_stop_obeys_its_safety_contract_and_history_is_preserved(self):
         result = bench.run()
         for row in result["scenarios"]:
             self.assertTrue(row["class_ok"], row)
@@ -27,18 +27,25 @@ class Benchmark(unittest.TestCase):
         for before, after in zip(order, order[1:]):
             self.assertEqual(bench.regressions(versions[before], versions[after]), [], f"{before} -> {after}")
         recorded = versions[order[-1]]
-        self.assertEqual(bench.regressions(recorded, result["totals"]), [],
-                         "the code is worse than the last recorded version: fix it, or record a new version only if it is better")
+        # P-186 removes a fabricated recovery in S10. Keep that historical regression visible rather than
+        # replacing the golden or counting a blocked audit as automatically recovered.
+        self.assertEqual(bench.regressions(recorded, result["totals"]), [
+            "human_interventions: 0 -> 1", "minutes_to_recovery: 7.8 -> 51.9"])
 
-    def test_the_night_needed_ten_people_and_the_current_code_none(self):
+    def test_the_night_needed_ten_people_and_the_current_code_retains_one_unresolved_audit(self):
         totals = bench.run()["totals"]
-        self.assertEqual((totals["human_interventions_night"], totals["human_interventions"]), (10, 0))
+        self.assertEqual((totals["human_interventions_night"], totals["human_interventions"]), (10, 1))
         self.assertLess(totals["minutes_to_recovery"], totals["minutes_to_recovery_night"] / 10)
         self.assertEqual(totals["as_expected"], totals["scenarios"])
 
-    def test_no_recorded_stop_is_left_for_a_person(self):
-        asking = {row["id"] for row in bench.run()["scenarios"] if not row["auto"]}
-        self.assertEqual(asking, set())
+    def test_an_audit_without_producer_repair_stays_blocked_instead_of_reporting_recovery(self):
+        rows = bench.run()["scenarios"]
+        asking = [row for row in rows if not row["auto"]]
+        self.assertEqual([row["id"] for row in asking], ["S10"])
+        self.assertEqual(asking[0]["blocker"], "producer_remediation_required")
+        self.assertEqual(asking[0]["repair"], "none")
+        self.assertTrue(asking[0]["recovery_pending"])
+        self.assertEqual(asking[0]["minutes_after"], asking[0]["minutes_before"])
 
     def test_a_worse_version_is_reported(self):
         base = {"human_interventions": 2, "minutes_to_recovery": 76.3, "classified": 11, "as_expected": 12}
