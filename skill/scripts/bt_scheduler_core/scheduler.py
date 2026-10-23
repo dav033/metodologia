@@ -383,7 +383,7 @@ class SchedulerCore:
                 raise TypeError("invalid assignment proposal")
         except Exception as exc:  # noqa: BLE001 - a dead or buggy adapter must not stop the core
             self.record("port_error" if not isinstance(exc, TypeError) else "port_invalid", port="assignment",
-                        error=type(exc).__name__)
+                        error=type(exc).__name__, detail=str(exc)[:200])      # an adapter's stable message names fields, never values
             return []
         claimed = []
         for proposal in proposals:                    # refused entries must not eat the slots of valid ones

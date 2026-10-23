@@ -199,6 +199,13 @@ class AssignmentAdvice(unittest.TestCase):
                 self.assertEqual(h.core.read(lambda c: (c.state.to_dict()["tasks"], c.state.holds)), before)
                 self.assertTrue({"port_error", "port_invalid"} & set(h.audit_kinds()))
 
+    def test_a_refused_assignment_input_says_which_fields_in_the_audit(self):
+        """REQ-020 T14.5a: the owner recorded `port_error` every 5 s for 30 minutes and nothing said why."""
+        h, _ = self.harness(ValueError("decision_input_invalid: demand_estimate.fields"))
+        h.core.step()
+        events = [e for e in h.core.audit_log() if e.kind == "port_error"]
+        self.assertIn("demand_estimate.fields", str(events[0].detail))
+
     def test_proposals_for_unknown_blocked_or_unready_tasks_and_over_capacity_are_refused(self):
         h, _ = self.harness(lambda r: [sc.Assignment("ghost", "x"), sc.Assignment("T2", "x"), sc.Assignment("T1", "x"),
                                        sc.Assignment("T1", "again"), sc.Assignment("T3", "x"), sc.Assignment("T3", "y")])
