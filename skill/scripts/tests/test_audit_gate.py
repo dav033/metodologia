@@ -22,6 +22,35 @@ def finding(fid="F1", severity="high", status="open", tasks=("T1",), **extra):
 
 
 class Evaluate(unittest.TestCase):
+    def test_task_references_and_closed_are_compatible_spellings_of_tasks_and_fixed(self):
+        canonical = finding(status="fixed", evidence="pytest: passed")
+        alias = {**canonical, "status": "closed", "taskReferences": canonical["tasks"]}
+        del alias["tasks"]
+        for item in (canonical, alias):
+            self.assertEqual(gate.validate_ledger(json.loads(ledger(item))), [])
+        self.assertEqual(self.judge(ledger(canonical)), self.judge(ledger(alias)))
+        canonical["status"], alias["status"] = "open", "open"
+        self.assertEqual(self.judge(ledger(canonical)), self.judge(ledger(alias)))
+        self.assertEqual(self.judge(ledger(alias)).rework, ("T1",))
+
+    def test_info_is_valid_and_closed_requires_the_same_evidence_as_fixed(self):
+        self.assertEqual(gate.validate_ledger(json.loads(ledger(finding(severity="info")))), [])
+        self.assertTrue(self.judge(ledger(finding(severity="info"))).ok)
+        self.assertEqual(self.judge(ledger(finding(status="fixed"))).problems,
+                         self.judge(ledger(finding(status="closed"))).problems)
+        invalid_alias = finding(taskReferences="T1")
+        del invalid_alias["tasks"]
+        self.assertTrue(gate.validate_ledger(json.loads(ledger(invalid_alias))))
+
+    def test_the_public_validator_accepts_a_valid_ledger_without_applying_blocking_policy(self):
+        self.assertEqual(gate.validate_ledger(json.loads(ledger(finding()))), [])
+
+    def test_the_public_validator_reports_the_same_schema_problems_as_the_gate(self):
+        for data in ([], {}, {"schema": gate.SCHEMA, "findings": [finding(status="fixed")]},
+                     {"schema": gate.SCHEMA, "findings": [finding(), finding()]}):
+            with self.subTest(data=data):
+                self.assertEqual(gate.validate_ledger(data)[:20], list(self.judge(json.dumps(data)).problems))
+
     def judge(self, raw):
         return gate.evaluate(raw, PLAN, "T9")
 

@@ -38,5 +38,3 @@ def check(errors: list[str], where: str, task: dict, ids: set[str], schema_12: b
                 else:
                     errors.append(f"{spot}.category: {category!r} is not one of "
                                          f"{', '.join(quality.VERIFICATION_CATEGORIES)}")
-
-

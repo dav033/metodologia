@@ -42,6 +42,18 @@ class Commands(PlanDir):
             {"type": "command", "value": "cat reports/results.json"}]}]}
         self.assertEqual(command_checks.input_findings(plan, lambda repo, path: path.startswith("reports/")), ([], []))
 
+    def test_an_audit_using_a_private_ledger_checker_gets_advice_but_no_error(self):
+        plan = self.good()
+        task = plan["tasks"][0]
+        task["kind"] = "audit"
+        task["verification"][0]["value"] = "npx tsx scripts/check.ts docs/T1.findings.json"
+        warnings = contract.validate(plan).warnings
+        self.assertTrue(any("audit-ledger check" in p for p in warnings))
+        task["verification"][0]["value"] = "engine audit-ledger check docs/T1.findings.json"
+        self.assertFalse(command_checks.project_ledger_checks(plan))
+        task["kind"] = "implement"
+        task["verification"][0]["value"] = "python check.py audit-findings"
+        self.assertFalse(command_checks.project_ledger_checks(plan))
 
 
 if __name__ == "__main__":

@@ -118,6 +118,14 @@ def _text(value: object) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
+def _tasks(item: dict):
+    return item.get("tasks", item.get("taskReferences", []))
+
+
+def _status(item: dict):
+    return "fixed" if item.get("status") == "closed" else item.get("status")
+
+
 def _finding_problems(item: object, index: int) -> list[str]:
     where = f"findings[{index}]"
     if not isinstance(item, dict):
@@ -125,20 +133,39 @@ def _finding_problems(item: object, index: int) -> list[str]:
     out = []
     if not _text(item.get("id")) or len(_text(item.get("id"))) > 40:
         out.append(f"{where}.id: missing or longer than 40")
-    if item.get("severity") not in SEVERITIES:
+    if item.get("severity") not in (*SEVERITIES, "info"):
         out.append(f"{where}.severity: one of {', '.join(SEVERITIES)}")
-    if item.get("status") not in STATUSES:
+    if _status(item) not in STATUSES:
         out.append(f"{where}.status: one of {', '.join(STATUSES)}")
     if not _text(item.get("summary")):
         out.append(f"{where}.summary: missing")
-    tasks = item.get("tasks", [])
+    tasks = _tasks(item)
     if not isinstance(tasks, list) or not all(isinstance(t, str) and t.strip() for t in tasks):
         out.append(f"{where}.tasks: a list of plan task ids")
-    if item.get("status") == "fixed" and not _text(item.get("evidence")):
+    if _status(item) == "fixed" and not _text(item.get("evidence")):
         out.append(f"{where}: `fixed` needs `evidence`")
     if item.get("status") == "accepted" and not (item.get("accepted_by") == "owner" and _text(item.get("reason"))):
         out.append(f"{where}: `accepted` needs accepted_by `owner` and a `reason` (an auditor cannot waive a finding)")
     return out
+
+
+def validate_ledger(data: object) -> list[str]:
+    """Validate the ledger contract without judging open findings or requiring a plan."""
+    if not isinstance(data, dict) or data.get("schema") != SCHEMA or not isinstance(data.get("findings"), list):
+        return [f"the ledger must be an object with schema `{SCHEMA}` and a `findings` list"]
+    findings = data["findings"]
+    if len(findings) > MAX_FINDINGS:
+        return [f"more than {MAX_FINDINGS} findings"]
+    problems: list[str] = []
+    ids: set[str] = set()
+    for index, item in enumerate(findings):
+        problems += _finding_problems(item, index)
+        if isinstance(item, dict):
+            fid = _text(item.get("id"))
+            if fid in ids:
+                problems.append(f"findings[{index}].id: duplicate {fid!r}")
+            ids.add(fid)
+    return problems
 
 
 def evaluate(raw: bytes | str | None, plan_task_ids, audit_task_id: str, policy: Policy = Policy()) -> Gate:
@@ -153,27 +180,15 @@ def evaluate(raw: bytes | str | None, plan_task_ids, audit_task_id: str, policy:
         data = json.loads(raw.decode("utf-8"))
     except (UnicodeDecodeError, ValueError):
         return Gate(False, ("the findings ledger is not valid UTF-8 JSON",), (), ())
-    if not isinstance(data, dict) or data.get("schema") != SCHEMA or not isinstance(data.get("findings"), list):
-        return Gate(False, (f"the ledger must be an object with schema `{SCHEMA}` and a `findings` list",), (), ())
-    findings = data["findings"]
-    if len(findings) > MAX_FINDINGS:
-        return Gate(False, (f"more than {MAX_FINDINGS} findings",), (), ())
-    problems: list[str] = []
-    ids: set[str] = set()
-    for index, item in enumerate(findings):
-        problems += _finding_problems(item, index)
-        if isinstance(item, dict):
-            fid = _text(item.get("id"))
-            if fid in ids:
-                problems.append(f"findings[{index}].id: duplicate {fid!r}")
-            ids.add(fid)
+    problems = validate_ledger(data)
     if problems:
         return Gate(False, tuple(problems[:20]), (), ())
+    findings = data["findings"]
     known = set(plan_task_ids)
     blocking, rework = [], []
     for item in findings:
         if item["severity"] in policy.blocking and item["status"] == "open":
-            tasks = [t.strip() for t in item.get("tasks", []) if t.strip() in known and t.strip() != audit_task_id]
+            tasks = [t.strip() for t in _tasks(item) if t.strip() in known and t.strip() != audit_task_id]
             blocking.append({"id": _text(item["id"]), "severity": item["severity"],
                              "summary": _text(item["summary"])[:MAX_TEXT], "tasks": tasks,
                              "evidence": _text(item.get("evidence"))[:MAX_TEXT]})

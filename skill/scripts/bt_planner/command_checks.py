@@ -89,3 +89,24 @@ def input_findings(plan: dict, ignored: IgnoredPath | None) -> tuple[list[str], 
                                   "by an earlier command of this task; a clean verification snapshot cannot rely on it")
             produced.update(outputs)
     return errors, warnings
+
+
+def project_ledger_checks(plan: dict) -> list[str]:
+    warnings = []
+    tasks = plan.get("tasks")
+    for task in tasks if isinstance(tasks, list) else ():
+        if not isinstance(task, dict) or task.get("kind") != "audit":
+            continue
+        checks = task.get("verification")
+        for index, check in enumerate(checks if isinstance(checks, list) else ()):
+            if not isinstance(check, dict) or check.get("type") != "command":
+                continue
+            words = tokens(str(check.get("value", "")))
+            if "audit-ledger" in words and "check" in words:
+                continue
+            ledger = any(".findings.json" in word or "audit-findings" in word for word in words)
+            script = any(re.search(r"\.(?:[cm]?[jt]sx?|py|sh)$", word) for word in words)
+            if ledger and script:
+                warnings.append(f"{task.get('id')}.verification[{index}]: project-specific audit ledger validator; "
+                                "use the engine's `audit-ledger check` command instead")
+    return warnings

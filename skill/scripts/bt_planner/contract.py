@@ -373,6 +373,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
     report.errors.extend(command_errors)
     report.warnings.extend(command_warnings)
+    report.warnings.extend(command_checks.project_ledger_checks(plan))
     return report
 
 

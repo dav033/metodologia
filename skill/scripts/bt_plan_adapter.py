@@ -207,6 +207,8 @@ def ref_verifier(rdir: Path):
 def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = False, emit=print,
             compatibility_report: dict[str, object] | None = None, cross_check: bool = False) -> int:
     """Back the `bitacora.py plan-json <action> REQ-NNN` command."""
+    original_emit = emit
+    emit = lambda text: original_emit(text.replace("the engine's `audit-ledger check`", "`bitacora.py audit-ledger check`"))
     if action == "compat":
         messages: list[str] = []
         code = planner_cli.run(action, rdir, plan_id=plan_id(rdir), force=force, as_json=as_json,

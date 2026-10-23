@@ -54,7 +54,7 @@ class IgnoredInputs(unittest.TestCase):
         with patch("bitacora_platform.plan_command_checks.subprocess.run", side_effect=FileNotFoundError):
             self.assertFalse(self.errors("cat reports/results.json"))
 
-    def test_plan_json_check_resolves_repository_roles(self):
+    def test_plan_json_check_resolves_repository_roles_and_prints_the_engine_ledger_command(self):
         golden = Path(adapter.planner.__file__).parent / "tests" / "golden" / "input-1.2.0.json"
         plan = json.loads(golden.read_text())
         task = plan["tasks"][0]
@@ -69,6 +69,7 @@ class IgnoredInputs(unittest.TestCase):
                 patch.object(adapter, "ref_verifier", return_value=None):
             self.assertEqual(adapter.run_cli("check", rdir, emit=output.append), 2)
         self.assertTrue(any("git-ignored" in p for p in output))
+        self.assertTrue(any("bitacora.py audit-ledger check" in p for p in output))
 
 
 if __name__ == "__main__":
