@@ -298,6 +298,9 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
         max_steps: int | None = None) -> int:
     rdir = Path(rdir)
     with adapter.owner_lock(rdir):
+        import bt_scheduler_ops as ops
+        if ops.on_hold(rdir):
+            raise RuntimeErrorCode("OWNER_HELD", "an operator hold is active; release it with scheduler-op resume")
         from bt_requirements_gate import require_ready
 
         require_ready(rdir)

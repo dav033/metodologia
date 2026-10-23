@@ -277,7 +277,7 @@ if __name__ == "__main__":
 class ReviewAttempts(unittest.TestCase):
     """The attempts a review waits on are readable while the owner holds the M6 store (the coordinator runs then)."""
 
-    def test_a_store_in_use_falls_back_to_the_decision_cards_read_only(self):
+    def test_reviews_use_the_decision_cards_without_opening_a_writer(self):
         import bt_scheduler_decisions as decisions
         from bt_scheduler_quality.contracts import QualityError
 
@@ -288,10 +288,9 @@ class ReviewAttempts(unittest.TestCase):
                 patch("bt_run_stores.paths", return_value={"m6": "x"}):
             self.assertEqual(ops.review_attempts(Path("/nowhere"), "T9"), ("att-7",))
 
-    def test_any_other_store_error_is_not_swallowed(self):
-        from bt_scheduler_quality.contracts import QualityError
+    def test_a_read_only_state_error_is_not_swallowed(self):
+        import bt_scheduler_decisions as decisions
 
-        with patch("bt_scheduler_quality.store.QualityStore", side_effect=QualityError("STORE_CORRUPT", "damaged")), \
-                patch("bt_run_stores.paths", return_value={"m6": "x"}):
-            with self.assertRaises(QualityError):
+        with patch.object(decisions, "open_requests", side_effect=sqlite3.DatabaseError("damaged")):
+            with self.assertRaises(sqlite3.DatabaseError):
                 ops.review_attempts(Path("/nowhere"), "T9")

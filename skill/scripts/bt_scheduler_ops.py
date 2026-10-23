@@ -414,28 +414,14 @@ def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wa
         time.sleep(2)
 
 
+def _review_cards(rdir: Path, task: str) -> list[dict]:
+    import bt_scheduler_decisions as decisions
+    return [card for card in decisions.open_requests(rdir) if card.get("source") == "review" and card.get("task") == task]
+
+
 def review_attempts(rdir: Path, task: str) -> tuple[str, ...]:
-    """The attempts whose open reviews wait for `task`'s manual evidence. The M6 store belongs to the owner while it is alive (the
-    verification that waits for evidence keeps it so), so then the read goes through the decision cards, which open it read-only."""
-    import bt_run_stores
-    from bt_scheduler_quality.store import QualityError, QualityStore
-
-    try:
-        probe = QualityStore(bt_run_stores.paths(rdir)["m6"])
-    except QualityError as error:
-        if error.code != "STORE_IN_USE":
-            raise
-        import bt_scheduler_decisions as decisions
-
-        found: list[str] = []
-        for request in decisions.open_requests(rdir):
-            if request.get("source") == "review" and request.get("task") == task and request.get("attempt") not in found:
-                found.append(request["attempt"])
-        return tuple(a for a in found if a)
-    try:
-        return probe.open_review_attempts(task)
-    finally:
-        probe.close()
+    """Read only reviews whose attempts are still waiting in M1; never claim the M6 writer lock."""
+    return tuple(dict.fromkeys(card["attempt"] for card in _review_cards(rdir, task) if card.get("attempt")))
 
 
 def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: str, by: str = "coordinator", *, requeue: bool = True, expected_attempt: str | None = None) -> list[str]:
@@ -479,16 +465,18 @@ def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: 
         return lines
     with hold(rdir, f"attestation of {task}"):
         stopped = stop_owner(project, req)
-        store = QualityStore(bt_run_stores.paths(rdir)["m6"])
-        try:
-            for key in store.open_reviews_of(task):
-                try:
-                    store.retry_attested(key, by, f"manual evidence attested by {by}: {evidence[:120]}")
-                    lines.append(f"verification of {task} requeued: the verifier will find the receipt")
-                except Exception as exc:  # noqa: BLE001 - QualityError: not only manual evidence, or already retried
-                    lines.append(f"verification of {task} stays for a person ({getattr(exc, 'code', type(exc).__name__)})")
-        finally:
-            store.close()
+        with adapter.owner_lock(rdir):
+            cards = [card for card in _review_cards(rdir, task) if card.get("attempt") in attempts]
+            store = QualityStore(bt_run_stores.paths(rdir)["m6"])
+            try:
+                for card in cards:
+                    try:
+                        store.retry_attested(card["id"], by, f"manual evidence attested by {by}: {evidence[:120]}")
+                        lines.append(f"verification of {task} requeued: the verifier will find the receipt")
+                    except Exception as exc:  # noqa: BLE001 - QualityError: not only manual evidence, or already retried
+                        lines.append(f"verification of {task} stays for a person ({getattr(exc, 'code', type(exc).__name__)})")
+            finally:
+                store.close()
         lines.insert(0, f"owner stopped: {stopped} process(es)")
     return lines
 

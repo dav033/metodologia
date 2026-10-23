@@ -3,6 +3,7 @@ anything else."""
 from __future__ import annotations
 
 import json
+import sqlite3
 import stat
 import sys
 import tempfile
@@ -10,6 +11,7 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+from contextlib import closing
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_attestation as att
@@ -130,6 +132,11 @@ class Operator(unittest.TestCase):
             root.chmod(0o700)
             rdir = root / "REQ-1"
             rdir.mkdir()
+            with closing(sqlite3.connect(adapter.run_db_path(rdir))) as connection:
+                connection.execute("CREATE TABLE state(id INTEGER, doc TEXT)")
+                connection.execute("INSERT INTO state VALUES(1, ?)", (json.dumps({"revision": 1,
+                    "tasks": {"T1": {"state": "active"}}, "attempts": {"att-1": {"state": "verifying"}}}),))
+                connection.commit()
             database = root / "m6.sqlite3"
             checks = [{"type": "manual", "value": value, "purpose": purpose, "expected": "ok"}
                       for value, purpose in [("local live", "local"), ("deployed live", "deployed")]]
@@ -176,7 +183,9 @@ class Operator(unittest.TestCase):
             with patch.object(ops, "bound_plan", return_value=plan), patch.object(ops, "stop_owner", return_value=1), \
                     patch("bt_scheduler_quality.store.QualityStore", return_value=store), \
                     patch("bt_run_stores.paths", return_value={"m6": Path(tmp) / "m6.sqlite3"}), \
-                    patch.object(att, "mint", lambda *a, **k: real_mint(*a, **{**k, "key_file": key})):
+                    patch.object(att, "mint", lambda *a, **k: real_mint(*a, **{**k, "key_file": key})), \
+                    patch.object(ops, "_review_cards", side_effect=lambda *a: [
+                        {"attempt": attempt, "id": "key-1", "task": "T9"} for attempt in store.open_review_attempts("T9")]):
                 lines = ops.attest("p", "REQ-001", rdir, "T9", "", EVIDENCE)
                 self.assertEqual(sum(1 for line in lines if line.startswith("attested T9@att-1")), 2)
                 self.assertEqual(store.retried, [("key-1", "coordinator")])

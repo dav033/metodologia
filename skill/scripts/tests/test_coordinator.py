@@ -70,10 +70,9 @@ class Attest(unittest.TestCase):
         patcher = patch.object(ops, "attest", side_effect=lambda *a, **k: self.attested.append((a, k)) or ["attested"])
         patcher.start()
         self.addCleanup(patcher.stop)
-        patcher = patch("bt_scheduler_quality.store.QualityStore")
-        store = patcher.start()
+        patcher = patch.object(ops, "review_attempts", return_value=("att-7",))
+        patcher.start()
         self.addCleanup(patcher.stop)
-        store.return_value.open_review_attempts.return_value = ("att-7",)
         patcher = patch.object(bt_config, "get", side_effect=lambda key, default=None: {"coordinator.projects": ["pictures"],
                                                                                       "coordinator.command_seconds": 60}.get(key, default))
         patcher.start()
