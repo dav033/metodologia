@@ -101,6 +101,11 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
                      f"{case.task} already had {task_actions} automatic plan repairs")
             continue
         outcome = healing._repair(project, req, rdir, request, case, context, plan, doc, answer, revise)
+        if outcome.get("blocker"):
+            entry.update(status="unrepairable", blocker=outcome["blocker"], repair=outcome["repair"])
+            healing.save(rdir, state)
+            log(f"healing {case.task}: no retry ({outcome['blocker']}); apply a real repair revision first")
+            continue
         if outcome["repair"] == "none" and healing.model_enabled() and healing.model_eligible(request):
             outcome = healing.model_repair(project, req, rdir, request, case, answer)
             if outcome["repair"] == "wait":            # the diagnosis is not there yet: ask again next cycle, nothing is recorded

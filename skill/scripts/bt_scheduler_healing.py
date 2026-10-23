@@ -337,11 +337,7 @@ def _repair(project, req, rdir, request, case, context, plan, doc, answer, revis
         elif kind == "criterion_unmapped":
             return _fix_mapping(project, req, rdir, request, case, plan, answer, revise)
         elif kind == "regression" and "audit gate:" in context.get("verify", "") + str(request.get("error")):
-            import bt_remediation
-
-            if "retry" in options and bt_remediation.grant_round(rdir, request["task"]):
-                answer(request_id, "retry", "automatic: one more remediation round for the audit instead of sending accepted tasks back")
-                return {"repair": "one more remediation round, then the audit looks again", "result": "fixed"}
+            return {"repair": "none", "result": "pending", "blocker": "producer_remediation_required"}
         elif kind in ("regression", "plan_defect"):
             if added_by_healing(rdir, request["task"]):
                 # a repair that fails is retried with the new evidence, never repaired by another task: REQ-020 grew T14.3a -> T14.4a ->
