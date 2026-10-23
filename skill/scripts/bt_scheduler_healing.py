@@ -217,6 +217,13 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
         if outcome["repair"] == "none":
             entry["status"] = "unrepairable"           # terminal: the card stays for a person and the case is not looked at again
             continue
+        if outcome["result"] == "failed" and str(outcome["repair"]).startswith("revision invalid") and entry.get("invalid", 0) < INVALID_TRIES:
+            # a revision the planner REFUSED changed nothing: it is not a repair that failed to help, so it must not spend the case (REQ-020
+            # T15: the first repair died on the planner lint, the case was marked exhausted, and the task idled all night for a person)
+            entry["invalid"] = entry.get("invalid", 0) + 1
+            save(rdir, state)
+            log(f"healing {case.task} [{case.kind}] {outcome['repair']}: will be tried again")
+            continue
         state["actions"] += 1
         done += 1
         entry.update(applied=entry["applied"] + 1, repair=outcome["repair"], at=round(now(), 3),
@@ -230,6 +237,7 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
     return done
 
 
+INVALID_TRIES = 3                 # revisions the planner may refuse for one case before it counts as a spent repair
 STUCK_VERIFY_REJECTIONS = 3        # the verifier refusing the same order this many times is not going to change its mind
 
 

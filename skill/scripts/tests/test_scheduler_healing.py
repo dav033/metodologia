@@ -199,6 +199,19 @@ class Cycle(unittest.TestCase):
         entry = next(iter(healing.load(self.rdir)["cases"].values()))
         self.assertEqual(entry["status"], "exhausted")
 
+    def test_a_revision_the_planner_refused_does_not_spend_the_case(self):
+        """REQ-020 T15: «revision invalid: T15.1.objective repeats the same words» marked the case exhausted at the first try."""
+        refused = {"repair": "revision invalid: T9.1.objective: repeats the same words", "result": "failed"}
+        with patch.object(healing, "_repair", return_value=refused):
+            for _ in range(healing.INVALID_TRIES):
+                self.run_cycle([request()])
+        entry = next(iter(healing.load(self.rdir)["cases"].values()))
+        self.assertEqual((entry["status"], entry["applied"], entry["invalid"]), ("open", 0, healing.INVALID_TRIES))
+        with patch.object(healing, "_repair", return_value=refused):
+            self.run_cycle([request()])                                                       # the fourth refusal does count
+        entry = next(iter(healing.load(self.rdir)["cases"].values()))
+        self.assertEqual(entry["applied"], 1)
+
     def test_a_fresh_quota_stop_waits_and_a_stopped_or_disabled_run_does_nothing(self):
         self.verify = "agent stopped: you've hit your limit"
         self.doc["attempts"]["att-9"]["updated_at"] = NOW - 10                               # just happened: wait for the reset
