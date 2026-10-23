@@ -76,6 +76,24 @@ class Basics(LineCase):
             git(self.app, "cat-file", "-e", f"{line.tip('app')}:{name}")
         self.assertEqual(line.needs_resolution("app"), {})
 
+    def test_attempts_started_from_a_line_commit_with_an_empty_tree_are_read_against_the_parent_that_has_the_files(self):
+        """The poisoned `m3 line: T1` of david-ui REQ-001 (empty tree): T2 and T6 started from it and then clashed add/add on every file."""
+        t1 = snapshot(self.app, self.head, {"a.txt": "a\n", "package.json": "{}\n"})
+        import subprocess
+
+        tree = subprocess.run(["git", "mktree"], cwd=self.app, input=b"", check=True, capture_output=True).stdout.decode().strip()
+        empty = git(self.app, "commit-tree", tree, "-p", self.head, "-p", t1, "-m", "m3 line: T1")
+        t6 = snapshot(self.app, empty, {"a.txt": "a\n", "package.json": '{"x":1}\n', "six.txt": "6\n"})
+        t2 = snapshot(self.app, empty, {"a.txt": "a\n", "package.json": "{}\n", "two.txt": "2\n"})
+        self.accept("T1", t1)
+        self.accept("T6", t6)
+        self.accept("T2", t2)
+        line = self.line({"T1": ([], "app"), "T6": (["T1"], "app"), "T2": (["T1"], "app")})
+        self.assertEqual(line.needs_resolution("app"), {})
+        for name in ("a.txt", "six.txt", "two.txt"):
+            git(self.app, "cat-file", "-e", f"{line.tip('app')}:{name}")
+        self.assertEqual(self.at(line.tip("app"), "package.json"), '{"x":1}')
+
     def test_an_empty_handoff_is_a_no_op(self):
         self.accept("T1", self.head)
         self.assertEqual(self.line({"T1": ([], "app")}).tip("app"), self.head)

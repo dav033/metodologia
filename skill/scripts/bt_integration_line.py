@@ -241,7 +241,7 @@ class Line:
             # REQ-001 T1 att-0004, whose start base the tip never had). A 3-way merge against that start base reads "the tip deleted
             # everything the snapshot still has" and yields an EMPTY tree without a clash: fast-forward, as for `start_base == tip`.
             return item.snapshot, ()
-        base = item.start_base
+        base = _real_base(repo, item.start_base)
         done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={base}",
                     tip, item.snapshot, check=False)
         if done.returncode == 1:
@@ -263,6 +263,23 @@ class Line:
         merged = _git(repo, "commit-tree", "--no-gpg-sign", lines[0].strip(), "-p", tip, "-p", item.snapshot, "-m",
                       f"m3 line: {item.task}").stdout.strip()
         return merged, ()
+
+
+EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
+
+def _real_base(repo: Path, base: str) -> str:
+    """A start base whose tree is EMPTY while a parent's is not is a line commit an earlier bug built (david-ui REQ-001: `m3 line: T1`
+    with no files). Attempts started from it did not start from nothing: read their work against the parent that holds the files."""
+    if _git(repo, "rev-parse", f"{base}^{{tree}}", check=False).stdout.strip() != EMPTY_TREE:
+        return base
+    for number in (2, 1):
+        parent = _git(repo, "rev-parse", "--verify", "--quiet", f"{base}^{number}", check=False)
+        if parent.returncode == 0:
+            sha = parent.stdout.strip()
+            if SHA.fullmatch(sha) and _git(repo, "rev-parse", f"{sha}^{{tree}}", check=False).stdout.strip() != EMPTY_TREE:
+                return sha
+    return base
 
 
 def _missing(repo: Path, sha: str) -> bool:
