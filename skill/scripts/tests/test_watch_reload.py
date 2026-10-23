@@ -130,6 +130,26 @@ class Watcher(unittest.TestCase):
         self.check(w, live=["running"])
         self.assertEqual(self.stops, [])
 
+    def test_the_owner_the_watcher_started_itself_is_also_checked_for_a_new_engine(self):
+        """REQ-001 (david-ui): `_wait(owner)` ran the healing every 5 s but never the reload check, so the watcher stayed on its 06:14 code
+        for hours (the manual reviewer never ran there). The check now runs every HEAL_SECONDS while the watcher waits for its own owner."""
+        clock = [1000.0]
+        checks = []
+        w = watch.Watch("p", "REQ-1", self.rdir, fingerprint=lambda: "v1", reexec=lambda *a: None, log=self.logged.append,
+                        now=lambda: clock[0], sleep=lambda seconds: clock.__setitem__(0, clock[0] + seconds), heal=lambda: False,
+                        announce=lambda: None)
+        w._reload_check = lambda: checks.append(clock[0])
+
+        class Owner:
+            polls = 0
+
+            def poll(self):
+                Owner.polls += 1
+                return 0 if Owner.polls > 20 else None            # about 100 s of waiting
+
+        self.assertEqual(w._wait(Owner()), 0)
+        self.assertGreaterEqual(len(checks), 3)
+
     def test_a_failing_check_never_stops_the_watch(self):
         w = self.watcher()
         with patch.object(ops, "status", side_effect=RuntimeError("db locked")):

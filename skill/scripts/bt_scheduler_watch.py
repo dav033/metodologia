@@ -355,12 +355,16 @@ class Watch:
                                         diagnose=bt_scheduler_decisions.auto_diagnoser(self.project, self.req, self.rdir))
 
     def _wait(self, owner) -> int:
+        checked = self.now()
         while True:
             code = owner.poll()
             if code is not None:
                 return code
             self.announce()
             self.heal()                       # a clash card is answered while the owner keeps working on the rest
+            if self.now() - checked >= HEAL_SECONDS:
+                checked = self.now()
+                self._reload_check()          # the owner the watcher itself started: it never got the reload check (REQ-001: 3 h on 06:14 code)
             self.sleep(POLL_SECONDS)
 
 
