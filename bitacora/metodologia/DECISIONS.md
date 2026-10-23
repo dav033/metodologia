@@ -1078,3 +1078,23 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Decision:** (1) the coordinator (`bt_coordinator`, per-project opt-in `coordinator.projects`, today `pictures`) runs the manual live commands of a review on the attempt's snapshot, attests them when all exit 0, and rejects the review (`review_fail`, output as reason) when a command ran and exited >0; a command that could not run leaves the review for a person. (2) `bt_attempt_analyst` (`analyst.auto`, on) reads a task that failed more than twice and puts cause and advice in the next prompt; it executes nothing. (3) `planner.require_mapped_checks` is now ON in the owner's config: a plan with a check that maps to no criterion is not publishable (`planner` refuses with the list); revert with `bt_config set planner.require_mapped_checks false`.
 - **Consequences:** + the unmapped-check stops (CHECK_UNMAPPED, T12/T14a) are caught when the plan is written, not at verification; + live evidence no longer waits for a person. − a plan with a supplementary command check must now map it to a criterion; a live run spends the project's real services and credentials (test credentials only).
 - **Source:** REQ-030, P-155, P-157, P-138
+
+## D-122 — Engine v2 (subplans, Designer, knowledge stores) is built outside the flow, directly on main
+
+- **Date:** 2026-10-23 · **Status:** Accepted
+- **Context:** Master spec v1.7 (`engine-v2/METODOLOGIA_AGENTES_SUBPLANES.md`) redesigns the cycle around functional subplans, versioned compositions and an eighth role. Building it through the scheduler would mean the engine modifying itself.
+- **Decision:**
+  - Owner rulings are in `engine-v2/CONTRACT.md` (they prevail over the master).
+  - Work runs outside the methodology flow (no REQ/plan/scheduler), directly on `main`, with one lead and Codex `gpt-6-luna` high workers (6 max, accounts codex/codex-2/codex-luis); push after each green merge.
+  - `PLAN.json` gets a new schema version with optional `subplans`; each subplan sits inside one milestone (D-01 = A, D-02).
+  - All 14 private skills are approved, including the 3 Implementer drafts.
+  - Designer is a full role: `design/` area in the project repo, opus/high and sol/high, 3 private skills and 4 public adaptations.
+  - Visual QA is a third Reviewer axis `visual` (D-05).
+  - Researcher gets an external knowledge store and private skills.
+  - Upstream skills are fetched, SHA-pinned, license-checked and adapted, never executed.
+  - The workspace cleanup has a backup first.
+  - Live runs david-ui REQ-001 and pictures REQ-020 stay held.
+- **Consequences:**
+  - \+ One agreed contract and a self-contained execution prompt (`engine-v2/PROMPT.md`).
+  - − `main` is also the live skill, so held runs resumed later will run on v2 code unless pinned to the `pre-engine-v2` tag.
+- **Source:** engine-v2 (session fdcfb6a3)
