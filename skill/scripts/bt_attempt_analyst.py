@@ -23,10 +23,13 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from bt_prompt_context import compact, concise, instruction
+
 FAILURES_BEFORE = 2
 REANALYZE_AFTER = 2
 MAX_CONTEXT = 14000
 NOTES = "RUN.notes"
+
 
 PROMPT = """You are the failure analyst of a software scheduler. One task has failed {failures} attempts. You can only read: you change nothing and
 run nothing. Read everything below and answer with ONE JSON object and nothing else:
@@ -35,6 +38,17 @@ run nothing. Read everything below and answer with ONE JSON object and nothing e
   "not_the_task": true|false, "confidence": "alta"|"media"|"baja"}}
 `not_the_task` is true when the cause is outside what the task may change (the plan, the environment, a missing credential, another task's
 work): then say so in `cause` and say who must act in `solution`. Do not repeat an approach the history says already failed.
+
+{bundle}
+"""
+
+
+CONCISE_PROMPT = """Failure analyst: {failures} failed attempts. Read only; change and run nothing. Return ONE JSON object:
+{{"cause": "root cause, max 4 sentences; name the wrong file, command or assumption",
+"solution": "different approach, max 5 short numbered steps",
+"not_the_task": true|false, "confidence": "alta"|"media"|"baja"}}
+If the cause is outside task scope (plan, environment, credential, another task), set not_the_task=true and name who must act.
+Do not repeat failed approaches. Preserve commands, paths, numbers, negations and decisive errors.
 
 {bundle}
 """
@@ -111,14 +125,16 @@ def bundle(rdir: Path, task: str, doc: dict, plan: dict | None) -> str:
     parts = []
     spec = _spec(plan, task)
     if spec:
-        parts.append("THE TASK (from the approved plan):\n" + json.dumps(spec, ensure_ascii=False, indent=1, default=str)[:5000])
+        parts.append("THE TASK (from the approved plan):\n" + (json.dumps(spec, ensure_ascii=False, separators=(",", ": "), default=str) if concise()
+                     else json.dumps(spec, ensure_ascii=False, indent=1, default=str)[:5000]))
     for label, text in (("HISTORY OF THE ATTEMPTS", bt_attempt_history.prompt(rdir, task, doc)),
                         ("LAST VERIFICATION NOTE", decisions.verify_notes(rdir, task)),
                         ("AUDIT NOTES", decisions.audit_notes(rdir, task)),
                         ("OWNER'S NOTES", decisions.operator_notes(rdir, task))):
         if text:
             parts.append(f"{label}:\n{text}")
-    return "\n\n".join(parts)[:MAX_CONTEXT]
+    text = "\n\n".join(parts)
+    return compact(text) if concise() else text[:MAX_CONTEXT]
 
 
 def parse(text: str) -> dict[str, Any]:
@@ -153,7 +169,7 @@ def analyze(project: str, rdir: Path, task: str, *, runner: Callable[..., Any] =
         provider = spec["provider"]
         bt_profiles.authorize(pid, project)
         env = bt_profiles.session_env(pid, provider, None, project)
-        prompt = PROMPT.format(failures=count, bundle=bundle(rdir, task, doc, plan))
+        prompt = instruction(PROMPT, CONCISE_PROMPT).format(failures=count, bundle=bundle(rdir, task, doc, plan))
         with tempfile.TemporaryDirectory(prefix="bt-analyst-") as work:
             out = Path(work) / "answer.txt"
             done = runner(bt_block_agent.argv(provider, spec.get("bin") or provider, model, effort, out), input=prompt, text=True,

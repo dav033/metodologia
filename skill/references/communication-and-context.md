@@ -80,6 +80,12 @@ targeted output when it is already sufficient. Full recovery of a failed test lo
 request relevant saved lines with `rtk recall --grep`/`--from`/`--lines` when supported, keeping exact evidence
 accessible.
 
+The scheduler applies this guidance through `prompts.rtk` and `prompts.concise` (both default on).
+RTK guidance appears only when PATH discovery succeeds; verification commands and M6 output are always RAW.
+Concise retry history compares exact failure text, keeps all distinct failures and the first/latest full text of repeats.
+Prompt line budgets reduce repeated lines with counts, never unique evidence; structured audit observations and manual-review verdict evidence are not condensed. Older history records may already be truncated; new records retain full text.
+Turning either setting off restores its legacy prompt behavior; neither setting installs tools or changes verification.
+
 ## Grill Me: investigate facts, interview decisions
 
 Source excerpts:

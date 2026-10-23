@@ -135,7 +135,7 @@ explicit operator action (`GitWorkspaces.release`).
 
 ## Configuration (`Config`, all explicit)
 
-`handoff_mode="snapshot"` (or opt-in `"patch"`), `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
+`handoff_mode="snapshot"` (or opt-in `"patch"`), `prompt_rtk=True` (optional RTK inspection guidance; verification stays RAW), `max_running=2` (a safety ceiling; M1 owns global capacity), `max_queued=64`, `timeout_seconds=1800`, `max_timeout_seconds=86400`,
 `grace_seconds=10`, `spare_interactive=True`, `heartbeat_seconds=30`, `poll_seconds=0.5`, `output_head_bytes=8 MiB`, `output_tail_bytes=256 KiB`,
 `classify_head_bytes=64 KiB`, `patch_max_bytes=16 MiB`, `log_tail_bytes=64 KiB`, `max_event_backlog=10000`, `deliver_batch=100`,
 `spawn_wait_seconds=10`, `settle_retry_seconds=5`, `handoff_tries=3`, `handoff_retry_seconds=0.5`. An order's own timeout wins over the default, both capped by the maximum.

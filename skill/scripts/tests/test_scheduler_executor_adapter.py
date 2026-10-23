@@ -387,6 +387,19 @@ class Translation(s.World):
             bt_worktree.check_scope(allocation, ["inside.txt"])
 
 
+class PromptSettings(s.World):
+    def test_machine_setting_reaches_executor_without_changing_other_limits(self):
+        import bt_config
+        from unittest.mock import patch
+
+        self.approve([s.task("T1", "work")])
+        with patch.object(bt_config, "STATE", self.tmp / "config"):
+            bt_config.set_value("prompts.rtk", False)
+            wiring = self.wire("direct:claude/haiku", autostart=False)
+        self.assertFalse(wiring.executor.cfg.prompt_rtk)
+        self.assertEqual(wiring.executor.cfg.timeout_seconds, 60)
+
+
 class Layout(s.World):
     def test_the_executor_root_sits_next_to_the_schedulers_database(self):
         layout = self.tmp / "bitacora" / "proj" / "requirements" / "REQ-042-x"

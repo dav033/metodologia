@@ -12,6 +12,7 @@ from pathlib import Path
 from bt_core import STATE
 
 DEFAULTS: dict = {
+    "prompts": {"rtk": True, "concise": True},
     "executor": {"display": "background"},
     "approval": {"auto": True, "max_milestones": 8, "max_tasks": 40},
     "learn": {"promote_after": 3, "inject_max": 12},

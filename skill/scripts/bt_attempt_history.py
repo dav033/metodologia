@@ -18,7 +18,6 @@ from pathlib import Path
 
 NOTES = "RUN.notes"
 SHOWN = 6                   # attempts listed in a prompt; older ones are counted
-MAX_TEXT = 1500
 ERROR_LINE = re.compile(r"error|fail|exit code|cannot|not found|denied|refused|conflict|timeout|assert", re.I)
 NOISE = (re.compile(r"\b[0-9a-f]{7,64}\b"), re.compile(r"(?:/[\w.@+-]+)+/"), re.compile(r"\d+(?:\.\d+)?"))
 
@@ -92,7 +91,7 @@ def record(rdir: Path, task: str, attempt: str, text: str, kind: str = "verifica
         with target.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps({"attempt": attempt, "kind": kind, "at": time.time(), "signature": signature(text),
                                      "signature_authority": "informational_only",
-                                     "text": text.strip()[:MAX_TEXT]}, ensure_ascii=False) + "\n")
+                                     "text": text.strip()}, ensure_ascii=False) + "\n")
     except OSError:
         pass
 
@@ -160,6 +159,10 @@ def _excerpt(text: str) -> str:
 
 def prompt(rdir: Path, task: str, doc: dict) -> str:
     """The section of a retry's prompt about earlier attempts; '' for a first attempt."""
+    from bt_prompt_context import concise
+
+    if concise():
+        return _concise_prompt(rdir, task, doc)
     history = entries(rdir, task, doc)
     if not history:
         return ""
@@ -195,4 +198,43 @@ def prompt(rdir: Path, task: str, doc: dict) -> str:
                      "again. Find the root cause first; it may be outside the code you wrote (the environment, a "
                      "dependency, the verification command, the plan). If it cannot be fixed within this task, say so "
                      "at the top of your final report, with the evidence, instead of retrying the same change.")
+    return "\n".join(lines)
+
+
+def _concise_prompt(rdir: Path, task: str, doc: dict) -> str:
+    history = entries(rdir, task, doc)
+    if not history:
+        return ""
+    observations = doc.get("audit_observations") or _observations(rdir, task)
+    lines = ["Earlier attempts of this task (oldest first). Do not repeat failed approaches."]
+    if isinstance(observations, list) and observations:
+        lines.append("Structured audit observations (authoritative when validated):")
+        lines.extend("- " + json.dumps(o, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+                     for o in observations if isinstance(o, dict))
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for entry in history:
+        groups.setdefault((entry["outcome"], entry["text"]), []).append(entry)
+    keep = {h["attempt"] for group in groups.values() for h in (group[0], group[-1])}
+    for entry in history:
+        group = groups[(entry["outcome"], entry["text"])]
+        if entry["attempt"] not in keep:
+            continue
+        header = f"- #{entry['number']} {entry['attempt']}: {entry['outcome']}"
+        if entry["outcome"] == "accepted":
+            lines.append(header + ", later sent back (rework, audit or plan revision)")
+            continue
+        if entry is group[0] and len(group) > 1:
+            header += f"; same failure ×{len(group)} (first/latest text; attempts " + ", ".join(h["attempt"] for h in group) + ")"
+        lines.append(header + ": " + entry["text"])
+    lines.append("Text signatures are heuristic hints only; they are not authoritative evidence of audit recurrence.")
+    if not observations and len(history) > 1 and history[-1]["outcome"] != "accepted":
+        last = history[-1]
+        count = 0
+        for entry in reversed(history):
+            if (entry["outcome"], entry["text"]) != (last["outcome"], last["text"]):
+                break
+            count += 1
+        if count > 1:
+            lines.append(f"WARNING: the last {count} attempts have identical failure text. Find the root cause; "
+                         "if outside this task, report the blocker with evidence.")
     return "\n".join(lines)

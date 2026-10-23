@@ -78,5 +78,32 @@ class PromptRemoteActions(unittest.TestCase):
         self.assertNotIn("mounted read-only", remote)
 
 
+class PromptRtk(unittest.TestCase):
+    def test_optional_rtk_preserves_native_prompt_and_verification(self):
+        import hashlib
+        from unittest.mock import patch
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt, _rtk_available
+
+        brief = Brief(title="T", verification=("npm run verify",))
+        request = SimpleNamespace(task_id="T1", acceptance_criteria=())
+        args = dict(workdir="/w", branch="b", report_path="/r.json")
+        self.addCleanup(_rtk_available.cache_clear)
+        _rtk_available.cache_clear()
+        with patch("shutil.which", return_value=None):
+            absent = build_prompt(brief, request, **args)
+        _rtk_available.cache_clear()
+        with patch("shutil.which", return_value="/bin/rtk"):
+            present = build_prompt(brief, request, **args)
+            disabled = build_prompt(brief, request, rtk=False, **args)
+        self.assertEqual(hashlib.sha256(absent.encode()).hexdigest(),
+                         "8ae02948b2b1d95850b35ee67c7833bf5c8e9ebd5a834717402085089607ce8b")
+        self.assertEqual(absent, disabled)
+        self.assertIn("rtk git status", present)
+        self.assertIn("rtk recall <hash> --full", present)
+        self.assertIn("verification commands exactly as written", present)
+        self.assertIn("npm run verify", present)
+
+
 if __name__ == "__main__":
     unittest.main()

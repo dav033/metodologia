@@ -32,6 +32,8 @@ class Config:
     spare_interactive: bool = True    # the worktree sweep leaves processes with a controlling terminal that are not the agent's live descendants
     handoff_mode: str = "snapshot"    # snapshot (private refs) or patch (artifact only)
 
+    prompt_rtk: bool = True
+
     def validate(self) -> Config:
         if self.handoff_mode not in ("snapshot", "patch"):
             raise ExecutorError("CONFIG_INVALID", "handoff_mode must be 'snapshot' or 'patch'")
