@@ -415,10 +415,24 @@ def _repair(project, req, rdir, request, case, context, plan, doc, answer, revis
                 answer(request_id, "retry", "automatic: one more remediation round for the audit instead of sending accepted tasks back")
                 return {"repair": "one more remediation round, then the audit looks again", "result": "fixed"}
         elif kind in ("regression", "plan_defect"):
+            if added_by_healing(rdir, request["task"]):
+                # a repair that fails is retried with the new evidence, never repaired by another task: REQ-020 grew T14.3a -> T14.4a ->
+                # T14.5a, each carrying the checks of the one before (P-164)
+                option = next((o for o in ("review_fail", "retry_with_note", "retry") if o in options), None)
+                if option is None:
+                    return {"repair": "none", "result": "pending"}
+                answer(request_id, option, f"automatic: the repair task {request['task']} failed its checks, so it is retried with the new "
+                                           f"evidence instead of adding another repair: {cite}")
+                return {"repair": f"retry the repair task {request['task']} with the new evidence", "result": "fixed"}
             return repair_task(project, req, rdir, request, case, context, plan, revise)
     except Exception as error:  # noqa: BLE001 - a repair that fails leaves the card for a person
         return {"repair": f"{kind}: {type(error).__name__}: {str(error)[:200]}", "result": "failed"}
     return {"repair": "none", "result": "pending"}
+
+
+def added_by_healing(rdir: Path | str, task: str) -> bool:
+    """True when `task` is a repair task this run's healing inserted (it has a case with `task_added == task`)."""
+    return any(entry.get("task_added") == task for entry in load(rdir)["cases"].values())
 
 
 WORKSPACE_CAP_MB = 8192

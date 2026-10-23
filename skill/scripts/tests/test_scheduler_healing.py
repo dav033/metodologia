@@ -130,6 +130,19 @@ class Cycle(unittest.TestCase):
                              revise=lambda why: self.revisions.append(why) or ["rebased"],
                              notify=lambda title, text: self.notes.append(text), **over)
 
+    def test_a_repair_task_that_fails_is_retried_not_repaired_by_another_task(self):
+        """P-164: REQ-020's T14.3a failed, and the healing added T14.4a to repair the repair, then T14.5a, each carrying the previous checks."""
+        healing.save(self.rdir, {"actions": 1, "cases": {"old": {"id": "old", "task": "T7", "class": "regression", "status": "applied",
+                                                                 "applied": 1, "task_added": "T7.1", "history": []}}})
+        self.verify = "$ npx tsx scripts/e2e/asesor/run.ts --live\nexit code 1\n[FAIL] boom"
+        card = request(task="T7.1", source="review", id="key-7", options=[{"id": "review_fail"}, {"id": "review_pass"}, {"id": "stop"}])
+        with patch("bt_healing_classify.owners_of", return_value=("T1",)), patch.object(healing, "repair_task") as nested:
+            self.run_cycle([card])
+        nested.assert_not_called()                                                          # no repair of the repair
+        self.assertEqual([a[:2] for a in self.answers], [("key-7", "review_fail")])
+        self.assertTrue(healing.added_by_healing(self.rdir, "T7.1"))
+        self.assertFalse(healing.added_by_healing(self.rdir, "T7"))
+
     def test_a_finished_analysis_rides_along_whatever_places_the_stop(self):
         import bt_attempt_analyst as analyst
 
