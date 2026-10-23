@@ -683,7 +683,7 @@ class QualityVerificationPort:
         except Exception as error:  # noqa: BLE001
             self.store.finish_delivery(request_key, "pending", type(error).__name__)
             LOGGER.warning(
-                "M6 verdict submission remains pending (%s)", type(error).__name__
+                "M6 verdict submission remains pending (%s: %s)", type(error).__name__, str(error)[:300]
             )
             return "pending"
         if response.status in {"applied", "duplicate"}:
