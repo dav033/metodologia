@@ -413,7 +413,10 @@ class QualityVerificationPort:
         path = bt_audit_gate.ledger_path(task.expected_paths) if task.meta.get("kind") == "audit" else None
         if path is None:
             return False
-        failed = [c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"]
+        # a check that was never run (CHECK_DEFERRED: a cheaper one failed first) is no failure of its own: REQ-020's T15 had `npm run gate`
+        # deferred behind its two ledger checks, so «every failed check names the ledger» was false and the gate never spoke for 18 attempts
+        failed = [c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"
+                  and c.get("issue_code") != "CHECK_DEFERRED"]
         return bool(failed) and all(str(c.get("command") or "").find(path) >= 0 for c in failed)
 
     def _recovery_coverage_gate(self, order: VerifyRequest, result: Mapping[str, Any]) -> bt_audit_gate.Gate | None:
