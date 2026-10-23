@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r8:att-0094:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "El verificador necesita que una persona confirme las comprobaciones manuales de T14a",
+ "origin": "T14a solo tiene comprobaciones manuales: las corridas en vivo del coordinador (M1 y M2 con .env.local) que la sandbox no puede ejecutar. Además, las comprobaciones CRITERION_MANUAL y CHECK_UNMAPPED siguen abiertas porque los comandos no corresponden exactamente a los criterios. La última corrida en vivo de M2 registrada (att-0084) terminó con exit 1 y no atestiguó nada, y el fallo previo de M2 ('correction did not regenerate the summary') está en scripts/e2e/asesor/scenarios/m2.ts, un fallo de producto que T14a debe reportar, no corregir. Los errores del intento actual no muestran un fallo de código.",
+ "steps": [
+  "Ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` (sin `--strict`) y confirma que sale con código 0.",
+  "Abre docs/req-020/integration-results.json y comprueba que liveEntryPoint y deployedEntryPoint aparecen como coordinator-pending o con su resultado real, y que el fallo de M2 de correction aparece con failedOwningTask.",
+  "Si ambas cosas se cumplen, pulsa «Aprobar a mano» indicando que T14a solo informa resultados. Si el check falla o falta esa evidencia, pulsa «Rechazar» y di qué falta."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T18:54:10",
+ "seconds": 26.9
+}

@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r9:att-0095:verify",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "La prueba viva de M2 falla por el flujo de corrección del asesor, fuera de T14.4a",
+ "origin": "El verificador pide una persona por CRITERION_MANUAL, pero el criterio manual es ejecutar `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2`, y esa ejecución falla con `[FAIL] asesor M2: correction did not regenerate the summary`. Según el análisis, Gemini devuelve partes `functionCall` que el código concatena como texto; ese defecto está en el flujo de corrección del asesor, que es de otra tarea. El análisis también indica que `--check-results docs/req-020/integration-results.json` es inalcanzable por construcción, pero no hay intentos registrados que lo demuestren, así que esa parte no está confirmada.",
+ "steps": [
+  "No apruebes a mano: la comprobación viva de M2 no pasa, así que elige «stop» para detener esta tarea.",
+  "Asigna el fallo de M2 y la evidencia en reports/e2e/asesor/integration-results.json a la tarea dueña del flujo de corrección del asesor.",
+  "Pide al dueño del checker que revise `--check-results docs/req-020/integration-results.json` y su test, porque el análisis dice que no puede salir con 0 con el estado actual.",
+  "Cuando esas tareas estén resueltas, reabre T14.4a con un plan nuevo: sube \"revision\" en PLAN.json y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T19:03:40",
+ "seconds": 19.4
+}

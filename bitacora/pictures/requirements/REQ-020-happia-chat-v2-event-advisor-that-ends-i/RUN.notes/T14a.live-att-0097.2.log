@@ -1,0 +1,3 @@
+$ npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1
+exit code 1 after 0.6 s
+Invalid URL

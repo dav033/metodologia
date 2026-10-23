@@ -1,0 +1,14 @@
+{
+ "at": 1792719577.612,
+ "attempt": "att-0096",
+ "binding": "48e9431ea2551a0e100c1bc9e91a4aa9050c3e2e0d364b25a8d14d8ee11ac6dc",
+ "by": "coordinator-auto",
+ "evidence": "Coordinator ran 1 live command(s) on the snapshot 34a3abc1108e of att-0096 with the project's .env.local (values redacted):\n`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` exit 0 in 152.1 s; last lines: there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no",
+ "evidence_sha256": "109eda85f76abeba49139c7b07f5327f8967e6a31df769a4b507bbd471563b47",
+ "expected": "The coordinator's live run exits 0 and its redacted evidence is recorded.",
+ "purpose": "The live check that failed for T14a now passes: npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2",
+ "schema": "attestation/1",
+ "seal": "d3f25acb91f26d2da6a094de8f12e041ba011eb7219523ca4c230b2faea51ee9",
+ "task": "T14.4a",
+ "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` with .env.local and records redacted evidence."
+}

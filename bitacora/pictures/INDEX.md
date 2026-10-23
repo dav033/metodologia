@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-20 13:00 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-22 20:23 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-20
+**Last activity:** 2026-10-22
 
 ## Workspace
 
@@ -48,25 +48,25 @@ _Generated 2026-10-20 13:00 by `bitacora.py index`. Do not edit by hand._
 
 ## Top pending (urgency, then complexity)
 
-- P-122 · REQ-020 plan prepared for launch (D-095): chained verifications split, T15b after T15, che · high/S
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
+- P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
+- P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 - P-086 · `tamano_pieza` shrink (-1) enlarges a piece whose start size is below the constructor mini · med/S
-- P-002 · FLUX photo color fidelity: residual ΔE ~15 after hex prompt (c25490f1); next: photoreal ca · med/M
 
 ## Recent decisions
 
+- D-064 — Observe release identity and version deployed advisor evidence
 - D-063 — Cancel the isolated REQ-018 run and revert this pass's code
 - D-062 — Reactivate REQ-018 only for the complete isolated product run
 - D-061 — Authorize root-cause repair and isolated T1 retry
 - D-060 — Scope the actual REQ-018 experiment to isolated T1
-- D-059 — Table-seat count test updated for parametric salon tables (REQ-014 T54)
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

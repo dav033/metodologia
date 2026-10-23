@@ -1,6 +1,38 @@
 {
- "actions": 2,
+ "actions": 5,
  "cases": {
+  "49cc9be7a3eba583": {
+   "after_restored": [
+    "T10",
+    "T14",
+    "T14.1a",
+    "T14.2a",
+    "T14.3a"
+   ],
+   "applied": 1,
+   "at": 1792713971.007,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/run.ts belong to accepted T1, T7, T10a, T14, T14.1a, T14.2a, T14.3a",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792713970.661,
+   "history": [
+    {
+     "at": 1792713971.007,
+     "repair": "plan r10 frozen but not applied: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+     "result": "failed"
+    }
+   ],
+   "id": "49cc9be7a3eba583",
+   "repair": "plan r10 frozen but not applied: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+   "revision": 10,
+   "status": "reverted",
+   "target": "T14.4a",
+   "task": "T14.4a",
+   "task_added": "T14.5a",
+   "why": "the same failure came back after its repair"
+  },
   "6f18906b7e10dffd": {
    "applied": 0,
    "class": "criterion_unmapped",
@@ -38,6 +70,61 @@
    "id": "71aa926b82606c04",
    "status": "unrepairable",
    "task": "T14a"
+  },
+  "b1a59cfe750aa92d": {
+   "after_restored": [
+    "T10",
+    "T14",
+    "T14.1a",
+    "T14.2a",
+    "T14.3a"
+   ],
+   "applied": 1,
+   "at": 1792713430.098,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/run.ts belong to accepted T1, T7, T10a, T14, T14.1a, T14.2a, T14.3a",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792713429.208,
+   "history": [
+    {
+     "at": 1792713430.098,
+     "repair": "plan r9: repair task T14.4a before T14a",
+     "result": "fixed"
+    }
+   ],
+   "id": "b1a59cfe750aa92d",
+   "lines": [
+    "att-0094: cancelled",
+    "rebase r8 → r9: kept 18, redo 3, new 1, removed 0"
+   ],
+   "repair": "plan r9: repair task T14.4a before T14a",
+   "revision": 9,
+   "status": "exhausted",
+   "target": "T14a",
+   "task": "T14a",
+   "task_added": "T14.4a",
+   "why": "the same failure came back after its repair"
+  },
+  "cc9aa96f774b926c": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/run.ts belong to accepted T1, T7, T10a, T14, T14.1a, T14.2a, T14.3a",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792718433.248,
+   "history": [
+    {
+     "at": 1792718433.252,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "cc9aa96f774b926c",
+   "status": "unrepairable",
+   "task": "T14.4a"
   },
   "e2cc469d7a69cbd7": {
    "after_restored": [
@@ -104,6 +191,25 @@
    "target": "T14a",
    "task": "T14a",
    "task_added": "T14.3a"
+  },
+  "fb6658a974310d34": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792713800.329,
+   "history": [
+    {
+     "at": 1792713800.333,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "fb6658a974310d34",
+   "status": "unrepairable",
+   "task": "T14.4a"
   }
  }
 }

@@ -1,0 +1,22 @@
+{
+ "request": "REQ-020:r11:att-0096:verify",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "La verificación viva de M2 falla por un defecto fuera de T14a; reintentar no lo arregla",
+ "origin": "El comando `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` sale con código 1 y muestra `[FAIL] asesor M2: correction did not regenerate the summary`. Según el análisis independiente, Gemini devuelve partes `functionCall` que el flujo de corrección del asesor concatena como texto; ese flujo pertenece a otra tarea, no a T14a. Además, `--check-results docs/req-020/integration-results.json` exige que todos los runs estén en 'passed' y cuenta como 'not run' las entradas pendientes, así que T14a no puede cumplir ese check tal como está. No pude comprobar esto contra el código: solo tengo la evidencia citada, y los intentos #1 a #15 repitieron el mismo enfoque sin tocar estas causas.",
+ "steps": [
+  "Elige la opción `stop` con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> stop --reason \"...\"` (el id sale de `scheduler-op REQ-020 decisions`); no reintentes T14.4a con el mismo flujo.",
+  "Pasa a la tarea dueña del flujo de corrección del asesor el fallo `correction did not regenerate the summary` y los `functionCall` tratados como texto, con la evidencia en /home/david/.cache/bt-coordinator/run-keiuaox2/tree/reports/e2e/asesor/integration-results.json.",
+  "Pide al dueño del checker que `--check-results` y su test acepten el esquema integration-results/1 con runs pendientes marcados como coordinator-pending; cuando eso esté, reabre T14a para repetir el check vivo de M2."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T20:33:55",
+ "seconds": 18.9
+}
