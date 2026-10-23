@@ -10,6 +10,14 @@
     "plan_id": {"type": "string", "minLength": 1},
     "revision": {"type": "integer", "minimum": 1, "maximum": 1000000},
     "spec_ref": {"type": "string", "minLength": 1, "description": "relative path inside the requirement folder"},
+    "generated_paths": {"type": "array", "maxItems": 256, "items": {"type": "string", "minLength": 1, "maxLength": 1024,
+      "description": "Repository-relative tracked output path or fnmatch glob; no absolute paths, dot components, backslashes, colons or control characters"}},
+    "generated_command": {"oneOf": [
+      {"type": "string", "minLength": 1, "maxLength": 4096},
+      {"type": "object", "minProperties": 1, "maxProperties": 256,
+       "propertyNames": {"pattern": "^[A-Za-z0-9._-]{1,128}$"},
+       "additionalProperties": {"type": "string", "minLength": 1, "maxLength": 4096}}
+    ], "description": "Rebuild command for the plan or a map from repository role to command; metadata only, not automatically executed"},
     "milestones": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/milestone"}},
     "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}},
     "requirements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/requirement_id"}},

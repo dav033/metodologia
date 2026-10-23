@@ -23,13 +23,24 @@ It reuses the integrator's `_git` so git is called the same safe way (no foreign
 """
 from __future__ import annotations
 
+import fnmatch
+import os
+import subprocess
+import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import bt_integration_invariant as invariant
-from bt_scheduler_integrator import SAFE, SHA, IntegrationError, _git
+from bt_scheduler_integrator import (
+    IDENT,
+    LOCATION_VARS,
+    SAFE,
+    SHA,
+    IntegrationError,
+    _git,
+)
 
 REF_PREFIX = "refs/m3/line"
 
@@ -50,6 +61,17 @@ class LineState:
     tip: str
     applied: tuple[str, ...]
     unresolved: Mapping[str, tuple[str, ...]]
+    generated_stale: tuple[str, ...] = ()
+
+
+class ApplyResult(tuple):
+    """Keep the historical `(tip, conflicts)` unpacking; expose stale output paths additively."""
+    generated_stale: tuple[str, ...]
+
+    def __new__(cls, tip: str, conflicts: tuple[str, ...], generated_stale: tuple[str, ...] = ()):
+        result = super().__new__(cls, (tip, conflicts))
+        result.generated_stale = generated_stale
+        return result
 
 
 class Line:
@@ -70,6 +92,9 @@ class Line:
         self._states: dict[str, tuple[Any, LineState]] = {}
 
     # ------------------------------------------------------------------------------------------------ public
+    def is_generated(self, path: str) -> bool:
+        return any(fnmatch.fnmatchcase(path, pattern) for pattern in getattr(self.plan, "generated_paths", ()))
+
     def roles(self) -> list[str]:
         seen: list[str] = []
         for tid in self.plan.ids():
@@ -119,15 +144,19 @@ class Line:
     def needs_resolution(self, role: str) -> dict[str, tuple[str, ...]]:
         return dict(self.state(role).unresolved)
 
-    def apply(self, role: str, task: str, attempt: str, snapshot: str, start_base: str | None = None) -> tuple[str, tuple[str, ...]]:
+    def apply(self, role: str, task: str, attempt: str, snapshot: str, start_base: str | None = None) -> ApplyResult:
         """Would `task`'s candidate result apply on the current tip? -> (new tip commit, conflicting files). The candidate
         replaces any earlier contribution of the same task. Objects only, nothing is stored and no ref moves."""
         repo = self._repo(role)
-        tip = self.tip(role, without=task)
+        state = self.state(role)
+        if task in dict(self.accepted()):
+            tip, _, _, inherited = self._replay(repo, state.base, [c for c in self.contributions(role) if c.task != task])
+        else:
+            tip, inherited = state.tip, state.generated_stale
         start = start_base or f"{snapshot}^1"
         resolved = _git(repo, "rev-parse", "--verify", f"{start}^{{commit}}")
-        merged, conflicts = self._apply_one(repo, tip, Contribution(task, attempt, resolved.stdout.strip(), snapshot))
-        return merged or tip, conflicts
+        merged, conflicts, stale = self._apply_one(repo, tip, Contribution(task, attempt, resolved.stdout.strip(), snapshot))
+        return ApplyResult(merged or tip, conflicts, tuple(sorted(set(inherited) | set(stale))))
 
     def recompute(self, roles: list[str] | None = None) -> dict[str, LineState]:
         """Recompute every line from the persisted facts and move its ref. Idempotent; safe at owner start-up."""
@@ -159,7 +188,7 @@ class Line:
     def _declared(self, task_id: str) -> tuple[str, ...]:
         return tuple(getattr(self.plan.task(task_id), "expected_paths", ()) or ())
 
-    def _guard(self, repo: Path, tip: str, contributions: list[Contribution], applied: list[str]) -> str:
+    def _guard(self, repo: Path, tip: str, contributions: list[Contribution], applied: list[str], stale: set[str]) -> str:
         """The tip never silently loses a file an applied task left (`bt_integration_invariant`): what a fold dropped is
         put back from its owner, once, as one repair commit, and reported. A repair that does not hold leaves the tip as
         the fold produced it and the lost files are reported, so the consumer decides (nothing is guessed here)."""
@@ -167,10 +196,15 @@ class Line:
             return tip
         items = [invariant.Item(c.task, c.start_base, c.snapshot) for c in contributions if c.task in applied and c.start_base]
         report = invariant.check(_git, repo, tip, items, self._declared, self._ancestors)
+        if stale:
+            report = invariant.Report(*({task: kept for task, names in group.items()
+                                         if (kept := tuple(name for name in names if name not in stale))}
+                                        for group in (report.lost, report.reverted)))
         if report.ok:
             return tip
         fixed = invariant.restore(_git, repo, tip, items, report)
-        ok = bool(fixed) and invariant.check(_git, repo, fixed, items, self._declared, self._ancestors).ok
+        remaining = invariant.check(_git, repo, fixed, items, self._declared, self._ancestors) if fixed else report
+        ok = bool(fixed) and all(name in stale for names in remaining.files().values() for name in names)
         self._announce(report, "fixed" if ok else "failed")
         if not ok:
             return tip
@@ -211,38 +245,40 @@ class Line:
     def _fold(self, role: str) -> LineState:
         repo = self._repo(role)
         base = self._base(role, repo)
-        tip, applied, unresolved = self._replay(repo, base, self.contributions(role))
-        return LineState(role, base, tip, tuple(applied), dict(unresolved))
+        tip, applied, unresolved, stale = self._replay(repo, base, self.contributions(role))
+        return LineState(role, base, tip, tuple(applied), dict(unresolved), tuple(sorted(stale)))
 
     def _replay(self, repo: Path, base: str, contributions: list[Contribution]):
-        tip, applied, unresolved = base, [], {}
+        tip, applied, unresolved, stale = base, [], {}, set()
         for item in contributions:
-            merged, conflicts = self._apply_one(repo, tip, item)
+            merged, conflicts, taken = self._apply_one(repo, tip, item)
             if conflicts:
                 unresolved[item.task] = conflicts
             elif merged:
                 tip = merged
                 applied.append(item.task)
+                stale.update(taken)
             else:
                 applied.append(item.task)                  # already part of the tip: nothing to add
-        return self._guard(repo, tip, contributions, applied), applied, unresolved
+        return self._guard(repo, tip, contributions, applied, stale), applied, unresolved, stale
 
-    @staticmethod
-    def _apply_one(repo: Path, tip: str, item: Contribution) -> tuple[str | None, tuple[str, ...]]:
-        """(merged commit, ()) when it applies; (None, ()) when the tip already holds it; (None, files) on a clash."""
+    def _apply_one(self, repo: Path, tip: str, item: Contribution) -> tuple[str | None, tuple[str, ...], tuple[str, ...]]:
+        """(merged commit or None, conflicts, generated paths taken from the candidate)."""
         if item.snapshot == tip or _git(repo, "merge-base", "--is-ancestor", item.snapshot, tip, check=False).returncode == 0:
-            return None, ()
+            return None, (), ()
         if item.start_base == tip:
-            return item.snapshot, ()                         # fast-forward: the same tree a merge would give, without the commit
+            return item.snapshot, (), ()                     # fast-forward: the same tree a merge would give, without the commit
         if not item.start_base:
             raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{item.task}: no start base for snapshot {item.snapshot[:12]}")
         if _git(repo, "merge-base", "--is-ancestor", tip, item.snapshot, check=False).returncode == 0:
             # The snapshot already holds everything the tip holds (a retry continues from the rejected attempt's snapshot: david-ui
             # REQ-001 T1 att-0004, whose start base the tip never had). A 3-way merge against that start base reads "the tip deleted
             # everything the snapshot still has" and yields an EMPTY tree without a clash: fast-forward, as for `start_base == tip`.
-            return item.snapshot, ()
+            return item.snapshot, (), ()
+        patterns = tuple(getattr(self.plan, "generated_paths", ()) or ())
+        output_flags = ("-z",) if patterns else ()
         base = _real_base(repo, item.start_base)
-        done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={base}",
+        done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", *output_flags, f"--merge-base={base}",
                     tip, item.snapshot, check=False)
         if done.returncode == 1:
             # An attempt that continued from an earlier one (a retry carries the rejected snapshot) started from a commit the
@@ -251,21 +287,57 @@ class Line:
             common = _git(repo, "merge-base", item.start_base, tip, check=False)
             origin = common.stdout.strip()
             if common.returncode == 0 and SHA.fullmatch(origin) and origin != item.start_base:
-                again = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={origin}",
+                again = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", *output_flags, f"--merge-base={origin}",
                              tip, item.snapshot, check=False)
                 if again.returncode == 0:
                     done = again
-        lines = done.stdout.splitlines()
+        lines = done.stdout.split("\0") if patterns else done.stdout.splitlines()
+        stale = ()
         if done.returncode == 1:
-            return None, tuple(line.strip() for line in lines[1:] if line.strip()) or ("?",)
-        if done.returncode or not lines or not SHA.fullmatch(lines[0].strip()):
+            conflicts = tuple(line for line in lines[1:] if line) if patterns else tuple(line.strip() for line in lines[1:] if line.strip())
+            real = tuple(path for path in conflicts if not self.is_generated(path))
+            if real or not conflicts:
+                return None, real or ("?",), ()
+            stale = conflicts
+            lines[0] = _resolve_generated(repo, lines[0], item.snapshot, stale)
+        if done.returncode not in (0, 1) or not lines or not SHA.fullmatch(lines[0].strip()):
             raise IntegrationError("INTEGRATION_GIT", f"merge-tree for {item.task}: {(done.stderr or done.stdout).strip()[:300]}")
         merged = _git(repo, "commit-tree", "--no-gpg-sign", lines[0].strip(), "-p", tip, "-p", item.snapshot, "-m",
                       f"m3 line: {item.task}").stdout.strip()
-        return merged, ()
+        return merged, (), stale
 
 
 EMPTY_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
+
+
+def _resolve_generated(repo: Path, tree: str, snapshot: str, paths: tuple[str, ...]) -> str:
+    with tempfile.TemporaryDirectory(prefix="m3-generated-") as scratch:
+        env = {k: v for k, v in os.environ.items() if k not in LOCATION_VARS}
+        env.update(IDENT, GIT_INDEX_FILE=str(Path(scratch) / "index"), GIT_LITERAL_PATHSPECS="1",
+                   GIT_CONFIG_NOSYSTEM="1", GIT_TERMINAL_PROMPT="0", GIT_OPTIONAL_LOCKS="0", LC_ALL="C")
+
+        def run(*args: str) -> str:
+            try:
+                done = subprocess.run(["git", "-c", "core.hooksPath=/dev/null", "-c", "gc.auto=0", "-C", str(repo), *args],
+                                      env=env, capture_output=True, text=True, timeout=60, check=False)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise IntegrationError("INTEGRATION_GIT", "generated resolution: " + type(exc).__name__) from exc
+            if done.returncode:
+                raise IntegrationError("INTEGRATION_GIT", "generated resolution: " + done.stderr.strip()[:300])
+            return done.stdout
+
+        run("read-tree", tree)
+        for path in paths:
+            entry = run("ls-tree", "-z", snapshot, "--", path).split("\0")[0]
+            if not entry:
+                run("update-index", "--force-remove", "--", path)
+                continue
+            meta, name = entry.split("\t", 1)
+            mode, kind, blob = meta.split()
+            if kind != "blob" or name != path:
+                raise IntegrationError("INTEGRATION_GIT", "generated resolution requires a file: " + path)
+            run("update-index", "--add", "--cacheinfo", f"{mode},{blob},{path}")
+        return run("write-tree").strip()
 
 
 def _real_base(repo: Path, base: str) -> str:

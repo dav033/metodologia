@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_scheduler_integrator as integ
 import scheduler_executor_support as s
 from scheduler_executor_support import adapter, core, git
+from scheduler_generated_case import GeneratedGate  # noqa: F401 - unittest discovery
 
 
 def snapshot(repo: Path, base: str, files: dict[str, str]) -> str:

@@ -392,7 +392,7 @@ class PredecessorIntegrator:
             if sha and SHA.fullmatch(sha):
                 rows.append((tid, attempt, sha))
         mine = self._items(repo, [(task_id, attempt_id, snapshot)])[0]
-        found = invariant.foreign_deletions(_git, repo, mine, self._items(repo, rows), self._declared, self.ancestors)
+        found = invariant.foreign_deletions(_git, repo, mine, self._items(repo, rows), self._declared, self.ancestors, self.line.is_generated if self.line else lambda _: False)
         if not found:
             return ""
         text = "; ".join(f"{owner}: {', '.join(names[:4])}" for owner, names in found.items())

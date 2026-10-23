@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import evidence as ev
-from . import interfaces, quality, traceability
+from . import generated, interfaces, quality, traceability
 
 SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
 EVIDENCE_SINCE = (1, 1, 0)
@@ -327,6 +327,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     if not isinstance(plan, dict):
         report.errors.append("plan: top level must be an object")
         return report
+    report.errors.extend(generated.errors(plan))
     for key in TOP_REQUIRED:
         if key not in plan:
             report.errors.append(f"plan.{key}: missing")
@@ -373,6 +374,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     if not report.errors or all("cycle" not in e for e in report.errors):
         (report.errors if strict else report.warnings).extend(quality.conflicts(plan))
         report.warnings.extend(quality.shared_unordered(plan))
+        report.warnings.extend(generated.advice(plan, quality.ancestors(plan)))
         report.warnings.extend(quality.dominant_shared_resources(plan))
         report.warnings.extend(quality.unconsumed_results(plan))
         report.warnings.extend(quality.redundant_edges(plan))

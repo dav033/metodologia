@@ -141,12 +141,14 @@ def check(git: Git, repo: Path, tree: str, items: Iterable[Item], declared: Call
 
 def foreign_deletions(git: Git, repo: Path, candidate: Item, others: Iterable[Item],
                       declared: Callable[[str], tuple[str, ...]] = lambda t: (),
-                      ancestors: Callable[[str], Iterable[str]] = lambda t: ()) -> dict[str, tuple[str, ...]]:
+                      ancestors: Callable[[str], Iterable[str]] = lambda t: (),
+                      generated: Callable[[str], bool] = lambda path: False) -> dict[str, tuple[str, ...]]:
     """Files the candidate deletes that another accepted task left and the candidate does not declare: {owner: files}.
     Such a result cannot be integrated without erasing someone else's work, so it is the candidate that is sent back."""
     if not candidate.start:
         return {}
-    mine = {name for name, (status, _new, _old) in _raw(git, repo, candidate.start, candidate.snapshot).items() if status == "D"}
+    mine = {name for name, (status, _new, _old) in _raw(git, repo, candidate.start, candidate.snapshot).items()
+            if status == "D" and not generated(name)}
     if not mine:
         return {}
     found: dict[str, list[str]] = {}

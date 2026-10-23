@@ -182,7 +182,11 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   files`), so the existing carry/resolve retry resolves it on top of the current tip. A task whose accepted result no longer
   fits after a redo is listed by `Line.needs_resolution` and left out of the tip (never silently resolved or dropped); its
   dependents are rejected with `PREDECESSOR_NEEDS_RESOLUTION` (permanent: a transient error would leave the attempt `uncertain`). A run that began with the flag on keeps it (`RUN.integration-line` marker). A run that already accepted tasks without it is **migrated** at the next start only when a dry-run fold (`bt_scheduler_executor_wiring._migration_probe`, in memory) holds every accepted contribution cleanly (`gates.integration_line_migrate`, default on); otherwise it stays on the predecessor merge and `RUN.integration-line.skipped` says which task does not fit. `recompute()` rebuilds the refs from persisted facts at
-  owner start-up. If git fails the integrator falls back to the predecessor merge for that call and logs. Not done yet:
+  owner start-up. Optional plan `generated_paths` allow conflicts in tracked build outputs to take the candidate's version,
+  with `LineState.generated_stale` / `apply(...).generated_stale` listing those paths (no automatic rebuild;
+  `generated_command` is metadata). Mixed conflicts still reject and list only undeclared paths. Resolution uses a
+  private index, never the checkout or its index. See `plan-contract.md` for declaration limits and matching.
+  If git fails the integrator falls back to the predecessor merge for that call and logs. Not done yet:
   a `resolve` attempt started by the line itself for an already accepted task (part 2), pinning each attempt's real start base;
 - the **integration invariant** (`gates.integration_check_files`, default on; REQ-030, `bt_integration_invariant`): after every
   integration (predecessor merge and line fold) each file an accepted task left (`start_base -> snapshot`, added or changed)

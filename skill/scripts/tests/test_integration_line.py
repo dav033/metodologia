@@ -11,6 +11,7 @@ import bt_integration_line as line_mod
 import bt_scheduler_integrator as integ
 import scheduler_executor_support as s
 from scheduler_executor_support import git
+from scheduler_generated_case import delete_snapshot
 from test_scheduler_integrator import FakePlan, snapshot
 
 V1, V2, V3 = ("".join(f"line {i} v{v}\n" for i in range(5)) for v in (1, 2, 3))
@@ -43,6 +44,77 @@ class LineCase(unittest.TestCase):
 
 
 class Basics(LineCase):
+    def test_declared_generated_conflicts_keep_last_writer_and_mark_stale(self):
+        names = ("registry.json", "registry/app/registry.json", "catalog/resolved.ts")
+        self.accept("T1", snapshot(self.app, self.head, {**dict.fromkeys(names, "left\n"), "a.txt": "a\n"}))
+        candidate = snapshot(self.app, self.head, {**dict.fromkeys(names, "right\n"), "b.txt": "b\n"})
+        line = self.line({"T1": ([], "app"), "T2": ([], "app")})
+        line.plan.generated_paths = ("registry.json", "registry/**/registry.json", "catalog/resolved.ts")
+        preview = line.apply("app", "T2", "att-T2", candidate)
+        tip, conflicts = preview
+        self.assertEqual(conflicts, ())
+        self.assertEqual(set(preview.generated_stale), set(names))
+        self.assertEqual(self.at(tip, "registry.json"), "right")
+        self.accept("T2", candidate)
+        state = line.recompute()["app"]
+        self.assertEqual(state.applied, ("T1", "T2"))
+        self.assertEqual(set(state.generated_stale), set(names))
+        self.assertEqual(line.needs_resolution("app"), {})
+        for name in names:
+            self.assertEqual(self.at(state.tip, name), "right")
+        for name in ("a.txt", "b.txt"):
+            git(self.app, "cat-file", "-e", f"{state.tip}:{name}")
+        self.assertEqual(line.recompute()["app"], state)
+        fresh = self.line({"T1": ([], "app"), "T2": ([], "app"), "T3": ([], "app")})
+        fresh.plan.generated_paths = line.plan.generated_paths
+        self.assertEqual(fresh.state("app"), state)
+        clean = snapshot(self.app, state.tip, {"c.txt": "c\n"})
+        self.assertEqual(set(fresh.apply("app", "T3", "att-T3", clean).generated_stale), set(names))
+
+    def test_generated_deletion_takes_candidate_and_is_not_restored_by_the_guard(self):
+        base = snapshot(self.app, self.head, {"registry.json": "base\n"})
+        self.accept("T1", snapshot(self.app, base, {"registry.json": "left\n", "a.txt": "a\n"}))
+        candidate = delete_snapshot(self.app, base, "registry.json")
+        self.accept("T2", candidate)
+        line = self.line({"T1": ([], "app"), "T2": ([], "app")}, base_of=lambda role: base)
+        line.plan.generated_paths = ("registry.json",)
+        state = line.state("app")
+        self.assertEqual(state.unresolved, {})
+        self.assertEqual(state.generated_stale, ("registry.json",))
+        self.assertNotIn("registry.json", git(self.app, "ls-tree", "--name-only", state.tip).splitlines())
+        self.assertEqual(self.at(state.tip, "a.txt"), "a")
+
+    def test_generated_paths_are_literal_and_resolution_does_not_touch_the_checkout(self):
+        name = "catalog/with\tquote\".ts"
+        self.accept("T1", snapshot(self.app, self.head, {name: "left\n"}))
+        self.accept("T2", snapshot(self.app, self.head, {name: "right\n"}))
+        line = self.line({"T1": ([], "app"), "T2": ([], "app")})
+        line.plan.generated_paths = ("catalog/*",)
+        (self.app / "local.txt").write_text("uncommitted\n")
+        before = git(self.app, "status", "--porcelain")
+        state = line.recompute()["app"]
+        self.assertEqual(self.at(state.tip, name), "right")
+        self.assertEqual(state.generated_stale, (name,))
+        self.assertEqual(git(self.app, "status", "--porcelain"), before)
+
+    def test_mixed_conflicts_report_only_sources_and_do_not_advance(self):
+        self.accept("T1", snapshot(self.app, self.head, {"registry.json": "left\n", "README.md": "left\n"}))
+        candidate = snapshot(self.app, self.head, {"registry.json": "right\n", "README.md": "right\n"})
+        line = self.line({"T1": ([], "app"), "T2": ([], "app")})
+        line.plan.generated_paths = ("registry.json",)
+        before = line.tip("app")
+        result = line.apply("app", "T2", "att-T2", candidate)
+        self.assertEqual(tuple(result), (before, ("README.md",)))
+        self.assertEqual(result.generated_stale, ())
+        self.accept("T2", candidate)
+        self.assertEqual(line.needs_resolution("app"), {"T2": ("README.md",)})
+
+    def test_undeclared_generated_file_still_clashes(self):
+        self.accept("T1", snapshot(self.app, self.head, {"registry.json": "left\n"}))
+        self.accept("T2", snapshot(self.app, self.head, {"registry.json": "right\n"}))
+        line = self.line({"T1": ([], "app"), "T2": ([], "app")})
+        self.assertEqual(line.needs_resolution("app"), {"T2": ("registry.json",)})
+
     def test_nothing_accepted_the_tip_is_the_run_base(self):
         line = self.line({"T1": ([], "app")})
         self.assertEqual(line.tip("app"), self.head)

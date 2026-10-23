@@ -23,6 +23,18 @@ def digest(text: str) -> str:
 
 
 class Loading(unittest.TestCase):
+    def test_generated_paths_are_retained_and_bounded_at_the_loading_boundary(self):
+        source = json.loads(FIXTURE.read_text())
+        source["generated_paths"] = ["registry.json", "registry/**/registry.json"]
+        raw = json.dumps(source)
+        self.assertEqual(sc.load_plan(raw, approved_sha256=digest(raw)).generated_paths,
+                         ("registry.json", "registry/**/registry.json"))
+        for paths in (["../source.py"], ["/source.py"], ["x"] * 257):
+            source["generated_paths"] = paths
+            raw = json.dumps(source)
+            with self.assertRaises(sc.SchedulerError):
+                sc.load_plan(raw, approved_sha256=digest(raw))
+
     def test_a_contract_example_plan_loads_bound_to_id_revision_and_hash(self):
         text = FIXTURE.read_text(encoding="utf-8")
         plan = sc.load_plan(text, approved_sha256=digest(text), plan_id="REQ-EXAMPLE", revision=1)

@@ -51,6 +51,7 @@ class Plan:
     schema_version: str
     sha256: str
     tasks: tuple[TaskSpec, ...]  # in the order of the plan (the deterministic tie-break everywhere)
+    generated_paths: tuple[str, ...] = ()
 
     def __post_init__(self):
         object.__setattr__(self, "_by_id", {t.id: t for t in self.tasks})
@@ -151,6 +152,14 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
     issues: list[str] = []
     if not isinstance(data, dict):
         raise SchedulerError("PLAN_INVALID", "top level must be a JSON object")
+    # Kept local for standalone loading; adapter parity tests pin the planner's declaration limits.
+    generated_paths = data.get("generated_paths", [])
+    if not isinstance(generated_paths, list) or len(generated_paths) > 256 or any(
+        not isinstance(p, str) or not 1 <= len(p) <= 1024 or p != p.strip()
+        or p.startswith("/") or "\\" in p or ":" in p or any(ord(c) < 32 for c in p)
+        or any(part in ("", ".", "..") for part in p.split("/")) for p in generated_paths
+    ):
+        raise SchedulerError("PLAN_INVALID", "generated_paths must be at most 256 relative paths/globs of 1..1024 characters")
     version = data.get("schema_version")
     match = VERSION_RE.fullmatch(version) if isinstance(version, str) else None
     if not match:
@@ -226,7 +235,8 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
     cycle = _cycle(tasks)
     if cycle:
         raise SchedulerError("PLAN_INVALID", "dependency cycle: " + " -> ".join(cycle))
-    return Plan(plan_id=pid, revision=rev, schema_version=version, sha256=digest, tasks=tuple(tasks))
+    return Plan(plan_id=pid, revision=rev, schema_version=version, sha256=digest, tasks=tuple(tasks),
+                generated_paths=tuple(generated_paths))
 
 
 def _cycle(tasks: list[TaskSpec]) -> list[str]:

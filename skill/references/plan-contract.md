@@ -62,6 +62,38 @@ explicit `covers:` and `kind:` values. A value PLAN.md does not
 state is not a contradiction; one it states differently is an error. Fields the parser would silently drop (a repeated
 field, an `after` entry that is not a task id, an unbackticked `verify`) are reported with their line.
 
+### Tracked generated outputs (optional, all 1.x plans)
+
+Top-level `generated_paths` declares build outputs tracked in git, relative to each repository root:
+
+```json
+{
+  "generated_paths": ["registry.json", "registry/**/registry.json", "catalog/resolved.ts"],
+  "generated_command": {"app": "npm run registry:build"}
+}
+```
+
+Paths use case-sensitive `fnmatch` globs (`*` also matches `/`); an exact entry matches only that path. The list has
+at most 256 entries, each 1..1024 characters. Absolute paths, empty or dot path components (`.`/`..`), backslashes,
+colons, control characters and leading/trailing whitespace are rejected. An empty list declares no outputs.
+`generated_command` is optional metadata: either a non-empty command string for the plan or a non-empty map of
+at most 256 repository roles to commands. Roles match `[A-Za-z0-9._-]{1,128}`; each command is at most 4096 characters
+and contains no NUL. Commands are not automatically executed.
+
+On the integration line, conflicts only in declared outputs take the candidate's version (including its deletion),
+preserving all other cleanly merged files. Last writer means the last applied contribution in deterministic plan order;
+candidate previews apply last to the current tip. Mixed conflicts reject the whole contribution and list only source
+paths. `LineState.generated_stale` and `Line.apply(...).generated_stale` expose the sorted/taken output paths; `apply`
+still unpacks as `(tip, conflicts)`. The marker is conservatively retained during replay and recomputed from accepted
+snapshots after restart. It does not assert that the outputs represent the combined sources. Rebuild execution and
+clearing the marker after a verified rebuild remain follow-up work; consumers must inspect the marker before release.
+No declaration preserves existing integration behavior. These declarations do not change scheduler resource reservations.
+
+`check` warns when unordered tasks in the same repository list the same likely generated path (`registry.json`,
+`*.lock`, `*.snap`, `resolved.*`, or a `generated`/`dist` component) without declaring it. Transitive `after` edges
+suppress that warning. Declared outputs are exempt from path coupling advice/errors; source overlaps and shared
+resource checks still apply. Declarations and rebuild commands are frozen with the rest of the approved plan.
+
 ### Audits and end-to-end tests (schema 1.2.0 errors)
 
 A passing `test -s report.md` says nothing about what an audit found, and module tests that pass alone say nothing
