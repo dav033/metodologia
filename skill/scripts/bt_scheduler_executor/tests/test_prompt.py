@@ -105,5 +105,22 @@ class PromptRtk(unittest.TestCase):
         self.assertIn("npm run verify", present)
 
 
+class PromptWholeSuites(unittest.TestCase):
+    def test_a_whole_suite_is_left_to_the_verifier_and_focused_checks_are_still_run_by_the_agent(self):
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt, whole_suites
+
+        def prompt(checks):
+            brief = Brief(title="T", objective="o", acceptance_criteria=("a",), verification=checks)
+            return build_prompt(brief, SimpleNamespace(task_id="T1", acceptance_criteria=("a",)), workdir="/w", branch="b",
+                                report_path="/r.json")
+        mixed = prompt(("regression: npm run gate", "functional: npx vitest run a.test.ts", "regression: npm run gate"))
+        self.assertIn("do NOT run them yourself", mixed)
+        self.assertIn("`npm run gate`", mixed)
+        self.assertEqual(whole_suites(("x: npm run gate", "y: npx vitest run a", "z: python3 -m unittest discover -s tests")),
+                         ["npm run gate", "python3 -m unittest discover -s tests"])
+        self.assertNotIn("do NOT run them yourself", prompt(("functional: npx vitest run a.test.ts",)))
+
+
 if __name__ == "__main__":
     unittest.main()

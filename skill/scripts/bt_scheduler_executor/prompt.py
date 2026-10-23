@@ -1,10 +1,25 @@
 """The agent prompt: the frozen plan's task plus the rules of the isolated worktree. Task text only, never secrets."""
 from __future__ import annotations
 
+import re
 import shutil
 from functools import lru_cache
 
 from .model import Brief, StartRequest
+
+
+# A whole-repository suite (npm test / npm run gate, unittest discovery without a pattern, bare pytest, cargo test).
+_WHOLE_SUITE = re.compile(r"(unittest\s+discover\b[^&|;]*$)|(\bnpm\s+(run\s+)?(test|gate)\s*$)|(\bpytest\s*$)|(\bcargo\s+test\s*$)")
+
+
+def whole_suites(verification) -> list[str]:
+    """The whole-suite commands among the brief's checks (entries read `purpose: command`)."""
+    found = []
+    for entry in verification or ():
+        command = str(entry).split(": ", 1)[-1].strip()
+        if _WHOLE_SUITE.search(command.rsplit("&&", 1)[-1].strip()) and command not in found:
+            found.append(command)
+    return found
 
 
 @lru_cache(maxsize=1)
@@ -37,6 +52,12 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
                      "If the project has a lockfile, install it in your worktree first (for npm: "
                      "`npm ci --offline`) so you can run the checks. Run each one yourself before you finish and say "
                      "which you could not run.")
+        suites = whole_suites(brief.verification)
+        if suites:
+            # REQ-020 T15.1: the agent ran `npm run gate` (~10 min) and then the verifier ran it again on the same files
+            parts.append("\nThe verifier runs the whole-suite checks (" + ", ".join(f"`{c}`" for c in suites) + ") itself on your final files "
+                         "and they take minutes: do NOT run them yourself; run the focused tests of what you changed, and say that the "
+                         "whole suites were left to the verifier.")
     if brief.expected_paths:
         parts.append(f"\n## Expected paths (guidance, not a limit)\n{bullets(brief.expected_paths)}")
     if brief.notes:
