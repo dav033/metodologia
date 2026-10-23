@@ -1,11 +1,22 @@
 """The agent prompt: the frozen plan's task plus the rules of the isolated worktree. Task text only, never secrets."""
 from __future__ import annotations
 
+import shutil
+from functools import lru_cache
+
 from .model import Brief, StartRequest
 
 
+@lru_cache(maxsize=1)
+def _rtk_available() -> bool:
+    try:
+        return shutil.which("rtk") is not None
+    except OSError:
+        return False
+
+
 def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: str, report_path: str,
-                 handoff_mode: str = "snapshot") -> str:
+                 handoff_mode: str = "snapshot", rtk: bool = True) -> str:
     def bullets(items) -> str:
         return "\n".join(f"- {i}" for i in items) if items else "- (none stated)"
 
@@ -63,5 +74,16 @@ report what you created and pushed in your summary.""")
 - Do not read, print or write secrets or credentials.
 - Do not declare the task verified: an independent check decides. Say plainly what you did and what is left.
 - Optionally write `{report_path}` as JSON {{"status": "done|partial|blocked", "summary": "<=3 sentences"}}. It is a claim, not a verdict.
+""")
+    if rtk and _rtk_available():
+        parts.append("""
+## Noisy inspection output
+For your own noisy inspection, prefer supported RTK commands: `rtk git status`, `rtk git log`, `rtk git diff`,
+`rtk grep <pattern> <path>`, `rtk read <path>`, or `rtk test <command>` / `rtk next build` for exploratory diagnostics.
+Keep inspections read-only; tests/builds may write local artifacts and need the task's authorization. Inspect `rtk <cmd> --help`.
+Condensed output is a reading aid. Recover missing failure details from the emitted record with `rtk recall <hash> --full`
+or its saved path; do not repeat side effects to recover output. Preserve exit codes. Read exact code before editing.
+Run the task's own verification commands exactly as written, with RAW output: never wrap them in RTK or filter evidence.
+Do not install/configure RTK or add a second prefix if a hook already wraps the command.
 """)
     return "\n".join(parts)

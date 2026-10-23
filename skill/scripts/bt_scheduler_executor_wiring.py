@@ -193,6 +193,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
     port.plan = scheduler.plan                         # one plan object for the api.core, the brief and the repository roles
     root = api.executor_root(rdir, api.run_identity(scheduler))
     repo_of = api.repositories(project, repos)
+    import bt_config
+    from dataclasses import replace
+
+    executor_config = replace(executor_config or api.m3.Config(), prompt_rtk=bt_config.get("prompts.rtk", True))
     executor = api.m3.AgentExecutor(
         root, resolver=resolver or api.RouteResolver(project, m2_lookup=m2_lookup, repos=repo_of, allow_direct=allow_direct),
         briefs=api.PlanBriefs(scheduler.plan), driver=driver or api.MethodologyDriver(project),

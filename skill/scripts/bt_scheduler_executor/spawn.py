@@ -59,7 +59,7 @@ class SpawnMixin:
                 return self._settle(attempt_id, {"reason": "cancelled", "returncode": None})
             timeout = min(request.timeout_seconds or self.cfg.timeout_seconds, self.cfg.max_timeout_seconds)
             prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
-                                  report_path=str(adir / "report.json"), handoff_mode=self.cfg.handoff_mode)
+                                  report_path=str(adir / "report.json"), handoff_mode=self.cfg.handoff_mode, rtk=self.cfg.prompt_rtk)
             artifacts.atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
             launch = self._guard_port(lambda: self.driver.prepare(route, prompt, ws, timeout))
             shim = self._spawn(attempt_id, adir, launch, ws, timeout)
