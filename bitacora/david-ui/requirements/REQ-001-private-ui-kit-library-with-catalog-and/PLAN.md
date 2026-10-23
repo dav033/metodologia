@@ -6,7 +6,7 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 2/7 · tareas 12/27 · generado: 2026-10-23T08:40:50-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/7 · tareas 14/27 · generado: 2026-10-23T08:47:42-05:00
 
 **M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
@@ -29,19 +29,19 @@ created: 2026-10-22
 | T10 | Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart | alta | completada | gpt-6-luna | codex-1 | 3 |
 | T11 | P1 e2e and a11y suite: Playwright spec that opens every P1 demo, runs axe, exercises keyboard paths and repeats under `reducedMotion: 'reduce'`; promote passing entries to `validated` | alta | completada | gpt-6-luna | codex-luis | 1 |
 
-**M3 — Private catalog application built with the kit** · dificultad alta · 1/3
+**M3 — Private catalog application built with the kit** · dificultad alta · 3/3
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T12 | Catalog shell and browse: layout with kit Sidebar/Breadcrumb, home grid of entries, filters (source, category, priority, status, type), command-palette search (adds `Command` and any shadcn piece needed, e.g. Toggle Group, as catalog-driven additions), theme toggle | alta | completada | gpt-6-luna | codex-luis | 1 |
-| T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | en curso | gpt-6-luna | codex-luis | 1 |
-| T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | en curso | gpt-6-luna | codex-luis | 1 |
+| T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | completada | gpt-6-luna | codex-luis | 1 |
 
 **M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 0/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | pendiente | — | — | 0 |
+| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | en curso | gpt-6-luna | codex-1 | 1 |
 | T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | pendiente | — | — | 0 |
 
 **M5 — Bencho UI (12)** · dificultad alta · 0/2

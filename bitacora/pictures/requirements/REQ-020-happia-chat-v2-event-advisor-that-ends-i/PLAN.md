@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 20/23 · generado: 2026-10-23T08:17:05-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 20/23 · generado: 2026-10-23T08:49:29-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -49,7 +49,7 @@ created: 2026-10-20
 | T14.2a | Integrate reviewed summary lifecycle and deployed evidence correction | media | completada | gpt-6-luna | codex-luis | 1 |
 | T14.3a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 1 |
 | T14.4a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
-| T15.1 | Repair what blocks T15 | alta | en curso | gpt-6-luna | codex-luis | 1 |
+| T15.1 | Repair what blocks T15 | alta | en curso | gpt-6-luna | codex-luis | 2 |
 <!-- bitacora:status:end -->
 
 ## Approach

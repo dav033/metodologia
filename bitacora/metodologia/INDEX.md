@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-22 17:56 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-23 08:50 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-22
+**Last activity:** 2026-10-23
 
 ## Workspace
 
@@ -47,7 +47,7 @@ _Generated 2026-10-22 17:56 by `bitacora.py index`. Do not edit by hand._
 ## Top pending (urgency, then complexity)
 
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/st · high/S
-- P-155 · REQ-020 T14a needs its LIVE checks run by the coordinator (`run.ts --live` and `--live --d · high/S
+- P-155 · [live checks working 2026-10-22: see D-121] REQ-020 T14a needs its LIVE checks run by the  · high/S
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
@@ -77,6 +77,6 @@ _Generated 2026-10-22 17:56 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)
