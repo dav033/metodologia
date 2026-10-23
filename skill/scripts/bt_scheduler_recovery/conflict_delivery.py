@@ -50,6 +50,8 @@ def publish_or_raise(publisher: Callable | None, order, clash: str, refusal: str
         reference = publisher(order, clash, refusal, detail)
     except Exception as error:  # noqa: BLE001 - sink failure makes an automatic verdict unsafe
         raise EvidenceUnavailable(f"evidence_unavailable: integration conflict publication failed ({type(error).__name__})") from None
+    if reference is None:
+        return None                      # the publisher has no structural evidence to give (recovery off): the caller keeps the plain text
     if not isinstance(reference, str) or not reference:
         raise EvidenceUnavailable("evidence_unavailable: integration conflict publication returned no reference")
     return reference

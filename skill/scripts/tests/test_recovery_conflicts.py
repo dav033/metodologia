@@ -100,6 +100,14 @@ class ConflictEvidenceTests(unittest.TestCase):
                              object(), "T1 vs T3 for T4: src/file.py",
                              "ordinary_rework_refused", "limit: T1 rework limit")
 
+    def test_a_publisher_without_structural_evidence_leaves_the_plain_refusal_instead_of_stalling_the_verdict(self):
+        """david-ui REQ-001 T2/T8/T10: with structural recovery off the publisher raised «M5 did not retain evidence» and the verdict stayed
+        pending for ever; None now means «no structural evidence», and the task goes back with the integration gate's own text."""
+        self.assertIsNone(publish_or_raise(lambda *_: None, object(), "T1 vs T3 for T4: f", "ordinary_rework_refused", "limit"))
+        self.assertIsNone(publish_or_raise(None, object(), "T1 vs T3 for T4: f", "ordinary_rework_refused", "limit"))
+        with self.assertRaisesRegex(EvidenceUnavailable, "no reference"):
+            publish_or_raise(lambda *_: "", object(), "T1 vs T3 for T4: f", "ordinary_rework_refused", "limit")
+
     def test_ordinary_no_carry_integration_gate_remains_classifiable(self):
         observation = {
             "schema_version": "conflict-observation/1", "source_type": "integration_gate",

@@ -288,8 +288,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 return repo_of(role) if role else None
 
             def publish_conflict_observation(order, clash, refusal, detail):
+                if wiring.recovery is None:
+                    return None      # structural recovery is off: the plain refusal text is the evidence, the task goes back as before
                 match = re.search(r"conflict evidence: (conflict:[0-9a-f]{64})", clash)
-                if match is None or wiring.recovery is None:
+                if match is None:
                     raise EvidenceUnavailable("evidence_unavailable: M5 did not retain full conflict evidence")
                 observation = wiring.recovery.read_conflict_observation(match.group(1))
                 if observation is None:
