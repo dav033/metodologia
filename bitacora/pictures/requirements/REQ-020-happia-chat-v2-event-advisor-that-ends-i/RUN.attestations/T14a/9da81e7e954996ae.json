@@ -1,0 +1,14 @@
+{
+ "at": 1792775864.193,
+ "attempt": "att-0120",
+ "binding": "9da81e7e954996ae26046437165b765523e3ec2a279ba99e9fb02ce183074406",
+ "by": "coordinator-auto",
+ "evidence": "Coordinator ran 2 live command(s) on the snapshot edc2fcd26404 of att-0120 with the project's .env.local (values redacted):\n`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` exit 0 in 175.9 s; last lines: there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no\n`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M2` exit 0 in 83.6 s; last lines: there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no | there are non-text parts functionCall in the response, returning concatenation of all text parts. Please refer to the no",
+ "evidence_sha256": "55ee79a998a8e756602e2c69cc502f2a47eb88951f6a9a9f1e0c2758a3777bb0",
+ "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+ "purpose": "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
+ "schema": "attestation/1",
+ "seal": "76f43966b1b4e1312731117e7dae35a5c9b1e94eea891c3524a7f27b6230072b",
+ "task": "T14a",
+ "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence."
+}

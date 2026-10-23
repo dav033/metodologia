@@ -1,0 +1,29 @@
+{
+  "source_snapshot": "edc2fcd26404db8da426529dec0d7f5841a236c0",
+  "source_tree_digest": "sha256:6cc5bb1b8f1134cc514eca51ddd6a64b77820cc4dd9b44f3a39d6b52afc8ddda",
+  "started_at": 1792777147.2624347,
+  "runs": [
+    {
+      "command": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1 --report /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M1.json",
+      "exit_code": 0,
+      "seconds": 40.3,
+      "tail": [
+        "Deployed M1 passed; evidence: /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M1.json"
+      ],
+      "full": [
+        "Deployed M1 passed; evidence: /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M1.json"
+      ]
+    },
+    {
+      "command": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M2 --report /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M2.json",
+      "exit_code": 0,
+      "seconds": 43.6,
+      "tail": [
+        "Deployed M2 passed; evidence: /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M2.json"
+      ],
+      "full": [
+        "Deployed M2 passed; evidence: /home/david/bitacora/pictures/artifacts/req020-supervisor-root-cause/deployed-M2.json"
+      ]
+    }
+  ]
+}

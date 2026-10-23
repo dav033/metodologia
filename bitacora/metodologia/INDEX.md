@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-23 08:51 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-23 13:00 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -48,11 +48,11 @@ _Generated 2026-10-23 08:51 by `bitacora.py index`. Do not edit by hand._
 
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/st · high/S
 - P-155 · [live checks working 2026-10-22: see D-121] REQ-020 T14a needs its LIVE checks run by the  · high/S
+- P-180 · [closed 2026-10-23, 8e2b7fe84] Planner requires `bitacora.py audit-ledger check` but M6 tr · high/S
+- P-182 · [closed 2026-10-23, 3c5ac6eb] M6 verdict stays pending for post-verification guard failure · high/S
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
 - P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
-- P-138 · [closed 2026-10-22 by session 81c84684: bt_attempt_analyst] Failure analyst (owner rule 20 · high/M
-- P-159 · [closed 2026-10-22 by session 81c84684] Make rejected verification delivery visible and bo · high/M
 
 ## Recent decisions
 

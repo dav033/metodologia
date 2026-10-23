@@ -1,0 +1,37 @@
+{
+  "schema": "deployed-integration-results/1",
+  "task": "T14a",
+  "mode": "live",
+  "target": "deployed",
+  "revision": "c25a5f42fc9727b84f454f166e08348521cca6ad",
+  "verifiedRevision": "c25a5f42fc9727b84f454f166e08348521cca6ad",
+  "origin": "https://185-147-157-25.sslip.io",
+  "milestone": "M1",
+  "startedAt": "2026-10-23T17:39:08.278Z",
+  "outcome": "passed",
+  "checks": [
+    "user login and persisted conversation creation",
+    "real Gemini text conversation and proposed summary",
+    "twelve configured direction cards shown",
+    "selected direction persisted while event fields remained unchanged",
+    "same-device reload restores persisted conversation",
+    "correction persisted and invalidated stale summary",
+    "corrected summary has a new version",
+    "approved brief is persisted and visible to the user",
+    "admin API and page deny advisor role",
+    "admin login sees approved brief"
+  ],
+  "completedAt": "2026-10-23T17:39:47.062Z",
+  "invocation": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision c25a5f42fc9727b84f454f166e08348521cca6ad --milestone M1",
+  "commands": [
+    "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision c25a5f42fc9727b84f454f166e08348521cca6ad --milestone M1"
+  ],
+  "runs": [
+    {
+      "revision": "c25a5f42fc9727b84f454f166e08348521cca6ad",
+      "task": "T14a",
+      "command": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision c25a5f42fc9727b84f454f166e08348521cca6ad --milestone M1",
+      "outcome": "passed"
+    }
+  ]
+}

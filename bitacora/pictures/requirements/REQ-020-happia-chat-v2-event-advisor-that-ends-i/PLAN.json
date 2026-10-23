@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 16,
+  "revision": 17,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2232,7 +2232,9 @@
       "acceptance_criteria": [
         "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
         "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
-        "The redacted integration result identifies revision, commands, actual outcomes and failed owning task; this task creates no tests/configuration, applies no fixes and makes no product acceptance decision."
+        "The redacted integration result identifies revision, commands, actual outcomes and failed owning task; this task creates no tests/configuration, applies no fixes and makes no product acceptance decision.",
+        "Exercise the deployed revision and check protected happie paths/contracts against the captured implementation-base ref; no required case may be skipped.",
+        "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets."
       ],
       "verification": [
         {
@@ -2404,24 +2406,25 @@
       "acceptance_criteria": [
         "The read-only production review traces each R1-R14 criterion to actual integration evidence and phone behavior, including privacy/redaction, required-field refusal, provider retry and unchanged happie behavior; unexecuted checks remain unaccepted.",
         "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
-        "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact."
+        "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact.",
+        "Existing foundation gate and protected happie webhook regression pass on the audited snapshot."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run gate",
-          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "purpose": "Existing foundation gate and protected happie webhook regression pass on the audited snapshot.",
           "category": "regression"
         },
         {
           "type": "command",
           "value": "npm run happie:test-webhook",
-          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "purpose": "Existing foundation gate and protected happie webhook regression pass on the audited snapshot.",
           "category": "regression"
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
+          "value": "bitacora.py audit-ledger check docs/req-020/T15.findings.json",
           "purpose": "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
           "created_by": "T7",
           "category": "functional"
@@ -2435,7 +2438,7 @@
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json",
+          "value": "test -s docs/req-020/T15.md",
           "purpose": "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact.",
           "created_by": "T7",
           "category": "static"
@@ -2466,7 +2469,9 @@
       "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
       "repository": "pictures",
       "after": [
-        "T15"
+        "T14a",
+        "T15.1",
+        "T15.2"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -2529,31 +2534,29 @@
         "docs/req-020/T15-crosscheck.md",
         "docs/req-020/T15-crosscheck.findings.json"
       ],
-      "shared_resources": [
-        "advisor-command-contract",
-        "pictures-production-deployment"
-      ],
+      "shared_resources": [],
       "acceptance_criteria": [
         "The read-only production review traces each R1-R14 criterion to actual integration evidence and phone behavior, including privacy/redaction, required-field refusal, provider retry and unchanged happie behavior; unexecuted checks remain unaccepted.",
         "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
-        "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact."
+        "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact.",
+        "Existing foundation gate and protected happie webhook regression pass on the audited snapshot."
       ],
       "verification": [
         {
           "type": "command",
           "value": "npm run gate",
-          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "purpose": "Existing foundation gate and protected happie webhook regression pass on the audited snapshot.",
           "category": "regression"
         },
         {
           "type": "command",
           "value": "npm run happie:test-webhook",
-          "purpose": "Run the existing declared task checks; focused checks below establish advisor behavior.",
+          "purpose": "Existing foundation gate and protected happie webhook regression pass on the audited snapshot.",
           "category": "regression"
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json",
+          "value": "bitacora.py audit-ledger check docs/req-020/T15-crosscheck.findings.json",
           "purpose": "Exactly one audit-findings/1 ledger records findings with severity, status, summary and affected plan task IDs; malformed data or an open critical/high finding rejects acceptance and returns the named producer tasks for rework.",
           "created_by": "T7",
           "category": "functional"
@@ -2567,7 +2570,7 @@
         },
         {
           "type": "command",
-          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json",
+          "value": "test -s docs/req-020/T15-crosscheck.md",
           "purpose": "The audit changes only its report and ledger; the report includes redacted closure/bitacora notes and does not approve, edit, deploy or repair any product artifact.",
           "created_by": "T7",
           "category": "static"

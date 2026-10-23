@@ -1,0 +1,14 @@
+{
+ "at": 1792779074.76,
+ "attempt": "att-0122",
+ "binding": "eafbda6e339eff6a14ecf3993b173e72746862dd9729ebd0f08afab292c02513",
+ "by": "supervisor-repair",
+ "evidence": "Coordinator ran 2 live command(s) on the snapshot 07eaa57fd2fc of att-0122 with the project's .env.local (values redacted):\n`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` exit 0 in 50.0 s; last lines: Deployed M1 passed; evidence: /home/david/.cache/bt-coordinator/run-dps2e0wb/tree/reports/e2e/asesor/deployed-M1.json\n`npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M2` exit 0 in 40.4 s; last lines: Deployed M2 passed; evidence: /home/david/.cache/bt-coordinator/run-dps2e0wb/tree/reports/e2e/asesor/deployed-M2.json",
+ "evidence_sha256": "6fde547072090fec3a75df5c3a0f27d973510509d5ef7be9b1724ca4092a8930",
+ "expected": "Coordinator evidence recorded in the task report; any failure returns the task with its cause.",
+ "purpose": "Exercise the deployed revision and check protected happie paths/contracts against the captured implementation-base ref; no required case may be skipped.",
+ "schema": "attestation/1",
+ "seal": "dcea6b16ab39489a8e42d702ff46e2f55c6204f3222b218c7de30ec9dc823d22",
+ "task": "T14a",
+ "value": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence."
+}

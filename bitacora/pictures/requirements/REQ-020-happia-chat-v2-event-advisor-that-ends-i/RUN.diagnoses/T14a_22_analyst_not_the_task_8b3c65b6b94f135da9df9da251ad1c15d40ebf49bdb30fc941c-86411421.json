@@ -1,0 +1,22 @@
+{
+ "request": "T14a:22:analyst_not_the_task:8b3c65b6b94f135da9df9da251ad1c15d40ebf49bdb30fc941c6e14e295c6e67",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "T14a bloqueada: el informe de integración no pasa la verificación y el motivo no es reconocido",
+ "origin": "El revisor manual rechazó el informe docs/req-020/integration-results.json en tres intentos (att-0027 a att-0029). Registra M2 live como \"failed\" en T14.4a con «[FAIL] asesor M2: correction did not regenerate the summary». Deployed y live figuran como \"coordinator-pending\", así que el caso desplegado obligatorio no se ejecutó, y la comprobación de rutas protegidas (git diff contra 915a75af) aparece como \"passed\" sin salida que lo respalde. La nota del dueño exige cambiar --check-results en scripts/e2e/asesor/run.ts para que salga 0 sin --strict, pero eso cambia un criterio del plan. Sin una revisión, reintentar repetiría el mismo fallo. El motivo «analyst_not_the_task» no está en la lista que el sistema reconoce, así que la etiqueta del bloqueo es un hueco del sistema, no la causa.",
+ "steps": [
+  "En PLAN.json de REQ-020, sube \"revision\" en 1 y aplica la nota del dueño: --check-results valida integridad (sin exigir outcome passed salvo con --strict) y quita runs[11] de docs/req-020/integration-results.json. Luego ejecuta `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción `revise`.",
+  "Vuelve a ejecutar la comprobación de rutas protegidas contra 915a75af y guarda su salida. Si no se ejecuta, márcala como no ejecutada en lugar de \"passed\".",
+  "El coordinador ejecuta con .env.local `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` y `--milestone M2`, además de `--start --live` para M1 y M2, y registra la evidencia redactada. Hasta entonces deployedEntryPoint y liveEntryPoint quedan como coordinator-pending."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T12:21:47",
+ "seconds": 25.1
+}

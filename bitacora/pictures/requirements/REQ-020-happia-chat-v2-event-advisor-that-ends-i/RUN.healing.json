@@ -1,6 +1,10 @@
 {
  "actions": 10,
  "analyst_stops": {
+  "T14a:8b3c65b6b94f135da9df9da251ad1c15d40ebf49bdb30fc941c6e14e295c6e67": {
+   "attempt": "att-0121",
+   "task": "T14a"
+  },
   "T14a:cc86879d6c7d1bbb0fc00e26273132eb844ad06577af0424f46d1479a59c1583": {
    "attempt": "",
    "task": "T14a"
@@ -45,6 +49,25 @@
    "repair": "retry_with_note chosen by the diagnosing model (haiku): T15 no arrancó: T14a se aceptó pero no dejó snapshot del que partir",
    "status": "unrepairable",
    "task": "T15"
+  },
+  "2eaca70cf941d1d6": {
+   "applied": 0,
+   "class": "integration_defect",
+   "evidence": [
+    "integration evidence in the last error: PREDECESSOR_NEEDS_RESOLUTION",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792775874.952,
+   "history": [
+    {
+     "at": 1792775874.953,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "2eaca70cf941d1d6",
+   "status": "unrepairable",
+   "task": "T14a"
   },
   "47d0274ea0c2167f": {
    "applied": 1,
@@ -219,6 +242,39 @@
    "task": "T15",
    "task_added": "T15.2"
   },
+  "890691cdc6958137": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792778124.401,
+   "history": [],
+   "id": "890691cdc6958137",
+   "status": "exhausted",
+   "task": "T14a",
+   "why": "T14a already had 3 automatic plan repairs"
+  },
+  "8c2a1e806c5247b6": {
+   "applied": 0,
+   "class": "integration_defect",
+   "evidence": [
+    "integration evidence in the last error: PREDECESSOR_NEEDS_RESOLUTION",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792775511.383,
+   "history": [
+    {
+     "at": 1792775511.384,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "8c2a1e806c5247b6",
+   "status": "unrepairable",
+   "task": "T14a"
+  },
   "b1a59cfe750aa92d": {
    "after_restored": [
     "T10",
@@ -339,6 +395,19 @@
    "target": "T14a",
    "task": "T14a",
    "task_added": "T14.3a"
+  },
+  "f0c171676142e161": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 19 failures: La verificación no puede pasar por construcción. El `--check-results` de `scripts/e2e/asesor/run.ts` (creado por T7) exige que todos los outcomes estén en 'passed', mientras `docs/req-020/integration-"
+   ],
+   "first_at": 1792776076.373,
+   "history": [],
+   "id": "f0c171676142e161",
+   "status": "exhausted",
+   "task": "T14a",
+   "why": "T14a already had 3 automatic plan repairs"
   },
   "f7d7aeb440f5a411": {
    "applied": 0,

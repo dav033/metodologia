@@ -1,0 +1,18 @@
+[
+  {
+    "strict": false,
+    "status": "pass",
+    "exit": 0,
+    "issue": null,
+    "stdout": "\n> @sempertex/agente-core@0.1.0 build\n> tsc -p tsconfig.build.json\n\n\n> @sempertex/happie-package-ia@0.1.0 build\n> tsc -p tsconfig.build.json\n\nGenerating route types...\n\u2713 Types generated successfully\nIntegration report is valid: docs/req-020/integration-results.json\n",
+    "stderr": "npm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.2.1\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1\nnpm notice To update run: npm install -g npm@12.2.1\nnpm notice\n"
+  },
+  {
+    "strict": true,
+    "status": "pass",
+    "exit": 0,
+    "issue": null,
+    "stdout": "\n> @sempertex/agente-core@0.1.0 build\n> tsc -p tsconfig.build.json\n\n\n> @sempertex/happie-package-ia@0.1.0 build\n> tsc -p tsconfig.build.json\n\nGenerating route types...\n\u2713 Types generated successfully\nIntegration report is valid: docs/req-020/integration-results.json\n",
+    "stderr": "npm notice\nnpm notice New major version of npm available! 11.19.0 -> 12.2.1\nnpm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1\nnpm notice To update run: npm install -g npm@12.2.1\nnpm notice\n"
+  }
+]

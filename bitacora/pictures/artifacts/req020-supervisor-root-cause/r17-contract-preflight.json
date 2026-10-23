@@ -1,0 +1,47 @@
+{
+  "scope": "contract preflight using actual M6 command passes plus verified local receipt and fresh deployed proofs; not a Scheduler verdict",
+  "criteria": [
+    {
+      "criterion": "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
+      "status": "pass",
+      "evidence": [
+        "CHECK-001"
+      ]
+    },
+    {
+      "criterion": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+      "status": "pass",
+      "evidence": [
+        "CHECK-002",
+        "CHECK-003",
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-007"
+      ]
+    },
+    {
+      "criterion": "The redacted integration result identifies revision, commands, actual outcomes and failed owning task; this task creates no tests/configuration, applies no fixes and makes no product acceptance decision.",
+      "status": "pass",
+      "evidence": [
+        "CHECK-009"
+      ]
+    },
+    {
+      "criterion": "Exercise the deployed revision and check protected happie paths/contracts against the captured implementation-base ref; no required case may be skipped.",
+      "status": "pass",
+      "evidence": [
+        "CHECK-008"
+      ]
+    },
+    {
+      "criterion": "Same scenario offline: fake model port and the local disposable Postgres; no network to AI providers and no secrets.",
+      "status": "pass",
+      "evidence": [
+        "CHECK-010",
+        "CHECK-011"
+      ]
+    }
+  ],
+  "unmapped": []
+}

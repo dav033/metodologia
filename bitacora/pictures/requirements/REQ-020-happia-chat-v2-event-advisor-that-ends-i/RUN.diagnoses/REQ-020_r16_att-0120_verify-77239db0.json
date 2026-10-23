@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r16:att-0120:verify",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La verificación de T14a no tiene veredicto: el live desplegado falló con «Invalid URL»",
+ "origin": "El último intento no quedó atestiguado: el live desplegado del coordinador (`--live --deployed --milestone M1`) terminó con exit code 1 y el mensaje «Invalid URL». Además, el chequeo `--check-results` de `scripts/e2e/asesor/run.ts` es inalcanzable por construcción, porque exige que todo resultado pase y registra su propia ejecución en `runs[11]`, lo que produce `CHECK_UNMAPPED`. La regla de «comprobación manual» no es la causa; aprobar a mano sin evidencia daría por buena una comprobación que falló.",
+ "steps": [
+  "Corrige `--check-results` en `scripts/e2e/asesor/run.ts` según la nota del dueño: valida schema `integration-results/1`, revisión, outcome por run, `failedOwningTask` o `coordinator-pending` en lo no aprobado y `coverageGaps`; quita `runs[11]`; `--strict` exige todo `passed`; marca `liveEntryPoint`/`deployedEntryPoint` como `coordinator-pending`.",
+  "Si cambias el texto de un check o de un criterio en PLAN.json, sube \"revision\" en 1 y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` antes de reintentar.",
+  "Revisa la URL base que usa `--deployed` en `.env.local` (debe ser absoluta, p. ej. `https://...`) y repite `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` y `--milestone M2`.",
+  "Regenera `docs/req-020/integration-results.json` y ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` sin `--strict`; debe salir con 0."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T12:18:15",
+ "seconds": 20.5
+}

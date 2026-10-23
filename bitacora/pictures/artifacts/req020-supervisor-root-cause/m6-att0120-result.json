@@ -1,0 +1,238 @@
+{
+  "checks": [
+    {
+      "argv": [],
+      "command": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --live --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
+      "duration_ms": 0,
+      "exit_code": null,
+      "id": "CHECK-001",
+      "issue_code": "CHECK_MANUAL",
+      "status": "unknown",
+      "stderr_ref": "m6://artifact/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_ref": "m6://artifact/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "gate"
+      ],
+      "command": "npm run gate",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-002",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/b8082fd76453280ef85c1ff5d8777ee5f3d90c3ca73f8ecdfd69e587d9b148c2",
+      "stdout_ref": "m6://artifact/5c136ffd91547ab96d4d3d66c0722d9acc3c37672745ab05380f1ad2fe00fcd3"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "happie:test-webhook"
+      ],
+      "command": "npm run happie:test-webhook",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-003",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/6b760be8c928cf1debf66e911be1f54f891714d41bfdec1c1968fd2de9df101d",
+      "stdout_ref": "m6://artifact/49150e052241882dc2435388914af0fc3b95ba910c103a61be0198a1b9238428"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "lint"
+      ],
+      "command": "npm run lint",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-004",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/e6afb161e5873f4b6cf53d896f1437f341617cd2727743fc2bc88c545a7d9cc4",
+      "stdout_ref": "m6://artifact/d6f5df31be877a141a3f7a9bdd293b01a2b3c636600ee8a2c30bdb1d7b46a8cd"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "build",
+        "--workspaces",
+        "--if-present"
+      ],
+      "command": "npm run build --workspaces --if-present",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-005",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/b3d60c460619c7cf6ebbcdfc91d8d61e217035d1539fae6803cf76e527a55cf3",
+      "stdout_ref": "m6://artifact/b5d629bcd716d1e9c20552c82ed741aba2d5e43fbf1e048a457f60d3d1da412a"
+    },
+    {
+      "argv": [
+        "npx",
+        "tsc",
+        "--noEmit"
+      ],
+      "command": "npx tsc --noEmit",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-006",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/3c0f9ea34ab2a1fa2da1836f188dd80917876a1e65b16ccb67ff4866f5d2f6cc",
+      "stdout_ref": "m6://artifact/ba0069ee838db3a093448992b251f3f28ebf27fd49abf81be8a0c21270b15121"
+    },
+    {
+      "argv": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "command": "npm run build",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-007",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/9683c4c29bd14f8e57deeb3e3d49785bb8087593351c99e1058a43309e0c75b8",
+      "stdout_ref": "m6://artifact/aaf70e53c7349b609c05fee7f224bc221277a10f01c85ce15dbcba68986a178b"
+    },
+    {
+      "argv": [],
+      "command": "Coordinator runs `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone M1` and then `--milestone M2` with .env.local (live Gemini/Supabase/credentials) and records redacted evidence.",
+      "duration_ms": 0,
+      "exit_code": null,
+      "id": "CHECK-008",
+      "issue_code": "CHECK_MANUAL",
+      "status": "unknown",
+      "stderr_ref": "m6://artifact/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_ref": "m6://artifact/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "npx",
+        "tsx",
+        "--conditions=react-server",
+        "scripts/e2e/asesor/run.ts",
+        "--check-results",
+        "docs/req-020/integration-results.json"
+      ],
+      "command": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-009",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/bb2affbce7ce0589e7aa0c6bfc4704edae820d8700748fb281aaf370b3c1cc23",
+      "stdout_ref": "m6://artifact/b3017738eb6997b436b95d70e4c8de08bc24e2fcd0548e783a489f571aff0778"
+    },
+    {
+      "argv": [
+        "env",
+        "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag",
+        "npx",
+        "tsx",
+        "--conditions=react-server",
+        "scripts/e2e/asesor/run.ts",
+        "--start",
+        "--fake-model",
+        "--milestone",
+        "M1"
+      ],
+      "command": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-010",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/a2556a1c5c4b2dd05122b6beefc6b946bb92e37b788e909daafa37ec2dd2b040",
+      "stdout_ref": "m6://artifact/c86fa7f29a3fce3924708fff2db7b924e928cdd23c48f322b1d379ef1019fa7f"
+    },
+    {
+      "argv": [
+        "env",
+        "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag",
+        "npx",
+        "tsx",
+        "--conditions=react-server",
+        "scripts/e2e/asesor/run.ts",
+        "--start",
+        "--fake-model",
+        "--milestone",
+        "M2"
+      ],
+      "command": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+      "duration_ms": 0,
+      "exit_code": 0,
+      "id": "CHECK-011",
+      "issue_code": null,
+      "status": "pass",
+      "stderr_ref": "m6://artifact/afee84a5f334260c62373e290b3e93030a87c3e0deffff3ee8d6b2df05281206",
+      "stdout_ref": "m6://artifact/7d65fdf1a87eddea6b1555c783295177f2b1be4d3e50931815cf1ca4f010fdb2"
+    }
+  ],
+  "criteria": [
+    {
+      "criterion": "The T7 runner starts the shipped production Next entry point and drives a real login, text/photo/voice conversation, reload, correction, approval and admin read through Postgres, configured AI and real Whisper; it fails on missing live dependencies or required skipped assertions.",
+      "evidence": [
+        "CHECK-001"
+      ],
+      "status": "pass"
+    },
+    {
+      "criterion": "Gate, package builds, lint, application types, production build and unchanged webhook regressions run with recorded exit status; source comparison checks the protected happie paths/contracts against the implementation base.",
+      "evidence": [
+        "CHECK-002",
+        "CHECK-003",
+        "CHECK-004",
+        "CHECK-005",
+        "CHECK-006",
+        "CHECK-007"
+      ],
+      "status": "pass"
+    },
+    {
+      "criterion": "The redacted integration result identifies revision, commands, actual outcomes and failed owning task; this task creates no tests/configuration, applies no fixes and makes no product acceptance decision.",
+      "evidence": [
+        "CHECK-009"
+      ],
+      "status": "pass"
+    }
+  ],
+  "evidence_manifest": "m6://result/8efbdfdbbbf66331a19b65a4665c838b8d0aea0b204b5d8db4ccecdf302a2652",
+  "finished_at": "2026-10-23T17:17:52.262Z",
+  "identity": {
+    "attempt_id": "att-0120",
+    "plan_id": "REQ-020",
+    "revision": 16,
+    "task_id": "T14a",
+    "token": 120
+  },
+  "input": {
+    "base_sha": "edc2fcd26404db8da426529dec0d7f5841a236c0",
+    "checks_sha256": "c05fa66193cd3975189e6f7e3af4da7bb282c8f992f329e8a7849d0680aeb07e",
+    "criteria_hash": "043e9699133fba8012a34a7fb018b76cf6429865404936fbd363f80ce14028d9",
+    "order_sha256": "cf13b3daa0ee38477ed853b688071745abcc0d2f9cad7414d2f256aa6e33053f",
+    "snapshot_sha": "edc2fcd26404db8da426529dec0d7f5841a236c0"
+  },
+  "issues": [
+    {
+      "code": "CHECK_UNMAPPED",
+      "detail": "A verification check does not map exactly to an acceptance criterion."
+    }
+  ],
+  "schema_version": "m6.verify-result/1",
+  "status": "NEEDS_REVIEW",
+  "verifier": {
+    "identity": "m6-quality/checker-v1",
+    "independent": true,
+    "kind": "deterministic",
+    "policy_version": "m6-policy/1"
+  }
+}

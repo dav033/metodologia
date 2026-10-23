@@ -1,5 +1,7 @@
 # pictures — Summary
 
+- 2026-10-23 13:15 REQ-020 r17: T14a ACCEPTED on att-0122, 22/24 completed; T15/T15b run independently in parallel. Fresh deployed M1/M2 PASS at published c25a5f42; source-content provenance, reconstructed integration report and exact criterion mapping verified before reopening. Engine receipt/source/owner-race defects repaired; no new deployment, no repeated live calls on recovery, no review_pass. Physical-phone observations and independent UI acceptance remain pending. Supervisor evidence: artifacts/req020-supervisor-root-cause; current daily supervisor session records commits and delays.
+
 - 2026-10-19 REQ-019 (Taller stuck viewer, mobile, React Bits) planned and approved; local REQ-014 tree backed up (`backup/req-014-local-20261019`) and merged into `main` (`ae78a79d`, content unchanged). Execution paused: to be handed to the scheduler.
 
 - 2026-10-18 Isolated REQ-018 full run CANCELLED by the owner after T2 was rejected five times (shared-scope root cause); this pass's T2 worktrees/code reverted (D-063). T1 acceptance retained as evidence; T2-T8 not done. No change to canonical Pictures.
