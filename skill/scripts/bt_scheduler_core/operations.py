@@ -59,6 +59,17 @@ def cancel(ctx: Ctx, by: str, reason: str = "") -> None:
                     add_outbox(ctx, "cancel", att.id, {"token": att.token, "reason": reason})
 
 
+def block_task(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
+    by, reason = _who(by, reason)
+    rec = ctx.state.tasks.get(task_id)
+    if rec is None:
+        raise SchedulerError("UNKNOWN_TASK", task_id)
+    if ctx.state.cancel_requested or T(rec.state) not in (T.READY, T.RECOVERING):
+        raise SchedulerError("NOT_ALLOWED", f"only a ready or recovering task can be blocked ({task_id} is {rec.state})")
+    rec.reason = reason
+    set_task(ctx, task_id, T.BLOCKED, by=by, reason=reason, decision="operator_block")
+
+
 def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
     """BLOCKED/RECOVERING -> READY with a fresh attempt budget. Completed tasks come back only through `rework`; cancelled ones never (new revision instead)."""
     by, reason = _who(by, reason)

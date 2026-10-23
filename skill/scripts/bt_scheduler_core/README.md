@@ -150,6 +150,7 @@ core.start()                                                        # create the
 core.run()                                                          # event-driven; or call core.step() yourself
 core.ingest(event); core.submit_verdict(verdict); core.snapshot(); core.audit_log()
 core.pause(by) / resume / cancel / reopen(task_id, by) / resolve_attempt(attempt_id, outcome, by)
+core.block_task(task_id, by, reason)   # stop a ready/recovering task; cancel a live attempt first
 ```
 
 ## Rebase (a new approved revision without losing accepted work)

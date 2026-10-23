@@ -30,6 +30,10 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
     answer = answer or (lambda request_id, option, reason: decisions.answer(project, req, rdir, request_id, option, reason, "scheduler"))
     revise = revise or (lambda reason: healing._revise(project, req, rdir, reason))
     state, bound = healing.load(rdir), healing.limits()
+    from bitacora_platform import healing_analyst as bt_healing_analyst
+
+    doc, found = bt_healing_analyst.stop_tasks(project, req, rdir, doc, found, state,
+                                             enabled=lambda: healing.enabled(rdir), save=lambda: healing.save(rdir, state), log=log)
     done = 0
     for task_id, attempt_id, detail, times in healing.stuck_verifications(rdir, doc):
         if attempt_id in state.setdefault("stuck", []):
@@ -64,8 +68,9 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             context = decisions._context(rdir, doc, request)
         except Exception:  # noqa: BLE001 - without its context a stop is not diagnosed
             continue
-        case = healing.classify_mod.classify(request, verify=context.get("verify", ""), failures=context.get("failures", ()),
-                                     plan=plan, doc=doc)
+        case = healing.analyst_case(rdir, request) if str(request.get("reason", "")).split(":", 1)[0] == bt_healing_analyst.REASON else None
+        case = case or healing.classify_mod.classify(request, verify=context.get("verify", ""), failures=context.get("failures", ()),
+                                            plan=plan, doc=doc)
         analysis = healing.analyst_case(rdir, request) if case is None else None
         if analysis is not None:
             case = analysis
@@ -88,7 +93,7 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
                            if e["task"] == case.task and e["class"] in healing.REVISING)
         if entry["status"] in ("exhausted", "reverted", "unrepairable"):
             continue
-        if ops.on_hold(rdir):                      # an operator's stop landed since the cycle began: it wins, nothing more is done
+        if not healing.enabled(rdir) or ops.on_hold(rdir):  # an operator's stop landed since the cycle began: it wins
             break
         if entry["applied"] >= healing.REPEATS.get(case.kind, 1) or (case.kind in healing.REVISING and task_actions >= bound["per_task"]):
             healing._give_up(rdir, state, entry, case, request, doc, now(), notify, log,

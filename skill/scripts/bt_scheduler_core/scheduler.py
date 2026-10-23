@@ -309,6 +309,9 @@ class SchedulerCore:
         self.write(lambda c: operations.cancel(c, by, reason))
         self._wake.set()
 
+    def block_task(self, task_id: str, by: str, reason: str = "") -> None:
+        self.write(lambda c: operations.block_task(c, task_id, by, reason))
+
     def reopen(self, task_id: str, by: str, reason: str = "") -> None:
         self.write(lambda c: operations.reopen(c, task_id, by, reason))
         self._wake.set()

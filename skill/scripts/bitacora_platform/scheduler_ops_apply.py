@@ -10,7 +10,7 @@ import bt_scheduler_ops as ops
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
           keep_held: bool = False, only: bool = False, option: str = "", *, expected_task: str = "",
           expected_task_state: str | None = None, expected_attempt_state: str | None = None,
-          confirm: bool = False) -> list[str]:
+          confirm: bool = False, block_task: bool = False) -> list[str]:
     """Run one operator move; the owner is stopped first and the watchdog restarts it afterwards."""
     lines: list[str] = []
     why = reason or f"operator {action}"
@@ -21,6 +21,8 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
         existing_hold = None
     nested_recovery_stop = (action == "stop" and isinstance(existing_hold, dict)
                             and existing_hold.get("why") == "recovery revision")
+    if block_task and (existing_hold is not None or ops.on_hold(rdir)):
+        raise ops.core.SchedulerError("STALE_PRECONDITION", "analysis stop waits: the run is held by an operator")
     if action == "remediate" and (existing_hold is not None or ops.on_hold(rdir)):
         # an operator's stop is already in force: freezing a revision now would consume the correction under it (REQ-029 F15)
         return ["remediation waits: the run is held by an operator move (`scheduler-op REQ resume` releases it)"]
@@ -58,7 +60,9 @@ def apply(project: str, req: str, rdir: Path, action: str, target: str = "", rea
                         f"attempt {target} changed from {expected_attempt_state} to {actual_state}",
                     )
             if action == "cancel-attempt":
-                lines += ops.cancel_attempts(project, req, rdir, sch, [target], why)
+                lines += ops.cancel_attempts(project, req, rdir, sch, [target] if target else [], why)
+                if block_task:
+                    sch.block_task(expected_task, ops.OPERATOR, why)
             elif action == "reopen":
                 sch.reopen(target, ops.OPERATOR, why)
                 lines.append(f"{target}: reopened")

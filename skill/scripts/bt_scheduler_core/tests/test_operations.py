@@ -15,6 +15,23 @@ import bt_scheduler_core as sc
 
 
 class Status(unittest.TestCase):
+    def test_an_operator_can_block_a_ready_or_cancelled_attempt_task_without_spending_its_budget(self):
+        h = Harness([indep("T1")], max_attempts=10)
+        h.core.block_task("T1", "operator", "independent analysis")
+        self.assertEqual(h.state("T1"), "blocked")
+        h.core.step()
+        self.assertEqual(h.core.read(lambda ctx: len(ctx.state.attempts)), 0)
+        h.core.reopen("T1", "operator")
+        h.core.step()
+        attempt = h.attempt("T1")
+        with self.assertRaises(sc.SchedulerError):
+            h.core.block_task("T1", "operator")
+        h.core.resolve_attempt(attempt, "cancelled", "operator")
+        h.core.block_task("T1", "operator", "analysis")
+        h.core.step()
+        self.assertEqual(h.state("T1"), "blocked")
+        self.assertEqual(h.core.read(lambda ctx: len(ctx.state.attempts)), 1)
+
     def test_completed_only_when_every_task_is_completed(self):
         h = Harness([indep("T1"), indep("T2")], parallel=2)
         h.core.step()

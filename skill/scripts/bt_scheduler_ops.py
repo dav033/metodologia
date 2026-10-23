@@ -385,12 +385,12 @@ def _impact_guard(rdir: Path, sch, action: str, lost, confirm: bool) -> None:
 def apply(project: str, req: str, rdir: Path, action: str, target: str = "", reason: str = "",
           keep_held: bool = False, only: bool = False, option: str = "", *, expected_task: str = "",
           expected_task_state: str | None = None, expected_attempt_state: str | None = None,
-          confirm: bool = False) -> list[str]:
+          confirm: bool = False, block_task: bool = False) -> list[str]:
     from bitacora_platform.scheduler_ops_apply import apply as move
 
     return move(project, req, rdir, action, target, reason, keep_held, only, option,
                 expected_task=expected_task, expected_task_state=expected_task_state,
-                expected_attempt_state=expected_attempt_state, confirm=confirm)
+                expected_attempt_state=expected_attempt_state, confirm=confirm, block_task=block_task)
 
 
 def _refresh_projection(rdir: Path) -> bool:
