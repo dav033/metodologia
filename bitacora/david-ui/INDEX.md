@@ -1,10 +1,10 @@
 # Index — david-ui
 
-_Generated 2026-10-23 09:31 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-23 17:32 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/david-ui) · [graph](http://127.0.0.1:8765/p/david-ui/graph)  
-**Last activity:** 2026-10-22
+**Last activity:** 2026-10-23
 
 ## Workspace
 
@@ -27,4 +27,4 @@ _None._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [22](2026-10/W4/2026-10-22.md)
+  - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md)
