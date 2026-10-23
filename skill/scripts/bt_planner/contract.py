@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import evidence as ev
-from . import interfaces, quality, traceability
+from . import interfaces, quality, traceability, verification
 
 SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
 EVIDENCE_SINCE = (1, 1, 0)
@@ -168,38 +168,6 @@ def _check_milestones(report: Report, plan: dict) -> dict[str, int]:
     return order
 
 
-def _check_verification(report: Report, where: str, task: dict, ids: set[str], schema_12: bool = False) -> None:
-    items = task.get("verification")
-    if not isinstance(items, list) or not items:
-        report.errors.append(f"{where}.verification: needs at least one command or explicit manual check")
-        return
-    for index, item in enumerate(items):
-        spot = f"{where}.verification[{index}]"
-        if not isinstance(item, dict):
-            report.errors.append(f"{spot}: must be an object")
-            continue
-        kind = item.get("type")
-        if kind not in VERIFICATION_TYPES:
-            report.errors.append(f"{spot}.type: {kind!r} is not one of {', '.join(VERIFICATION_TYPES)}")
-        if not _text(item.get("value")):
-            report.errors.append(f"{spot}.value: required")
-        if not _text(item.get("purpose")):
-            report.errors.append(f"{spot}.purpose: required")
-        if kind == "manual" and not _text(item.get("expected")):
-            report.errors.append(f"{spot}.expected: a manual check must state the expected result")
-        created = item.get("created_by")
-        if created is not None and not (isinstance(created, str) and created in ids):
-            report.errors.append(f"{spot}.created_by: {created!r} is not a task of this plan")
-        if schema_12:
-            category = item.get("category")
-            if category not in VERIFICATION_CATEGORIES:
-                if "category" not in item:
-                    report.errors.append(f"{spot}.category: missing in schema 1.2.0")
-                else:
-                    report.errors.append(f"{spot}.category: {category!r} is not one of "
-                                         f"{', '.join(VERIFICATION_CATEGORIES)}")
-
-
 def schema_tuple(plan: dict) -> tuple[int, int, int]:
     version = plan.get("schema_version")
     if isinstance(version, str) and VERSION_RE.fullmatch(version):
@@ -266,7 +234,7 @@ def _check_task(report: Report, task: object, index: int, milestones: dict[str, 
                                    f"({exc['reason'].strip()[:80]!r}); the owner must review it at approval")
     elif "scope_exception" in task:
         report.errors.append(f"{where}.scope_exception: only valid with scope=full_system")
-    _check_verification(report, where, task, ids, schema_12)
+    verification.check(report.errors, where, task, ids, schema_12)
     found = ev.check_task(where, task, strict=strict, task_ids=ids, own_id=tid, file_exists=file_exists,
                           ref_exists=ref_exists)
     report.errors += found[0]
