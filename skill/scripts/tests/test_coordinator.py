@@ -138,6 +138,31 @@ class Attest(unittest.TestCase):
         self.assertEqual(kept, ["T14a.live-att-7.1.log"])           # the failed run's output is kept
         self.assertNotIn(SECRET, (self.rdir / "RUN.notes" / kept[0]).read_text())
 
+    def test_a_check_that_passed_stays_attested_when_another_check_of_the_task_cannot(self):
+        """REQ-020 T14a: the local live M1/M2 pass, the deployed one has no deployment (`Invalid URL`). Only the second stays for the owner."""
+        plan = SimpleNamespace(task=lambda tid: SimpleNamespace(verification=[
+            {"type": "manual", "value": "Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --start --live --milestone M1`.", "purpose": "local live", "expected": "x"},
+            {"type": "manual", "value": "Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --live --deployed --milestone M1`.", "purpose": "deployed", "expected": "x"}]))
+        with patch.object(ops, "bound_plan", return_value=plan):
+            run, calls = self.runner([0, 1, 1])                  # local passes; deployed fails and is run once more
+            lines = coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertEqual(len(calls), 3)
+        (args, _), = self.attested
+        self.assertEqual(args[4], "1")                           # only the first check got its receipt
+        self.assertIn("milestone M1", args[5])
+        self.assertNotIn("deployed", args[5])
+        self.assertIn("manual check 2", self.notes[0][1])        # the note says which check is still open
+        self.assertTrue(any("(manual check 2)" in line for line in lines))
+
+    def test_a_command_two_checks_share_runs_once(self):
+        both = "Coordinator runs `npx tsx scripts/e2e/asesor/run.ts --start --live --milestone M1`."
+        plan = SimpleNamespace(task=lambda tid: SimpleNamespace(verification=[
+            {"type": "manual", "value": both, "purpose": "a", "expected": "x"}, {"type": "manual", "value": both, "purpose": "b", "expected": "x"}]))
+        with patch.object(ops, "bound_plan", return_value=plan):
+            run, calls = self.runner([0])
+            coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertEqual((len(calls), [a[0][4] for a in self.attested]), (1, ["1", "2"]))
+
     def test_two_failures_attest_nothing_and_a_timeout_is_not_retried(self):
         run, calls = self.runner([1, 1])
         coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)

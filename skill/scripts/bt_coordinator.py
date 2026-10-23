@@ -196,39 +196,54 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     secrets = env_secrets(env_file)
     limit = timeout or int(bt_config.get("coordinator.command_seconds", 1800))
     run = runner or run_one
-    results: list[dict] = []
     scratch = Path.home() / ".cache" / "bt-coordinator"         # on the checkout's filesystem (not /tmp) so node_modules can be hard-linked
     scratch.mkdir(parents=True, exist_ok=True)
+    tries = 1 + max(0, int(bt_config.get("coordinator.retries", 1) or 0))
+    done: dict[str, dict] = {}                                  # a command shared by two checks runs once
+    outcome: list[tuple[int, dict, list[dict]]] = []            # (1-based number of the check, the check, the results of its commands)
     with tempfile.TemporaryDirectory(prefix="run-", dir=scratch) as work:
         root = prepare(repository, snapshot, Path(work), env_file, extra_files(project))
-        tries = 1 + max(0, int(bt_config.get("coordinator.retries", 1) or 0))
-        for command in commands:
-            # A live check drives real services (a model, a database) and shares the machine with the scheduler's own gates: REQ-020's M2
-            # failed five times in the watcher and passed five times run by hand on the same snapshot. One more run costs minutes; the evidence
-            # keeps how many runs it took, and every failed run's full output is kept for the diagnosis.
-            for number in range(1, tries + 1):
-                result = run(command, root, limit, secrets)
-                result["run"], result["of"] = number, tries
-                if result["exit_code"] != 0:
-                    _keep_failure(rdir, task, attempt, result, number)
-                if result["exit_code"] == 0 or result["exit_code"] < 0:
-                    break                                       # passed, or could not run at all (a timeout is not retried)
-            results.append(result)
-            if result["exit_code"] != 0:
-                break                                           # nothing is attested over a failure: the next ones prove nothing
+        for number, check in enumerate(checks, 1):
+            results: list[dict] = []
+            for command in commands_of(check["value"]):
+                if command not in done:
+                    # A live check drives real services (a model, a database) and shares the machine with the scheduler's own gates: REQ-020's M2
+                    # failed five times in the watcher and passed five times run by hand on the same snapshot. One more run costs minutes; the
+                    # evidence keeps how many runs it took, and every failed run's full output is kept for the diagnosis.
+                    for turn in range(1, tries + 1):
+                        result = run(command, root, limit, secrets)
+                        result["run"], result["of"] = turn, tries
+                        if result["exit_code"] != 0:
+                            _keep_failure(rdir, task, attempt, result, turn)
+                        if result["exit_code"] == 0 or result["exit_code"] < 0:
+                            break                               # passed, or could not run at all (a timeout is not retried)
+                    done[command] = result
+                results.append(done[command])
+                if done[command]["exit_code"] != 0:
+                    break                                       # the rest of THIS check proves nothing; the other checks still run
+            outcome.append((number, check, results))
     stamp = f"{project}-{req}"
-    if all(r["exit_code"] == 0 for r in results) and len(results) == len(commands):
+    lines: list[str] = []
+    passed = [(n, c, r) for n, c, r in outcome if r and all(x["exit_code"] == 0 for x in r) and len(r) == len(commands_of(c["value"]))]
+    failed_checks = [(n, c, r) for n, c, r in outcome if (n, c, r) not in passed]
+    for number, check, results in passed:
         evidence = _evidence(attempt, snapshot, results)
-        lines = ops.attest(project, req, rdir, task, "", evidence, by="coordinator-auto")
-        bt_interventions.record(rdir, kind="criterion_unmapped", source="auto", task=task, evidence=f"manual live checks of {attempt}",
-                                repair=f"the coordinator ran {len(results)} command(s) and attested them", result="fixed", run=stamp)
-        return [f"{task}@{attempt}: {len(results)} live command(s) passed", *lines]
-    failed = next(r for r in results if r["exit_code"] != 0)
-    decisions.write_verify_notes(rdir, task, "The coordinator ran the live check and it FAILED, so nothing was attested:\n\n$ "
+        # one receipt per check (its 1-based number): what passed stays attested when another check of the task cannot
+        lines += ops.attest(project, req, rdir, task, str(number), evidence, by="coordinator-auto")
+        bt_interventions.record(rdir, kind="criterion_unmapped", source="auto", task=task, evidence=f"manual live check {number} of {attempt}",
+                                repair=f"the coordinator ran {len(results)} command(s) and attested check {number}", result="fixed", run=stamp)
+    if not failed_checks:
+        return [f"{task}@{attempt}: {sum(len(r) for _, _, r in passed)} live command(s) passed", *lines]
+    every = [x for _, _, r in outcome for x in r]
+    failed = next(x for _, _, r in failed_checks for x in r if x["exit_code"] != 0)
+    left = ", ".join(str(n) for n, _, _ in failed_checks)
+    decisions.write_verify_notes(rdir, task, "The coordinator ran the live check and it FAILED, so nothing was attested"
+                                 + (f" for manual check {left}" if passed else "") + ":\n\n$ "
                                  f"{failed['command']}\nexit code {failed['exit_code']}\n" + "\n".join(failed["tail"]))
-    bt_interventions.record(rdir, kind="regression", source="auto", task=task, evidence=_evidence(attempt, snapshot, results)[:600],
+    bt_interventions.record(rdir, kind="regression", source="auto", task=task, evidence=_evidence(attempt, snapshot, every)[:600],
                             repair="none: the live check failed, the note carries it", result="failed", run=stamp)
-    return [f"{task}@{attempt}: `{failed['command'][:100]}` exited {failed['exit_code']}; not attested, the failure is in the verification note"]
+    return [*lines, f"{task}@{attempt}: `{failed['command'][:100]}` exited {failed['exit_code']}; not attested "
+            f"{'(manual check ' + left + ')' if passed else ''}, the failure is in the verification note"]
 
 
 STATE = "RUN.coordinator.json"
