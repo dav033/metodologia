@@ -1,0 +1,22 @@
+{
+ "request": "T15:17",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "T15 falla: la revisión del ledger (ba256cf) no coincide con la de la evidencia de integración (34a3abc)",
+ "origin": "El check `scripts/e2e/asesor/check-findings.ts` falla con `[FAIL] findings check: Audit ledger revision ba256cf9ba98bd09b65442284c3cc6fdb18d1086 does not match integration evidence revision 34a3abc1108e2337185a3c2d5721b64cce403aa2.` El script ya informa el desajuste de forma explícita, como pidió el dueño. El problema está en los datos: ninguna de las dos revisiones es la desplegada (c25a5f42fc9727b84f454f166e08348521cca6ad, según RUN.notes/T15.md), así que T15 no puede cerrar el check sin cambiar la revisión del ledger para que coincida con la evidencia, lo que sería falsear la evidencia. Los tres últimos intentos repiten el mismo error.",
+ "steps": [
+  "Confirma qué revisión auditó realmente `docs/req-020/integration-results.json` comparándola con c25a5f42fc9727b84f454f166e08348521cca6ad (RUN.notes/T15.md y ~/bitacora/pictures/artifacts/req020-production-release/deployed-M1.json).",
+  "Regenera la evidencia de integración contra la revisión desplegada (T14a, M1/M2 con `run.ts --live --deployed`) o, si no se puede, registra la discrepancia como hallazgo abierto de severidad alta en `docs/req-020/T15.findings.json` sin tocar las revisiones para que coincidan.",
+  "Ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json` y confirma que sale con código 0 antes de volver a lanzar T15."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T10:33:04",
+ "seconds": 28.1
+}

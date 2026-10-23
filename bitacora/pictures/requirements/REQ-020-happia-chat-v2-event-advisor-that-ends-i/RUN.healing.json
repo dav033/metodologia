@@ -1,5 +1,19 @@
 {
- "actions": 8,
+ "actions": 10,
+ "analyst_stops": {
+  "T14a:cc86879d6c7d1bbb0fc00e26273132eb844ad06577af0424f46d1479a59c1583": {
+   "attempt": "",
+   "task": "T14a"
+  },
+  "T15:e285980e0cdc1f656eff6fcafc2ca280996732220697da93a8a5ef4af4796913": {
+   "attempt": "att-0118",
+   "task": "T15"
+  },
+  "T15:f0def2b9df5fb3530b90525163e057d1d4cf16009a3a8fb0cd664b6584ba8642": {
+   "attempt": "att-0115",
+   "task": "T15"
+  }
+ },
  "cases": {
   "267eec28de34dc09": {
    "applied": 2,
@@ -31,6 +45,43 @@
    "repair": "retry_with_note chosen by the diagnosing model (haiku): T15 no arrancó: T14a se aceptó pero no dejó snapshot del que partir",
    "status": "unrepairable",
    "task": "T15"
+  },
+  "47d0274ea0c2167f": {
+   "applied": 1,
+   "at": 1792772481.94,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 19 failures: El check scripts/e2e/asesor/check-findings.ts compara la revisión del ledger docs/req-020/T15.findings.json (ba256cf…, luego fb04448…, cambiando en cada intento) con la revisión pinneada en docs/req-0"
+   ],
+   "first_at": 1792772475.12,
+   "history": [
+    {
+     "at": 1792772475.378,
+     "repair": "revision invalid: T15.3.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772475.935,
+     "repair": "revision invalid: T15.3.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772476.42,
+     "repair": "revision invalid: T15.3.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772481.94,
+     "repair": "revision invalid: T15.3.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    }
+   ],
+   "id": "47d0274ea0c2167f",
+   "invalid": 3,
+   "repair": "revision invalid: T15.3.verification: needs at least one command or explicit manual check",
+   "status": "exhausted",
+   "task": "T15",
+   "why": "the same failure came back after its repair"
   },
   "49cc9be7a3eba583": {
    "after_restored": [
@@ -86,6 +137,19 @@
    "task": "T15",
    "why": "the same failure came back after its repair"
   },
+  "666e44439e01a3d6": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 17 failures: La causa está fuera de lo que T14a puede cambiar. (1) El chequeo `--check-results` de scripts/e2e/asesor/run.ts es inalcanzable por construcción: exige que todos los outcomes registrados estén en 'pas"
+   ],
+   "first_at": 1792772507.919,
+   "history": [],
+   "id": "666e44439e01a3d6",
+   "status": "exhausted",
+   "task": "T14a",
+   "why": "T14a already had 3 automatic plan repairs"
+  },
   "6f18906b7e10dffd": {
    "applied": 0,
    "class": "criterion_unmapped",
@@ -123,6 +187,37 @@
    "id": "71aa926b82606c04",
    "status": "unrepairable",
    "task": "T14a"
+  },
+  "7d4157a8dee10d43": {
+   "after_restored": [
+    "T14a",
+    "T15.1"
+   ],
+   "applied": 1,
+   "at": 1792771392.435,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 17 failures: El ledger docs/req-020/T15.findings.json (revisión HEAD ba256cf9…) se compara con docs/req-020/integration-results.json, que sigue fijado en la revisión histórica 34a3abc1… con outcome failed; scripts"
+   ],
+   "first_at": 1792771391.764,
+   "history": [
+    {
+     "at": 1792771392.435,
+     "repair": "plan r15: repair task T15.2 before T15",
+     "result": "fixed"
+    }
+   ],
+   "id": "7d4157a8dee10d43",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r14 → r15: kept 21, redo 2, new 1, removed 0"
+   ],
+   "repair": "plan r15: repair task T15.2 before T15",
+   "revision": 15,
+   "status": "applied",
+   "target": "T15",
+   "task": "T15",
+   "task_added": "T15.2"
   },
   "b1a59cfe750aa92d": {
    "after_restored": [

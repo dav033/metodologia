@@ -1,6 +1,41 @@
 {
- "actions": 1,
+ "actions": 6,
+ "analyst_stops": {},
  "cases": {
+  "02b1e1e354a968b4": {
+   "applied": 0,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/112d309531ff9cca6b8b14dfbccd7c01bbfdfa0f6ad81b793e93b4f424fd1956",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792770209.579,
+   "history": [],
+   "id": "02b1e1e354a968b4",
+   "status": "open",
+   "task": "T24a"
+  },
+  "4e9984197f6b260a": {
+   "applied": 1,
+   "at": 1792772866.749,
+   "class": "transient",
+   "evidence": [
+    "transient signature: cancelled",
+    "reason code: m5_stale_or_cancelled"
+   ],
+   "first_at": 1792772866.627,
+   "history": [
+    {
+     "at": 1792772866.749,
+     "repair": "retry (transient)",
+     "result": "fixed"
+    }
+   ],
+   "id": "4e9984197f6b260a",
+   "repair": "retry (transient)",
+   "status": "applied",
+   "task": "T6"
+  },
   "5442e3f21d1b8535": {
    "applied": 0,
    "class": "criterion_unmapped",
@@ -19,6 +54,44 @@
    "id": "5442e3f21d1b8535",
    "status": "unrepairable",
    "task": "T2"
+  },
+  "63957d22548e188f": {
+   "applied": 1,
+   "at": 1792772660.893,
+   "class": "regression",
+   "evidence": [
+    "the independent audit still finds blocking problems after its remediation rounds and would send back accepted tasks",
+    "reason code: rework_impact"
+   ],
+   "first_at": 1792772593.308,
+   "history": [
+    {
+     "at": 1792772593.557,
+     "repair": "revision invalid: T25.1.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772624.402,
+     "repair": "revision invalid: T25.1.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772655.401,
+     "repair": "revision invalid: T25.1.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    },
+    {
+     "at": 1792772660.893,
+     "repair": "revision invalid: T25.1.verification: needs at least one command or explicit manual check",
+     "result": "failed"
+    }
+   ],
+   "id": "63957d22548e188f",
+   "invalid": 3,
+   "repair": "revision invalid: T25.1.verification: needs at least one command or explicit manual check",
+   "status": "exhausted",
+   "task": "T25",
+   "why": "the same failure came back after its repair"
   },
   "79429a014c4867ce": {
    "applied": 1,
@@ -41,6 +114,48 @@
    "status": "applied",
    "task": "T5"
   },
+  "c87001098cc184dd": {
+   "applied": 1,
+   "at": 1792772866.441,
+   "class": "transient",
+   "evidence": [
+    "transient signature: cancelled",
+    "reason code: m5_stale_or_cancelled"
+   ],
+   "first_at": 1792772866.192,
+   "history": [
+    {
+     "at": 1792772866.441,
+     "repair": "retry (transient)",
+     "result": "fixed"
+    }
+   ],
+   "id": "c87001098cc184dd",
+   "repair": "retry (transient)",
+   "status": "applied",
+   "task": "T3"
+  },
+  "d1adfe6f635df64a": {
+   "applied": 1,
+   "at": 1792772866.574,
+   "class": "transient",
+   "evidence": [
+    "transient signature: cancelled",
+    "reason code: m5_stale_or_cancelled"
+   ],
+   "first_at": 1792772866.444,
+   "history": [
+    {
+     "at": 1792772866.574,
+     "repair": "retry (transient)",
+     "result": "fixed"
+    }
+   ],
+   "id": "d1adfe6f635df64a",
+   "repair": "retry (transient)",
+   "status": "applied",
+   "task": "T4"
+  },
   "edcf4469d3fb1728": {
    "applied": 0,
    "class": "environment",
@@ -59,6 +174,36 @@
    "id": "edcf4469d3fb1728",
    "status": "unrepairable",
    "task": "T1"
+  },
+  "edecaf9ce94ede4e": {
+   "after_restored": [
+    "T24"
+   ],
+   "applied": 1,
+   "at": 1792770250.303,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: Los tres intentos fallan igual: 104 pasan y varios tests de e2e/catalog-browse, e2e/catalog-entry y e2e/p1 (reduced motion) fallan con `locator.click` a 30 s o `element(s) not found`. Lo más probable "
+   ],
+   "first_at": 1792770249.818,
+   "history": [
+    {
+     "at": 1792770250.303,
+     "repair": "plan r3: repair task T24.1a before T24a",
+     "result": "fixed"
+    }
+   ],
+   "id": "edecaf9ce94ede4e",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r2 → r3: kept 24, redo 3, new 1, removed 0"
+   ],
+   "repair": "plan r3: repair task T24.1a before T24a",
+   "revision": 3,
+   "status": "applied",
+   "target": "T24a",
+   "task": "T24a",
+   "task_added": "T24.1a"
   }
  }
 }

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-001",
-  "revision": 2,
+  "revision": 4,
   "spec_ref": "SPEC.md",
   "generated_paths": [
     "catalog/resolved.ts",
@@ -2610,7 +2610,8 @@
       "objective": "The finished acceptance commands run unchanged against real production entry points and retain exit codes and flow evidence for the audit.",
       "repository": "app",
       "after": [
-        "T24"
+        "T24",
+        "T24.1a"
       ],
       "complexity": "medium",
       "scope": "large_change",
@@ -2716,7 +2717,11 @@
       "objective": "A read-only review maps the integrated outcome to R1–R16 and records every confirmed defect in a valid blocking-findings ledger.",
       "repository": "app",
       "after": [
-        "T24a"
+        "T24a",
+        "T24.1",
+        "T24.2",
+        "T24.3",
+        "T24.4"
       ],
       "complexity": "high",
       "scope": "large_change",
@@ -2816,7 +2821,11 @@
       "objective": "An independent second audit of the scope of T25. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
       "repository": "app",
       "after": [
-        "T24a"
+        "T24a",
+        "T24.1",
+        "T24.2",
+        "T24.3",
+        "T24.4"
       ],
       "complexity": "high",
       "scope": "large_change",
@@ -2908,6 +2917,484 @@
         "R16"
       ],
       "kind": "audit"
+    },
+    {
+      "id": "T24.1a",
+      "milestone_id": "M7",
+      "title": "Repair what blocks T24a",
+      "objective": "T24a cannot pass its checks: the cause lies outside it (independent analysis below). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ npm run test:e2e\nexit code 1\n\nIndependent failure analysis (after 3 failed attempts; confidence media; the cause lies in OUTSIDE what this task may change). It is an opinion of a reader who ran nothing: check it against the code and the failures above before you follow it.\nCause: Los tres intentos fallan igual: 104 pasan y varios tests de e2e/catalog-browse, e2e/catalog-entry y e2e/p1 (reduced motion) fallan con `locator.click` a 30 s o `element(s) not found`. Lo más probable es que el flujo de catálogo dependa de datos o variables de entorno que el sandbox no tiene (\"none of your environment variables\", archivos generados ignorados por git), así que el catálogo no renderiza y los locators nunca aparecen. Esto es una hipótesis: el log está truncado, no muestra cuántos tests fallan y no revisé los `test-results/*/error-context.md` ni el `playwright.config`. Si el DOM del error-context muestra el catálogo poblado, el fallo es un selector o un bug de UI dentro del alcance de T24a (not_the_task=false).\nWhat to do differently: 1. Abrir `test-results/catalog-browse-catalog-bro-6c488-r-and-their-combined-result-chromium/error-context.md` y `test-results/p1-button-opens-with-accessible-applicable-states-chromium/error-context.md` y comprobar si el snapshot muestra una lista de catálogo vacía, una página de login o un error de carga.\n2. Buscar en `playwright.config.*` y en los fixtures de `e2e/` las `process.env.*` y los archivos que leen (datos del catálogo generados, storageState, seed), y listar cuáles están en `.gitignore`.\n3. Reproducir las condiciones del sandbox: clonar el repo en un directorio nuevo con `git clone` y `git status --ignored`, sin `.env` ni `node_modules` locales, y ejecutar `npx playwright test e2e/catalog-browse.spec.ts --project=chromium`.\n4. Si falta un dato o variable, hacer que el\n- H1 (high; owned by T24a): T24a cannot pass its checks: the cause lies outside it (independent analysis below) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "app",
+      "after": [
+        "T24"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T24a, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T24a",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        ".evidence/T24-run.md"
+      ],
+      "shared_resources": [
+        "contract:acceptance-flow"
+      ],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T24a cannot pass its checks: the cause lies outside it (independent analysis below)",
+        "T24a's own check 1 passes: npm run test:e2e",
+        "T24a's own check 2 passes: node scripts/acceptance.mjs",
+        "T24a's own check 3 passes: npm run catalog:check -- --final"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run test:e2e",
+          "purpose": "H1 (high) is fixed: T24a cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T24.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "node scripts/acceptance.mjs",
+          "purpose": "H1 (high) is fixed: T24a cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T24.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run catalog:check -- --final",
+          "purpose": "H1 (high) is fixed: T24a cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T24.1a",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run test:e2e",
+          "purpose": "T24a's own check 1 passes: npm run test:e2e",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "node scripts/acceptance.mjs",
+          "purpose": "T24a's own check 2 passes: node scripts/acceptance.mjs",
+          "created_by": "T24",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npm run catalog:check -- --final",
+          "purpose": "T24a's own check 3 passes: npm run catalog:check -- --final",
+          "created_by": "T4",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R14",
+        "R15",
+        "R4",
+        "R5",
+        "R6",
+        "R9"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24.1",
+      "milestone_id": "M7",
+      "title": "Remediate T25 findings: security: anonymous access and token-protected index",
+      "objective": "Fix these confirmed audit findings of T24a (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F1 (high; owned by T14, T22): R14: /components/* is outside both the proxy matcher and its owner-page predicate; entry pages have no independent session check. Anonymous requests can read catalog entry content. See T25.md F1 and probe A. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\n- F2 (high; owned by T14, T22): R14/R15: agent-index.ts writes llms.txt at public/llms.txt, which the proxy allows anonymously, and never writes the required public/r/llms.txt. The required token-protected text index is missing while its contents are public at another path. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "app",
+      "after": [
+        "T24a"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T14, T22, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T14",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "src/lib/auth",
+        "src/proxy.ts",
+        "src/app/login/page.tsx",
+        "src/app/api/session/route.ts",
+        "e2e/auth.spec.ts",
+        "scripts/agent-index.ts",
+        "scripts/agent-index.test.ts",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/consumption.md"
+      ],
+      "shared_resources": [
+        "contract:catalog-schema",
+        "contract:owner-authorization"
+      ],
+      "acceptance_criteria": [
+        "F1 (high) is fixed: R14: /components/* is outside both the proxy matcher and its owner-page predicate; entry pages have no independent session check. Anonymous requests can read catalog entry content. See T25.md F1 and p"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run verify",
+          "purpose": "F1 (high) is fixed: R14: /components/* is outside both the proxy matcher and its owner-page predicate; entry pages have no independent session check. Anonymous requests can read catalog entry content. See T25.md F1 and p",
+          "created_by": "T24.1",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R14",
+        "R15"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24.2",
+      "milestone_id": "M7",
+      "title": "Remediate T25 findings: registry install: internal dependencies and import paths",
+      "objective": "Fix these confirmed audit findings of T24a (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F3 (high; owned by T5): R1/R4/R6: internal registry dependencies are frequently bare names. The installed shadcn resolver sends card, use-motion and tokens to ui.shadcn.com, rather than @david-ui. This installs upstream variants or fails on unavailable upstream items. See probe B. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\n- F4 (high; owned by T5): R6: registry installation flattens UI files but preserves source-tree-relative imports. shadcn's own planner/import rewriter leaves Aurora importing ../effects/lifecycle despite planning components/ui/lifecycle.tsx; Showcase and Toast have analogous broken imports. See probe B. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "app",
+      "after": [
+        "T24a"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T5, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "registry.json",
+        "scripts/build-registry.ts",
+        "scripts/registry-smoke.mjs",
+        "registry/david-ui/structure/button.tsx"
+      ],
+      "shared_resources": [
+        "contract:registry-button"
+      ],
+      "acceptance_criteria": [
+        "F3 (high) is fixed: R1/R4/R6: internal registry dependencies are frequently bare names. The installed shadcn resolver sends card, use-motion and tokens to ui.shadcn.com, rather than @david-ui. This installs upstream vari"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run verify",
+          "purpose": "F3 (high) is fixed: R1/R4/R6: internal registry dependencies are frequently bare names. The installed shadcn resolver sends card, use-motion and tokens to ui.shadcn.com, rather than @david-ui. This installs upstream vari",
+          "created_by": "T24.2",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24.3",
+      "milestone_id": "M7",
+      "title": "Remediate T25 findings: design tokens wired into the app",
+      "objective": "Fix these confirmed audit findings of T24a (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F5 (high; owned by T3): R3/R8 and inventory section 6: tokens.css is never imported by the application, globals.css defines the stock grayscale palette without mapping to --du-* tokens, and no loaded stylesheet defines the profile duration variables. The intended Catppuccin theme and token-backed motion are not integrated. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "app",
+      "after": [
+        "T24a"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T3, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T3",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "registry/david-ui/styles/tokens.css",
+        "registry/david-ui/lib/theme-provider.tsx",
+        "registry/david-ui/lib/motion-profile.tsx",
+        "registry/david-ui/lib/motion-profile.test.tsx"
+      ],
+      "shared_resources": [
+        "contract:motion-profile"
+      ],
+      "acceptance_criteria": [
+        "F5 (high) is fixed: R3/R8 and inventory section 6: tokens.css is never imported by the application, globals.css defines the stock grayscale palette without mapping to --du-* tokens, and no loaded stylesheet defines the p"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run verify",
+          "purpose": "F5 (high) is fixed: R3/R8 and inventory section 6: tokens.css is never imported by the application, globals.css defines the stock grayscale palette without mapping to --du-* tokens, and no loaded stylesheet defines the p",
+          "created_by": "T24.3",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R8"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T24.4",
+      "milestone_id": "M7",
+      "title": "Remediate T25 findings: kit-only guard coverage",
+      "objective": "Fix these confirmed audit findings of T24a (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F22 (high; owned by T6): R4: the kit-only guard omits motion/@animate-ui imports and raw dialog, and does not scan src/demos, where real raw buttons are rendered by the catalog. In-memory violation fixtures for motion/react, @animate-ui/react and dialog all return no findings, while a button control is caught. See probe E. Evidence from the audit: see the T25 audit ledger (.evidence/T25.findings.json)\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "app",
+      "after": [
+        "T24a"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "medium",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T6, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T6",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "scripts/check-kit-only.ts",
+        "scripts/check-kit-only.test.ts"
+      ],
+      "shared_resources": [
+        "contract:verification-tools"
+      ],
+      "acceptance_criteria": [
+        "F22 (high) is fixed: R4: the kit-only guard omits motion/@animate-ui imports and raw dialog, and does not scan src/demos, where real raw buttons are rendered by the catalog. In-memory violation fixtures for motion/react,"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run verify",
+          "purpose": "F22 (high) is fixed: R4: the kit-only guard omits motion/@animate-ui imports and raw dialog, and does not scan src/demos, where real raw buttons are rendered by the catalog. In-memory violation fixtures for motion/react,",
+          "created_by": "T24.4",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R4"
+      ],
+      "kind": "implement"
     }
   ]
 }

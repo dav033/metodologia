@@ -1,0 +1,23 @@
+{
+ "request": "T15:18",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "T15 bloqueada: la evidencia de integración no corresponde a la revisión desplegada",
+ "origin": "El check `scripts/e2e/asesor/check-findings.ts` falla con `Audit ledger revision ... does not match integration evidence revision 34a3abc1108e2337185a3c2d5721b64cce403aa2`. En el sandbox no hay `.git`, así que el script usa la revisión del ledger, que cambió entre intentos (ba256cf9… y luego fb04448ac…) sin coincidir nunca con 34a3abc. Según las notas del dueño, la revisión desplegada es c25a5f42fc9727b84f454f166e08348521cca6ad (RUN.notes/T15.md), por lo que la evidencia de integración (producida en T14a) no corresponde a producción. El origen está en esa evidencia, no en el código de T15; igualar revisiones a mano falsearía la evidencia.",
+ "steps": [
+  "Confirma a qué revisión corresponde docs/req-020/integration-results.json (34a3abc) y compárala con c25a5f42fc9727b84f454f166e08348521cca6ad en RUN.notes/T15.md y ~/bitacora/pictures/artifacts/req020-production-release/deployed-M1.json.",
+  "Reabre T14a y regenera docs/req-020/integration-results.json contra la revisión desplegada (M1/M2 con run.ts --live --deployed), sin editar revisiones a mano.",
+  "Confirma que `npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --check-audit-diff --integration-results docs/req-020/integration-results.json` sale con código 0 y solo entonces relanza T15.",
+  "Si la evidencia no se puede regenerar, T15 no puede aceptarse: registra la discrepancia como hallazgo abierto de severidad alta en docs/req-020/T15.findings.json, sin cambiar la revisión del ledger."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T10:40:36",
+ "seconds": 23.6
+}

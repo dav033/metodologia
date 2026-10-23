@@ -13,6 +13,18 @@
    "sha256": "801d53146ca6a3c8e5cb047c262f427a98cf25b7552d38b691ea44b2ba7e60ca",
    "frozen_at": "2026-10-23T09:30:36",
    "source": "monitor-generated-paths"
+  },
+  {
+   "revision": 3,
+   "sha256": "6abf4adce87a3283c51a1bd47fd74a163edbf53dbdc6ce8da6179bd3d90fd4de",
+   "frozen_at": "2026-10-23T10:44:10",
+   "source": "healing"
+  },
+  {
+   "revision": 4,
+   "sha256": "4f18b691c5d86ac7b9b2fee1440abacf74555a722552840179c26c2eeac18097",
+   "frozen_at": "2026-10-23T11:25:48",
+   "source": "monitor-targeted-remediation"
   }
  ]
 }

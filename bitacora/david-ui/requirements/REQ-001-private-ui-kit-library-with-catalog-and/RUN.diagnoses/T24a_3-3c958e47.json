@@ -1,0 +1,22 @@
+{
+ "request": "T24a:3",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Los tests e2e fallan igual en 3 intentos: clics que expiran y elementos no encontrados",
+ "origin": "La verificación independiente de `npm run test:e2e` termina con exit code 1 en los tres intentos. Se repiten `locator.click: Test timeout of 30000ms exceeded` en el catálogo (browse, sin coincidencias, cambio de tema) y `element(s) not found` con `toBeFocused`, `toBeVisible` y `toHaveAttribute` en catalog-entry y en P1 con reduced motion, en chromium y chromium-mobile. Solo pasan los casos simples, como copiar el comando de instalación. La tarea T24a prohíbe cambiar código, así que la causa probable está en el producto de tareas previas o en selectores que no existen en el build, no en un error de reintento. Los detalles están en `test-results/*/error-context.md`, que la verificación no muestra.",
+ "steps": [
+  "Lee `test-results/catalog-browse-catalog-bro-6c488-*/error-context.md` y `test-results/p1-button-opens-with-accessible-applicable-states-chromium/error-context.md` y anota el selector y el estado de la página donde se queda el click.",
+  "Ejecuta `npm run test:e2e` con las variables del archivo del verificador (p. ej. `~/.config/metodologia/verifier-david-ui.env`) para ver si el fallo es reproducible fuera del entorno local.",
+  "Si el selector o el flujo fallan por código de T24, no cambies el producto en esta tarea: documenta el error exacto y la ruta del error-context.md y pide revisión de T24 o del plan."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not change product code or acceptance checks in this task. First diagnose: run `npm run test:e2e`, read test-results/<dir>/error-context.md for the first failing test in each group (catalog browse 'combined result', catalog entry 'manifest metadata', p1 reduced motion), and record the exact selector that was not found and the page state where the click timed out. Check whether the suite runs against `next start` of the built app and whether it reads any environment variable absent from the verifier env file. Report the root cause with those error-context excerpts; do not retry blindly.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T10:43:54",
+ "seconds": 24.9
+}

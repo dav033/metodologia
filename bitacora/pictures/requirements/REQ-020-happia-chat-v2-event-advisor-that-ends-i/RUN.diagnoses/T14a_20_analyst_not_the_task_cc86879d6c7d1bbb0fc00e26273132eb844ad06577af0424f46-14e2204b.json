@@ -1,0 +1,23 @@
+{
+ "request": "T14a:20:analyst_not_the_task:cc86879d6c7d1bbb0fc00e26273132eb844ad06577af0424f46d1479a59c1583",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "T14a bloqueada: T14.1a no encaja en el árbol integrado y el chequeo deployed falla",
+ "origin": "La tarea se bloquea con el código «analyst_not_the_task:cc86879d…», que el sistema no reconoce. El último arranque fue rechazado con «PREDECESSOR_NEEDS_RESOLUTION: T14.1a is accepted but does not fit the integrated tree yet», así que T14a no puede arrancar hasta resolver T14.1a. La verificación independiente falló tres veces con el mismo fallo, pero el texto visible está truncado y no muestra qué comando falló. Además, el chequeo en vivo del coordinador (`--live --deployed --milestone M1`) termina con exit code 1 y «Invalid URL», sin indicar la variable afectada. La nota del dueño pide cambiar `--check-results` en scripts/e2e/asesor/run.ts, lo que contradice el alcance de T14a («no crea tests ni configuración»).",
+ "steps": [
+  "Revisa por qué T14.1a no encaja con el árbol integrado: `bitacora.py --project pictures scheduler-op REQ-020 decisions`, y resuelve ese predecesor antes de reintentar T14a.",
+  "No edites scripts/e2e/asesor/run.ts ni tests desde T14a. El cambio de `--check-results` pedido por el dueño es otra tarea o una nueva revisión del plan: sube «revision» en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige la opción `revise`.",
+  "El coordinador revisa la URL del despliegue en .env.local (el error «Invalid URL» aparece antes de cualquier login) y vuelve a ejecutar `--live --deployed --milestone M1` y `--milestone M2`, registrando la salida exacta.",
+  "Reintenta T14a con la nota; el agente solo ejecuta los comandos de verificación tal cual, registra los resultados y no aplica correcciones."
+ ],
+ "option": "retry_with_note",
+ "note": "Scope is fixed: do NOT edit scripts/e2e/asesor/run.ts, any test, or any config, and do not implement the owner's --check-results change (that is a separate revision). Run each listed verification command exactly as written and record its exact exit code and output. The --live --deployed M1 check currently fails with 'Invalid URL' before login: record it as a failure with that error, do not work around it. Write docs/req-020/integration-results.json with schema integration-results/1, the revision, every run's outcome, failedOwningTask for each non-passed run, coverageGaps, and liveEntryPoint/deployedEntryPoint marked coordinator-pending. Make no product acceptance decision.",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T11:22:13",
+ "seconds": 24.8
+}

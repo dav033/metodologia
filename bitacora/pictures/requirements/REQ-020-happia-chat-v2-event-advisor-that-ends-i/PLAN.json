@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 14,
+  "revision": 16,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2333,7 +2333,8 @@
       "repository": "pictures",
       "after": [
         "T14a",
-        "T15.1"
+        "T15.1",
+        "T15.2"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -3781,6 +3782,112 @@
         "R4",
         "R5",
         "R6"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15.2",
+      "milestone_id": "M4",
+      "title": "Repair what blocks T15",
+      "objective": "T15 cannot pass its checks: the cause lies outside it (independent analysis below). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json\nexit code 1\n\nIndependent failure analysis (after 17 failed attempts; confidence media; the cause lies in OUTSIDE what this task may change). It is an opinion of a reader who ran nothing: check it against the code and the failures above before you follow it.\nCause: El ledger docs/req-020/T15.findings.json (revisión HEAD ba256cf9…) se compara con docs/req-020/integration-results.json, que sigue fijado en la revisión histórica 34a3abc1… con outcome failed; scripts/e2e/asesor/check-findings.ts (validateFindingsEvidence, línea 85) exige igualdad de revisiones y falla antes de llegar al bloqueo 'Open high finding' (línea 129), así que nunca se produce el rechazo con las tareas productoras nombradas. Además, sin --known-tasks el valor por defecto es solo 'T7' (línea 167), así que las referencias a T8–T14 serían rechazadas, y sin --integration-results el valor por defecto apunta a /workspace/reports/e2e/asesor/integration-results.json (línea 165). El supuesto de T15 de que el ledger puede coincidir con evidencia de integración es falso mientras T14a no entregue evidencia inmutable en la revisión auditada. Nota: la copia /home/david/dev/pictures-wt/asesor muestra otro integration-results.json (rev 71a8f784…, fake-model, T7), así que no pude confirmar sin git el contenido del snapshot que usa el verificador.\nWhat to do differently: 1. T7 (no T15): en check-findings.ts, leer por defecto docs/req-020/integration-results.json; derivar known-tasks del ledger o usar la lista T1–T15 y T14a; evaluar bloqueos critical/high abiertos antes de la igualdad de revisiones, para que se nombren los taskReferences productores; validar summary, fixed evidence y accepted_by; escanear el worktree completo en --check-audit-diff.\n2. T14a: entregar un integration-results/1 inmutable para la revisión auditada, con o\n- H1 (high; owned by T15): T15 cannot pass its checks: the cause lies outside it (independent analysis below) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T14a",
+        "T15.1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T15, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/T15.md",
+        "docs/req-020/T15.findings.json"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T15 cannot pass its checks: the cause lies outside it (independent analysis below)"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T15.2",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "H1 (high) is fixed: T15 cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T15.2",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
       ],
       "kind": "implement"
     }
