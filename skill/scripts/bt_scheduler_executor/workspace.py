@@ -67,7 +67,7 @@ class GitWorkspaces:
         BASE_UNRESOLVED before the first task. One empty root commit gives it a base and changes no file."""
         if gitutil.run(repo, ["rev-list", "-n", "1", "--all"], check=False):
             return
-        gitutil.run(repo, ["-c", "user.name=Bitacora", "-c", "user.email=bitacora@localhost", "commit", "--allow-empty", "-q", "-m",
+        gitutil.run(repo, ["-c", "user.name=scheduler", "-c", "user.email=scheduler@localhost", "commit", "--allow-empty", "-q", "-m",
                            "chore: root commit (the scheduler needs a base to start from)"], check=False)
 
     # ------------------------------------------------------------------------------------------ allocation
