@@ -438,7 +438,7 @@ def review_attempts(rdir: Path, task: str) -> tuple[str, ...]:
         probe.close()
 
 
-def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: str, by: str = "coordinator") -> list[str]:
+def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: str, by: str = "coordinator", *, requeue: bool = True, expected_attempt: str | None = None) -> list[str]:
     """Leave the coordinator's receipt for the manual check(s) of `task` (`which`: a purpose text or 1-based index; empty =
     every manual check of the task) and send the task's open review back to the verifier, which then finds the receipt."""
     import bt_attestation
@@ -465,6 +465,8 @@ def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: 
         if not attempts:
             raise core.SchedulerError("NOT_ALLOWED", f"{task} has no verification waiting for evidence: a receipt covers the attempt "
                                       "being verified, so attest once the verifier asks")
+    if expected_attempt is not None and attempts != (expected_attempt,):
+        raise core.SchedulerError("STALE_PRECONDITION", "the live evidence belongs to a different verification attempt")
     try:
         for check in picked:
             for attempt in attempts:
@@ -473,6 +475,8 @@ def attest(project: str, req: str, rdir: Path, task: str, which: str, evidence: 
                 lines.append(f"attested {task}{'@' + attempt if attempt else ''}: «{check['purpose'][:80]}» -> {path.name}")
     except bt_attestation.AttestationError as exc:
         raise core.SchedulerError("NOT_ALLOWED", str(exc)) from exc
+    if not requeue:
+        return lines
     with hold(rdir, f"attestation of {task}"):
         stopped = stop_owner(project, req)
         store = QualityStore(bt_run_stores.paths(rdir)["m6"])

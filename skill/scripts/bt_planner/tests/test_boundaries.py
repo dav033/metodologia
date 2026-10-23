@@ -141,7 +141,7 @@ class Boundaries(unittest.TestCase):
             writers[path.name] = [w for w in ("write_text", "os.replace", "open(", "unlink", "mkdir", "chmod")
                                   if w in text]
         self.assertEqual(sorted(name for name, hits in writers.items() if hits),
-                         ["_lock.py", "amendments.py", "revisions.py", "sync.py"])   # amendments: PLAN.amendments.jsonl
+                         ["_lock.py", "amendments.py", "audit_retrofit.py", "revisions.py", "sync.py"])   # working-plan audit migrations
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import bt_audit_gate as audit
 from bt_audit_evidence import evidence_paths, safe_path
 from .quality_progress import observer as progress_observer
+from . import quality_ledger_command
 
 
 def check(port, order, raw: bytes | str, gate: audit.Gate) -> audit.Gate:
@@ -108,6 +109,9 @@ class EvidenceRunner:
             del self.context.order
 
     def run(self, spec, snapshot_root, **kwargs):
+        result = quality_ledger_command.run(spec, snapshot_root)
+        if result is not None:
+            return result
         order = getattr(self.context, "order", None)
         if order is not None and self.owns(order, spec):
             return self.passed()

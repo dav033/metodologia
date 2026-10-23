@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import evidence as ev
-from . import command_checks, generated, interfaces, quality, traceability, verification
+from . import command_checks, generated, interfaces, milestone_audits, quality, traceability, verification
 
 SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
 EVIDENCE_SINCE = (1, 1, 0)
@@ -374,6 +374,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.warnings.extend(quality.verification_findings(plan))
         report.errors.extend(quality.audit_findings(plan))
         report.warnings.extend(quality.audit_advice(plan))
+        report.warnings.extend(milestone_audits.advice(plan, quality.ancestors(plan)))
     command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
     report.errors.extend(command_errors)
     report.warnings.extend(command_warnings)

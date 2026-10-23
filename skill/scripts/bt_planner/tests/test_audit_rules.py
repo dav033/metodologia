@@ -193,6 +193,18 @@ class CrossCheck(unittest.TestCase):
         self.assertEqual(by_id["T18"]["shared_resources"], ["contract:acceptance-flow"])
         self.assertEqual(by_id["T18b"].get("shared_resources", []), [])
 
+    def test_cross_check_verifies_its_own_ledger(self):
+        from bt_planner import sync
+
+        plan = self.plan()
+        plan["tasks"][1]["verification"].append({"type": "command", "value":
+            "engine audit-ledger check docs/audit.findings.json", "purpose": "ledger"})
+        (self.dir / "PLAN.json").write_text(self.pc.dumps(plan), encoding="utf-8")
+        sync.retrofit_audit(self.dir, cross_check=True)
+        clone = next(task for task in self.plan()["tasks"] if task["id"] == "T18b")
+        self.assertEqual(clone["verification"][1]["value"],
+                         "engine audit-ledger check docs/audit-crosscheck.findings.json")
+
     def test_it_only_adds_one_and_only_for_a_single_audit(self):
         from bt_planner import sync
         sync.retrofit_audit(self.dir, cross_check=True)

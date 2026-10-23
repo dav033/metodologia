@@ -6,6 +6,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
@@ -21,11 +22,12 @@ class QualityProgressTests(unittest.TestCase):
         self.rdir = Path(self.temp.name) / "REQ-001-x"
         self.rdir.mkdir()
         db = adapter.run_db_path(self.rdir)
-        with sqlite3.connect(db) as conn:
+        with closing(sqlite3.connect(db)) as conn:
             conn.execute("CREATE TABLE state(id INTEGER, doc TEXT)")
             conn.execute("INSERT INTO state VALUES (1, ?)", (json.dumps({"revision": 1,
                 "attempts": {"att-0001": {"id": "att-0001", "task_id": "T1", "state": "verifying"}},
                 "tasks": {"T1": {"state": "active"}}}),))
+            conn.commit()
         bt_run_stores.runtime_marker(db).write_text(json.dumps({"runtime_id": "a" * 32}))
         self.store = bt_run_stores.paths(self.rdir)["m6"]
 

@@ -119,6 +119,46 @@ class Rotation(Receipt):
 
 
 class Operator(unittest.TestCase):
+    def test_multiple_receipts_requeue_once_after_the_last_evidence(self):
+        import hashlib
+        from bt_scheduler_quality.contracts import VerifyRequest
+        from bt_scheduler_quality.evidence import canonical_json
+        from bt_scheduler_quality.store import QualityStore
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            root.chmod(0o700)
+            rdir = root / "REQ-1"
+            rdir.mkdir()
+            database = root / "m6.sqlite3"
+            checks = [{"type": "manual", "value": value, "purpose": purpose, "expected": "ok"}
+                      for value, purpose in [("local live", "local"), ("deployed live", "deployed")]]
+            order = VerifyRequest.from_mapping({"idempotency_key": "verify:1", "plan_id": "REQ-1", "revision": 1,
+                "task_id": "T1", "attempt_id": "att-1", "token": 1, "acceptance_criteria": ["local", "deployed"],
+                "verification": checks})
+            manifest = b"{}"
+            result = {"status": "NEEDS_REVIEW", "issues": [{"code": "CRITERION_MANUAL"}],
+                      "evidence_manifest": "m6://result/" + hashlib.sha256(manifest).hexdigest()}
+            with QualityStore(database) as store:
+                store.reserve(order)
+                store.claim_work(order.idempotency_key)
+                store.finish(order, result, canonical_json(result), manifest, {})
+            plan = SimpleNamespace(task=lambda task: SimpleNamespace(verification=checks))
+            real_mint = att.mint
+            with patch.object(ops, "bound_plan", return_value=plan), patch.object(ops, "stop_owner", return_value=0), \
+                    patch("bt_run_stores.paths", return_value={"m6": database}), \
+                    patch.object(att, "mint", lambda *a, **k: real_mint(*a, **{**k, "key_file": root / "key"})):
+                with self.assertRaisesRegex(adapter.core.SchedulerError, "different verification attempt"):
+                    ops.attest("p", "REQ-1", rdir, "T1", "1", EVIDENCE, expected_attempt="att-old")
+                self.assertFalse((rdir / att.DIR).exists())
+                ops.attest("p", "REQ-1", rdir, "T1", "1", EVIDENCE, requeue=False, expected_attempt="att-1")
+                with QualityStore(database) as store:
+                    self.assertEqual(store.open_review_attempts("T1"), ("att-1",))
+                ops.attest("p", "REQ-1", rdir, "T1", "2", EVIDENCE)
+            with QualityStore(database) as store:
+                self.assertEqual(store.open_review_attempts("T1"), ())
+                self.assertEqual(store.reserve(order)[0], "queued")
+
     def test_attest_writes_a_receipt_per_manual_check_and_requeues_the_open_review(self):
         with tempfile.TemporaryDirectory() as tmp:
             rdir = Path(tmp) / "REQ-1"

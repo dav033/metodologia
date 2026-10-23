@@ -40,10 +40,13 @@ def _cross_check_of(task: dict, new_id: str) -> dict:
     clone["objective"] = (f"An independent second audit of the scope of {task['id']}. Do not read its report or ledger "
                           "first: confirm findings yourself and record every one in your own ledger.")
     clone["expected_paths"] = ([f"{new_stem}.md"] if old_report else []) + [f"{new_stem}{quality.LEDGER_SUFFIX}"]
+    replacements = {p: f"{new_stem}{quality.LEDGER_SUFFIX}" for p in paths if p.endswith(quality.LEDGER_SUFFIX)}
     if old_report:
-        for item in clone.get("verification", []):
-            if isinstance(item, dict) and isinstance(item.get("value"), str):
-                item["value"] = item["value"].replace(old_report, f"{new_stem}.md")
+        replacements[old_report] = f"{new_stem}.md"
+    for item in clone.get("verification", []):
+        if isinstance(item, dict) and isinstance(item.get("value"), str):
+            for original, replacement in replacements.items():
+                item["value"] = item["value"].replace(original, replacement)
     clone["estimate_rationale"] = (f"Cross-check of {task['id']}: a bounded independent pass over the same scope; "
                                    + str(task.get("estimate_rationale", "")))[:400]
     return clone

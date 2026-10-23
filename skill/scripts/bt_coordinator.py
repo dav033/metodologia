@@ -277,10 +277,16 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     _review_attempts(ops, rdir, task)             # the owner may be restarting right now (an engine reload): attest once the review is visible
     passed = [(n, c, r) for n, c, r in outcome if r and all(x["exit_code"] == 0 for x in r) and len(r) == len(commands_of(c["value"]))]
     failed_checks = [(n, c, r) for n, c, r in outcome if (n, c, r) not in passed]
+    evidence_path = Path(rdir) / "RUN.notes" / f"{task}.coordinator-{attempt}.json"
+    evidence_path.parent.mkdir(parents=True, exist_ok=True)
+    evidence_path.write_text(json.dumps({"attempt": attempt, "snapshot": snapshot,
+        "checks": [{"number": n, "results": r} for n, _, r in outcome]}, ensure_ascii=False, indent=2), encoding="utf-8")
+    evidence_path.chmod(0o600)
     for number, check, results in passed:
         evidence = _evidence(attempt, snapshot, results)
         # one receipt per check (its 1-based number): what passed stays attested when another check of the task cannot
-        lines += ops.attest(project, req, rdir, task, str(number), evidence, by="coordinator-auto")
+        lines += ops.attest(project, req, rdir, task, str(number), evidence, by="coordinator-auto",
+                            requeue=not failed_checks and number == passed[-1][0], expected_attempt=attempt)
         bt_interventions.record(rdir, kind="criterion_unmapped", source="auto", task=task, evidence=f"manual live check {number} of {attempt}",
                                 repair=f"the coordinator ran {len(results)} command(s) and attested check {number}", result="fixed", run=stamp)
     if not failed_checks:

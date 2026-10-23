@@ -162,6 +162,11 @@ class Attest(unittest.TestCase):
             run, calls = self.runner([0])
             coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
         self.assertEqual((len(calls), [a[0][4] for a in self.attested]), (1, ["1", "2"]))
+        self.assertEqual([kwargs["requeue"] for _, kwargs in self.attested], [False, True])
+        evidence = json.loads((self.rdir / "RUN.notes" / "T14a.coordinator-att-7.json").read_text())
+        self.assertEqual((evidence["attempt"], evidence["snapshot"]), ("att-7", self.sha))
+        self.assertEqual([item["number"] for item in evidence["checks"]], [1, 2])
+        self.assertNotIn(SECRET, json.dumps(evidence))
 
     def test_two_failures_attest_nothing_and_a_timeout_is_not_retried(self):
         run, calls = self.runner([1, 1])
