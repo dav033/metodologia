@@ -492,6 +492,18 @@ class PlanRepairs(unittest.TestCase):
         self.assertEqual(plan_errors(revised), [])
         self.assertIn("functionCall parts", {t["id"]: t for t in revised["tasks"]}[new_id]["objective"])
 
+    def test_a_template_tail_that_repeats_words_is_trimmed_instead_of_abandoning_the_repair(self):
+        """REQ-020 T15.1: even the shortest evidence stayed invalid because the owners' own commands repeated the same words."""
+        from bt_plan_adapter import plan_errors
+
+        plan = self.plan()
+        for task in plan["tasks"][:2]:
+            task["verification"] = [{"type": "command", "value": f"npx tsx scripts/e2e/asesor/check-findings.ts docs/req-020/f.json --n {n}",
+                                     "purpose": "scripts e2e asesor check findings docs req 020", "category": "functional"} for n in range(8)]
+        case = taxonomy.Case("T3:1", "T3", "regression", ("e",), owners=("T1", "T2"), failing=("check-findings.ts",), signature="s5")
+        revised, new_id, _ = healing.build_fix_revision(plan, "T3", case, {"verify": "$ npx tsx scripts/e2e/asesor/check-findings.ts\nexit code 1\n[FAIL] findings check\n"})
+        self.assertEqual([e for e in plan_errors(revised) if e.startswith(f"{new_id}.objective")], [])
+
     def test_a_repair_of_a_repair_does_not_pile_up_repeated_checks_and_never_exceeds_what_the_scheduler_routes(self):
         """REQ-020 T14.5a had 42 checks: the decision engine refused its input and the owner looped for 30 minutes."""
         from bt_plan_adapter import plan_errors

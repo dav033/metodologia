@@ -683,7 +683,10 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
                 f"{first_block[:300]}\n",                                                        # only the first failing command
                 "see the verification note of the task\n"]                                       # nothing the lint can object to
     revised = restored = None
-    for evidence in dict.fromkeys(variants):
+    # the remediation template's own tail (owners' commands, paths) can repeat words by itself (REQ-020 T15.1 stayed invalid with the
+    # shortest evidence): its unique lines, then nothing, are the last resorts
+    tails = list(dict.fromkeys([tail, "\n".join(dict.fromkeys(tail.splitlines()))[:1200], ""]))
+    for evidence, tail in [(e, t) for t in tails for e in dict.fromkeys(variants)]:
         # The planner refuses an objective whose words mostly repeat: a repair that quotes two failing commands, their exit codes and
         # the analysis repeats `npx tsx scripts ... check-findings.ts` (REQ-020 T15.1). Say less rather than give up on the repair.
         fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
