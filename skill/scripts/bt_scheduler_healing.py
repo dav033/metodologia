@@ -379,6 +379,8 @@ def _repair(project, req, rdir, request, case, context, plan, doc, answer, revis
 
 
 WORKSPACE_CAP_MB = 8192
+MAX_CHECKS = 30      # the decision engine accepts at most 32 checks per task (bt_scheduler_decision.validation)
+MAX_PATHS = 100
 
 
 def _workspace_full(rdir: Path, case) -> bool:
@@ -574,6 +576,19 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
         fix["verification"].append({"type": "manual", "value": f"Coordinator runs `{live['command']}` with .env.local and records redacted evidence.",
                                     "purpose": purpose, "expected": "The coordinator's live run exits 0 and its redacted evidence is recorded.",
                                     "category": "integration"})
+    # a repair of a repair collects the checks of every owner it names, repeated: REQ-020's T14.5a carried 42, and the scheduler's M2
+    # refuses a task with more than MAX_CHECKS ("task.verification:invalid_sequence"), so the owner looped on it for 30 minutes
+    seen: set[tuple] = set()
+    unique = []
+    for check in fix["verification"]:
+        key = (check.get("type"), check.get("value"), check.get("purpose"))
+        if key not in seen:
+            seen.add(key)
+            unique.append(check)
+    fix["verification"] = unique
+    fix["acceptance_criteria"] = list(dict.fromkeys(fix["acceptance_criteria"]))
+    if len(fix["verification"]) > MAX_CHECKS or len(fix.get("expected_paths") or ()) > MAX_PATHS:
+        return None                                    # no sound task fits: the card stays for a person instead of a plan nobody can run
     fix["title"] = f"Repair what blocks {task_id}"[:120]
     fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
                         f"tests unless the test itself is the defect, and say which one was. Evidence from the last "

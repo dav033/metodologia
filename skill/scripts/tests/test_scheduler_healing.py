@@ -450,6 +450,32 @@ class PlanRepairs(unittest.TestCase):
         self.assertEqual(plan_errors(revised), [])
         self.assertIn("functionCall parts", {t["id"]: t for t in revised["tasks"]}[new_id]["objective"])
 
+    def test_a_repair_of_a_repair_does_not_pile_up_repeated_checks_and_never_exceeds_what_the_scheduler_routes(self):
+        """REQ-020 T14.5a had 42 checks: the decision engine refused its input and the owner looped for 30 minutes."""
+        from bt_plan_adapter import plan_errors
+
+        plan = self.plan()
+        base = plan["tasks"][1]
+        base["verification"] = base["verification"] + [{"type": "command", "value": f"pytest tests/test_x{n}.py", "purpose": f"x{n} passes",
+                                                         "category": "regression"} for n in range(10)]
+        case = taxonomy.Case("T3:1", "T3", "regression", ("e",), owners=("T1", "T2"), failing=("test_a",), signature="s4")
+        revised, new_id, _ = healing.build_fix_revision(plan, "T3", case, {"verify": "FAIL: test_a"})
+        fix = {t["id"]: t for t in revised["tasks"]}[new_id]
+        values = [(c["type"], c["value"], c["purpose"]) for c in fix["verification"]]
+        self.assertEqual(len(values), len(set(values)))
+        self.assertEqual(plan_errors(revised), [])
+        for n in range(40):                                                                  # too many DISTINCT checks: no repair at all
+            base["verification"].append({"type": "command", "value": f"pytest tests/test_y{n}.py", "purpose": f"y{n} passes", "category": "regression"})
+        self.assertIsNone(healing.build_fix_revision(plan, "T3", case, {"verify": "FAIL: test_a"}))
+
+    def test_a_plan_the_scheduler_cannot_route_is_not_a_valid_revision(self):
+        from bt_plan_adapter import plan_errors
+
+        plan = self.plan()
+        plan["tasks"][0]["verification"] = [{"type": "command", "value": f"pytest t{n}.py", "purpose": f"t{n}", "category": "functional"}
+                                            for n in range(33)]
+        self.assertTrue(any("routes at most 32" in e for e in plan_errors(plan)))
+
     def test_only_a_finished_confident_analysis_that_blames_something_else_places_a_stop(self):
         import bt_attempt_analyst as analyst
 

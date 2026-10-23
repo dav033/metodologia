@@ -432,9 +432,18 @@ def latest_plan(rdir: Path) -> dict | None:
     return planner_revisions.load_revision(rdir, last["revision"]) if last else None
 
 
+DECISION_MAX_CHECKS = 32      # the scheduler's decision engine refuses a task with more checks (bt_scheduler_decision.validation)
+
+
 def plan_errors(plan: dict) -> list[str]:
-    """The contract errors of a plan ([] when it is valid)."""
-    return list(planner_contract.validate(plan).errors)
+    """The contract errors of a plan ([] when it is valid), including the limits the scheduler enforces when it dispatches: a plan
+    the owner cannot route used to freeze fine and then stall the run in a loop (REQ-020 T14.5a had 42 checks)."""
+    errors = list(planner_contract.validate(plan).errors)
+    for task in plan.get("tasks", ()) if isinstance(plan, dict) else ():
+        count = len(task.get("verification") or ()) if isinstance(task, dict) else 0
+        if count > DECISION_MAX_CHECKS:
+            errors.append(f"{task.get('id')}: {count} verification checks; the scheduler routes at most {DECISION_MAX_CHECKS} per task")
+    return errors
 
 
 def freeze_revision(rdir: Path, plan: dict, source: str) -> dict:
