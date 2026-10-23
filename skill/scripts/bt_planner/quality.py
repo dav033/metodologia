@@ -9,6 +9,8 @@ from __future__ import annotations
 import fnmatch
 import re
 
+from . import generated
+
 LEDGER_SUFFIX = ".findings.json"   # the findings ledger an audit task declares
 VERIFICATION_CATEGORIES = ("static", "functional", "integration", "regression", "product")
 
@@ -105,7 +107,7 @@ def conflicts(plan: dict) -> list[str]:
             if str(ta.get("repository")) != str(tb.get("repository")):
                 continue
             paths = [(p, q) for p in _strs(ta.get("expected_paths")) for q in _strs(tb.get("expected_paths"))
-                     if paths_overlap(p, q)]
+                     if paths_overlap(p, q) and not generated.declared_pair(p, q, plan)]
             shared = sorted(set(_strs(ta.get("shared_resources"))) & set(_strs(tb.get("shared_resources"))))
             if paths or shared:
                 what = f"path {paths[0][0]!r}~{paths[0][1]!r}" if paths else f"resource {shared[0]!r}"
@@ -134,7 +136,7 @@ def shared_unordered(plan: dict) -> list[str]:
                 continue
             shared = sorted(set(_strs(ta.get("shared_resources"))) & set(_strs(tb.get("shared_resources"))))
             paths = [p for p in _strs(ta.get("expected_paths")) for q in _strs(tb.get("expected_paths"))
-                     if paths_overlap(p, q)]
+                     if paths_overlap(p, q) and not generated.declared_pair(p, q, plan)]
             if shared or paths:
                 what = f"resource {shared[0]!r}" if shared else f"path {paths[0]!r}"
                 first, second = sorted((a, b))
