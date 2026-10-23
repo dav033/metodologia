@@ -9,7 +9,9 @@ until it acts (the stop's settle time + one poll) instead of the minutes until a
 
 Totals: `human_interventions` and `minutes_to_recovery` (lower is better) and `classified` (higher is better). The results of
 every version are kept in `tests/fixtures/recovery-benchmark-results.json`; `regressions(previous, current)` is what stops a
-change from making recovery worse than the version before it.
+change from making recovery worse than the version before it. Historical v2 counted an unchanged audit retry as recovery;
+P-186 deliberately reports that case as unresolved instead. Historical totals remain immutable and the comparison still
+reports the lost automation. An unresolved case retains its historical wait as a conservative cost, not measured recovery.
 """
 from __future__ import annotations
 
@@ -50,21 +52,19 @@ def _attempt(scenario: dict, now: float) -> dict[str, Any]:
     answers: list[tuple] = []
     plan_json, frozen = scenario.get("plan_json"), []
     import bt_config
-    import bt_remediation
-
-    original = (healing._latest_plan, healing._freeze, bt_config.set_value, bt_remediation.grant_round)
+    original = (healing._latest_plan, healing._freeze, bt_config.set_value)
     bt_config.set_value = lambda key, value: None                     # the benchmark never writes the machine's settings
-    bt_remediation.grant_round = lambda rdir, audit, limit=1: True
     healing._latest_plan = lambda rdir: plan_json
     healing._freeze = lambda rdir, plan_, source: frozen.append(plan_) or plan_
     try:
         outcome = healing._repair("bench", "REQ-0", Path("."), request, case, context, plan, doc,
                                   lambda *args: answers.append(args) or ["ok"], lambda why: ["rebased"])
     finally:
-        healing._latest_plan, healing._freeze, bt_config.set_value, bt_remediation.grant_round = original
+        healing._latest_plan, healing._freeze, bt_config.set_value = original
     auto = outcome["repair"] != "none" and outcome["result"] == "fixed"
     wait = healing.SETTLE.get(case.kind, 0.0) + POLL_SECONDS if auto else None
-    return {"class": case.kind, "auto": auto, "repair": outcome["repair"], "wait": wait}
+    return {"class": case.kind, "auto": auto, "repair": outcome["repair"], "wait": wait,
+            "blocker": outcome.get("blocker")}
 
 
 def _files_lost() -> dict[str, Any]:
@@ -115,7 +115,9 @@ def run(path: Path = SCENARIOS) -> dict[str, Any]:
         expect = scenario["expect"]
         minutes_after = got["wait"] / 60 if got["auto"] and got["wait"] is not None else night["minutes"]
         rows.append({"id": scenario["id"], "title": scenario["title"], "class": got["class"], "class_ok": got["class"] == expect["class"],
-                     "auto": got["auto"], "auto_ok": got["auto"] == expect["auto"] and (not got["auto"] or got["repair"].startswith(expect["repair"])),
+                     "auto": got["auto"], "auto_ok": got["auto"] == expect["auto"] and
+                     got.get("blocker") == expect.get("blocker") and (not got["auto"] or got["repair"].startswith(expect["repair"])),
+                     "blocker": got.get("blocker"), "recovery_pending": not got["auto"],
                      "repair": got["repair"], "human_before": night["human"], "human_after": 0 if got["auto"] else 1,
                      "minutes_before": night["minutes"], "minutes_after": round(minutes_after, 2)})
     return {"scenarios": rows, "totals": {
