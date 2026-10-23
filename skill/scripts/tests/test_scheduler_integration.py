@@ -60,7 +60,10 @@ class Case(unittest.TestCase):
 
 class Boundary(unittest.TestCase):
     ALLOWED_USERS = frozenset({"bt_scheduler_adapter.py", "test_scheduler_integration.py",
-                               "test_scheduler_decision_sources.py", "test_package_install.py"})
+                               "test_scheduler_decision_sources.py", "test_package_install.py",
+                               "bt_scheduler_quality_adapter.py",
+                               "test_scheduler_quality_real_integration.py"})
+    ALLOWED_PATHS = frozenset({"skill/scripts/bt_scheduler_quality/tests/test_adapter.py"})
 
     def names_in(self, path: Path) -> set[str]:
         found = set()
@@ -73,20 +76,20 @@ class Boundary(unittest.TestCase):
                 found.add(node.value.split(".")[0])
         return found
 
-    def test_only_the_adapter_imports_the_core(self):
+    def test_only_approved_adapters_and_integration_tests_import_the_core(self):
         offenders = []
         for path in sorted(REPO.rglob("*.py")):
             rel = path.relative_to(REPO)
             if ".git" in rel.parts or "bt_scheduler_core" in rel.parts or "node_modules" in rel.parts \
                     or ".venv" in rel.parts or rel.parts[0] == "bitacora" \
-                    or path.name in self.ALLOWED_USERS:
+                    or path.name in self.ALLOWED_USERS or rel.as_posix() in self.ALLOWED_PATHS:
                 continue
             try:
                 if "bt_scheduler_core" in self.names_in(path):
                     offenders.append(str(rel))
             except (SyntaxError, UnicodeError):
                 continue
-        self.assertEqual(offenders, [], "only bt_scheduler_adapter may reach the scheduler core")
+        self.assertEqual(offenders, [], "only approved adapters and integration tests may reach the core")
         self.assertIn("bt_scheduler_core", self.names_in(SCRIPTS / "bt_scheduler_adapter.py"))
 
     def test_the_core_imports_nothing_of_the_methodology(self):
@@ -116,6 +119,11 @@ class Boundary(unittest.TestCase):
         self.assertIn("bt_scheduler_core", config["packages"])
         self.assertIn("bt_scheduler_adapter", config["py-modules"])
         self.assertIn("README.md", tomllib.loads((REPO / "pyproject.toml").read_text())["tool"]["setuptools"]["package-data"]["bt_scheduler_core"])
+        self.assertIn("bt_scheduler_quality", config["packages"])
+        self.assertIn("bt_scheduler_quality_adapter", config["py-modules"])
+        quality_data = config["package-data"]["bt_scheduler_quality"]
+        self.assertIn("README.md", quality_data)
+        self.assertIn("api-contract.json", quality_data)
 
     def test_the_legacy_supervisor_asks_the_adapter_before_opening_a_run(self):
         source = (SCRIPTS / "bt_runentry.py").read_text(encoding="utf-8")

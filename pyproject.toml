@@ -21,7 +21,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_quality"]
 py-modules = [
   "bitacora",
   "bt_agents",
@@ -56,6 +56,7 @@ py-modules = [
   "bt_plan_adapter_evidence",
   "bt_scheduler_adapter",
   "bt_scheduler_executor_adapter",
+  "bt_scheduler_quality_adapter",
   "bt_scheduler_integrator",
   # Scheduler module adapters and local M2 runtime modules.
   "bt_scheduler_decision_adapter",
@@ -143,6 +144,7 @@ bt_planner = ["data/*.json", "README.md"]
 bt_scheduler_core = ["README.md"]
 bt_scheduler_decision = ["api-contract.json", "README.md", "laya-requirements.in", "laya-requirements.lock"]
 bt_scheduler_executor = ["README.md"]
+bt_scheduler_quality = ["api-contract.json", "README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "agents/*", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",

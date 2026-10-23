@@ -1,0 +1,12 @@
+{
+  "verdict_id": "m6-1111111111111111111111111111111111111111111111111111111111111111",
+  "plan_id": "PLAN-TEST",
+  "revision": 1,
+  "task_id": "T-002",
+  "attempt_id": "att-002",
+  "accepted": false,
+  "verifier": "m6-quality/checker-v1",
+  "evidence": "m6://result/1111111111111111111111111111111111111111111111111111111111111111",
+  "token": 1,
+  "occurred_at": "2026-10-15T00:00:00Z"
+}

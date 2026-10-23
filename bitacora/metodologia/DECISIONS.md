@@ -379,3 +379,26 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
   supported; no legacy RUN or live configuration is migrated.
 - **Source:** REQ-019 SPEC and `/home/david/PLAN-FASE-5-M5-RECOVERY-MANAGER.md`.
 
+## D-042 — M6 verifies isolated M3 snapshots and holds unknowns for review
+- **Date:** 2026-10-15 · **Status:** Accepted through David's explicit M6 implementation request.
+- **Context:** M1 has a binary `Verdict` contract and refuses to complete without an independent, correlated verdict;
+  M3 preserves the actual result, including dirty and untracked files. A check must not trust the builder's claim or
+  execute arbitrary project code with access to the host.
+- **Decision:** Add `bt_scheduler_quality` as an isolated standard-library module with a private durable ledger and
+  verdict outbox. Run only approved checks against a verified copy of the M3 snapshot in bubblewrap with network,
+  host home and inherited secrets unavailable. Map criteria only through exact approved `purpose` text. When a
+  check cannot run or evidence is incomplete, persist `NEEDS_REVIEW`, leave M1 `VERIFYING`, and require an explicit
+  identified operator resolution; never invent an M1 state or map uncertainty to PASS/FAIL. Reuse M3's pinned base
+  and `PredecessorIntegrator`; do not recalculate or mutate repository refs.
+- **Alternatives:** Add a third M1 state (crosses M1 authority and shared contract); trust agent reports or an M3
+  worktree as a sandbox (not independent or isolated); write M6 data into M1/M3 stores (cross-owner mutation);
+  map unknowns to rejection/retry (can burn recovery budget without evidence).
+- **Consequences:** + No false completion, durable replay and actual OS isolation; + M1/M3/M5 remain independent.
+  − Checks require bubblewrap; unsupported or ambiguous cases wait for a human, and criterion wording must map
+  exactly to an approved check purpose.
+- **Rollback:** Omit the `VerificationPort` adapter; preserve M6 reports/ledger and M3 snapshots. M1 contracts,
+  M1/M3 databases and predecessor refs require no migration or rollback.
+- **Source:** [REQ-020 SPEC](requirements/REQ-020-scheduler-m6-quality-integration/SPEC.md) ·
+  [REQ-020 PLAN](requirements/REQ-020-scheduler-m6-quality-integration/PLAN.md) ·
+  `/home/david/PLAN-FASE-6-M6-QUALITY-INTEGRATION-PROPUESTO.md`.
+
