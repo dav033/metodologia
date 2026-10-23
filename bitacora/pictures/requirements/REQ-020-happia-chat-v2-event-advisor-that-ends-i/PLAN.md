@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 20/22 · generado: 2026-10-22T21:58:55-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/4 · tareas 20/22 · generado: 2026-10-22T22:26:14-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -43,7 +43,7 @@ created: 2026-10-20
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | completada | gpt-6-luna | codex-luis | 19 |
-| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | en curso | gpt-6.1-sol | codex-1 | 7 |
+| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | bloqueada | gpt-6.1-sol | codex-1 | 8 |
 | T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | — | — | 0 |
 | T14.1a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
 | T14.2a | Integrate reviewed summary lifecycle and deployed evidence correction | media | completada | gpt-6-luna | codex-luis | 1 |

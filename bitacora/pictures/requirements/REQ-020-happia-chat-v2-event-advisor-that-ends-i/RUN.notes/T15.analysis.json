@@ -1,13 +1,13 @@
 {
- "at": "2026-10-22T17:15:23",
- "cause": "`scripts/e2e/asesor/check-findings.ts` `parseArgs` only reads `--findings` and `--results`. The bare positional `docs/req-020/T15.findings.json` is ignored, `--integration-results` is unknown, and `--check-audit-diff` is not handled. So the first command falls back to `reports/e2e/asesor/integration-results.json`, which does not exist in the clean sandbox copy (ENOENT). The second command falls back to `reports/audit/audit-findings.json`, not the T15 ledger, which is why it reports a malformed header. The script was created by T7, so this is another task's work, and the T15 ledger may also have no valid `audit-findings/1` header yet, which is not verified.",
+ "at": "2026-10-22T22:13:19",
+ "cause": "El comando falla por causas fuera de T15. Sin `--integration-results`, el checker de T7 (`scripts/e2e/asesor/check-findings.ts`) busca `reports/e2e/asesor/integration-results.json`, un archivo ignorado por git que no existe en la sandbox. Con `--integration-results docs/req-020/integration-results.json` rechaza que la revisión de la auditoría (revision 11, snapshot 2de317d) no coincide con la del resultado de integración. Además, el contrato de T7 no coincide con el de T15: asume T7 en lugar de T14a, exige taskReferences y closed en lugar de tasks y fixed, y no valida la evidencia de aceptación del propietario. Los findings F1–F6 siguen abiertos y son high, así que la aceptación debe fallar igualmente; T15 no debe fabricar integración ni cerrar findings.",
  "confidence": "alta",
- "failures": 5,
+ "failures": 7,
  "model": "haiku",
  "not_the_task": true,
  "profile": "claude",
- "seconds": 17.8,
- "solution": "1. In `parseArgs` of `scripts/e2e/asesor/check-findings.ts`, take the first non-flag argument as the findings path; `--findings` still wins when given.\n2. Accept `--integration-results PATH` as an alias of `--results`, and accept `--check-audit-diff`, which enables the audit edit-boundary check (printed as skipped when git is unavailable). Keep the git-optional revision logic.\n3. Make sure `docs/req-020/T15.findings.json` has a valid `audit-findings/1` header and findings list (severity, status, summary, affected plan task IDs), and that `docs/req-020/integration-results.json` exists, so the commands do not need `reports/`.\n4. Run both plan commands exactly as written from the repo root, plus `npm run gate` and `npm run happie:test-webhook`, and record the output in `docs/req-020/T15.md`.\n5. Do not change any other product file; if the edit-boundary check flags the script change, record it as a T7 finding instead of hiding it.",
+ "seconds": 17.9,
+ "solution": "1. No editar check-findings.ts ni crear reports/e2e/asesor/integration-results.json a mano: eso corresponde a T7 y T14a. 2. Que T14a regenere docs/req-020/integration-results.json sobre la revisión auditada (revision 11, snapshot 2de317d), o que T7 alinee el checker con la revisión vigente. 3. Que T7 corrija los defaults (T14a en lugar de T7), acepte tasks y fixed, y valide summary y la evidencia de aceptación del propietario. 4. En T15, mantener docs/req-020/T15.findings.json con F1–F6 abiertos y gate_status honesto, y documentar en docs/req-020/T15.md que la aceptación falla hasta cerrarlos. 5. Reejecutar ambos comandos solo después de los pasos 2 y 3; F1 y F2 (despliegue y observaciones de teléfono) los decide el propietario.",
  "state": "done",
  "task": "T15"
 }

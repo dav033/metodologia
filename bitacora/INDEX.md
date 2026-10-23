@@ -1,11 +1,12 @@
 # Bitácora — index
 
-_Generated 2026-10-22 22:03. Do not edit by hand. Web: http://127.0.0.1:8765_
+_Generated 2026-10-22 22:28. Do not edit by hand. Web: http://127.0.0.1:8765_
 
 | Project | Repos | Open REQs | Open pending | Last activity | Links |
 |---|---|---|---|---|---|
 | [agentes-de-trabajo](agentes-de-trabajo/INDEX.md) | package | 0 | 1 (0 high) | 2026-10-12 | [summary](agentes-de-trabajo/SUMMARY.md) · [web](http://127.0.0.1:8765/p/agentes-de-trabajo) |
 | [dav033-demos](dav033-demos/INDEX.md) | app, example-child | 1 | 0 (0 high) | 2026-10-18 | [summary](dav033-demos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/dav033-demos) |
+| [david-ui](david-ui/INDEX.md) | app | 1 | 0 (0 high) | 2026-10-22 | [summary](david-ui/SUMMARY.md) · [web](http://127.0.0.1:8765/p/david-ui) |
 | [dev](dev/INDEX.md) | repo-agentes-de-trabajo, repo-crunchyreroll, repo-hints-custom, repo-hints.wiki, repo-hyprland-wiki, repo-kodi, repo-lotm, repo-lotm-backend, repo-lotm-frontend, repo-marketplace-control-backend, repo-marketplace-control-frontend, repo-maros-nest-ci, repo-metodologia, repo-metodologia-m2, repo-metodologia-m5, repo-metodologia-m6-quality, repo-oraldenti, repo-pictures, repo-proposal-studio, repo-trainingapp | 0 | 25 (7 high) | 2026-10-22 | [summary](dev/SUMMARY.md) · [web](http://127.0.0.1:8765/p/dev) |
 | [escritorio](escritorio/INDEX.md) | — | 1 | 3 (1 high) | 2026-10-16 | [summary](escritorio/SUMMARY.md) · [web](http://127.0.0.1:8765/p/escritorio) |
 | [eventos](eventos/INDEX.md) | frontend, backend | 0 | 9 (7 high) | 2026-10-08 | [summary](eventos/SUMMARY.md) · [web](http://127.0.0.1:8765/p/eventos) |

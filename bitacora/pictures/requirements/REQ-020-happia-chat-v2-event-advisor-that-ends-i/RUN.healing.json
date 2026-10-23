@@ -1,5 +1,5 @@
 {
- "actions": 5,
+ "actions": 6,
  "cases": {
   "49cc9be7a3eba583": {
    "after_restored": [
@@ -31,6 +31,28 @@
    "target": "T14.4a",
    "task": "T14.4a",
    "task_added": "T14.5a",
+   "why": "the same failure came back after its repair"
+  },
+  "54a8b9dd7c8277a6": {
+   "applied": 1,
+   "at": 1792725977.527,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/check-findings.ts belong to accepted T7, T14.1a, T14.2a, T14.3a, T14.4a",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792725977.412,
+   "history": [
+    {
+     "at": 1792725977.527,
+     "repair": "revision invalid: T15.1.objective: repeats the same words instead of saying anything",
+     "result": "failed"
+    }
+   ],
+   "id": "54a8b9dd7c8277a6",
+   "repair": "revision invalid: T15.1.objective: repeats the same words instead of saying anything",
+   "status": "exhausted",
+   "task": "T15",
    "why": "the same failure came back after its repair"
   },
   "6f18906b7e10dffd": {

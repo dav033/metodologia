@@ -1,0 +1,22 @@
+{
+ "request": "T15:8",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "La auditoría de producción no puede aprobarse: el asesor aún no está en producción",
+ "origin": "T14a dejó registrado que los checks desplegados M1 y M2 fallan cerrados con \"Deployed advisor login returned HTTP 307\": la aplicación publicada no tiene el punto de entrada del asesor, así que la release a producción no se ha hecho. Esto es un hallazgo F1 (alta, abierta) que debe impedir la aceptación, no un fallo que el reintento pueda arreglar. Además, el fallo de verificación es de plan: el primer comando, `check-findings.ts docs/req-020/T15.findings.json` sin `--integration-results`, busca `/workspace/reports/e2e/asesor/integration-results.json`, que no existe en el sandbox (ENOENT), y `npm run gate` no llegó a ejecutarse.",
+ "steps": [
+  "Haz la release del asesor a producción (la aplicación publicada debe tener el punto de entrada del asesor) y, después, fija `ASESOR_E2E_DEPLOYED_REVISION` al SHA publicado; sin eso, el run deployed de T14a sigue en fallo cerrado.",
+  "Si el primer comando sigue en ENOENT tras la release, es un defecto del plan: sube `revision` en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` y elige `revise` para que el comando use `--integration-results docs/req-020/integration-results.json`.",
+  "Mientras tanto, deja la auditoría como rechazada: registra F1 como alta y abierta en el ledger con los IDs de tarea afectados, para que devuelva las tareas productoras a rework."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not edit scripts/e2e/asesor/check-findings.ts, any product file, or deploy anything; this audit only writes its report and ledger. Record F1 (severity high, status open, summary: advisor not released to production, deployed M1/M2 HTTP 307 per T14a att-0097) with the affected producer task IDs, so the ledger rejects acceptance and returns those tasks for rework. Use the ledger revision as the expected revision (git is unavailable) and make the ledger and integration-results revision match only if the recorded evidence actually matches. If command 1 still fails with ENOENT on /workspace/reports, do not patch the script: report it as a plan defect that needs --integration-results docs/req-020/integration-results.json. Run `npm run gate` and `npm run happie:test-webhook`, report their real output, and mark every unexecuted check as not accepted.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-22T22:26:45",
+ "seconds": 27.3
+}

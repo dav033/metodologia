@@ -1,18 +1,24 @@
 {
- "attention": [],
+ "attention": [
+  {
+   "kind": "blocked_task",
+   "reason": "m5:attempts_exhausted",
+   "task_id": "T15"
+  }
+ ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-23T03:03:06+00:00",
+ "heartbeat_at": "2026-10-23T03:26:21+00:00",
  "plan_ref": {
   "plan_id": "REQ-020",
   "revision": 11,
   "sha256": "c0d6871b30ef4b8e55db8fc5fcd994267c35ead9a8d31c48b935c712b2fac359"
  },
- "projected_at": "2026-10-23T03:03:06+00:00",
+ "projected_at": "2026-10-23T03:26:21+00:00",
  "projection": true,
  "req": "REQ-020",
- "scheduler_status": "running",
- "sessions": 99,
- "status": "running",
+ "scheduler_status": "blocked",
+ "sessions": 100,
+ "status": "blocked",
  "tasks": [
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -572,32 +578,32 @@
    "after": [
     "T14a"
    ],
-   "attempts": 7,
-   "attempts_used": 2,
+   "attempts": 8,
+   "attempts_used": 3,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
-   "executor": "route:m2:v1:35cd005ae3883671ca51805e6dba75de4f21deb0580f79c62d41a444bd9b441f:623258ea1a4f878bcb7cfed34d747453490c33e4f35d815193a60bd26183a900",
+   "evidence": "m6://result/9cd040f1b636c73afb903c17fad83e5332cf216c8780b63daa84e53ef6597510",
+   "executor": "route:m2:v1:bb4013dc2ade74703be81fee8766c92ae695c546891e146652a05294fada2174:623258ea1a4f878bcb7cfed34d747453490c33e4f35d815193a60bd26183a900",
    "id": "T15",
    "max_attempts": 3,
    "milestone": "M4",
    "model": "gpt-6.1-sol",
    "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1792723471.1471996",
+   "quota_observed_at": "1792725096.070589",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "12.0",
-   "quota_valid_until": "1792730671.1471996",
-   "reason": "",
+   "quota_used_percent": "13.0",
+   "quota_valid_until": "1792732296.070589",
+   "reason": "m5:attempts_exhausted",
    "repo": "pictures",
-   "retries_remaining": 1,
+   "retries_remaining": 0,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "blocked",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "blocked",
    "title": "Full acceptance on production: every R1\u2013R14 check, `/happie` unchanged, report with evidence, bit\u00e1cora updated",
    "unreachable": false
   },
@@ -633,7 +639,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T15: Full acceptance on production: every R1\u2013R14 check, `/happie` unchanged, report with evidence, bit\u00e1cora updated",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
