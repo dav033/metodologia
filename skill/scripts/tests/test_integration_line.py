@@ -64,6 +64,18 @@ class Basics(LineCase):
         self.assertEqual(line.needs_resolution("app"), {"T2": ("README.md",)})
         self.assertEqual(line.state("app").applied, ("T1",))
 
+    def test_a_snapshot_that_already_holds_the_tip_fast_forwards_even_when_its_start_base_is_not_in_the_tip(self):
+        """david-ui REQ-001 T1 att-0004: its snapshot continued from att-0003's, a commit the tip never held. Merged against THAT base the
+        tip read as 'deleted everything' and the line commit had an EMPTY tree: T2 and T6 then clashed add/add on every file."""
+        first = snapshot(self.app, self.head, {"a.txt": "a\n", "b.txt": "b\n", "c.txt": "c\n"})        # the rejected attempt
+        retry = snapshot(self.app, first, {"a.txt": "a2\n"})                                              # carries it, changes one file
+        self.accept("T1", retry)
+        line = self.line({"T1": ([], "app")})
+        self.assertEqual(self.tip_text(line, "a.txt"), "a2\n")
+        for name in ("b.txt", "c.txt", "README.md"):
+            git(self.app, "cat-file", "-e", f"{line.tip('app')}:{name}")
+        self.assertEqual(line.needs_resolution("app"), {})
+
     def test_an_empty_handoff_is_a_no_op(self):
         self.accept("T1", self.head)
         self.assertEqual(self.line({"T1": ([], "app")}).tip("app"), self.head)

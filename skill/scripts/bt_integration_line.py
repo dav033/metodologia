@@ -236,7 +236,13 @@ class Line:
             return item.snapshot, ()                         # fast-forward: the same tree a merge would give, without the commit
         if not item.start_base:
             raise IntegrationError("PREDECESSOR_HANDOFF_MISSING", f"{item.task}: no start base for snapshot {item.snapshot[:12]}")
-        done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={item.start_base}",
+        if _git(repo, "merge-base", "--is-ancestor", tip, item.snapshot, check=False).returncode == 0:
+            # The snapshot already holds everything the tip holds (a retry continues from the rejected attempt's snapshot: david-ui
+            # REQ-001 T1 att-0004, whose start base the tip never had). A 3-way merge against that start base reads "the tip deleted
+            # everything the snapshot still has" and yields an EMPTY tree without a clash: fast-forward, as for `start_base == tip`.
+            return item.snapshot, ()
+        base = item.start_base
+        done = _git(repo, "merge-tree", "--write-tree", "--name-only", "--no-messages", f"--merge-base={base}",
                     tip, item.snapshot, check=False)
         if done.returncode == 1:
             # An attempt that continued from an earlier one (a retry carries the rejected snapshot) started from a commit the
