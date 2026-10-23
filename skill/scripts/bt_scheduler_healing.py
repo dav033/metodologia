@@ -154,6 +154,19 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             notify(f"Bitácora · {task_id}", f"La verificación de {task_id} ({attempt_id}) no avanza: el verificador rechaza su orden "
                                            f"({detail}) y se reenvía cada pocos minutos. Hace falta una revisión del plan o un arreglo.")
         save(rdir, state)
+    for port, detail, times in looping_ports(rdir):
+        key = f"{port}:{detail}"[:160]
+        if key in state.setdefault("looping", []):
+            continue
+        state["looping"] = [*state["looping"], key][-50:]
+        bt_interventions.record(rdir, kind="plan_defect", source="auto", task="",
+                                evidence=f"the owner repeats the same {port} error {times} times in a row ({detail})",
+                                repair="none: the owner is told (a plan revision or a fix of the port is needed)",
+                                result="failed", run=f"{project}-{req}")
+        log(f"healing: the owner loops on a {port} error, {times} times ({detail})")
+        if notify:
+            notify(f"Bitácora · {req}", f"El scheduler repite el mismo error de {port} ({detail}) y no avanza. Hace falta revisar el plan.")
+        save(rdir, state)
     for request in found:
         if done >= PER_CYCLE or state["actions"] >= bound["actions"]:
             break
@@ -257,6 +270,36 @@ def stuck_verifications(rdir: Path, doc: dict, rejections=None) -> list[tuple[st
         if len(details) >= STUCK_VERIFY_REJECTIONS and len(set(details[-STUCK_VERIFY_REJECTIONS:])) == 1:
             found.append((att.get("task_id", ""), attempt_id, details[-1], len(details)))
     return found
+
+
+LOOP_ERRORS = 12        # the same port error this many times in a row (the owner retries every ~5 s): a loop, not a hiccup
+
+
+def looping_ports(rdir: Path, rows=None) -> list[tuple[str, str, int]]:
+    """(port, detail, times) when the newest `port_error`/`port_invalid` events of the run's audit log are all the same error. REQ-020
+    T14.5a: the decision engine refused a repair task's input (`task.verification:invalid_sequence`) and the owner retried every 5 s for
+    30 minutes, with nothing to say so."""
+    if rows is None:
+        import sqlite3
+
+        import bt_scheduler_adapter as adapter
+
+        try:
+            conn = sqlite3.connect(f"file:{adapter.run_db_path(Path(rdir))}?mode=ro", uri=True, timeout=2)
+            try:
+                rows = [json.loads(r[0] or "{}") for r in conn.execute(
+                    "SELECT detail FROM audit WHERE kind IN ('port_error', 'port_invalid') ORDER BY rowid DESC LIMIT ?", (LOOP_ERRORS,))]
+                last = conn.execute("SELECT kind FROM audit ORDER BY rowid DESC LIMIT 1").fetchone()
+            finally:
+                conn.close()
+        except (sqlite3.Error, ValueError):
+            return []
+        if not last or last[0] not in ("port_error", "port_invalid"):
+            return []                                  # something else happened since: the run is moving
+    if len(rows) < LOOP_ERRORS:
+        return []
+    keys = {(r.get("port", ""), r.get("detail") or r.get("error", "")) for r in rows}
+    return [(next(iter(keys))[0], str(next(iter(keys))[1])[:160], len(rows))] if len(keys) == 1 else []
 
 
 def model_enabled() -> bool:

@@ -476,6 +476,13 @@ class PlanRepairs(unittest.TestCase):
                                             for n in range(33)]
         self.assertTrue(any("routes at most 32" in e for e in plan_errors(plan)))
 
+    def test_an_owner_that_repeats_the_same_port_error_is_seen(self):
+        same = [{"port": "assignment", "error": "DecisionInputError", "detail": "decision_input_invalid: task.verification:invalid_sequence"}] * 12
+        found = healing.looping_ports(Path("/nowhere"), same)
+        self.assertEqual(found, [("assignment", "decision_input_invalid: task.verification:invalid_sequence", 12)])
+        self.assertEqual(healing.looping_ports(Path("/nowhere"), same[:11]), [])                                  # a hiccup
+        self.assertEqual(healing.looping_ports(Path("/nowhere"), same[:11] + [{"port": "query", "error": "X"}]), [])   # mixed: not a loop
+
     def test_only_a_finished_confident_analysis_that_blames_something_else_places_a_stop(self):
         import bt_attempt_analyst as analyst
 
