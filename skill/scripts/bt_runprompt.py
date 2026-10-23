@@ -42,7 +42,19 @@ def _safe(text) -> str:
 
 def _recent_log(state: dict, task_id: str, n: int = 5) -> list[str]:
     rows = [e for e in state.get("log", []) if e.get("task") == task_id][-n:]
-    return [f"- session {e['session']} {e['result']}: {_safe(e['summary'])}" for e in rows]
+    from bt_prompt_context import concise
+
+    lines = [f"- session {e['session']} {e['result']}: {_safe(e['summary'])}" for e in rows]
+    if not concise():
+        return lines
+    seen: dict[tuple[str, str], int] = {}
+    for index, entry in enumerate(rows):
+        key = (entry["result"], _safe(entry["summary"]))
+        if key in seen:
+            lines[index] = f"- session {entry['session']} {entry['result']}: same as session {seen[key]}"
+        else:
+            seen[key] = entry["session"]
+    return lines
 
 
 def _cli(project: str) -> str:

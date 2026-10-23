@@ -38,6 +38,7 @@ from typing import Any
 
 import bt_healing_classify as classify_mod
 import bt_interventions
+from bt_prompt_context import repair_excerpt as excerpt
 
 FILE = "RUN.healing.json"
 OFF = "RUN.healing.off"
@@ -582,24 +583,6 @@ def repair_task(project, req, rdir, request, case, context, plan, revise) -> dic
             "track": {**track, "lines": lines[-2:]}}
 
 
-_SIGNAL = re.compile(r"FAIL|ERROR|Error|error|Expected|Assertion|!==|not ok|✖|✗|Cannot|cannot|Traceback|Exception")
-
-
-def excerpt(text: str, limit: int = 700) -> str:
-    """What failed, for the objective of a repair task: the commands that RAN and failed (a numeric exit code; a check that never ran
-    says `None` and is not this task's to fix) with the few lines that say why. A real note carries pages of server logs; the planner
-    refuses an objective that repeats the same words, and an agent does not need the logs to know what to fix."""
-    blocks = re.split(r"(?m)^(?=\$ )", str(text or ""))
-    out: list[str] = []
-    for block in blocks:
-        head, _, body = block.partition("\n")
-        code = re.match(r"exit code (-?\d+)\b", body.lstrip())
-        if not head.startswith("$ ") or not code or code.group(1) == "0":
-            continue
-        lines = [line.strip()[:160] for line in body.splitlines()[1:]
-                 if _SIGNAL.search(line) and not line.lstrip().startswith(("{", "npm notice"))]
-        out.append(head[:200] + f"\nexit code {code.group(1)}" + ("".join("\n" + line for line in dict.fromkeys(lines[:6]))))
-    return "\n".join(out)[:limit] or str(text or "")[:min(limit, 400)]
 
 
 def _analysis_text(rdir: Path | str, task: str) -> str:

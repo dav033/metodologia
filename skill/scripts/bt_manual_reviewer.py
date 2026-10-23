@@ -23,6 +23,8 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from bt_prompt_context import instruction
+
 STATE = "RUN.reviewer.json"
 MAX_COMMANDS = 8
 ROUNDS = 3
@@ -71,6 +73,14 @@ EXPECTED: {expected}
 COMMANDS AND OUTPUTS:
 {outputs}
 """
+
+
+CONCISE_PLAN_PROMPT = PLAN_PROMPT.replace(
+    "You review a manual acceptance criterion of a software task. You have no tools: say which READ-ONLY commands would show\nwhether it holds, and the engine will run them.",
+    "Manual criterion reviewer, no tools. Request READ-ONLY evidence commands for the engine.")
+CONCISE_JUDGE_PROMPT = JUDGE_PROMPT.replace(
+    "You review a manual acceptance criterion of a software task from command outputs the engine collected. Judge ONLY from them.",
+    "Judge this manual criterion ONLY from the collected outputs.")
 
 
 def enabled() -> bool:
@@ -200,7 +210,7 @@ def _json(text: str) -> dict[str, Any]:
 
 def judge(task: str, check: dict, results: list[dict], ask_model: Callable[[str], str]) -> dict[str, Any]:
     outputs = "\n\n".join(f"$ {r['command']}\n(exit {r['exit_code']})\n{r['output']}" for r in results)[-90000:] or "(no command could be run)"
-    data = _json(ask_model(JUDGE_PROMPT.format(task=task, purpose=check["purpose"], expected=check["expected"], outputs=outputs,
+    data = _json(ask_model(instruction(JUDGE_PROMPT, CONCISE_JUDGE_PROMPT).format(task=task, purpose=check["purpose"], expected=check["expected"], outputs=outputs,
                                                limit=MAX_COMMANDS, chars=OUTPUT_CHARS, rounds=ROUNDS)))
     verdict = data.get("verdict") if data.get("verdict") in ("pass", "fail", "unsure") else "unsure"
     confidence = data.get("confidence") if data.get("confidence") in ("alta", "media", "baja") else "baja"
@@ -240,7 +250,7 @@ def review_task(project: str, req: str, rdir: Path, task: str, *, ask_model: Cal
         secrets = _env_secrets(repository)
         files = _listing(work)
         for number, check in enumerate(checks, 1):
-            asked = _json(ask_model(PLAN_PROMPT.format(
+            asked = _json(ask_model(instruction(PLAN_PROMPT, CONCISE_PLAN_PROMPT).format(
                 limit=MAX_COMMANDS, task=task, purpose=check["purpose"], value=check["value"], expected=check["expected"],
                 repository=repository, snapshot=snapshot_sha, files=files, roots=", ".join(str(r) for r in roots[1:]))))
             results: list[dict] = []

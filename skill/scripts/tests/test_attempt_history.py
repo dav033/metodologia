@@ -43,8 +43,8 @@ class History(unittest.TestCase):
         self.assertIn("#1 att-0: failed: start rejected: INTEGRATION_CONFLICT", text)
         self.assertIn("#2 att-1: verification failed: $ npm run verify", text)
         self.assertIn("ERR_MODULE_NOT_FOUND", text)
-        self.assertIn("#4 att-3: verification failed: the same failure as attempt #2", text)
-        self.assertIn("WARNING: the last 3 attempts failed in exactly the same way", text)
+        self.assertIn("#4 att-3: verification failed: " + ESLINT.format(run="att-3", n=2), text)
+        self.assertNotIn("WARNING", text)  # distinct paths/numbers remain distinct evidence
         self.assertNotIn("att-4", text)                                  # the live attempt is the one being prompted
         self.assertEqual(history.repeats(history.entries(self.rdir, "T15", run)), 3)
 
@@ -83,9 +83,10 @@ class History(unittest.TestCase):
         rows = [(f"att-{n}", "cancelled", "cancelled by operator: wrong base") for n in range(8)]
         rows.append(("att-8", "accepted", ""))
         text = history.prompt(self.rdir, "T15", doc(*rows))
-        self.assertIn("(3 older attempt(s) not shown)", text)
+        self.assertIn("same failure ×8", text)
+        self.assertIn("#1 att-0", text)
         self.assertIn("accepted, later sent back", text)
-        self.assertIn("cancelled: cancelled by operator: wrong base", text.splitlines()[2])
+        self.assertIn("#8 att-7: cancelled: cancelled by operator: wrong base", text)
 
     def test_the_card_says_a_known_cause_keeps_coming_back(self):
         request = {"id": "T15:4", "source": "task", "task": "T15", "options": [{"id": "retry"}, {"id": "retry_with_note"}],

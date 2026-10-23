@@ -18,6 +18,7 @@ import time
 from pathlib import Path
 
 import bt_block_diagnosis as rules
+from bt_prompt_context import compact, instruction
 
 DIR = "RUN.diagnoses"
 RUNNING_SECONDS = 600            # a «diagnosing…» marker older than this belongs to a process that died
@@ -58,6 +59,13 @@ evidence), with exactly these keys:
 Evidence:
 {bundle}
 """
+
+
+CONCISE_PROMPT = """Diagnose this stopped run from evidence only. Tell the owner what failed, its origin and the next action.
+Guard codes are symptoms, not necessarily causes. Prefer a concrete rule-based diagnosis unless evidence contradicts it.
+Preserve commands, paths, numbers, negations and decisive errors. Avoid repeated explanations.
+
+""" + PROMPT[PROMPT.index("How the system works"):]
 
 
 def path(rdir: Path, request_id: str) -> Path:
@@ -138,7 +146,7 @@ def diagnose(project: str, rdir: Path, request: dict, evidence: str, *, runner=s
         bt_profiles.authorize(pid, project)
         env = bt_profiles.session_env(pid, provider, None, project)
         options = ", ".join(o["id"] for o in request.get("options", []))
-        prompt = PROMPT.format(kinds=", ".join(rules.KINDS), options=options, bundle=evidence)
+        prompt = instruction(PROMPT, CONCISE_PROMPT).format(kinds=", ".join(rules.KINDS), options=options, bundle=compact(evidence))
         with tempfile.TemporaryDirectory(prefix="bt-diagnosis-") as work:
             out = Path(work) / "answer.txt"
             done = runner(argv(provider, spec.get("bin") or provider, model, effort, out), input=prompt, text=True,

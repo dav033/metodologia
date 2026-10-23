@@ -120,7 +120,9 @@ def _with_owner_notes(rdir, plan, base):
         except api.core.SchedulerError:
             pass
         parts.append(base(request) if base else "")
-        return "\n\n".join(part for part in parts if part)
+        from bt_prompt_context import compact
+
+        return compact("\n\n".join(part for part in parts if part))
     return notes
 
 
