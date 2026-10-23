@@ -6,27 +6,27 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 0/7 · tareas 4/32 · generado: 2026-10-23T11:34:26-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 1/7 · tareas 7/32 · generado: 2026-10-23T12:05:02-05:00
 
-**M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 4/6
+**M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T1 | Scaffold `~/dev/david-ui`: Next 16 + TS strict + Tailwind 4 + shadcn init (Base UI style) + ESLint/Prettier + Vitest/Testing Library + Playwright/axe; scripts `verify`, `test`, `test:e2e`; `.gitignore` incl. `.evidence/`; `.env.example`; create private GitHub repo `dav033/david-ui` and push | alta | completada | sonnet | claude-work | 4 |
 | T2 | Compatibility and license spike: per each of the 22 enhancements and 7 capabilities, whether Animate UI ships a Base UI variant and its install path; Motion/React/Tailwind version matrix; Sonner vs Animate UI toast as single engine; licenses of shadcn, Animate UI, Bencho (per block) and React Bits; write `.evidence/T2-spike.md` and record the toast-engine and primitive rulings | alta | completada | sonnet | claude-work | 1 |
 | T3 | Design tokens and motion: `registry/david-ui/styles/tokens.css` (Catppuccin Latte/Mocha, mauve accent, radii, shadows, typography, spacing, motion durations/easings for subtle/natural/expressive), `ThemeProvider`, `MotionProfileProvider` (Motion `MotionConfig` + reduced motion), `useMotionProfile`; registry items for them | alta | completada | sonnet | claude-work | 4 |
-| T4 | Catalog manifest and license register: zod schema (R5), `catalog/entries.ts` with all 93 entries `pending` and the 22 enhancements linked to base entries, `catalog/licenses.ts` from T2, `npm run catalog:check` asserting counts, unique ids, base links and status/metadata rules | alta | verificando | sonnet | claude-work | 5 |
-| T5 | Registry pipeline: `registry.json` generated from the manifest, `npm run registry:build` (`shadcn build` → `public/r/`), proof item `button`; integration script `scripts/registry-smoke.mjs` that creates a scratch Next app in a temp dir, installs `@david-ui/button` from a locally served registry and builds it | alta | pendiente | sonnet | claude-work | 4 |
+| T4 | Catalog manifest and license register: zod schema (R5), `catalog/entries.ts` with all 93 entries `pending` and the 22 enhancements linked to base entries, `catalog/licenses.ts` from T2, `npm run catalog:check` asserting counts, unique ids, base links and status/metadata rules | alta | completada | sonnet | claude-work | 5 |
+| T5 | Registry pipeline: `registry.json` generated from the manifest, `npm run registry:build` (`shadcn build` → `public/r/`), proof item `button`; integration script `scripts/registry-smoke.mjs` that creates a scratch Next app in a temp dir, installs `@david-ui/button` from a locally served registry and builds it | alta | completada | sonnet | claude-work | 5 |
 | T6 | Kit-only guard: ESLint `no-restricted-imports` outside `registry/` + `scripts/check-kit-only.ts` (forbidden imports and raw interactive JSX in `src/app`, `src/components`), with a test that plants violations | media | completada | sonnet | claude-work | 3 |
 
-**M2 — 30 P1 shadcn components with their Animate UI enhancements** · dificultad alta · 0/5
+**M2 — 30 P1 shadcn components with their Animate UI enhancements** · dificultad alta · 1/5
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T7 | Structure + forms: Button (+ variants), Card, Badge, Avatar, Field, Input, Textarea, Select*, Checkbox*, Switch*, Combobox* (* = Animate UI enhancement), demos with all states, manifest updated | alta | pendiente | sonnet | claude-work | 1 |
-| T8 | Navigation: Sidebar* (manual), Tabs*, Dropdown Menu*, Breadcrumb, Pagination* (manual) | alta | pendiente | gpt-6-luna | codex-1 | 2 |
-| T9 | Overlays and disclosure: Dialog*, Alert Dialog*, Sheet*, Popover*, Tooltip*, Accordion* | alta | pendiente | gpt-6-luna | codex-2 | 1 |
-| T10 | Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart | alta | pendiente | gpt-6-luna | codex-1 | 3 |
+| T7 | Structure + forms: Button (+ variants), Card, Badge, Avatar, Field, Input, Textarea, Select*, Checkbox*, Switch*, Combobox* (* = Animate UI enhancement), demos with all states, manifest updated | alta | completada | sonnet | claude-work | 2 |
+| T8 | Navigation: Sidebar* (manual), Tabs*, Dropdown Menu*, Breadcrumb, Pagination* (manual) | alta | en curso | sonnet | claude-work | 3 |
+| T9 | Overlays and disclosure: Dialog*, Alert Dialog*, Sheet*, Popover*, Tooltip*, Accordion* | alta | en curso | sonnet | claude-work | 2 |
+| T10 | Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart | alta | en curso | sonnet | claude-work | 4 |
 | T11 | P1 e2e and a11y suite: Playwright spec that opens every P1 demo, runs axe, exercises keyboard paths and repeats under `reducedMotion: 'reduce'`; promote passing entries to `validated` | alta | pendiente | gpt-6-luna | codex-luis | 1 |
 
 **M3 — Private catalog application built with the kit** · dificultad alta · 0/3
