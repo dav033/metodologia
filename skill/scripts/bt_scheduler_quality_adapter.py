@@ -17,6 +17,7 @@ import bt_scheduler_executor_adapter as executor_adapter
 from bitacora_platform import (
     quality_audit_evidence,
     quality_notes,
+    quality_review_gate,
     quality_snapshot,
 )
 from bitacora_platform.quality_delivery import QualityDeliveryMethods
@@ -126,6 +127,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         )
         self._active: set[str] = set()
         self._active_lock = threading.Lock()
+        self._audit_review_seen: set[tuple[str, str | None]] = set()
         self._wake = threading.Event()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
@@ -204,6 +206,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         return m1.Ack("duplicate" if state != "new" else "accepted", "durably admitted")
 
     def reconcile_outbox(self, *, force: bool = False) -> dict[str, int]:
+        quality_review_gate.advance(self)
         delivered = stale = pending = deferred = 0
         now = datetime.now(UTC)
         for item in self.store.pending_deliveries():
@@ -410,7 +413,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         if not gate.problems and raw_ledger is not None and self.publish_audit_observation is not None:
             try:
                 source = self._snapshot_source(order)
-                status = "evaluated" if evaluate_gate and check_status == "PASS" else "not_run"
+                status = "evaluated" if evaluate_gate else "not_run"
                 observation = audit_observation_from_ledger(order, source, raw_ledger, gate_status=status)
                 self.publish_audit_observation(order.task_id, order.attempt_id, observation)
             except (UnicodeDecodeError, ValueError, TypeError, KeyError) as error:

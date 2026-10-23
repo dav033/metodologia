@@ -27,6 +27,7 @@ from .quality_notes import (
     _unresolved_note,
     _without_noise,
 )
+from .quality_review_gate import VERIFIER as AUDIT_GATE_VERIFIER
 
 m1 = scheduler_adapter.core
 LOGGER = logging.getLogger("bt_scheduler_quality_adapter")
@@ -203,8 +204,9 @@ class QualityDeliveryMethods:
             except m1.SchedulerError:
                 pass
             deferred = not accepted and result.get("status") == "FAIL" and self._only_ledger_checks_failed(order, result)
-            audit_gate = (self._audit_gate(order, evaluate_gate=accepted or deferred, check_status=str(result.get("status")))
-                          if audit_kind and result.get("status") in {"PASS", "FAIL"} else None)
+            negative_gate = verifier == AUDIT_GATE_VERIFIER and not accepted
+            audit_gate = (self._audit_gate(order, evaluate_gate=accepted or deferred or negative_gate, check_status=str(result.get("status")))
+                          if audit_kind and (result.get("status") in {"PASS", "FAIL"} or negative_gate) else None)
             if deferred:
                 # the gate judges the ledger (and turns blocking findings into remediation); a check that asked the same
                 # question as an exit code cannot also stop the audit before the gate speaks

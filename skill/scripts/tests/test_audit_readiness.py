@@ -165,6 +165,7 @@ class Readiness(unittest.TestCase):
         core.start()
         core.step()
         analyst._save(rdir, "T1", {"state": "done", "not_the_task": True, "confidence": "alta", "failures": 3,
+                                  "source_available": True, "source_snapshot": git(self.repo, "rev-parse", "HEAD"),
                                   "cause": "The planner estimate is invalid", "solution": "Correct the plan contract"})
         # Only the OS process probe is faked: cancellation, decisions, validation and healing state are real.
         with patch("bt_scheduler_ops._processes", return_value=[]):
