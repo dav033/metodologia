@@ -3,6 +3,9 @@
 It adds names, not code: `bitacora_platform.core is bt_core`, the same module object, so there is still one
 global ROOT and one copy of every monkeypatched value. No file moved and no flat module was rewritten. The final
 package name (the ADR says `bitacora`, which the legacy CLI module occupies) is the owner's decision.
+
+Private engine helpers without a flat counterpart can live directly in this package; setuptools includes them with
+the namespace, so adding a helper does not require registering another top-level module in the distribution manifest.
 """
 from __future__ import annotations
 
