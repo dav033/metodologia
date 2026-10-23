@@ -1098,3 +1098,41 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - \+ One agreed contract and a self-contained execution prompt (`engine-v2/PROMPT.md`).
   - − `main` is also the live skill, so held runs resumed later will run on v2 code unless pinned to the `pre-engine-v2` tag.
 - **Source:** engine-v2 (session fdcfb6a3)
+
+## D-123 — Engine v2 P0: backup by bundle + dirty snapshots, not full tarballs
+
+- **Date:** 2026-10-23 · **Status:** Accepted · **Refines:** D-122
+- **Context:** The 18 terminal metodologia run folders (REQ-027 r1–r12, REQ-029 r1–r7) held 574 attempt checkouts, 213 GB, with 12 GB free on `/home`. A literal tarball of each `.state/executor/<run>` (CONTRACT §5) could not fit.
+- **Decision:** The backup in `~/backups/metodologia-engine-v2-2026-10-23/` keeps everything that is not reproducible:
+  - `refs.bundle`: 1186 refs, verified. It holds the 574 `m3/att-*` branches, 12 merged local branches, 12 merged remote branches and a temporary ref for each of the 588 removed worktree HEADs, so detached HEADs are included too.
+  - `dirty/` + `dirty.tar.zst`: per worktree, `status.txt`, the `HEAD` sha, `tracked.patch` (`git diff HEAD --binary`) and `untracked.tar` (non-ignored files). 436 worktrees were dirty.
+  - `runs/<run>.tar.zst`: each run folder with everything except the checkout directories, i.e. ledgers, attempts, journal, locks and the per-worktree `.json` metadata.
+
+  Clean tracked content is reproducible from the bundle; ignored files (`__pycache__`, `node_modules`) are not kept. Removed: 585 worktrees (574 attempts + 11 feature/agent/scratch), 3 stale `/tmp` worktrees pruned, 18 run folders, 586 local branches and 12 remote branches. Kept: the 5 WIP branches in CONTRACT §5, plus the unmerged local-only `backup/pre-workflow-removal-20261013` and `wt/T14-4ec8b9d4`. These two are not on the cleanup list.
+- **Consequences:**
+  - \+ Every deleted ref and dirty file is restorable: `git fetch <bundle> 'refs/*:refs/restored/*'`, then `git apply tracked.patch` in a checkout of `HEAD`.
+  - − `df` showed no space freed. `/home` is btrfs with snapper snapshots of `@home`, which keep the blocks until they rotate. Snapshots were not touched.
+- **Source:** engine-v2
+
+## D-124 — PLAN.json schema 1.3.0: optional subplans and composition gates inside PLAN.json
+
+- **Date:** 2026-10-23 · **Status:** Accepted · **Refines:** D-122 (D-01 = A, D-02)
+- **Decision:** The design is `engine-v2/SCHEMA-1.3.0.md`. It was reviewed by the antagonist before implementation: 1 blocker and 4 major findings, all folded in.
+  - Optional `subplans[]` (one milestone each; observable `outcome`; `covers`; criteria carried by their own tasks; `produces`/`consumes` with `contract|implementation|publication` dependencies; checkpoints; integration test; audit; `ui` Designer gate) and `composition_gates[]`.
+  - Tasks gain `subplan_id`, `ui` and the `design` kind; verifications gain `environment`/`requires`/`authorization_needed`.
+  - Errors: undeclared cross-subplan edges, implement work outside subplans, chains of more than 6 tasks without a barrier, UI work without a Designer gate, and file-existence probes used as behaviour checks.
+  - 1.0.0–1.2.0 documents keep validation, canonical bytes and hashes. The 1.3.0 names are refused in them at publication only.
+  - New skeletons stay 1.2.0 and the adapter refuses to approve a 1.3.0 plan until F4 makes M1/M2/M6 consume it.
+- **Consequences:**
+  - \+ One artifact, atomic freeze, P-177 caught by plan structure.
+  - − F4 must ship the consumers before anyone can run a 1.3.0 plan.
+- **Source:** engine-v2
+
+## D-125 — Engine v2 phases close in order; independent work starts early
+
+- **Date:** 2026-10-23 · **Status:** Accepted · **Refines:** D-122
+- **Decision:** Phases P0→F5 are closed (review, suite, push, bitácora) in order. Work that owns no F1 file and does not consume the 1.3.0 schema (F2 role prompts, skills and install support; F3 knowledge store) starts in parallel while F1's schema is on the critical path. F4 consumers start only after F1's schema is merged and reviewed.
+- **Consequences:**
+  - \+ The six Codex slots stay busy.
+  - − Phase entries may report work merged before the phase formally opened.
+- **Source:** engine-v2
