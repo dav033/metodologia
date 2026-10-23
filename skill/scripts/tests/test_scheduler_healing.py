@@ -452,6 +452,15 @@ class PlanRepairs(unittest.TestCase):
         commands = {v["value"] for v in {t["id"]: t for t in revised["tasks"]}[new_id]["verification"]}
         self.assertIn("pytest tests/test_a.py", commands)                                    # the owners' checks stay
         self.assertNotIn("pytest tests/test_a.py tests/test_b.py", commands)                  # the audit's own do not
+        # a case that names no owner (the analyst said «not this task») names the audit itself: a command over ITS ledger still must not reach
+        # the repair, whatever put it there
+        for task in plan["tasks"]:
+            if task["id"] == "T3":
+                task["expected_paths"] = ["docs/report.md"]
+                task["verification"] = [*task["verification"], {"type": "command", "value": "check docs/report.md", "purpose": "ledger",
+                                                                "category": "functional"}]
+        alone, alone_id, _ = healing.build_fix_revision(plan, "T3", self.case(owners=("T1",)), {"verify": "FAIL: x"})
+        self.assertFalse([v for v in {t["id"]: t for t in alone["tasks"]}[alone_id]["verification"] if "docs/report.md" in v["value"]])
 
     def test_the_analysts_cause_and_advice_reach_the_repair_tasks_objective(self):
         case = taxonomy.Case("T3:1", "T3", "regression", ("independent analysis",), signature="s2")

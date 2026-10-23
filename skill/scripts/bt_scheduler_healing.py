@@ -522,8 +522,8 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     new_id = bt_remediation._next_ids(set(by_id), task_id, 1)[0]
     spec_ref = str(plan.get("spec_ref") or "SPEC.md").split(":")[-1]
     # the owners' own checks (all of them, not only the first) plus the blocked task's own, stated by this repair
-    own_commands = [[{"command": v["value"]} for name in named for v in by_id[name].get("verification", ())
-                     if v.get("type") == "command" and v.get("value")]]
+    own_commands = [[{"command": v["value"]} for name in named if by_id[name].get("kind") != "audit"     # an audit's checks read its own ledger
+                     for v in by_id[name].get("verification", ()) if v.get("type") == "command" and v.get("value")]]
     fix = bt_remediation._task(new_id, target, chunk, by_id, list(target.get("after") or ()), 1, spec_ref, plan,
                                commands=own_commands if own_commands[0] else None)
     if fix is None:
@@ -554,6 +554,11 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
         if key not in seen:
             seen.add(key)
             unique.append(check)
+    if target.get("kind") == "audit":
+        # whatever the checks came from (the owners, the case, the audit itself), a command that reads a file only the AUDIT writes (its
+        # ledger/report: REQ-020 T15.2 inherited `check-findings.ts docs/req-020/T15.findings.json`) cannot pass for a repair
+        written = [path for path in (target.get("expected_paths") or ()) if isinstance(path, str)]
+        unique = [c for c in unique if not any(path in str(c.get("value", "")) for path in written)]
     fix["verification"] = unique
     fix["acceptance_criteria"] = list(dict.fromkeys(fix["acceptance_criteria"]))
     if len(fix["verification"]) > MAX_CHECKS or len(fix.get("expected_paths") or ()) > MAX_PATHS:
