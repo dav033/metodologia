@@ -250,6 +250,21 @@ class Prepare(unittest.TestCase):
             self.assertEqual((modules / "dep" / "index.js").stat().st_ino, (repo / "node_modules" / "dep" / "index.js").stat().st_ino)
 
 
+class CommandEnv(unittest.TestCase):
+    def test_env_files_reach_only_the_commands_that_contain_the_configured_text(self):
+        """REQ-020: the deployed check needs the published origin and the deployed services' passwords; the local live one keeps the
+        checkout's test credentials (a blanket override sent the voice check to a file that does not exist)."""
+        with tempfile.TemporaryDirectory() as base:
+            live = Path(base) / "live.env"
+            live.write_text('URL="https://published.example"\n# c\nPASS=x\n')
+            rules = {"pictures": {"--deployed": [str(live)]}}
+            with patch.object(bt_config, "get", side_effect=lambda key, default=None: rules if key == "coordinator.env_files" else default):
+                self.assertEqual(coord.command_env("pictures", "npx tsx run.ts --live --deployed --milestone M1"),
+                                 {"URL": "https://published.example", "PASS": "x"})
+                self.assertEqual(coord.command_env("pictures", "npx tsx run.ts --start --live --milestone M1"), {})
+                self.assertEqual(coord.command_env("other", "run --deployed"), {})
+
+
 class ExtraFiles(unittest.TestCase):
     def test_only_relative_destinations_inside_the_tree_are_taken(self):
         files = {"pictures": {".e2e/voice.wav": "/a/voice.wav", "/etc/passwd": "/a/x", "../out": "/a/y"}}

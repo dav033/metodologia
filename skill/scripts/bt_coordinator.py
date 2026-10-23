@@ -98,6 +98,36 @@ def extra_files(project: str) -> dict[str, str]:
             if isinstance(files, dict) and not Path(str(dest)).is_absolute() and ".." not in Path(str(dest)).parts}
 
 
+def command_env(project: str, command: str) -> dict[str, str]:
+    """`coordinator.env_files.<project>` = {"<text in the command>": [env files of this machine]}: the variables of those files go into the
+    PROCESS environment of the commands that contain the text (a process variable wins over `.env.local` for dotenv and Next). REQ-020's
+    deployed check (`--deployed`) needs the published origin and the passwords of the deployed services; the local live check keeps the
+    checkout's own test credentials."""
+    import bt_config
+
+    configured = bt_config.get("coordinator.env_files", {})
+    rules = configured.get(project, {}) if isinstance(configured, dict) else {}
+    env: dict[str, str] = {}
+    for needle, files in (rules.items() if isinstance(rules, dict) else ()):
+        if needle in command and isinstance(files, list):
+            for path in files:
+                env.update(parse_env(Path(str(path)).expanduser()))
+    return env
+
+
+def parse_env(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                values[key.strip()] = value.strip().strip("'\"")
+    except OSError:
+        pass
+    return values
+
+
 def prepare(repository: Path, snapshot: str, work: Path, env_file: Path, files: dict[str, str] | None = None) -> Path:
     """The attempt's snapshot as a plain tree with the project's env file and node_modules (nothing of the checkout is touched)."""
     root = work / "tree"
@@ -125,11 +155,11 @@ def prepare(repository: Path, snapshot: str, work: Path, env_file: Path, files: 
     return root
 
 
-def run_one(command: str, root: Path, timeout: int, secrets: list[str]) -> dict[str, Any]:
+def run_one(command: str, root: Path, timeout: int, secrets: list[str], extra_env: dict[str, str] | None = None) -> dict[str, Any]:
     started = time.monotonic()
     try:
         done = subprocess.run(shlex.split(command), cwd=root, capture_output=True, text=True, timeout=timeout, check=False,
-                              env={**os.environ, "CI": "1"})
+                              env={**os.environ, "CI": "1", **(extra_env or {})})
         code, text = done.returncode, (done.stdout or "") + (done.stderr or "")
     except subprocess.TimeoutExpired as error:
         code, text = -1, f"timed out after {timeout} s\n" + str(error.stdout or "")[-2000:]
@@ -194,6 +224,9 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     if not env_file.is_file():
         return [f"{task}: {env_file} does not exist: the coordinator has no credentials to run with"]
     secrets = env_secrets(env_file)
+    for needle_files in (bt_config.get("coordinator.env_files", {}) or {}).get(project, {}).values():
+        for extra in needle_files if isinstance(needle_files, list) else ():
+            secrets += env_secrets(Path(str(extra)).expanduser())
     limit = timeout or int(bt_config.get("coordinator.command_seconds", 1800))
     run = runner or run_one
     scratch = Path.home() / ".cache" / "bt-coordinator"         # on the checkout's filesystem (not /tmp) so node_modules can be hard-linked
@@ -211,7 +244,8 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
                     # failed five times in the watcher and passed five times run by hand on the same snapshot. One more run costs minutes; the
                     # evidence keeps how many runs it took, and every failed run's full output is kept for the diagnosis.
                     for turn in range(1, tries + 1):
-                        result = run(command, root, limit, secrets)
+                        result = run(command, root, limit, secrets, command_env(project, command)) if runner is None \
+                            else run(command, root, limit, secrets)
                         result["run"], result["of"] = turn, tries
                         if result["exit_code"] != 0:
                             _keep_failure(rdir, task, attempt, result, turn)
