@@ -283,6 +283,13 @@ class Watch:
                 return True
         except Exception as error:  # noqa: BLE001 - opt-in per project: its failure never stops the watch
             self.log(f"coordinator failed ({type(error).__name__}: {error})")
+        try:
+            import bt_manual_reviewer
+
+            if bt_manual_reviewer.cycle(self.project, self.req, self.rdir, log=self.log):     # prose manual criteria: P-165
+                return True
+        except Exception as error:  # noqa: BLE001 - an extra: its failure leaves the review for a person
+            self.log(f"reviewer failed ({type(error).__name__}: {error})")
         return self._heal_conflicts()
 
     def _heal_conflicts(self) -> bool:

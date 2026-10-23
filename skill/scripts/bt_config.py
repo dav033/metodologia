@@ -37,6 +37,7 @@ DEFAULTS: dict = {
     # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
     # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
     "analyst": {"auto": True},
+    "reviewer": {"auto": True},
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
