@@ -76,7 +76,7 @@ class QualityPolicy:
     max_snapshot_bytes: int = 536_870_912
     max_snapshot_files: int = 20_000
     max_workspace_bytes: int = 2_147_483_648  # tmpfs: source + `next build` output already use ~80% of 1 GiB
-    max_tmp_bytes: int = 134_217_728
+    max_tmp_bytes: int = 2_147_483_648  # /tmp tmpfs (allocated lazily): a scratch `npm install` of a Next app needs ~400 MB (ENOSPC at 128 MiB, david-ui T5)
     max_address_space_bytes: int = 0  # 0 = unlimited: V8 and Chromium reserve far more address space than they use
     max_data_bytes: int = 12_884_901_888  # RLIMIT_DATA: what a check may really allocate (reservations do not count)
     max_open_files: int = 1024

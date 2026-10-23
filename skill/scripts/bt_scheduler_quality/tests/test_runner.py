@@ -321,6 +321,16 @@ class SandboxRunnerTests(unittest.TestCase):
         self.assertLessEqual(len(limited.stdout), 1024)
         self.assertIn(b"output cut", limited.stdout)
 
+    def test_tmp_holds_a_scratch_install_not_only_a_few_megabytes(self):
+        """david-ui REQ-001 T5: `registry-smoke.mjs` installs a Next app under /tmp; at 128 MiB npm died with ENOSPC (exit 228)."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "fill.py").write_text(
+                "import os, tempfile\nd = tempfile.mkdtemp()\nwith open(os.path.join(d, 'big'), 'wb') as f:\n    f.write(b'0' * (300 * 1024 * 1024))\n",
+                encoding="utf-8")
+            result = SandboxRunner(QualityPolicy()).run(_check("fill.py"), root)
+        self.assertEqual((result.status, result.exit_code), ("pass", 0))
+
     def test_a_runaway_output_is_killed_as_output_limit(self):
         import bt_scheduler_quality.runner_execution as execution
 
