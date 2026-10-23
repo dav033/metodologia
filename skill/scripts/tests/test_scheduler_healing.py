@@ -396,6 +396,28 @@ class PlanRepairs(unittest.TestCase):
         from bt_plan_adapter import plan_errors
         self.assertEqual(plan_errors(revised), [])
 
+    def test_applying_a_revision_retries_while_an_owner_is_starting_and_gives_up_on_anything_else(self):
+        import bt_scheduler_ops as ops
+
+        calls, pauses = [], []
+
+        def apply(*args):
+            calls.append(args)
+            if len(calls) < 3:
+                raise ops.core.SchedulerError("OWNER_ACTIVE", "another Scheduler or legacy owner is starting")
+            return ["rebased"]
+
+        with patch.object(ops, "apply", side_effect=apply):
+            self.assertEqual(healing._revise("p", "REQ-1", Path("/x"), "why", sleep=pauses.append), ["rebased"])
+        self.assertEqual((len(calls), pauses), (3, [healing.REVISE_PAUSE] * 2))
+        with patch.object(ops, "apply", side_effect=ops.core.SchedulerError("OWNER_ACTIVE", "x")), \
+                self.assertRaises(ops.core.SchedulerError):
+            healing._revise("p", "REQ-1", Path("/x"), "why", sleep=lambda s: None)
+        with patch.object(ops, "apply", side_effect=ops.core.SchedulerError("NOT_ALLOWED", "no")) as other, \
+                self.assertRaises(ops.core.SchedulerError):
+            healing._revise("p", "REQ-1", Path("/x"), "why", sleep=lambda s: None)
+        self.assertEqual(other.call_count, 1)                                                # a real refusal is not retried
+
     def test_a_live_check_that_failed_becomes_a_coordinator_check_of_the_repair_itself(self):
         verify = ("The coordinator ran the live check and it FAILED, so nothing was attested:\n\n$ npx tsx --conditions=react-server "
                   "scripts/e2e/asesor/run.ts --start --live --milestone M2\nexit code 1\n[FAIL] asesor M2: correction did not regenerate the summary\n")

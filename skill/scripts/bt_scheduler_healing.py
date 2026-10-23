@@ -655,7 +655,21 @@ def _freeze(rdir: Path, plan: dict, source: str):
     return bt_plan_adapter.freeze_revision(rdir, plan, source)
 
 
-def _revise(project: str, req: str, rdir: Path, reason: str) -> list[str]:
+REVISE_TRIES = 4
+REVISE_PAUSE = 5.0
+
+
+def _revise(project: str, req: str, rdir: Path, reason: str, *, sleep: Callable[[float], None] = time.sleep) -> list[str]:
+    """Apply the frozen revision. An owner that is starting at that very moment (`OWNER_ACTIVE`: the watchdog restarts one as soon as the
+    coordinator or the healing releases a hold) is a race, not a refusal: try again shortly. A revision frozen but never applied makes
+    the next owner refuse the run (PLAN_MISMATCH) and the watch gives up (REQ-020, plan r10)."""
     import bt_scheduler_ops as ops
 
-    return ops.apply(project, req, rdir, "revise", "", reason)
+    for attempt in range(1, REVISE_TRIES + 1):
+        try:
+            return ops.apply(project, req, rdir, "revise", "", reason)
+        except ops.core.SchedulerError as error:
+            if getattr(error, "code", "") != "OWNER_ACTIVE" or attempt == REVISE_TRIES:
+                raise
+            sleep(REVISE_PAUSE)
+    return []
