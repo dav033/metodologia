@@ -655,7 +655,9 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
                                commands=own_commands if own_commands[0] else None)
     if fix is None:
         return None
-    own = [v for v in target.get("verification", ()) if v.get("type") == "command"]
+    # an AUDIT's own checks read the ledger the audit itself writes: a repair cannot produce it, so the repair could never pass them
+    # (REQ-020 T15.1 failed `ENOENT docs/req-020/T15.findings.json` for ever); the repair answers to the owners' checks and its own
+    own = [v for v in target.get("verification", ()) if v.get("type") == "command"] if target.get("kind") != "audit" else []
     for number, check in enumerate(own, 1):
         purpose = f"{task_id}'s own check {number} passes: {check['value'][:140]}"
         fix["acceptance_criteria"].append(purpose)

@@ -441,6 +441,18 @@ class PlanRepairs(unittest.TestCase):
         self.assertEqual(plan_errors(revised), [])
         self.assertEqual(self.plan()["revision"], 1)                                           # the input is untouched
 
+    def test_the_repair_of_an_audit_does_not_inherit_the_checks_that_read_the_audits_own_ledger(self):
+        """REQ-020 T15.1: it carried T15's `check-findings.ts docs/req-020/T15.findings.json`, a file only the audit writes, and failed ENOENT
+        on every attempt."""
+        plan = self.plan()
+        for task in plan["tasks"]:
+            if task["id"] == "T3":
+                task["kind"] = "audit"
+        revised, new_id, _ = healing.build_fix_revision(plan, "T3", self.case(), {"verify": "FAIL: test_a boom"})
+        commands = {v["value"] for v in {t["id"]: t for t in revised["tasks"]}[new_id]["verification"]}
+        self.assertIn("pytest tests/test_a.py", commands)                                    # the owners' checks stay
+        self.assertNotIn("pytest tests/test_a.py tests/test_b.py", commands)                  # the audit's own do not
+
     def test_the_analysts_cause_and_advice_reach_the_repair_tasks_objective(self):
         case = taxonomy.Case("T3:1", "T3", "regression", ("independent analysis",), signature="s2")
         analysis = "Independent failure analysis (after 5 failed attempts): Cause: check-findings.ts ignores the positional path"
