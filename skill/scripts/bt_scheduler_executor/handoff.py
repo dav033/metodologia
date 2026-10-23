@@ -36,8 +36,22 @@ def _atomic(path: Path, data: bytes) -> None:
     os.replace(tmp, path)
 
 
+def _declared_outputs(tree: Path, declared) -> list[str]:
+    """The plan's `expected_paths` that exist in the worktree as files. A path the task is DECLARED to produce belongs to the snapshot even
+    when the project's .gitignore covers it: david-ui's audit wrote `.evidence/T25.findings.json` under an ignored `.evidence/` and the
+    verifier rejected it as «ledger missing from the audited snapshot»."""
+    found = []
+    for item in declared or ():
+        text = str(item)
+        if not text or text.startswith(("/", "-")) or ".." in Path(text).parts or any(ch in text for ch in "*?[]"):
+            continue
+        if (tree / text).is_file():
+            found.append(text)
+    return found
+
+
 def capture(ws: Workspace, directory: Path, *, dirname: str, attempt_id: str, when: float, patch_max: int,
-            log_tail: bytes = b"", mode: str = "snapshot") -> dict[str, Any]:
+            log_tail: bytes = b"", mode: str = "snapshot", declared_paths=()) -> dict[str, Any]:
     """Capture state using private refs (snapshot) or a recoverable patch artifact (patch)."""
     out = Path(directory) / "handoff"
     out.mkdir(parents=True, exist_ok=True)
@@ -57,6 +71,9 @@ def capture(ws: Workspace, directory: Path, *, dirname: str, attempt_id: str, wh
         env = {"GIT_INDEX_FILE": str(Path(scratch) / "index")}
         gitutil.run(tree, ["read-tree", "HEAD"], env=env)
         gitutil.run(tree, ["add", "-A"], env=env)
+        outputs = _declared_outputs(tree, declared_paths)
+        if outputs:
+            gitutil.run(tree, ["add", "-f", "--", *outputs], env=env, check=False)
         snap_tree = gitutil.run(tree, ["write-tree"], env=env)
 
     base_tree = gitutil.run(repo, ["rev-parse", f"{ws.base_sha}^{{tree}}"])

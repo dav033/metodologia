@@ -70,6 +70,22 @@ class Handoff(unittest.TestCase):
         self.assertEqual(manifest["patch_bytes"], len(raw))
         self.assertEqual(manifest["patch_sha256"], hashlib.sha256(raw).hexdigest())
 
+    def test_a_declared_output_inside_an_ignored_directory_is_part_of_the_snapshot_other_ignored_files_are_not(self):
+        """david-ui T25: the audit wrote `.evidence/T25.findings.json` under an ignored `.evidence/`; the verifier saw «ledger missing»."""
+        (self.wt / ".gitignore").write_text(".evidence/\nnode_cache/\n")
+        git(self.wt, "add", ".gitignore")
+        git(self.wt, "commit", "-m", "ignore")
+        (self.wt / ".evidence").mkdir()
+        (self.wt / ".evidence" / "T25.findings.json").write_text("{}\n")
+        (self.wt / "node_cache").mkdir()
+        (self.wt / "node_cache" / "junk").write_text("x\n")
+        manifest = self.capture(declared_paths=[".evidence/T25.findings.json", "../outside", "/etc/passwd", "*.md"])
+        listing = git(self.repo, "ls-tree", "-r", "--name-only", manifest["snapshot_sha"]).split()
+        self.assertIn(".evidence/T25.findings.json", listing)
+        self.assertNotIn("node_cache/junk", listing)
+        plain = self.capture()                                                      # without the declaration: the ignored file stays out
+        self.assertNotIn(".evidence/T25.findings.json", git(self.repo, "ls-tree", "-r", "--name-only", plain["snapshot_sha"]).split())
+
     def test_patch_mode_empty_state_has_an_applicable_empty_artifact(self):
         manifest = self.capture(mode="patch")
         self.assertTrue(manifest["empty"])

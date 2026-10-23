@@ -155,7 +155,8 @@ class SettleMixin:
             try:
                 return handoff.capture(workspace, adir, dirname=row["dirname"], attempt_id=row["attempt_id"], when=end,
                                        patch_max=self.cfg.patch_max_bytes, mode=self.cfg.handoff_mode,
-                                       log_tail=artifacts.log_tail(adir, self.cfg.log_tail_bytes))
+                                       log_tail=artifacts.log_tail(adir, self.cfg.log_tail_bytes),
+                                       declared_paths=(artifacts.read_json(adir / "brief.json") or {}).get("expected_paths") or ())
             except (ExecutorError, OSError) as caught:
                 error = caught
                 if attempt + 1 < self.cfg.handoff_tries:
