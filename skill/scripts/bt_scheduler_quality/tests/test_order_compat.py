@@ -18,7 +18,7 @@ class LegacyRepairAdmissionTests(unittest.TestCase):
         response = adapter.request(fixtures._order_from_plan(core, "T1", attempts["T1"]))
         self.assertEqual(response.status, "accepted")
         self.assertTrue(fixtures._wait_for(lambda: core.snapshot().tasks["T1"]["state"] == "completed"))
-        self.assertEqual(adapter.engine.runner.calls, ["python3 verify.py"])
+        self.assertEqual(adapter.engine.runner.runner.calls, ["python3 verify.py"])
         self.assertEqual(core.plan.task("T1").verification[0]["expected"], "pass")
 
     def test_legacy_command_compatibility_does_not_accept_other_expected_values(self):
@@ -30,7 +30,7 @@ class LegacyRepairAdmissionTests(unittest.TestCase):
         self.assertEqual((response.status, response.detail), ("rejected", "ORDER_INVALID"))
         self.assertTrue(response.permanent)                         # the core ends the attempt instead of re-sending a refused order
         self.assertEqual(store.pending_requests(), ())
-        self.assertEqual(adapter.engine.runner.calls, [])
+        self.assertEqual(adapter.engine.runner.runner.calls, [])
 
     def test_legacy_compatibility_still_rejects_a_changed_command(self):
         task = fixtures._task("T1", "python3 verify.py")

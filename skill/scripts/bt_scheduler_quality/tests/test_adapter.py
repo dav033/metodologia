@@ -839,7 +839,7 @@ class M6M1AdapterTests(unittest.TestCase):
             [task], store_path=store_path
         )
         attempts = self._start_attempts(core, executor, root, ("T1",))
-        runner = adapter.engine.runner
+        runner = adapter.engine.runner.runner
         submit = core.submit_verdict
         submitted_ids = []
 
@@ -910,7 +910,7 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertEqual(response.status, "rejected")
         self.assertEqual(response.detail, "ORDER_DIFFERS_FROM_APPROVED_PLAN")
         self.assertEqual(store.pending_requests(), ())
-        self.assertEqual(adapter.engine.runner.calls, [])
+        self.assertEqual(adapter.engine.runner.runner.calls, [])
 
     def test_stale_m1_reply_marks_the_stored_result_and_stops_delivery(self):
         task = _task("T1", "python3 verify.py")

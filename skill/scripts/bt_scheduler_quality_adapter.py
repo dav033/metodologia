@@ -20,7 +20,8 @@ from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.identity import verdict_id
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.review import ReviewerPort
-from bt_scheduler_quality.runner import SandboxRunner
+from bt_scheduler_quality.runner import CommandOutcome, SandboxRunner
+from bitacora_platform import quality_audit_evidence
 import bt_audit_gate
 from bt_recovery_evidence import audit_observation_from_ledger, recovery_coverage_problems
 from bt_scheduler_quality.snapshot import SnapshotResolver, SnapshotSource
@@ -96,8 +97,11 @@ class QualityVerificationPort:
         if not isinstance(configured_attempts, (str, Path)):
             raise TypeError("M3 attempts root must be a configured filesystem path")
         self.attempts_root = Path(configured_attempts)
+        self._audit_runner = quality_audit_evidence.EvidenceRunner(
+            runner or SandboxRunner(policy), lambda order, spec: quality_audit_evidence.owns_check(self, order, spec),
+            lambda: CommandOutcome("pass", 0, 0, b"[M6] engine ledger contract and content provenance passed\n", b"", None, True))
         self.engine = QualityEngine(
-            policy, store, reviewer=reviewer, runner=runner, resolver=snapshot_resolver, attestations=attestations,
+            policy, store, reviewer=reviewer, runner=self._audit_runner, resolver=snapshot_resolver, attestations=attestations,
             own_outputs=self._own_outputs
         )
         self._pool = ThreadPoolExecutor(
@@ -294,7 +298,8 @@ class QualityVerificationPort:
             except Exception as error:  # noqa: BLE001
                 LOGGER.warning("M6 handoff lookup failed (%s)", type(error).__name__)
                 source = None
-            result = self.engine.process_reserved(order, source)
+            with self._audit_runner.bind(order):
+                result = self.engine.process_reserved(order, source)
         # Convert any engine failure into an explicit durable unavailable result.
         except Exception as error:  # noqa: BLE001
             LOGGER.error(
@@ -395,6 +400,8 @@ class QualityVerificationPort:
                 raise RuntimeError("validated audit observation could not be published") from error
         if not evaluate_gate:
             return None
+        if not gate.problems and raw_ledger is not None:
+            gate = quality_audit_evidence.check(self, order, raw_ledger, gate)
         stray = bt_audit_gate.stray_changes(self._read_changes(order), task.expected_paths) \
             if self.audit_policy.read_only else ()
         if stray:
@@ -639,7 +646,8 @@ class QualityVerificationPort:
                                      else _reverted_note(clash) if clash.startswith(REVERTED)
                                      else _integration_note(clash))
             remediating = False
-            if gate is not None and gate.blocking and not gate.problems and self.remediate is not None:
+            stale_evidence = gate is not None and any(f.get("code") == "STALE_EVIDENCE" for f in gate.blocking)
+            if gate is not None and gate.blocking and not gate.problems and not stale_evidence and self.remediate is not None:
                 try:
                     remediating = bool(self.remediate(order.task_id, order.attempt_id, list(gate.blocking)))
                 except Exception as error:  # noqa: BLE001 - when it cannot, the named tasks are sent back as before

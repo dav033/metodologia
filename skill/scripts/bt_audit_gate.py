@@ -11,13 +11,16 @@ machine-readable ledger beside it:
 The gate reads the ledger, never the prose. Whether the report says «PARTIAL, release blocked» is irrelevant: a
 critical/high finding still `open` rejects the task, a ledger that is missing or malformed rejects it, and the tasks the
 findings name are sent back for rework by the Scheduler (`SchedulerCore.reject_and_rework`). Only the owner can accept a
-risk; an auditor cannot waive its own finding. Standard library only; no I/O (the caller reads the file).
+risk; an auditor cannot waive its own finding. Standard library only; ledger evaluation is pure, and the provenance
+helpers read git trees without changing the repository (the caller reads evidence files).
 """
 from __future__ import annotations
 
 import hashlib
 import json
 from dataclasses import dataclass
+
+from bt_audit_evidence import DIGEST, evidence_gate, evidence_outputs, evidence_paths, tree_digest
 
 LEDGER_SUFFIX = ".findings.json"
 SCHEMA = "audit-findings/1"
@@ -157,6 +160,12 @@ def validate_ledger(data: object) -> list[str]:
     if len(findings) > MAX_FINDINGS:
         return [f"more than {MAX_FINDINGS} findings"]
     problems: list[str] = []
+    if "tree_digest" in data and (not isinstance(data["tree_digest"], str) or not DIGEST.fullmatch(data["tree_digest"])):
+        problems.append("tree_digest: expected sha256:<64 lowercase hex>")
+    try:
+        evidence_paths(data, {})
+    except ValueError as error:
+        problems.append(str(error))
     ids: set[str] = set()
     for index, item in enumerate(findings):
         problems += _finding_problems(item, index)

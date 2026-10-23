@@ -29,3 +29,21 @@ def check(path: Path, emit: Callable[[str], None] = print) -> int:
     if not problems:
         emit("OK: audit ledger contract is valid")
     return 2 if problems else 0
+
+
+def digest(plan_path: Path, repository: Path, role: str, revision: str = "HEAD",
+           emit: Callable[[str], None] = print, evidence_files: tuple[str, ...] = ()) -> int:
+    """Print provenance for a producer or auditor to record; the plan defines the shared exclusions."""
+    try:
+        plan = json.loads(plan_path.read_text(encoding="utf-8"))
+        tasks = plan["tasks"]
+        if not isinstance(tasks, list) or not all(isinstance(t, dict) for t in tasks):
+            raise ValueError("plan tasks must be objects")
+        if not any(t.get("repository") == role for t in tasks):
+            raise ValueError(f"repository role {role!r} is absent from the plan")
+        value = gate.tree_digest(repository, revision, gate.evidence_outputs(tasks, role, evidence_files))
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
+        emit(f"ERROR source tree digest unavailable: {error}")
+        return 2
+    emit(value)
+    return 0
