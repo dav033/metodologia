@@ -287,7 +287,8 @@ def _check_graph(report: Report, tasks: list[dict], milestones: dict[str, int]) 
 
 
 def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists: ev.RefExists | None = None,
-             *, spec_ids: set[str] | None = None, ignored_path: command_checks.IgnoredPath | None = None) -> Report:
+             *, spec_ids: set[str] | None = None, ignored_path: command_checks.IgnoredPath | None = None,
+             strict_publication: bool = False, ledger_command: str = "engine audit-ledger check") -> Report:
     """Deterministic validation of a parsed PLAN.json; every error names the task/field that causes it.
     `file_exists(repository, path)` lets a caller that knows the repositories verify `file:` evidence and
     `ref_exists(kind, value, repository)` does the same for `command:` and `precedent:` references."""
@@ -376,7 +377,7 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
     report.errors.extend(command_errors)
     report.warnings.extend(command_warnings)
-    report.warnings.extend(command_checks.project_ledger_checks(plan))
+    (report.errors if strict_publication else report.warnings).extend(command_checks.project_ledger_checks(plan, ledger_command))
     return report
 
 

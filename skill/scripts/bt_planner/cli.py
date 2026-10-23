@@ -42,6 +42,7 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
         as_json: bool = False, approved_states: tuple[str, ...] | None = None,
         repo_roots: dict[str, Path] | None = None, ref_exists=None, amend: dict | None = None,
         cross_check: bool = False, ignored_path: IgnoredPath | None = None,
+        ledger_command: str = "engine audit-ledger check",
         emit: Callable[[str], None] = print) -> int:
     """Execute one action and return the exit code. `target` is a plan directory (a file for `validate`).
     `repo_roots` maps repository roles to paths so that `file:` evidence is verified, not just accepted; `ref_exists`
@@ -85,7 +86,8 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
             emit("  " + ", ".join(f"{name} x{count}" for name, count in sorted(gaps.items())))
             return 0
         if action == "check":
-            report = sync.check(target, plan_id=plan_id, repo_roots=repo_roots, ref_exists=ref_exists, ignored_path=ignored_path)
+            report = sync.check(target, plan_id=plan_id, repo_roots=repo_roots, ref_exists=ref_exists, ignored_path=ignored_path,
+                                ledger_command=ledger_command)
             _report(report, as_json, emit)
             return 0 if report.ok else 2
         if action == "bind":
@@ -111,7 +113,8 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
             emit(json.dumps(summary, indent=1, ensure_ascii=False))
             return 0
         if action == "freeze":
-            entry = sync.approve_freeze(target, plan_id, states, repo_roots, ref_exists=ref_exists, ignored_path=ignored_path)
+            entry = sync.approve_freeze(target, plan_id, states, repo_roots, ref_exists=ref_exists, ignored_path=ignored_path,
+                                        ledger_command=ledger_command)
             emit(f"frozen {plan_id or sync.default_plan_id(target)} revision {entry['revision']} "
                  f"sha256 {entry['sha256'][:12]}")
             return 0

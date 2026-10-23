@@ -57,8 +57,12 @@ def main() -> None:
     ap.add_argument("--cwd", default=os.getcwd())
     sub = ap.add_subparsers(dest="cmd", required=True)
     p_ledger = sub.add_parser("audit-ledger", help="validate the engine-owned audit ledger contract")
-    p_ledger.add_argument("action", choices=["check"])
+    p_ledger.add_argument("action", choices=["check", "tree-digest"])
     p_ledger.add_argument("file")
+    p_ledger.add_argument("--repository", default=".", help="tree-digest: git repository root")
+    p_ledger.add_argument("--role", help="tree-digest: repository role in the plan")
+    p_ledger.add_argument("--revision", default="HEAD", help="tree-digest: committed source snapshot")
+    p_ledger.add_argument("--evidence", action="append", default=[], help="tree-digest: additional declared evidence output")
     sub.add_parser("where", help="ensure today's files exist and print all paths")
     sub.add_parser("init", help="create the project tree")
     p_id = sub.add_parser("id", help="next free ID")
@@ -169,6 +173,11 @@ def main() -> None:
 
     if a.cmd == "audit-ledger":
         from bitacora_platform import cli_audit_ledger as bt_cli_audit_ledger
+        if a.action == "tree-digest":
+            if not a.role:
+                ap.error("audit-ledger tree-digest requires --role")
+            sys.exit(bt_cli_audit_ledger.digest(Path(a.file), Path(a.repository), a.role, a.revision,
+                                               evidence_files=tuple(a.evidence)))
         sys.exit(bt_cli_audit_ledger.check(Path(a.file)))
 
     if a.cmd == "relay":

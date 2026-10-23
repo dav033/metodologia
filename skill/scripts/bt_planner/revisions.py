@@ -159,13 +159,14 @@ def _write_revision(folder: Path, target: Path, text: str) -> None:
             raise
 
 
-def freeze(directory: Path, plan: dict, source: str = "approval", narrative: str | None = None) -> dict:
+def freeze(directory: Path, plan: dict, source: str = "approval", narrative: str | None = None,
+           ledger_command: str = "engine audit-ledger check") -> dict:
     """Freeze a validated plan as its revision. Idempotent for identical content; a different content under an already
     frozen revision number is refused (create revision N+1 instead); gaps are refused. Serialised by a lock; a file
     left by an interrupted freeze is adopted when its content is identical and refused otherwise. `source` is recorded in
     the manifest (not hashed): `approval` (the approval act froze it) or `launch-forced` (the owner's explicit
     --force of a plan that was never approved)."""
-    report = pc.validate(plan)
+    report = pc.validate(plan, strict_publication=True, ledger_command=ledger_command)
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
     text = pc.dumps(plan)

@@ -44,6 +44,23 @@ class LedgerCLI(unittest.TestCase):
             result = self.run_check(json.dumps({"schema": "audit-findings/1", "findings": [item]}).encode())
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_tree_digest_reads_the_plan_and_excludes_explicit_evidence_without_creating_state(self):
+        import bt_audit_gate
+        from scheduler_executor_support import make_repo
+
+        repo = make_repo(self.root / "app")
+        plan = {"tasks": [{"id": "T1", "repository": "app", "kind": "implement", "expected_paths": ["result.json"]}]}
+        path = self.root / "PLAN.json"
+        path.write_text(json.dumps(plan))
+        script = Path(__file__).resolve().parents[1] / "bitacora.py"
+        result = subprocess.run([sys.executable, str(script), "audit-ledger", "tree-digest", str(path),
+                                 "--repository", str(repo), "--role", "app", "--evidence", "result.json"],
+                                cwd=self.root, env={**os.environ, "BITACORA_ROOT": str(self.root / "unused")},
+                                text=True, capture_output=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(result.stdout.strip(), bt_audit_gate.tree_digest(repo, "HEAD", ["result.json"]))
+        self.assertFalse((self.root / "unused").exists())
+
 
 if __name__ == "__main__":
     unittest.main()
