@@ -526,6 +526,29 @@ class PlanRepairs(unittest.TestCase):
         self.assertEqual(plan_errors(revised), [])
         self.assertIn("functionCall parts", {t["id"]: t for t in revised["tasks"]}[new_id]["objective"])
 
+    def test_a_repair_left_without_any_check_gets_a_manual_review_instead_of_being_refused_by_the_planner(self):
+        """david-ui T25.1 / REQ-020 T15.3: «needs at least one command or explicit manual check»."""
+        import bt_remediation
+        from bt_plan_adapter import plan_errors
+
+        plan = self.plan()
+        target = {t["id"]: t for t in plan["tasks"]}["T3"]
+        target["kind"] = "audit"
+        target["verification"] = []
+        original = bt_remediation._task
+
+        def bare(*args, **kwargs):
+            task = original(*args, **kwargs)
+            if task is not None:
+                task["verification"] = []
+            return task
+        case = taxonomy.Case("T3:1", "T3", "regression", ("e",), owners=("T1",), failing=("test_a",), signature="s7")
+        with patch.object(bt_remediation, "_task", bare):
+            revised, new_id, _ = healing.build_fix_revision(plan, "T3", case, {"verify": "FAIL: test_a boom"})
+        fix = {t["id"]: t for t in revised["tasks"]}[new_id]
+        self.assertEqual([v["type"] for v in fix["verification"]], ["manual"])
+        self.assertEqual([e for e in plan_errors(revised) if e.startswith(new_id)], [])
+
     def test_a_template_tail_that_repeats_words_is_trimmed_instead_of_abandoning_the_repair(self):
         """REQ-020 T15.1: even the shortest evidence stayed invalid because the owners' own commands repeated the same words."""
         from bt_plan_adapter import plan_errors

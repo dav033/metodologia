@@ -559,6 +559,14 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
         # ledger/report: REQ-020 T15.2 inherited `check-findings.ts docs/req-020/T15.findings.json`) cannot pass for a repair
         written = [path for path in (target.get("expected_paths") or ()) if isinstance(path, str)]
         unique = [c for c in unique if not any(path in str(c.get("value", "")) for path in written)]
+    if not unique:
+        # the repair of an audit keeps none of the audit's own ledger commands and its owners may have no command at all (their checks were
+        # manual/live): the planner refused the revision (REQ-020 T15.3, david-ui T25.1: «needs at least one command or explicit manual
+        # check»). The repair is then judged by the manual reviewer against the findings it names.
+        purpose = f"Every finding this task names is fixed in the code, with the file and test that show it ({task_id})"
+        fix["acceptance_criteria"] = list(dict.fromkeys([*fix["acceptance_criteria"], purpose]))
+        unique = [{"type": "manual", "value": "Review the findings named in the objective against the snapshot: each one is fixed, citing the code and the test.",
+                   "purpose": purpose, "expected": "Each named finding is closed with evidence from the snapshot.", "category": "product"}]
     fix["verification"] = unique
     fix["acceptance_criteria"] = list(dict.fromkeys(fix["acceptance_criteria"]))
     if len(fix["verification"]) > MAX_CHECKS or len(fix.get("expected_paths") or ()) > MAX_PATHS:
