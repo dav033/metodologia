@@ -467,8 +467,17 @@ class Wiring:
 
 def _accepted_attempts(scheduler) -> dict[str, str]:
     """{task id: the attempt the core accepted} for every completed task, from ONE snapshot of the run."""
-    return {tid: view["attempt"] for tid, view in scheduler.snapshot().tasks.items()
-            if view.get("state") == "completed" and view.get("attempt")}
+    def read(ctx):
+        # the attempt that was ACCEPTED, not the task's last one: a rework taken back (`withdraw-rework`) leaves the failed attempt of the
+        # redo after it, and the next task then looked for the snapshot of an attempt that never produced one (REQ-020 T15, 07:28)
+        found = {}
+        for tid, rec in ctx.state.tasks.items():
+            if rec.state == "completed":
+                attempt = next((a for a in reversed(rec.attempts) if ctx.state.attempts[a].state == "accepted"), None)
+                if attempt:
+                    found[tid] = attempt
+        return found
+    return scheduler.read(read)
 
 
 def _earlier_attempts(scheduler, task_id: str) -> list[str]:

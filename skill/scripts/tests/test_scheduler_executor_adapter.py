@@ -395,5 +395,21 @@ class Layout(s.World):
         self.assertEqual(adapter.executor_root(self.rdir), self.rdir / "EXECUTOR")
 
 
+class AcceptedAttemptAfterWithdrawnRework(unittest.TestCase):
+    def test_a_completed_task_reports_its_accepted_attempt_not_the_failed_redo_after_it(self):
+        """REQ-020 T14a: rework + withdraw left att-0101 (a start the integrator rejected) after the accepted att-0097; T15 then asked for
+        the snapshot of att-0101 (PREDECESSOR_HANDOFF_MISSING)."""
+        from types import SimpleNamespace
+
+        from bt_scheduler_executor_adapter import _accepted_attempts
+
+        attempts = {"a1": SimpleNamespace(state="accepted"), "a2": SimpleNamespace(state="failed"), "b1": SimpleNamespace(state="accepted"),
+                    "c1": SimpleNamespace(state="running")}
+        tasks = {"A": SimpleNamespace(state="completed", attempts=["a1", "a2"]), "B": SimpleNamespace(state="completed", attempts=["b1"]),
+                 "C": SimpleNamespace(state="active", attempts=["c1"])}
+        scheduler = SimpleNamespace(read=lambda fn: fn(SimpleNamespace(state=SimpleNamespace(tasks=tasks, attempts=attempts))))
+        self.assertEqual(_accepted_attempts(scheduler), {"A": "a1", "B": "b1"})
+
+
 if __name__ == "__main__":
     unittest.main()
