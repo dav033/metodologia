@@ -185,7 +185,7 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             text = _analysis_text(rdir, request["task"])
             if text:
                 context = {**context, "analysis": text}
-        if case is None and model_enabled() and model_eligible(request):
+        if case is None and (model_enabled() or autonomous_enabled()) and model_eligible(request):
             case = classify_mod.unplaced(request, verify=context.get("verify", ""), failures=context.get("failures", ()))
         if case is None or _too_fresh(case, request, doc, now()):
             continue
@@ -210,6 +210,8 @@ def cycle(project: str, req: str, rdir: Path | str, *, requests: list[dict] | No
             outcome = model_repair(project, req, rdir, request, case, answer)
             if outcome["repair"] == "wait":            # the diagnosis is not there yet: ask again next cycle, nothing is recorded
                 continue
+        if outcome["repair"] == "none" and case.kind == "unknown" and autonomous_enabled() and model_eligible(request):
+            outcome = autonomous_repair(rdir, request, case, answer)
         entry["history"] = [*entry["history"], {"at": round(now(), 3), "repair": outcome["repair"],
                                                 "result": outcome["result"]}][-MAX_HISTORY:]
         if outcome["repair"] == "none":
@@ -300,6 +302,33 @@ def looping_ports(rdir: Path, rows=None) -> list[tuple[str, str, int]]:
         return []
     keys = {(r.get("port", ""), r.get("detail") or r.get("error", "")) for r in rows}
     return [(next(iter(keys))[0], str(next(iter(keys))[1])[:160], len(rows))] if len(keys) == 1 else []
+
+
+AUTONOMOUS_LIMIT = 3                                        # automatic recommended retries per task and option before a person is asked
+SAFE_DEFAULTS = frozenset({"retry", "retry_with_note"})    # re-running work: nothing is accepted, deleted or changed by it
+
+
+def autonomous_enabled() -> bool:
+    """`healing.autonomous_default` (on): a stop nothing could place gets the card's own recommended retry instead of waiting for a person."""
+    return _config("autonomous_default", True) is True
+
+
+def autonomous_repair(rdir: Path | str, request: dict, case, answer) -> dict[str, Any]:
+    """The last rung (the owner wants no human in the loop): a task stop that the rules and the model left unplaced is answered with the
+    option the card itself recommends, but only a plain retry (`SAFE_DEFAULTS`), never an owner-only decision, never a verdict, and at
+    most AUTONOMOUS_LIMIT times per task and option: after that the failure is not transient and the card stays for a person."""
+    option = request.get("recommended")
+    if option not in SAFE_DEFAULTS or option not in _options(request):
+        return {"repair": "none", "result": "pending"}
+    import bt_scheduler_decisions as decisions
+
+    task = request.get("task", "")
+    if decisions.automatic_answers(Path(rdir), task, option) >= AUTONOMOUS_LIMIT:
+        return {"repair": "none", "result": "pending"}
+    note = str((request.get("diagnosis") or {}).get("note") or "")
+    cite = "; ".join(case.evidence[:2])
+    answer(request["id"], option, "automatic (no rule placed this stop; the card's recommended retry): " + (note + " " if note else "") + cite)
+    return {"repair": f"{option} (recommended, nothing placed the stop)", "result": "fixed"}
 
 
 def model_enabled() -> bool:

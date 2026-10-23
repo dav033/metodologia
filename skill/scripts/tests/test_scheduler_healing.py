@@ -143,6 +143,35 @@ class Cycle(unittest.TestCase):
         self.assertTrue(healing.added_by_healing(self.rdir, "T7.1"))
         self.assertFalse(healing.added_by_healing(self.rdir, "T7"))
 
+    def test_a_stop_nothing_could_place_gets_the_cards_recommended_retry_a_bounded_number_of_times(self):
+        """The owner wants no human in the loop: the last rung is the card's own recommended plain retry, never a verdict or an owner-only
+        decision."""
+        self.verify = "an error the taxonomy has never seen"
+        card = request(options=[{"id": "retry"}, {"id": "retry_with_note"}], recommended="retry")
+        with patch("bt_config.get", side_effect=lambda key, default=None: default):             # shipped defaults: model off, autonomy on
+            self.assertEqual(self.run_cycle([card]), 1)
+        self.assertEqual([a[:2] for a in self.answers], [("T7:3", "retry")])
+        self.assertIn("recommended retry", self.answers[0][2])
+        # never a review, an owner-only stop, or an option that is not a plain retry
+        for bad in (request(source="review", options=[{"id": "retry"}], recommended="retry"),
+                    request(unskippable=True, options=[{"id": "retry"}], recommended="retry"),
+                    request(options=[{"id": "review_pass"}, {"id": "stop"}], recommended="stop")):
+            self.answers.clear()
+            with patch("bt_config.get", side_effect=lambda key, default=None: default):
+                self.run_cycle([bad])
+            self.assertEqual(self.answers, [], bad)
+
+    def test_the_autonomous_retry_stops_after_its_bound_and_can_be_switched_off(self):
+        self.verify = "an error the taxonomy has never seen"
+        card = request(options=[{"id": "retry"}], recommended="retry")
+        with patch("bt_config.get", side_effect=lambda key, default=None: False if key == "healing.autonomous_default" else default):
+            self.assertEqual(self.run_cycle([card]), 0)
+        self.assertEqual(self.answers, [])
+        with patch("bt_scheduler_decisions.automatic_answers", return_value=healing.AUTONOMOUS_LIMIT), \
+                patch("bt_config.get", side_effect=lambda key, default=None: default):
+            self.assertEqual(self.run_cycle([card]), 0)
+        self.assertEqual(self.answers, [])
+
     def test_a_finished_analysis_rides_along_whatever_places_the_stop(self):
         import bt_attempt_analyst as analyst
 
@@ -273,8 +302,8 @@ class Cycle(unittest.TestCase):
 
     def test_the_model_step_is_off_by_default_and_a_thin_note_becomes_a_plain_retry(self):
         self.verify = "an error the taxonomy has never seen"
-        with patch("bt_config.get", side_effect=lambda key, default=None: default):             # the shipped default, not this machine's config
-            self.assertEqual(self.run_cycle([self.model_card()]), 0)                          # off by default
+        with patch("bt_config.get", side_effect=lambda key, default=None: False if key == "healing.autonomous_default" else default):
+            self.assertEqual(self.run_cycle([self.model_card()]), 0)                          # the shipped model default (off), autonomy aside
         self.with_model()
         self.assertEqual(self.run_cycle([self.model_card(note="redo")]), 1)
         self.assertEqual(self.answers[0][1], "retry")
