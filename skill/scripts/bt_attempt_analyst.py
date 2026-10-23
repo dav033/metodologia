@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from bt_prompt_context import compact, concise, instruction
+from bitacora_platform import analyst_source
 
 FAILURES_BEFORE = 2
 REANALYZE_AFTER = 2
@@ -169,15 +170,23 @@ def analyze(project: str, rdir: Path, task: str, *, runner: Callable[..., Any] =
         provider = spec["provider"]
         bt_profiles.authorize(pid, project)
         env = bt_profiles.session_env(pid, provider, None, project)
-        prompt = instruction(PROMPT, CONCISE_PROMPT).format(failures=count, bundle=bundle(rdir, task, doc, plan))
         with tempfile.TemporaryDirectory(prefix="bt-analyst-") as work:
+            source = analyst_source.prepare(rdir, task, doc, Path(work))
+            notice = (f"CURRENT SEALED SOURCE: {source['source_snapshot']} from {source.get('source_attempt')}. "
+                      f"Read files under {source['source_directory']}; historical /workspace paths are not this directory. "
+                      "Historical failures may already be fixed; inspect the current code before concluding not_the_task."
+                      if source["source_available"] else "CURRENT SOURCE UNAVAILABLE: history alone cannot establish a current code defect.")
+            prompt = notice + "\n\n" + instruction(PROMPT, CONCISE_PROMPT).format(failures=count, bundle=bundle(rdir, task, doc, plan))
             out = Path(work) / "answer.txt"
             done = runner(bt_block_agent.argv(provider, spec.get("bin") or provider, model, effort, out), input=prompt, text=True,
-                          capture_output=True, cwd=work, env=env, timeout=int(config["timeout_seconds"]))
+                          capture_output=True, cwd=source.get("source_directory", work), env=env, timeout=int(config["timeout_seconds"]))
             text = out.read_text(encoding="utf-8") if out.is_file() else (done.stdout or "")
         if done.returncode:
             raise ValueError(f"{provider} exited with {done.returncode}: {(done.stderr or done.stdout or '')[-300:]}")
         result = {"state": "done", **parse(text)}
+        result.update(source)
+        if result["not_the_task"] and not source["source_available"]:
+            result["confidence"] = "baja"
     except (OSError, ValueError, KeyError, subprocess.TimeoutExpired, SystemExit) as exc:
         result = {"state": "failed", "error": str(exc)[:400]}
     result.update({"failures": count, "model": model, "profile": pid, "at": time.strftime("%Y-%m-%dT%H:%M:%S"),

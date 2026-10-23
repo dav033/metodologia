@@ -18,7 +18,7 @@ class AnalystStops(unittest.TestCase):
         self.rdir = Path(self.tmp.name)
         self.doc = {"tasks": {"T1": {"state": "active", "attempts": ["a1"]}},
                     "attempts": {"a1": {"id": "a1", "task_id": "T1", "state": "running"}}}
-        self.analysis = {"state": "done", "not_the_task": True, "confidence": "media", "failures": 7,
+        self.analysis = {"state": "done", "not_the_task": True, "confidence": "media", "failures": 7, "source_available": True,
                          "cause": "The checker reads an ignored input", "solution": "repair the checker"}
         self.moves = []
         self.stop_during_move = False
@@ -55,6 +55,12 @@ class AnalystStops(unittest.TestCase):
         self.assertIn("checker reads", repair.call_args.args[4].evidence[0])
         self.assertEqual(repair.call_args.args[4].kind, "regression")
         self.assertTrue(healing.load(self.rdir).get("analyst_stops"))
+
+    def test_an_analysis_without_current_source_cannot_cancel_an_attempt(self):
+        self.analysis["source_available"] = False
+        result, _ = self.run_cycle()
+        self.assertEqual(result, 0)
+        self.assertEqual(self.moves, [])
 
     def test_a_ready_task_is_blocked_without_cancelling_its_earlier_attempt(self):
         self.doc["tasks"]["T1"]["state"] = "ready"

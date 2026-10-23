@@ -33,6 +33,8 @@ def stop_tasks(project: str, req: str, rdir: Path, doc: dict, found: list[dict],
         data = analyst.load(rdir, task)
         if data.get("state") != "done" or data.get("not_the_task") is not True or data.get("confidence") == "baja":
             continue
+        if data.get("source_available") is not True:
+            continue
         fingerprint = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
         key = f"{task}:{fingerprint}"
         if key in seen:
