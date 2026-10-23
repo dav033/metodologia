@@ -18,7 +18,7 @@ from pathlib import Path
 
 MARKER = "RUN.owner-code"
 DIRTY = "dirty"                        # the working copy of the engine has uncommitted source edits: nothing is released
-PATIENCE_VERIFYING = 600.0             # seconds a pending reload waits while only verifications are in flight
+PATIENCE_VERIFYING = 1800.0            # seconds a pending reload waits while only verifications are in flight (the long gate takes 10-18 min: 600 s killed it mid-way)
 PATIENCE_BUSY = 5400.0                 # ... while an agent works (a run that is never idle still gets the fix)
 BUSY = frozenset({"running", "dispatched", "reserved"})
 
