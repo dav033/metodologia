@@ -33,6 +33,27 @@ class NestedDependenciesTests(unittest.TestCase):
             result = SandboxRunner(policy).run(check, snapshot, mounts=mounts)
             self.assertEqual((result.status, result.exit_code), ('pass', 0), result)
 
+    def test_tools_can_write_their_config_bundle_under_node_modules_but_nothing_else(self):
+        """david-ui REQ-001 T1: vitest bundles `vitest.config.mts` into `node_modules/.vite-temp` and died with EROFS (three attempts)."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            snapshot, worktree = root / "snapshot", root / "worktree"
+            snapshot.mkdir()
+            (snapshot / "package.json").write_text("{}")
+            (worktree / "node_modules").mkdir(parents=True)
+            (snapshot / "probe.py").write_text(
+                "from pathlib import Path\n"
+                "Path('node_modules/.vite-temp/config.mjs').write_text('x')\n"
+                "try:\n    Path('node_modules/other').write_text('x')\n"
+                "except OSError:\n    pass\n"
+                "else:\n    raise AssertionError('dependencies are writable')\n")
+            policy = QualityPolicy()
+            mounts = attempt_mounts(policy, worktree, snapshot_root=snapshot)
+            check = CheckSpec("C1", "command", "python3 probe.py", ("python3", "probe.py"), ".", "scratch under node_modules")
+            result = SandboxRunner(policy).run(check, snapshot, mounts=mounts)
+            self.assertEqual((result.status, result.exit_code), ("pass", 0), result)
+            self.assertFalse((worktree / "node_modules" / ".vite-temp" / "config.mjs").exists())   # the write never reaches the host
+
     def test_nested_app_mounts_its_installed_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

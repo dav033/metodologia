@@ -239,6 +239,27 @@ def _mount_arguments(policy: QualityPolicy, mounts: tuple[Mount, ...]) -> list[s
     arguments: list[str] = []
     for mount in (*toolchain(policy).mounts, *mounts):
         arguments += ["--ro-bind", mount.source, mount.target]
+        arguments += _scratch_arguments(policy, mount)
+    return arguments
+
+
+SCRATCH_DIRECTORIES = (".vite-temp", ".cache")   # tools write their config bundles and caches inside node_modules
+
+
+def _scratch_arguments(policy: QualityPolicy, mount: Mount) -> list[str]:
+    """`node_modules` is read-only, and vite/vitest bundle a `.mts`/`.ts` config into `node_modules/.vite-temp` (EROFS in david-ui
+    REQ-001 T1, three attempts lost). A scratch tmpfs over that directory lets them run; the dependencies stay unwritable. bwrap cannot
+    create the mount point inside a read-only bind, so the (empty) directory is made on the host side first."""
+    if not mount.target.endswith("/node_modules"):
+        return []
+    arguments: list[str] = []
+    for name in SCRATCH_DIRECTORIES:
+        source = Path(mount.source) / name
+        try:
+            source.mkdir(exist_ok=True)
+        except OSError:
+            continue
+        arguments += ["--size", str(policy.max_tmp_bytes), "--tmpfs", f"{mount.target}/{name}"]
     return arguments
 
 
