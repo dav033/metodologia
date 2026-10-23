@@ -25,6 +25,7 @@ class Boundary(unittest.TestCase):
         "test_plan_adapter_evidence.py",
         "test_plan_boundary.py",
         "test_plan_integration.py",
+        "test_plan_generated.py",   # its fixture builds a plan with `generated_paths` through the planner
         "test_package_install.py",
         "test_planblock.py",      # pins the contract between the generated status block and the planner's narrative digest
         "test_plan_bench.py",    # the benchmark harness is a planner client by design (see plan_bench below)
