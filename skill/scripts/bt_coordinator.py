@@ -136,14 +136,27 @@ def run_one(command: str, root: Path, timeout: int, secrets: list[str]) -> dict[
     except OSError as error:
         code, text = -2, f"could not start: {error}"
     lines = [line for line in redact(text, secrets).splitlines() if line.strip()]
-    return {"command": command, "exit_code": code, "seconds": round(time.monotonic() - started, 1), "tail": lines[-TAIL_LINES:]}
+    return {"command": command, "exit_code": code, "seconds": round(time.monotonic() - started, 1), "tail": lines[-TAIL_LINES:],
+            "full": lines[-400:]}
+
+
+def _keep_failure(rdir: Path, task: str, attempt: str, result: dict, number: int) -> None:
+    """The failed run's output (already redacted) beside the task's notes: the verification note keeps only its last lines."""
+    try:
+        target = Path(rdir) / "RUN.notes" / f"{task}.live-{attempt}.{number}.log"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(f"$ {result['command']}\nexit code {result['exit_code']} after {result['seconds']} s\n" + "\n".join(result.get("full") or result["tail"]) + "\n",
+                          encoding="utf-8")
+    except OSError:
+        pass
 
 
 def _evidence(attempt: str, snapshot: str, results: list[dict]) -> str:
     parts = [f"Coordinator ran {len(results)} live command(s) on the snapshot {snapshot[:12]} of {attempt} with the project's .env.local "
              "(values redacted):"]
     for result in results:
-        parts.append(f"`{result['command'][:160]}` exit {result['exit_code']} in {result['seconds']} s; last lines: "
+        parts.append(f"`{result['command'][:160]}` exit {result['exit_code']} in {result['seconds']} s"
+                     + (f" (run {result['run']} of {result['of']})" if result.get("run", 1) > 1 else "") + "; last lines: "
                      + " | ".join(line[:120] for line in result["tail"][-4:]))
     return "\n".join(parts)[:3800]
 
@@ -188,8 +201,18 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
     scratch.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="run-", dir=scratch) as work:
         root = prepare(repository, snapshot, Path(work), env_file, extra_files(project))
+        tries = 1 + max(0, int(bt_config.get("coordinator.retries", 1) or 0))
         for command in commands:
-            result = run(command, root, limit, secrets)
+            # A live check drives real services (a model, a database) and shares the machine with the scheduler's own gates: REQ-020's M2
+            # failed five times in the watcher and passed five times run by hand on the same snapshot. One more run costs minutes; the evidence
+            # keeps how many runs it took, and every failed run's full output is kept for the diagnosis.
+            for number in range(1, tries + 1):
+                result = run(command, root, limit, secrets)
+                result["run"], result["of"] = number, tries
+                if result["exit_code"] != 0:
+                    _keep_failure(rdir, task, attempt, result, number)
+                if result["exit_code"] == 0 or result["exit_code"] < 0:
+                    break                                       # passed, or could not run at all (a timeout is not retried)
             results.append(result)
             if result["exit_code"] != 0:
                 break                                           # nothing is attested over a failure: the next ones prove nothing

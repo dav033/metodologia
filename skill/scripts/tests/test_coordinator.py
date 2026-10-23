@@ -109,7 +109,7 @@ class Attest(unittest.TestCase):
         self.assertTrue(any("passed" in line for line in lines))
 
     def test_a_failing_command_attests_nothing_and_leaves_the_failure_in_the_note(self):
-        run, calls = self.runner([0, 1])
+        run, calls = self.runner([0, 1, 1])
         lines = coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
         self.assertEqual(self.attested, [])
         self.assertEqual(self.notes[0][0], "T14a")
@@ -121,16 +121,35 @@ class Attest(unittest.TestCase):
     def test_a_failure_leaves_the_review_open_for_the_healing_to_place_with_the_failing_script_in_the_note(self):
         import bt_healing_classify as classify
 
-        run, _ = self.runner([0, 1])
+        run, _ = self.runner([0, 1, 1])
         with patch.object(decisions, "answer") as answer:
             coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
         answer.assert_not_called()                                                           # nobody rejects it: a retry fixes no code
         self.assertTrue(classify.failing_command_files(self.notes[0][1]))                    # the classifier finds the script that failed
 
-    def test_the_first_failure_stops_the_rest(self):
-        run, calls = self.runner([2, 0])
+    def test_a_live_command_that_fails_is_run_once_more_and_the_evidence_says_so(self):
+        run, calls = self.runner([1, 0, 0])                         # M1: fails, then passes; M2 passes
+        lines = coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertEqual(len(calls), 3)
+        (args, _), = self.attested
+        self.assertIn("run 2 of 2", args[5])                         # the flake is in the evidence, not hidden
+        self.assertTrue(any("passed" in line for line in lines))
+        kept = sorted(p.name for p in (self.rdir / "RUN.notes").glob("T14a.live-att-7.*.log"))
+        self.assertEqual(kept, ["T14a.live-att-7.1.log"])           # the failed run's output is kept
+        self.assertNotIn(SECRET, (self.rdir / "RUN.notes" / kept[0]).read_text())
+
+    def test_two_failures_attest_nothing_and_a_timeout_is_not_retried(self):
+        run, calls = self.runner([1, 1])
+        coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertEqual((len(calls), self.attested), (2, []))
+        run, calls = self.runner([-1, 0])
         coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
         self.assertEqual(len(calls), 1)
+
+    def test_the_first_failure_stops_the_rest(self):
+        run, calls = self.runner([2, 2, 0])
+        coord.attest_task("pictures", "REQ-001", self.rdir, "T14a", runner=run)
+        self.assertEqual(len(calls), 2)                              # both runs of the first command, none of the second
 
     def test_a_project_the_owner_did_not_name_is_refused_and_nothing_runs(self):
         run, calls = self.runner([0])
