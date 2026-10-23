@@ -92,6 +92,25 @@ be simulated with `bt_scheduler_core.simulators`.
   existing recovery and verification ports. The legacy launcher stays separate, and low-level compositions retain
   their optional port seam. `NEEDS_REVIEW` remains operator-owned.
 
+### Verification inputs, analyst stops and audit ledgers
+
+The planner checks explicit verification input paths against `git check-ignore` in the repository checkout resolved by
+its adapter. An ignored input needs a preceding producer command in the same task (an explicit output option, shell
+redirection or `touch`); declaring it in `expected_paths` does not create it. Missing git or an unresolved checkout
+leaves this check silent. The isolated planner receives repository facts as a callback and never starts a process.
+Known reads of ignored paths are errors; arguments whose input/output role the planner cannot establish only warn.
+
+A finished failure analysis with `not_the_task: true` and confidence other than `baja` also interrupts a ready or active
+task, before its retry budget runs out. The watcher uses the operator's cancellation move and blocks the task under the
+same hold, then feeds the ordinary decision card into `analyst_case` and the existing repair flow. `RUN.healing.json`
+records the analysis fingerprint so a restart never repeats that interruption; an operator hold or `heal stop` wins.
+
+`bitacora.py audit-ledger check <file>` validates the engine-owned `audit-findings/1` contract (exit 0 valid, 2 with
+problems). Open findings can be structurally valid and still fail the audit gate. `tasks` and `taskReferences` are
+compatible fields (`tasks` takes precedence); `fixed` and `closed` both require evidence. Severities are critical,
+high, medium, low and info; accepting a risk still requires `accepted_by: owner` and a reason. Project-specific scripts
+that check audit ledgers receive planner advice to use this command instead.
+
 ## Agent executor (`bt_scheduler_executor`, REQ-014)
 
 The third Scheduler module (M3), built under the same five rules. It receives the core's authorised, idempotent start/cancel/query

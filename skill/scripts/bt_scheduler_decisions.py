@@ -282,7 +282,7 @@ def _blocked(doc: dict, rdir: Path) -> list[dict]:
                                               f"Motivo del bloqueo: {rec.get('reason', '')}" if not known else "") if x))
         out.append({
             "needs": needs, "you_can": list(you_can), "error": error,
-            "id": f"{task}:{len(attempts)}", "source": "task", "task": task, "attempt": last.get("id", ""),
+            "id": f"{task}:{len(attempts)}" + (f":{rec['reason']}" if rec.get("reason", "").startswith("analyst_not_the_task:") else ""), "source": "task", "task": task, "attempt": last.get("id", ""),
             "title": f"{task} bloqueada: {code or 'sin razón'}", "what": what, "reason": rec.get("reason", ""),
             "evidence": [e for e in (f"intentos: {len(attempts)}", f"último fallo: {last.get('failure')}" if last.get("failure") else "",
                                      f"evidencia: {last.get('evidence')}" if last.get("evidence") else "") if e],

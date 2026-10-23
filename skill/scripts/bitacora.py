@@ -56,6 +56,9 @@ def main() -> None:
     ap.add_argument("--project", help="override project name")
     ap.add_argument("--cwd", default=os.getcwd())
     sub = ap.add_subparsers(dest="cmd", required=True)
+    p_ledger = sub.add_parser("audit-ledger", help="validate the engine-owned audit ledger contract")
+    p_ledger.add_argument("action", choices=["check"])
+    p_ledger.add_argument("file")
     sub.add_parser("where", help="ensure today's files exist and print all paths")
     sub.add_parser("init", help="create the project tree")
     p_id = sub.add_parser("id", help="next free ID")
@@ -163,6 +166,10 @@ def main() -> None:
     p_relay.add_argument("--settings", help="install: settings.json to merge the hooks into (default: print only)")
     p_relay.add_argument("--dry-run", action="store_true", help="install: print, change nothing")
     a = ap.parse_args()
+
+    if a.cmd == "audit-ledger":
+        from bitacora_platform import cli_audit_ledger as bt_cli_audit_ledger
+        sys.exit(bt_cli_audit_ledger.check(Path(a.file)))
 
     if a.cmd == "relay":
         import bt_relay_cli

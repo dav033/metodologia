@@ -60,6 +60,20 @@ class OpsTests(unittest.TestCase):
         ops.apply("p", "REQ-001", self.rdir, "reopen", "T3", "retry")
         self.sch.reopen.assert_called_once_with("T3", ops.OPERATOR, "retry")
 
+    def test_analyst_cancellation_blocks_the_task_before_releasing_the_hold(self):
+        def block(*args):
+            self.assertTrue(ops.on_hold(self.rdir))
+            self.sch.resolve_attempt.assert_called_once()
+        self.sch.block_task.side_effect = block
+        ops.apply("p", "REQ-001", self.rdir, "cancel-attempt", "att-0001", "analysis",
+                  expected_task="T1", block_task=True)
+        self.sch.block_task.assert_called_once_with("T1", ops.OPERATOR, "analysis")
+
+    def test_analyst_can_block_a_ready_task_without_cancelling_a_closed_attempt(self):
+        ops.apply("p", "REQ-001", self.rdir, "cancel-attempt", "", "analysis", expected_task="T1", block_task=True)
+        self.sch.resolve_attempt.assert_not_called()
+        self.sch.block_task.assert_called_once_with("T1", ops.OPERATOR, "analysis")
+
     def test_rework_sends_the_listed_tasks_back_through_m1(self):
         self.sch.rework.return_value = ("T1", "T2")
         lines = ops.apply("p", "REQ-001", self.rdir, "rework", "T1, T2", "audit found it")
