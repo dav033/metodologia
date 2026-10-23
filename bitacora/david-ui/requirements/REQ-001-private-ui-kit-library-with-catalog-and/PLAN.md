@@ -1,6 +1,6 @@
 ---
 req: REQ-001
-status: draft
+status: review
 created: 2026-10-22
 ---
 # Plan — Private UI kit library with catalog and registry
@@ -136,6 +136,20 @@ A missing identity, URL or secret produces a deliberate failure. Missing/wrong b
 /r delivery on Netlify, including JSON indexes, not only Next handler imports. The unresolved secret locations must
 be resolved before T14/T23 execution; this classification session performs no production action.
 
+
+## Spec review amendments (2026-10-22)
+An independent spec review tightened SPEC.md after classification; task scope is unchanged, these details bind them:
+- T4: manifest fields `origin` (inventory / catalog-driven / own), normalized priority + raw source priority, type
+  enum, exposure form, `applicableStates`, incorporation date, dependency-compatibility result, `ownerApproved`;
+  `catalog:check` counts only `origin: inventory` (30/12 shadcn, 7, 6+6 Bencho, 9/12/6/5 React Bits) and verifies
+  license header notices on copied files. Status semantics are in SPEC "Status semantics".
+- T12/T13: inventory entries the catalog needs early (Command, Scroll Area, Drawer…) are built there and stay inventory
+  entries; T13 also adds the gaps page (R9).
+- T14/T22: the agent index is served at `/r/index.json` and `/r/llms.txt`, both behind the registry token (R14).
+- T16: Page Transition validated only on the Next App Router.
+- T17/T18: §10.3 slugs; each R12 rule has its own test.
+- T21: backgrounds measured with Pixel 7 emulation + 4× CPU throttle, median ≥ 30 FPS or static fallback by default on mobile (R13).
+- T22: `AGENTS.md` documents the deliberate upstream-update procedure (R10).
 ## Tasks
 
 ### M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline
@@ -437,6 +451,7 @@ Acceptance: `/r/index.json`, `/llms.txt` and repo `AGENTS.md`/`CLAUDE.md` list e
   - Acceptance / static: The final aggregate has no pending baseline candidate, all 22 enhancements resolved and complete required metadata and QA evidence for every validated entry. Check: `npm run catalog:check -- --final` (authored by T4)
 
 - [ ] T25 — Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger · repo: app · after: T24a · verify: `node scripts/check-audit-ledger.mjs .evidence/T25.findings.json` · files: .evidence/T25.md, .evidence/T25.findings.json · resources: contract:acceptance-flow · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
+- [ ] T25b — Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger · repo: app · after: T24a · verify: `node scripts/check-audit-ledger.mjs .evidence/T25-crosscheck.findings.json` · files: .evidence/T25-crosscheck.md, .evidence/T25-crosscheck.findings.json · resources: contract:acceptance-flow · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
 
   Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 300 minutes.
 
@@ -444,7 +459,7 @@ Acceptance: `/r/index.json`, `/llms.txt` and repo `AGENTS.md`/`CLAUDE.md` list e
 
   Estimate: Provisional engineering estimate in minutes: 210 requirement/inventory review + 60 reproduction + 30 ledger validation = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
 
-  - Acceptance / product: The audit ledger conforms to audit-findings/1, names valid responsible plan tasks and has no open critical or high finding. Check: `node scripts/check-audit-ledger.mjs .evidence/T25.findings.json` (authored by T1)
+  - Acceptance / product: The audit ledger conforms to audit-findings/1, names valid responsible plan tasks and has no open critical or high finding. Check: `node scripts/check-audit-ledger.mjs .evidence/T25-crosscheck.findings.json` (authored by T1)
 
 ## Review focus
 
