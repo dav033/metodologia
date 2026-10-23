@@ -6,7 +6,7 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 4/7 · tareas 18/27 · generado: 2026-10-23T09:30:52-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 6/7 · tareas 24/27 · generado: 2026-10-23T10:15:22-05:00
 
 **M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
@@ -44,29 +44,29 @@ created: 2026-10-22
 | T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | completada | gpt-6-luna | codex-1 | 1 |
 | T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | completada | gpt-6-luna | codex-2 | 1 |
 
-**M5 — Bencho UI (12)** · dificultad alta · 0/2
+**M5 — Bencho UI (12)** · dificultad alta · 2/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | en curso | gpt-6-luna | codex-2 | 4 |
-| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | pendiente | — | — | 0 |
+| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | completada | gpt-6-luna | codex-2 | 4 |
+| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | completada | gpt-6-luna | codex-luis | 1 |
 
-**M6 — React Bits Free (32)** · dificultad alta · 2/3
+**M6 — React Bits Free (32)** · dificultad alta · 3/3
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | completada | gpt-6-luna | codex-2 | 1 |
 | T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | en curso | gpt-6-luna | codex-2 | 2 |
+| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | completada | gpt-6-luna | codex-2 | 2 |
 
-**M7 — Agent index, deployment and acceptance** · dificultad alta · 0/6
+**M7 — Agent index, deployment and acceptance** · dificultad alta · 3/6
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | pendiente | — | — | 0 |
-| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | pendiente | — | — | 0 |
-| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | pendiente | — | — | 0 |
-| T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | pendiente | — | — | 0 |
+| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | completada | gpt-6-luna | codex-2 | 2 |
+| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | verificando | gpt-6-luna | codex-luis | 1 |
 | T25 | Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | — | — | 0 |
 | T25b | Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | — | — | 0 |
 <!-- bitacora:status:end -->
