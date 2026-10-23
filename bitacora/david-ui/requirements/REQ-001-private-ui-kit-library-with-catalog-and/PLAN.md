@@ -6,7 +6,7 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: paused · hitos 6/7 · tareas 24/32 · generado: 2026-10-23T16:40:36-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: paused · hitos 6/7 · tareas 24/32 · generado: 2026-10-23T17:36:03-05:00
 
 **M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
@@ -69,7 +69,7 @@ created: 2026-10-22
 | T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | pendiente | gpt-6-luna | codex-1 | 4 |
 | T25 | Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-1 | 2 |
 | T25b | Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-2 | 1 |
-| T24.1a | Repair what blocks T24a | media | en curso | sonnet | claude-work | 4 |
+| T24.1a | Repair what blocks T24a | media | bloqueada | sonnet | claude-work | 4 |
 | T24.1 | Remediate T25 findings: security: anonymous access and token-protected index | alta | pendiente | — | — | 0 |
 | T24.2 | Remediate T25 findings: registry install: internal dependencies and import paths | alta | pendiente | — | — | 0 |
 | T24.3 | Remediate T25 findings: design tokens wired into the app | alta | pendiente | — | — | 0 |

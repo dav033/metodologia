@@ -1,13 +1,19 @@
 {
- "attention": [],
+ "attention": [
+  {
+   "kind": "blocked_task",
+   "reason": "m5:attempts_exhausted",
+   "task_id": "T24.1a"
+  }
+ ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-23T22:32:23+00:00",
+ "heartbeat_at": "2026-10-23T22:36:04+00:00",
  "plan_ref": {
   "plan_id": "REQ-001",
   "revision": 9,
   "sha256": "a7d21c84059e583ab46cd464b8c1d9332a628607ce5a6ce554ea84f7977a5545"
  },
- "projected_at": "2026-10-23T22:32:23+00:00",
+ "projected_at": "2026-10-23T22:36:04+00:00",
  "projection": true,
  "req": "REQ-001",
  "scheduler_status": "paused",
@@ -868,7 +874,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -906,7 +912,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Independent audit of the whole requirement against SPEC R1\u2013R16 and the inventory rules (\u00a76, \u00a710.2, \u00a711.6): read-only review, findings ledger",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -944,7 +950,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1\u2013R16 and the inventory rules (\u00a76, \u00a710.2, \u00a711.6): read-only review, findings ledger",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:f027ad10283229d2756ab1ec641209a19392344421ddc25d496fa875212c012c",
@@ -968,15 +974,15 @@
    "quota_state": "fresh",
    "quota_used_percent": "64.0",
    "quota_valid_until": "1792797535.5496228",
-   "reason": "",
+   "reason": "m5:attempts_exhausted",
    "repo": "app",
    "retries_remaining": 0,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "blocked",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;verified_history",
-   "status": "in_progress",
+   "status": "blocked",
    "title": "Repair what blocks T24a",
    "unreachable": false
   },
@@ -1012,7 +1018,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T25 findings: security: anonymous access and token-protected index",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1046,7 +1052,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T25 findings: registry install: internal dependencies and import paths",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1080,7 +1086,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T25 findings: design tokens wired into the app",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1114,7 +1120,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Remediate T25 findings: kit-only guard coverage",
-   "unreachable": false
+   "unreachable": true
   }
  ]
 }
