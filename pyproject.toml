@@ -29,6 +29,7 @@ packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench
 py-modules = [
   "bitacora",
   "bt_attempt_log",
+  "bt_attempt_analyst",
   "bt_remediation",
   "bt_audit_gate",
   "bt_cli_scheduler_ops",

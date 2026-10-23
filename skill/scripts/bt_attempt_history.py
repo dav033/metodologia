@@ -69,14 +69,17 @@ def _recorded(rdir: Path, task: str) -> dict[str, dict]:
     return out
 
 
-def entries(rdir: Path, task: str, doc: dict) -> list[dict]:
-    """Every settled attempt of the task, oldest first: {attempt, number, outcome, text, signature}."""
+def entries(rdir: Path, task: str, doc: dict, include: str = "") -> list[dict]:
+    """Every settled attempt of the task, oldest first: {attempt, number, outcome, text, signature}.
+
+    `include` names an attempt still in verification whose rejection is already known (its failure was just recorded),
+    so a reader acting at that moment sees it as settled."""
     recorded = _recorded(rdir, task)
     out = []
     for number, attempt in enumerate(doc.get("tasks", {}).get(task, {}).get("attempts", []), 1):
         rec = doc.get("attempts", {}).get(attempt, {})
         state = rec.get("state", "")
-        if state in ("reserved", "dispatched", "running", "verifying", "uncertain", ""):
+        if state in ("reserved", "dispatched", "running", "verifying", "uncertain", "") and attempt != include:
             continue
         failure = str(rec.get("failure") or "")
         if state == "accepted":

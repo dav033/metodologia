@@ -37,6 +37,11 @@ DEFAULTS: dict = {
     # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
     # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
+    # analyst: a task that failed `min_failures` times in a row is not retried blindly; a read-only model with the repository
+    # in view finds the cause and writes the solution into the next attempt's prompt (bt_attempt_analyst). `wait_seconds`
+    # is how long a dispatch waits for an analysis still running before it goes on without it
+    "analyst": {"enabled": True, "min_failures": 2, "max_per_task": 4, "profile": "claude", "model": "sonnet",
+                "effort": "medium", "timeout_seconds": 300, "wait_seconds": 90},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": ""},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
