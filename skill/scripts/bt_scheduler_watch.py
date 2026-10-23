@@ -64,6 +64,7 @@ class Watch:
         self.failures: collections.deque[float] = collections.deque()
         self.backoff = BACKOFF_START
         self.low_disk_notified = False
+        self.applied_frozen: set[int] = set()
 
     @staticmethod
     def _min_free() -> int:
@@ -185,6 +186,8 @@ class Watch:
                 continue
             ran = self.now() - started
             self.log(f"owner exited with {code} after {int(ran)} s")
+            if code in PERMANENT and self._apply_frozen():
+                continue                                                # a healing revision was frozen but never applied: apply it, then run
             if code in PERMANENT:
                 self.notify(f"Bitácora · {self.req}", f"El scheduler de {self.req} no arranca (código {code}); revisa el log.")
                 return 2
@@ -197,6 +200,28 @@ class Watch:
             self.sleep(self.backoff)
             self.backoff = min(BACKOFF_CAP, self.backoff * 2)
         return 0
+
+    def _apply_frozen(self) -> bool:
+        """P-164: the self-healing freezes a revision (PLAN.json moves to it) and then applies it to the run. When the apply fails (an owner
+        was starting: OWNER_ACTIVE) the next owner refuses the run (PLAN_MISMATCH, exit 2) and the watch used to give up for good. If the
+        newest frozen revision came from the healing and is ahead of the run's, apply it now, once per revision. True when it was applied."""
+        try:
+            manifest = json.loads((self.rdir / "plan-revisions" / "MANIFEST.json").read_text(encoding="utf-8"))
+            newest = manifest["revisions"][-1]
+            frozen = int(json.loads((self.rdir / "PLAN.json").read_text(encoding="utf-8")).get("revision") or 0)
+            running = int(ops.status(self.project, self.req, self.rdir).get("revision") or 0)
+        except (OSError, ValueError, KeyError, IndexError, TypeError):
+            return False
+        if not str(newest.get("source", "")).startswith("healing") or frozen <= running or frozen in self.applied_frozen:
+            return False
+        self.applied_frozen.add(frozen)
+        try:
+            ops.apply(self.project, self.req, self.rdir, "revise", "", f"healing: applying the frozen revision r{frozen} the owner could not start on")
+        except Exception as error:  # noqa: BLE001 - the watch then gives up as before, with the reason in its log
+            self.log(f"frozen revision r{frozen} could not be applied ({type(error).__name__}: {str(error)[:160]})")
+            return False
+        self.log(f"frozen revision r{frozen} (healing) applied to the run after the owner refused it")
+        return True
 
     def _remediate(self) -> bool:
         """An audit asked for remediation tasks (REQ-028): put them in the plan, rebase the run onto it, and run again."""
