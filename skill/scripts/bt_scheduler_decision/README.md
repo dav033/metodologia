@@ -1,18 +1,27 @@
 # `bt_scheduler_decision` — M2 public contract
 
-M2 recommends a route for one READY task. M1 remains authoritative: it validates each returned `Assignment`, checks
-capacity and resource claims atomically, and may refuse it. This package is standard-library-only and imports no
-methodology module. `bt_scheduler_decision_adapter.py` is the sole methodology adapter; it translates the M1 port and
-existing catalog, profile, quota and telemetry facts into this contract.
+M2 can recommend a route for one READY task or plan a bounded READY batch. M1 remains authoritative: it validates
+each returned `Assignment`, checks capacity and resource claims atomically, and may refuse it. This package is
+standard-library-only and imports no methodology module. `bt_scheduler_decision_adapter.py` is the sole methodology
+adapter; it translates the M1 port and existing catalog, profile, quota and telemetry facts into this contract.
 
 The frozen Python API is exported by `__init__.py`: `DecisionRequest`, `TaskFacts`, `Candidate`, `RouteHistory`,
 `LayaChoice`, `DecisionRecord`, `RouteSummary`, `RouteBinding`, `Exclusion`, `Confidence`, `ValidatedRequest`,
 `DecisionInputError`, `validate_request`, `candidate_route_id`, `account_reference`, `executor_reference`,
 `parse_executor_reference`, `canonical_json`, `sha256_json`, `rank_candidates`, `deterministic_reference`,
-`CandidateRanking`, `assess_history`, `HistoryAssessment`, `DecisionLedger`, `DecisionLedgerError`,
-`idempotency_key`, `decision_id_for`, `resolve_executor_reference`, and `resolve_executor_binding`. Their normative serialized fields and enums are in
-`api-contract.json`. The decision service itself is added in the next implementation milestone; callers use only this
-public surface, never package internals.
+`CandidateRanking`, `DemandEstimate`, `DemandSample`, `observed_token_usage`, `attribute_quota_delta`,
+`estimate_demand`, `assess_history`, `HistoryAssessment`, `DecisionLedger`, `DecisionLedgerError`,
+`RouteQuotaRequirement`, `BatchRouteQuotaAssessment`, `BatchQuotaAssessment`, `assess_batch_quota`,
+`AccountConcurrency`, `BatchDecisionStore`, `BatchAssignment`, `BatchPlan`, `BatchRouteExclusion`, `BatchUnassignment`,
+`RoutePolicyConfig`, `RoutePolicyEvidence`, `QuotaWindowPreference`, `plan_ready_batch`,
+`SHADOW_POLICY_VERSION`, `ShadowAssignment`, `ShadowComparison`, `ShadowTaskComparison`, `compare_shadow_batch`,
+`QuotaObservation`, `QuotaAssessment`, `normalize_cached_windows`, `assess_required_windows`,
+`assess_account_windows`, `PerformanceEvent`, `PerformanceEventError`, `normalize_performance_event`,
+`reduce_performance_events`, `PerformanceContext`, `PerformanceMeasurement`, `ContextualHistoryAssessment`,
+`PerformanceHistoryError`, `aggregate_performance_history`, `LearningSnapshot`, `LearningSnapshotStore`,
+`TemporalEvaluation`, `TemporalEvaluationError`, `evaluate_prequential_history`, `idempotency_key`,
+`decision_id_for`, `resolve_executor_reference`, and `resolve_executor_binding`. Their normative serialized fields and enums are in
+`api-contract.json`. Methodology callers use this public surface through `bt_scheduler_decision_adapter.py`, never package internals.
 Malformed identity/route values, non-finite numbers, invalid SHA-256 values, and oversized collections are rejected.
 Optional classifications and evidence are normalized to explicit unknown facts with stable warnings; the nested
 classification, evidence and verification payloads share a 8,192-node and 256-KiB JSON budget before normalization.
@@ -48,6 +57,50 @@ duration coverage/median and token coverage/median separate. An absent sample re
 shrunk to the declared prior/minimum-sample rule. Subscription quota is not a price estimate, and a model score is
 never converted to real-world success probability.
 
+`QuotaObservation` is a versioned, account-scoped record for one provider/model window. `normalize_cached_windows()`
+reads only values supplied from existing subscription or Antigravity caches; it performs no collection or network I/O.
+Every result retains the opaque account reference, window ID, source, observation time, validity deadline, reset
+time/confidence, usage percentage, state and a finite reason code. Missing, malformed, stale, future, auth-error or
+reset-expired data stays `unknown` or `stale`; all caller-required windows must be fresh before
+`assess_required_windows()` reports available capacity. The pressure is the highest observed percentage among those
+windows. A null reset can be marked usable only for a Claude window explicitly declared by its source; Codex and
+Antigravity require a reported future reset. This status is quota telemetry, not a token or currency estimate.
+
+`DemandEstimate` keeps provider tokens and quota percentage points in separate units. Direct token observations retain
+the provider usage source. A percentage delta is observed only when both cached readings describe the same account,
+provider, model and window, the reset is known and unchanged, exactly one task ran, and telemetry explicitly rules out
+external usage. Parallel work, reset changes, unknown resets, stale reads, counter decreases or external usage return
+`unknown` with `attribution_unknown` where attribution is unsafe. `estimate_demand()` accepts only bounded, unique,
+exact-context samples of the same source and unit; it reports sample count and the empirical min/median/max range with
+a maximum one-day validity. This range is not a confidence interval or a calibrated forecast. Token counts are never
+converted to quota percentages, and percentages are never converted to tokens or currency.
+
+`assess_account_windows()` checks base and model-specific scopes independently for one opaque effective account.
+`assess_batch_quota()` reuses that assessment for candidate aliases that share an account, counts the account once and
+marks a route eligible only when every window it requires is available. A fresh five-hour reset cannot offset an
+exhausted weekly or model-specific window. This is a read-only assessment; it does not reserve capacity or change M1.
+
+`plan_ready_batch()` is the public bounded T15 selector over the supplied READY `DecisionRequest`s from one plan
+revision, plan hash, request time and `free_slots` snapshot. It applies `m2-route-policy-v1` after hard filters, then
+matches tasks to effective accounts with a deterministic capacity-aware augmenting-path algorithm. Tasks with fewer
+eligible accounts are considered first, with task ID as the stable tie-break; route order stays the route policy's
+order. It emits at most `free_slots` distinct task assignments and subtracts active work from each supplied account
+concurrency limit. When no account limit is supplied, it applies no inferred per-account limit and remains bounded by
+the global slots. The plan contains only opaque hashes, route ranks, route exclusions and stable selection/no-assignment
+reasons; it creates no durable reservation. The public inputs are `AccountConcurrency`, `RoutePolicyEvidence`,
+`RoutePolicyConfig` and `QuotaWindowPreference`; the result types are `BatchPlan`, `BatchAssignment`,
+`BatchUnassignment` and `BatchRouteExclusion`. `DecisionLedger.batch_decisions.persist()` stores this redacted plan
+append-only under its canonical input fingerprint; `get()` reads it by that fingerprint. Exact replay returns the
+first stored plan and checksum failures fail closed. The current M1 adapter still uses its per-task loop; T18 owns
+wiring this planner into that boundary.
+
+`compare_shadow_batch(..., enabled=True)` returns a content-addressed `ShadowComparison`; with `enabled=False` it
+returns `None` before validating or traversing inputs. The deterministic baseline uses router order in the supplied
+READY order, while the proposed result uses the batch policy. Both receive the same normalized task requests,
+route-policy evidence, `free_slots` and explicit account-concurrency snapshot. The result contains each side's
+assignments, exclusions and no-assignment reasons plus stable per-task difference codes. It is a replayable in-memory
+record: T17 does not write the ledger, dispatch, reserve capacity, call a provider or change task state.
+
 ## Selection and confidence
 
 Deterministic filters run before Laya. The deterministic reference is the existing `bt_agents.candidates` router
@@ -75,6 +128,31 @@ strength is four observations and history is considered sufficiently sampled at 
 sample counts and are not imputed. This historical feature is not a calibrated prediction of future task success and
 does not override the deterministic router's explicit baseline rank.
 
+`normalize_performance_event()` joins bounded M1 attempt, M2 decision and M1-applied verdict projections by exact
+plan/revision/task/attempt/decision/route identities. Only an applied independent PASS or FAIL with explicit event
+time recorded by M1 and non-synthetic sources enters verified history. Claims, cancellations, infrastructure failures, stale or
+uncorrelated verdicts, PASS rows without required acceptance evidence and synthetic rows remain non-learning outcomes. The output is
+replayable by `(attempt_id, verdict_id)`, omits verifier labels and evidence text, and never writes M1 or M6 state.
+`reduce_performance_events()` removes identical replays, lets a later M1 application supersede an earlier stale
+delivery of that verdict, and demotes conflicting applied or multiple-applied verdict identities for the same
+plan/revision/task/attempt to `unknown` without depending on arrival order.
+
+`aggregate_performance_history()` consumes only eligible T9 events and a separate allowlisted context map. It reports
+unique attempt counts, PASS/FAIL sample counts, non-quality outcomes, coverage, the observed rate and a descriptive
+Wilson 95% interval. It searches exact context, complexity class, task family and route; a level informs the ranking
+feature only after five verified samples. If the route bucket is still sparse, the selected feature stays `null` and
+the caller retains the existing deterministic baseline. The Beta(2,2)-shrunk value is a ranking feature, not a
+forecast or calibrated success probability. Legacy aggregate telemetry is not converted into correlated events here;
+validated M4/M6 source wiring remains a later adapter task.
+
+`evaluate_prequential_history()` assigns cutoffs only from M1-applied events with a valid timezone-aware
+`applied_at`; stale, invalid and noop deliveries cannot make an outcome appear available. It partitions raw events
+across all routes before replay reduction, then aggregates the selected route so conflicting route projections stay
+unknown. Facts at the cutoff are training; later facts are evaluation, and an attempt already known at the cutoff
+cannot reappear as a future sample. Attempts without a valid M1-applied timestamp are excluded from both sets and
+reported separately. Each source fingerprint contains only pre-cutoff reduced events. Historical ranking features and future observed counts/rates are
+separate descriptive values; future rates are not success probabilities or calibration results.
+
 `DecisionRecord.confidence` is a tagged value. Laya confidence means only “this choice score passed the local
 chooser-calibration cutoff”; it is not a probability of task success. Deterministic confidence means only a policy
 margin/tie description. If no meaningful margin exists, its numeric value is `null`. The record's rationale is
@@ -92,11 +170,24 @@ before writing, uses WAL plus `BEGIN IMMEDIATE`, and serializes duplicate writer
 at most 100,000 records of at most 128 KiB each, failing closed at the bound; it never deletes older records. The
 record rationale is the joined set of stable factor codes, not free text. The database file is set to mode `0600`.
 `resolve_executor_reference()` returns a route only when its IDs match the persisted record's selected route.
+Selected and alternative route summaries retain the quota sample time, measured usage percentage and validity deadline.
+Records written under 1.0.0 and 1.1.0 remain readable, but any missing quota facts cannot be launched through M3.
 Reason codes, factor codes and fallback codes are finite contract enums, so source explanations, task text and model
 output cannot be smuggled into the audit record through those fields.
 `DecisionLedger.persist()` accepts and revalidates the original `DecisionRequest`. It rejects a `ValidatedRequest`:
 normalization intentionally removes evidence prose and raw references, so their input digest cannot be authenticated
 again from the redacted object.
+
+`DecisionLedger.learning_snapshots.persist()` stores the contextual aggregate, policy version and learning cutoff in
+the same SQLite ledger. Its SHA-256 source fingerprint binds the normalized T9 event projections, hashed context
+identities, route, target context, cutoff, policy and aggregate. Raw event/task identities are never stored. Exact
+replays return the first immutable snapshot and timestamp; conflicting content, oversized snapshots and capacity
+exhaustion fail closed. `learning_snapshots.get()` reads by fingerprint. Writable schema-1 ledgers migrate additively
+through schema 2 to schema 3; writable schema-2 ledgers add only the immutable `batch_decisions` table. Read-only
+schema-1 consumers remain able to read decisions and report no snapshots or batch rows; schema-2 consumers can read
+decisions and snapshots and report no batch rows. The schema-3 batch table stores no task prose, route-policy evidence
+or provider output; it is append-only, capped at 10,000 rows and 2 MiB per plan, and fails closed at capacity. Callers
+must build the learning aggregate only from facts available at its declared cutoff; T12 validates temporal use.
 
 The M1 adapter receives multiple READY tasks and one shared `free_slots` budget. It considers tasks in M1 plan order,
 continues past a task with no eligible route, adds at most one proposal per task, and stops after producing

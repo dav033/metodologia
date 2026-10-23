@@ -47,7 +47,8 @@ class Boundaries(unittest.TestCase):
                     names = [node.name.split(".")[-1]]
                 for name in names:
                     self.assertNotIn(name, DYNAMIC_NAMES, f"{path.name}:{getattr(node, 'lineno', '?')}: {name}")
-            self.assertNotRegex(source, re.compile(r"\b(subprocess|socket|urllib|httpx|requests)\b"))
+            # The AST import-boundary test above already rejects third-party `requests` imports.
+            self.assertNotRegex(source, re.compile(r"\b(subprocess|socket|urllib|httpx)\b"))
 
     def test_readme_lists_the_single_public_surface(self):
         readme = (MODULE / "README.md").read_text(encoding="utf-8")
@@ -56,7 +57,15 @@ class Boundaries(unittest.TestCase):
         for name in ("DecisionRequest", "TaskFacts", "Candidate", "RouteHistory", "LayaChoice", "DecisionRecord",
                      "validate_request", "executor_reference", "parse_executor_reference", "DecisionLedger",
                      "idempotency_key", "decision_id_for", "resolve_executor_reference", "resolve_executor_binding",
-                     "RouteBinding"):
+                     "RouteBinding", "PerformanceEvent", "PerformanceEventError", "normalize_performance_event",
+                     "reduce_performance_events", "PerformanceContext", "PerformanceMeasurement",
+                     "ContextualHistoryAssessment", "PerformanceHistoryError", "aggregate_performance_history",
+                     "LearningSnapshot", "LearningSnapshotStore", "AccountConcurrency", "BatchDecisionStore",
+                     "BatchAssignment", "BatchPlan", "BatchRouteExclusion", "BatchUnassignment",
+                     "RoutePolicyConfig", "RoutePolicyEvidence", "QuotaWindowPreference", "plan_ready_batch",
+                     "SHADOW_POLICY_VERSION", "ShadowAssignment", "ShadowComparison", "ShadowTaskComparison",
+                     "compare_shadow_batch", "TemporalEvaluation",
+                     "TemporalEvaluationError", "evaluate_prequential_history"):
             self.assertIn(f"`{name}`", readme)
         self.assertIn("api-contract.json", readme)
 

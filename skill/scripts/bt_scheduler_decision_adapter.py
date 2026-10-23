@@ -103,6 +103,25 @@ def _token_count(row: Mapping[str, Any]) -> int | None:
     return None
 
 
+def _route_options(provider: str, tier: int, task_kind: str) -> tuple[tuple[str, str | None], ...]:
+    """Enumerate configured model/effort rungs at or above the task floor."""
+    if provider not in bt_agents.PROVIDERS:
+        return ()
+    options: list[tuple[str, str | None]] = []
+    seen: set[tuple[str, str | None]] = set()
+    for rung_tier in range(tier, bt_agents.TOP + 1):
+        model, effort = bt_agents.model_for(provider, rung_tier, kind=task_kind)
+        model_spec = bt_agents.MODELS.get(model) if isinstance(model, str) else None
+        if not isinstance(model_spec, Mapping) or model_spec.get("provider") != provider or \
+                (effort is not None and effort not in bt_agents.EFFORTS):
+            continue
+        option = (model, effort)
+        if option not in seen:
+            seen.add(option)
+            options.append(option)
+    return tuple(options)
+
+
 def _history_snapshot(rows: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str, str, str, str], RouteHistory]:
     grouped: dict[tuple[str, str, str, str, str], list[Mapping[str, Any]]] = defaultdict(list)
     for row in rows:
@@ -162,7 +181,10 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     usage = bt_subscriptions.load()
     tier = _tier_for(classifications, task_kind)
     routes, _ = bt_agents.candidates(project, pool, tier, task_kind)
-    router_rank = {route["profile"]: index for index, route in enumerate(routes)}
+    router_rank = {
+        (route.get("profile"), route.get("agent"), route.get("model"), route.get("effort")): index
+        for index, route in enumerate(routes)
+    }
     histories = _history_snapshot(bt_events.read_all())
     candidates = []
     for profile in pool:
@@ -170,25 +192,27 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
         if not isinstance(spec, Mapping):
             continue
         provider = str(spec.get("provider") or "")
-        model, effort = bt_agents.model_for(provider, tier, kind=task_kind)
-        if not isinstance(model, str):
+        options = _route_options(provider, tier, task_kind)
+        if not options:
             continue
         key = bt_agents.account_key(profile, provider)
-        quota, auth, observed, valid_until, pressure, reason = _usage_facts(provider, key, model, usage, now)
         cooldown = bt_agents.cooling_until(profile, provider)
         source_status = "temporarily_unavailable" if cooldown is not None and cooldown > now else "available"
-        source_reasons = ("cooldown_active",) if source_status != "available" else \
-            ("capacity_exhausted",) if reason else ()
+        source_reasons = ("cooldown_active",) if source_status != "available" else ()
         binary = spec.get("bin") or provider
         runtime_status = "available" if shutil.which(str(binary)) else "unavailable"
-        history_key = (provider, model, profile, effort or "", task_kind)
-        history = histories.get(history_key, RouteHistory())
-        route_id = candidate_route_id(provider, model, profile, effort)
-        candidates.append(Candidate(
-            route_id, provider, model, profile, account_reference(key), effort,
-            source_status, source_reasons, True, auth, runtime_status, quota,
-            observed, valid_until, pressure, router_rank.get(profile), history,
-        ))
+        for model, effort in options:
+            quota, auth, observed, valid_until, pressure, reason = _usage_facts(provider, key, model, usage, now)
+            model_source_reasons = source_reasons if source_reasons else (("capacity_exhausted",) if reason else ())
+            history_key = (provider, model, profile, effort or "", task_kind)
+            history = histories.get(history_key, RouteHistory())
+            route_id = candidate_route_id(provider, model, profile, effort)
+            route_rank = router_rank.get((profile, provider, model, effort))
+            candidates.append(Candidate(
+                route_id, provider, model, profile, account_reference(key), effort,
+                source_status, model_source_reasons, True, auth, runtime_status, quota,
+                observed, valid_until, pressure, route_rank, history,
+            ))
     return tuple(candidates)
 
 

@@ -21,26 +21,30 @@ class UsageError(Exception):
 
 
 def number(value: object) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise UsageError("invalid_response")
-    return float(value)
+    try:
+        result = float(value)
+    except OverflowError as exc:
+        raise UsageError("invalid_response") from exc
+    if not math.isfinite(result):
+        raise UsageError("invalid_response")
+    return result
 
 
-def window(used: object, reset: object, minutes: object) -> dict:
-    used, reset, minutes = number(used), number(reset), number(minutes)
-    if not 0 <= used <= 100 or reset <= 0 or minutes <= 0:
+def window(used: object, reset: object, minutes: object, *, allow_unknown_reset: bool = False) -> dict:
+    used, minutes = number(used), number(minutes)
+    if reset is None:
+        if not allow_unknown_reset:
+            raise UsageError("invalid_response")
+    else:
+        reset = number(reset)
+    if not 0 <= used <= 100 or (reset is not None and reset <= 0) or minutes <= 0:
         raise UsageError("invalid_response")
     return {"used_percent": used, "resets_at": reset, "window_minutes": minutes}
 
 
-def parse_codex(payload: object) -> dict:
-    if not isinstance(payload, dict):
-        raise UsageError("invalid_response")
-    buckets = payload.get("rateLimitsByLimitId")
-    bucket = buckets.get("codex") if isinstance(buckets, dict) else None
-    bucket = bucket or payload.get("rateLimits")
-    if not isinstance(bucket, dict):
-        raise UsageError("missing_windows")
+def _codex_windows(bucket: dict, *, allow_missing: bool = False) -> dict:
     windows = {}
     for key in ("primary", "secondary"):
         value = bucket.get(key)
@@ -50,10 +54,67 @@ def parse_codex(payload: object) -> dict:
             raise UsageError("invalid_response")
         item = window(value.get("usedPercent"), value.get("resetsAt"), value.get("windowDurationMins"))
         name = {300: "five_hour", 10080: "seven_day"}.get(item["window_minutes"])
-        if name:
-            windows[name] = item
-    if not windows:
+        if name is None:
+            raise UsageError("unsupported_window")
+        windows[name] = item
+    if not windows and not allow_missing:
         raise UsageError("missing_windows")
+    return windows
+
+
+def _validate_codex_bucket_controls(bucket: dict) -> None:
+    reached = bucket.get("rateLimitReachedType")
+    spend_control = bucket.get("spendControlReached")
+    if reached is not None or spend_control is True:
+        raise UsageError("usage_denied")
+    if "spendControlReached" in bucket and spend_control is not False:
+        raise UsageError("usage_unknown")
+
+
+def parse_codex(payload: object) -> dict:
+    if not isinstance(payload, dict):
+        raise UsageError("invalid_response")
+    allowed = payload.get("ordinaryUsageAllowed")
+    if allowed is False:
+        raise UsageError("usage_denied")
+    if "ordinaryUsageAllowed" in payload and allowed is not True:
+        raise UsageError("usage_unknown")
+    buckets = payload.get("rateLimitsByLimitId")
+    if buckets is not None and not isinstance(buckets, dict):
+        raise UsageError("invalid_response")
+    bucket = buckets.get("codex") if isinstance(buckets, dict) else None
+    if bucket is None:
+        legacy = payload.get("rateLimits")
+        if not isinstance(legacy, dict) or legacy.get("limitId") != "codex":
+            raise UsageError("missing_windows")
+        bucket = legacy
+    if not isinstance(bucket, dict):
+        raise UsageError("missing_windows")
+    _validate_codex_bucket_controls(bucket)
+    windows = _codex_windows(bucket)
+    model_buckets: dict[str, list[dict]] = {}
+    if isinstance(buckets, dict):
+        for limit_id, model_bucket in buckets.items():
+            if limit_id == "codex":
+                continue
+            if not isinstance(model_bucket, dict):
+                raise UsageError("invalid_response")
+            model_slug = model_bucket.get("normalModelSlug")
+            if not isinstance(model_slug, str) or not model_slug.strip():
+                raise UsageError("model_quota_unknown")
+            try:
+                _validate_codex_bucket_controls(model_bucket)
+                scoped_windows = _codex_windows(model_bucket, allow_missing=True)
+            except UsageError as exc:
+                if exc.code in {"unsupported_window", "usage_denied", "usage_unknown"}:
+                    scoped_windows = {"quota_unknown": True}
+                else:
+                    raise
+            if not scoped_windows:
+                scoped_windows = {"quota_unknown": True}
+            model_buckets.setdefault(model_slug, []).append(scoped_windows)
+    if model_buckets:
+        windows["_model_buckets"] = model_buckets
     return windows
 
 
@@ -66,16 +127,22 @@ def parse_claude(payload: object) -> dict:
         value = payload.get(name)
         if value is None:
             continue
-        if not isinstance(value, dict) or not isinstance(value.get("resets_at"), str):
+        if not isinstance(value, dict) or "resets_at" not in value:
             raise UsageError("invalid_response")
-        try:
-            stamp = dt.datetime.fromisoformat(value["resets_at"].replace("Z", "+00:00"))
-            if stamp.tzinfo is None:
-                raise ValueError("timezone required")
-            reset = stamp.timestamp()
-        except ValueError as exc:
-            raise UsageError("invalid_response") from exc
-        windows[name] = window(value.get("utilization"), reset, minutes)
+        reset_value = value["resets_at"]
+        if reset_value is None:
+            reset = None
+        elif isinstance(reset_value, str):
+            try:
+                stamp = dt.datetime.fromisoformat(reset_value.replace("Z", "+00:00"))
+                if stamp.tzinfo is None:
+                    raise ValueError("timezone required")
+                reset = stamp.timestamp()
+            except (OverflowError, ValueError) as exc:
+                raise UsageError("invalid_response") from exc
+        else:
+            raise UsageError("invalid_response")
+        windows[name] = window(value.get("utilization"), reset, minutes, allow_unknown_reset=True)
     if not windows:
         raise UsageError("missing_windows")
     return windows

@@ -5,7 +5,7 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, TypeVar
 
 from .contracts import (
     API_VERSION,
@@ -27,6 +27,34 @@ from .recorder import DecisionLedger, decision_id_for, idempotency_key
 from .validation import validate_request
 
 MAX_LAYA_CANDIDATES = 8
+
+
+class MetricSnapshot(Protocol):
+    provider: str
+    profile_id: str | None
+    model: str | None
+    name: str
+    unit: str
+    source: str
+    quality: str
+    value: int | float | None
+    sample_count: int
+    observed_at: str
+    comparability_key: str
+
+
+MetricSnapshotT = TypeVar("MetricSnapshotT", bound=MetricSnapshot)
+
+
+def comparable_metric_snapshots(samples: tuple[MetricSnapshotT, ...], *, provider: str,
+                                profile: str | None, model: str | None, name: str, unit: str,
+                                comparability_key: str) -> tuple[MetricSnapshotT, ...]:
+    """Select an exact provenance bucket; unknown identity dimensions are never merged."""
+    return tuple(sample for sample in samples
+                 if (sample.provider, sample.profile_id, sample.model, sample.name, sample.unit) ==
+                 (provider, profile, model, name, unit) and sample.comparability_key == comparability_key)
+
+
 class Chooser(Protocol):
     def choose(self, request: DecisionRequest, candidates: tuple[Candidate, ...]) -> LayaChoice: ...
 
@@ -104,7 +132,8 @@ def task_is_ambiguous(validated: ValidatedRequest) -> bool:
 
 def _summary(candidate: Candidate, factors: tuple[str, ...] = ()) -> RouteSummary:
     return RouteSummary(candidate.route_id, candidate.provider, candidate.model, candidate.profile,
-                        candidate.account_ref, candidate.effort, candidate.baseline_rank, factors)
+                        candidate.account_ref, candidate.effort, candidate.baseline_rank, factors,
+                        candidate.quota_observed_at, candidate.quota_used_percent, candidate.quota_valid_until)
 
 
 def _history_factors(candidate: Candidate) -> set[str]:

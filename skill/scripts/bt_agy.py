@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import math
 import os
 import re
 import shutil
@@ -23,6 +24,15 @@ DEFAULT_MODEL = "gemini-3.8-flash-low"
 POOL_GEMINI = "Gemini Models"
 POOL_OTHER = "Claude and GPT models"
 _ROW = re.compile(r"^(?P<pool>.+?)\t(?P<window>Five Hour|Weekly) Limit Remaining\t(?P<left>\d+(?:\.\d+)?)%\t(?P<reset>\S+)\s*$")
+
+
+def _quota_number(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError("invalid quota number")
+    result = float(value)
+    if not math.isfinite(result):
+        raise ValueError("invalid quota number")
+    return result
 
 
 def exe() -> str:
@@ -49,8 +59,14 @@ def parse_usage(text: str, now: float | None = None) -> dict:
         if not m:
             continue
         try:
-            reset = dt.datetime.fromisoformat(m["reset"].replace("Z", "+00:00")).timestamp()
-        except ValueError:
+            left = float(m["left"])
+            stamp = dt.datetime.fromisoformat(m["reset"].replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                continue
+            reset = stamp.timestamp()
+        except (OSError, OverflowError, ValueError):
+            continue
+        if not math.isfinite(left) or not 0 <= left <= 100:
             continue
         suffix = "" if m["pool"].strip() == POOL_GEMINI else "_claude_gpt" if m["pool"].strip() == POOL_OTHER else None
         if suffix is None:
@@ -158,13 +174,31 @@ def capacity(now: float | None = None) -> tuple[float | None, float | None]:
     now = _t.time() if now is None else now
     cache = load_cache()
     try:
-        observed = float(cache.get("observed_at") or 0)
-        windows = cache.get("windows") or {}
-        active = {k: w for k, w in windows.items() if k in ("five_hour", "seven_day") and float(w["resets_at"]) > now}
-        exhausted = [float(w["resets_at"]) for w in active.values() if float(w["used_percent"]) >= 100]
+        raw_observed = cache.get("observed_at")
+        if isinstance(raw_observed, bool) or not isinstance(raw_observed, (int, float)):
+            return None, None
+        observed = _quota_number(raw_observed)
+        raw_windows = cache.get("windows")
+        if not isinstance(raw_windows, dict):
+            return None, None
+        active = {}
+        for name, duration in (("five_hour", 300), ("seven_day", 10080)):
+            raw = raw_windows.get(name)
+            if raw is None:
+                continue
+            if not isinstance(raw, dict):
+                return None, None
+            used, reset, minutes = (_quota_number(raw["used_percent"]), _quota_number(raw["resets_at"]),
+                                    _quota_number(raw["window_minutes"]))
+            if not all(math.isfinite(value) for value in (used, reset, minutes)) or \
+                    not 0 <= used <= 100 or reset <= 0 or minutes != duration:
+                return None, None
+            if reset > now:
+                active[name] = {"used_percent": used, "resets_at": reset}
+        exhausted = [w["resets_at"] for w in active.values() if w["used_percent"] >= 100]
         fresh = cache.get("status") == "ok" and 0 <= now - observed <= MAX_AGE_SEC
-        pressure = max(float(w["used_percent"]) for w in active.values()) \
+        pressure = max(w["used_percent"] for w in active.values()) \
             if fresh and len(active) == 2 else None
         return pressure, (max(exhausted) if exhausted else None)
-    except (KeyError, TypeError, ValueError):
+    except (KeyError, OverflowError, TypeError, ValueError):
         return None, None

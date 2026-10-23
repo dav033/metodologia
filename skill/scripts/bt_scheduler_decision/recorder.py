@@ -9,6 +9,11 @@ import re
 import sqlite3
 from pathlib import Path
 
+from .batch_ledger import (
+    BatchDecisionStore,
+    create_batch_decision_table,
+    migrate_schema_two_ledger,
+)
 from .contracts import (
     API_VERSION,
     DECISION_FACTOR_CODES,
@@ -16,6 +21,7 @@ from .contracts import (
     DECISION_STATUSES,
     EXCLUSION_REASON_CODES,
     FALLBACK_REASONS,
+    LEGACY_API_VERSIONS,
     Candidate,
     Confidence,
     DecisionRecord,
@@ -24,16 +30,35 @@ from .contracts import (
     RouteSummary,
     ValidatedRequest,
 )
+from .executor_lookup import (
+    resolve_executor_binding as _resolve_executor_binding,
+)
+from .executor_lookup import (
+    resolve_executor_binding_path,
+    resolve_executor_reference_path,
+)
+from .executor_lookup import (
+    resolve_executor_reference as _resolve_executor_reference,
+)
 from .identity import (
     canonical_json,
-    parse_executor_reference,
     sha256_json,
 )
+from .learning_snapshots import (
+    CURRENT_LEDGER_SCHEMA_VERSION as LEDGER_SCHEMA_VERSION,
+)
+from .learning_snapshots import (
+    LEARNING_SNAPSHOT_LEDGER_SCHEMA_VERSION,
+    LEGACY_LEDGER_SCHEMA_VERSION,
+    LearningSnapshotStore,
+    create_learning_snapshot_table,
+    migrate_legacy_ledger,
+)
+from .ledger_errors import DecisionLedgerError
 from .policy import rank_candidates
 from .validation import validate_request
 
 APPLICATION_ID = 0x4D324445  # "M2DE"
-LEDGER_SCHEMA_VERSION = 1
 MAX_RECORD_BYTES = 131_072
 MAX_LEDGER_RECORDS = 100_000
 _SHA256 = re.compile(r"[0-9a-f]{64}\Z")
@@ -50,14 +75,6 @@ CREATE TABLE IF NOT EXISTS decision_records (
 CREATE INDEX IF NOT EXISTS decision_records_task_latest
     ON decision_records(plan_id, task_id, seq DESC);
 """
-
-
-class DecisionLedgerError(RuntimeError):
-    """Stable local-persistence error without filesystem or SQLite details."""
-
-    def __init__(self, code: str):
-        self.code = code
-        super().__init__(f"decision_ledger_{code}")
 
 
 def _idempotency_key_for_validated(validated: ValidatedRequest) -> str:
@@ -93,8 +110,29 @@ def decision_id_for(key: str) -> str:
 
 def _route_summary_matches(summary: RouteSummary, candidate: Candidate) -> bool:
     return (summary.route_id, summary.provider, summary.model, summary.profile, summary.account_ref, summary.effort,
-            summary.baseline_rank) == (candidate.route_id, candidate.provider, candidate.model, candidate.profile,
-                                       candidate.account_ref, candidate.effort, candidate.baseline_rank)
+            summary.baseline_rank, summary.quota_observed_at, summary.quota_used_percent,
+            summary.quota_valid_until) == \
+        (candidate.route_id, candidate.provider, candidate.model, candidate.profile,
+         candidate.account_ref, candidate.effort, candidate.baseline_rank, candidate.quota_observed_at,
+         candidate.quota_used_percent, candidate.quota_valid_until)
+
+
+def _valid_epoch(value: object) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(value) and value >= 0
+    except OverflowError:
+        return False
+
+
+def _valid_quota_percentage(value: object) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(value) and 0 <= value < 100
+    except OverflowError:
+        return False
 
 
 def _validate_route_summary(value: object) -> None:
@@ -109,6 +147,16 @@ def _validate_route_summary(value: object) -> None:
     if value.baseline_rank is not None and (not isinstance(value.baseline_rank, int) or
                                              isinstance(value.baseline_rank, bool) or
                                              not 0 <= value.baseline_rank <= 255):
+        raise DecisionLedgerError("invalid_record")
+    quota_facts = (value.quota_observed_at, value.quota_used_percent, value.quota_valid_until)
+    if any(item is not None for item in quota_facts) and not all(item is not None for item in quota_facts):
+        raise DecisionLedgerError("invalid_record")
+    if value.quota_observed_at is not None and not _valid_epoch(value.quota_observed_at):
+        raise DecisionLedgerError("invalid_record")
+    if value.quota_valid_until is not None and (not _valid_epoch(value.quota_valid_until) or
+                                                 value.quota_valid_until <= value.quota_observed_at):
+        raise DecisionLedgerError("invalid_record")
+    if value.quota_used_percent is not None and not _valid_quota_percentage(value.quota_used_percent):
         raise DecisionLedgerError("invalid_record")
     if not isinstance(value.factor_codes, tuple) or len(value.factor_codes) > 64 or \
             any(not isinstance(code, str) or code not in DECISION_FACTOR_CODES for code in value.factor_codes):
@@ -126,7 +174,7 @@ def _validate_exclusion(value: object) -> None:
 
 
 def _validate_record(record: object, request: ValidatedRequest | None = None) -> None:
-    if not isinstance(record, DecisionRecord) or record.schema_version != API_VERSION or \
+    if not isinstance(record, DecisionRecord) or record.schema_version not in {API_VERSION, *LEGACY_API_VERSIONS} or \
             not _SHA256.fullmatch(record.decision_id or "") or not _SHA256.fullmatch(record.idempotency_key or ""):
         raise DecisionLedgerError("invalid_record")
     if record.decision_id != decision_id_for(record.idempotency_key):
@@ -170,6 +218,11 @@ def _validate_record(record: object, request: ValidatedRequest | None = None) ->
         _validate_exclusion(exclusion)
     if record.selected is not None:
         _validate_route_summary(record.selected)
+    if record.schema_version == API_VERSION and any(
+            route.quota_valid_until is None
+            for route in ((*record.alternatives, record.selected) if record.selected is not None
+                          else record.alternatives)):
+        raise DecisionLedgerError("invalid_record")
     if (record.status == "recommended") != (record.selected is not None):
         raise DecisionLedgerError("invalid_record")
     if record.method == "laya" and (record.checkpoint_revision is None or
@@ -277,7 +330,7 @@ class DecisionLedger:
         try:
             if create:
                 self.path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-            self._initialize(create, existed=existed)
+            self._schema_version = self._initialize(create, existed=existed)
             if create:
                 os.chmod(self.path, 0o600)
         except DecisionLedgerError:
@@ -295,7 +348,17 @@ class DecisionLedger:
         connection.execute("PRAGMA synchronous = FULL")
         return connection
 
-    def _initialize(self, create: bool, *, existed: bool) -> None:
+    @property
+    def learning_snapshots(self) -> LearningSnapshotStore:
+        return LearningSnapshotStore(lambda readonly: self._connect(readonly=readonly),
+                                     writable=self._writable, schema_version=self._schema_version)
+
+    @property
+    def batch_decisions(self) -> BatchDecisionStore:
+        return BatchDecisionStore(lambda readonly: self._connect(readonly=readonly),
+                                  writable=self._writable, schema_version=self._schema_version)
+
+    def _initialize(self, create: bool, *, existed: bool) -> int:
         if not create and not self.path.is_file():
             raise DecisionLedgerError("ledger_missing_or_invalid")
         connection = self._connect(readonly=not create)
@@ -304,9 +367,25 @@ class DecisionLedger:
                 "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
             app_id = connection.execute("PRAGMA application_id").fetchone()[0]
             version = connection.execute("PRAGMA user_version").fetchone()[0]
-            if existed and (app_id != APPLICATION_ID or tables != {"decision_records"} or
-                            version != LEDGER_SCHEMA_VERSION):
-                raise DecisionLedgerError("ledger_incompatible")
+            if existed:
+                if app_id != APPLICATION_ID:
+                    raise DecisionLedgerError("ledger_incompatible")
+                if version == LEGACY_LEDGER_SCHEMA_VERSION and tables == {"decision_records"}:
+                    if not create:
+                        return version
+                    migrate_legacy_ledger(connection)
+                    version = LEARNING_SNAPSHOT_LEDGER_SCHEMA_VERSION
+                    tables.add("learning_snapshots")
+                if version == LEARNING_SNAPSHOT_LEDGER_SCHEMA_VERSION and \
+                        tables == {"decision_records", "learning_snapshots"}:
+                    if not create:
+                        return version
+                    migrate_schema_two_ledger(connection)
+                    version = LEDGER_SCHEMA_VERSION
+                    tables.add("batch_decisions")
+                if version != LEDGER_SCHEMA_VERSION or tables != {
+                        "decision_records", "learning_snapshots", "batch_decisions"}:
+                    raise DecisionLedgerError("ledger_incompatible")
             if not existed and (tables or app_id != 0 or version != 0):
                 raise DecisionLedgerError("ledger_incompatible")
             if not create and not tables:
@@ -314,8 +393,11 @@ class DecisionLedger:
             if create:
                 connection.execute("PRAGMA journal_mode = WAL")
                 connection.executescript(_SCHEMA_SQL)
+                create_learning_snapshot_table(connection)
+                create_batch_decision_table(connection)
                 connection.execute(f"PRAGMA application_id = {APPLICATION_ID}")
                 connection.execute(f"PRAGMA user_version = {LEDGER_SCHEMA_VERSION}")
+            return version if existed else LEDGER_SCHEMA_VERSION
         finally:
             connection.close()
 
@@ -388,65 +470,19 @@ class DecisionLedger:
             connection.close()
 
     def resolve_executor_binding(self, reference: str) -> RouteBinding | None:
-        """Like `resolve_executor_reference`, with the plan/revision/task the decision was made for and the id of the
-        NEXT decision for the same plan/task when one exists (the most recent decision per task is the live one).
-        A ledger file belongs to ONE project: the record stores no project, so plan ids are only unique within it."""
-        parsed = parse_executor_reference(reference)
-        if parsed is None:
-            return None
-        decision_id, route_id = parsed
-        try:
-            connection = self._connect(readonly=True)
-        except sqlite3.Error as exc:
-            raise DecisionLedgerError("ledger_unavailable") from exc
-        try:
-            row = connection.execute("SELECT seq, record_json FROM decision_records WHERE decision_id = ?",
-                                     (decision_id,)).fetchone()
-            if row is None:
-                return None
-            record = _decode_record(row[1])
-            if record.selected is None or record.selected.route_id != route_id:
-                return None
-            later = connection.execute(
-                "SELECT decision_id FROM decision_records WHERE plan_id = ? AND task_id = ? AND seq > ? "
-                "ORDER BY seq DESC LIMIT 1", (record.plan_id, record.task_id, row[0])).fetchone()
-        except sqlite3.Error as exc:
-            raise DecisionLedgerError("ledger_unavailable") from exc
-        finally:
-            connection.close()
-        return RouteBinding(record.selected, record.decision_id, record.plan_id, record.revision, record.plan_sha256,
-                            record.task_id, record.created_at, later[0] if later else None)
+        """Resolve the selected route and the plan/task its persisted decision belongs to."""
+        return _resolve_executor_binding(lambda readonly: self._connect(readonly=readonly), _decode_record, reference)
 
     def resolve_executor_reference(self, reference: str) -> RouteSummary | None:
         """Resolve only the selected route; unknown, malformed, excluded and alternative refs return `None`."""
-        parsed = parse_executor_reference(reference)
-        if parsed is None:
-            return None
-        decision_id, route_id = parsed
-        try:
-            connection = self._connect(readonly=True)
-        except sqlite3.Error as exc:
-            raise DecisionLedgerError("ledger_unavailable") from exc
-        try:
-            row = connection.execute("SELECT record_json FROM decision_records WHERE decision_id = ?",
-                                     (decision_id,)).fetchone()
-        except sqlite3.Error as exc:
-            raise DecisionLedgerError("ledger_unavailable") from exc
-        finally:
-            connection.close()
-        if row is None:
-            return None
-        record = _decode_record(row[0])
-        if record.selected is None or record.selected.route_id != route_id:
-            return None
-        return record.selected
+        return _resolve_executor_reference(lambda readonly: self._connect(readonly=readonly), _decode_record, reference)
 
 
 def resolve_executor_binding(path: str | Path, reference: str) -> RouteBinding | None:
     """`resolve_executor_reference` plus the decision's plan/revision/task and whether it was superseded, read-only."""
-    return DecisionLedger(path, create=False).resolve_executor_binding(reference)
+    return resolve_executor_binding_path(path, reference)
 
 
 def resolve_executor_reference(path: str | Path, reference: str) -> RouteSummary | None:
     """Resolve a selected route through an existing ledger without creating or changing the database."""
-    return DecisionLedger(path, create=False).resolve_executor_reference(reference)
+    return resolve_executor_reference_path(path, reference)

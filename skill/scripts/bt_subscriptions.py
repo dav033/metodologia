@@ -39,6 +39,7 @@ def capacity(row: object, model: str, now: float | None = None) -> tuple[float |
         raw = row.get("windows")
         if not isinstance(raw, dict):
             return None, None
+        allow_unknown_reset = row.get("provider") == "claude"
         names = ["five_hour", "seven_day"]
         if model in ("sonnet", "opus"):
             names.append("seven_day_" + model)
@@ -47,14 +48,36 @@ def capacity(row: object, model: str, now: float | None = None) -> tuple[float |
             item = raw.get(name)
             if item is None:
                 continue
-            if not isinstance(item, dict):
+            if not isinstance(item, dict) or "resets_at" not in item:
                 raise UsageError("invalid_response")
-            item = window(item.get("used_percent"), item.get("resets_at"), item.get("window_minutes"))
+            item = window(item.get("used_percent"), item.get("resets_at"), item.get("window_minutes"),
+                          allow_unknown_reset=allow_unknown_reset)
             if item["window_minutes"] != (300 if name == "five_hour" else 10080):
                 raise UsageError("invalid_response")
-            if item["resets_at"] > now:
+            if item["resets_at"] is None or item["resets_at"] > now:
                 active[name] = item
-        exhausted = [item["resets_at"] for item in active.values() if item["used_percent"] >= 100]
+        model_buckets = raw.get("_model_buckets")
+        if model_buckets is not None:
+            if not isinstance(model_buckets, dict):
+                raise UsageError("invalid_response")
+            scoped = model_buckets.get(model)
+            if scoped is not None:
+                if not isinstance(scoped, list) or not scoped or len(scoped) > 32:
+                    raise UsageError("invalid_response")
+                for index, bucket in enumerate(scoped):
+                    if not isinstance(bucket, dict) or not bucket or bucket.get("quota_unknown") is True:
+                        raise UsageError("invalid_response")
+                    for name, item in bucket.items():
+                        if name not in ("five_hour", "seven_day") or not isinstance(item, dict):
+                            raise UsageError("invalid_response")
+                        item = window(item.get("used_percent"), item.get("resets_at"), item.get("window_minutes"))
+                        expected = 300 if name == "five_hour" else 10080
+                        if item["window_minutes"] != expected:
+                            raise UsageError("invalid_response")
+                        if item["resets_at"] > now:
+                            active[f"model_{index}_{name}"] = item
+        exhausted = [item["resets_at"] for item in active.values()
+                     if item["used_percent"] >= 100 and item["resets_at"] is not None]
         fresh = row.get("status") == "ok" and now - observed <= MAX_AGE_SECONDS
         pressure = max(item["used_percent"] for item in active.values()) if fresh and all(
             name in active for name in ("five_hour", "seven_day")) else None

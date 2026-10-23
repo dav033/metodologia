@@ -68,6 +68,21 @@ class SubscriptionUsageTests(AgentTests):
         row = self.row(short=100, reset=self.now-1)
         self.assertEqual(usage.capacity(row, "sonnet"), (None, None))
 
+    def test_claude_null_reset_remains_active_but_a_missing_reset_is_unknown(self):
+        row = self.row()
+        row["provider"] = "claude"
+        row["windows"]["five_hour"]["resets_at"] = None
+        self.assertEqual(usage.capacity(row, "sonnet", self.now), (30, None))
+        del row["windows"]["five_hour"]["resets_at"]
+        self.assertEqual(usage.capacity(row, "sonnet", self.now), (None, None))
+
+    def test_unrepresentable_cached_numbers_are_unknown_instead_of_raising(self):
+        with self.assertRaises(sources.UsageError):
+            sources.number(10 ** 1000)
+        row = self.row()
+        row["observed_at"] = 10 ** 1000
+        self.assertEqual(usage.capacity(row, "gpt-6.1-sol", self.now), (None, None))
+
     def test_model_specific_claude_quota_is_respected(self):
         row = self.row()
         row["windows"]["seven_day_opus"] = sources.window(100, self.now+8000, 10080)
@@ -156,7 +171,7 @@ class SubscriptionUsageTests(AgentTests):
         self.assertEqual(sources.retry_after("invalid"), self.now+3600)
 
     def test_codex_windows_are_identified_by_duration_not_position(self):
-        payload = {"rateLimits": {"primary": {"usedPercent": 13, "windowDurationMins": 10080,
+        payload = {"rateLimits": {"limitId": "codex", "primary": {"usedPercent": 13, "windowDurationMins": 10080,
                                               "resetsAt": self.now+8000},
                                   "secondary": {"usedPercent": 42, "windowDurationMins": 300,
                                                 "resetsAt": self.now+1000}}}
@@ -164,11 +179,43 @@ class SubscriptionUsageTests(AgentTests):
         self.assertEqual(parsed["five_hour"]["used_percent"], 42)
         self.assertEqual(parsed["seven_day"]["used_percent"], 13)
 
+    def test_codex_uses_the_named_bucket_and_blocks_explicit_usage_denials(self):
+        windows = {"primary": {"usedPercent": 10, "windowDurationMins": 300, "resetsAt": self.now + 1000},
+                   "secondary": {"usedPercent": 20, "windowDurationMins": 10080, "resetsAt": self.now + 8000}}
+        payload = {"rateLimits": {"limitId": "other", **windows},
+                   "rateLimitsByLimitId": {"codex": {"primary": windows["primary"],
+                                                       "secondary": windows["secondary"]},
+                                              "codex_model": {"normalModelSlug": "gpt-6.1-sol",
+                                                               "primary": {"usedPercent": 100,
+                                                                           "windowDurationMins": 10080,
+                                                                           "resetsAt": self.now + 8000}}}}
+        parsed = sources.parse_codex(payload)
+        self.assertEqual(parsed["five_hour"]["used_percent"], 10)
+        row = {"status": "ok", "observed_at": self.now, "windows": parsed}
+        self.assertEqual(usage.capacity(row, "gpt-6.1-sol", self.now), (100, self.now + 8000))
+        self.assertEqual(usage.capacity(row, "gpt-6-luna", self.now), (20, None))
+        for denied in ({"ordinaryUsageAllowed": False}, {"ordinaryUsageAllowed": None},
+                       {"bucket": {"spendControlReached": True}},
+                       {"bucket": {"rateLimitReachedType": "workspace_member_credits_depleted"}},
+                       {"bucket": {"spendControlReached": None}}):
+            bucket = {"limitId": "codex", **windows, **denied.get("bucket", {})}
+            payload = {"rateLimits": bucket, **{k: v for k, v in denied.items() if k != "bucket"}}
+            with self.subTest(denied=denied), self.assertRaises(sources.UsageError):
+                sources.parse_codex(payload)
+        with self.assertRaises(sources.UsageError):
+            sources.parse_codex({"rateLimits": {"limitId": "other", **windows}})
+        null_reset = {"limitId": "codex",
+                      "primary": {"usedPercent": 0, "windowDurationMins": 300, "resetsAt": None},
+                      "secondary": windows["secondary"]}
+        with self.assertRaises(sources.UsageError):
+            sources.parse_codex({"rateLimits": null_reset})
+
     def test_claude_response_requires_timezone_and_valid_percentage(self):
         reset = dt.datetime.fromtimestamp(self.now+500,dt.timezone.utc).isoformat()
         self.assertEqual(sources.parse_claude({"five_hour": {"utilization": 55, "resets_at": reset}})
                          ["five_hour"]["used_percent"], 55)
         for value in ({"five_hour": {"utilization": 55, "resets_at": "2026-10-13"}},
+                      {"five_hour": {"utilization": 55}},
                       {"five_hour": {"utilization": 101, "resets_at": reset}}, [], {}):
             with self.assertRaises(sources.UsageError): sources.parse_claude(value)
 
@@ -196,7 +243,7 @@ class SubscriptionUsageTests(AgentTests):
 
 class CodexMetadataProtocolTests(unittest.IsolatedAsyncioTestCase):
     async def test_only_initialize_and_rate_limit_messages_are_sent_without_model_turns(self):
-        payload = {"rateLimits": {"primary": {"usedPercent": 42, "windowDurationMins": 300,
+        payload = {"rateLimits": {"limitId": "codex", "primary": {"usedPercent": 42, "windowDurationMins": 300,
                                               "resetsAt": 1_900_000_000}}}
         process = Mock(returncode=None)
         process.stdin.drain = AsyncMock()

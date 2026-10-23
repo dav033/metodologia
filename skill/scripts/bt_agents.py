@@ -14,6 +14,7 @@ announced reset. Rules for agents: references/agents.md.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import sys
@@ -27,6 +28,7 @@ PROVIDERS = ("claude", "codex", "antigravity")
 KINDS = ("implement", "test", "docs", "audit", "research")
 TOP = 2
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
+_DEFAULT_ACCOUNT_DIRECTORIES = {"CLAUDE_CONFIG_DIR": ".claude", "CODEX_HOME": ".codex"}
 
 # rank: the lowest tier the model is a sensible default for. cost: relative weight on its subscription's quota.
 MODELS: dict[str, dict] = {
@@ -183,7 +185,7 @@ def cooling_until(profile: str | None, agent: str | None = None) -> float | None
 
 
 def account_key(profile: str | None, agent: str | None = None) -> str:
-    """Accounts are what quotas belong to: two profile ids selecting the same account share one key."""
+    """Return the stable legacy quota-cache key encoded from this profile's environment overlay."""
     if not profile:
         return f"{agent or 'claude'}:default"
     try:
@@ -192,6 +194,22 @@ def account_key(profile: str | None, agent: str | None = None) -> str:
         return profile
     env = sorted((spec.get("env") or {}).items())
     return f"{spec['provider']}:" + (",".join(f"{k}={v}" for k, v in env) if env else "default")
+
+
+def _pool_account_identity(profile: str, spec: dict) -> tuple[str, tuple[tuple[str, str | None], ...]]:
+    """Identify the effective account for in-memory pool deduplication without changing persisted quota keys."""
+    provider = spec["provider"]
+    env = bt_profiles.env_of(profile)
+    selectors = []
+    for key in bt_profiles.ACCOUNT_VARS.get(provider, ()):
+        value = env.get(key)
+        if value is None:
+            default_directory = _DEFAULT_ACCOUNT_DIRECTORIES.get(key)
+            value = str(Path.home() / default_directory) if default_directory else None
+        if value:
+            value = os.path.normpath(value)
+        selectors.append((key, value))
+    return provider, tuple(selectors)
 
 
 def _config(key: str, default):
@@ -218,7 +236,10 @@ def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
     out, seen = [], set()
     for pid in ids:
         spec = profiles[pid]
-        if spec["provider"] not in PROVIDERS or account_key(pid) in seen:
+        if spec["provider"] not in PROVIDERS:
+            continue
+        identity = _pool_account_identity(pid, spec)
+        if identity in seen:
             continue
         if spec.get("work_only") and not bt_profiles.is_work_project(project):
             continue
@@ -230,7 +251,7 @@ def pool_for(project: str, requested: list[str] | None = None) -> list[str]:
         if spec["provider"] == "antigravity" and not (
                 Path.home() / ".gemini" / "antigravity-cli" / "antigravity-oauth-token").exists():
             continue  # not signed in: `agy` would ask for a browser login in the middle of a run
-        seen.add(account_key(pid))
+        seen.add(identity)
         out.append(pid)
     return out
 

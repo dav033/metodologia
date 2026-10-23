@@ -91,6 +91,11 @@ class UsageAndCommandTests(AgTestCase):
         self.assertEqual(windows["five_hour_claude_gpt"]["used_percent"], 9.0)
         self.assertEqual(windows["seven_day_claude_gpt"]["used_percent"], 27.5)
 
+    def test_parse_usage_rejects_out_of_range_remaining_percent(self):
+        report = "Gemini Models\tWeekly Limit Remaining\t101%\t2026-10-20T16:21:10Z\n" \
+                 "Gemini Models\tFive Hour Limit Remaining\t-1%\t2026-10-13T16:21:10Z\n"
+        self.assertEqual(bt_agy.parse_usage(report), {})
+
     def test_argv_attaches_prompt_last_and_only_adds_timeout_when_given(self):
         with patch.object(bt_agy, "exe", return_value="/fake/agy"):
             args = bt_agy.argv(None, "inspect this prompt")
@@ -155,6 +160,24 @@ class CacheTests(AgTestCase):
     def test_capacity_returns_unknown_for_corrupt_cache(self):
         bt_agy._cache_path().write_text("{broken", encoding="utf-8")
         self.assertEqual(bt_agy.capacity(now=1100), (None, None))
+
+    def test_capacity_returns_unknown_for_out_of_range_usage_or_wrong_window_shape(self):
+        self.cache(1000, five_used=101)
+        self.assertEqual(bt_agy.capacity(now=1100), (None, None))
+        self.cache(1000)
+        cache = json.loads(bt_agy._cache_path().read_text())
+        cache["windows"]["five_hour"]["window_minutes"] = 60
+        self.write_cache(cache)
+        self.assertEqual(bt_agy.capacity(now=1100), (None, None))
+
+    def test_capacity_returns_unknown_for_string_and_boolean_quota_numbers(self):
+        for name, value in (("used_percent", "30"), ("resets_at", True), ("window_minutes", "300")):
+            with self.subTest(name=name, value=value):
+                self.cache(1000)
+                cache = json.loads(bt_agy._cache_path().read_text())
+                cache["windows"]["five_hour"][name] = value
+                self.write_cache(cache)
+                self.assertEqual(bt_agy.capacity(now=1100), (None, None))
 
     def test_refresh_skips_young_cache(self):
         self.cache(1000)
