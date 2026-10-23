@@ -1,0 +1,37 @@
+{
+  "schema": "deployed-integration-results/1",
+  "task": "T14a",
+  "mode": "live",
+  "target": "deployed",
+  "revision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+  "verifiedRevision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+  "origin": "https://demo-decoracion.vercel.app",
+  "milestone": "M1",
+  "startedAt": "2026-10-23T21:02:21.968Z",
+  "outcome": "passed",
+  "checks": [
+    "user login and persisted conversation creation",
+    "real Gemini text conversation and proposed summary",
+    "twelve configured direction cards shown",
+    "selected direction persisted while event fields remained unchanged",
+    "same-device reload restores persisted conversation",
+    "correction persisted and invalidated stale summary",
+    "corrected summary has a new version",
+    "approved brief is persisted and visible to the user",
+    "admin API and page deny advisor role",
+    "admin login sees approved brief"
+  ],
+  "completedAt": "2026-10-23T21:03:00.835Z",
+  "invocation": "scripts/e2e/asesor/run.ts --live --deployed --origin https://demo-decoracion.vercel.app --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M1",
+  "commands": [
+    "scripts/e2e/asesor/run.ts --live --deployed --origin https://demo-decoracion.vercel.app --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M1"
+  ],
+  "runs": [
+    {
+      "revision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+      "task": "T14a",
+      "command": "scripts/e2e/asesor/run.ts --live --deployed --origin https://demo-decoracion.vercel.app --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M1",
+      "outcome": "passed"
+    }
+  ]
+}

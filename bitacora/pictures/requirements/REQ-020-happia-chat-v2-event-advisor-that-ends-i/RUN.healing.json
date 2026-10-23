@@ -1,5 +1,5 @@
 {
- "actions": 10,
+ "actions": 11,
  "analyst_stops": {
   "T14a:8b3c65b6b94f135da9df9da251ad1c15d40ebf49bdb30fc941c6e14e295c6e67": {
    "attempt": "att-0121",
@@ -8,6 +8,10 @@
   "T14a:cc86879d6c7d1bbb0fc00e26273132eb844ad06577af0424f46d1479a59c1583": {
    "attempt": "",
    "task": "T14a"
+  },
+  "T15:0c9855683845c8b413ef4b1df631418ebcc5ac2af50d792fc6f7b4152eae33e5": {
+   "attempt": "att-0130",
+   "task": "T15"
   },
   "T15:e285980e0cdc1f656eff6fcafc2ca280996732220697da93a8a5ef4af4796913": {
    "attempt": "att-0118",
@@ -19,6 +23,58 @@
   }
  },
  "cases": {
+  "19c90c772bfc380e": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "the independent audit still finds blocking problems after its remediation rounds and would send back accepted tasks",
+    "reason code: rework_limit"
+   ],
+   "first_at": 1792780816.112,
+   "history": [],
+   "id": "19c90c772bfc380e",
+   "status": "exhausted",
+   "task": "T15",
+   "why": "T15 already had 3 automatic plan repairs"
+  },
+  "1acc6e2caff9e324": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792786125.557,
+   "history": [
+    {
+     "at": 1792786125.561,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "1acc6e2caff9e324",
+   "status": "unrepairable",
+   "task": "T15b"
+  },
+  "260ee156420ff2ed": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792780226.038,
+   "history": [
+    {
+     "at": 1792780226.043,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "260ee156420ff2ed",
+   "status": "unrepairable",
+   "task": "T15b"
+  },
   "267eec28de34dc09": {
    "applied": 2,
    "at": 1792758507.817,
@@ -68,6 +124,60 @@
    "id": "2eaca70cf941d1d6",
    "status": "unrepairable",
    "task": "T14a"
+  },
+  "30922af22a1beed6": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792791493.682,
+   "history": [
+    {
+     "at": 1792791493.685,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "30922af22a1beed6",
+   "status": "unrepairable",
+   "task": "T15.8"
+  },
+  "30bbdc42eaf63163": {
+   "applied": 1,
+   "at": 1792780800.737,
+   "class": "regression",
+   "evidence": [
+    "the independent audit still finds blocking problems after its remediation rounds and would send back accepted tasks",
+    "reason code: rework_limit"
+   ],
+   "first_at": 1792780800.026,
+   "history": [
+    {
+     "at": 1792780800.737,
+     "repair": "one more remediation round, then the audit looks again",
+     "result": "fixed"
+    }
+   ],
+   "id": "30bbdc42eaf63163",
+   "repair": "one more remediation round, then the audit looks again",
+   "status": "exhausted",
+   "task": "T15b",
+   "why": "the same failure came back after its repair"
+  },
+  "43925ac9bf0328a8": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 21 failures: T15 is not the failing task. The legacy checker scripts/e2e/asesor/check-findings.ts still compares the ledger `revision` string with `integration.revision` (line 159, `Audit ledger revision ... does "
+   ],
+   "first_at": 1792785006.812,
+   "history": [],
+   "id": "43925ac9bf0328a8",
+   "status": "exhausted",
+   "task": "T15",
+   "why": "T15 already had 3 automatic plan repairs"
   },
   "47d0274ea0c2167f": {
    "applied": 1,
@@ -211,6 +321,20 @@
    "status": "unrepairable",
    "task": "T14a"
   },
+  "7507dab00df1b444": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/e2e/asesor/check-findings.ts belong to accepted T7, T14.1a, T14.2a, T14.3a, T14.4a, T15.1",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792780360.978,
+   "history": [],
+   "id": "7507dab00df1b444",
+   "status": "exhausted",
+   "task": "T15",
+   "why": "T15 already had 3 automatic plan repairs"
+  },
   "7d4157a8dee10d43": {
    "after_restored": [
     "T14a",
@@ -329,6 +453,25 @@
    "id": "cc9aa96f774b926c",
    "status": "unrepairable",
    "task": "T14.4a"
+  },
+  "df992683abe3b355": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792784957.834,
+   "history": [
+    {
+     "at": 1792784957.838,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "df992683abe3b355",
+   "status": "unrepairable",
+   "task": "T15.6"
   },
   "e2cc469d7a69cbd7": {
    "after_restored": [

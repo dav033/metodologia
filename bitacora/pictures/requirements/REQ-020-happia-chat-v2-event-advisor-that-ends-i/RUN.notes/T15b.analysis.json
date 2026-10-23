@@ -1,0 +1,17 @@
+{
+ "at": "2026-10-23T15:09:43",
+ "cause": "No es un fallo de T15b: el ledger de la auditoría de att-0131 registra correctamente hallazgos abiertos de severidad alta (C4 evidencia de integración obsoleta en T14a; C5 y C6 faltan evidencia física en teléfono y de producción en vivo, de T15.6; C7 pérdida de precio, fuente y frescura del paquete en T5/T13; y STALE-EVIDENCE-1). El criterio de aceptación de T15b exige rechazar y devolver esas tareas productoras a rework, pero el puerta de auditoría la trata como fallo de T15b, y se repitió con el mismo resultado en att-0124 y att-0131. Además, las rutas esperadas (docs/req-020/T15-crosscheck.md y T15-crosscheck.findings.json) ya existen en el árbol con el informe y el ledger de T15 (tree_digest 286420…, HEAD 77d89de), así que T15b colisiona con otro auditor; y docs/req-020/integration-results.json sigue en revisión edc2fcd2 con tree_digest 6cc5bb1b…, no en el snapshot 50f6832.",
+ "confidence": "alta",
+ "failures": 3,
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 34.9,
+ "solution": "1) No reintentar T15b sin cambios: registrar att-0131 como auditoría válida con resultado de rechazo, con C4–C7 y STALE-EVIDENCE-1 abiertos y asignados a sus tareas productoras. 2) Devolver a rework: T14a (regenerar integration-results.json para el tree_digest del snapshot 50f6832 y verificarlo con bt_audit_evidence), T5 y T13 (llevar precio COP, fuente y frescura a la aprobación y al brief), T13/T15.3 (frescura y avisos de cobertura en la tarjeta de paquete, C8), T15.3 (envío solo con foto, C9), y T15.6 (evidencia física en teléfono y M1/M2 en vivo firmadas por David, sin inventar aprobaciones). 3) Cambiar las rutas de salida de T15b a nombres propios (p. ej. docs/req-020/T15b-crosscheck.md y T15b-crosscheck.findings.json) o confirmar que el motor no sobrescribe el ledger de T15. 4) Tras el rework, repetir la auditoría sobre un snapshot nuevo: ledger con tree_digest igual al digest del motor, npm run gate, npm run happie:test-webhook y bitacora.py audit-ledger check docs/req-020/T15b-crosscheck.findings.json. 5) Pedir a David que confirme o revierta el review_pass de T15.6 registrado por flow (RUN.decisions.jsonl, reason \"a\", 14:49:56) antes de volver a acceptar T15.",
+ "source_attempt": "att-0131",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-u947i17s/source",
+ "source_snapshot": "50f6832a0390c796dda06bc1c021ba0922271b38",
+ "state": "done",
+ "task": "T15b"
+}

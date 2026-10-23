@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r17:att-0123:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15 no puede cerrarse: falta comprobación en teléfono y hay hallazgos altos abiertos",
+ "origin": "El verificador no da veredicto porque T15 solo tiene evidencia manual (`CRITERION_MANUAL: This acceptance criterion has only manual evidence.`). Permisos de cámara/micrófono, teclado, reintento y recarga en teléfono físico necesitan una persona y no constan en la evidencia. Además, el ledger tiene F5 (subida de foto), F6 (tarjetas) y F8 (resumen) como high abiertos; según la nota del dueño son fallos de producto que deben volver a sus tareas productoras, no aprobarse. El desajuste de revisión ba256cf/34a3abc que aparece en la última verificación no es la causa actual, aunque no pude confirmar que esté resuelto.",
+ "steps": [
+  "Elige review_fail para devolver a rework las tareas productoras de F5, F6 y F8 (docs/req-020/T15.findings.json).",
+  "No marques como aprobadas las comprobaciones de teléfono: en docs/req-020/T15.md deja como no ejecutadas cámara/micrófono, teclado, reintento y recarga.",
+  "Cuando una persona haga esas pruebas en el teléfono físico, registra lo observado en docs/req-020/T15.md y vuelve a lanzar T15 con esa evidencia.",
+  "Antes de reintentar, ejecuta `bitacora.py --project pictures audit-ledger check docs/req-020/T15.findings.json` y `npm run gate` sobre la copia auditada."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T13:39:43",
+ "seconds": 19.5
+}

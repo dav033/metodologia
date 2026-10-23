@@ -1,0 +1,23 @@
+{
+ "request": "T15:21",
+ "state": "done",
+ "kind": "integrity",
+ "label": "Integridad",
+ "tone": "bad",
+ "headline": "T15 bloqueada: el ledger declara una revisión distinta de la evidencia de integración (34a3abc)",
+ "origin": "El check scripts/e2e/asesor/check-findings.ts compara la revisión del ledger docs/req-020/T15.findings.json con la de docs/req-020/integration-results.json y falla con: '[FAIL] findings check: Audit ledger revision fb04448ac3fe4676ccdd646b9d68090d95910848 does not match integration evidence revision 34a3abc1108e2337185a3c2d5721b64cce403aa2'. Como el sandbox no tiene .git, la revisión sale solo del ledger, así que el valor mal alineado lo escribió la auditoría T15; los intentos anteriores citaban ba256cf, lo que indica valores copiados sin verificar. npm run gate no se ejecutó porque esta comprobación falló primero.",
+ "steps": [
+  "Lee docs/req-020/integration-results.json y toma la revisión y el tree digest que registra; no uses ba256cf ni fb04448 de intentos anteriores.",
+  "Edita solo docs/req-020/T15.findings.json: pon revision 34a3abc1108e2337185a3c2d5721b64cce403aa2, recalcula tree_digest sobre el snapshot auditado con las exclusiones del motor y declara integration_evidence: [\"docs/req-020/integration-results.json\"].",
+  "Registra F1 (advisor no liberado en producción), F5, F6 y F8 como open con sus ids de tarea productora; marca como no verificadas las observaciones del teléfono físico (cámara, micrófono, teclado, reintento, recarga). No copies el informe ni el ledger del otro auditor.",
+  "Vuelve a ejecutar npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json --integration-results docs/req-020/integration-results.json, luego npm run gate y npm run happie:test-webhook, y solo después bitacora.py audit-ledger check docs/req-020/T15.findings.json."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix only the audit ledger and report (docs/req-020/T15.findings.json and docs/req-020/T15.md). Set the ledger revision to 34a3abc1108e2337185a3c2d5721b64cce403aa2, the revision recorded in docs/req-020/integration-results.json; do not use ba256cf or fb04448 from earlier attempts. Recompute tree_digest over the audited source snapshot with the engine's exclusions, and declare integration_evidence: [\"docs/req-020/integration-results.json\"]. Keep production c25a5f42 separate from the integrated revision. Record F1, F5, F6 and F8 as open with their producer task IDs, and mark physical-phone camera, microphone, keyboard, retry and reload observations as not verified. Do not change product code, artifacts or deployments, and do not copy the other auditor's report or ledger.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T13:40:38",
+ "seconds": 21.9
+}

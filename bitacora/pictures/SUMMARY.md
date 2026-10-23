@@ -1,5 +1,7 @@
 # pictures — Summary
 
+- PAUSED by owner request, 2026-10-23: REQ-020 r17 22/24, operator hold active, owner stopped, no live attempt. T14a is accepted. T15/T15b confirmed UI photo/card/summary gaps and missing physical-phone/full-evaluation evidence. An unchanged T15b retry was cancelled; no product remediation revision applied. Supervisor is paused with P-186 engine fix uncommitted; do not resume without a new owner instruction. No new production deployment authorized.
+
 - 2026-10-23 13:15 REQ-020 r17: T14a ACCEPTED on att-0122, 22/24 completed; T15/T15b run independently in parallel. Fresh deployed M1/M2 PASS at published c25a5f42; source-content provenance, reconstructed integration report and exact criterion mapping verified before reopening. Engine receipt/source/owner-race defects repaired; no new deployment, no repeated live calls on recovery, no review_pass. Physical-phone observations and independent UI acceptance remain pending. Supervisor evidence: artifacts/req020-supervisor-root-cause; current daily supervisor session records commits and delays.
 
 - 2026-10-19 REQ-019 (Taller stuck viewer, mobile, React Bits) planned and approved; local REQ-014 tree backed up (`backup/req-014-local-20261019`) and merged into `main` (`ae78a79d`, content unchanged). Execution paused: to be handed to the scheduler.
@@ -78,3 +80,5 @@ quotes priced by Python; the 3D engine sits behind `GUIADA_MOTOR=python`).
   D-032 owner-away defaults · D-033 dev servers allowed · D-034 no VPS deploy this weekend · D-035 reader-first persisted fields · D-036 review stop-rule · D-037 VPS approved · D-038 one quote · D-039 everything on · D-049/D-050 semiarco fill calibration with an empirical price-bounded cap · D-055 T14 synchronization limited to the approved ship payload · D-056 separate admin key removed · D-057 no stock persistence yet.
 
 _Last updated: 2026-10-18_
+
+- 2026-10-23 14:15 owner-authorized supervisor resumption: REQ-020 r18 applied (22 accepted preserved; only unaccepted T15/T15b reset; four bounded corrective tasks added). Engine P-186 fixed in 8d8ee7d7; unchanged audit retry forbidden. T15.3 UI, T15.4 evaluation, T15.5 readiness precede T15.6 owner-only release/live/physical-phone evidence and both audits. No new deployment authorized. This supersedes the earlier pause.

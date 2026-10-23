@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-001",
-  "revision": 4,
+  "revision": 9,
   "spec_ref": "SPEC.md",
   "generated_paths": [
     "catalog/resolved.ts",
@@ -2490,9 +2490,10 @@
           "category": "functional"
         },
         {
-          "type": "command",
-          "value": "node scripts/prod-smoke.mjs",
+          "type": "manual",
+          "value": "Supervisor runs `node scripts/prod-smoke.mjs` against the deployed Netlify production site with the production credentials (NETLIFY_SITE_URL, DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET, DAVID_UI_REGISTRY_TOKEN), which the verification sandbox deliberately does not have, and attests the exact command, site and outcome.",
           "purpose": "The Netlify production smoke confirms successful login, protected-page redirects and registry denial without or with an incorrect token and success with the valid token.",
+          "expected": "The smoke passes against the deployed production site: owner login succeeds, an anonymous protected page redirects to /login, registry reads are 401 without or with a wrong token and 200 with the valid token, and the static registry assets are token protected. Absent or failing smoke evidence must not pass.",
           "created_by": "T23",
           "category": "product"
         }
@@ -2788,7 +2789,7 @@
       "verification": [
         {
           "type": "command",
-          "value": "node scripts/check-audit-ledger.mjs .evidence/T25.findings.json",
+          "value": "bitacora.py audit-ledger check .evidence/T25.findings.json",
           "purpose": "The audit ledger conforms to audit-findings/1, names valid responsible plan tasks and has no open critical or high finding.",
           "created_by": "T1",
           "category": "product"
@@ -2892,7 +2893,7 @@
       "verification": [
         {
           "type": "command",
-          "value": "node scripts/check-audit-ledger.mjs .evidence/T25-crosscheck.findings.json",
+          "value": "bitacora.py audit-ledger check .evidence/T25-crosscheck.findings.json",
           "purpose": "The audit ledger conforms to audit-findings/1, names valid responsible plan tasks and has no open critical or high finding.",
           "created_by": "T1",
           "category": "product"

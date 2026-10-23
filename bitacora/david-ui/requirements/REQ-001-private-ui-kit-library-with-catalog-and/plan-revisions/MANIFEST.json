@@ -25,6 +25,36 @@
    "sha256": "4f18b691c5d86ac7b9b2fee1440abacf74555a722552840179c26c2eeac18097",
    "frozen_at": "2026-10-23T11:25:48",
    "source": "monitor-targeted-remediation"
+  },
+  {
+   "revision": 5,
+   "sha256": "e79e68a995f700bd361f3a8933cc8e7f6cacba7128046e55f1b350281d7871e9",
+   "frozen_at": "2026-10-23T15:17:48",
+   "source": "remediation"
+  },
+  {
+   "revision": 6,
+   "sha256": "bf8116e6e03e57a527b4d7cf53094c4645f94ccf7f8e572fbed1c5a7b4fcbe54",
+   "frozen_at": "2026-10-23T15:19:13",
+   "source": "healing"
+  },
+  {
+   "revision": 7,
+   "sha256": "9335ccc84a22ee0905753a85ee85d673ae43a92662e9e63ff71321cff8371eb0",
+   "frozen_at": "2026-10-23T15:20:51",
+   "source": "healing-revert"
+  },
+  {
+   "revision": 8,
+   "sha256": "c02018d353d5c8d1384836cf574c4657b0466868885d5367491614196cb15474",
+   "frozen_at": "2026-10-23T15:22:06",
+   "source": "healing"
+  },
+  {
+   "revision": 9,
+   "sha256": "a7d21c84059e583ab46cd464b8c1d9332a628607ce5a6ce554ea84f7977a5545",
+   "frozen_at": "2026-10-23T15:24:29",
+   "source": "healing-revert"
   }
  ]
 }

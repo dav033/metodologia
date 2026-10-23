@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r18:att-0131:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "La auditoría T15b no puede cerrarse: faltan pruebas manuales en teléfono físico",
+ "origin": "El criterio de aceptación exige comprobaciones en un teléfono físico contra producción (permiso de cámara y micrófono, teclado, reintento y recarga) que solo puede hacer una persona. La evidencia de T14a y del informe no las cubre, por lo que el verificador (CRITERION_MANUAL) espera una decisión humana; no es un fallo de código. La sugerencia «Aprobar a mano» contradice la indicación del propietario: no marcar nada como pasado ni aceptado sin esa evidencia física, y la auditoría previa ya registró una decisión review_pass por flow sin verificar en T15.",
+ "steps": [
+  "Haz en un teléfono físico, contra producción (c25a5f42), las comprobaciones de cámara y micrófono, teclado, reintento y recarga, y anota fecha y resultado en docs/req-020/T15-crosscheck.md y en su ledger.",
+  "Si alguna comprobación no puedes hacerla, déjala como no aceptada en el informe; no la marques como pasada.",
+  "Valida el ledger con `bitacora.py audit-ledger check docs/req-020/T15-crosscheck.findings.json` y localiza el id con `bitacora.py --project pictures scheduler-op REQ-020 decisions`.",
+  "Cuando la evidencia física esté registrada, decide con `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_pass --reason \"...\"`; mientras tanto, no apruebes."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T15:09:04",
+ "seconds": 18.8
+}

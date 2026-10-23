@@ -1,6 +1,19 @@
 {
- "actions": 6,
- "analyst_stops": {},
+ "actions": 9,
+ "analyst_stops": {
+  "T23:40ea39c885cdc52da62a275209131e50af2f95d0767a2fa6d23d6f7b7826e376": {
+   "attempt": "att-0086",
+   "task": "T23"
+  },
+  "T23:f49740d7c33eededceb692f0591751a061a2adcce5ba6a11447c87f4616590d0": {
+   "attempt": "att-0091",
+   "task": "T23"
+  },
+  "T23:f5ab2eee9beccd321471bf4820bac0da625b014dae813569b2e8f3da68a7f3a8": {
+   "attempt": "att-0088",
+   "task": "T23"
+  }
+ },
  "cases": {
   "02b1e1e354a968b4": {
    "applied": 0,
@@ -156,6 +169,36 @@
    "status": "applied",
    "task": "T4"
   },
+  "de79597037b218be": {
+   "after_restored": [
+    "T22"
+   ],
+   "applied": 1,
+   "at": 1792786753.612,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 5 failures: La verificación fallida es el paso manual `node scripts/prod-smoke.mjs` contra el sitio desplegado, y se ejecuta en una sandbox sin NETLIFY_SITE_URL, DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET ni DAVI"
+   ],
+   "first_at": 1792786753.124,
+   "history": [
+    {
+     "at": 1792786753.612,
+     "repair": "plan r6: repair task T23.1 before T23",
+     "result": "fixed"
+    }
+   ],
+   "id": "de79597037b218be",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r5 → r6: kept 22, redo 10, new 1, removed 0"
+   ],
+   "repair": "plan r6: repair task T23.1 before T23",
+   "revision": 6,
+   "status": "reverted",
+   "target": "T23",
+   "task": "T23",
+   "task_added": "T23.1"
+  },
   "edcf4469d3fb1728": {
    "applied": 0,
    "class": "environment",
@@ -204,6 +247,57 @@
    "target": "T24a",
    "task": "T24a",
    "task_added": "T24.1a"
+  },
+  "f0c11c3336ed35fa": {
+   "after_restored": [
+    "T22"
+   ],
+   "applied": 1,
+   "at": 1792786926.333,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 7 failures: El paso que falla es `node scripts/prod-smoke.mjs` con credenciales de producción, que es la verificación manual del supervisor, y el verificador automático lo ejecuta en la sandbox, que no tiene NETL"
+   ],
+   "first_at": 1792786925.924,
+   "history": [
+    {
+     "at": 1792786926.333,
+     "repair": "plan r8: repair task T23.1 before T23",
+     "result": "fixed"
+    }
+   ],
+   "id": "f0c11c3336ed35fa",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r7 → r8: kept 22, redo 10, new 1, removed 0"
+   ],
+   "repair": "plan r8: repair task T23.1 before T23",
+   "revision": 8,
+   "status": "reverted",
+   "target": "T23",
+   "task": "T23",
+   "task_added": "T23.1"
+  },
+  "ff0a082c2d5623b1": {
+   "applied": 1,
+   "at": 1792785238.737,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: El fallo está en la verificación del producto, no en el código de T23. `node scripts/prod-smoke.mjs` es un smoke contra el sitio desplegado: `readSmokeConfig` (scripts/prod-smoke.mjs:10-13) lanza `Mis"
+   ],
+   "first_at": 1792785238.497,
+   "history": [
+    {
+     "at": 1792785238.737,
+     "repair": "regression: PlanContractError: PLAN_INVALID: T25.verification[0]: project-specific audit ledger validator; replace with `bitacora.py audit-ledger check .evidence/T25.findings.json`; the engine owns the ledger contract; T25b.verific",
+     "result": "failed"
+    }
+   ],
+   "id": "ff0a082c2d5623b1",
+   "repair": "regression: PlanContractError: PLAN_INVALID: T25.verification[0]: project-specific audit ledger validator; replace with `bitacora.py audit-ledger check .evidence/T25.findings.json`; the engine owns the ledger contract; T25b.verific",
+   "status": "exhausted",
+   "task": "T23",
+   "why": "the same failure came back after its repair"
   }
  }
 }

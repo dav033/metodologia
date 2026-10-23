@@ -6,7 +6,7 @@ created: 2026-10-22
 # Plan — Private UI kit library with catalog and registry
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/7 · tareas 15/32 · generado: 2026-10-23T13:16:27-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: paused · hitos 6/7 · tareas 24/32 · generado: 2026-10-23T16:40:36-05:00
 
 **M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
 
@@ -37,39 +37,39 @@ created: 2026-10-22
 | T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | completada | gpt-6-luna | codex-1 | 4 |
 | T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | completada | gpt-6-luna | codex-2 | 2 |
 
-**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 1/2
+**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 2/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | completada | gpt-6-luna | codex-1 | 2 |
-| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | en curso | gpt-6-luna | codex-1 | 2 |
+| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | completada | gpt-6-luna | codex-1 | 2 |
 
-**M5 — Bencho UI (12)** · dificultad alta · 0/2
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | pendiente | gpt-6-luna | codex-2 | 4 |
-| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | pendiente | gpt-6-luna | codex-luis | 1 |
-
-**M6 — React Bits Free (32)** · dificultad alta · 0/3
+**M5 — Bencho UI (12)** · dificultad alta · 2/2
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | pendiente | gpt-6-luna | codex-2 | 1 |
-| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | pendiente | gpt-6-luna | codex-2 | 1 |
-| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | pendiente | gpt-6-luna | codex-2 | 2 |
+| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | completada | gpt-6-luna | codex-luis | 5 |
+| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | completada | gpt-6-luna | codex-luis | 3 |
 
-**M7 — Agent index, deployment and acceptance** · dificultad alta · 0/11
+**M6 — React Bits Free (32)** · dificultad alta · 3/3
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | pendiente | gpt-6-luna | codex-luis | 2 |
-| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | pendiente | gpt-6-luna | codex-2 | 2 |
-| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | pendiente | gpt-6-luna | codex-2 | 1 |
+| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | completada | gpt-6-luna | codex-luis | 3 |
+| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | completada | gpt-6-luna | codex-luis | 5 |
+
+**M7 — Agent index, deployment and acceptance** · dificultad alta · 3/11
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | completada | gpt-6-luna | codex-luis | 3 |
+| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | completada | gpt-6-luna | codex-luis | 10 |
+| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | pendiente | gpt-6-luna | codex-1 | 4 |
 | T25 | Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-1 | 2 |
 | T25b | Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-2 | 1 |
-| T24.1a | Repair what blocks T24a | media | pendiente | gpt-6-luna | codex-1 | 1 |
+| T24.1a | Repair what blocks T24a | media | en curso | sonnet | claude-work | 4 |
 | T24.1 | Remediate T25 findings: security: anonymous access and token-protected index | alta | pendiente | — | — | 0 |
 | T24.2 | Remediate T25 findings: registry install: internal dependencies and import paths | alta | pendiente | — | — | 0 |
 | T24.3 | Remediate T25 findings: design tokens wired into the app | alta | pendiente | — | — | 0 |

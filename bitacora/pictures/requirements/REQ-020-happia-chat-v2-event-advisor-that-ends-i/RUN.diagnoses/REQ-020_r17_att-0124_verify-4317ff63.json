@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r17:att-0124:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15b queda en revisión humana: faltan las comprobaciones en el teléfono físico",
+ "origin": "T15b es una auditoría de producción cuyos criterios de cámara, micrófono, teclado, reintento y recarga solo tienen evidencia manual, y el verificador marcó CRITERION_MANUAL: «This acceptance criterion has only manual evidence.». La evidencia que tengo no incluye esas observaciones de un teléfono real, así que no puedo verificarlas ni marcarlas como aprobadas. Los comandos automáticos (npm run gate, npm run happie:test-webhook, audit-ledger check y test -s) no bastan para aceptar la tarea.",
+ "steps": [
+  "Abre la app de producción (c25a5f42) en un teléfono real y comprueba permisos de cámara y micrófono, teclado, reintento y recarga; anota en docs/req-020/T15-crosscheck.md lo que viste y deja sin aprobar lo que no probaste.",
+  "Ejecuta npm run gate, npm run happie:test-webhook, bitacora.py audit-ledger check docs/req-020/T15-crosscheck.findings.json y test -s docs/req-020/T15-crosscheck.md, y confirma que todos pasan sin cambios en el código del producto.",
+  "Revisa docs/req-020/T15-crosscheck.findings.json: cada hallazgo crítico o alto abierto debe figurar con su ID de tarea productora para que el motor la devuelva a rework.",
+  "Con bitacora.py --project pictures scheduler-op REQ-020 status revisa la decisión pendiente y elige review_fail con --reason explicando que falta la evidencia telefónica; cuando la tengas, vuelve a lanzar T15b y aprueba con review_pass."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T13:39:44",
+ "seconds": 21.1
+}

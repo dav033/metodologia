@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r18:att-0129:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15.6 espera tu decisión: falta la autorización de release y la evidencia del teléfono",
+ "origin": "La comprobación [manual] de T15.6 exige una autorización explícita de David para el release reparado y observaciones del teléfono físico sobre esa revisión. Según la evidencia, esa autorización no existe: el handoff indica que Pictures «still has no deployment authorization» y que T15.6 «need[s] the owner». Por eso el verificador deja el criterio pendiente con CRITERION_MANUAL. La sugerencia automática de «Aprobar a mano» contradice la evidencia, así que no se debe usar.",
+ "steps": [
+  "No apruebes T15.6 a mano: todavía no hay autorización de release ni observaciones del teléfono sobre la revisión reparada.",
+  "Obtén el id de la decisión con `bitacora.py --project pictures scheduler-op REQ-020 decisions`.",
+  "Registra `bitacora.py --project pictures scheduler-op REQ-020 decide <id> review_fail --reason \"Falta autorización explícita de David y evidencia de teléfono físico; criterio manual sin aceptar\"`.",
+  "Cuando David dé la autorización y la evidencia de la revisión reparada, documéntala en docs/req-020/remediation-release-evidence.md; si cambia una comprobación, sube revision y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020` antes de reintentar."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T14:49:34",
+ "seconds": 16.3
+}

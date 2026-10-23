@@ -1,0 +1,31 @@
+{
+  "schema": "deployed-integration-results/1",
+  "task": "T14a",
+  "mode": "live",
+  "target": "deployed",
+  "revision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+  "verifiedRevision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+  "origin": "https://185-147-157-25.sslip.io",
+  "milestone": "M2",
+  "startedAt": "2026-10-23T21:03:53.001Z",
+  "outcome": "passed",
+  "checks": [
+    "real voice service transcript and original photo persisted in customer messages",
+    "same-device reload restores transcript and received photo bytes",
+    "corrected brief was proposed and approved at its current version",
+    "admin sees the approved brief, voice transcript, and photo attachment"
+  ],
+  "completedAt": "2026-10-23T21:04:37.459Z",
+  "invocation": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M2",
+  "commands": [
+    "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M2"
+  ],
+  "runs": [
+    {
+      "revision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482",
+      "task": "T14a",
+      "command": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 --milestone M2",
+      "outcome": "passed"
+    }
+  ]
+}

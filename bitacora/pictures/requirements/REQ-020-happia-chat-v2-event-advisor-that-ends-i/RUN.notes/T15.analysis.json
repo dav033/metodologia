@@ -1,13 +1,17 @@
 {
- "at": "2026-10-23T11:03:36",
- "cause": "El check scripts/e2e/asesor/check-findings.ts compara la revisión del ledger docs/req-020/T15.findings.json (ba256cf…, luego fb04448…, cambiando en cada intento) con la revisión pinneada en docs/req-020/integration-results.json, que es 34a3abc1108e2337185a3c2d5721b64cce403aa2 con outcome failed, modo mixed y entradas live/deployed pendientes. Ese archivo es evidencia de T14a y no describe ni la revisión auditada ni la desplegada (c25a5f42fc9727b84f454f166e08348521cca6ad). Igualar la revisión del ledger a 34a3abc falsearía la auditoría, así que el desajuste no se resuelve dentro de T15, y aun con exit 0 el ledger tiene hallazgos high abiertos (F2 a F6, F8, F9) que rechazan la aceptación.",
+ "at": "2026-10-23T13:40:44",
+ "cause": "T15 is not the failing task. The legacy checker scripts/e2e/asesor/check-findings.ts still compares the ledger `revision` string with `integration.revision` (line 159, `Audit ledger revision ... does not match integration evidence revision ...`), and docs/req-020/integration-results.json still pins 34a3abc1108e2337185a3c2d5721b64cce403aa2 with outcome failed. The latest audit (att-0123, revision 17, snapshot 7114d206) passes the native ledger and reports `gate_status: evaluated` with 6 open high findings (F2, F4, F5, F6, F8, F10), which is the correct rejection under T15's acceptance criteria. Those findings are product or evidence gaps owned by producers (T8, T12/T13, T4/T5, T14, T14a, T10 and the owner's phone observations), so T15 cannot close them by editing its ledger or revision.",
  "confidence": "alta",
- "failures": 19,
+ "failures": 21,
  "model": "haiku",
  "not_the_task": true,
  "profile": "claude",
- "seconds": 23.8,
- "solution": "1. No cambiar el campo revision del ledger ni editar docs/req-020/integration-results.json, y no volver a ejecutar los mismos comandos de check-findings.\n2. T14a: regenerar docs/req-020/integration-results.json como evidencia inmutable de la revisión auditada (fb04448ac3fe4676ccdd646b9d68090d95910848 o la vigente), con M1/M2 contra producción; si no hay credenciales, dejarlo declarado como pendiente.\n3. T7: corregir check-findings.ts (ruta por defecto ignorada, validación de summary, fixed evidence, accepted_by y reason, y escaneo de límites de auditoría en todo el worktree); no es trabajo de T15.\n4. David (dueño): completar las observaciones en teléfono físico (login, cámara/galería/micrófono, denegación y recuperación, recarga, reintento de proveedor) y entregar recibos redactados a T7/T10.\n5. T15: registrar el desajuste como hallazgo high abierto en docs/req-020/T15.findings.json con la revisión realmente auditada, devolver rework a T14a, T7, T8, T12/T13, T4/T5 y T14, y rechazar la aceptación hasta que check-findings.ts con --check-audit-diff --integration-results salga 0 sin hallazgos high o critical abiertos.",
+ "seconds": 28.1,
+ "solution": "1. Do not change the T15 ledger revision to match 34a3abc; that would relabel evidence. Keep the ledger at the audited snapshot 7114d206 and record the mismatch as an open high finding for T7/T14a.\n2. T7 (not T15): change the legacy checker to validate the mixed-report tree_digest contract instead of revision string equality, and validate summary, fixed/accepted metadata and the full worktree edit boundary.\n3. T14a: regenerate docs/req-020/integration-results.json against the current tested revision and immutable receipts (resolve F10: the receipt reference 56f81d7d… does not match the supplied file sha256 b204e0fc…).\n4. Producers rework the open high findings: T8 (photo upload/display, F5), T12/T13 (direction and package cards, F6), T4/T5 (summary and brief link, F8), T14 (full live nine-scenario matrix, F4), T10 (production phone observations, F2 — David must perform them).\n5. After those tasks are fixed and re-audited, rerun `npm run gate`, `npm run happie:test-webhook` and `bitacora.py audit-ledger check docs/req-020/T15.findings.json`; T15 can only pass when no open critical/high finding remains.",
+ "source_attempt": "att-0123",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-nqx5c97i/source",
+ "source_snapshot": "7114d206fa30233aab9d719ebefd6ea73ab11df8",
  "state": "done",
  "task": "T15"
 }

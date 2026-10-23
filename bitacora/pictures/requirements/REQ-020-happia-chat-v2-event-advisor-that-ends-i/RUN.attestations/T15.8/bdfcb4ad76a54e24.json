@@ -1,0 +1,14 @@
+{
+ "at": 1792791534.395,
+ "attempt": "att-0133",
+ "binding": "bdfcb4ad76a54e241c124ada8b40c1bef5e6740158dd5f25f5130df9e024b846",
+ "by": "coordinator",
+ "evidence": "Supervisor executed against released revision fa101a4759feb3f435c2500b3b2bc9684ff2f482 (main, PR #16, Quality checks green; published identity verified on both origins): deterministic gate, happie:test-webhook, lint, workspace builds, tsc, app build and fake-model M1/M2 in a clean environment (all exit 0); local live M1 and M2 (exit 0, real Gemini, voice service and database); deployed M1 and M2 on https://185-147-157-25.sslip.io and https://demo-decoracion.vercel.app (all four pass, each verifying the published SHA); live nine-scenario evaluation scripts/eval/asesor/run.ts --live (status executed, exit 0). Evidence files in bitacora/pictures/artifacts/req020-r19-release, installed unmodified by T15.8 (byte-identical); integration-results.json passes run.ts --check-results including --strict, tree_digest sha256:d492c6bd... Physical-phone checks are not claimed here (T15.9). Note: the first deployed M1/M2 attempts failed INVALID_CREDENTIALS because the deployed advisor password hashes were unknown; the owner authorized resetting them, after which all passed.",
+ "evidence_sha256": "29bb7a05f744e81b2a36e94aa0e1801ae9321b06f279c0e67166a23fa38eee5f",
+ "expected": "Revision-bound deployed and live evidence exists and every recorded run passed on the released revision; absent or failing runs must not pass.",
+ "purpose": "docs/req-020 holds the revision-bound deployed and live evidence of the repaired release, unmodified from the supervisor artifact, with a passing report check.",
+ "schema": "attestation/1",
+ "seal": "fe05ca05edb8aac86e26d0907d188d018dbe40fd53f9cbd10d208c1d2901cae1",
+ "task": "T15.8",
+ "value": "Supervisor ran the deployed M1/M2 and the full live matrix against the released revision and attests the exact commands, revision and outcomes."
+}

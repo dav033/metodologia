@@ -1,0 +1,23 @@
+{
+ "request": "REQ-020:r19:att-0133:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "El verificador espera una revisión humana: el criterio de T15.8 solo admite evidencia manual",
+ "origin": "El fallo viene del plan, no del código: el criterio «Install revision-bound release…» solo tiene la comprobación manual «Supervisor ran the deployed M1/M2 and the full live matrix…». El verificador devolvió CRITERION_MANUAL, así que no puede dar veredicto automático. Las dos comprobaciones por comando no aparecen como fallidas en la evidencia, y no hay errores de intento. Aprobar equivale a que una persona confirme que el supervisor ejecutó esas pruebas sobre la revisión publicada.",
+ "steps": [
+  "Compara cada archivo de /home/david/bitacora/pictures/artifacts/req020-r19-release con docs/req-020 (por ejemplo `cmp` o `diff`). Deben ser idénticos y `docs/req-020/live-acceptance.md` debe tener contenido.",
+  "En docs/req-020/integration-results.json, confirma que la revisión y el tree_digest coinciden con este árbol. Si falta algún archivo o no coincide, rechaza con «Rechazar» e indica qué falló; no edites la evidencia.",
+  "Ejecuta `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` y confirma que pasa.",
+  "Si todo lo anterior se cumple, usa «Aprobar a mano» indicando que revisaste los archivos y el resultado del check."
+ ],
+ "option": "review_pass",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-23T16:38:30",
+ "seconds": 16.7
+}

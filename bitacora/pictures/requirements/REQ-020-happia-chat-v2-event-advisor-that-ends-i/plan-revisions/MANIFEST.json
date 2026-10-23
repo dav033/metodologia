@@ -107,6 +107,18 @@
    "frozen_at": "2026-10-23T12:34:16",
    "source": "approval",
    "plan_md_sha256": "50fa6fc9b84adb653c3b4b687a1508a36e6e13833cd44f6282d46f3411a4fe84"
+  },
+  {
+   "revision": 18,
+   "sha256": "7db6a18d875da6a91460441d577c9dac3d4b706409f1dcc2d24297eec88258f9",
+   "frozen_at": "2026-10-23T14:14:36",
+   "source": "owner-authorized bounded supervisor remediation; preserve 22 accepted tasks"
+  },
+  {
+   "revision": 19,
+   "sha256": "ded4da1a4471503151601dd8698008848020a631841f471baeb1e986e1e126dd",
+   "frozen_at": "2026-10-23T15:12:57",
+   "source": "remediation"
   }
  ]
 }

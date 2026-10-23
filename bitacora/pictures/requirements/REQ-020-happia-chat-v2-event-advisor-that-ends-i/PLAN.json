@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 17,
+  "revision": 19,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2336,7 +2336,9 @@
       "after": [
         "T14a",
         "T15.1",
-        "T15.2"
+        "T15.2",
+        "T15.6",
+        "T15.9"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -2471,7 +2473,9 @@
       "after": [
         "T14a",
         "T15.1",
-        "T15.2"
+        "T15.2",
+        "T15.6",
+        "T15.9"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -3893,6 +3897,808 @@
         "R9"
       ],
       "kind": "implement"
+    },
+    {
+      "id": "T15.3",
+      "milestone_id": "M4",
+      "title": "Repair customer photo, offer-card and authoritative summary flows",
+      "objective": "Repair sealed att-0123 F5/F6/F8 and att-0124 X1/X2/X3 on the current integrated tree. Wire camera/gallery upload through the existing authenticated photo API, persisted attachments, structured direction/package state, authoritative summary/correction/approval and printable-brief navigation. Validate SSE and restore payloads before use. Keep Spanish product language and existing Pictures visual conventions. Preserve voice, privacy, retries and happie. First reproduce each defect using the actual ChatView/useConversation in deterministic browser tests with controlled authenticated API/SSE fixtures (system Chromium /usr/bin/chromium is available). Test real DOM interactions, upload failure/retry, SSE and reload, card selection/image/source/price, summary correction invalidating approval, and approved brief link. Replace obsolete static tests asserting photo=false/cards=[] with behavior tests; retain their original privacy/retry invariants. Do not treat emulation as physical-phone acceptance. No deployment, production writes, commits, pushes, or changes outside the declared advisor surface. No new dependency without justification.",
+      "repository": "pictures",
+      "after": [
+        "T14a",
+        "T15.1",
+        "T15.2"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded repair estimate 180 minutes: implementation and regression evidence on the existing integrated tree; human release wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: reconciles structured asynchronous state and independent acceptance across existing advisor contracts; a local label change cannot close the sealed findings."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Full feature repair: one declared corrective surface with executable behavior checks, while all original accepted task specifications remain unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 180 minutes for implementation and fresh checks on the integrated tree; no measured comparable duration is claimed and external owner wait is excluded."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: false closure could expose private conversation data or approve stale summary/release evidence, so checks must fail closed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes existing SSE/restore, media, offers and brief contracts; dependencies explicitly order corrective work before release evidence and final audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: sealed independent audits and current source establish the defects, while exact repaired behavior and owner-only acceptance remain unverified."
+        }
+      },
+      "expected_paths": [
+        "src/components/asesor",
+        "scripts/test/asesor/chat-ui.test.ts",
+        "scripts/test/asesor/ui-remediation.test.ts",
+        "scripts/e2e/asesor/ui-remediation.ts",
+        "scripts/e2e/asesor/scenarios/text.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved.",
+          "created_by": "T15.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --test scripts/test/asesor/ui-remediation.test.ts",
+          "purpose": "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved.",
+          "created_by": "T15.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/e2e/asesor/ui-remediation.ts",
+          "purpose": "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved.",
+          "created_by": "T15.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved.",
+          "created_by": "T15.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "Actual chat UI supports photo upload/display, sourced offer cards and current summary approval/brief navigation through both streaming and restore, with privacy and idempotent retry preserved.",
+          "created_by": "T15.3",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R5",
+        "R7",
+        "R9",
+        "R10",
+        "R11"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15.4",
+      "milestone_id": "M4",
+      "title": "Repair nine-scenario evaluation and negative/privacy acceptance coverage",
+      "objective": "Close automatable portions of att-0123 F4 and att-0124 X5 without asserting missing production/phone acceptance. Preserve all nine versioned scenarios and separate fake-port deterministic invariants from real-model outcomes. Extend deterministic harness coverage for contact/address refusal, off-topic/injection, vendor redaction, sourced direction/package price and fallback freshness, and provider failure/retry without duplicated turns. Add regression tests that fail if a required scenario/assertion is omitted. Use existing selected model and ports; keep outcome artifacts redacted and explicitly report unexecuted live checks. Prepare exact coordinator commands for the full live matrix on the repaired snapshot; never relabel fake-model results as live. Modify prompts only when a reproduced failing behavioral assertion needs it. No deployment, production mutation, commits or pushes.",
+      "repository": "pictures",
+      "after": [
+        "T15.3"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded repair estimate 180 minutes: implementation and regression evidence on the existing integrated tree; human release wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: reconciles structured asynchronous state and independent acceptance across existing advisor contracts; a local label change cannot close the sealed findings."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Full feature repair: one declared corrective surface with executable behavior checks, while all original accepted task specifications remain unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 180 minutes for implementation and fresh checks on the integrated tree; no measured comparable duration is claimed and external owner wait is excluded."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: false closure could expose private conversation data or approve stale summary/release evidence, so checks must fail closed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes existing SSE/restore, media, offers and brief contracts; dependencies explicitly order corrective work before release evidence and final audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: sealed independent audits and current source establish the defects, while exact repaired behavior and owner-only acceptance remain unverified."
+        }
+      },
+      "expected_paths": [
+        "scripts/eval/asesor",
+        "scripts/e2e/asesor/scenarios/m1.ts",
+        "scripts/e2e/asesor/scenarios/m2.ts",
+        "scripts/test/asesor/evaluation-remediation.test.ts",
+        "src/lib/asesor/prompts",
+        "docs/req-020/remediation-evaluation.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted.",
+          "created_by": "T15.4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/evaluation-remediation.test.ts",
+          "purpose": "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted.",
+          "created_by": "T15.4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted.",
+          "created_by": "T15.4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted.",
+          "created_by": "T15.4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "All nine versioned scenarios and required negative/privacy/provider-failure invariants have executable deterministic coverage, with live evaluation explicitly distinguished and pending where unexecuted.",
+          "created_by": "T15.4",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R7",
+        "R9",
+        "R10",
+        "R11",
+        "R13"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15.5",
+      "milestone_id": "M4",
+      "title": "Prepare repaired-tree evidence and exact owner release checklist",
+      "objective": "Run local deterministic UI/evaluation checks for T15.3/T15.4 and prepare docs/req-020/remediation-readiness.md. Bind every result to the resulting revision/tree, record exact commands, exit codes and redacted artifact references. Reconcile historical F10 against the exact immutable local-live-receipt.json in bitacora/pictures/artifacts/req020-supervisor-root-cause: the supervisor restored original bytes at 13:18 and its digest is sha256:56f81d7d1cba375a911244c6d621a61b32574cb9e984a04e6adc917d26e9ec30. Do not edit sealed audit results or assert that old receipts cover this repaired tree. Write exact local live nine-scenario coordinator command and release/deployed/physical-phone checklist. Keep deployed c25a5f42 evidence historical; repaired source is not released. No deploy, production writes, commits or pushes. This task prepares evidence, not acceptance of missing phone or release checks.",
+      "repository": "pictures",
+      "after": [
+        "T15.4"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded repair estimate 90 minutes: implementation and regression evidence on the existing integrated tree; human release wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: reconciles structured asynchronous state and independent acceptance across existing advisor contracts; a local label change cannot close the sealed findings."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Full feature repair: one declared corrective surface with executable behavior checks, while all original accepted task specifications remain unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 90 minutes for implementation and fresh checks on the integrated tree; no measured comparable duration is claimed and external owner wait is excluded."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: false closure could expose private conversation data or approve stale summary/release evidence, so checks must fail closed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes existing SSE/restore, media, offers and brief contracts; dependencies explicitly order corrective work before release evidence and final audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: sealed independent audits and current source establish the defects, while exact repaired behavior and owner-only acceptance remain unverified."
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/remediation-readiness.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Repaired-tree readiness report preserves provenance and distinguishes local checks, historical receipts, pending live evaluation and owner-only release/physical-phone evidence."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/remediation-readiness.md",
+          "purpose": "Repaired-tree readiness report preserves provenance and distinguishes local checks, historical receipts, pending live evaluation and owner-only release/physical-phone evidence.",
+          "created_by": "T15.5",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/e2e/asesor/ui-remediation.ts",
+          "purpose": "Repaired-tree readiness report preserves provenance and distinguishes local checks, historical receipts, pending live evaluation and owner-only release/physical-phone evidence.",
+          "created_by": "T15.5",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "Repaired-tree readiness report preserves provenance and distinguishes local checks, historical receipts, pending live evaluation and owner-only release/physical-phone evidence.",
+          "created_by": "T15.5",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "Repaired-tree readiness report preserves provenance and distinguishes local checks, historical receipts, pending live evaluation and owner-only release/physical-phone evidence.",
+          "created_by": "T15.5",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R3",
+        "R7",
+        "R9",
+        "R10",
+        "R11",
+        "R13",
+        "R14"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T15.6",
+      "milestone_id": "M4",
+      "title": "Await owner-authorized release and physical-phone acceptance evidence",
+      "objective": "Prepare docs/req-020/remediation-release-evidence.md from T15.5, explicitly pending. No new production deployment is authorized. Only David can authorize release and provide physical-phone observations. Do not execute deployment commands or claim a release/phone check happened. The independent verifier must leave the manual criterion pending until real owner evidence is supplied for the repaired revision. Required evidence: released revision and fresh deployed M1/M2 plus full real-model nine-scenario/negative/privacy/provider retry matrix, and physical-phone login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, summary approval/print/admin. Report failures as failures. Preserve historic evidence. No commits or pushes.",
+      "repository": "pictures",
+      "after": [
+        "T15.5"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 45,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded repair estimate 45 minutes: implementation and regression evidence on the existing integrated tree; human release wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: reconciles structured asynchronous state and independent acceptance across existing advisor contracts; a local label change cannot close the sealed findings."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Full feature repair: one declared corrective surface with executable behavior checks, while all original accepted task specifications remain unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 45 minutes for implementation and fresh checks on the integrated tree; no measured comparable duration is claimed and external owner wait is excluded."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: false closure could expose private conversation data or approve stale summary/release evidence, so checks must fail closed."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes existing SSE/restore, media, offers and brief contracts; dependencies explicitly order corrective work before release evidence and final audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15",
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: sealed independent audits and current source establish the defects, while exact repaired behavior and owner-only acceptance remain unverified."
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/remediation-release-evidence.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "Owner-authorized repaired release, full live acceptance matrix and physical-phone observations are supplied with revision-bound redacted evidence; unexecuted checks remain unaccepted."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/remediation-release-evidence.md",
+          "purpose": "Owner-authorized repaired release, full live acceptance matrix and physical-phone observations are supplied with revision-bound redacted evidence; unexecuted checks remain unaccepted.",
+          "created_by": "T15.6",
+          "category": "static"
+        },
+        {
+          "type": "manual",
+          "value": "David supplies explicit release authorization and revision-bound physical-phone observations; verify fresh deployed M1/M2 and full live scenario/negative/privacy/provider-retry evidence on that repaired release.",
+          "purpose": "Owner-authorized repaired release, full live acceptance matrix and physical-phone observations are supplied with revision-bound redacted evidence; unexecuted checks remain unaccepted.",
+          "expected": "Actual owner authorization and complete revision-bound release/live/physical-phone evidence, with no unresolved high findings. Pending or absent evidence must not pass.",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T15.7",
+      "milestone_id": "M4",
+      "title": "Repair package commercial facts, card disclosures and photo-only send",
+      "objective": "Repair sealed T15b findings C7, C8 and C9 on the current integrated tree without reopening any accepted task. C7: the approved summary and the delivered brief must carry the package estimated COP price, its source and catalogue freshness, not only the package name and id (src/lib/asesor/tools.ts propose_summary stores name/id only; src/lib/asesor/brief.ts projects state.brief without standardPackage). C8: the customer package card must show catalogue freshness and the unknown event/theme/city/capacity disclosures the server sends (src/components/asesor/conversation-contract.ts strips and never renders them), also after restore. C9: a customer with a selected photo and an empty textarea must be able to send (Composer.tsx disables Enviar with !value.trim(); useConversation already supports photo-only turns). First reproduce each defect with a failing test (the sealed audit evidence names exact probes), then fix; add regression tests that fail if the price, source, freshness or disclosures are dropped again. Keep Spanish product language, privacy rules, idempotent retries and /happie unchanged. No deployment, production writes, commits or pushes.",
+      "repository": "pictures",
+      "after": [
+        "T15.6"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded estimate 120 minutes on the existing integrated tree; owner wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: touches summary, brief and customer card contracts that already passed independent acceptance."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Bounded corrective surface; every accepted task specification is left unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 120 minutes; no measured comparable duration is claimed."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: a lost price or freshness caveat misleads the customer, and false closure would hide missing release evidence."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes the T4/T5/T13/T15.3 contracts; dependencies order repair, release evidence and audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: the sealed cross-check reproduced the defects, the repaired behavior is still unverified."
+        }
+      },
+      "expected_paths": [
+        "src/lib/asesor",
+        "src/components/asesor",
+        "scripts/test/asesor/package-facts.test.ts",
+        "scripts/test/asesor/ui-remediation.test.ts",
+        "scripts/e2e/asesor/ui-remediation.ts"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/package-facts.test.ts",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/e2e/asesor/ui-remediation.ts",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "The approved summary and brief carry package price, source and freshness; the package card shows freshness and disclosures after streaming and restore; a selected photo can be sent without text.",
+          "created_by": "T15.7",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R4",
+        "R5",
+        "R7",
+        "R9",
+        "R10",
+        "R11"
+      ],
+      "kind": "implement"
+    },
+    {
+      "id": "T15.8",
+      "milestone_id": "M4",
+      "title": "Install revision-bound release, deployed M1/M2 and live-matrix evidence",
+      "objective": "Copy, unchanged, the supervisor-produced evidence for the repaired release from /home/david/bitacora/pictures/artifacts/req020-r19-release into docs/req-020: integration-results.json (deployed and local-live runs on the released revision, tree_digest equal to the source digest of this tree) and live-acceptance.md (full real-model nine-scenario, negative/privacy/provider-retry matrix with redacted outcomes). Verify the report with the approved checker. If the artifact directory or a file is missing, or its revision/tree_digest does not match this tree, stop with status blocked and say so; never edit evidence, never run live or deployment commands. No commits or pushes.",
+      "repository": "pictures",
+      "after": [
+        "T15.7"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 45,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded estimate 45 minutes on the existing integrated tree; owner wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: touches summary, brief and customer card contracts that already passed independent acceptance."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Bounded corrective surface; every accepted task specification is left unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 45 minutes; no measured comparable duration is claimed."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: a lost price or freshness caveat misleads the customer, and false closure would hide missing release evidence."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes the T4/T5/T13/T15.3 contracts; dependencies order repair, release evidence and audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: the sealed cross-check reproduced the defects, the repaired behavior is still unverified."
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/integration-results.json",
+        "docs/req-020/live-acceptance.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "docs/req-020 holds the revision-bound deployed and live evidence of the repaired release, unmodified from the supervisor artifact, with a passing report check."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/live-acceptance.md",
+          "purpose": "docs/req-020 holds the revision-bound deployed and live evidence of the repaired release, unmodified from the supervisor artifact, with a passing report check.",
+          "created_by": "T15.8",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json",
+          "purpose": "docs/req-020 holds the revision-bound deployed and live evidence of the repaired release, unmodified from the supervisor artifact, with a passing report check.",
+          "created_by": "T15.8",
+          "category": "functional"
+        },
+        {
+          "type": "manual",
+          "value": "Supervisor ran the deployed M1/M2 and the full live matrix against the released revision and attests the exact commands, revision and outcomes.",
+          "purpose": "docs/req-020 holds the revision-bound deployed and live evidence of the repaired release, unmodified from the supervisor artifact, with a passing report check.",
+          "expected": "Revision-bound deployed and live evidence exists and every recorded run passed on the released revision; absent or failing runs must not pass.",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R7",
+        "R9",
+        "R10",
+        "R11",
+        "R13",
+        "R14"
+      ],
+      "kind": "test"
+    },
+    {
+      "id": "T15.9",
+      "milestone_id": "M4",
+      "title": "Install the owner physical-phone observations",
+      "objective": "Copy, unchanged, the owner-supplied physical-phone observations for the released revision from /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md into docs/req-020/phone-observations.md. If the file does not exist, stop with status blocked and say that only David can supply it; never write or infer observations. Required observations: login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, summary approval/print/admin. No commits or pushes.",
+      "repository": "pictures",
+      "after": [
+        "T15.8"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 20,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional bounded estimate 20 minutes on the existing integrated tree; owner wait excluded.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: touches summary, brief and customer card contracts that already passed independent acceptance."
+        },
+        "scope": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Bounded corrective surface; every accepted task specification is left unchanged."
+        },
+        "duration": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Provisional 20 minutes; no measured comparable duration is claimed."
+        },
+        "risk": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: a lost price or freshness caveat misleads the customer, and false closure would hide missing release evidence."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "High: consumes the T4/T5/T13/T15.3 contracts; dependencies order repair, release evidence and audits."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15b",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Medium: the sealed cross-check reproduced the defects, the repaired behavior is still unverified."
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/phone-observations.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/phone-observations.md",
+          "purpose": "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified.",
+          "created_by": "T15.9",
+          "category": "static"
+        },
+        {
+          "type": "manual",
+          "value": "David performed the physical-phone checks on the released revision and supplied the observations.",
+          "purpose": "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified.",
+          "expected": "Actual owner observations tied to the released revision, covering every listed area; absent or partial evidence must not pass.",
+          "category": "product"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14"
+      ],
+      "kind": "test"
     }
   ]
 }

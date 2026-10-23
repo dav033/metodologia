@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 22/24 · generado: 2026-10-23T13:11:38-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: paused · hitos 3/4 · tareas 28/31 · generado: 2026-10-23T16:40:42-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -38,19 +38,26 @@ created: 2026-10-20
 | T13 | Standard package/service first: tool matching event/theme/city/guests, card with estimated price + notice, recorded in the brief | alta | completada | gpt-6-luna | codex-2 | 9 |
 | T14 | Scripted conversation set (birthday, corporate, school, undecided, photo-led, refusals, prompt injection) run against the real model; fix prompt gaps | alta | completada | gpt-6-luna | codex-1 | 10 |
 
-**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 7/9
+**M4 — Acceptance and close (before the 23 Nov rehearsal)** · dificultad alta · 13/16
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T14a | Run full advisor entry-point integration and protected happie regression; record outcomes without fixes | baja | completada | gpt-6-luna | codex-1 | 23 |
-| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | en curso | gpt-6.1-sol | codex-1 | 21 |
-| T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | en curso | gpt-6.1-sol | codex-1 | 1 |
+| T15 | Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-luis | 22 |
+| T15b | Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated | alta | pendiente | gpt-6.1-sol | codex-luis | 3 |
 | T14.1a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 3 |
 | T14.2a | Integrate reviewed summary lifecycle and deployed evidence correction | media | completada | gpt-6-luna | codex-luis | 1 |
 | T14.3a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 1 |
 | T14.4a | Repair what blocks T14a | alta | completada | sonnet | claude-work | 2 |
 | T15.1 | Repair what blocks T15 | alta | completada | gpt-6-luna | codex-luis | 3 |
 | T15.2 | Repair what blocks T15 | alta | completada | gpt-6-luna | codex-1 | 2 |
+| T15.3 | Repair customer photo, offer-card and authoritative summary flows | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T15.4 | Repair nine-scenario evaluation and negative/privacy acceptance coverage | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T15.5 | Prepare repaired-tree evidence and exact owner release checklist | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T15.6 | Await owner-authorized release and physical-phone acceptance evidence | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T15.7 | Repair package commercial facts, card disclosures and photo-only send | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T15.8 | Install revision-bound release, deployed M1/M2 and live-matrix evidence | alta | completada | sonnet | claude-work | 1 |
+| T15.9 | Install the owner physical-phone observations | alta | lista | — | — | 0 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -332,3 +339,15 @@ Deterministic validation: the project plan-json check was run after enrichment a
 - 2026-10-22 Owner requested integration: local commit 915a75af, antagonist: 2 fixed, 0 deferred, 0 dropped; re-review SOUND. Plan r7 adds T14.2a to import the reviewed diff after accepted T14.1a and before T14a; no requirement expansion. Rebase kept16 accepted, reset3 pending, added1. Old T14a att-0089 superseded; new att-0090 running.
 
 - 2026-10-23 supervisor: r17 aligns T14a verification purposes with explicit acceptance criteria, preserves completed repairs in the narrative, and uses the engine findings/provenance/edit-boundary gate for both independent audits. No product deployment authorized.
+
+
+### Supervisor bounded remediation r18 (owner-authorized, 2026-10-23)
+
+P-186 is fixed by engine commit 8d8ee7d7. Independent sealed r17 audits require producer corrections; unchanged audit retries are forbidden. Core preview preserves every one of the 22 accepted tasks, resets only the two unaccepted final audits and adds four tasks. No deployment is authorized by this revision.
+
+- T15.3 repairs actual customer photo, sourced direction/package cards and persisted summary/approval/brief navigation, with deterministic real-UI browser regression tests, typecheck and build.
+- T15.4 repairs nine-scenario evaluation and negative/privacy/provider-retry coverage, separating fake fixtures from actual live model evidence.
+- T15.5 prepares repaired-tree readiness and exact release/phone evidence checklist. Historical F10 is reconciled against the restored immutable receipt bytes; old receipts never attest the repaired tree.
+- T15.6 waits for David's release authorization and revision-bound deployed/live/physical-phone acceptance. Both final audits depend on this gate. Missing evidence remains unaccepted.
+
+Read-only independent candidate review approved; the pure Scheduler rebase preview is retained at `artifacts/req020-supervisor-root-cause/remediation-r18.preview.json`. The frozen JSON is authoritative for exact commands, paths and contracts.
