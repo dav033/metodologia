@@ -191,6 +191,22 @@ def _evidence(attempt: str, snapshot: str, results: list[dict]) -> str:
     return "\n".join(parts)[:3800]
 
 
+REVIEW_WAIT_TRIES = 12
+REVIEW_WAIT_SECONDS = 15.0
+
+
+def _review_attempts(ops, rdir: Path, task: str, sleep: Callable[[float], None] = time.sleep) -> tuple[str, ...]:
+    """The attempts waiting for `task`'s evidence; while there are none, wait: a live run takes ~25 min and the owner can be restarting
+    (an engine reload) just when it ends, which made REQ-020's T14a lose a whole run («no verification waiting for evidence»)."""
+    attempts = ops.review_attempts(rdir, task)
+    for _ in range(REVIEW_WAIT_TRIES):
+        if attempts:
+            break
+        sleep(REVIEW_WAIT_SECONDS)
+        attempts = ops.review_attempts(rdir, task)
+    return attempts
+
+
 def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callable[..., dict] | None = None,
                 timeout: int | None = None) -> list[str]:
     """Run the manual live checks of `task` for the attempt its verifier is waiting on, and attest them when they all pass."""
@@ -213,7 +229,7 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
         commands += [c for c in found if c not in commands]
     if not commands:
         return [f"{task} has no manual check"]
-    attempts = ops.review_attempts(rdir, task)
+    attempts = _review_attempts(ops, rdir, task)
     if len(attempts) != 1:
         return [f"{task}: no single verification is waiting for evidence ({len(attempts)} found)"]
     attempt = attempts[0]
@@ -258,6 +274,7 @@ def attest_task(project: str, req: str, rdir: Path, task: str, *, runner: Callab
             outcome.append((number, check, results))
     stamp = f"{project}-{req}"
     lines: list[str] = []
+    _review_attempts(ops, rdir, task)             # the owner may be restarting right now (an engine reload): attest once the review is visible
     passed = [(n, c, r) for n, c, r in outcome if r and all(x["exit_code"] == 0 for x in r) and len(r) == len(commands_of(c["value"]))]
     failed_checks = [(n, c, r) for n, c, r in outcome if (n, c, r) not in passed]
     for number, check, results in passed:

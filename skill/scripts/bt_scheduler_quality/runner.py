@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
@@ -17,8 +18,9 @@ from .sandbox_mounts import Mount
 class SandboxRunner:
     """Runs only policy-compiled commands in a fresh OS namespace."""
 
-    def __init__(self, policy: QualityPolicy):
+    def __init__(self, policy: QualityPolicy, *, progress: Callable[[str, str, int], None] | None = None):
         self.policy = policy
+        self.progress = progress
         self._slots = threading.BoundedSemaphore(policy.max_concurrent)
         self._execution = SandboxExecution(policy, self._outcome, self._redact)
 
@@ -94,7 +96,8 @@ class SandboxRunner:
         started: float,
         mounts: tuple[Mount, ...] = (),
     ) -> CommandOutcome:
-        return self._execution.execute(check, root, timeout, started, mounts)
+        observer = (lambda phase, size: self.progress(check.id, phase, size)) if self.progress else None
+        return self._execution.execute(check, root, timeout, started, mounts, progress=observer)
 
     def _redact(self, value: bytes) -> bytes:
         for secret in sorted(self.policy.secret_values, key=len, reverse=True):

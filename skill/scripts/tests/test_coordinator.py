@@ -250,6 +250,22 @@ class Prepare(unittest.TestCase):
             self.assertEqual((modules / "dep" / "index.js").stat().st_ino, (repo / "node_modules" / "dep" / "index.js").stat().st_ino)
 
 
+class ReviewWait(unittest.TestCase):
+    def test_it_waits_for_the_review_to_reappear_instead_of_losing_a_finished_live_run(self):
+        """REQ-020 T14a: the owner restarted (engine reload) when the 25 min live run ended; «no verification waiting» lost it."""
+        answers = [(), (), ("att-1",)]
+        ops = type("Ops", (), {"review_attempts": staticmethod(lambda rdir, task: answers.pop(0) if len(answers) > 1 else answers[0])})
+        slept = []
+        self.assertEqual(coord._review_attempts(ops, Path("/x"), "T1", sleep=slept.append), ("att-1",))
+        self.assertEqual(len(slept), 2)
+
+    def test_it_gives_up_after_the_limit_and_reports_none(self):
+        ops = type("Ops", (), {"review_attempts": staticmethod(lambda rdir, task: ())})
+        slept = []
+        self.assertEqual(coord._review_attempts(ops, Path("/x"), "T1", sleep=slept.append), ())
+        self.assertEqual(len(slept), coord.REVIEW_WAIT_TRIES)
+
+
 class CommandEnv(unittest.TestCase):
     def test_env_files_reach_only_the_commands_that_contain_the_configured_text(self):
         """REQ-020: the deployed check needs the published origin and the deployed services' passwords; the local live one keeps the

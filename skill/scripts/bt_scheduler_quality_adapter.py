@@ -98,7 +98,7 @@ class QualityVerificationPort:
             raise TypeError("M3 attempts root must be a configured filesystem path")
         self.attempts_root = Path(configured_attempts)
         self._audit_runner = quality_audit_evidence.EvidenceRunner(
-            runner or SandboxRunner(policy), lambda order, spec: quality_audit_evidence.owns_check(self, order, spec),
+            runner or SandboxRunner(policy, progress=quality_audit_evidence.progress_observer(self)), lambda order, spec: quality_audit_evidence.owns_check(self, order, spec),
             lambda: CommandOutcome("pass", 0, 0, b"[M6] engine ledger contract and content provenance passed\n", b"", None, True))
         self.engine = QualityEngine(
             policy, store, reviewer=reviewer, runner=self._audit_runner, resolver=snapshot_resolver, attestations=attestations,

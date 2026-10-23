@@ -9,6 +9,7 @@ from contextlib import contextmanager
 
 import bt_audit_gate as audit
 from bt_audit_evidence import evidence_paths, safe_path
+from .quality_progress import observer as progress_observer
 
 
 def check(port, order, raw: bytes | str, gate: audit.Gate) -> audit.Gate:

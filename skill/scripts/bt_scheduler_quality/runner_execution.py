@@ -64,6 +64,7 @@ class SandboxExecution:
         timeout: int,
         started: float,
         mounts: tuple[Mount, ...] = (),
+        progress: Callable[[str, int], None] | None = None,
     ) -> CommandOutcome:
         if not sandbox_available(self.policy):
             return self.make_outcome(
@@ -72,7 +73,9 @@ class SandboxExecution:
         session = SandboxSession()
         try:
             session.start(check, root, self.policy, mounts)
-            collected = self._collect(session, started, timeout)
+            if progress:
+                progress("running", 0)
+            collected = self._collect(session, started, timeout, progress)
             return self._to_outcome(collected, started)
         except (OSError, subprocess.SubprocessError, ValueError, TypeError):
             if session.process is not None:
@@ -82,9 +85,12 @@ class SandboxExecution:
             )
         finally:
             session.close()
+            if progress:
+                progress("finished", 0)
 
     def _collect(
-        self, session: SandboxSession, started: float, timeout: int
+        self, session: SandboxSession, started: float, timeout: int,
+        progress: Callable[[str, int], None] | None = None,
     ) -> _Collection:
         if session.process is None or session.selector is None:
             raise OSError("sandbox process did not start")
@@ -101,6 +107,8 @@ class SandboxExecution:
                 self._consume_event(session, state, key)
                 if state.sandbox_failed or state.output_exceeded:
                     break
+            if progress:
+                progress("running", state.total_output)
             if state.sandbox_failed or state.output_exceeded:
                 break
         if session.process.poll() is None:

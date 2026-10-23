@@ -182,6 +182,17 @@ class CrossCheck(unittest.TestCase):
         self.assertIn("files: docs/audit-crosscheck.md, docs/audit-crosscheck.findings.json", text)
         self.assertIn("after: T18, T18b", text)
 
+    def test_read_only_cross_check_does_not_inherit_exclusive_resources(self):
+        from bt_planner import sync
+
+        plan = self.plan()
+        plan["tasks"][1]["shared_resources"] = ["contract:acceptance-flow"]
+        (self.dir / "PLAN.json").write_text(self.pc.dumps(plan), encoding="utf-8")
+        sync.retrofit_audit(self.dir, cross_check=True)
+        by_id = {task["id"]: task for task in self.plan()["tasks"]}
+        self.assertEqual(by_id["T18"]["shared_resources"], ["contract:acceptance-flow"])
+        self.assertEqual(by_id["T18b"].get("shared_resources", []), [])
+
     def test_it_only_adds_one_and_only_for_a_single_audit(self):
         from bt_planner import sync
         sync.retrofit_audit(self.dir, cross_check=True)
