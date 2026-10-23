@@ -315,8 +315,21 @@ class SandboxRunnerTests(unittest.TestCase):
 
         self.assertNotIn(secret.encode(), redacted.stdout)
         self.assertIn(b"[REDACTED]", redacted.stdout)
-        self.assertEqual(limited.issue_code, "OUTPUT_LIMIT")
+        # a long output is CUT (head and tail kept, flagged), not a failure: the command's own exit code decides
+        self.assertEqual((limited.status, limited.exit_code, limited.issue_code), ("pass", 0, None))
+        self.assertTrue(limited.output_truncated)
         self.assertLessEqual(len(limited.stdout), 1024)
+        self.assertIn(b"output cut", limited.stdout)
+
+    def test_a_runaway_output_is_killed_as_output_limit(self):
+        import bt_scheduler_quality.runner_execution as execution
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "flood.py").write_text("import sys\nwhile True:\n    sys.stdout.write('x' * 65536)\n", encoding="utf-8")
+            with patch.object(execution, "HARD_OUTPUT_BYTES", 2_000_000):
+                limited = SandboxRunner(QualityPolicy(max_output_bytes=1024)).run(_check("flood.py"), root)
+        self.assertEqual(limited.issue_code, "OUTPUT_LIMIT")
 
     def test_refuses_to_run_when_bubblewrap_is_unavailable(self):
         with tempfile.TemporaryDirectory() as directory:

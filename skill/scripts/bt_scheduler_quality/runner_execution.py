@@ -28,12 +28,20 @@ class _Collection:
     handshake: bool = False
     timed_out: bool = False
     output_exceeded: bool = False
+    output_cut: bool = False                 # more was printed than is kept: the head and the tail are kept, the middle is not
+    total_output: int = 0
+    tails: dict[str, bytearray] = field(
+        default_factory=lambda: {"stdout": bytearray(), "stderr": bytearray()}
+    )
     sandbox_failed: bool = False
     eof: set[str] = field(default_factory=set)
     return_code: int = 125
     command_started: bool = False
     stdout: bytes = b""
     stderr: bytes = b""
+
+
+HARD_OUTPUT_BYTES = 64 * 1024 * 1024        # a command that prints more than this is a runaway: killed, OUTPUT_LIMIT
 
 
 class SandboxExecution:
@@ -219,16 +227,27 @@ class SandboxExecution:
         stream_name: str,
         chunk: bytes,
     ) -> None:
-        current_size = sum(len(value) for value in state.streams.values())
-        remaining = self.policy.max_output_bytes - current_size
-        state.streams[stream_name].extend(chunk[: max(0, remaining)])
-        if len(chunk) > remaining:
+        # A fresh `npm install` + `next build` prints far more than the kept output (david-ui REQ-001 T5: the command was killed at 256 KB
+        # and the task waited for a person although it exited 0). The head and the tail are KEPT, the middle is counted and dropped, and only
+        # a runaway (HARD_OUTPUT_BYTES) is killed.
+        state.total_output += len(chunk)
+        if state.total_output > HARD_OUTPUT_BYTES:
             state.output_exceeded = True
             _terminate(session.process)
+            return
+        head_limit = self.policy.max_output_bytes * 3 // 4
+        room = max(0, head_limit - sum(len(value) for value in state.streams.values()))
+        state.streams[stream_name].extend(chunk[:room])
+        if len(chunk) > room:
+            state.output_cut = True
+            tail = state.tails[stream_name]
+            tail.extend(chunk[room:])
+            del tail[: max(0, len(tail) - self.policy.max_output_bytes // 8)]
 
     def _finish_streams(self, marker: str, state: _Collection) -> None:
-        raw_stdout = bytes(state.streams["stdout"])
-        raw_stderr = bytes(state.streams["stderr"])
+        cut = b"\n[... output cut: the middle of a long output is not kept ...]\n"
+        raw_stdout = bytes(state.streams["stdout"]) + (cut + bytes(state.tails["stdout"]) if state.tails["stdout"] else b"")
+        raw_stderr = bytes(state.streams["stderr"]) + (cut + bytes(state.tails["stderr"]) if state.tails["stderr"] else b"")
         marker_bytes = (marker + "\n").encode("ascii")
         state.command_started = marker_bytes in raw_stderr
         raw_stderr = raw_stderr.replace(marker_bytes, b"")
@@ -310,7 +329,7 @@ class SandboxExecution:
             state.stderr,
             None,
             True,
-            False,
+            state.output_cut,
             state.namespaces,
         )
 
