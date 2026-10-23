@@ -20,6 +20,17 @@ class PublicationBrief(unittest.TestCase):
         self.assertFalse(self._brief(["npm run gate"]).publishes)
         self.assertFalse(self._brief(["git merge-base --is-ancestor HEAD origin/develop"]).publishes)
 
+    def test_a_task_that_itself_creates_its_repository_or_pushes_gets_the_remote_actions_its_plan_approved(self):
+        """david-ui REQ-001 T1: 'create private GitHub repo and push' with a prompt that said NEVER push blocked the run."""
+        def brief(objective, criteria=("a",)):
+            spec = SimpleNamespace(id="T1", meta={"title": "t", "objective": objective}, acceptance_criteria=criteria,
+                                   expected_paths=(), verification=[])
+            return PlanBriefs(SimpleNamespace(task=lambda _tid: spec)).brief(SimpleNamespace(task_id="T1"))
+
+        self.assertTrue(brief("Scaffold the app; create private GitHub repo `dav033/david-ui` and push").remote_actions)
+        self.assertTrue(brief("x", ("The GitHub repository dav033/david-ui is private and the scaffold is pushed.",)).remote_actions)
+        self.assertFalse(brief("Add a push button to the form and fix the git remote url parsing").remote_actions)
+
 
 if __name__ == "__main__":
     unittest.main()

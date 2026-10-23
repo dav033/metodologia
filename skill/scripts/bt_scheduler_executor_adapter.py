@@ -286,6 +286,11 @@ class MethodologyDriver:
 # A task whose approved verification requires the branch to be on origin/main is the plan's publication step: the owner
 # approved that push with the plan, so only that task's prompt allows it (once, fast-forward, to main).
 PUBLISH_CHECK = "git merge-base --is-ancestor HEAD origin/main"
+# A task that itself says to create its GitHub repository or push to it (david-ui REQ-001 T1: the agent was told never to push and the
+# criterion "scaffold is pushed" could not pass): the owner approved that with the plan, so its prompt allows those remote actions.
+REMOTE_ACTION = re.compile(r"\bcreate\b[^.\n]{0,40}\bgithub\b[^.\n]{0,20}\brepo\w*|\bgh repo create\b|"
+                           r"\bpush(?:ed|es)?\s+(?:\w+\s+){0,3}?(?:to|into)\s+(?:the\s+|its\s+|a\s+)?(?:github|origin|remote|repo\w*)|"
+                           r"\b(?:is|are|and)\s+pushed\b|\band\s+push\b", re.IGNORECASE)
 
 
 class PlanBriefs:
@@ -305,7 +310,8 @@ class PlanBriefs:
         return m3.Brief(title=str(spec.meta.get("title", spec.id)), objective=str(spec.meta.get("objective", "")),
                         acceptance_criteria=tuple(spec.acceptance_criteria), verification=checks,
                         expected_paths=tuple(spec.expected_paths), notes=self.notes(request) if self.notes else "",
-                        publishes=publishes)
+                        publishes=publishes,
+                        remote_actions=bool(REMOTE_ACTION.search(" ".join((str(spec.meta.get("objective", "")), *spec.acceptance_criteria)))))
 
 
 # ------------------------------------------------------------------------------------------------------ core ports

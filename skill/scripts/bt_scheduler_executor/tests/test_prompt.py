@@ -59,3 +59,24 @@ class PromptPublication(unittest.TestCase):
         self.assertIn("Never use `--force`", publish)
         self.assertNotIn("Do not push, merge, rebase", publish)
         self.assertIn("The only remote action allowed is the publication above", publish)
+
+
+class PromptRemoteActions(unittest.TestCase):
+    def test_a_task_that_creates_and_pushes_its_own_repository_may_use_gh_and_push_never_force(self):
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+
+        def prompt(remote):
+            brief = Brief(title="T", objective="o", acceptance_criteria=("a",), verification=("a: x",), remote_actions=remote)
+            return build_prompt(brief, SimpleNamespace(task_id="T1", acceptance_criteria=("a",)), workdir="/w", branch="b",
+                                report_path="/r.json")
+        plain, remote = prompt(False), prompt(True)
+        self.assertIn("Do not push, merge, rebase onto other branches", plain)
+        self.assertIn("`gh repo view", remote)
+        self.assertIn("Never use `--force`", remote)
+        self.assertNotIn("Do not push, merge, rebase", remote)
+        self.assertNotIn("mounted read-only", remote)
+
+
+if __name__ == "__main__":
+    unittest.main()

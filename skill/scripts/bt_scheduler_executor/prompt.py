@@ -21,9 +21,9 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
                      "The checks run from a clean copy of your final worktree: tracked and untracked files, nothing git-ignored "
                      "(so no `.env` and none of your shell's variables), with network access but no running server of yours. A script or test that these commands name and the repository does not "
                      "have yet is yours to create, and every command must pass on your final files. Installed dependencies "
-                     "(`node_modules`) are mounted read-only: a check or test that runs `npm install`/`npm ci` or writes "
-                     "inside `node_modules` fails there, so a test must use what is installed and write build output "
-                     "elsewhere. If the project has a lockfile, install it in your worktree first (for npm: "
+                     "(`node_modules`) are mounted in a throwaway overlay: tools may write inside it (a vite/vitest config "
+                     "bundle, caches) but nothing reaches your worktree, and `npm install`/`npm ci` there fails (no registry). "
+                     "If the project has a lockfile, install it in your worktree first (for npm: "
                      "`npm ci --offline`) so you can run the checks. Run each one yourself before you finish and say "
                      "which you could not run.")
     if brief.expected_paths:
@@ -44,6 +44,16 @@ fetch and rebase once more and retry once. Never use `--force` or `--force-with-
 tag, and never change remotes. Report the pushed commit in your summary.""")
         scope_rule = ("- Do not merge other branches, force anything, or touch other worktrees. The only remote action allowed is "
                       "the publication above.")
+    elif brief.remote_actions:
+        parts.append("""
+## Remote actions (approved by the owner with this plan)
+This task's own objective asks you to create its repository on the host and/or push to it. You have the authenticated `gh` and
+`git` of the owner for exactly that: inspect first (`gh repo view <owner>/<name>`), create the repository with the visibility the task
+names only if it does not exist, set `origin` to it, and push what the task asks for (your commit, to the repository's default
+branch when it is empty). Never use `--force` or `--force-with-lease`, never delete anything, never touch any other repository, and
+report what you created and pushed in your summary.""")
+        scope_rule = ("- Do not merge other branches, force anything, or touch other worktrees. The only remote actions allowed are the "
+                      "ones above, on this task's own repository.")
     else:
         scope_rule = "- Do not push, merge, rebase onto other branches, force anything, or touch other worktrees or remotes."
     parts.append(f"""

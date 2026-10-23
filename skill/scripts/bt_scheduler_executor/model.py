@@ -232,6 +232,7 @@ class Brief:
     expected_paths: tuple[str, ...] = ()
     notes: str = ""
     publishes: bool = False                    # the frozen plan's own check requires HEAD to be on origin/main
+    remote_actions: bool = False               # the approved task itself asks to create its repository on the host or push to it
 
 
 @dataclass(frozen=True)
