@@ -110,6 +110,8 @@ ledger path (next to its `.md` report) in PLAN.json (a new working revision) and
 policy requires a pair). It never
 invents the integration test; `check` keeps saying so until the plan has one.
 
+**Whole suites belong to audits.** `plan-json check` warns when one whole-repository command (`npm run gate`, `unittest discover`, `pytest`, `cargo test`) is a check of half or more of the work tasks (at least four): every attempt of each pays for it (REQ-020: ~10 min of `npm run gate` in nearly every task). Give each task the focused tests of what it changes and keep the whole suite on milestone audits and the final acceptance.
+
 ## Where the methodology touches the module
 
 Only `bt_plan_adapter.py` imports `bt_planner` (enforced by `tests/test_plan_integration.py`):

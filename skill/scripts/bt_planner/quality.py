@@ -427,6 +427,28 @@ def dominant_shared_resources(plan: dict, share: float = 0.6, minimum: int = 4) 
             if tasks and count >= minimum and count / len(tasks) >= share]
 
 
+_WHOLE_SUITE = re.compile(r"(unittest\s+discover\b[^&|;]*$)|(\bnpm\s+(run\s+)?(test|gate)\s*$)|(\bpytest\s*$)|(\bcargo\s+test\s*$)")
+
+
+def repeated_whole_suite(plan: dict, share: float = 0.5, minimum: int = 4) -> list[str]:
+    """A whole-repository suite (`npm run gate`, `unittest discover`, `pytest`) copied into the checks of most work tasks is paid at every
+    attempt of every task: REQ-020's `npm run gate` (~10 min) sat in nearly all of them and the repository's CI runs the same suites. The
+    suite belongs on milestone audits and the final acceptance; a task answers for the focused tests of what it changes."""
+    tasks = [t for _, t in _plan_tasks(plan) if t.get("kind") != "audit"]
+    counts: dict[str, int] = {}
+    for task in tasks:
+        checks = task.get("verification")
+        found = {str(v.get("value", "")).strip() for v in (checks if isinstance(checks, list) else ())
+                 if isinstance(v, dict) and v.get("type") == "command"}
+        for command in found:
+            if _WHOLE_SUITE.search(command.rsplit("&&", 1)[-1].strip()):
+                counts[command] = counts.get(command, 0) + 1
+    return [f"verification: the whole suite `{command}` is a check of {count} of {len(tasks)} work tasks, and every attempt of each pays for it; "
+            "keep it on the milestone audits and the final acceptance and give each task the focused tests of what it changes"
+            for command, count in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+            if tasks and count >= minimum and count / len(tasks) >= share]
+
+
 def verification_report(plan: dict) -> dict[str, object]:
     """Stable Planner report fields for T10 to expose without changing legacy analysis output."""
     return {"verification_categories": verification_categories(plan),
