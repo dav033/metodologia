@@ -10,8 +10,11 @@ def publish(recovery, plan, order, clash: str, refusal: str, detail: str) -> str
     if recovery is None:
         return None      # structural recovery is off: the plain refusal text is the evidence, the task goes back as before
     match = re.search(r"conflict evidence: (conflict:[0-9a-f]{64})", clash)
-    if match is None and " vs line for " in clash:
-        return None      # a clash found by the integration line has no M5 observation: the plain text goes back with the task
+    if match is None and (" vs line for " in clash or clash.startswith((
+            "INTEGRATION_FILES_LOST ", "merge conflict markers left in: ",
+            "files changed back to an older version than the base they started from: "))):
+        # These guards already carry their complete rejection, not a pairwise M5 merge record.
+        return None
     if match is None:
         raise EvidenceUnavailable("evidence_unavailable: M5 did not retain full conflict evidence")
     observation = recovery.read_conflict_observation(match.group(1))
