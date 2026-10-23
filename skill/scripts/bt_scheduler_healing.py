@@ -676,17 +676,31 @@ def build_fix_revision(plan: dict, task_id: str, case: classify_mod.Case, contex
     if len(fix["verification"]) > MAX_CHECKS or len(fix.get("expected_paths") or ()) > MAX_PATHS:
         return None                                    # no sound task fits: the card stays for a person instead of a plan nobody can run
     fix["title"] = f"Repair what blocks {task_id}"[:120]
-    fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
-                        f"tests unless the test itself is the defect, and say which one was. Evidence from the last "
-                        f"verification:\n{failure}\n" + (f"\n{analysis}\n" if analysis else "") + fix["objective"].split("\n", 1)[-1])[:6000]
-    fix["kind"] = "implement"
-    revised = copy.deepcopy(plan)
-    revised["revision"] = int(plan.get("revision") or 0) + 1
-    restored = list(target.get("after") or ())
-    for task in revised["tasks"]:
-        if task["id"] == task_id:
-            task["after"] = list(dict.fromkeys([*restored, new_id]))
-    revised["tasks"] = [*revised["tasks"], fix]
+    tail = fix["objective"].split("\n", 1)[-1]
+    first_block = failure.split("\n$ ")[0]
+    variants = [failure and f"{failure}\n" + (f"\n{analysis}\n" if analysis else ""),           # everything the evidence has
+                f"{failure}\n",                                                                  # without the analysis
+                f"{first_block[:300]}\n",                                                        # only the first failing command
+                "see the verification note of the task\n"]                                       # nothing the lint can object to
+    revised = restored = None
+    for evidence in dict.fromkeys(variants):
+        # The planner refuses an objective whose words mostly repeat: a repair that quotes two failing commands, their exit codes and
+        # the analysis repeats `npx tsx scripts ... check-findings.ts` (REQ-020 T15.1). Say less rather than give up on the repair.
+        fix["objective"] = (f"{summary}. Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing "
+                            f"tests unless the test itself is the defect, and say which one was. Evidence from the last "
+                            f"verification:\n{evidence}" + tail)[:6000]
+        fix["kind"] = "implement"
+        revised = copy.deepcopy(plan)
+        revised["revision"] = int(plan.get("revision") or 0) + 1
+        restored = list(target.get("after") or ())
+        for task in revised["tasks"]:
+            if task["id"] == task_id:
+                task["after"] = list(dict.fromkeys([*restored, new_id]))
+        revised["tasks"] = [*[t for t in revised["tasks"] if t["id"] != new_id], fix]
+        import bt_plan_adapter
+
+        if not [e for e in bt_plan_adapter.plan_errors(revised) if e.startswith(f"{new_id}.objective")]:
+            break
     return revised, new_id, restored
 
 

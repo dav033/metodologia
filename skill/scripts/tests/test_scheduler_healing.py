@@ -525,6 +525,19 @@ class PlanRepairs(unittest.TestCase):
         self.assertEqual(healing.looping_ports(Path("/nowhere"), same[:11]), [])                                  # a hiccup
         self.assertEqual(healing.looping_ports(Path("/nowhere"), same[:11] + [{"port": "query", "error": "X"}]), [])   # mixed: not a loop
 
+    def test_a_repair_that_would_repeat_the_same_words_says_less_instead_of_being_refused(self):
+        """REQ-020 T15.1: two failing commands with the same long script path, their exit codes and the analyst's text made the planner refuse
+        the objective (`repeats the same words`) and the healing gave up on a repair that was sound."""
+        cmd = "$ npx tsx --conditions=react-server scripts/e2e/asesor/check-findings.ts docs/req-020/T15.findings.json"
+        verify = (f"{cmd}\nexit code 1\n[FAIL] findings check: ENOENT: no such file\n"
+                  f"{cmd} --check-audit-diff --integration-results docs/req-020/integration-results.json\nexit code 1\n[FAIL] findings check: mismatch\n")
+        analysis = "Independent failure analysis: Cause: check-findings.ts check-findings.ts check-findings.ts " * 6
+        revised, new_id, _ = healing.build_fix_revision(self.plan(), "T3", self.case(), {"verify": verify, "analysis": analysis})
+        from bt_plan_adapter import plan_errors
+        self.assertEqual(plan_errors(revised), [])
+        self.assertEqual([t["id"] for t in revised["tasks"]].count(new_id), 1)               # one repair task, however many variants were tried
+        self.assertIn("check-findings.ts", {t["id"]: t for t in revised["tasks"]}[new_id]["objective"])
+
     def test_only_a_finished_confident_analysis_that_blames_something_else_places_a_stop(self):
         import bt_attempt_analyst as analyst
 
