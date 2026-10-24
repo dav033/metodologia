@@ -79,7 +79,17 @@ def propose(case: RecoveryCase, policy: Policy = DEFAULT_POLICY,
         return block("elapsed_limit")
     if history.same_cause_attempts >= policy.max_same_cause:
         return block("same_cause_limit")
-    cause = "timeout" if reason == "TIMEOUT" else case.technical_cause
+    cause = case.technical_cause
+    if reason == "TIMEOUT" and case.core_cause == "verification_rejected":
+        if case.verification_ref is None:
+            return block("verification_evidence_missing")
+        if case.execution_state != "finished":
+            return block("cause_state_mismatch")
+        if case.handoff_sha is None:
+            return block("handoff_missing")
+        if history.timeout_decisions >= 1:
+            return block("timeout_repeated")
+        return decision("retry", "verification_rejected", route="same_route")
     if case.core_cause == "verification_rejected" or cause == "verification_rejected":
         if case.core_cause != "verification_rejected" or case.verification_ref is None:
             return block("verification_evidence_missing")
@@ -100,7 +110,7 @@ def propose(case: RecoveryCase, policy: Policy = DEFAULT_POLICY,
             return block("quota_reset_unknown")
         return deferred(case.reset_epoch + policy.reset_margin_seconds, "quota_reset", "reevaluate")
     if cause in ("connection_lost", "incomplete_output", "agent_error", "timeout"):
-        if not case.transient_confirmed and reason != "TIMEOUT":
+        if not case.transient_confirmed:
             return block("transience_unconfirmed")
         if cause == "timeout" and history.same_cause_attempts >= 1:
             return block("timeout_repeated")

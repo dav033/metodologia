@@ -90,6 +90,7 @@ class RecoveryCase:
         require(type(raw) is dict, "INVALID_INPUT")
         version = raw.get("schema_version")
         if version == "m5.recovery-case/1":
+            require("reason_code" not in raw, "SCHEMA_MISMATCH")
             data = decode(cls, raw, "m5.recovery-case/1")
             data["reason_code"] = "UNCLASSIFIED"
         elif version == "m5.recovery-case/2":
@@ -129,10 +130,12 @@ class Policy:
 class HistorySummary:
     same_cause_attempts: int = 0
     decisions: int = 0
+    timeout_decisions: int = 0
 
     def __post_init__(self) -> None:
         integer(self.same_cause_attempts)
         integer(self.decisions)
+        integer(self.timeout_decisions)
 
 
 @dataclass(frozen=True)

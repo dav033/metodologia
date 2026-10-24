@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import bt_scheduler_adapter as sched
 import bt_scheduler_recovery as m5
@@ -74,6 +75,15 @@ class RecoveryPortContract(unittest.TestCase):
         self.assertIn("restore the declared dependency", proposal.reason)
         self.assertNotIn("secret-not-to-persist", proposal.reason)
 
+    def test_m6_tree_digest_is_compared_when_executor_facts_supply_one(self):
+        official = self.port._official(self.context)
+        reference, encoded = self._m6_manifest(official)
+        official["evidence"] = reference
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        self.facts["tree_digest"] = "c" * 64
+        with self.assertRaisesRegex(ValueError, "tree identity is stale"):
+            self.port._case(self.context, official, self.facts)
+
     def test_wrong_candidate_m6_evidence_blocks_instead_of_reclassifying_from_prose(self):
         official = self.port._official(self.context)
         reference, encoded = self._m6_manifest(official, snapshot="c" * 40)
@@ -109,15 +119,36 @@ class RecoveryPortContract(unittest.TestCase):
         self.port.m6_evidence_reader = lambda _reference: encoded
         self.assertEqual(self.port._case(self.context, official, self.facts).reason_code, "UNCLASSIFIED")
 
+    def test_oversized_m6_manifest_is_rejected_before_parsing(self):
+        official = self.port._official(self.context)
+        encoded = b"{" + b" " * (1024 * 1024)
+        official["evidence"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        with self.assertRaisesRegex(ValueError, "size"):
+            self.port._case(self.context, official, self.facts)
+
     def test_composition_frontier_is_passed_through_without_ancestry_expansion(self):
         raw = {"schema_version": "m5.demonstrated-frontier/1", "change_id": "change-1",
                "source_task_id": "T1", "composition_id": "C7", "manifest_sha256": "a" * 64,
                "tree_digest": "b" * 40, "action": "modify", "frontier": ["T2"],
                "evidence_refs": ["m6:" + "c" * 64]}
         self.port.composition_propagation = lambda _change: raw
+        self.port.scheduler = SimpleNamespace(snapshot=lambda: SimpleNamespace(tasks={"T1": {}, "T2": {}}))
         advice = self.port.demonstrated_frontier("change-1")
         self.assertEqual((advice.action, advice.frontier), ("modify", ("T2",)))
         raw["action"] = "none"
+        with self.assertRaises(m5.RecoveryError):
+            self.port.demonstrated_frontier("change-1")
+
+    def test_composition_frontier_must_name_current_tasks_and_exclude_source(self):
+        raw = {"schema_version": "m5.demonstrated-frontier/1", "change_id": "change-1",
+               "source_task_id": "T1", "composition_id": "C7", "manifest_sha256": "a" * 64,
+               "tree_digest": "b" * 40, "action": "modify", "frontier": ["ZZ"],
+               "evidence_refs": ["m6:" + "c" * 64]}
+        self.port.composition_propagation = lambda _change: raw
+        with self.assertRaises(m5.RecoveryError):
+            self.port.demonstrated_frontier("change-1")
+        raw["frontier"] = ["T1"]
         with self.assertRaises(m5.RecoveryError):
             self.port.demonstrated_frontier("change-1")
 

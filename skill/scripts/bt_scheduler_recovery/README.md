@@ -35,6 +35,9 @@ bounded identifiers and opaque evidence refs. Unknown wire fields fail. Evidence
 must have the form `scheme:<64 lowercase hex digits>`; hashes, never paths or raw logs.
 The adapter is responsible for hashing/redacting evidence and proving identity, exact
 plan SHA-256, revision, fencing token, current attempt, terminal state and handoff snapshot.
+The captured `snapshot_sha` is the binding identity; M6 input/check `tree_digest` values
+are informational when executor facts provide no corresponding tree id, and are compared
+against that id when one is available.
 `reason_code` is advice metadata; actual `attempt_id` identifies one M1 attempt, while
 the bounded code-retry history counts only distinct prior attempts with retryable
 evidence. `RecoveryDecision.retry_budget_remaining` is the M1 actual-attempt budget;
@@ -48,7 +51,9 @@ the default policy. A timeout permits only one retry. All transient cases requir
 explicit transience evidence, a verified handoff and attempt budget. Reported or
 confirmed structured evidence is accepted; inferred/unknown evidence blocks.
 Verification rejection additionally requires a verifier reference and finished
-execution; it produces a retry recommendation and never an acceptance.
+execution; it produces a retry recommendation and never an acceptance. For a verification
+`TIMEOUT`, M5 counts earlier timeout decisions by reason across the task history, independent
+of technical cause, and blocks after the first retry.
 
 Safety and exclusivity guards precede evidence and budgets. `BLOCKED_EXTERNAL` and
 `BLOCKED_ENV` return typed block reasons with owner/environment actions before retry

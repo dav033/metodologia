@@ -97,6 +97,22 @@ def _same_cause_attempts(connection: sqlite3.Connection, case: RecoveryCase) -> 
     return len(by_attempt)
 
 
+def _timeout_decisions(connection: sqlite3.Connection, case: RecoveryCase) -> int:
+    rows = connection.execute(
+        "SELECT DISTINCT attempt_id,case_json FROM decisions WHERE run_id=? AND task_id=? AND attempt_id<>?",
+        (case.run_id, case.task_id, case.attempt_id),
+    ).fetchall()
+    attempts = set()
+    for attempt_id, encoded in rows:
+        try:
+            previous = json.loads(encoded)
+        except (TypeError, ValueError):
+            raise RecoveryError("STORE_SCHEMA") from None
+        if isinstance(previous, dict) and previous.get("reason_code") == "TIMEOUT":
+            attempts.add(attempt_id)
+    return len(attempts)
+
+
 def _private_path(path: Path) -> None:
     missing = []
     parent = path.parent
@@ -206,7 +222,8 @@ class DecisionStore:
                 count = connection.execute("SELECT count(*) FROM decisions").fetchone()[0]
                 require(count < min(self.max_decisions, policy.max_decisions), "STORE_FULL")
                 same = _same_cause_attempts(connection, case)
-                decision = propose(case, policy, HistorySummary(same, count))
+                timeouts = _timeout_decisions(connection, case)
+                decision = propose(case, policy, HistorySummary(same, count, timeouts))
                 connection.execute("INSERT INTO decisions(decision_id,run_id,task_id,attempt_id,cause,facts,case_json,"
                                    "policy_json,decision_json,action) VALUES (?,?,?,?,?,?,?,?,?,?)",
                                    (key, case.run_id, case.task_id, case.attempt_id, case.technical_cause, _facts(case),

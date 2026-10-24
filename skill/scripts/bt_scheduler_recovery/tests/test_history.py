@@ -82,8 +82,21 @@ class HistoryTests(unittest.TestCase):
 
     def test_m6_timeout_allows_only_one_distinct_attempt_retry(self):
         with DecisionStore(self.path) as store:
-            first = store.decide(case(reason_code="TIMEOUT"))
-            second = store.decide(case(attempt_id="A-002", token=2, reason_code="TIMEOUT"))
+            verification = {"core_cause": "verification_rejected", "technical_cause": "verification_rejected",
+                            "execution_state": "finished", "verification_ref": "verdict:" + "d" * 64}
+            first = store.decide(case(reason_code="TIMEOUT", **verification))
+            second = store.decide(case(attempt_id="A-002", token=2, reason_code="TIMEOUT", **verification))
+            self.assertEqual(first.action, "retry")
+            self.assertEqual((second.action, second.reason_code), ("block", "timeout_repeated"))
+
+    def test_verification_timeout_history_is_independent_of_technical_cause(self):
+        with DecisionStore(self.path) as store:
+            verification = {"core_cause": "verification_rejected", "execution_state": "finished",
+                            "verification_ref": "verdict:" + "d" * 64}
+            first = store.decide(case(reason_code="TIMEOUT", technical_cause="verification_rejected",
+                                      **verification))
+            second = store.decide(case(attempt_id="A-002", token=2, reason_code="TIMEOUT",
+                                       technical_cause="agent_error", **verification))
             self.assertEqual(first.action, "retry")
             self.assertEqual((second.action, second.reason_code), ("block", "timeout_repeated"))
 

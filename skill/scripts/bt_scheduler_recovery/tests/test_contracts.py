@@ -29,6 +29,13 @@ class ContractsTests(unittest.TestCase):
         legacy.pop("reason_code")
         self.assertEqual(RecoveryCase.from_dict(legacy).reason_code, "UNCLASSIFIED")
 
+    def test_v1_case_rejects_reason_code_key(self):
+        legacy = case().to_dict()
+        legacy["schema_version"] = "m5.recovery-case/1"
+        with self.assertRaises(RecoveryError) as error:
+            RecoveryCase.from_dict(legacy)
+        self.assertEqual(error.exception.code, "SCHEMA_MISMATCH")
+
     def test_reason_code_is_closed_and_invalid_wire_is_rejected(self):
         with self.assertRaises(RecoveryError):
             case(reason_code="credential missing: token=secret")

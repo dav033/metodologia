@@ -144,7 +144,9 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
         if re.fullmatch(r"[a-f0-9]{64}", digest) is None:
             raise ValueError("M6 evidence reference is invalid")
         encoded = self.m6_evidence_reader(reference)
-        if not isinstance(encoded, bytes) or hashlib.sha256(encoded).hexdigest() != digest:
+        if not isinstance(encoded, bytes) or len(encoded) > 1024 * 1024:
+            raise ValueError("M6 persisted evidence exceeds the 1 MiB size limit")
+        if hashlib.sha256(encoded).hexdigest() != digest:
             raise ValueError("M6 persisted evidence is unavailable or has a mismatched digest")
         manifest = json.loads(encoded)
         if not isinstance(manifest, Mapping) or manifest.get("schema_version") not in M6_MANIFEST_SCHEMAS:
@@ -171,6 +173,13 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
         tree = evidence_input.get("tree_digest")
         if not isinstance(tree, str) or re.fullmatch(r"[a-f0-9]{40}|[a-f0-9]{64}", tree) is None:
             raise ValueError("M6 evidence tree identity is invalid")
+        facts_tree = facts.get("tree_digest")
+        if facts_tree is None:
+            facts_tree = handoff.get("tree_digest")
+        if facts_tree is not None and (not isinstance(facts_tree, str)
+                or re.fullmatch(r"[a-f0-9]{40}|[a-f0-9]{64}", facts_tree) is None
+                or tree != facts_tree):
+            raise ValueError("M6 evidence tree identity is stale")
         checks = manifest.get("checks")
         if not isinstance(checks, list):
             raise ValueError("M6 evidence checks are invalid")
@@ -181,6 +190,8 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             if check_tree is not None and (not isinstance(check_tree, str)
                     or re.fullmatch(r"[a-f0-9]{40}|[a-f0-9]{64}", check_tree) is None):
                 raise ValueError("M6 evidence check tree identity is invalid")
+            if facts_tree is not None and check_tree is not None and check_tree != facts_tree:
+                raise ValueError("M6 evidence check tree identity is stale")
         return reason
 
     def propose(self, context):
@@ -235,6 +246,10 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
         raw = self.composition_propagation(change_id)
         advice = m5.DemonstratedFrontier.from_dict(raw)
         if advice.change_id != change_id:
+            raise m5.RecoveryError("PROPAGATION_STALE")
+        task_ids = self.scheduler.snapshot().tasks.keys()
+        if advice.source_task_id not in task_ids or advice.source_task_id in advice.frontier \
+                or any(task_id not in task_ids for task_id in advice.frontier):
             raise m5.RecoveryError("PROPAGATION_STALE")
         return advice
 
