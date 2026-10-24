@@ -1136,3 +1136,13 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - \+ The six Codex slots stay busy.
   - − Phase entries may report work merged before the phase formally opened.
 - **Source:** engine-v2
+
+## D-126 — External verification authority comes from operator files, never the plan
+
+- **Date:** 2026-10-24 · **Status:** Accepted · **Refines:** D-125
+- **Decision:** For schema 1.3 `environment`/`requires`/`authorization_needed`, the owner injects M6's trusted ports from operator-owned sources outside the plan and the repos: a required resource exists only if the owner's environment or `~/.config/flow/secrets.env` declares that variable NAME (values are never read, logged or stored); a staging/production verification is authorized only by a matching entry in `<bitacora>/<project>/verification-policy.json`. Absent or unreadable policy, or no match, blocks as BLOCKED_EXTERNAL before any command runs; sandbox needs no authorization.
+- **Consequences:**
+  - \+ A plan can declare what it needs but can never grant itself credentials or production access.
+  - − Each project that wants staging/production checks needs an operator policy file before its first 1.3 run.
+- **Source:** engine-v2 F4-9b (lead session 1fbc12c7)
+- **Refinement 2026-10-24 (after F4-9 reviews):** a policy entry authorizes only when `environment` matches, its `authorization` text equals the plan's `authorization_needed`, and (if it lists `requirements`) the REQ is listed; an empty variable is not an available resource. Policy and secrets reads refuse symlinks, non-regular files and files over 64 KiB.
