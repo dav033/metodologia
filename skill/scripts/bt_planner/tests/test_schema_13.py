@@ -48,6 +48,10 @@ def base_plan() -> dict:
 
 
 class Schema13Tests(unittest.TestCase):
+    def assertCode(self, plan: dict, code: str) -> None:
+        report = pc.validate(plan)
+        self.assertTrue(any(line.startswith(f"{code}:") for line in report.errors), report.errors)
+
     def test_version_constants_and_legacy_canonical_output_are_separate(self):
         plan = base_plan()
         self.assertEqual(pc.SCHEMA_VERSION, "1.2.0")
@@ -182,6 +186,130 @@ class Schema13Tests(unittest.TestCase):
         plan["tasks"][0]["verification"] = [{"type": "command", "value": "test -f src/auth.py", "purpose": "file exists",
                                               "category": "functional"}]
         self.assertTrue(any(e.startswith("FILE_EXISTENCE_CHECK:") for e in pc.validate(plan).errors))
+
+    def test_remaining_subplan_and_composition_error_codes(self):
+        cases = []
+
+        plan = base_plan()
+        plan["subplans"][0]["id"] = "not-a-subplan"
+        cases.append((plan, "SUBPLAN_INVALID"))
+
+        plan = base_plan()
+        for task in plan["tasks"]:
+            task["subplan_id"] = "SP-2"
+        cases.append((plan, "SUBPLAN_EMPTY"))
+
+        plan = base_plan()
+        plan["subplans"][0]["outcome"] = plan["subplans"][0]["title"]
+        cases.append((plan, "SUBPLAN_NO_OUTCOME"))
+
+        plan = base_plan()
+        plan["subplans"][0]["milestone_id"] = "M99"
+        cases.append((plan, "SUBPLAN_MILESTONE"))
+
+        plan = base_plan()
+        plan["subplans"][0]["covers"] = ["AUTH-2"]
+        cases.append((plan, "SUBPLAN_COVERAGE"))
+
+        plan = base_plan()
+        plan["subplans"][0]["acceptance_criteria"] = ["A criterion with no task evidence"]
+        cases.append((plan, "SUBPLAN_CRITERION_UNCARRIED"))
+
+        plan = base_plan()
+        plan["subplans"][0]["produces"] = [{"contract": "Invalid/slug", "version": 1, "defined_by": "T1"}]
+        cases.append((plan, "SUBPLAN_CONTRACT"))
+
+        plan = base_plan()
+        plan["subplans"][0]["audit_task"] = "T2"
+        cases.append((plan, "SUBPLAN_AUDIT"))
+
+        plan = base_plan()
+        plan["requirements"].append("AUTH-2")
+        cases.append((plan, "REQUIREMENT_ORPHAN"))
+
+        plan = base_plan()
+        outside = copy.deepcopy(plan["tasks"][0])
+        outside.update(id="T4", subplan_id=None, after=["T3"], kind="implement")
+        plan["tasks"].append(outside)
+        cases.append((plan, "TASK_OUTSIDE_SUBPLAN"))
+
+        plan = base_plan()
+        plan["composition_gates"] = [{"id": "CG-1", "subplans": ["SP-1"], "task": "T2", "criteria": []}]
+        cases.append((plan, "COMPOSITION_INVALID"))
+
+        plan = base_plan()
+        producer = copy.deepcopy(plan["subplans"][0])
+        producer.update(id="SP-2", title="Session producer", produces=[])
+        plan["subplans"].append(producer)
+        plan["subplans"][0]["consumes"] = [{"contract": "session-api", "version": 1, "from": "SP-2",
+                                              "dependency": "contract"}]
+        cases.append((plan, "COMPOSITION_MISSING"))
+
+        for plan, code in cases:
+            with self.subTest(code=code):
+                self.assertCode(plan, code)
+
+    def test_contract_order_and_consumer_test_warning(self):
+        plan = base_plan()
+        producer_task = copy.deepcopy(plan["tasks"][0])
+        producer_task.update(id="T4", subplan_id="SP-2", after=[], kind="implement",
+                             acceptance_criteria=["The session contract is frozen"])
+        plan["tasks"].append(producer_task)
+        producer = copy.deepcopy(plan["subplans"][0])
+        producer.update(id="SP-2", title="Session API", outcome="The session API contract is frozen",
+                        produces=[{"contract": "session-api", "version": 1, "defined_by": "T4"}],
+                        acceptance_criteria=["The session contract is frozen"], integration_test_task="T4",
+                        audit_task="T4", checkpoints=[])
+        plan["subplans"].append(producer)
+        plan["subplans"][0]["consumes"] = [{"contract": "session-api", "version": 1, "from": "SP-2",
+                                              "dependency": "implementation"}]
+        plan["subplans"][0]["produces"] = [{"contract": "consumer-api", "version": 1, "defined_by": "T1"}]
+        self.assertCode(plan, "SUBPLAN_ORDER")
+        report = pc.validate(plan)
+        self.assertTrue(any(line.startswith("CONSUMER_CONTRACT_TEST_MISSING:") for line in report.warnings), report.warnings)
+
+    def test_subplan_late_checkpoint_and_ui_order_errors(self):
+        plan = base_plan()
+        plan["tasks"] = []
+        for index in range(1, 12):
+            task = copy.deepcopy(base_plan()["tasks"][0])
+            kind = "implement" if index < 10 else "test" if index == 10 else "audit"
+            task.update(id=f"T{index}", kind=kind, subplan_id="SP-1",
+                        after=[f"T{index-1}"] if index > 1 else [], covers=["AUTH-1"],
+                        expected_paths=[f"src/step{index}.py"], acceptance_criteria=["Expired sessions are rejected"])
+            if kind == "test":
+                task["verification"] = [{"type": "command", "value": "pytest tests/integration -q",
+                                          "purpose": "real integration", "category": "integration"}]
+            if kind == "audit":
+                task["expected_paths"] = ["docs/T11.findings.json"]
+                task["verification"] = [{"type": "command", "value": "engine audit-ledger check docs/T11.findings.json",
+                                          "purpose": "audit findings", "category": "static"}]
+            plan["tasks"].append(task)
+        plan["subplans"][0]["integration_test_task"] = "T10"
+        plan["subplans"][0]["audit_task"] = "T11"
+        plan["subplans"][0]["checkpoints"] = []
+        self.assertCode(plan, "SUBPLAN_LATE_CHECKPOINT")
+
+        plan = base_plan()
+        design = copy.deepcopy(plan["tasks"][0])
+        design.update(id="T4", subplan_id="SP-1", kind="design", after=[], ui=False,
+                      acceptance_criteria=["The visual contract is defined"])
+        plan["tasks"].append(design)
+        plan["tasks"][0]["ui"] = True
+        plan["subplans"][0]["acceptance_criteria"] = ["Expired sessions are rejected"]
+        plan["subplans"][0]["ui"] = {"contract": "session-ui", "version": 1, "design_task": "T4",
+                                       "visual_review_task": "T3"}
+        self.assertCode(plan, "UI_GATE_ORDER")
+
+        plan = base_plan()
+        plan["tasks"][0]["ui"] = True
+        self.assertCode(plan, "UI_GATE_MISSING")
+
+        plan = base_plan()
+        plan["tasks"][0]["ui"] = True
+        plan["subplans"][0]["ui"] = {"contract": "session-ui", "version": 1,
+                                       "design_task": "T1", "visual_review_task": "T3"}
+        self.assertCode(plan, "UI_REVIEW_ORDER")
 
     def test_verification_environment_resources_and_implementation_sandbox(self):
         plan = base_plan()
