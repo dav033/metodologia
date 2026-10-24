@@ -25,7 +25,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality", "bt_composition"]
 py-modules = [
   "bitacora",
   "bt_agent_models",
@@ -61,6 +61,7 @@ py-modules = [
   "bt_cli_scheduler_recovery",
   "bt_cli_scheduler_run",
   "bt_code_review",
+  "bt_composition_adapter",
   "bt_config",
   "bt_context",
   "bt_continuation",
@@ -255,6 +256,7 @@ bt_scheduler_executor = ["README.md"]
 bt_scheduler_monitor = ["README.md"]
 bt_scheduler_recovery = ["README.md"]
 bt_scheduler_quality = ["api-contract.json", "README.md"]
+bt_composition = ["README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "assets/vendor/**/*", "agents/*", "agents/**/*",
   "agents/*/skills/*/SKILL.md", "githooks/*",
