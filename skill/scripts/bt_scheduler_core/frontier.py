@@ -19,7 +19,8 @@ _TREE = re.compile(r"[0-9a-f]{40,64}")
 
 def apply_demonstrated_frontier(ctx: Ctx, *, change_id: str, source_task_id: str, composition_id: str,
                                 manifest_sha256: str, tree_digest: str, action: str,
-                                task_ids: tuple[str, ...], evidence_refs: tuple[str, ...]) -> tuple[str, ...]:
+                                task_ids: tuple[str, ...], evidence_refs: tuple[str, ...],
+                                allow_prior_frontier: bool = False) -> tuple[str, ...]:
     """Apply exactly the named tasks. This deliberately does not traverse the dependency graph."""
     if (not isinstance(change_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", change_id) or
             not isinstance(source_task_id, str) or not isinstance(composition_id, str) or
@@ -52,10 +53,18 @@ def apply_demonstrated_frontier(ctx: Ctx, *, change_id: str, source_task_id: str
             raise SchedulerError("NOT_ALLOWED", "change_id was already applied with a different proof")
         return tuple(previous["applied_task_ids"])
     fact = state.compositions.get(composition_id)
-    if (fact is None or fact.get("plan_id") != state.plan_id or fact.get("revision") != state.revision or
-            fact.get("state") != "published" or fact.get("manifest_sha256") != manifest_sha256 or
-            fact.get("tree_digest") != tree_digest or set(fact.get("members", {})) != set(gate.subplans) or
-            not composition_members_current(plan, state, fact.get("members", {}))):
+    current_fact = (fact is not None and fact.get("plan_id") == state.plan_id and
+                    fact.get("revision") == state.revision and fact.get("state") == "published" and
+                    fact.get("manifest_sha256") == manifest_sha256 and fact.get("tree_digest") == tree_digest and
+                    set(fact.get("members", {})) == set(gate.subplans) and
+                    composition_members_current(plan, state, fact.get("members", {})))
+    continuation = allow_prior_frontier and any(
+        prior.get("source_task_id") == source_task_id and prior.get("composition_id") == composition_id and
+        prior.get("manifest_sha256") == manifest_sha256 and prior.get("tree_digest") == tree_digest and
+        prior.get("evidence_refs") == list(evidence_refs) and prior.get("plan_id") == state.plan_id and
+        prior.get("revision") == state.revision
+        for prior in state.frontier_applications.values())
+    if not current_fact and not continuation:
         raise SchedulerError("NOT_ALLOWED", "frontier proof is not bound to the current published composition")
     if state.cancel_requested:
         raise SchedulerError("NOT_ALLOWED", "cannot apply a frontier to a cancelled run")
@@ -86,3 +95,30 @@ def apply_demonstrated_frontier(ctx: Ctx, *, change_id: str, source_task_id: str
               action=action, tasks=list(task_ids), applied_task_ids=applied, evidence_refs=list(evidence_refs))
     state.frontier_applications[change_id] = {**identity, "applied_task_ids": applied}
     return tuple(applied)
+
+
+def apply_to_scheduler(scheduler, **proof) -> tuple[str, ...]:
+    moved = scheduler.write(lambda ctx: apply_demonstrated_frontier(ctx, **proof))
+    scheduler._wake.set()
+    return moved
+
+
+def apply_batch_to_scheduler(scheduler, applications: tuple[dict, ...]) -> tuple[str, ...]:
+    if not isinstance(applications, tuple) or not applications:
+        raise SchedulerError("CONTRACT_VIOLATION", "M5 frontier batch must be a nonempty tuple")
+
+    def apply(ctx):
+        moved = []
+        required = {"change_id", "source_task_id", "composition_id", "manifest_sha256", "tree_digest",
+                    "action", "frontier", "evidence_refs"}
+        for proof in applications:
+            if not isinstance(proof, dict) or set(proof) != required:
+                raise SchedulerError("CONTRACT_VIOLATION", "M5 frontier batch entry is malformed")
+            values = dict(proof)
+            values["task_ids"] = values.pop("frontier")
+            moved.extend(apply_demonstrated_frontier(ctx, **values, allow_prior_frontier=True))
+        return tuple(moved)
+
+    result = scheduler.write(apply)
+    scheduler._wake.set()
+    return result

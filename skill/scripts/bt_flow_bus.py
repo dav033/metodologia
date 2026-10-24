@@ -241,6 +241,11 @@ M1_RULES: dict[str, Callable] = {
     "subplan_version_published": _m1("subplan_version", "M6", "M1", "{subplan_id} publica la versión {version}"),
     **{f"composition_{s}": _m1("composition", "M6", "M1", f"Composición {{composition_id}}: {es}") for s, es in _COMPOSITION_STATES},
     "demonstrated_frontier_applied": _m1("recovery_frontier", "M5", "M1", "M1 aplica la frontera explícita de M5"),
+    "needs_review_held": _m1("needs_review", "M6", "M1", "M1 conserva la revisión M6 de {attempt}"),
+    "needs_review_waiting": _m1("needs_review_wait", "M5", "M1", "M5 mantiene en espera {attempt}"),
+    "needs_review_resumed": _m1("needs_review_resume", "M5", "M1", "M5 reanuda la verificación de {attempt}"),
+    "needs_review_blocked": _m1("needs_review_block", "M5", "M1", "M5 bloquea la revisión no resuelta de {attempt}"),
+    "needs_review_resolved": _m1("needs_review_resolved", "M6", "M1", "M6 entrega el veredicto de {attempt}"),
 }
 
 

@@ -18,7 +18,7 @@ from typing import Any, Literal, Self
 from .contracts import QualityError, VerifyRequest
 from .evidence import canonical_json, finished_at, read_result
 from .check_history import CHECK_HISTORY_SCHEMA, CheckHistory
-from .recovery import retry_attested, retry_interrupted
+from .recovery import retry_attested, retry_interrupted, retry_m5_transient
 
 _SCHEMA_VERSION = 2
 
@@ -374,6 +374,11 @@ class QualityStore:
         _validate_operator(operator, reason, "FAIL")
         with self._transaction() as connection:
             retry_attested(connection, request_key, operator, reason)
+
+    def retry_m5_transient(self, request_key: str) -> None:
+        """Apply M5's one bounded same-attempt verification resume for TIMEOUT/FLAKY_SUSPECTED evidence."""
+        with self._transaction() as connection:
+            retry_m5_transient(connection, request_key, "m5-policy", "same-attempt verification resume")
 
     def resolve_review(
         self, request_key: str, operator: str, decision: str, reason: str

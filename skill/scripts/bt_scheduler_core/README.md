@@ -35,7 +35,7 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `views.py` | read models: run status, per-task view, unreachable set, attention list |
 | `transitions.py` | the only place that changes a task/attempt state, hold or outbox row |
 | `reservation.py`, `resources.py` | atomic claim; resource claims and their conflicts |
-| `events.py`, `recovery.py`, `operations.py`, `frontier.py` | applying facts/verdicts, recovery decisions & reconciliation, operator actions, explicit M5 frontier application |
+| `events.py`, `recovery.py`, `operations.py`, `frontier.py`, `review.py` | applying facts/verdicts, recovery decisions & reconciliation, operator actions, explicit M5 frontiers and durable M6 review holds |
 | `dispatch.py` | outbox delivery (write-ahead) and reconciliation queries |
 | `scheduler.py` | `SchedulerCore`: transactions + ports + `step()`/`run()` |
 | `rebase.py` | `rebase_run`: move a run onto revision N+1 keeping accepted, unchanged work (see *Rebase*) |
@@ -127,18 +127,21 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
-Run-state schema 6 adds subplan-version, composition, frontier-application and code-attempt budget facts. The loader
-upgrades schemas 1 through 5 in memory and writes schema 6 on the next state change; older M1 versions reject schema 6
+Run-state schema 7 adds subplan-version, composition, frontier-application, code-attempt budget and M6 review-hold facts. The loader
+upgrades schemas 1 through 6 in memory and writes schema 7 on the next state change; older M1 versions reject schema 7
 rather than silently dropping facts. Historical attempts migrate as budget-consuming; new attempts consume the code
 retry budget only after M3 confirms execution began. Schema 3 carries guarded revision barriers and the bounded
 revision-application journal; schema 2 introduced
 durable per-task route recommendations and the completed-map marker. These fields remain available after the upgrades.
 
-The owner may call `apply_demonstrated_frontier` with an explicit M5 action, task list, evidence refs, and current
-published composition id/manifest/tree. M1 validates and journals the identity idempotently, refuses live attempts and
-touches only the listed tasks (the composition gate may independently become stale under the existing gate invariant).
-It never infers descendants. This operation is available for an owner integration; the current composition adapter
-does not yet expose a frontier producer.
+The composition owner passes real `propagate` actions through M5's `composition_propagation` port and applies each
+action with its exact task list, evidence refs, and published composition id/manifest/tree. M1 validates and journals
+each identity idempotently, refuses live attempts and touches only listed tasks. Multiple actions demonstrated against
+the same composition snapshot apply atomically and retain their distinct operation labels; M1 never infers descendants.
+
+An M6 `NEEDS_REVIEW` result creates a durable M1 hold before M1 calls M5 outside its transaction. M5 may resume the
+same verification attempt once, wait with the attempt still `VERIFYING`, or block the task. None of these actions
+allocates an implementation attempt; only a correlated M6 verdict can complete the task.
 
 ## Dispatch and restart
 

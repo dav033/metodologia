@@ -2,12 +2,57 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Mapping
 from pathlib import Path
 
 import bt_audit_gate
+from bt_scheduler_quality.contracts import QualityError
 
 MAX_AUDIT_LEDGERS = 64
+LOGGER = logging.getLogger(__name__)
+
+
+def handoff_needs_review(runtime, request_key: str, identity: Mapping[str, object], result: Mapping[str, object]) -> None:
+    """Call the owner supplied M1/M5 bridge and execute M6's bounded same-attempt resume when advised."""
+    outcome = runtime.needs_review_handoff(identity, result)
+    if outcome == "resumed":
+        runtime.store.retry_m5_transient(request_key)
+        runtime._wake.set()
+
+
+def resume_needs_review_handoffs(runtime) -> int:
+    """Replay open durable M6 reviews into M1 after owner restart; M1 holds make this idempotent."""
+    if runtime.needs_review_handoff is None:
+        return 0
+    sent = 0
+    for review in runtime.store.list_reviews():
+        result = runtime.store.get_result(review["request_key"])
+        if not isinstance(result, Mapping) or result.get("status") != "NEEDS_REVIEW":
+            continue
+        identity = result.get("identity")
+        if not isinstance(identity, Mapping):
+            continue
+        try:
+            handoff_needs_review(runtime, review["request_key"], identity, result)
+        except Exception as error:  # noqa: BLE001 - durable hold is retried on the next restart
+            LOGGER.warning("M1 NEEDS_REVIEW restart handoff remains held (%s)", type(error).__name__)
+        else:
+            sent += 1
+    return sent
+
+
+def retry_interrupted_reviews(runtime) -> int:
+    """Retry only M6 reviews whose sole cause was an owner restart, once per request."""
+    retried = 0
+    for review in runtime.store.list_reviews():
+        try:
+            runtime.store.retry_interrupted(review["request_key"], "owner-restart",
+                                            "verification interrupted by a restart of the owner; rerun it")
+            retried += 1
+        except QualityError:
+            continue
+    return retried
 
 
 def evaluate_audit_ledgers(raw_ledgers, plan_task_ids, audit_task_id: str,

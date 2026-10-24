@@ -14,6 +14,7 @@ from typing import Any
 import bt_audit_gate
 import bt_scheduler_adapter as scheduler_adapter
 import bt_scheduler_executor_adapter as executor_adapter
+import bt_scheduler_quality_owner_adapter as quality_owner_adapter
 from bitacora_platform import (
     quality_audit_evidence,
     quality_notes,
@@ -90,6 +91,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         publish_audit_observation: Callable[[str, str, dict], None] | None = None,
         publish_conflict_observation: Callable[[VerifyRequest, str, str, str], str] | None = None,
         composition_identity: Callable[[m1.VerifyOrder], Mapping[str, Any] | None] | None = None,
+        needs_review_handoff: Callable[[Mapping[str, Any], Mapping[str, Any]], None] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -108,6 +110,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         self.publish_audit_observation = publish_audit_observation
         self.publish_conflict_observation = publish_conflict_observation
         self.composition_identity = composition_identity
+        self.needs_review_handoff = needs_review_handoff
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -145,8 +148,9 @@ class QualityVerificationPort(QualityDeliveryMethods):
         if self._thread is not None and self._thread.is_alive():
             return
         self.engine.recover_interrupted()
-        self._retry_interrupted_reviews()
+        quality_owner_adapter.retry_interrupted_reviews(self)
         self.reconcile_outbox(force=True)
+        quality_owner_adapter.resume_needs_review_handoffs(self)
         self._stop.clear()
         self._thread = threading.Thread(
             target=self._dispatch_loop, name="m6-quality-dispatch", daemon=True
@@ -155,18 +159,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         self._wake.set()
 
     def _retry_interrupted_reviews(self) -> int:
-        """A verification cut short by a restart of the owner is repeated, not left for a person: the review it left is
-        caused solely by the interruption (no check gave a verdict). The store allows one such retry per request, so a
-        restart loop cannot replay commands indefinitely; a request already retried stays for the owner."""
-        retried = 0
-        for review in self.store.list_reviews():
-            try:
-                self.store.retry_interrupted(review["request_key"], "owner-restart",
-                                             "verification interrupted by a restart of the owner; rerun it")
-                retried += 1
-            except QualityError:
-                continue                                # not an interruption, or already retried once
-        return retried
+        return quality_owner_adapter.retry_interrupted_reviews(self)
 
     def close(self, *, wait: bool = True) -> None:
         self._closed = True
@@ -357,6 +350,13 @@ class QualityVerificationPort(QualityDeliveryMethods):
                     LOGGER.warning(
                         "M6 durable verdict remains pending (%s)", type(error).__name__
                     )
+            elif result["status"] == "NEEDS_REVIEW" and self.needs_review_handoff is not None:
+                try:
+                    quality_owner_adapter.handoff_needs_review(self, request_key,
+                        {"plan_id": order.plan_id, "revision": order.revision, "task_id": order.task_id,
+                         "attempt_id": order.attempt_id, "token": order.token}, result)
+                except Exception as error:  # noqa: BLE001 - the persisted M1 hold is reconciled after restart
+                    LOGGER.warning("M1 NEEDS_REVIEW handoff remains held (%s)", type(error).__name__)
         finally:
             with self._active_lock:
                 self._active.discard(request_key)

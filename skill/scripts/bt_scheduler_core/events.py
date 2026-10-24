@@ -146,5 +146,9 @@ def apply_verdict(ctx: Ctx, verdict: Verdict) -> IngestResult:
         promote_ready(ctx)
     else:
         end_attempt(ctx, attempt_id, A.REJECTED, "verification_rejected", evidence or "verdict rejected the work")
+    review = ctx.state.review_holds.get(attempt_id)
+    if review is not None and review["state"] in {"held", "waiting", "resumed"}:
+        review["state"] = "resolved"
+        ctx.audit("needs_review_resolved", att.task_id, attempt_id, verdict_id=verdict.verdict_id)
     ctx.state.remember(verdict.verdict_id)
     return IngestResult("applied", "", verdict.verdict_id)

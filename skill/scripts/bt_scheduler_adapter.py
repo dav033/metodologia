@@ -20,7 +20,7 @@ import os
 import re
 import sqlite3
 import tempfile
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -607,6 +607,21 @@ def apply_demonstrated_frontier(scheduler: core.SchedulerCore, advice: Any) -> t
         composition_id=advice.composition_id, manifest_sha256=advice.manifest_sha256,
         tree_digest=advice.tree_digest, action=advice.action, task_ids=advice.frontier,
         evidence_refs=advice.evidence_refs)
+
+
+def apply_demonstrated_frontiers(scheduler: core.SchedulerCore, advice_items: Sequence[Any]) -> tuple[str, ...]:
+    """Apply a same-snapshot M5 action set atomically; each action remains its own persisted M1 fact."""
+    required = ("change_id", "source_task_id", "composition_id", "manifest_sha256", "tree_digest", "action",
+                "frontier", "evidence_refs")
+    proofs = []
+    for advice in advice_items:
+        if any(not hasattr(advice, field) for field in required):
+            raise ValueError("M5 demonstrated frontier contract is incomplete")
+        proofs.append({"change_id": advice.change_id, "source_task_id": advice.source_task_id,
+                       "composition_id": advice.composition_id, "manifest_sha256": advice.manifest_sha256,
+                       "tree_digest": advice.tree_digest, "action": advice.action,
+                       "frontier": advice.frontier, "evidence_refs": advice.evidence_refs})
+    return scheduler.apply_demonstrated_frontiers(tuple(proofs))
 
 
 def subplan_status(scheduler: core.SchedulerCore) -> dict[str, str]:

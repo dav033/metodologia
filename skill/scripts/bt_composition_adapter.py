@@ -10,7 +10,8 @@ import tempfile
 from pathlib import Path
 from collections.abc import Sequence
 
-from bt_composition import CompositionEngine, GitResult, Store, VerdictProof
+from bt_composition import (Action, CompositionEngine, EvidenceKey, GitResult, PropagationChange, Store,
+                            VerdictProof, propagate as _propagate)
 
 
 class GitCommandError(RuntimeError):
@@ -229,4 +230,11 @@ def create_engine(repository: str | Path, store_path: str | Path,
     return CompositionEngine(git, store, workspace_root), store
 
 
-__all__ = ["GitCommandError", "GitSubprocessPort", "VerdictProof", "create_engine"]
+def propagate(change: PropagationChange, consumers: Sequence[dict[str, object]],
+              evidence: Sequence[dict[str, object]]) -> tuple[Action, ...]:
+    """Public owner boundary for the composition engine's explicit consumer actions."""
+    return _propagate(change, consumers, evidence)
+
+
+__all__ = ["Action", "EvidenceKey", "GitCommandError", "GitSubprocessPort", "PropagationChange", "VerdictProof",
+           "create_engine", "propagate"]

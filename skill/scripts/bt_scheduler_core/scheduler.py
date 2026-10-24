@@ -40,7 +40,10 @@ from .repository import StateRepository
 from .resources import claims_for, first_conflict
 from .simulators import FifoAssignment
 from .subplans import record_composition_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
-from .frontier import apply_demonstrated_frontier as apply_frontier
+from .frontier import (apply_demonstrated_frontier as apply_frontier,
+                       apply_batch_to_scheduler as apply_frontier_batch_to_scheduler,
+                       apply_to_scheduler as apply_frontier_to_scheduler)
+from .review import handle_on_scheduler as handle_review_on_scheduler
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
@@ -239,13 +242,21 @@ class SchedulerCore:
                                     manifest_sha256: str, tree_digest: str, action: str,
                                     task_ids: tuple[str, ...], evidence_refs: tuple[str, ...]) -> tuple[str, ...]:
         """M1-owned, idempotent application of the exact frontier demonstrated by M5."""
-        moved = self.write(lambda ctx: apply_frontier(ctx, change_id=change_id, source_task_id=source_task_id,
-                                                      composition_id=composition_id,
-                                                      manifest_sha256=manifest_sha256, tree_digest=tree_digest,
-                                                      action=action, task_ids=task_ids,
-                                                      evidence_refs=evidence_refs))
-        self._wake.set()
-        return moved
+        return apply_frontier_to_scheduler(self, change_id=change_id, source_task_id=source_task_id,
+                                           composition_id=composition_id, manifest_sha256=manifest_sha256,
+                                           tree_digest=tree_digest, action=action, task_ids=task_ids,
+                                           evidence_refs=evidence_refs)
+
+    def apply_demonstrated_frontiers(self, applications: tuple[Mapping[str, Any], ...]) -> tuple[str, ...]:
+        """Atomically apply distinct M5 actions demonstrated against one published composition snapshot."""
+        return apply_frontier_batch_to_scheduler(self, applications)
+
+    def handle_needs_review(self, *, plan_id: str, revision: int, task_id: str, attempt_id: str,
+                            token: int, evidence_ref: str, advice_port: Callable[[Mapping[str, object]], str]) -> str:
+        """Durably hold an M6 review, ask M5 outside the transaction, and apply its advice without a code retry."""
+        return handle_review_on_scheduler(self, plan_id=plan_id, revision=revision, task_id=task_id,
+                                          attempt_id=attempt_id, token=token, evidence_ref=evidence_ref,
+                                          advice_port=advice_port)
 
     # ------------------------------------------------------------------ inbound facts
     def ingest(self, event: Event | Mapping[str, Any]) -> IngestResult:

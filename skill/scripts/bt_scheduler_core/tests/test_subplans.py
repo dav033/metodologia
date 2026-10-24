@@ -223,6 +223,62 @@ class Subplans(unittest.TestCase):
                 evidence_refs=("m6:" + "e" * 64,))
         self.assertEqual(stale.exception.code, "NOT_ALLOWED")
 
+    def test_needs_review_hold_is_durable_and_m5_resume_reuses_same_attempt(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        core.claim(sc.Assignment("T1", "worker"))
+        attempt = core.snapshot().tasks["T1"]["attempt"]
+        core.ingest(sc.Event("done", plan.plan_id, plan.revision, "T1", attempt, "worker", "execution_finished"))
+        core.step()
+        calls = []
+        advice = lambda case: calls.append(case) or "resume"
+        args = dict(plan_id=plan.plan_id, revision=plan.revision, task_id="T1", attempt_id=attempt, token=1,
+                    evidence_ref="m6://result/" + "a" * 64)
+        self.assertEqual(core.handle_needs_review(**args, advice_port=advice), "resumed")
+        self.assertEqual(core.snapshot().tasks["T1"]["attempt"], attempt)
+        self.assertEqual(core.attempts_used("T1"), 1)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(core.handle_needs_review(**args, advice_port=advice), "resumed")
+        self.assertEqual(core.attempts_used("T1"), 1)
+
+    def test_needs_review_wait_and_block_do_not_create_code_attempts(self):
+        for advice, expected in (("wait", "waiting"), ("block", "blocked")):
+            plan = load(plan_13())
+            core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+            core.start()
+            core.claim(sc.Assignment("T1", "worker"))
+            attempt = core.snapshot().tasks["T1"]["attempt"]
+            core.ingest(sc.Event("done", plan.plan_id, plan.revision, "T1", attempt, "worker", "execution_finished"))
+            core.step()
+            result = core.handle_needs_review(plan_id=plan.plan_id, revision=plan.revision, task_id="T1",
+                                              attempt_id=attempt, token=1,
+                                              evidence_ref="m6://result/" + "b" * 64,
+                                              advice_port=lambda _case, value=advice: value)
+            self.assertEqual(result, expected)
+            self.assertEqual(core.attempts_used("T1"), 1)
+            self.assertEqual(core.snapshot().tasks["T1"]["attempt"], attempt)
+
+    def test_needs_review_restart_replays_a_persisted_hold_without_allocating_an_attempt(self):
+        plan = load(plan_13())
+        repo = sc.InMemoryRepository()
+        core = sc.SchedulerCore(plan, repo)
+        core.start()
+        core.claim(sc.Assignment("T1", "worker"))
+        attempt = core.snapshot().tasks["T1"]["attempt"]
+        core.ingest(sc.Event("done", plan.plan_id, plan.revision, "T1", attempt, "worker", "execution_finished"))
+        core.step()
+        args = dict(plan_id=plan.plan_id, revision=plan.revision, task_id="T1", attempt_id=attempt, token=1,
+                    evidence_ref="m6://result/" + "c" * 64)
+        with self.assertRaisesRegex(RuntimeError, "M5 unavailable"):
+            core.handle_needs_review(**args, advice_port=lambda _case: (_ for _ in ()).throw(RuntimeError("M5 unavailable")))
+        restarted = sc.SchedulerCore(plan, repo)
+        restarted.start()
+        self.assertEqual(restarted.read(lambda ctx: ctx.state.review_holds[attempt]["state"]), "held")
+        self.assertEqual(restarted.handle_needs_review(**args, advice_port=lambda _case: "wait"), "waiting")
+        self.assertEqual(restarted.snapshot().tasks["T1"]["attempt"], attempt)
+        self.assertEqual(restarted.attempts_used("T1"), 1)
+
     def test_publication_requires_the_subplan_audit_to_be_accepted(self):
         core = sc.SchedulerCore(load(plan_13()), sc.InMemoryRepository())
         core.start()

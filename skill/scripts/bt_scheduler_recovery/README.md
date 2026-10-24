@@ -130,6 +130,13 @@ requires an empty frontier. M5 validates and returns only that frontier; it neve
 expands ancestry or mutates M1 tasks. Runtime wiring and any M1 application operation
 belong to F4-9.
 
+For M6 `NEEDS_REVIEW`, the owner calls M5 with the held M1 identity and a content-addressed
+M6 result reference. M5 verifies the manifest digest and request identity before advising
+`resume`, `wait`, or `block`. Timeout/flaky evidence may resume the same M6 request once;
+blocked environment/external dependencies and not-run checks wait. Unknown or stale evidence
+fails closed. M1 persists the hold before this port call and applies the advice without an
+implementation retry.
+
 ## Durable diagnostics and semantic progress
 
 `DiagnosticStore` adds schema 2 transactionally while retaining every schema-1 decision row and the

@@ -140,6 +140,23 @@ class RecoveryPortContract(unittest.TestCase):
         with self.assertRaises(m5.RecoveryError):
             self.port.demonstrated_frontier("change-1")
 
+    def test_needs_review_advice_requires_digest_identity_and_never_accepts_flaky_pass(self):
+        case = {"plan_id": "P", "revision": 1, "task_id": "T1", "attempt_id": self.attempt_id,
+                "token": self.token, "evidence_ref": "m6://result/" + "0" * 64}
+        result = {"schema_version": "m6.evidence-manifest/1.1", "request": {key: case[key] for key in
+                  ("plan_id", "revision", "task_id", "attempt_id", "token")}, "reason_code": "FLAKY_SUSPECTED",
+                  "checks": [{"reason_code": "FLAKY_SUSPECTED"}], "issues": []}
+        encoded = json.dumps(result, sort_keys=True, separators=(",", ":")).encode()
+        case["evidence_ref"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        self.assertEqual(self.port.needs_review_advice(case), "resume")
+        result["request"]["token"] = self.token + 1
+        encoded = json.dumps(result, sort_keys=True, separators=(",", ":")).encode()
+        case["evidence_ref"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        with self.assertRaises(m5.RecoveryError):
+            self.port.needs_review_advice(case)
+
     def test_composition_frontier_must_name_current_tasks_and_exclude_source(self):
         raw = {"schema_version": "m5.demonstrated-frontier/1", "change_id": "change-1",
                "source_task_id": "T1", "composition_id": "C7", "manifest_sha256": "a" * 64,

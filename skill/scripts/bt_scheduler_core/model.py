@@ -12,7 +12,7 @@ from typing import Any
 from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 6
+STATE_SCHEMA = 7
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -85,6 +85,7 @@ class RunState:
     subplan_versions: dict[str, dict[str, Any]] = field(default_factory=dict)
     compositions: dict[str, dict[str, Any]] = field(default_factory=dict)
     frontier_applications: dict[str, dict[str, Any]] = field(default_factory=dict)
+    review_holds: dict[str, dict[str, Any]] = field(default_factory=dict)
     schema: int = STATE_SCHEMA
 
     def has_seen(self, message_id: str) -> bool:
@@ -108,6 +109,7 @@ class RunState:
             "subplan_versions": {key: dict(value) for key, value in self.subplan_versions.items()},
             "compositions": {key: dict(value) for key, value in self.compositions.items()},
             "frontier_applications": {key: dict(value) for key, value in self.frontier_applications.items()},
+            "review_holds": {key: dict(value) for key, value in self.review_holds.items()},
             "counters": dict(self.counters), "seen_events": list(self.seen_events),
             "rejected_recent": list(self.rejected_recent),
             "tasks": {k: vars(v).copy() for k, v in self.tasks.items()},
@@ -119,7 +121,7 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, STATE_SCHEMA}:
+            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, 6, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
             routing_complete = data.get("routing_complete", False)
             if not isinstance(routing_complete, bool):
@@ -216,6 +218,22 @@ class RunState:
                     (value["action"] == "none") != (not value["task_ids"])
                     for key, value in frontier_applications.items()):
                 raise ValueError("frontier applications are invalid")
+            review_holds = data.get("review_holds", {})
+            review_fields = {"plan_id", "revision", "task_id", "attempt_id", "token", "evidence_ref", "state",
+                             "advice"}
+            if not isinstance(review_holds, dict) or any(
+                    not isinstance(key, str) or not key or not isinstance(value, dict) or
+                    set(value) != review_fields or value.get("attempt_id") != key or
+                    not isinstance(value.get("plan_id"), str) or not value["plan_id"] or
+                    type(value.get("revision")) is not int or value["revision"] < 1 or
+                    not isinstance(value.get("task_id"), str) or not value["task_id"] or
+                    type(value.get("token")) is not int or value["token"] < 1 or
+                    not isinstance(value.get("evidence_ref"), str) or
+                    re.fullmatch(r"m6://result/[0-9a-f]{64}", value["evidence_ref"]) is None or
+                    value.get("state") not in {"held", "waiting", "resumed", "blocked", "resolved"} or
+                    value.get("advice") not in {"", "resume", "wait", "block"}
+                    for key, value in review_holds.items()):
+                raise ValueError("review holds are invalid")
             state = cls(plan_id=data["plan_id"], revision=data["revision"], plan_sha256=data["plan_sha256"],
                         created_at=data["created_at"], paused=bool(data["paused"]),
                         cancel_requested=bool(data["cancel_requested"]), routing_complete=routing_complete,
@@ -225,6 +243,7 @@ class RunState:
                         subplan_versions={key: dict(value) for key, value in versions.items()},
                         compositions={key: dict(value) for key, value in compositions.items()},
                         frontier_applications={key: dict(value) for key, value in frontier_applications.items()},
+                        review_holds={key: dict(value) for key, value in review_holds.items()},
                         seen_events=list(data["seen_events"]), rejected_recent=list(data.get("rejected_recent", [])))
             state.tasks = {}
             for task_id, value in data["tasks"].items():

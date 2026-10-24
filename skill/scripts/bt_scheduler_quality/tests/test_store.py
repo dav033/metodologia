@@ -133,6 +133,19 @@ class QualityStoreTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "REVIEW_ALREADY_RESOLVED")
 
+    def test_m5_resume_requeues_only_one_timeout_review_without_creating_a_verdict(self):
+        with QualityStore(":memory:") as store:
+            store.reserve(self.order)
+            self.assertTrue(store.claim_work(self.order.idempotency_key))
+            result, _result_bytes, manifest, artifacts = _result("NEEDS_REVIEW")
+            result["reason_code"] = "TIMEOUT"
+            store.finish(self.order, result, canonical_json(result), manifest, artifacts)
+            store.retry_m5_transient(self.order.idempotency_key)
+            self.assertEqual(store.reserve(self.order)[0], "queued")
+            self.assertEqual(store.list_reviews(), ())
+            with self.assertRaises(QualityError):
+                store.retry_m5_transient(self.order.idempotency_key)
+
     def test_review_requires_operator_identity_rationale_and_binary_decision(self):
         with QualityStore(":memory:") as store:
             store.reserve(self.order)

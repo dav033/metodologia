@@ -256,6 +256,40 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             raise m5.RecoveryError("PROPAGATION_STALE")
         return advice
 
+    def needs_review_advice(self, case: Mapping[str, object]) -> str:
+        """Classify one persisted M6 NEEDS_REVIEW result; missing or stale evidence blocks closed."""
+        if self.m6_evidence_reader is None or not isinstance(case, Mapping):
+            raise m5.RecoveryError("M6_EVIDENCE_UNAVAILABLE")
+        reference = case.get("evidence_ref")
+        if not isinstance(reference, str) or re.fullmatch(r"m6://result/[0-9a-f]{64}", reference) is None:
+            raise m5.RecoveryError("M6_EVIDENCE_INVALID")
+        encoded = self.m6_evidence_reader(reference)
+        digest = reference.removeprefix("m6://result/")
+        if not isinstance(encoded, bytes) or len(encoded) > 1024 * 1024 or hashlib.sha256(encoded).hexdigest() != digest:
+            raise m5.RecoveryError("M6_EVIDENCE_INVALID")
+        manifest = json.loads(encoded)
+        expected = {key: case.get(key) for key in ("plan_id", "revision", "task_id", "attempt_id", "token")}
+        request = manifest.get("request") if isinstance(manifest, Mapping) else None
+        if (not isinstance(manifest, Mapping) or manifest.get("schema_version") not in M6_MANIFEST_SCHEMAS or
+                not isinstance(request, Mapping) or not all(
+                type(request.get(key)) is type(value) and request.get(key) == value
+                for key, value in expected.items())):
+            raise m5.RecoveryError("M6_EVIDENCE_STALE")
+        checks = manifest.get("checks", [])
+        issues = manifest.get("issues", [])
+        codes = {item.get("reason_code") or item.get("issue_code") or item.get("code")
+                 for item in (*checks, *issues) if isinstance(item, Mapping)} if isinstance(checks, list) and isinstance(issues, list) else set()
+        top_reason = manifest.get("reason_code")
+        if top_reason not in M6_REASONS or top_reason == "PASS":
+            raise m5.RecoveryError("M6_RESULT_NOT_NEEDS_REVIEW")
+        codes.add(top_reason)
+        if codes & {"TIMEOUT", "FLAKY_SUSPECTED", "CHECK_TIMEOUT"}:
+            return "resume"
+        if codes & {"BLOCKED_ENV", "BLOCKED_EXTERNAL", "NOT_RUN", "CHECK_MANUAL", "CHECK_UNAVAILABLE",
+                    "SANDBOX_UNAVAILABLE", "CHECK_UNSUPPORTED"}:
+            return "wait"
+        return "block"
+
 
 def inspect_store(path: Path | str, *, metrics: bool = False):
     """Operational reads use the module's read-only API; they never create an empty store."""

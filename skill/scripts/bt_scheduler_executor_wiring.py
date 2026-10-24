@@ -358,6 +358,17 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
 
             def publish_conflict_observation(order, clash, refusal, detail):
                 return conflict_publisher.publish(wiring.recovery, scheduler.plan, order, clash, refusal, detail)
+
+            def needs_review_handoff(identity, result):
+                if wiring.recovery is None:
+                    raise RuntimeError("M5 recovery is unavailable for M6 NEEDS_REVIEW")
+                evidence_ref = result.get("evidence_manifest")
+                scheduler.handle_needs_review(
+                    plan_id=identity.get("plan_id"), revision=identity.get("revision"),
+                    task_id=identity.get("task_id"), attempt_id=identity.get("attempt_id"),
+                    token=identity.get("token"), evidence_ref=evidence_ref,
+                    advice_port=wiring.recovery.needs_review_advice)
+
             wiring.verification_runtime = QualityVerificationPort(
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
                 attempts_root=executor.attempts_dir,
@@ -381,6 +392,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                     bt_config.get("gates.integration_rework_limit", 6)),
                 composition_identity=(getattr(composition_runtime, "verification_identity", None)
                                       if composition_runtime is not None else None),
+                needs_review_handoff=needs_review_handoff,
                 verification_authority=owner_verification_authority(rdir, project))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()

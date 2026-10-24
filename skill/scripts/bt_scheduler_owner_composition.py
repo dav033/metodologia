@@ -13,6 +13,7 @@ import re
 import sqlite3
 import stat
 import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,21 @@ import bt_scheduler_quality_owner_adapter as m6_adapter
 
 class CompositionRuntimeError(RuntimeError):
     pass
+
+
+def _propagation_change_id(composition_id: str, manifest_sha256: str, evidence_ids: tuple[str, ...],
+                           consumer: str, action: str, reason: str) -> str:
+    value = {"composition_id": composition_id, "manifest_sha256": manifest_sha256,
+             "evidence_ids": sorted(evidence_ids), "consumer": consumer, "action": action, "reason": reason}
+    digest = hashlib.sha256(json.dumps(value, sort_keys=True, separators=(",", ":"),
+                                      ensure_ascii=True, allow_nan=False).encode()).hexdigest()
+    return "cp-" + digest
+
+
+def _opaque_evidence_ref(value: str) -> str:
+    match = re.fullmatch(r"(?:m6://result/|sha256:)([0-9a-f]{64})", value)
+    digest = match.group(1) if match else hashlib.sha256(value.encode("utf-8")).hexdigest()
+    return "m6:" + digest
 
 
 def composition_store_path(rdir: Path, project: str, req: str) -> Path:
@@ -52,6 +68,7 @@ class OwnerCompositionRuntime:
             raise
         self.scheduler = None
         self.candidates: dict[str, Any] = {}
+        self._frontier_proposals: dict[str, dict[str, Any]] = {}
 
     @staticmethod
     def supports(plan) -> bool:
@@ -355,6 +372,76 @@ class OwnerCompositionRuntime:
                     for subplan, number in candidate.members.items()}
         return {key: value for version in versions.values() for key, value in version.contracts.items()}
 
-    def demonstrated_frontier(self, _change_id: str):
-        raise RuntimeError("OWNER_COMPOSITION_PROPAGATION_NOT_AVAILABLE")
+    def propagate(self, change, consumers, evidence, *, composition_id: str, manifest_sha256: str,
+                  tree_digest: str, source_task_id: str) -> tuple[str, ...]:
+        """Produce real composition actions, validate each through M5, and apply its exact task frontier through M1."""
+        if self.scheduler is None:
+            raise CompositionRuntimeError("OWNER_COMPOSITION_M1_UNAVAILABLE")
+        actions = bt_composition_adapter.propagate(change, consumers, evidence)
+        if not actions:
+            return ()
+        evidence_ids = self._evidence_ids(evidence)
+        if not evidence_ids:
+            raise CompositionRuntimeError("OWNER_COMPOSITION_PROPAGATION_EVIDENCE_IDS_MISSING")
+        if len(evidence_ids) > 32:
+            raise CompositionRuntimeError("OWNER_COMPOSITION_PROPAGATION_EVIDENCE_LIMIT")
+        consumer_map = {}
+        for item in consumers:
+            consumer_id = item.get("id") if isinstance(item, Mapping) else None
+            if not isinstance(consumer_id, str) or not consumer_id or consumer_id in consumer_map:
+                raise CompositionRuntimeError("OWNER_COMPOSITION_ACTION_CONSUMERS_AMBIGUOUS")
+            consumer_map[consumer_id] = item
+        advice_items = []
+        for action in actions:
+            if action.operation not in {"reverify", "reintegrate", "audit", "adapt_contract", "modify", "reimplement"}:
+                raise CompositionRuntimeError(f"OWNER_COMPOSITION_ACTION_UNMAPPABLE:{action.operation}")
+            consumer = consumer_map.get(action.consumer)
+            task_ids = consumer.get("task_ids") if isinstance(consumer, Mapping) else None
+            if (not isinstance(task_ids, list) or not task_ids or
+                    any(not isinstance(task_id, str) for task_id in task_ids) or
+                    len(task_ids) != len(set(task_ids)) or
+                    any(task_id not in self.scheduler.plan.ids() or task_id == source_task_id for task_id in task_ids)):
+                raise CompositionRuntimeError(f"OWNER_COMPOSITION_ACTION_FRONTIER_UNMAPPABLE:{action.consumer}")
+            change_id = _propagation_change_id(composition_id, manifest_sha256, evidence_ids,
+                                               action.consumer, action.operation, action.reason)
+            evidence_refs = tuple(_opaque_evidence_ref(value) for value in evidence_ids)
+            payload = {"schema_version": "m5.demonstrated-frontier/1", "change_id": change_id,
+                       "source_task_id": source_task_id, "composition_id": composition_id,
+                       "manifest_sha256": manifest_sha256, "tree_digest": tree_digest,
+                       "action": action.operation, "frontier": list(task_ids),
+                       "evidence_refs": list(evidence_refs)}
+            self._frontier_proposals[change_id] = payload
+            recovery_port = getattr(getattr(self.scheduler, "ports", None), "recovery", None)
+            if recovery_port is None or not callable(getattr(recovery_port, "demonstrated_frontier", None)):
+                raise CompositionRuntimeError("OWNER_COMPOSITION_M5_PROPAGATION_UNAVAILABLE")
+            try:
+                advice = recovery_port.demonstrated_frontier(change_id)
+                advice_items.append(advice)
+            except Exception as error:  # noqa: BLE001 - fail closed at the public module boundary
+                code = getattr(error, "code", type(error).__name__)
+                raise CompositionRuntimeError(f"OWNER_COMPOSITION_M5_PROPAGATION_REFUSED:{code}") from None
+        if not advice_items:
+            return ()
+        try:
+            return m1_adapter.apply_demonstrated_frontiers(self.scheduler, tuple(advice_items))
+        except Exception as error:  # noqa: BLE001 - the batch is atomic in M1
+            code = getattr(error, "code", type(error).__name__)
+            raise CompositionRuntimeError(f"OWNER_COMPOSITION_M1_FRONTIER_REFUSED:{code}") from None
+
+    def demonstrated_frontier(self, change_id: str):
+        """M5 composition_propagation port; returns only the staged, exact payload for this change id."""
+        proposal = self._frontier_proposals.get(change_id)
+        return dict(proposal) if proposal is not None else None
+
+    @staticmethod
+    def _evidence_ids(evidence) -> tuple[str, ...]:
+        values = []
+        for item in evidence:
+            if not isinstance(item, Mapping):
+                raise CompositionRuntimeError("OWNER_COMPOSITION_PROPAGATION_EVIDENCE_INVALID")
+            identity = item.get("evidence_id", item.get("verdict_id"))
+            if not isinstance(identity, str) or not identity:
+                raise CompositionRuntimeError("OWNER_COMPOSITION_PROPAGATION_EVIDENCE_IDS_MISSING")
+            values.append(identity)
+        return tuple(dict.fromkeys(values))
 

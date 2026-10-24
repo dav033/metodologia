@@ -90,7 +90,7 @@ Mapping to M1 is deliberately binary:
 |---|---|
 | PASS | Submit current correlated `Verdict(accepted=True, evidence="m6://...")` |
 | FAIL | Submit current correlated `Verdict(accepted=False, evidence="m6://...")` |
-| NEEDS_REVIEW | Persist a review item; send no verdict; attempt remains `VERIFYING` |
+| NEEDS_REVIEW | Persist a review item and M1 hold; send no verdict; M5 may resume the same verification once, wait, or block |
 | STALE | Record stale identity; send no verdict for a replacement attempt |
 
 An M1 Ack acknowledges only durable request admission. A check's exit 0 does not become PASS unless every criterion
@@ -140,8 +140,11 @@ task text or an agent-supplied environment map.
 
 Artifacts are local, mode `0700` directories and mode `0600` files in a separate M6 store. The SQLite WAL ledger and
 verdict outbox are private to M6; neither M1 nor M3 stores are opened for writing by the package. A durable
-NEEDS_REVIEW item holds M1 in `VERIFYING` until an explicit operator resolution records identity and rationale.
-The identity entered by the local operator is audit metadata, not cryptographic proof of a human account.
+NEEDS_REVIEW item is handed to M5 with its content-addressed evidence reference. M5 may ask M6 to resume the same
+verification attempt once for timeout/flaky evidence, wait for a blocker to clear, or block the task. A resumed flaky
+result is never accepted from its earlier single pass. Other unresolved review items still require explicit operator
+resolution with identity and rationale; M1 never spends an implementation retry for review handling. The identity
+entered by the local operator is audit metadata, not cryptographic proof of a human account.
 
 After repairing an engine crash, an operator may explicitly call
 `QualityStore.retry_interrupted(request_key, operator, reason)` while the scheduler owner is stopped. This
