@@ -54,6 +54,8 @@ Attack, hard and concretely:
   transactions, problem+json errors with a stable code and no HTTP exceptions in business code, permission
   checked before existence, cursor pagination with a clamped limit, `Idempotency-Key` on side-effect POSTs, async
   misuse (blocking calls in `async def`, work that must not be lost sent to fire-and-forget).
+- For UI changes, check that implementers followed the owner-approved `design/contracts/<contract>@vN.md`; report
+  concrete contract drift as a finding and cite the affected contract criterion and rendered/code evidence.
 - **Correctness:** edge cases, error paths, concurrency, partial failure, data integrity, migrations, off-by-one,
   null/empty, time zones, idempotency.
 - **Security:** input validation, authz, injection, secrets, data exposure.

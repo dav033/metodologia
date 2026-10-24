@@ -40,6 +40,10 @@ Netlify", "baja el backup del bucket":
 
 ## Keeping it current
 
+If a project enables the optional Designer preview, document its local preview command, port, and status/stop
+commands in that project's `TOOLS.md`. The preview uses mock data and is not the rendered application evidence
+consumed by Reviewer `visual`; Runner captures the actual app through existing browser/preview tooling.
+
 - When you discover or set up access to something new (a server, a CLI project link, a bucket), add a `###` block to
   the right TOOLS.md, following the commented example in the file: type, access, what runs there, status/log
   commands, deploy command, notes.

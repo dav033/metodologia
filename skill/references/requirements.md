@@ -101,11 +101,10 @@ Deferred**. Topics that don't apply are marked Clear with "n/a".
 For business requirements also cover: KPIs, process owner, rollout/communication, what happens to the current way
 of doing it.
 
-For user-facing work, establish whether the scope includes a UI and who uses it. Ask one concise question about the
-visual direction when it is not already clear (for example, an existing design system or a reference to follow).
-Capture the chosen direction and the UI scope in the spec; do not ask for pixel-level decisions that belong in the
-Designer contract. A UI subplan must plan a versioned design contract and owner approval of that version before UI
-implementation, followed by visual review before the subplan audit.
+When scope includes a user-facing UI/UX subplan, detect it during the interview and settle visual direction in
+that same front-loaded round: audience, primary task, existing design system or brand, supported states and
+accessibility constraints. Offer a recommended direction grounded in repository and owner evidence so the owner
+can accept it directly; do not defer this decision to an implementer.
 
 ## 4. Ask in rounds
 
@@ -225,10 +224,6 @@ or one that contradicts PLAN.md; approval freezes that revision and every launch
 run, resume) refuses anything that is not exactly the approved revision (a launch never freezes it itself). Run `plan-json check REQ-NNN` and read
 `plan-json report REQ-NNN` before.
 
-For plans with UI subplans, plan approval does not approve design contracts. Each contract version needs a separate
-owner decision from the requirement page or `bitacora.py design approve|changes REQ-NNN <contract>@vN`; UI
-implementation remains waiting until its exact contract content is approved.
-
 **One command for the whole chain:** `bitacora.py --project P go REQ-NNN` takes a written SPEC.md + PLAN.md, creates the
 PLAN.json skeleton, has the Planner agent classify every task (router-chosen model, up to 2 rounds, `--no-ai` to skip),
 runs `plan-json check` and then `handoff` (below). It stops, and says why, on an invalid plan or when risk reasons need the
@@ -251,6 +246,14 @@ the end. Tell the user in two or three lines in Spanish what happened, then run 
 `terminal: true`. On `blocked`, read PENDING.md and say what is needed. Never `/clear` this conversation to "make room":
 the executors already start clean, and clearing here only loses the thread the user is following. In a CLI without
 background wake-ups (Codex), run `watch` when the user asks how it is going.
+
+For each UI subplan, the plan includes a `kind: design` task, owner approval of its versioned contract, dependent
+`ui: true` implementation tasks, a visual review and the audit. Design approval is separate from plan approval:
+the owner approves each contract version with `bitacora.py design approve REQ-NNN <contract>@vN` (or requests
+changes with `bitacora.py design changes REQ-NNN <contract>@vN`) or on the web requirement page. During a launched
+run, UI implementation pauses while approval is pending; the scheduler reports that it is awaiting owner contract
+approval, and approval releases the held tasks. Include this pause in handoff timing and tell the owner when it is
+reached. See `execution.md` §1c and `interface-quality.md`.
 
 Each milestone then runs in a fresh session that receives only references: the spec, the plan, the bitácora
 pointers, a context bundle, the agents available and the confirmed learnings. Everything that must survive is in

@@ -187,6 +187,11 @@ there to give confidence to change code, not to hit a number.
 
 ## 6. Verification & self-review
 
+For UI subplans, include conformance with the owner-approved versioned design contract in the completion check.
+The Reviewer runs the `visual` axis against the rendered application and declared breakpoint × state coverage;
+Runner screenshots are evidence inputs, not a visual verdict. A missing or unapproved contract means UI work is
+not ready to start.
+
 **No "done" without fresh evidence.** Run it, read the output, then claim.
 
 For interfaces or product copy, also apply [`interface-quality.md`](interface-quality.md). For a substantive

@@ -25,7 +25,7 @@ symlinked destination components. Tool limits are enforced by the runtime, not b
 | `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | `scoped-verification-execution`, `failure-deduplication-and-triage`, `subplan-integration-smoke` | Luna high / Sonnet low |
 | `antagonist` | When required by `bt_review_policy.py`, attacks the scoped change (architecture, correctness, security, tests) | No | `adversarial-contract-breakage`, `cross-subplan-failure-scenarios`, `failure-mode-and-boundary-analysis` | Sonnet medium / Opus high |
 
-Load each private skill only under its role prompt's stated trigger; a skill file's presence alone does not activate it. These role-specific skills are not registered as generally discoverable skills. Planner may write requirement documents but never product code, approve or freeze a plan, or launch execution. For a UI subplan, Designer writes the versioned contract first; owner approval gates implementation. An Implementer assigned a `ui: true` task reads the approved contract (including required views, states and breakpoints) and reports any mismatch instead of silently changing the design.
+Load each private skill only under its role prompt's stated trigger; a skill file's presence alone does not activate it. These role-specific skills are not registered as generally discoverable skills. Planner may write requirement documents but never product code, approve or freeze a plan, or launch execution.
 
 In Claude Code and Codex, invoke installed roles by name. In Antigravity, select Planner from the agent picker. If a role is not installed, use the harness's built-ins with the same briefs and contracts.
 
@@ -104,17 +104,20 @@ STOP IF: ambiguity that changes the design, missing context → return NEEDS_CON
 OUTPUT: your role's output contract; full notes to <path> if any
 ```
 
-### Design-task brief example
+For a UI subplan, a design-task brief can use this scoped form:
 
 ```
-GOAL: Author contract <contract>@v1 for UI subplan <subplan>.
-CONTEXT: Follow the approved UI scope and visual direction in SPEC.md; this task ends with the contract, before UI implementation.
-POINTERS: spec=<path> plan=<path> files=design/contracts/<contract>@v1.md
-SCOPE: Write the versioned contract and any enabled preview under design/. Do not implement product UI or approve the contract.
-VERIFY: Review required views, states, breakpoints, interaction behavior and accessibility criteria against the spec.
-STOP IF: A material direction or scope decision is missing from the approved requirement.
-OUTPUT: Contract path/version, preview path if enabled, and unresolved decisions.
+GOAL: Author contract <contract>@vN for UI subplan <id> from the approved SPEC direction.
+CONTEXT: D-127; owner approval is required before any `ui: true` task starts.
+POINTERS: spec=<path> plan=<path> contract=design/contracts/<contract>@vN.md
+SCOPE: Write the versioned UI/UX contract and its changelog in `design/` only. Do not implement UI or approve the contract.
+VERIFY: Check the contract against the SPEC, approved interface guidance, and prior contract version if present.
+STOP IF: the requirement or prior contract has a material unresolved contradiction.
+OUTPUT: contract path, version, acceptance evidence, and owner-approval command `bitacora.py design approve REQ-NNN <contract>@vN`.
 ```
+
+Every implementer assigned a `ui: true` task reads the owner-approved contract version named by its plan before editing UI.
+If the contract is missing or its approval is pending, return the blocker; do not start implementation.
 
 ## Evidence for diff reviews
 

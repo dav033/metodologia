@@ -48,6 +48,12 @@ authors a versioned contract and the owner approves each version before UI imple
 ## Constraints
 _Tech, integrations, data, security/privacy, compliance, budget, people._
 
+## UI / design contract
+_If scope includes a UI subplan: identify its users and primary task, visual direction, existing design system or
+brand constraints, supported states/breakpoints, and accessibility requirements. Planner assigns a versioned
+contract to Designer; the owner approves each version before UI implementation. Omit or mark not applicable when
+there is no UI subplan._
+
 ## Priorities & phases
 _MoSCoW + what is MVP vs later._
 
@@ -68,6 +74,7 @@ _Best guesses taken instead of asking, with why. Revisit if they turn out wrong.
 | Edge cases | Missing |
 | Acceptance criteria | Missing |
 | Constraints | Missing |
+| UI / design direction | Missing |
 | Priorities & phases | Missing |
 | Timeline | Missing |
 

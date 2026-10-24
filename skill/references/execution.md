@@ -69,12 +69,16 @@ Audits use Sonnet 5.5 medium, Opus 5.5 high for escalation/high risk, or Sol med
 they do not inherit the implementation ladder's effort. Reuse milestone audits for closing review rather than
 launching duplicate full passes; the final session consolidates evidence and cross-milestone risks.
 
-**UI subplans:** execution follows design task → owner approval of the exact `design/contracts/<contract>@vN.md`
-content → `ui: true` implementation tasks → Reviewer `visual` review → subplan audit. A missing contract is
-`DESIGN_CONTRACT_MISSING`; a contract without matching owner approval waits as `DESIGN_CONTRACT_UNAPPROVED` (or
-`DESIGN_CONTRACT_HASH_MISMATCH` if its content changed). These are blocked/waiting states, not implementation
-failures, and do not spend code-retry budget. Approval makes the waiting UI tasks eligible to retry. Plans without
-UI subplans keep their existing behavior.
+**UI subplans:** execute in this order: Designer `kind: design` task → owner approval of the contract version →
+`ui: true` implementation tasks → Reviewer `visual` task → subplan audit. The approval is an in-run owner gate,
+not plan approval. Use `bitacora.py design approve|changes REQ-NNN <contract>@vN` or the web requirement page.
+Until approved, the scheduler holds UI tasks with the waiting reason `awaiting owner contract approval`; this is
+not a task failure and does not spend code-retry budget. Approval releases the held tasks. A missing contract is
+reported as `DESIGN_CONTRACT_MISSING`; investigate the design task or base tree rather than retrying UI
+implementation. The gate also checks that the approved hash matches the contract blob in the base tree.
+Reviewer visual review consumes Runner's screenshot evidence for each declared breakpoint × state. Runner captures
+and reports evidence IDs/paths but does not judge fidelity; the Reviewer owns that judgment. See
+`interface-quality.md` and the Runner visual-evidence skill.
 
 **Account profiles** (`bitacora.py profiles list|doctor`, `launch --profile ID`): a profile is a provider plus the
 env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.
@@ -196,7 +200,8 @@ bitácora explicitly (the Stop hook won't remind you).
 - Work task by task. Tick `[x]` in PLAN.md and add a line to **Progress log** after each verified phase. PLAN.md is
   the handoff: if the context resets, it's how you (or the next session) pick up exactly where you left off.
 - **Keep your context clean with subagents** (`references/subagents.md`): `explorer` for code sweeps,
-  `researcher` for docs and comparisons, `runner` for test suites/builds/logs. For long plans, an `implementer`
+  `researcher` for docs and comparisons, `runner` for test suites/builds/logs and visual evidence capture, `designer`
+  for UI contracts, and `implementer` for code. For long plans, an `implementer`
   per task — one at a time — then verify its result yourself before ticking the task. After each phase,
   `reviewer` ×2 (axes `spec` and `standards`) on the phase diff. Between unrelated pieces of work, or when the
   conversation gets very long, make sure PLAN.md and the bitácora are current and suggest a `/clear` to the user

@@ -38,8 +38,9 @@ broaden scope without evidence.
 
 **Axis "visual":** use when the subplan contains UI work or the brief names its `visual_review_task`. Read the
 approved Designer contract at `design/contracts/<id>@v<N>.md` in the project repository and inspect the rendered
-application. Load `agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md`. Capture declared breakpoint × state
-observations and report evidence IDs. This axis is read-only: never edit code, tests, or the approved contract.
+application. Load `agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md`. Use Runner's screenshot evidence
+IDs/paths for declared breakpoint × state observations when supplied, and identify missing coverage. Runner captures
+evidence but never judges it. This axis is read-only: never edit code, tests, or the approved contract.
 Browser capture is allowed only through commands authorized by the brief; never install browsers or dependencies.
 If rendering or capture is impossible, report `BLOCKED` with the attempted command and observed reason; do not
 guess. A visual finding is evidence for the existing M6 audit gate, not an independent acceptance decision.
