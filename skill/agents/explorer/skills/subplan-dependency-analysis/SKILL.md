@@ -10,25 +10,47 @@ Load when the request mentions a subplan dependency, API consumer, transitive ca
 
 ## Procedure
 1. **Anchor the question.** Record project/repository, observed Git SHA, focused subplan IDs and public contract revision(s), if supplied. Do not invent missing subplans for a legacy plan.
-2. **Reuse curated evidence.** Query the existing project knowledge map for the same SHA/contract before exploring. Treat stale observations as leads only, not current facts. Do not assume map availability.
+2. **Reuse curated evidence.** Read `scripts/bt_knowledge/README.md` for the full contract, then query the project knowledge map using `bitacora.py knowledge query --commit <sha> --area <area> --json`. Treat stale observations as leads only, not current facts. If the map/query is unavailable, say so and continue without it. Explorer never calls `knowledge ingest`.
 3. **Search narrowly.** Use CodeGraph for symbol and call paths when indexed, otherwise Grep/Glob/Read. Verify each crucial reference in source with `path:line`; mark dynamic imports, reflection, runtime wiring and generated routes as completeness limits.
 4. **Identify surfaces.** Discover producer interfaces, consumers, callers/callees, events, schemas, DB/queue contracts, tests, UI contract references and shared state. Separate a direct edge from a plausible transitive impact.
-5. **Form facts, not judgments.** Emit normalized triples `(subject, relation, object)` and evidence, observed SHA, entity kind, verification level (`observed`, `inferred`, `unknown`), and an optional proposed impact query. Do not pronounce other subplans incompatible or order implementation changes.
+5. **Form facts, not judgments.** Use the graph-engineering discipline of a smallest useful, evidence-backed map; keep observed facts separate from inference, proposals and unknowns. Emit canonical `kind:name` entity IDs and only these uppercase relations: `IMPORTS`, `CALLS`, `IMPLEMENTS`, `PUBLISHES`, `CONSUMES`, `PRODUCES`, `CONFIGURES`, `TESTS`, `DEPENDS_ON`, `DEFINES`, `EXPOSES`, `CONTAINS`, `OWNS`, `REFERENCES`. Status is `observed`, `inferred`, `proposed` or `unknown`. Do not pronounce other subplans incompatible or order implementation changes.
 6. **Reduce duplication.** Prefer one canonical relation identity per subject/relation/object; list additional **independent** evidence separately. Avoid replaying identical observations already present in the map; corrections and contradictions are explicit deltas.
-7. **Deliver to ingestor.** Return a compact structured report. The ingestor validates schema, version, deduplicates, upserts transactionally and marks stale entries; Explorer never calls its mutation API directly unless the runtime exposes a read-only submission channel with separate authorization.
+7. **Deliver to ingestor.** Return a `knowledge-delta/1` JSON block with top-level `schema`, `project`, `repository`, `observed_commit`, `contributor`, `observations`, `contradictions` and `stale`. Each observation has `subject`, `relation`, `object`, `status` and `evidence` (`path:line`). Include only new evidence, corrections, contradictions or staleness updates; an empty delta is valid. The executor/lead saves it as `delta.json` and runs `bitacora.py knowledge ingest delta.json`, or pipes its JSON to `bitacora.py knowledge ingest -`. Explorer never writes to the map or calls its mutation API.
 
-## Output sketch (not an implemented runtime schema)
-```yaml
-observed_commit: '<SHA or unknown>'
-observations:
-  - subject: 'subplan:checkout'
-    relation: 'CONSUMES'
-    object: 'contract:auth/session@v1'
-    status: 'observed'
-    evidence: ['src/checkout/session.ts:42']
-    prior_observation: 'same|additional_evidence|changed|unknown'
-gaps: ['dynamic consumers not established']
+## Output block
+
+Return valid JSON in this shape; use empty arrays when there are no deltas. This is an interface contract, not an
+instruction to create or edit a file:
+
+```json
+{
+  "schema": "knowledge-delta/1",
+  "project": "<project-id>",
+  "repository": "<repository-id>",
+  "observed_commit": "<full Git SHA>",
+  "contributor": "<agent or run identity>",
+  "observations": [
+    {
+      "subject": "subplan:checkout",
+      "relation": "CONSUMES",
+      "object": "contract:auth-session-v1",
+      "status": "observed",
+      "evidence": ["src/checkout/session.ts:42"]
+    }
+  ],
+  "contradictions": [],
+  "stale": []
+}
 ```
+
+Use project/repository identities and the precise contradiction/stale item shapes defined by
+`scripts/bt_knowledge/README.md`; do not invent aliases or optional keys. Put explanatory gaps in the normal short
+answer, not in the JSON schema. Zero new deltas (`observations`, `contradictions` and `stale` empty) is valid.
 
 ## Safety and scope
 Reading `.env`/secrets, running mutating scripts or indexing CodeGraph autonomously is prohibited. Graph-engineering provides evidence discipline, **not** authority to invent a fresh competing graph DB. Planner/M6 decide impact and acceptance; information is always indexed to a source revision.
+
+## Upstream technique references
+
+- **Adapted, approved:** [douinc/agent-skills — graph-engineering](https://github.com/douinc/agent-skills/blob/99ec1c314078a37a55a8534682b20a7a52683907/skills/graph-engineering/SKILL.md), commit `99ec1c314078a37a55a8534682b20a7a52683907`, MIT (`LICENSE`). Borrow the minimal question-scoped graph, evidence on claims, explicit epistemic status and no required graph database. Its persistence decision is replaced by the read-only delta/ingestor boundary above.
+- **Candidates only; not adopted into Explorer's prompt or procedure:** [Data-System-School/agent-skills — investigate-codebase](https://github.com/Data-System-School/agent-skills/blob/a117418ab3596c59d641cab4cb89bdbe560fb277/investigate-codebase/SKILL.md), commit `a117418ab3596c59d641cab4cb89bdbe560fb277`, MIT (`LICENSE`); [event4u-app/agent-config — blast-radius-analyzer](https://github.com/event4u-app/agent-config/blob/4502d328ff6402f0dfb7bc1b970007179587282f/src/skills/blast-radius-analyzer/SKILL.md), commit `4502d328ff6402f0dfb7bc1b970007179587282f`, MIT (`LICENSE`). These are cited for future evaluation only; neither is loaded or applied here.

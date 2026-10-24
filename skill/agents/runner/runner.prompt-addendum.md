@@ -1,4 +1,6 @@
-# Proposed change to `skill/agents/runner.md`
+# Runner prompt addendum — merged into `skill/agents/runner.md`
+
+Retained as provenance for the prompt change. The canonical, active instructions are in `runner.md`.
 
 Insert immediately after its existing opening paragraph and before the operating rules. Do **not** change current tools or `STATUS: PASS | FAIL | BLOCKED` output format until the compatible M1/M6 migration is tested.
 

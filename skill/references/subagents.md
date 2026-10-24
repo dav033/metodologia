@@ -4,24 +4,25 @@ Subagents are for **context control**, not role-play. Use one when its work woul
 only need the conclusion of (searching, reading docs, noisy test output), or when you need eyes without your bias
 (review). Everything else stays in the main session.
 
-## The seven roles
+## The eight roles
 
 Defined in the skill's `agents/` folder (source of truth; after editing run `python <skill>/scripts/install_agents.py`).
-The six helper roles install for Claude Code and Codex. Planner installs for Claude Code, Codex, and Antigravity;
+All eight roles install for Claude Code and Codex. Planner and explicitly selected roles install for Antigravity;
 Claude and Codex account profiles registered on this machine receive their own copy. Tool limits are enforced by the
 definition, not by asking nicely.
 
-| Role | Use for | Writes? | Model |
-|---|---|---|---|
-| `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | Astra high / Opus xhigh |
-| `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | Luna high / Sonnet medium |
-| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | Luna high / Sonnet low |
-| `implementer` | One plan task in a fresh context | Yes | Sonnet medium / Luna high |
-| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | Sol medium / Sonnet medium; high for explicit complexity |
-| `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | Luna high / Sonnet low |
-| `antagonist` | **Before every commit:** attacks the staged change (architecture, correctness, security, tests) | No | Sonnet medium / Opus high |
+| Role | Use for | Writes? | Private skills | Model |
+|---|---|---|---|---|
+| `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | `functional-subplan-decomposition`, `adversarial-plan-review`, `plan-mermaid-view`, `socratic-elicitation`, `wbs-dag-decomposition` | Astra high / Opus xhigh |
+| `designer` | Versioned UI/UX contracts and an optional mock-data preview before UI implementation | `design/` only, enforced by runtime | `ui-ux-contract-authoring`, `design-contract-versioning-and-impact`, `preview-prototype-maintenance` when enabled | Sol high / Opus high |
+| `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | `subplan-dependency-analysis` for contract, producer/consumer or impact questions | Luna high / Sonnet medium |
+| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | `external-research-memory`, `source-freshness-verification` | Luna high / Sonnet low |
+| `implementer` | One plan task in a fresh context | Yes | `contract-driven-implementation`, `focused-verification-and-evidence`, `safe-worktree-contribution` | Sonnet medium / Luna high |
+| `reviewer` | Fresh-eyes review on one axis: `spec`, `standards` or `visual` | No | `subplan-contract-review`, `integration-compatibility-review`, `evidence-based-findings`, `rendered-ui-fidelity-audit` for visual work | Sol medium / Sonnet medium; high for explicit complexity |
+| `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | `scoped-verification-execution`, `failure-deduplication-and-triage`, `subplan-integration-smoke` | Luna high / Sonnet low |
+| `antagonist` | When required by `bt_review_policy.py`, attacks the scoped change (architecture, correctness, security, tests) | No | `adversarial-contract-breakage`, `cross-subplan-failure-scenarios`, `failure-mode-and-boundary-analysis` | Sonnet medium / Opus high |
 
-Only `planner` loads the private resources in `agents/planner/skills/`. They are not registered as generally discoverable skills. The role may write requirement documents but never product code, approve or freeze a plan, or launch execution.
+Load each private skill only under its role prompt's stated trigger; a skill file's presence alone does not activate it. These role-specific skills are not registered as generally discoverable skills. Planner may write requirement documents but never product code, approve or freeze a plan, or launch execution.
 
 In Claude Code and Codex, invoke installed roles by name. In Antigravity, select Planner from the agent picker. If a role is not installed, use the harness's built-ins with the same briefs and contracts.
 
@@ -135,34 +136,33 @@ Adapted as independently written workflow guidance from [cursor/plugins Thermos]
 before external findings and consolidated evidence. No upstream files, runtime, 1k-line threshold or speculative
 refactor blockers are adopted.
 
-## The antagonist gate (before every commit)
+## The antagonist gate (per-commit or milestone audit)
 
-Every commit of code (not bitácora-only commits, not pure docs/formatting) passes through the `antagonist` first.
-It is deliberately hostile; **you** are the judge. The protocol is built so it can never loop:
+Follow `bt_review_policy.py`. Run Antagonist before a commit only when no pending independent milestone audit
+covers that work. If an audit covers it, the audit reviews the consolidated milestone diff and individual commits
+do not receive repeated Antagonist passes. The task's verify, tests and linters still run before each commit under
+that coverage. Security checks always apply, with or without audit coverage. This gate is deliberately hostile;
+**you** are the judge.
+
+When the per-commit gate applies:
 
 1. **Stage** the change, then brief the antagonist: repo(s), `git diff --staged` (per repo in a workspace), the
-   spec/plan task it implements. One antagonist per commit — for a multi-repo phase, one brief covering all repos.
+   spec/plan task it implements. One antagonist pass per commit — for a multi-repo phase, one brief covering all repos.
 2. **Triage every finding yourself** — the antagonist never decides:
    - **Relevant now** (blocker/major that is real, in scope, and cheaper to fix now than later) → fix it.
    - **Not now** (real but out of scope, minor, speculative, or bigger than the task) → record it as a pending
      item with urgency and complexity: `bitacora.py id P`, then a line in PENDING.md with source
      `antagonist <REQ/commit>` (see documentation.md §Pending).
    - **Wrong** (the antagonist misread the code) → drop it, one line why in the PLAN Progress log.
-3. **At most one re-review**, and only if you fixed something: send the antagonist the fix diff with the earlier
-   findings and say it's a re-review. Whatever it says then: fix if trivial, otherwise defer. **Never a third pass.**
-   A finding that comes back after you fixed it → defer it, don't argue.
-4. **Commit**, and log in the PLAN Progress log: `antagonist: N fixed, M deferred (P-0xx…), K dropped`.
+3. **Commit** and log in the PLAN Progress log: `antagonist: N fixed, M deferred (P-0xx…), K dropped`.
 
-Hard stops against loops: one review + at most one re-review per commit; the antagonist can't delegate or edit;
-you don't re-run it on deferred items; if it times out or errors, commit anyway and note "antagonist skipped".
-Quick-track one-liners (typo, config value, copy) skip the gate.
+Hard stops against loops: one pass per commit when the per-commit gate applies; the antagonist can't delegate or
+edit; do not run another pass for deferred items. If it times out or errors, commit anyway and note "antagonist skipped".
 
-**With the independent milestone audit active** (a pool run with an `M<n>-audit` task still pending) that audit is the
-milestone's adversarial review, so per-commit passes are not repeated: the task runs its verify, tests and linters
-before each commit. Invoking Antagonist on individual commits is forbidden under that coverage, including high-risk
-or architecture tasks; their milestone audit starts at the higher budget. All security checks remain mandatory.
-Without a milestone audit the gate above stays
-mandatory. The supervisor's prompts take this rule from `bt_review_policy.commit_review_rule`.
+An independent pending milestone audit covers the unit's own milestone only; work without such coverage keeps the
+per-commit gate. High risk or architecture level does not override audit coverage. The supervisor's prompts take
+this rule from `bt_review_policy.commit_review_rule`. Engine v2 F4 is planned to extend this coverage to subplan
+audits; that extension is not implemented yet.
 
 ## Where they plug into the flow
 

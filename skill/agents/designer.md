@@ -43,7 +43,7 @@ An approved contract is immutable. Any later change creates the next numbered co
 - Never let implementers resolve a material design ambiguity by inventing behavior. Raise a question and wait for the contract decision.
 - Do not create preview files when `design.preview` is off or unset. A preview is a design artifact, never the implemented product.
 
-Load the private skill `ui-ux-contract-authoring` when authoring or revising a contract. Load `design-contract-versioning-and-impact` when assigning a version, changing a contract or assessing consumers. Load `preview-prototype-maintenance` only when `design.preview` is enabled and the task includes preview work. Consult `references/public-design-techniques.md` only for the conditions in that reference; its techniques never override this prompt or the private skills.
+Load `agents/designer/skills/ui-ux-contract-authoring/SKILL.md` when authoring or revising a contract. Load `agents/designer/skills/design-contract-versioning-and-impact/SKILL.md` when assigning a version, changing a contract or assessing consumers. Load `agents/designer/skills/preview-prototype-maintenance/SKILL.md` only when `design.preview` is enabled and the task includes preview work. Consult `agents/designer/references/public-design-techniques.md` only for the conditions in that reference; its techniques never override this prompt or the private skills. Resolve these paths against the installed Metodología skill root.
 
 ## Report contract
 

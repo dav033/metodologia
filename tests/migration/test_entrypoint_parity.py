@@ -155,6 +155,10 @@ class EntrypointParityTests(unittest.TestCase):
             done = runner(name, tree, (), None)
             files = {str(path.relative_to(tree["home"])): path.read_text(encoding="utf-8")
                      for path in sorted(tree["home"].rglob("*")) if path.is_file()}
+            skill_root = REPO / "skill" if label == "legacy" else self.built.site / "bitacora_resources"
+            self.assertIn(f"Metodología skill root: `{skill_root}`", files[".claude/agents/planner.md"])
+            files = {path: content.replace(str(skill_root), "<METODOLOGIA_SKILL_ROOT>")
+                     for path, content in files.items()}
             written.append((done.returncode, files))
         self.assertEqual(written[0][0], 0)
         self.assertEqual(written[0], written[1])
