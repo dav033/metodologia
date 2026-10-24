@@ -46,6 +46,7 @@ import bt_scheduler_executor as m3
 from bt_scheduler_executor import gitutil  # noqa: F401 - re-exported: the only door to the executor module
 from bt_scheduler_executor.workspace import dirname_of  # noqa: F401 - re-exported, same reason
 import bt_scheduler_integrator as integrator
+from bt_scheduler_executor.core_port import CoreExecutionPort as _CoreExecutionPort
 import bt_workspace
 from bt_scheduler_m4_wiring import (  # noqa: F401 - exported to the composition module
     M3StreamCandidates,
@@ -308,65 +309,28 @@ class PlanBriefs:
             raise m3.ExecutorError("ORDER_INVALID", f"{request.task_id} is not a task of the approved plan") from None
         checks = tuple(f"{v.get('purpose') or v.get('type', 'check')}: {v.get('value', '')}" for v in spec.verification)
         publishes = any(str(v.get("value", "")).strip() == PUBLISH_CHECK for v in spec.verification)
+        review_axis = "visual" if any(subplan.ui and subplan.ui.visual_review_task == spec.id
+                                       for subplan in getattr(self.plan, "subplans", ())) else ""
         return m3.Brief(title=str(spec.meta.get("title", spec.id)), objective=str(spec.meta.get("objective", "")),
                         acceptance_criteria=tuple(spec.acceptance_criteria), verification=checks,
                         expected_paths=tuple(spec.expected_paths), notes=self.notes(request) if self.notes else "",
-                        publishes=publishes,
+                        publishes=publishes, review_axis=review_axis,
                         remote_actions=bool(REMOTE_ACTION.search(" ".join((str(spec.meta.get("objective", "")), *spec.acceptance_criteria)))))
 
 
 # ------------------------------------------------------------------------------------------------------ core ports
-TRANSIENT = frozenset({"PORT_ERROR", "LEDGER_ERROR", "ARTIFACT_ERROR"})   # refusals that say nothing about the order itself
-
-
-class CoreExecutionPort:
-    """The core's `ExecutionPort`: translates its orders into the module's and the module's answers into the core's.
-
-    A transient failure of the executor is RAISED, not answered with a rejection: the core records a port error and tries
-    again (then asks `query`), whereas a rejection closes the attempt as failed and burns its attempt budget."""
+class CoreExecutionPort(_CoreExecutionPort):
+    """Bind M3, M1 and focused gate dependencies at the adapter boundary."""
 
     def __init__(self, executor: m3.AgentExecutor | None, plan, *, project: str,
-                 base_ref: str | Callable[[str], str] = "HEAD", default_repository: str = ""):
-        self.executor, self.plan, self.project = executor, plan, project
-        self.base_ref, self.default_repository = base_ref, default_repository
-        self.on_accepted_attempt: Callable[[str], None] | None = None
+                 base_ref: str | Callable[[str], str] = "HEAD", default_repository: str = "",
+                 composition_base: Callable[..., str | None] | None = None,
+                 repo_of: Callable[[str], Path | None] | None = None):
+        from bt_scheduler_executor import gates as m3_gates
 
-    def start(self, order):
-        if (order.plan_id, order.revision) != (self.plan.plan_id, self.plan.revision):
-            return core.Ack("rejected", "ORDER_INVALID: the order is for another plan revision than the one wired")
-        try:
-            repo = self.plan.task(order.task_id).repository or self.default_repository
-        except Exception:  # noqa: BLE001
-            return core.Ack("rejected", "ORDER_INVALID: unknown task")
-        if not repo:
-            return core.Ack("rejected", "REPOSITORY_UNKNOWN: the task names no repository")
-        try:
-            base = self.base_ref(order.task_id) if callable(self.base_ref) else self.base_ref
-        except integrator.IntegrationError as error:
-            if not error.permanent:                         # a hiccup says nothing about the plan: retry, don't burn an attempt
-                raise RuntimeError(f"{error.code}: {error.detail}"[:300]) from None
-            return core.Ack("rejected", start_rejection_detail(error))   # never run without accepted predecessor work
-        request = m3.StartRequest(
-            idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
-            attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,
-            project=self.project, base_ref=base, acceptance_criteria=tuple(order.acceptance_criteria),
-            verification=tuple(order.verification), plan_sha256=self.plan.sha256)
-        receipt = self.executor.start(request)
-        if receipt.status == "rejected" and receipt.code in TRANSIENT:
-            raise RuntimeError(f"{receipt.code}: {receipt.detail}")
-        if receipt.status in {"accepted", "duplicate"} and self.on_accepted_attempt is not None:
-            self.on_accepted_attempt(order.attempt_id)
-        return core.Ack(receipt.status, f"{receipt.code}: {receipt.detail}".strip(": ")[:300])
-
-    def cancel(self, order):
-        receipt = self.executor.cancel(order.attempt_id, order.token, order.idempotency_key, order.reason)
-        return core.Ack(receipt.status, f"{receipt.code}: {receipt.detail}".strip(": ")[:300])
-
-    def query(self, attempt_id: str):
-        if self.executor is None:      # `start()` reconciles while the executor is still being composed
-            raise core.PortNotReady("the executor is not composed yet")
-        status = self.executor.query(attempt_id)
-        return core.ExecutionStatus(STATE_OF[status.state], (status.cause or status.detail)[:300])
+        super().__init__(executor, plan, project=project, core=core, m3=m3, integrator=integrator,
+                         start_rejection_detail=start_rejection_detail, gates=m3_gates, base_ref=base_ref,
+                         default_repository=default_repository, composition_base=composition_base, repo_of=repo_of)
 
 
 class CoreEventSink:

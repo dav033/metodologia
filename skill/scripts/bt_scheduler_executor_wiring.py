@@ -135,7 +135,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
          monitor_store_path: Path | str | None = None, recovery_store_path: Path | str | None = None,
          recovery_policy: Mapping[str, object] | None = None,
          quality_store_path: Path | str | None = None,
-         quality_policy: Mapping[str, object] | None = None) -> api.Wiring:
+         quality_policy: Mapping[str, object] | None = None,
+         composition_base: Callable[..., str | None] | None = None) -> api.Wiring:
     """A Scheduler core with optional decision, monitor, recovery, and quality-verification ports.
 
     Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the api.core's own rule). The
@@ -184,8 +185,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                                   **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
-    port = api.CoreExecutionPort(None, api.sched.approved_plan(rdir), project=project, base_ref=base_ref,
-                             default_repository=default_repository)
+    plan = api.sched.approved_plan(rdir)
+    repo_of = api.repositories(project, repos)
+    port = api.CoreExecutionPort(None, plan, project=project, base_ref=base_ref,
+                                 default_repository=default_repository, composition_base=composition_base,
+                                 repo_of=repo_of)
     routing = assignment if callable(getattr(assignment, "plan", None)) else None
     scheduler = api.sched.open_scheduler(rdir, ports=api.core.Ports(assignment=assignment, routing=routing,
                                                             execution=port, verification=verification,
@@ -193,7 +197,6 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                      config=config, clock=clock)
     port.plan = scheduler.plan                         # one plan object for the api.core, the brief and the repository roles
     root = api.executor_root(rdir, api.run_identity(scheduler))
-    repo_of = api.repositories(project, repos)
     def designer_scope_check(event):
         try:
             task = scheduler.plan.task(event.task_id)
@@ -258,17 +261,30 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             port.base_ref = integrate.base_ref
             import bt_config
             integrate.check_files = bt_config.get("gates.integration_check_files", True) is not False
-            import bt_integration_line
-            line = bt_integration_line.Line(
-                plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
-                identity=identity, accepted=lambda: api._accepted_attempts(scheduler),
-                snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
-                start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
-                check_files=integrate.check_files,
-                base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
-            if _line_enabled(rdir, api._accepted_attempts(scheduler), _migration_probe(line)):
+            if scheduler.plan.schema_version == "1.3.0" and scheduler.plan.subplans:
+                import bt_integration_line
+                line = bt_integration_line.SubplanLineRouter(
+                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository, identity=identity,
+                    accepted=lambda: api._accepted_attempts(scheduler),
+                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                    start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                    check_files=integrate.check_files,
+                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
+            else:
+                import bt_integration_line
+                line = bt_integration_line.Line(
+                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                    identity=identity, accepted=lambda: api._accepted_attempts(scheduler),
+                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                    start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                    check_files=integrate.check_files,
+                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
+            subplan_plan = scheduler.plan.schema_version == "1.3.0" and bool(scheduler.plan.subplans)
+            if subplan_plan or _line_enabled(rdir, api._accepted_attempts(scheduler), _migration_probe(line)):
                 integrate.attach_line(line)
                 integrate.recompute_line()
+                if subplan_plan:
+                    (Path(rdir) / LINE_MARKER).write_text("integration line on for frozen subplan scopes\n", encoding="utf-8")
         if recovery_store_path is not None:
             import bt_recovery_pipeline
             import bt_recovery_runtime

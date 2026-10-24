@@ -146,6 +146,15 @@ Sampling is best effort and identity-checked; see the executor README for caps a
 - For schema 1.3.0 `design` tasks, M3 gates snapshots before verification: changes stay in `design/`; preview needs
   `design.preview` or `design.preview_projects`. Refusals retain snapshots (`DESIGN_SCOPE_VIOLATION`,
   `DESIGN_PREVIEW_DISABLED`).
+- For 1.3.0 plans with subplans, M3 folds accepted contributions into refs/m3/line/<run>/<repository-role>/<SP-id>;
+  each scope includes its accepted member tasks and accepted ancestors from the frozen plan. Redos replace the prior
+  delta and conflicts remain explicit. Tasks outside subplans require the injected owner `composition_base(task_id, order)`
+  identity; absent/empty identities are rejected as `COMPOSITION_BASE_MISSING` and are never rebuilt from all accepted work.
+  The start gate checks each `ui: true` task's exact `design/contracts/<contract>@v<version>.md` blob in that selected
+  base tree before launch (`DESIGN_CONTRACT_MISSING`). The current M1 `Ack` contract can carry only rejection detail and
+  cannot yet represent a blocked-environment classification; that typed result remains an owner-interface dependency.
+  Reviewer briefs derive `review_axis: visual` only for frozen `subplan.ui.visual_review_task` tasks. Workspaces explicitly
+  identify attempt, reconstructable subplan, and candidate integration kinds; integration cleanup is idempotent.
 - Predecessor hand-over (P-031): `skill/scripts/bt_scheduler_integrator.py`, used by `wire(..., integrate_predecessors=True)`. It merges
   the accepted same-repository ancestors' handoff snapshots into one commit (`git merge-tree`, no worktree touched, kept under
   `refs/m3/integration/<run>/<task>`) and passes it as the task's `base_ref`; a conflict or a missing snapshot rejects the order

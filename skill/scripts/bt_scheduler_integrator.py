@@ -403,14 +403,16 @@ class PredecessorIntegrator:
         redo replaces it). None = use the predecessor merge (nothing to integrate, or the line cannot be computed)."""
         role = self._role(task_id)
         same_repo = [t for t in self.ancestors(task_id) if self._role(t) == role]
-        if not same_repo:
+        subplan_task = bool(getattr(self._bound["plan"], "subplans", ())) and bool(
+            self._bound["plan"].task(task_id).meta.get("subplan_id"))
+        if not same_repo and not subplan_task:
             return None
         try:
             accepted = self._bound["accepted"]()
             for tid in same_repo:
                 if tid not in accepted:
                     raise IntegrationError("PREDECESSOR_NOT_ACCEPTED", f"{tid} is a prerequisite of {task_id} but is not accepted")
-            waiting = [tid for tid in same_repo if tid in self.line.needs_resolution(role)]
+            waiting = [tid for tid in same_repo if tid in self.line.needs_resolution(role, task_id)]
             if waiting:
                 raise IntegrationError("PREDECESSOR_NEEDS_RESOLUTION",
                                        f"{', '.join(waiting)} is accepted but does not fit the integrated tree yet")

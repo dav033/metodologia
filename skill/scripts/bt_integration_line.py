@@ -79,13 +79,14 @@ class Line:
                  repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
                  base_of: Callable[[str], str] = lambda role: "HEAD",
                  start_base_of: Callable[[str], str | None] | None = None, ref_prefix: str = REF_PREFIX,
-                 on_event: Callable[..., None] | None = None, check_files: bool = True):
+                 on_event: Callable[..., None] | None = None, check_files: bool = True, scope_id: str = ""):
         """`accepted()` -> {task_id: accepted attempt id}; `snapshot_of(attempt)` -> its snapshot sha (None: no handoff).
         `base_of(role)` is where the run began (pinned under `<ref>-base` the first time, so a moving HEAD cannot shift the
         line). `start_base_of(attempt)` -> the commit that attempt started from; by default the snapshot's first parent."""
         self.plan, self.accepted, self.snapshot_of, self.repo_of = plan, accepted, snapshot_of, repo_of
         self.default, self.identity = default_repository, SAFE.sub("-", identity) or "run"
         self.base_of, self.start_base_of, self.ref_prefix = base_of, start_base_of, ref_prefix.rstrip("/")
+        self.scope_id = SAFE.sub("-", scope_id).strip("-")
         self.on_event, self.check_files = on_event, check_files
         self._announced: set[tuple[str, str]] = set()
         self._before_ref_update: Callable[[], None] | None = None          # test seam: a crash between objects and ref
@@ -104,7 +105,8 @@ class Line:
         return seen
 
     def ref(self, role: str) -> str:
-        return f"{self.ref_prefix}/{self.identity}/{SAFE.sub('-', role)}"
+        suffix = f"/{self.scope_id}" if self.scope_id else ""
+        return f"{self.ref_prefix}/{self.identity}/{SAFE.sub('-', role)}{suffix}"
 
     def contributions(self, role: str) -> list[Contribution]:
         """The accepted tasks of `role` that left a usable snapshot, in plan order (topological, deterministic)."""
@@ -141,7 +143,7 @@ class Line:
         repo = self._repo(role)
         return self._replay(repo, state.base, [c for c in self.contributions(role) if c.task != without])[0]
 
-    def needs_resolution(self, role: str) -> dict[str, tuple[str, ...]]:
+    def needs_resolution(self, role: str, task_id: str | None = None) -> dict[str, tuple[str, ...]]:
         return dict(self.state(role).unresolved)
 
     def apply(self, role: str, task: str, attempt: str, snapshot: str, start_base: str | None = None) -> ApplyResult:
@@ -357,3 +359,89 @@ def _real_base(repo: Path, base: str) -> str:
 def _missing(repo: Path, sha: str) -> bool:
     """True when the commit is not in the repository."""
     return _git(repo, "cat-file", "-e", f"{sha}^{{commit}}", check=False).returncode != 0
+
+
+def scoped_task_ids(plan, subplan_id: str) -> frozenset[str]:
+    """Subplan members plus their frozen-plan ancestors; membership never comes from runtime state."""
+    members = {task.id for task in plan.tasks if task.meta.get("subplan_id") == subplan_id}
+    included = set(members)
+    for task_id in members:
+        included.update(plan.ancestors(task_id))
+    return frozenset(included)
+
+
+class SubplanLineRouter:
+    """Route line operations to refs/m3/line/<run>/<role>/<SP-id> without changing legacy refs."""
+
+    def __init__(self, *, plan, accepted: Callable[[], Mapping[str, str]], snapshot_of,
+                 repo_of: Callable[[str], Path | str | None], default_repository: str, identity: str,
+                 base_of, start_base_of=None, on_event=None, check_files: bool = True):
+        self.plan = plan
+        self.lines = {}
+        self.members = {}
+        all_accepted = accepted
+        for subplan in plan.subplans:
+            scope = scoped_task_ids(plan, subplan.id)
+            self.members[subplan.id] = scope
+            self.lines[subplan.id] = Line(
+                plan=plan,
+                accepted=lambda scope=scope: {task: attempt for task, attempt in all_accepted().items()
+                                              if task in scope},
+                snapshot_of=snapshot_of, repo_of=repo_of, default_repository=default_repository,
+                identity=identity, base_of=base_of, start_base_of=start_base_of,
+                on_event=on_event, check_files=check_files, scope_id=subplan.id)
+
+    def _for_task(self, task_id: str | None):
+        if not task_id:
+            return None
+        return self.lines.get(self.plan.task(task_id).meta.get("subplan_id"))
+
+    def is_generated(self, path: str) -> bool:
+        return any(line.is_generated(path) for line in self.lines.values())
+
+    def roles(self) -> list[str]:
+        found = []
+        for subplan_id in self.lines:
+            for task_id in {t.id for t in self.plan.tasks if t.meta.get("subplan_id") == subplan_id}:
+                role = self.plan.task(task_id).repository or self.lines[subplan_id].default
+                if role not in found:
+                    found.append(role)
+        return found
+
+    def state(self, role: str) -> LineState:
+        states = [line.state(role) for subplan_id, line in self.lines.items()
+                  if any((self.plan.task(task).repository or line.default) == role
+                         for task in {t.id for t in self.plan.tasks if t.meta.get("subplan_id") == subplan_id})]
+        if not states:
+            raise ValueError(f"no subplan line for repository role {role!r}")
+        return LineState(role, states[0].base, states[0].tip,
+                         tuple(task for state in states for task in state.applied),
+                         {task: paths for state in states for task, paths in state.unresolved.items()},
+                         tuple(path for state in states for path in state.generated_stale))
+
+    def needs_resolution(self, role: str, task_id: str | None = None) -> dict[str, tuple[str, ...]]:
+        line = self._for_task(task_id)
+        if line:
+            return line.needs_resolution(role)
+        return {task: paths for candidate in self.lines.values()
+                for task, paths in candidate.needs_resolution(role).items()}
+
+    def tip(self, role: str, without: str | None = None):
+        line = self._for_task(without)
+        return line.tip(role, without=without) if line else None
+
+    def apply(self, role: str, task: str, attempt: str, snapshot: str, start_base: str | None = None):
+        line = self._for_task(task)
+        if line is None:
+            return snapshot, ()
+        return line.apply(role, task, attempt, snapshot, start_base)
+
+    def recompute(self, roles: list[str] | None = None):
+        done = {}
+        for subplan_id, line in self.lines.items():
+            members = {t.id for t in self.plan.tasks if t.meta.get("subplan_id") == subplan_id}
+            line_roles = list(dict.fromkeys(self.plan.task(t).repository or line.default for t in members))
+            selected = [role for role in (roles or line_roles) if role in line_roles]
+            for role, state in line.recompute(selected).items():
+                done[(role, subplan_id)] = state
+        return done
