@@ -107,3 +107,10 @@ simulated wall time at parallel 3. `bt_recovery_benchmark` must not get worse. R
 | F4-7 policy + switch | `bt_review_policy.py`, `bt_plan_adapter.py`, planner `SCHEMA_VERSION` default | F4-3..6 |
 | F4-9 owner wiring | `bt_scheduler_run.py`, `bt_scheduler_executor_wiring.py` | all above |
 | F4-8 benchmark | `bt_engine_benchmark*`, fixtures | F4-9 |
+
+## 6. Data-flow contracts fixed during F4 (lead rulings)
+
+- M1 → M2/M3 task metadata (1.3.0 with subplans, optional keys): `subplan_id`; `review_axis: "visual"` for a subplan's
+  `ui.visual_review_task`; `ui: true|false` when declared. M2 maps `kind: design` → role `designer` and
+  `review_axis: visual` → role `reviewer` (axis visual) in `bt_role_policy.py`. M3 derives the brief's axis from the
+  frozen plan itself.
