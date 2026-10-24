@@ -13,8 +13,10 @@ from .criteria import CheckResult, CriterionResult
 from .identity import checks_hash, criteria_hash
 from .policy import QualityPolicy
 
-SCHEMA_VERSION = "m6.verify-result/1"
-MANIFEST_VERSION = "m6.evidence-manifest/1"
+SCHEMA_VERSION = "m6.verify-result/1.1"
+MANIFEST_VERSION = "m6.evidence-manifest/1.1"
+REASON_CODES = frozenset({"PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT",
+                          "FLAKY_SUSPECTED", "NOT_RUN"})
 
 
 def canonical_json(value: object) -> bytes:
@@ -46,6 +48,9 @@ def build_evidence(
     status: str,
     issues: tuple[Mapping[str, str], ...],
     extra_manifest: Mapping[str, Any] | None = None,
+    tree_digest: str | None = None,
+    environment_fingerprint: str | None = None,
+    check_tree_digests: Mapping[str, str | None] | None = None,
 ) -> tuple[dict[str, Any], bytes, bytes, str]:
     criteria_digest = criteria_hash(order.acceptance_criteria)
     check_digest = checks_hash(order)
@@ -67,6 +72,8 @@ def build_evidence(
                 "exit_code": item.outcome.exit_code,
                 "duration_ms": item.outcome.duration_ms,
                 "issue_code": item.outcome.issue_code,
+                "reason_code": reason_for_outcome(item.outcome.status, item.outcome.issue_code),
+                "tree_digest": (check_tree_digests or {}).get(item.spec.id, tree_digest),
                 "stdout_ref": item.stdout_ref,
                 "stderr_ref": item.stderr_ref,
             }
@@ -86,6 +93,9 @@ def build_evidence(
             "criteria_hash": criteria_digest,
             "order_sha256": order.input_hash,
             "checks_sha256": check_digest,
+            "tree_digest": tree_digest,
+            "contract_identities": dict(order.contract_identities),
+            "environment_fingerprint": environment_fingerprint,
         },
         "verifier": {
             "kind": "deterministic",
@@ -96,8 +106,11 @@ def build_evidence(
         "criteria": [item.to_dict() for item in criteria],
         "checks": check_rows,
         "status": status,
+        "reason_code": overall_reason_code(check_rows, status, issues),
         "finished_at": finished_at(),
     }
+    if order.composition_id is not None:
+        base_result["input"].update(composition_id=order.composition_id, manifest_sha256=order.manifest_sha256)
     if issues:
         base_result["issues"] = [dict(item) for item in issues]
     manifest: dict[str, Any] = {
@@ -113,6 +126,8 @@ def build_evidence(
                 "kind": item.spec.kind,
                 "expected": item.spec.expected,
                 "issue_code": item.outcome.issue_code,
+                "reason_code": row["reason_code"],
+                "tree_digest": row["tree_digest"],
                 "output_truncated": item.outcome.output_truncated,
             }
             for row, item in zip(check_rows, checks, strict=True)
@@ -122,6 +137,7 @@ def build_evidence(
     }
     if extra_manifest:
         manifest["context"] = dict(extra_manifest)
+    manifest["reason_code"] = base_result["reason_code"]
     manifest_bytes = canonical_json(manifest)
     manifest_digest = sha256_bytes(manifest_bytes)
     result = {**base_result, "evidence_manifest": f"m6://result/{manifest_digest}"}
@@ -143,16 +159,21 @@ def validate_result_contract(value: object) -> None:
         "evidence_manifest",
         "finished_at",
     }
-    if set(value) - (required | {"issues"}) or not required <= set(value):
+    if set(value) - (required | {"issues", "reason_code"}) or not required <= set(value):
         raise QualityError("RESULT_INVALID", "result has missing or unknown fields")
     _validate_result_identity(value["identity"])
     _validate_result_input(value["input"])
     _validate_result_verifier(value["verifier"])
     _validate_criterion_records(value["criteria"])
-    _validate_check_records(value["checks"])
+    legacy = value.get("schema_version") == "m6.verify-result/1"
+    _validate_check_records(value["checks"], legacy=legacy)
     _validate_result_completion(value)
     if "issues" in value:
         _validate_issue_records(value["issues"])
+    if value.get("schema_version") == SCHEMA_VERSION and value.get("reason_code") not in REASON_CODES:
+        raise QualityError("RESULT_INVALID", "result reason_code is invalid")
+    if legacy and value.get("reason_code") not in {None, "UNCLASSIFIED"}:
+        raise QualityError("RESULT_INVALID", "legacy result reason_code is invalid")
 
 
 def _validate_result_identity(identity: object) -> None:
@@ -182,7 +203,8 @@ def _validate_result_input(input_data: object) -> None:
         "order_sha256",
         "checks_sha256",
     }
-    if not isinstance(input_data, dict) or set(input_data) != input_keys:
+    optional = {"tree_digest", "contract_identities", "environment_fingerprint", "composition_id", "manifest_sha256"}
+    if not isinstance(input_data, dict) or not input_keys <= set(input_data) or set(input_data) - input_keys - optional:
         raise QualityError("RESULT_INVALID", "result input hashes are invalid")
     for name in ("snapshot_sha", "base_sha"):
         digest = input_data[name]
@@ -195,6 +217,22 @@ def _validate_result_input(input_data: object) -> None:
     for name in ("criteria_hash", "order_sha256", "checks_sha256"):
         if not _is_sha256(input_data[name]):
             raise QualityError("RESULT_INVALID", "result input hash is invalid")
+    tree = input_data.get("tree_digest")
+    if tree is not None and (not isinstance(tree, str) or len(tree) not in (40, 64)
+                             or any(char not in "0123456789abcdef" for char in tree)):
+        raise QualityError("RESULT_INVALID", "result tree digest is invalid")
+    contracts = input_data.get("contract_identities", {})
+    if not isinstance(contracts, dict) or any(not isinstance(key, str) or not key or not _is_sha256(digest)
+                                               for key, digest in contracts.items()):
+        raise QualityError("RESULT_INVALID", "result contract identities are invalid")
+    environment = input_data.get("environment_fingerprint")
+    if environment is not None and (not isinstance(environment, str) or len(environment) not in (24, 64)
+                                    or any(char not in "0123456789abcdef" for char in environment)):
+        raise QualityError("RESULT_INVALID", "result environment fingerprint is invalid")
+    composition, manifest = input_data.get("composition_id"), input_data.get("manifest_sha256")
+    if (composition is None) != (manifest is None) or (composition is not None and
+            (not isinstance(composition, str) or not composition or not _is_sha256(manifest))):
+        raise QualityError("RESULT_INVALID", "result composition identity is invalid")
 
 
 def _validate_result_verifier(verifier: object) -> None:
@@ -236,14 +274,14 @@ def _validate_criterion_record(item: object) -> None:
         raise QualityError("RESULT_INVALID", "result criterion record is invalid")
 
 
-def _validate_check_records(checks: object) -> None:
+def _validate_check_records(checks: object, *, legacy: bool = False) -> None:
     if not isinstance(checks, list) or not checks:
         raise QualityError("RESULT_INVALID", "result checks must be a non-empty list")
     for item in checks:
-        _validate_check_record(item)
+        _validate_check_record(item, legacy=legacy)
 
 
-def _validate_check_record(item: object) -> None:
+def _validate_check_record(item: object, *, legacy: bool = False) -> None:
     check_keys = {
         "id",
         "command",
@@ -255,7 +293,7 @@ def _validate_check_record(item: object) -> None:
         "stdout_ref",
         "stderr_ref",
     }
-    if not isinstance(item, dict) or set(item) != check_keys:
+    if not isinstance(item, dict) or not check_keys <= set(item) or set(item) - check_keys - {"reason_code", "tree_digest"}:
         raise QualityError("RESULT_INVALID", "result check record is invalid")
     if any(
         not isinstance(item[name], str) or not item[name] for name in ("id", "command")
@@ -283,6 +321,13 @@ def _validate_check_record(item: object) -> None:
         raise QualityError("RESULT_INVALID", "result check record is invalid")
     if not _artifact_ref(item["stdout_ref"]) or not _artifact_ref(item["stderr_ref"]):
         raise QualityError("RESULT_INVALID", "result check record is invalid")
+    allowed_reason_codes = REASON_CODES | ({"UNCLASSIFIED"} if legacy else set())
+    if item.get("reason_code") is not None and item["reason_code"] not in allowed_reason_codes:
+        raise QualityError("RESULT_INVALID", "result check reason_code is invalid")
+    tree = item.get("tree_digest")
+    if tree is not None and (not isinstance(tree, str) or len(tree) not in (40, 64)
+                             or any(char not in "0123456789abcdef" for char in tree)):
+        raise QualityError("RESULT_INVALID", "result check tree digest is invalid")
 
 
 def _valid_issue_code(value: object) -> bool:
@@ -297,7 +342,7 @@ def _valid_issue_code(value: object) -> bool:
 
 def _validate_result_completion(value: Mapping[str, object]) -> None:
     if (
-        value["schema_version"] != SCHEMA_VERSION
+        value["schema_version"] not in {"m6.verify-result/1", SCHEMA_VERSION}
         or not isinstance(value["status"], str)
         or value["status"] not in {"PASS", "FAIL", "NEEDS_REVIEW", "STALE"}
     ):
@@ -357,3 +402,58 @@ def _result_ref(value: object) -> bool:
         and value.startswith("m6://result/")
         and _is_sha256(value.removeprefix("m6://result/"))
     )
+
+
+def read_reason_code(record: Mapping[str, object]) -> str:
+    """Read old persisted checks compatibly; a missing taxonomy was never classified."""
+    value = record.get("reason_code")
+    return value if value in REASON_CODES else "UNCLASSIFIED"
+
+
+def read_result(value: Mapping[str, Any]) -> dict[str, Any]:
+    """Expose compatible classifications to callers without rewriting the stored, content-addressed bytes."""
+    result = dict(value)
+    result["reason_code"] = read_reason_code(result)
+    result["checks"] = [
+        {**check, "reason_code": read_reason_code(check)} if isinstance(check, Mapping) else check
+        for check in result.get("checks", ())
+    ]
+    return result
+
+
+def reason_for_outcome(status: str, issue_code: str | None) -> str:
+    if issue_code == "FLAKY_SUSPECTED":
+        return "FLAKY_SUSPECTED"
+    if status == "pass":
+        return "PASS"
+    if status == "fail":
+        return "FAIL_CODE"
+    if issue_code == "CHECK_TIMEOUT":
+        return "TIMEOUT"
+    if issue_code in {"CHECK_NOT_RUN", "CHECK_DEFERRED", "CHECK_MANUAL"}:
+        return "NOT_RUN"
+    if issue_code in {"CHECK_UNAVAILABLE", "CHECK_PRODUCTION_ACTION"}:
+        return "BLOCKED_EXTERNAL"
+    return "BLOCKED_ENV"
+
+
+def overall_reason_code(
+    checks: list[Mapping[str, object]],
+    verdict_status: str,
+    issues: tuple[Mapping[str, str], ...] = (),
+) -> str:
+    codes = [read_reason_code(check) for check in checks]
+    if "FLAKY_SUSPECTED" in codes:
+        return "FLAKY_SUSPECTED"
+    if verdict_status == "PASS":
+        return "PASS"
+    for code in ("FLAKY_SUSPECTED", "FAIL_CODE", "TIMEOUT", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "NOT_RUN"):
+        if code in codes:
+            return code
+    if verdict_status == "FAIL":
+        return "FAIL_CODE"
+    if verdict_status == "NEEDS_REVIEW" and any(
+        str(issue.get("code", "")).startswith("REVIEW_") for issue in issues
+    ):
+        return "BLOCKED_EXTERNAL"
+    return "BLOCKED_ENV"

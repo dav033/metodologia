@@ -23,6 +23,19 @@ class QualityStoreTests(unittest.TestCase):
         self.raw = json.loads(FIXTURE.read_text(encoding="utf-8"))
         self.order = VerifyRequest.from_mapping(self.raw)
 
+    def test_version_one_store_opens_with_additive_flaky_history_table(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            database = Path(temporary) / "quality.sqlite3"
+            connection = sqlite3.connect(database)
+            connection.execute("CREATE TABLE check_pass_cache (key TEXT PRIMARY KEY, exit_code INTEGER, "
+                               "duration_ms INTEGER NOT NULL, stdout BLOB NOT NULL, stderr BLOB NOT NULL, created_at REAL NOT NULL)")
+            connection.execute("PRAGMA user_version=1")
+            connection.close()
+            with QualityStore(database) as store:
+                key = "a" * 64
+                self.assertFalse(store.record_check_outcome(key, "fail", 1))
+                self.assertTrue(store.record_check_outcome(key, "pass", 2))
+
     def test_permission_refresh_preserves_sqlite_lock_against_another_process(self):
         with tempfile.TemporaryDirectory() as temporary:
             database = Path(temporary) / "quality.sqlite3"
@@ -78,7 +91,10 @@ class QualityStoreTests(unittest.TestCase):
             reopened = QualityStore(database)
             deliveries = reopened.pending_deliveries()
             payload = reopened.begin_delivery(self.order.idempotency_key)
-            self.assertEqual(reopened.get_result(self.order.idempotency_key), result)
+            loaded = reopened.get_result(self.order.idempotency_key)
+            self.assertEqual(loaded["status"], result["status"])
+            self.assertEqual(loaded["reason_code"], "UNCLASSIFIED")
+            self.assertEqual(loaded["checks"][0]["reason_code"], "UNCLASSIFIED")
             self.assertEqual(
                 reopened.get_artifact(result["stdout_ref"]), b"captured evidence\n"
             )

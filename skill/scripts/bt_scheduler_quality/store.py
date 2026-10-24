@@ -16,10 +16,11 @@ from pathlib import Path
 from typing import Any, Literal, Self
 
 from .contracts import QualityError, VerifyRequest
-from .evidence import canonical_json, finished_at
+from .evidence import canonical_json, finished_at, read_result
+from .check_history import CHECK_HISTORY_SCHEMA, CheckHistory
 from .recovery import retry_attested, retry_interrupted
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 
 class QualityStore:
@@ -78,7 +79,7 @@ class QualityStore:
         self._connection.row_factory = sqlite3.Row
         try:
             version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, _SCHEMA_VERSION):
+            if version not in (0, 1, _SCHEMA_VERSION):
                 raise QualityError(
                     "STORE_SCHEMA_UNSUPPORTED", "M6 store schema version is unsupported"
                 )
@@ -86,7 +87,9 @@ class QualityStore:
             self._connection.execute("PRAGMA journal_mode=WAL")
             self._connection.execute("PRAGMA synchronous=FULL")
             self._connection.execute("PRAGMA secure_delete=ON")
-            self._connection.executescript(_SCHEMA)
+            self._connection.executescript(_SCHEMA + CHECK_HISTORY_SCHEMA)
+            self._check_history = CheckHistory(self._connection, self._lock, self._transaction)
+            self._check_history.migrate()
             self._connection.execute(f"PRAGMA user_version={_SCHEMA_VERSION}")
             self._secure_database_files()
         except QualityError:
@@ -133,7 +136,7 @@ class QualityStore:
                     )
                 if row["state"] in {"queued", "running"}:
                     return row["state"], None
-                result = json.loads(row["result_json"]) if row["result_json"] else None
+                result = read_result(json.loads(row["result_json"])) if row["result_json"] else None
                 return "existing", result
             pending = connection.execute(
                 "SELECT COUNT(*) FROM requests WHERE state IN ('queued','running')"
@@ -273,7 +276,7 @@ class QualityStore:
             raise QualityError(
                 "STORE_CORRUPT", "persisted result failed its content hash"
             )
-        return json.loads(row[0])
+        return read_result(json.loads(row[0]))
 
     def get_artifact(self, reference: str) -> bytes | None:
         if not isinstance(reference, str) or not reference.startswith("m6://artifact/"):
@@ -588,30 +591,21 @@ class QualityStore:
 
     def cached_pass(self, key: str, max_age: float, now: float) -> sqlite3.Row | None:
         """A passing outcome stored under `key` no older than `max_age` seconds, else None."""
-        if max_age <= 0:
-            return None
-        with self._lock:
-            row = self._connection.execute(
-                "SELECT exit_code, duration_ms, stdout, stderr, created_at FROM check_pass_cache WHERE key = ?",
-                (key,)).fetchone()
-        return row if row is not None and now - row["created_at"] <= max_age else None
+        return self._check_history.cached_pass(key, max_age, now)
 
     def remember_pass(self, key: str, exit_code: int | None, duration_ms: int, stdout: bytes, stderr: bytes,
                       now: float) -> None:
-        with self._lock, self._transaction() as connection:
-            connection.execute("INSERT OR REPLACE INTO check_pass_cache VALUES (?, ?, ?, ?, ?, ?)",
-                               (key, exit_code, duration_ms, stdout, stderr, now))
-            connection.execute("DELETE FROM check_pass_cache WHERE created_at < ?", (now - 7 * 86_400,))
+        self._check_history.remember_pass(key, exit_code, duration_ms, stdout, stderr, now)
+
+    def record_check_outcome(self, key: str, status: str, now: float) -> bool:
+        """Persist an evidence-key outcome; return true when this pass follows a prior failure."""
+        return self._check_history.record_outcome(key, status, now)
 
     def last_check_ms(self, command_key: str) -> int | None:
-        with self._lock:
-            row = self._connection.execute("SELECT last_ms FROM check_stats WHERE command_key = ?",
-                                           (command_key,)).fetchone()
-        return int(row["last_ms"]) if row else None
+        return self._check_history.last_ms(command_key)
 
     def record_check_ms(self, command_key: str, duration_ms: int, now: float) -> None:
-        with self._lock, self._transaction() as connection:
-            connection.execute("INSERT OR REPLACE INTO check_stats VALUES (?, ?, ?)", (command_key, int(duration_ms), now))
+        self._check_history.record_ms(command_key, duration_ms, now)
 
     def metrics(self) -> dict[str, Any]:
         with self._lock:
@@ -721,19 +715,6 @@ CREATE TABLE IF NOT EXISTS verification_retries (
     reason TEXT NOT NULL,
     created_at TEXT NOT NULL,
     previous_result_json TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS check_pass_cache (
-    key TEXT PRIMARY KEY,
-    exit_code INTEGER,
-    duration_ms INTEGER NOT NULL,
-    stdout BLOB NOT NULL,
-    stderr BLOB NOT NULL,
-    created_at REAL NOT NULL
-);
-CREATE TABLE IF NOT EXISTS check_stats (
-    command_key TEXT PRIMARY KEY,
-    last_ms INTEGER NOT NULL,
-    updated_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS outbox (
     request_key TEXT PRIMARY KEY REFERENCES requests(idempotency_key),

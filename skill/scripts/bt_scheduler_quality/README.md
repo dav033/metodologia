@@ -36,6 +36,11 @@ Input is the JSON-compatible `VerifyOrder` already created by M1:
 }
 ```
 
+M6 also accepts these optional additive order fields: `contract_identities` maps contract identity names to lowercase
+SHA-256 values; `environment_fingerprint` is a lowercase SHA-256 supplied by the order and is combined with M6's local
+environment fingerprint; `composition_id` and `manifest_sha256` must appear together. They are included in evidence
+and cache binding only when present, leaving legacy request hashes and cache keys unchanged.
+
 verification accepts the approved Planner v1 shape: type=command|manual, value, purpose, optional created_by, and for
 manual, expected. It also accepts an optional 1.2.0 category (static, functional, integration, regression or product).
 M1 requires and validates the category when loading a 1.2.0 plan; M6 validates and preserves it as typed evidence
@@ -63,7 +68,9 @@ snapshot, and archives the snapshot into an owned temporary directory. The sourc
 artifact are read-only inputs. `PredecessorIntegrator` remains the only merge/conflict implementation; M3 records
 the base it used before execution.
 
-Result schema is `m6.verify-result/1`; PASS, FAIL, NEEDS_REVIEW and STALE are internal statuses. The full shape and
+Result schema is `m6.verify-result/1.1`; PASS, FAIL, NEEDS_REVIEW and STALE are internal statuses. Version 1.1 adds a
+per-check/result `reason_code` taxonomy and tree plus optional contract, environment and composition bindings. Stored
+version 1 results remain readable; a missing classification reads as `UNCLASSIFIED`. The full shape and
 illustrative examples live in `api-contract.json` and `tests/fixtures/`. Each check carries its own stable `issue_code`
 so aggregate metrics distinguish checks that were not run from checks that returned unknown for another reason.
 Mapping to M1 is deliberately binary:
@@ -84,7 +91,8 @@ until reconciled or is marked stale with the actual M1 response.
 
 - **Pass cache** (`reuse.py`, `QualityPolicy.cache_seconds`, default one day): a check that passed on this exact git tree
   with the same command and the same operator environment is not run again; its recorded output is returned with a note.
-  Failures are never reused. **Expensive checks last** (`defer_expensive`, `expensive_check_seconds`): a check that took
+  Failures are never reused. The existing `check_pass_cache` table also retains fail/flaky status for the same evidence key;
+  a later pass is classified `FLAKY_SUSPECTED` and is not cached. **Expensive checks last** (`defer_expensive`, `expensive_check_seconds`): a check that took
   that long the last time, or that looks like a whole suite (`unittest discover -s tests`, `npm run gate`), runs after the
   cheaper ones and is skipped (`CHECK_DEFERRED`) once one of them failed: the verdict is FAIL either way.
 - **Mixed evidence** (`mixed_evidence`, default on): a criterion may be backed by several checks with its exact text as

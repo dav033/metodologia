@@ -188,7 +188,13 @@ class QualityVerificationPort(QualityDeliveryMethods):
 
     def request(self, order: m1.VerifyOrder) -> m1.Ack:
         try:
-            parsed = VerifyRequest.from_mapping(_order_mapping(order))
+            raw_order = _order_mapping(order)
+            # New M1 releases may carry these additive M6 identity fields; old VerifyOrder remains unchanged.
+            for name in ("composition_id", "manifest_sha256", "contract_identities", "environment_fingerprint"):
+                value = getattr(order, name, None)
+                if value is not None:
+                    raw_order[name] = value
+            parsed = VerifyRequest.from_mapping(raw_order)
         except (QualityError, TypeError, ValueError) as error:
             code = error.code if isinstance(error, QualityError) else "ORDER_INVALID"
             return m1.Ack("rejected", code, permanent=True)          # the order is malformed: sending it again changes nothing

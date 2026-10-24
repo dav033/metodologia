@@ -20,6 +20,7 @@ ORDER_KEYS = frozenset(
         "verification",
     }
 )
+OPTIONAL_ORDER_KEYS = frozenset({"composition_id", "manifest_sha256", "contract_identities", "environment_fingerprint"})
 PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
 VERIFICATION_CATEGORIES = frozenset({"static", "functional", "integration", "regression", "product"})
 COMMAND_KEYS = frozenset({"type", "value", "purpose", "created_by", "category"})
@@ -105,10 +106,15 @@ class VerifyRequest:
     token: int
     acceptance_criteria: tuple[str, ...]
     verification: tuple[VerificationSpec, ...]
+    composition_id: str | None = None
+    manifest_sha256: str | None = None
+    contract_identities: tuple[tuple[str, str], ...] = ()
+    environment_fingerprint: str | None = None
 
     @classmethod
     def from_mapping(cls, value: object) -> VerifyRequest:
-        if not isinstance(value, Mapping) or set(value) != ORDER_KEYS:
+        if (not isinstance(value, Mapping) or not ORDER_KEYS <= set(value)
+                or set(value) - ORDER_KEYS - OPTIONAL_ORDER_KEYS):
             raise QualityError(
                 "ORDER_INVALID", "VerifyOrder has missing or unknown fields"
             )
@@ -123,6 +129,9 @@ class VerifyRequest:
             )
         criteria = _parse_criteria(value.get("acceptance_criteria"))
         checks = _parse_verification(value.get("verification"))
+        composition_id, manifest_sha256 = _parse_composition(value)
+        contract_identities = _parse_contract_identities(value.get("contract_identities", {}))
+        environment_fingerprint = _optional_sha256(value, "environment_fingerprint")
         request = cls(
             idempotency_key,
             plan_id,
@@ -132,6 +141,10 @@ class VerifyRequest:
             token,
             criteria,
             checks,
+            composition_id,
+            manifest_sha256,
+            contract_identities,
+            environment_fingerprint,
         )
         try:
             json.dumps(
@@ -144,7 +157,7 @@ class VerifyRequest:
         return request
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result = {
             "idempotency_key": self.idempotency_key,
             "plan_id": self.plan_id,
             "revision": self.revision,
@@ -154,6 +167,13 @@ class VerifyRequest:
             "acceptance_criteria": list(self.acceptance_criteria),
             "verification": [item.to_dict() for item in self.verification],
         }
+        if self.composition_id is not None:
+            result.update(composition_id=self.composition_id, manifest_sha256=self.manifest_sha256)
+        if self.contract_identities:
+            result["contract_identities"] = dict(self.contract_identities)
+        if self.environment_fingerprint is not None:
+            result["environment_fingerprint"] = self.environment_fingerprint
+        return result
 
     @property
     def input_hash(self) -> str:
@@ -184,6 +204,39 @@ def _parse_criteria(value: object) -> tuple[str, ...]:
     if len(set(criteria)) != len(criteria):
         raise QualityError("ORDER_INVALID", "acceptance criteria contain duplicates")
     return criteria
+
+
+def _optional_sha256(value: Mapping[str, object], name: str) -> str | None:
+    if name not in value:
+        return None
+    digest = value[name]
+    if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        raise QualityError("ORDER_INVALID", f"{name} must be a lowercase sha256 digest")
+    return digest
+
+
+def _parse_composition(value: Mapping[str, object]) -> tuple[str | None, str | None]:
+    present = {name for name in ("composition_id", "manifest_sha256") if name in value}
+    if not present:
+        return None, None
+    if present != {"composition_id", "manifest_sha256"}:
+        raise QualityError("ORDER_INVALID", "composition_id and manifest_sha256 must be supplied together")
+    composition_id = value["composition_id"]
+    if not _is_text(composition_id, max_bytes=256):
+        raise QualityError("ORDER_INVALID", "composition_id must be bounded, non-empty text")
+    return composition_id, _optional_sha256(value, "manifest_sha256")
+
+
+def _parse_contract_identities(value: object) -> tuple[tuple[str, str], ...]:
+    if not isinstance(value, Mapping) or len(value) > 128:
+        raise QualityError("ORDER_INVALID", "contract_identities must be a bounded object")
+    result = []
+    for key, digest in value.items():
+        if not _is_text(key, max_bytes=256) or not isinstance(digest, str) or len(digest) != 64 \
+                or any(char not in "0123456789abcdef" for char in digest):
+            raise QualityError("ORDER_INVALID", "contract identities require names and lowercase sha256 digests")
+        result.append((key, digest))
+    return tuple(sorted(result))
 
 
 def _parse_verification(value: object) -> tuple[VerificationSpec, ...]:
