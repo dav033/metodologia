@@ -1,5 +1,5 @@
 {
- "actions": 11,
+ "actions": 12,
  "analyst_stops": {
   "T14a:8b3c65b6b94f135da9df9da251ad1c15d40ebf49bdb30fc941c6e14e295c6e67": {
    "attempt": "att-0121",
@@ -467,6 +467,36 @@
    "status": "unrepairable",
    "task": "T14.4a"
   },
+  "d6d7aa47308c21b1": {
+   "after_restored": [
+    "T15.8"
+   ],
+   "applied": 1,
+   "at": 1792872532.485,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: El archivo fuente no existe: /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md no está (Glob y Grep no lo encuentran en ninguna parte de la bitácora). `docs/req-020/` de"
+   ],
+   "first_at": 1792872531.428,
+   "history": [
+    {
+     "at": 1792872532.485,
+     "repair": "plan r20: repair task T15.10 before T15.9",
+     "result": "fixed"
+    }
+   ],
+   "id": "d6d7aa47308c21b1",
+   "lines": [
+    "owner stopped: 0 process(es)",
+    "rebase r19 → r20: kept 28, redo 3, new 1, removed 0"
+   ],
+   "repair": "plan r20: repair task T15.10 before T15.9",
+   "revision": 20,
+   "status": "applied",
+   "target": "T15.9",
+   "task": "T15.9",
+   "task_added": "T15.10"
+  },
   "df992683abe3b355": {
    "applied": 0,
    "class": "criterion_unmapped",
@@ -551,6 +581,19 @@
    "target": "T14a",
    "task": "T14a",
    "task_added": "T14.3a"
+  },
+  "e8dc69bff25a0f52": {
+   "applied": 0,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/479cdfbf33f4431649a59cda67ce7dfee38cf728ff15cedbca38fda100395103",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792872659.986,
+   "history": [],
+   "id": "e8dc69bff25a0f52",
+   "status": "open",
+   "task": "T15.10"
   },
   "f0c171676142e161": {
    "applied": 0,

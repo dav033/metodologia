@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 19,
+  "revision": 20,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -4606,7 +4606,8 @@
       "objective": "Copy, unchanged, the owner-supplied physical-phone observations for the released revision from /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md into docs/req-020/phone-observations.md. If the file does not exist, stop with status blocked and say that only David can supply it; never write or infer observations. Required observations: login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, summary approval/print/admin. No commits or pushes.",
       "repository": "pictures",
       "after": [
-        "T15.8"
+        "T15.8",
+        "T15.10"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -4699,6 +4700,108 @@
         "R14"
       ],
       "kind": "test"
+    },
+    {
+      "id": "T15.10",
+      "milestone_id": "M4",
+      "title": "Repair what blocks T15.9",
+      "objective": "T15.9 cannot pass its checks: the cause lies outside it (independent analysis below). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ test -s docs/req-020/phone-observations.md\nexit code 1\n\nIndependent failure analysis (after 3 failed attempts; confidence alta; the cause lies in OUTSIDE what this task may change). It is an opinion of a reader who ran nothing: check it against the code and the failures above before you follow it.\nCause: El archivo fuente no existe: /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md no está (Glob y Grep no lo encuentran en ninguna parte de la bitácora). `docs/req-020/` del source tampoco tiene `phone-observations.md`, así que `test -s` falla con exit 1. Las observaciones solo las puede hacer David con un teléfono físico; `live-acceptance.md:43` y `integration-results.json:280` confirman que siguen siendo del owner. Además, la segunda verificación del plan es una frase en prosa ('David performed the physical-phone checks…') que se ejecuta como comando (`exit code None`), así que no puede pasar nunca.\nWhat to do differently: 1. No crear ni inferir `phone-observations.md`; el agente no puede cumplir esta tarea.\n2. Pedir a David que aporte las observaciones del teléfono físico sobre el release r19 (login/avisos, teclado, cámara/galería/micrófono permitir/denegar/recuperar, visualización de medios, recarga en el mismo dispositivo, resumen aprobar/imprimir/admin), o que copie el archivo en la ruta fuente indicada.\n3. Una vez existe, copiarlo sin cambios a `docs/req-020/phone-observations.md` y comprobar `test -s`.\n4. Pedir al planner que reclasifique la segunda verificación de T15.9 como `manual` (no `command`) con su criterio de cobertura por áreas, para que no falle como comando.\n5. Repetir T15.9 solo después de los pasos 2 y 3; no registrar el paso como pasado antes.\n- H1 (high; owned by T15.9): T15.9 cannot pass its checks: the cause lies outside it (independent analysis below) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T15.8"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T15.9, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T15.9",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "docs/req-020/phone-observations.md"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "H1 (high) is fixed: T15.9 cannot pass its checks: the cause lies outside it (independent analysis below)",
+        "T15.9's own check 1 passes: test -s docs/req-020/phone-observations.md"
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/phone-observations.md",
+          "purpose": "H1 (high) is fixed: T15.9 cannot pass its checks: the cause lies outside it (independent analysis below)",
+          "created_by": "T15.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "test -s docs/req-020/phone-observations.md",
+          "purpose": "T15.9's own check 1 passes: test -s docs/req-020/phone-observations.md",
+          "created_by": "T15.9",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R2",
+        "R3",
+        "R4",
+        "R5",
+        "R6",
+        "R7",
+        "R8",
+        "R9"
+      ],
+      "kind": "implement"
     }
   ]
 }
