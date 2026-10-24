@@ -58,7 +58,7 @@ Final message (max ~20 lines, under 400 words):
 
 ```
 AXIS: spec | standards | visual
-VERDICT: APPROVE | CHANGES_NEEDED | BLOCKED
+VERDICT: APPROVE | CHANGES_NEEDED | BLOCKED (BLOCKED only on the visual axis)
 FINDINGS (most severe first):
 - [critical|high|medium|low|info] <problem> — <evidence/path:line> — <impact> — <localized remediation>
 CHECKED: <what you verified, briefly>
