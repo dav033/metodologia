@@ -12,6 +12,7 @@ from .repository import Transaction
 from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, RESTORABLE, TASK_TRANSITIONS
 from .states import AttemptState as A
 from .states import TaskState as T
+from .subplans import gate_waiting, stale_subplan_members
 
 
 @dataclass
@@ -115,13 +116,41 @@ def promote_ready(ctx: Ctx) -> int:
     """PENDING -> READY for tasks whose every prerequisite is COMPLETED (which only a verdict can cause). The test is on
     every ancestor, not only the direct ones: after a rework that sends back a task and not what depends on it, a task can
     have all its direct prerequisites completed while one further up is being redone."""
+    enforce_gate_waiting(ctx)
     moved = 0
     for spec in ctx.plan.tasks:
         rec = ctx.state.tasks[spec.id]
         if rec.state == T.PENDING.value and all(ctx.state.tasks[d].state == T.COMPLETED.value
                                                 for d in (*spec.after, *ctx.plan.ancestors(spec.id))):
+            if gate_waiting(ctx.plan, ctx.state, spec.id):
+                continue
             set_task(ctx, spec.id, T.READY, reason="prerequisites_completed")
             moved += 1
+    return moved
+
+
+def enforce_gate_waiting(ctx: Ctx, *, confirmed_unsent_attempt: str = "") -> int:
+    """Demote gates whose publication facts went stale before they are reserved or dispatched."""
+    moved = 0
+    for gate in ctx.plan.composition_gates:
+        rec = ctx.state.tasks[gate.task]
+        if not gate_waiting(ctx.plan, ctx.state, gate.task):
+            continue
+        reasons = ",".join(f"{kind}:{member}" for member, kind in
+                           stale_subplan_members(ctx.plan, ctx.state, gate.task))
+        if rec.state == T.READY.value:
+            set_task(ctx, gate.task, T.PENDING, reason="composition_waiting", detail=reasons)
+            moved += 1
+        elif rec.state == T.ACTIVE.value:
+            attempt = live_attempt(ctx.state, gate.task)
+            pending_start = next((item for item in ctx.state.outbox if attempt is not None and
+                                  item.attempt_id == attempt.id and item.kind == "start" and
+                                  item.status == "pending" and
+                                  (item.deliveries == 0 or item.attempt_id == confirmed_unsent_attempt)), None)
+            if attempt is not None and A(attempt.state) == A.RESERVED and pending_start is not None:
+                end_attempt(ctx, attempt.id, A.CANCELLED, "composition_waiting", reasons)
+                set_task(ctx, gate.task, T.PENDING, reason="composition_waiting", detail=reasons)
+                moved += 1
     return moved
 
 

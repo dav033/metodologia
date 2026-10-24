@@ -12,7 +12,7 @@ from typing import Any
 from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 3
+STATE_SCHEMA = 4
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -81,6 +81,8 @@ class RunState:
     routing_complete: bool = False
     revision_barrier: dict[str, Any] | None = None
     revision_applications: dict[str, dict[str, Any]] = field(default_factory=dict)
+    subplan_versions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    compositions: dict[str, dict[str, Any]] = field(default_factory=dict)
     schema: int = STATE_SCHEMA
 
     def has_seen(self, message_id: str) -> bool:
@@ -101,6 +103,8 @@ class RunState:
             "routing_complete": self.routing_complete,
             "revision_barrier": dict(self.revision_barrier) if self.revision_barrier is not None else None,
             "revision_applications": {key: dict(value) for key, value in self.revision_applications.items()},
+            "subplan_versions": {key: dict(value) for key, value in self.subplan_versions.items()},
+            "compositions": {key: dict(value) for key, value in self.compositions.items()},
             "counters": dict(self.counters), "seen_events": list(self.seen_events),
             "rejected_recent": list(self.rejected_recent),
             "tasks": {k: vars(v).copy() for k, v in self.tasks.items()},
@@ -112,7 +116,7 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") not in {1, 2, STATE_SCHEMA}:
+            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
             routing_complete = data.get("routing_complete", False)
             if not isinstance(routing_complete, bool):
@@ -144,12 +148,49 @@ class RunState:
                     isinstance(value["at"], bool)
                     for key, value in applications.items()):
                 raise ValueError("revision applications are invalid")
+            versions = data.get("subplan_versions", {})
+            if not isinstance(versions, dict) or any(
+                    not isinstance(key, str) or re.fullmatch(r"SP-[1-9][0-9]*", key) is None or
+                    not isinstance(value, dict) or
+                    not {"plan_id", "revision", "version", "commit", "manifest_sha256"} <= set(value) or
+                    set(value) - {"plan_id", "revision", "version", "commit", "manifest_sha256",
+                                  "audit_attempt_id", "work_digest"} or
+                    (("audit_attempt_id" in value or "work_digest" in value) and
+                     (not isinstance(value.get("audit_attempt_id"), str) or not value["audit_attempt_id"] or
+                      not isinstance(value.get("work_digest"), str) or
+                      re.fullmatch(r"[0-9a-f]{64}", value["work_digest"]) is None)) or
+                    not isinstance(value["plan_id"], str) or not value["plan_id"] or
+                    type(value["revision"]) is not int or value["revision"] < 1 or
+                    type(value["version"]) is not int or value["version"] < 1 or
+                    not isinstance(value["commit"], str) or re.fullmatch(r"[0-9a-f]{40,64}", value["commit"]) is None or
+                    not isinstance(value["manifest_sha256"], str) or
+                    re.fullmatch(r"[0-9a-f]{64}", value["manifest_sha256"]) is None
+                    for key, value in versions.items()):
+                raise ValueError("subplan versions are invalid")
+            compositions = data.get("compositions", {})
+            if not isinstance(compositions, dict) or any(
+                    not isinstance(key, str) or not 1 <= len(key) <= 128 or
+                    not isinstance(value, dict) or set(value) != {"plan_id", "revision", "state", "members",
+                                                                  "manifest_sha256", "reason"} or
+                    not isinstance(value["plan_id"], str) or not value["plan_id"] or
+                    type(value["revision"]) is not int or value["revision"] < 1 or
+                    value["state"] not in {"candidate", "published", "rejected"} or
+                    not isinstance(value["members"], dict) or not 1 <= len(value["members"]) <= 64 or
+                    any(not isinstance(sid, str) or re.fullmatch(r"SP-[1-9][0-9]*", sid) is None or
+                        type(version) is not int or version < 1 for sid, version in value["members"].items()) or
+                    not isinstance(value["manifest_sha256"], str) or
+                    re.fullmatch(r"[0-9a-f]{64}", value["manifest_sha256"]) is None or
+                    not isinstance(value["reason"], str) or len(value["reason"]) > 500
+                    for key, value in compositions.items()):
+                raise ValueError("composition facts are invalid")
             state = cls(plan_id=data["plan_id"], revision=data["revision"], plan_sha256=data["plan_sha256"],
                         created_at=data["created_at"], paused=bool(data["paused"]),
                         cancel_requested=bool(data["cancel_requested"]), routing_complete=routing_complete,
                         counters=dict(data["counters"]), schema=STATE_SCHEMA,
                         revision_barrier=dict(barrier) if barrier is not None else None,
                         revision_applications={key: dict(value) for key, value in applications.items()},
+                        subplan_versions={key: dict(value) for key, value in versions.items()},
+                        compositions={key: dict(value) for key, value in compositions.items()},
                         seen_events=list(data["seen_events"]), rejected_recent=list(data.get("rejected_recent", [])))
             state.tasks = {}
             for task_id, value in data["tasks"].items():

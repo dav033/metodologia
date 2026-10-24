@@ -156,8 +156,7 @@ class _Safe(dict):
 
 def _m1(kind: str, frm: str, to: str, label: str, **extra: Any) -> Callable:
     def rule(ctx: Ctx, row: sqlite3.Row, d: dict) -> tuple:
-        text = label.format_map(_Safe({**d, "task": row["task_id"], "attempt": row["attempt_id"]})) \
-            if "{" in label else label
+        text = label.format_map(_Safe({**d, "task": row["task_id"], "attempt": row["attempt_id"]})) if "{" in label else label
         return frm, to, kind, text, extra
     return rule
 
@@ -201,6 +200,7 @@ def _task_transition(ctx: Ctx, row: sqlite3.Row, d: dict) -> tuple:
     return src, "M1", "task_state", f"{row['task_id']}: {d.get('from', '?')} → {d.get('to', '?')}{note}", {"state": d.get("to")}
 
 
+_COMPOSITION_STATES = (("candidate", "candidata"), ("published", "publicada"), ("rejected", "rechazada"))
 M1_RULES: dict[str, Callable] = {
     "run_created": _m1("run_created", "owner", "M1", "Ejecución creada ({tasks} tareas)"),
     "plan_routes_received": _m1("route_map", "M2", "M1", "M2 entrega el mapa de rutas del plan"),
@@ -238,6 +238,8 @@ M1_RULES: dict[str, Callable] = {
     "run_rebased": _m1("run_rebased", "planner", "M1", "La ejecución pasa a la revisión nueva"),
     "revision_barrier": _m1("revision_barrier", "planner", "M1", "Se bloquean nuevas reservas para aplicar la revisión {operation_key}"),
     "revision_applied": _m1("revision_applied", "planner", "M1", "La revisión {to_rev} se aplicó conservando el trabajo no afectado"),
+    "subplan_version_published": _m1("subplan_version", "M6", "M1", "{subplan_id} publica la versión {version}"),
+    **{f"composition_{s}": _m1("composition", "M6", "M1", f"Composición {{composition_id}}: {es}") for s, es in _COMPOSITION_STATES},
 }
 
 
@@ -456,8 +458,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
     rdir = Path(rdir)
     cur = {name: int((cursors or {}).get(name, 0)) for name in STORES}
     paths = bt_run_stores.paths(rdir)
-    run = f"{project}/{rdir.name.split('-')[0]}-{rdir.name.split('-')[1]}" if rdir.name.startswith("REQ-") else \
-        f"{project}/{rdir.name}"
+    run = f"{project}/{rdir.name.split('-')[0]}-{rdir.name.split('-')[1]}" if rdir.name.startswith("REQ-") else f"{project}/{rdir.name}"
     ctx = Ctx(paths.get("m2"), run)
     # M5 is timed from M1's terminal transitions, so M1 is always replayed from the start into the context
     m5_pending = {r["attempt_id"] for r in _rows(paths.get("m5"), "SELECT attempt_id FROM decisions WHERE seq > ? "

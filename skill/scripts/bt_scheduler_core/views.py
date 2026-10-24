@@ -11,6 +11,7 @@ from .plan import Plan
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
+from .subplans import gate_waiting, stale_subplan_members, subplan_status
 
 
 def unreachable(plan: Plan, state: RunState) -> frozenset[str]:
@@ -44,6 +45,11 @@ def attention(plan: Plan, state: RunState) -> list[dict[str, str]]:
            for a in state.attempts.values() if a.state == A.UNCERTAIN.value]
     out += [{"kind": "blocked_task", "task_id": tid, "reason": rec.reason}
             for tid, rec in state.tasks.items() if rec.state == T.BLOCKED.value]
+    out += [{"kind": "composition_waiting", "task_id": gate.task,
+             "reason": ";".join(f"{reason}:{member}" for member, reason in
+                                stale_subplan_members(plan, state, gate.task))}
+            for gate in plan.composition_gates
+            if gate_waiting(plan, state, gate.task) and state.tasks[gate.task].state == T.PENDING.value]
     return out
 
 
@@ -60,12 +66,16 @@ class Snapshot:
     unreachable: tuple[str, ...]
     attention: tuple[dict[str, str], ...]
     pending_outbox: int
+    subplans: dict[str, str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {"plan_id": self.plan_id, "revision": self.revision, "plan_sha256": self.plan_sha256,
-                "status": self.status, "paused": self.paused, "cancel_requested": self.cancel_requested,
-                "tasks": self.tasks, "counts": self.counts, "unreachable": list(self.unreachable),
-                "attention": list(self.attention), "pending_outbox": self.pending_outbox}
+        result = {"plan_id": self.plan_id, "revision": self.revision, "plan_sha256": self.plan_sha256,
+                  "status": self.status, "paused": self.paused, "cancel_requested": self.cancel_requested,
+                  "tasks": self.tasks, "counts": self.counts, "unreachable": list(self.unreachable),
+                  "attention": list(self.attention), "pending_outbox": self.pending_outbox}
+        if self.subplans:
+            result["subplans"] = dict(self.subplans)
+        return result
 
 
 def snapshot(plan: Plan, state: RunState) -> Snapshot:
@@ -88,4 +98,5 @@ def snapshot(plan: Plan, state: RunState) -> Snapshot:
     return Snapshot(plan_id=state.plan_id, revision=state.revision, plan_sha256=state.plan_sha256,
                     status=run_status(plan, state).value, paused=state.paused, cancel_requested=state.cancel_requested,
                     tasks=tasks, counts=counts, unreachable=tuple(sorted(dead)), attention=tuple(attention(plan, state)),
-                    pending_outbox=sum(1 for i in state.outbox if i.status == "pending"))
+                    pending_outbox=sum(1 for i in state.outbox if i.status == "pending"),
+                    subplans=subplan_status(plan, state) or None)
