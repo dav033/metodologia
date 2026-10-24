@@ -101,6 +101,25 @@ class VerifyRequestTests(unittest.TestCase):
                 with self.assertRaises(QualityError):
                     VerifyRequest.from_mapping(raw)
 
+    def test_secret_shaped_authorization_is_refused_one_shape_at_a_time(self):
+        for text in ("Use Bearer eyJabc.def", "key sk-live-4f9a8b7c6d5e", "aws AKIAIOSFODNN7EXAMPLE",
+                     "ghp_abcdefghijklmnopqrstuvwxyz0123456789", "pass=hunter2", "opaque " + "a1B2c3D4" * 5):
+            with self.subTest(text=text):
+                raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+                raw["verification"] = [{**raw["verification"][0], "environment": "production",
+                                        "authorization_needed": text}]
+                with self.assertRaises(QualityError):
+                    VerifyRequest.from_mapping(raw)
+
+    def test_plain_authorization_descriptions_stay_accepted(self):
+        raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+        for text in ("Owner authorizes the staging smoke on the payments sandbox account",
+                     "Operator permits read-only production checks for REQ-020 during the release window"):
+            with self.subTest(text=text):
+                raw["verification"] = [{**raw["verification"][0], "environment": "production",
+                                        "authorization_needed": text}]
+                self.assertEqual(VerifyRequest.from_mapping(raw).to_dict()["verification"][0]["authorization_needed"], text)
+
     def test_rejects_duplicate_acceptance_criteria_that_make_coverage_ambiguous(self):
         raw = json.loads(
             (FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8")

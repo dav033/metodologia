@@ -335,6 +335,12 @@ def _parse_requires(value: object) -> tuple[str, ...]:
     return tuple(result)
 
 
+_SECRET_SHAPES = re.compile(
+    r"(?i)(?:https?://|postgres(?:ql)?://|(?:token|pass\w*|pw|secret|api[_-]?key)\s*[:=]|\bbearer\s+\S"
+    r"|\bsk[-_]\w|\bAKIA[0-9A-Z]{16}\b|\bgh[opsur]_\w|\bxox[abpr]-|\beyJ\w)")
+
+
 def _looks_like_secret(value: str) -> bool:
-    return bool(re.search(r"(?i)(?:https?://|postgres(?:ql)?://|token\s*[:=]|password\s*[:=]|secret\s*[:=]|api[_-]?key\s*[:=])", value)
-                or re.search(r"\b\S+@\S+", value))
+    """Credential shapes and long opaque tokens; a plain description of a permission never matches."""
+    return bool(_SECRET_SHAPES.search(value) or re.search(r"\b\S+@\S+", value)
+                or re.search(r"[A-Za-z0-9+/_=.-]{32,}", value))
