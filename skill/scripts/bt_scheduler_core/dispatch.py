@@ -89,7 +89,8 @@ class Dispatcher:
         state = core.read(lambda c: (c.state.plan_id, c.state.revision))
         if kind == "start":
             order = StartOrder(key, state[0], state[1], task_id, attempt_id, payload["token"], payload["executor"],
-                               tuple(payload["acceptance_criteria"]), tuple(payload["verification"]))
+                               tuple(payload["acceptance_criteria"]), tuple(payload["verification"]),
+                               dict(payload.get("meta", {})))
             call = port.start
         elif kind == "cancel":
             order, call = CancelOrder(key, attempt_id, payload["token"], payload.get("reason", "")), port.cancel

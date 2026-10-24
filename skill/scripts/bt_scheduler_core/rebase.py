@@ -250,6 +250,8 @@ def fingerprint(spec: TaskSpec) -> str:
     body = {"id": spec.id, "after": sorted(spec.after), "repository": spec.repository,
             "acceptance_criteria": list(spec.acceptance_criteria),
             "verification": [dict(item) for item in spec.verification]}
+    if spec.schema_13:
+        body.update({key: spec.meta[key] for key in ("subplan_id", "ui") if key in spec.meta})
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
 
 
@@ -259,6 +261,8 @@ def content_fingerprint(spec: TaskSpec) -> str:
     body = {"id": spec.id, "repository": spec.repository, "objective": spec.meta.get("objective", ""),
             "expected_paths": sorted(spec.expected_paths), "shared_resources": sorted(spec.shared_resources),
             "acceptance_criteria": list(spec.acceptance_criteria), "verification": [dict(item) for item in spec.verification]}
+    if spec.schema_13:
+        body.update({key: spec.meta[key] for key in ("subplan_id", "ui") if key in spec.meta})
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), default=str).encode()).hexdigest()
 
 

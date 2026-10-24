@@ -39,6 +39,7 @@ from .plan import Plan
 from .repository import StateRepository
 from .resources import claims_for, first_conflict
 from .simulators import FifoAssignment
+from .subplans import record_composition_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
@@ -130,7 +131,7 @@ class SchedulerCore:
         def request(ctx: Ctx) -> PlanRoutingRequest:
             tasks = tuple(TaskView(
                 spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
-                spec.expected_paths, len(ctx.state.tasks[spec.id].attempts), dict(spec.meta),
+                spec.expected_paths, len(ctx.state.tasks[spec.id].attempts), self.plan.task_metadata(spec),
                 dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
                 verification=spec.verification,
             ) for spec in self.plan.tasks)
@@ -209,6 +210,25 @@ class SchedulerCore:
         """Pull-style view of undelivered intents (for adapters that poll instead of being called)."""
         return self.read(lambda c: [{"id": i.id, "kind": i.kind, "attempt_id": i.attempt_id, "key": i.key,
                                      "payload": dict(i.payload)} for i in c.state.outbox if i.status == "pending"])
+
+    def subplan_status(self) -> dict[str, str]:
+        """Derived lifecycle of each declared subplan; acceptance remains task-verdict based."""
+        return self.read(lambda ctx: derive_subplan_status(self.plan, ctx.state))
+
+    def record_subplan_version(self, subplan_id: str, version: int, commit: str, manifest_sha256: str) -> None:
+        """Record an adapter-published subplan version without changing task or attempt state."""
+        self.write(lambda ctx: record_subplan_version_fact(self.plan, ctx.state, ctx, subplan_id, version, commit,
+                                                           manifest_sha256))
+        self._wake.set()
+
+    def record_composition(self, state: str, composition_id: str, members: Mapping[str, int],
+                           manifest_sha256: str, reason: str = "") -> None:
+        """Record candidate/publication/rejection evidence as an immutable audited observation."""
+        if not isinstance(members, Mapping):
+            raise SchedulerError("CONTRACT_VIOLATION", "composition members must be a mapping")
+        self.write(lambda ctx: record_composition_fact(self.plan, ctx.state, ctx, state, composition_id,
+                                                       dict(members), manifest_sha256, reason))
+        self._wake.set()
 
     # ------------------------------------------------------------------ inbound facts
     def ingest(self, event: Event | Mapping[str, Any]) -> IngestResult:
@@ -368,7 +388,7 @@ class SchedulerCore:
                     continue
                 ready.append(TaskView(
                     spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
-                    spec.expected_paths, len(rec.attempts), dict(spec.meta),
+                    spec.expected_paths, len(rec.attempts), self.plan.task_metadata(spec),
                     dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
                     verification=spec.verification,
                 ))

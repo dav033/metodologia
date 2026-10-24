@@ -12,6 +12,7 @@ from .repository import Transaction
 from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, RESTORABLE, TASK_TRANSITIONS
 from .states import AttemptState as A
 from .states import TaskState as T
+from .subplans import gate_waiting
 
 
 @dataclass
@@ -120,6 +121,8 @@ def promote_ready(ctx: Ctx) -> int:
         rec = ctx.state.tasks[spec.id]
         if rec.state == T.PENDING.value and all(ctx.state.tasks[d].state == T.COMPLETED.value
                                                 for d in (*spec.after, *ctx.plan.ancestors(spec.id))):
+            if gate_waiting(ctx.plan, ctx.state, spec.id):
+                continue
             set_task(ctx, spec.id, T.READY, reason="prerequisites_completed")
             moved += 1
     return moved

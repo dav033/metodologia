@@ -224,6 +224,7 @@ class StartOrder:
     executor: str
     acceptance_criteria: tuple[str, ...] = ()
     verification: tuple[Mapping[str, Any], ...] = ()
+    meta: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

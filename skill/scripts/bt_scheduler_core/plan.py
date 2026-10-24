@@ -9,17 +9,21 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from types import MappingProxyType
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from .errors import SchedulerError
+from .subplans import CompositionGateSpec, SubplanSpec, parse_plan_extensions
 
 SUPPORTED_MAJOR = 1
-PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
 SCHEMA_1_2_SINCE = (1, 2, 0)
+SCHEMA_1_3_SINCE = (1, 3, 0)
 TASK_KINDS = frozenset({"implement", "test", "docs", "audit", "research"})
+TASK_KINDS_13 = TASK_KINDS | {"design"}
 VERIFICATION_CATEGORIES = frozenset({"static", "functional", "integration", "regression", "product"})
 MAX_BYTES = 2_000_000
 MAX_TASKS = 10_000
@@ -42,6 +46,7 @@ class TaskSpec:
     acceptance_criteria: tuple[str, ...]
     verification: tuple[Mapping[str, Any], ...]
     meta: Mapping[str, Any] = field(default_factory=dict)  # opaque to the core: passed to the decision port as is
+    schema_13: bool = False
 
 
 @dataclass(frozen=True, eq=False)
@@ -52,6 +57,8 @@ class Plan:
     sha256: str
     tasks: tuple[TaskSpec, ...]  # in the order of the plan (the deterministic tie-break everywhere)
     generated_paths: tuple[str, ...] = ()
+    subplans: tuple[SubplanSpec, ...] = ()
+    composition_gates: tuple[CompositionGateSpec, ...] = ()
 
     def __post_init__(self):
         object.__setattr__(self, "_by_id", {t.id: t for t in self.tasks})
@@ -90,6 +97,18 @@ class Plan:
                     stack.append(dep)
         return frozenset(seen)
 
+    def task_metadata(self, spec: TaskSpec) -> dict[str, Any]:
+        """Classification plus the F4 task fields passed to M2/M3 for 1.3.0 subplan plans."""
+        meta = dict(spec.meta)
+        if self.schema_version == "1.3.0" and self.subplans:
+            for key in ("subplan_id", "ui"):
+                if key in spec.meta:
+                    meta[key] = spec.meta[key]
+            for subplan in self.subplans:
+                if subplan.ui and spec.id == subplan.ui.visual_review_task:
+                    meta["review_axis"] = "visual"
+        return meta
+
 
 def _reject_constant(name: str):
     raise ValueError(f"non-standard JSON constant {name}")
@@ -107,10 +126,12 @@ def _int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool)
 
 
-def _task_meta(item: dict[str, Any], schema_1_2: bool) -> dict[str, Any]:
+def _task_meta(item: dict[str, Any], schema_1_2: bool, schema_1_3: bool) -> dict[str, Any]:
     """Keep compiler-owned recovery metadata opaque, and only on an explicitly generated recovery task."""
     keys = OPAQUE_KEYS if schema_1_2 else LEGACY_OPAQUE_KEYS
     meta = {key: item[key] for key in keys if key in item}
+    if schema_1_3:
+        meta.update({key: item[key] for key in ("subplan_id", "ui") if key in item})
     if item.get("recovery_task") is not True:
         return meta
     meta["recovery_task"] = True
@@ -171,6 +192,7 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
     if schema_version[0] != SUPPORTED_MAJOR:
         raise SchedulerError("PLAN_SCHEMA_UNSUPPORTED", f"schema major {schema_version[0]}; this core reads {SUPPORTED_MAJOR}.x")
     schema_1_2 = schema_version >= SCHEMA_1_2_SINCE
+    schema_1_3 = schema_version >= SCHEMA_1_3_SINCE
     pid, rev = data.get("plan_id"), data.get("revision")
     if not _text(pid):
         issues.append("plan_id must be a non-empty string")
@@ -208,12 +230,18 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
             issues.append(f"{tid}: verification must be a list of objects")
             verification = []
         if schema_1_2:
-            if item.get("kind") not in TASK_KINDS:
-                issues.append(f"{tid}: kind must be one of {', '.join(sorted(TASK_KINDS))}")
+            allowed_kinds = TASK_KINDS_13 if schema_1_3 else TASK_KINDS
+            if item.get("kind") not in allowed_kinds:
+                issues.append(f"{tid}: kind must be one of {', '.join(sorted(allowed_kinds))}")
             for check_index, check in enumerate(verification):
                 if check.get("category") not in VERIFICATION_CATEGORIES:
                     issues.append(f"{tid}: verification[{check_index}].category must be one of "
                                   f"{', '.join(sorted(VERIFICATION_CATEGORIES))}")
+        if schema_1_3:
+            if "subplan_id" in item and (not isinstance(item["subplan_id"], str) or not item["subplan_id"].strip()):
+                issues.append(f"{tid}: subplan_id must be a non-empty string")
+            if "ui" in item and not isinstance(item["ui"], bool):
+                issues.append(f"{tid}: ui must be a boolean")
         if len(set(item.get("after", []) if _strings(item.get("after", [])) else [])) != len(item.get("after", [])):
             issues.append(f"{tid}: duplicate entries in after")
         tasks.append(TaskSpec(
@@ -223,7 +251,7 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
             expected_paths=tuple(item.get("expected_paths", ())) if _strings(item.get("expected_paths", [])) else (),
             acceptance_criteria=tuple(item.get("acceptance_criteria", ())) if _strings(item.get("acceptance_criteria", [])) else (),
             verification=tuple(json.loads(json.dumps(v)) for v in verification),
-            meta=_task_meta(item, schema_1_2)))
+            meta=MappingProxyType(_task_meta(item, schema_1_2, schema_1_3)), schema_13=schema_1_3))
     for task in tasks:
         for dep in task.after:
             if dep not in seen:
@@ -235,8 +263,15 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
     cycle = _cycle(tasks)
     if cycle:
         raise SchedulerError("PLAN_INVALID", "dependency cycle: " + " -> ".join(cycle))
+    subplans, gates = parse_plan_extensions(data, seen) if schema_1_3 else ((), ())
+    if schema_1_3:
+        subplan_ids = {item.id for item in subplans}
+        for task in tasks:
+            subplan_id = task.meta.get("subplan_id")
+            if subplan_id is not None and subplan_id not in subplan_ids:
+                raise SchedulerError("PLAN_INVALID", f"{task.id}: subplan_id references unknown subplan {subplan_id!r}")
     return Plan(plan_id=pid, revision=rev, schema_version=version, sha256=digest, tasks=tuple(tasks),
-                generated_paths=tuple(generated_paths))
+                generated_paths=tuple(generated_paths), subplans=subplans, composition_gates=gates)
 
 
 def _cycle(tasks: list[TaskSpec]) -> list[str]:

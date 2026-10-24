@@ -52,7 +52,9 @@ be simulated with `bt_scheduler_core.simulators`.
   revision (through `bt_plan_adapter`, hash from the planner's manifest — approval is the caller-supplied sha256, no hash,
   no run), opens the run database at `<bitácora root>/.state/scheduler/<project>-<REQ>.db` (local, untracked; outside that
   layout `<requirement>/SCHEDULER.db`), and can write a `RUN.json`-shaped read model marked `authority: "scheduler"` as
-  `<requirement>/RUN.projection.json`.
+  `<requirement>/RUN.projection.json`. For schema 1.3.0 plans with subplans, read-only subplan/composition specs and
+  derived statuses are exposed by M1; the adapter also exposes thin `record_subplan_version` and `record_composition`
+  wrappers for F4-9. These audited facts gate composition tasks without changing task or attempt state.
 - **One authority per requirement**: the core's run database decides. The projection is never called `RUN.json`, so no
   legacy file can be overwritten by it. The adapter refuses to open a core over a legacy `RUN.json` (a run from before the
   marathon supervisor was removed); such files are historical, read-only and not migrated.

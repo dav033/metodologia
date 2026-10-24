@@ -67,7 +67,8 @@ def claim(ctx: Ctx, assignment: Assignment) -> ClaimResult:
     ctx.audit("reserved", task_id, attempt_id, token=token, executor=att.executor, resources=[c[0] for c in wanted])
     add_outbox(ctx, "start", attempt_id, {
         "task_id": task_id, "token": token, "executor": att.executor, "key": att.key,
-        "acceptance_criteria": list(spec.acceptance_criteria), "verification": [dict(v) for v in spec.verification]})
+        "acceptance_criteria": list(spec.acceptance_criteria), "verification": [dict(v) for v in spec.verification],
+        "meta": ctx.plan.task_metadata(spec) if ctx.plan.schema_version == "1.3.0" and ctx.plan.subplans else {}})
     return ClaimResult(True, attempt_id=attempt_id, task_id=task_id)
 
 

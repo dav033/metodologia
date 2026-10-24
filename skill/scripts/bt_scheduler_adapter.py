@@ -31,6 +31,8 @@ import bt_scheduler_core.plan as m1_plan
 import bt_scheduler_decision_adapter as decision_sources
 import bt_scheduler_plan_compat as plan_compat
 import bt_scheduler_metadata as task_metadata
+from bt_scheduler_core.subplans import (adapter_record_composition as record_composition,
+                                        adapter_record_subplan_version as record_subplan_version)
 from bt_scheduler_decision import (
     DecisionEngine,
     DecisionInputError,
