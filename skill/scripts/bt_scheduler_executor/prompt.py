@@ -41,40 +41,11 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
     ]
     if brief.objective:
         parts.append(f"\n## Objective\n{brief.objective}")
-    notes = brief.notes or ""
-    contract_line = next((line.strip() for line in notes.splitlines()
-                          if line.strip().lower().startswith("design contract:")), "")
-    if contract_line:
-        contract_path = contract_line.split(":", 1)[1].strip()
-        task_kind = next((line.split(":", 1)[1].strip().lower() for line in notes.splitlines()
-                          if line.strip().lower().startswith(("task kind:", "kind:"))), "")
-        ui_task = any(line.strip().lower() in ("ui task: true", "ui: true") for line in notes.splitlines())
-        if task_kind == "design":
-            instructions = [f"Author the contract at `{contract_path}`. Read any existing file there first; keep "
-                            "contract changes within `design/`."]
-        else:
-            instructions = [f"Read `{contract_path}` before making changes and follow its requirements."]
-            if ui_task:
-                instructions.append("Before editing, verify the notes include approval status `approved` and the approved SHA-256. "
-                                    "Compare that digest with the contract file; if either is missing or differs, stop and "
-                                    "report the task as blocked without changing UI code.")
-        parts.append("\n## Design contract\n" + "\n".join(f"- {instruction}" for instruction in instructions))
+    design = _design_context(brief)
     if brief.review_axis == "visual":
         parts.append("\n## Reviewer axis\nvisual")
-    contract_path = getattr(brief, "contract_path", "")
-    contract_version = getattr(brief, "contract_version", None)
-    contract = f"`{contract_path}`" if contract_path else "the declared UI contract"
-    version = f" (version {contract_version})" if contract_version is not None else ""
-    if getattr(brief, "task_kind", "") == "design":
-        parts.append(f"\n## Designer contract\nWrite the contract at {contract}{version}. Write only within `design/`. "
-                     "Use `design/preview` only when the preview is enabled in configuration. The Designer authors the "
-                     "contract and must never approve its own contract.")
-    if getattr(brief, "ui_task", False):
-        parts.append(f"\n## Approved UI contract\nRead it before implementing: the approved contract at {contract}{version}; "
-                     "then report conformance to it.")
-    if brief.review_axis == "visual":
-        parts.append(f"\n## Visual evidence\nUse the UI contract at {contract}{version}. Request Runner screenshots for each "
-                     "breakpoint and each state, and base the visual review on that evidence.")
+    if design:
+        parts.append("\n## Design contract\n" + "\n".join(f"- {line}" for line in _design_instructions(brief, design)))
     parts.append(f"\n## Acceptance criteria\n{bullets(brief.acceptance_criteria or request.acceptance_criteria)}")
     if brief.verification:
         parts.append(f"\n## How the work will be checked (by someone else)\n{bullets(brief.verification)}\n\n"
@@ -142,3 +113,39 @@ Run the task's own verification commands exactly as written, with RAW output: ne
 Do not install/configure RTK or add a second prefix if a hook already wraps the command.
 """)
     return "\n".join(parts)
+
+def _design_context(brief: Brief) -> dict:
+    """Contract facts from the owner's brief notes (`Design contract:` lines), else from optional brief attributes."""
+    facts = {}
+    for line in (brief.notes or "").splitlines():
+        key, sep, value = line.partition(":")
+        key = {"kind": "task kind"}.get(key.strip().lower(), key.strip().lower())
+        if sep and key in ("design contract", "task kind", "ui task", "approval", "sha-256"):
+            facts.setdefault(key, value.strip())
+    path = facts.get("design contract") or getattr(brief, "contract_path", "") or ""
+    if not path:
+        return {}
+    return {"path": path, "version": getattr(brief, "contract_version", None),
+            "kind": (facts.get("task kind") or getattr(brief, "task_kind", "") or "").lower(),
+            "ui": facts.get("ui task", "").lower() == "true" or bool(getattr(brief, "ui_task", False)),
+            "approval": facts.get("approval", ""), "sha256": facts.get("sha-256", "")}
+
+
+def _design_instructions(brief: Brief, design: dict) -> list[str]:
+    contract = f"`{design['path']}`" + (f" (version {design['version']})" if design["version"] is not None else "")
+    if design["kind"] == "design":
+        return [f"Author the contract at {contract}; read any existing file there first.",
+                "Write only within `design/` (keep contract changes within `design/`); use `design/preview` only when the preview "
+                "is enabled in configuration.",
+                "The Designer authors the contract and must never approve its own contract: the owner approves each version "
+                "before UI work starts."]
+    if brief.review_axis == "visual":
+        return [f"Judge the rendered UI against {contract}.",
+                "Request Runner screenshots for each breakpoint and each state the contract declares, and base the review on "
+                "that evidence."]
+    lines = [f"Read {contract} before making changes. Read it before implementing, follow it and report conformance."]
+    if design["ui"]:
+        lines.append(f"Owner approval: `{design['approval'] or 'unknown'}`, SHA-256 `{design['sha256'] or 'none'}`. "
+                     "Proceed only with approval status `approved` and a file matching the approved SHA-256; otherwise stop and "
+                     "report the task as blocked without changing UI code.")
+    return lines

@@ -245,26 +245,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
 
     executor_config = replace(executor_config or api.m3.Config(), prompt_rtk=bt_config.get("prompts.rtk", True))
     def design_notes(request):
-        task = scheduler.plan.task(request.task_id)
-        ui = next((item.ui for item in scheduler.plan.subplans if item.ui and
-                   item.ui.design_task == request.task_id), None)
-        ui_task = task.meta.get("ui") is True
-        if not ui_task and ui is None:
-            return ""
-        if ui_task:
-            path = f"design/contracts/{ui.contract}@v{ui.version}.md" if ui else ""
-        else:
-            path = f"design/contracts/{ui.contract}@v{ui.version}.md"
-        repository = repo_of(task.repository or default_repository)
-        state = "unavailable"
-        digest = ""
-        if repository is not None and path:
-            gate = check_design_approval(repository, request.base_ref, path)
-            state = gate.get("state", "unapproved")
-            digest = gate.get("sha256") or ""
-        return (f"Design contract: {path}\nTask kind: {task.meta.get('kind', '')}\n"
-                f"UI task: {str(ui_task).lower()}\n"
-                f"Approval: {state}\nSHA-256: {digest}")
+        return contract_notes(scheduler.plan, request, lambda task: repo_of(task.repository or default_repository),
+                              check_design_approval)
 
     executor = api.m3.AgentExecutor(
         root, resolver=resolver or api.RouteResolver(project, m2_lookup=m2_lookup, repos=repo_of, allow_direct=allow_direct),
@@ -447,3 +429,21 @@ def _quality_store_path(value: Path | str, *, rdir: Path, monitor_store_path: Pa
     if resolved in owned:
         raise ValueError("M6 quality store must be separate from M1, M4, and M5 stores")
     return resolved
+
+def contract_notes(plan, request, repository_for, check_approval) -> str:
+    """Brief notes naming the UI contract for a design, `ui: true` or visual-review task (empty for any other task)."""
+    task = plan.task(request.task_id)
+    ui_task = task.meta.get("ui") is True
+    ui = next((item.ui for item in plan.subplans if item.ui and (
+               request.task_id in (item.ui.design_task, item.ui.visual_review_task) or
+               (ui_task and item.id == task.meta.get("subplan_id")))), None)
+    if ui is None:
+        return ""
+    path = f"design/contracts/{ui.contract}@v{ui.version}.md"
+    repository = repository_for(task)
+    state, digest = "unavailable", ""
+    if repository is not None:
+        gate = check_approval(repository, request.base_ref, path)
+        state, digest = gate.get("state", "unapproved"), gate.get("sha256") or ""
+    return (f"Design contract: {path}\nTask kind: {task.meta.get('kind', '')}\n"
+            f"UI task: {str(ui_task).lower()}\nApproval: {state}\nSHA-256: {digest}")
