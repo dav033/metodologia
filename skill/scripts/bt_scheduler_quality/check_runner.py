@@ -83,10 +83,12 @@ class CheckExecutor:
         if spec.environment in ("external_authorized", "production"):
             authorize = self.authority.authorize_environment
             try:
-                permitted = authorize(spec.environment, spec.authorization_needed) is True if authorize else False
+                decision = authorize(spec.environment, spec.authorization_needed) if authorize else False
             except Exception:  # noqa: BLE001 - an unavailable authorization port fails closed
-                permitted = False
-            if not permitted:
+                decision = False
+            if decision == "POLICY_ENTRY_MISSING_AUTHORIZATION":
+                return "POLICY_ENTRY_MISSING_AUTHORIZATION"
+            if decision is not True:
                 return "CHECK_UNAVAILABLE"
         return None
 

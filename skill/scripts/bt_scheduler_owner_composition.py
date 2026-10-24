@@ -17,12 +17,13 @@ from typing import Any
 
 import bt_composition_adapter
 import bt_scheduler_adapter as m1_adapter
+import bt_plan_adapter
 import bt_scheduler_executor_adapter as m3_adapter
 import bt_scheduler_quality_owner_adapter as m6_adapter
+import bt_scheduler_owner_reconciliation
 import bt_integration_line
 from bt_scheduler_owner_errors import CompositionRuntimeError
 from bt_scheduler_owner_propagation import OwnerPropagationMixin
-from bt_scheduler_owner_validation import validate_contract_paths, validate_gate_chain
 import bt_scheduler_owner_workspace
 
 
@@ -89,8 +90,9 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         repository = repositories.get(role)
         if repository is None or not Path(repository).is_dir():
             raise CompositionRuntimeError(f"OWNER_COMPOSITION_REPOSITORY_MISSING: registered role {role}")
-        validate_contract_paths(plan)
-        validate_gate_chain(plan)
+        validation_errors = bt_plan_adapter.validate_owner_composition(plan)
+        if validation_errors:
+            raise CompositionRuntimeError(validation_errors[0])
         path = composition_store_path(rdir, project, req)
         state_root = composition_store_path(rdir, project, req).parent
         workspace_root = state_root / "workspaces" / f"{project}-{req}"
@@ -189,10 +191,10 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         self.store.close()
 
     def _line_commits(self, subplan_id: str) -> tuple[str | None, str | None]:
-        line = bt_integration_line.Line.__new__(bt_integration_line.Line)
-        line.identity = self.run_id
-        line.scope_id = subplan_id
-        line.ref_prefix = bt_integration_line.REF_PREFIX
+        line = bt_integration_line.Line(
+            plan=self.plan, accepted=lambda: {}, snapshot_of=lambda _attempt: None,
+            repo_of=lambda _role: self.repository, default_repository=self.role,
+            identity=self.run_id, scope_id=subplan_id)
         line_ref = line.ref(self.role)
         base, tip = self.git.rev_parse(line_ref + "-base"), self.git.rev_parse(line_ref)
         return base, tip
@@ -227,6 +229,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
     def reconcile_subplans(self) -> tuple[str, ...]:
         if self.scheduler is None:
             return ()
+        self._reconcile_store_version_counters()
         statuses = m1_adapter.subplan_status(self.scheduler)
         facts = m1_adapter.accepted_attempt_facts(self.scheduler)
         published = []
@@ -267,6 +270,9 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
             except Exception as error:  # noqa: BLE001 - isolate one damaged subplan from the owner loop
                 self._attend(subplan.id, getattr(error, "code", str(error) or type(error).__name__))
         return tuple(published)
+
+    def _reconcile_store_version_counters(self) -> None:
+        bt_scheduler_owner_reconciliation.reconcile_store_version_counters(self)
 
     def _contract_hashes(self, subplan_id: str, commit: str) -> dict[str, str]:
         subplan = next(item for item in self.plan.subplans if item.id == subplan_id)
@@ -342,12 +348,18 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                 candidate = self.engine.build_candidate(self.plan.plan_id, members, member_order=order,
                                                         required_verdicts={"M6": self.verifier_id})
                 tree = self.git.tree_oid(candidate.integrated_commit) if candidate.integrated_commit else ""
+                existing_fact = m1_adapter.composition_facts(self.scheduler).get(candidate.id)
+                if candidate.state == "rejected" and existing_fact and existing_fact.get("state") == "candidate":
+                    m1_adapter.record_composition(self.scheduler, "rejected", candidate.id, candidate.members,
+                                                  candidate.manifest_sha256,
+                                                  candidate.reason_code or "git_text_conflict", tree_digest=tree or "")
+                    self._attend(gate.task, "OWNER_COMPOSITION_CANDIDATE_REJECTED")
+                    continue
                 m1_adapter.record_composition(self.scheduler, "candidate", candidate.id, candidate.members,
                                               candidate.manifest_sha256, tree_digest=tree or "")
                 self.candidates[gate.task] = candidate
                 reserved.append(candidate.id)
                 if candidate.state == "rejected":
-                    self.engine.reject(candidate.id, {"reason": candidate.reason_code or "git_text_conflict"})
                     m1_adapter.record_composition(self.scheduler, "rejected", candidate.id, candidate.members,
                                                   candidate.manifest_sha256,
                                                   candidate.reason_code or "git_text_conflict", tree_digest=tree or "")
@@ -371,67 +383,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                 "contract_identities": contracts}
 
     def reconcile_compositions(self) -> tuple[str, ...]:
-        if self.scheduler is None:
-            return ()
-        accepted = m1_adapter.accepted_attempt_facts(self.scheduler)
-        published = []
-        for gate in self.plan.composition_gates:
-            fact = accepted.get(gate.task)
-            candidate_id = None
-            # M1's manifest evidence names the immutable candidate; restart never rebuilds it.
-            if fact is None:
-                continue
-            try:
-                candidate_id = self._manifest_candidate_id(fact.get("verdict_id"))
-                candidate = (bt_composition_adapter.get_candidate(self.store, candidate_id)
-                             if candidate_id else None)
-                if candidate is None:
-                    self._hold_composition_gate(gate.task, candidate_id, "OWNER_COMPOSITION_CANDIDATE_UNAVAILABLE")
-                    self._attend(gate.task, "OWNER_COMPOSITION_CANDIDATE_UNAVAILABLE")
-                    continue
-                composition_fact = m1_adapter.composition_facts(self.scheduler).get(candidate.id)
-                current_members, _ = self._members_for_gate(gate)
-                if composition_fact and composition_fact.get("state") == "published" \
-                        and composition_fact.get("members") == current_members:
-                    continue
-                if gate.audit_task:
-                    audit_fact = accepted.get(gate.audit_task)
-                    if audit_fact is None:
-                        continue
-                    audit_proof = self._composition_proof(candidate, gate.audit_task, audit_fact,
-                                                          audit_fact.get("verdict_id"))
-                    if audit_proof is None or audit_proof.verdict != "PASS":
-                        self._hold_composition_gate(gate.task, candidate.id,
-                                                    "OWNER_COMPOSITION_AUDIT_PROOF_MISMATCH")
-                        self._attend(gate.task, "OWNER_COMPOSITION_AUDIT_PROOF_MISMATCH")
-                        continue
-                proof = self._composition_proof(candidate, gate.task, fact, fact.get("verdict_id"))
-                if proof is None:
-                    self._hold_composition_gate(gate.task, candidate.id, "OWNER_COMPOSITION_PROOF_MISMATCH")
-                    self._attend(gate.task, "OWNER_COMPOSITION_PROOF_MISMATCH")
-                    continue
-                if proof.verdict == "FAIL":
-                    self.engine.reject(candidate.id, {"verdicts": {"M6": "FAIL"},
-                                        "proofs": {"M6": {"verifier_id": self.verifier_id,
-                                                          "evidence_id": proof.evidence_id}}})
-                    m1_adapter.record_composition(self.scheduler, "rejected", candidate.id, candidate.members,
-                                                  candidate.manifest_sha256, "M6_FAIL",
-                                                  tree_digest=proof.evaluated_tree)
-                    self._attend(gate.task, "OWNER_COMPOSITION_M6_FAIL")
-                    continue
-                if self.engine.publish(candidate.id, {"M6": proof}):
-                    m1_adapter.record_composition(self.scheduler, "published", candidate.id, candidate.members,
-                                                  candidate.manifest_sha256, tree_digest=proof.evaluated_tree)
-                    published.append(candidate.id)
-            except RuntimeError as error:
-                if "COMPOSITION_CURRENT_MOVED" in str(error):
-                    self._hold_composition_gate(gate.task, candidate_id, "COMPOSITION_CURRENT_MOVED")
-                    self._attend(gate.task, "COMPOSITION_CURRENT_MOVED")
-                    continue
-                self._attend(gate.task, getattr(error, "code", str(error)))
-            except Exception as error:  # noqa: BLE001
-                self._attend(gate.task, getattr(error, "code", str(error) or type(error).__name__))
-        return tuple(published)
+        return bt_scheduler_owner_reconciliation.reconcile_compositions(self)
 
     def _manifest_candidate_id(self, reference: object) -> str | None:
         if not isinstance(reference, str) or not reference.startswith("m6://result/"):

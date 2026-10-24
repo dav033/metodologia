@@ -97,6 +97,12 @@ class OwnerPropagationMixin:
             values.append(identity)
         return tuple(dict.fromkeys(values))
 
+    @staticmethod
+    def _environment_identity(version) -> str | None:
+        values = {item.get("environment_fingerprint") for item in version.evidence
+                  if isinstance(item.get("environment_fingerprint"), str)}
+        return next(iter(values)) if len(values) == 1 else None
+
     def reconcile_propagation(self) -> tuple[str, ...]:
         """Derive M5 actions from published composition members and their declared consumers."""
         if self.scheduler is None:
@@ -129,6 +135,11 @@ class OwnerPropagationMixin:
                 if not evidence_ids:
                     self._attend(source_id, "OWNER_COMPOSITION_PROPAGATION_EVIDENCE_MISSING")
                     continue
+                old_environment = self._environment_identity(previous)
+                new_environment = self._environment_identity(current)
+                if not old_environment or not new_environment:
+                    self._attend(source_id, "OWNER_COMPOSITION_PROPAGATION_ENVIRONMENT_IDENTITY_MISSING")
+                    continue
                 consumers = []
                 for consumer in self.plan.subplans:
                     if plan_order[consumer.id] <= plan_order[source_id]:
@@ -142,9 +153,9 @@ class OwnerPropagationMixin:
                     task_ids = list(dict.fromkeys(task_ids))
                     consumers.append({"id": consumer.id, "task_ids": task_ids,
                                       "old_evidence_key": EvidenceKey(previous.commit, previous.contracts,
-                                                                      "composition-owner-env/1"),
+                                                                      old_environment),
                                       "new_evidence_key": EvidenceKey(current.commit, current.contracts,
-                                                                      "composition-owner-env/1")})
+                                                                      new_environment)})
                 if not consumers:
                     continue
                 ancestry_only = current.contracts == previous.contracts

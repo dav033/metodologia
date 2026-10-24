@@ -55,6 +55,14 @@ class VerificationAuthorityTests(unittest.TestCase):
             policy.write_text(json.dumps({"allow": "production"}), encoding="utf-8")
             self.assertFalse(authority.authorize_environment("production", "approved"))
 
+    def test_policy_entry_without_authorization_has_specific_denial(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            rdir, secrets, policy = self._paths(Path(temporary))
+            policy.write_text(json.dumps({"allow": [{"environment": "production"}]}), encoding="utf-8")
+            authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
+            self.assertEqual(authority.authorize_environment("production", "approved"),
+                             "POLICY_ENTRY_MISSING_AUTHORIZATION")
+
     def test_external_authority_binds_environment_authorization_and_requirement(self):
         with tempfile.TemporaryDirectory() as temporary:
             rdir, secrets, policy = self._paths(Path(temporary))
@@ -68,9 +76,11 @@ class VerificationAuthorityTests(unittest.TestCase):
     def test_empty_environment_values_and_empty_secret_assignments_are_unavailable(self):
         with tempfile.TemporaryDirectory() as temporary:
             rdir, secrets, _ = self._paths(Path(temporary))
-            secrets.write_text("EMPTY_SECRET=\n", encoding="utf-8")
+            secrets.write_text('EMPTY_SECRET=\nQUOTED_EMPTY=""\nSINGLE_EMPTY=\'\'\n', encoding="utf-8")
             authority = owner_verification_authority(rdir, "demo", environ={"EMPTY_ENV": ""}, secrets_file=secrets)
             self.assertFalse(authority.resource_available("EMPTY_SECRET"))
+            self.assertFalse(authority.resource_available("QUOTED_EMPTY"))
+            self.assertFalse(authority.resource_available("SINGLE_EMPTY"))
             self.assertFalse(authority.resource_available("EMPTY_ENV"))
 
     def test_policy_and_secret_reads_refuse_symlinks_and_oversized_files(self):

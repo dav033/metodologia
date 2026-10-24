@@ -12,7 +12,7 @@ from .repository import Transaction
 from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, RESTORABLE, TASK_TRANSITIONS
 from .states import AttemptState as A
 from .states import TaskState as T
-from .subplans import gate_waiting, stale_subplan_members
+from .subplans import gate_waiting, prune_composition_holds, stale_subplan_members
 
 
 @dataclass
@@ -113,6 +113,7 @@ def mark_delivered(ctx: Ctx, attempt_id: str, kind: str) -> None:
 
 
 def promote_ready(ctx: Ctx) -> int:
+    prune_composition_holds(ctx.plan, ctx.state)
     """PENDING -> READY for tasks whose every prerequisite is COMPLETED (which only a verdict can cause). The test is on
     every ancestor, not only the direct ones: after a rework that sends back a task and not what depends on it, a task can
     have all its direct prerequisites completed while one further up is being redone."""
@@ -131,6 +132,7 @@ def promote_ready(ctx: Ctx) -> int:
 
 def enforce_gate_waiting(ctx: Ctx, *, confirmed_unsent_attempt: str = "") -> int:
     """Demote blocked gates and descendants before they are reserved or dispatched."""
+    prune_composition_holds(ctx.plan, ctx.state)
     moved = 0
     for spec in ctx.plan.tasks:
         rec = ctx.state.tasks[spec.id]

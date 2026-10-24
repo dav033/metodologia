@@ -51,6 +51,23 @@ def validate_candidate(plan: object) -> tuple[str, ...]:
     report = planner.validate(plan)
     return tuple(report.errors)
 
+
+def validate_owner_composition(plan: object) -> tuple[str, ...]:
+    """Apply Planner-owned composition constraints to a loaded M1 plan through a normalized view."""
+    subplans = []
+    for item in getattr(plan, "subplans", ()):
+        ui = getattr(item, "ui", None)
+        subplans.append({"id": getattr(item, "id", ""),
+                         "produces": [dict(value) for value in getattr(item, "produces", ())],
+                         "ui": ({"contract": ui.contract, "version": ui.version} if ui and
+                                hasattr(ui, "contract") and hasattr(ui, "version") else None)})
+    gates = [{"subplans": tuple(getattr(item, "subplans", ()))}
+             for item in getattr(plan, "composition_gates", ())]
+    tasks = [{"id": getattr(task, "id", ""), "repository": getattr(task, "repository", ""),
+              "expected_paths": tuple(getattr(task, "expected_paths", ()))}
+             for task in getattr(plan, "tasks", ())]
+    return planner.validate_owner_composition(subplans, gates, tasks)
+
 def second_auditor_required(plan: object) -> bool:
     """Expose the owner cross-check gate to pure plan transformations."""
     if not isinstance(plan, dict) or not isinstance(plan.get("schema_version"), str):

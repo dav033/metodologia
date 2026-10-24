@@ -29,6 +29,7 @@ _ISSUE_DETAILS = {
     "OUTPUT_LIMIT": "The command exceeded its captured output limit.",
     "SANDBOX_UNAVAILABLE": "The required operating-system sandbox could not be established.",
     "CHECK_UNAVAILABLE": "A declared external resource or trusted authorization is unavailable.",
+    "POLICY_ENTRY_MISSING_AUTHORIZATION": "The matching external policy entry is missing its authorization field.",
     "CHECK_MANUAL": "This verification requires an explicit operator review.",
     "RUNNER_BUSY": "The configured verification concurrency limit is full.",
     "ENGINE_INTERRUPTED": "M6 stopped before persisting a complete result; commands were not rerun.",

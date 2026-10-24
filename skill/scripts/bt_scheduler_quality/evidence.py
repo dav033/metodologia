@@ -16,7 +16,7 @@ from .policy import QualityPolicy
 SCHEMA_VERSION = "m6.verify-result/1.1"
 MANIFEST_VERSION = "m6.evidence-manifest/1.1"
 REASON_CODES = frozenset({"PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT",
-                          "FLAKY_SUSPECTED", "NOT_RUN"})
+                          "FLAKY_SUSPECTED", "NOT_RUN", "POLICY_ENTRY_MISSING_AUTHORIZATION"})
 
 
 def canonical_json(value: object) -> bytes:
@@ -430,6 +430,8 @@ def reason_for_outcome(status: str, issue_code: str | None) -> str:
         return "FAIL_CODE"
     if issue_code == "CHECK_TIMEOUT":
         return "TIMEOUT"
+    if issue_code == "POLICY_ENTRY_MISSING_AUTHORIZATION":
+        return issue_code
     if issue_code in {"CHECK_NOT_RUN", "CHECK_DEFERRED", "CHECK_MANUAL"}:
         return "NOT_RUN"
     if issue_code in {"CHECK_UNAVAILABLE", "CHECK_PRODUCTION_ACTION"}:
@@ -447,7 +449,8 @@ def overall_reason_code(
         return "FLAKY_SUSPECTED"
     if verdict_status == "PASS":
         return "PASS"
-    for code in ("FLAKY_SUSPECTED", "FAIL_CODE", "TIMEOUT", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "NOT_RUN"):
+    for code in ("POLICY_ENTRY_MISSING_AUTHORIZATION", "FLAKY_SUSPECTED", "FAIL_CODE", "TIMEOUT",
+                 "BLOCKED_EXTERNAL", "BLOCKED_ENV", "NOT_RUN"):
         if code in codes:
             return code
     if verdict_status == "FAIL":

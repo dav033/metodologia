@@ -592,8 +592,7 @@ def subplan_publication_facts(scheduler: core.SchedulerCore) -> dict[str, dict[s
 def composition_facts(scheduler: core.SchedulerCore) -> dict[str, dict[str, Any]]:
     """Read M1's durable candidate and terminal composition observations."""
     return scheduler.read(lambda ctx: {key: dict(value) for key, value in ctx.state.compositions.items()
-                                       if value.get("plan_id") == ctx.state.plan_id
-                                       and value.get("revision") == ctx.state.revision})
+                                       if value.get("plan_id") == ctx.state.plan_id})
 
 
 def hold_composition_gate(scheduler: core.SchedulerCore, gate_task_id: str,

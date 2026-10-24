@@ -61,6 +61,25 @@ class Schema13Tests(unittest.TestCase):
         self.assertNotIn("subplan_id", pc.canonicalize(legacy)["tasks"][0])
         self.assertTrue(pc.validate(plan).ok, pc.validate(plan).errors)
 
+    def test_owner_composition_rules_fail_during_plan_validation(self):
+        plan = base_plan()
+        gate_task = copy.deepcopy(plan["tasks"][-1])
+        gate_task.update(id="T4", subplan_id=None, kind="test", after=["T3"],
+                         repository="other", expected_paths=[],
+                         acceptance_criteria=["Composition works"],
+                         verification=[{"type": "command", "value": "true", "purpose": "composition",
+                                        "category": "integration"}])
+        plan["tasks"].append(gate_task)
+        plan["subplans"][0]["produces"] = [{"contract": "session-api", "version": 1, "defined_by": "T1"}]
+        plan["tasks"][0]["expected_paths"] = ["src/**/*.py"]
+        plan["composition_gates"] = [{"id": "CG-1", "subplans": ["SP-1"], "task": "T4",
+                                      "criteria": ["Composition works"]}]
+        report = pc.validate(plan)
+        self.assertTrue(any(line.startswith("OWNER_COMPOSITION_SINGLE_REPOSITORY_REQUIRED:")
+                            for line in report.errors), report.errors)
+        self.assertTrue(any(line.startswith("OWNER_COMPOSITION_DEFINED_BY_PATHS_NOT_EXACT_FILES:")
+                            for line in report.errors), report.errors)
+
     def test_schema_13_canonicalizes_new_fields_and_schema_document_is_valid_json(self):
         plan = base_plan()
         plan["tasks"][0]["ui"] = False
@@ -343,6 +362,7 @@ class Schema13Tests(unittest.TestCase):
         first[0]["acceptance_criteria"] = ["Session contract is defined"]
         first[0]["kind"] = "implement"
         first[0]["after"] = []
+        first[0]["expected_paths"] = ["src/session-contract.json"]
         first[1].update(id="T2", subplan_id="SP-1", kind="test", after=["T1", "T4"], covers=["AUTH-1"],
                         acceptance_criteria=["Session contract tests pass"])
         first[2].update(id="T3", subplan_id="SP-1", kind="audit", after=["T2"], covers=["AUTH-1"],
@@ -352,6 +372,7 @@ class Schema13Tests(unittest.TestCase):
         second = [copy.deepcopy(first[0]), copy.deepcopy(first[1]), copy.deepcopy(first[2])]
         second[0].update(id="T4", subplan_id="SP-2", covers=["AUTH-2"], after=[],
                          acceptance_criteria=["Customer contract is defined"])
+        second[0]["expected_paths"] = ["src/customer-contract.json"]
         second[1].update(id="T5", subplan_id="SP-2", covers=["AUTH-2"], after=["T4", "T1"],
                          acceptance_criteria=["Customer contract tests pass"])
         second[2].update(id="T6", subplan_id="SP-2", covers=["AUTH-2"], after=["T5"],

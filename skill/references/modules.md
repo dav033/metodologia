@@ -109,14 +109,15 @@ be simulated with `bt_scheduler_core.simulators`.
   are reserved once and loaded by manifest identity after restart, and per-gate errors emit owner attention records.
   M6 PASS/FAIL proofs bind the candidate, manifest, contract identities and tree. Multi-repository plans fail closed
   with `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
-  The planner default remains `1.2.0`: full stub-agent owner E2E and M6 review hold/resume remain unproven. M1 exposes
+  The planner default is `1.3.0` for subplan plans: stub-agent owner E2E and M6 review hold/resume are wired. Planner
+  checks the owner's gate chain, exact contract paths and one-repository boundary before run start. M1 exposes
   an operation for applying an explicit M5 frontier to exactly its named tasks, bound to the current published
   composition manifest and tree; it does not expand descendants. Owner M6 checks resource names against the process environment and
   `~/.config/flow/secrets.env` without persisting values. Sandbox needs no authorization; staging and production
   require a matching entry in `<bitacora root>/<project>/verification-policy.json`, and missing, unreadable or
   unmatched policy denies before command launch. The owner propagation producer is wired for changed published
   subplan versions included by a published composition; M5 evidence must carry stable evidence ids, and M1 applies
-  actions idempotently by change id. The defaults stay at 1.2.0 until the remaining owner acceptance tests pass.
+  actions idempotently by change id. Schema 1.2.0 remains supported for legacy plans.
 
 ### Verification inputs, analyst stops and audit ledgers
 

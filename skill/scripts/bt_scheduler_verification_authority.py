@@ -45,14 +45,17 @@ def _declared_names(path: Path) -> frozenset[str]:
                 if assignment.startswith("export "):
                     assignment = assignment[7:].lstrip()
                 name, separator, value = assignment.partition("=")
-                if separator and value.strip() and _ENV_NAME.fullmatch(name):
+                value = value.strip()
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+                    value = value[1:-1].strip()
+                if separator and value and _ENV_NAME.fullmatch(name):
                     names.add(name)
             return frozenset(names)
     except (OSError, UnicodeError, ValueError, RecursionError):
         return frozenset()
 
 
-def _policy_allows(path: Path, environment: str, authorization_needed: str | None, req_id: str) -> bool:
+def _policy_allows(path: Path, environment: str, authorization_needed: str | None, req_id: str) -> bool | str:
     if environment == "sandbox":
         return True
     if environment not in _ALLOWED_ENVIRONMENTS:
@@ -72,10 +75,12 @@ def _policy_allows(path: Path, environment: str, authorization_needed: str | Non
     for item in policy["allow"]:
         if not isinstance(item, Mapping) or item.get("environment") != environment:
             continue
-        if item.get("authorization") != authorization_needed.strip():
-            continue
         requirements = item.get("requirements")
         if requirements is not None and (not isinstance(requirements, list) or req_id not in requirements):
+            continue
+        if "authorization" not in item:
+            return "POLICY_ENTRY_MISSING_AUTHORIZATION"
+        if item.get("authorization") != authorization_needed.strip():
             continue
         return True
     return False

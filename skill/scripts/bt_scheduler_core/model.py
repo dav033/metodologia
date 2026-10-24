@@ -162,7 +162,8 @@ class RunState:
                     not isinstance(value, dict) or
                     not {"plan_id", "revision", "version", "commit", "manifest_sha256"} <= set(value) or
                     set(value) - {"plan_id", "revision", "version", "commit", "manifest_sha256",
-                                  "audit_attempt_id", "work_digest"} or
+                                  "audit_attempt_id", "work_digest", "stale"} or
+                    ("stale" in value and not isinstance(value["stale"], bool)) or
                     (("audit_attempt_id" in value or "work_digest" in value) and
                      (not isinstance(value.get("audit_attempt_id"), str) or not value["audit_attempt_id"] or
                       not isinstance(value.get("work_digest"), str) or

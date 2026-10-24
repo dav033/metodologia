@@ -127,13 +127,17 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
-Run-state schema 8 adds a structured executor failure classification to the schema 7 subplan-version, composition,
-frontier-application, code-attempt budget and M6 review-hold facts. The loader upgrades schemas 1 through 7 in memory
-and writes schema 8 on the next state change; older M1 versions reject schema 8
+Run-state schema 9 adds durable `composition_holds` to schema 8's structured executor failure classification,
+subplan-version, composition, frontier-application, code-attempt budget and M6 review-hold facts. A hold appears in
+snapshot attention and is released when any composition publishes the gate's current member set, the gate reopens,
+or its reserved members become stale. The loader upgrades schemas 1 through 8 in memory and writes schema 9 on the next
+state change; older M1 versions reject schema 9
 rather than silently dropping facts. Historical attempts migrate as budget-consuming; new attempts consume the code
 retry budget only after M3 confirms execution began. Schema 3 carries guarded revision barriers and the bounded
 revision-application journal; schema 2 introduced
 durable per-task route recommendations and the completed-map marker. These fields remain available after the upgrades.
+Schema 4 through 7 successively extended persisted scheduler facts; schema 8 added structured execution failure
+classification. Schema 9 adds `composition_holds`.
 
 The wired caller is `bt_scheduler_run.py` through `bt_scheduler_owner_composition.py` and
 `bt_scheduler_owner_propagation.py`: it derives changes from published subplan versions in a published composition,

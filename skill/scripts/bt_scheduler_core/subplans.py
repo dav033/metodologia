@@ -124,7 +124,7 @@ def _accepted_identity(plan: Plan, state: RunState, subplan: SubplanSpec) -> dic
 def _fact_is_current(plan: Plan, state: RunState, subplan: SubplanSpec) -> bool:
     fact = state.subplan_versions.get(subplan.id, {})
     identity = _accepted_identity(plan, state, subplan)
-    return (identity is not None and fact.get("plan_id") == state.plan_id and
+    return (identity is not None and not fact.get("stale", False) and fact.get("plan_id") == state.plan_id and
             fact.get("revision") == state.revision and
             {key: fact.get(key) for key in identity} == identity)
 
@@ -240,6 +240,17 @@ def gate_waiting(plan: Plan, state: RunState, task_id: str) -> bool:
     return blocked_by_hold or bool(stale_subplan_members(plan, state, task_id))
 
 
+def prune_composition_holds(plan: Plan, state: RunState) -> None:
+    """Drop holds whose gate was reopened or whose reserved members are no longer current."""
+    gates = {gate.task: gate for gate in plan.composition_gates}
+    for task_id, hold in tuple(state.composition_holds.items()):
+        gate = gates.get(task_id)
+        fact = state.compositions.get(hold.get("composition_id", ""))
+        if (gate is None or state.tasks[task_id].state != "completed" or
+                (fact is not None and not composition_members_current(plan, state, fact.get("members", {})))):
+            state.composition_holds.pop(task_id, None)
+
+
 def hold_composition_gate(plan: Plan, state: RunState, ctx: Any, gate_task_id: str,
                           composition_id: str, reason: str) -> bool:
     """Durably stop a completed gate's descendants until its exact candidate is published."""
@@ -257,10 +268,10 @@ def hold_composition_gate(plan: Plan, state: RunState, ctx: Any, gate_task_id: s
         raise SchedulerError("NOT_ALLOWED", "composition holds require a completed gate task")
     expected_members = {member: state.subplan_versions.get(member, {}).get("version") for member in gate.subplans}
     already_published = any(
-        (not composition_id or candidate_id == composition_id) and fact.get("plan_id") == state.plan_id and
+        fact.get("plan_id") == state.plan_id and
         fact.get("revision") == state.revision and fact.get("state") == "published" and
         fact.get("members") == expected_members
-        for candidate_id, fact in state.compositions.items())
+        for fact in state.compositions.values())
     if already_published:
         return False
     state.composition_holds[gate_task_id] = hold
@@ -282,8 +293,9 @@ def release_published_composition_holds(plan: Plan, state: RunState,
                                         composition_id: str, members: dict[str, int]) -> None:
     for gate in plan.composition_gates:
         hold = state.composition_holds.get(gate.task)
-        if (hold is None or hold["composition_id"] not in ("", composition_id) or
-                set(members) != set(gate.subplans)):
+        current_members = {member: state.subplan_versions.get(member, {}).get("version")
+                           for member in gate.subplans}
+        if hold is None or members != current_members:
             continue
         del state.composition_holds[gate.task]
 
@@ -332,7 +344,25 @@ def record_subplan_version_fact(plan: Plan, state: RunState, ctx: Any, subplan_i
     if version != expected:
         raise SchedulerError("NOT_ALLOWED", f"subplan version must advance from {expected - 1} to {expected}")
     state.subplan_versions[subplan_id] = fact
+    prune_composition_holds(plan, state)
     ctx.audit("subplan_version_published", subplan_id=subplan_id, version=version,
+              commit=commit, manifest_sha256=manifest_sha256)
+
+
+def record_stale_subplan_version_fact(plan: Plan, state: RunState, ctx: Any, subplan_id: str, version: int,
+                                      commit: str, manifest_sha256: str) -> None:
+    """Preserve a store version counter after a crash without letting stale work satisfy a gate."""
+    if (not validate_subplan_version(subplan_id, version, commit, manifest_sha256) or
+            plan.schema_version != "1.3.0" or subplan_id not in {item.id for item in plan.subplans}):
+        raise SchedulerError("CONTRACT_VIOLATION", "stale subplan version fact is malformed")
+    current = state.subplan_versions.get(subplan_id)
+    expected = 1 if current is None else current["version"] + 1
+    if version != expected:
+        raise SchedulerError("NOT_ALLOWED", f"subplan version must advance from {expected - 1} to {expected}")
+    state.subplan_versions[subplan_id] = {"plan_id": state.plan_id, "revision": state.revision,
+        "version": version, "commit": commit, "manifest_sha256": manifest_sha256, "stale": True}
+    prune_composition_holds(plan, state)
+    ctx.audit("subplan_version_stale", subplan_id=subplan_id, version=version,
               commit=commit, manifest_sha256=manifest_sha256)
 
 
@@ -354,6 +384,19 @@ def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: s
             "tree_digest": tree_digest}
     current = state.compositions.get(composition_id)
     if current == fact:
+        return
+    if (current is not None and current.get("state") in {"candidate", "published"} and
+            fact_state == current.get("state") and
+            current.get("members") == fact["members"] and
+            current.get("manifest_sha256") == manifest_sha256 and
+            current.get("tree_digest") == tree_digest and current.get("reason") == reason and
+            composition_members_current(plan, state, members)):
+        state.compositions[composition_id] = fact
+        ctx.audit(f"composition_{fact_state}", composition_id=composition_id, members=members,
+                  manifest_sha256=manifest_sha256, rebound=True, from_revision=current.get("revision"),
+                  to_revision=state.revision)
+        if fact_state == "published":
+            release_published_composition_holds(plan, state, composition_id, members)
         return
     if current is None and fact_state != "candidate":
         raise SchedulerError("NOT_ALLOWED", "composition must be durably reserved as a candidate before publication or rejection")

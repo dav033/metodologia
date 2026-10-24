@@ -89,6 +89,93 @@ class CompositionHolds(unittest.TestCase):
         self.assertEqual(resumed.snapshot().tasks["T5"]["state"], "ready")
         self.assertEqual(resumed.snapshot().tasks["T6"]["state"], "ready")
 
+    def test_new_composition_with_same_current_members_releases_hold(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.write(lambda ctx: (setattr(ctx.state.tasks["T4"], "state", "completed"),
+                                setattr(ctx.state.tasks["T5"], "state", "pending")))
+        core.hold_composition_gate("T4", "C1", "proof mismatch")
+        core.record_composition("candidate", "C2", {"SP-1": 1}, "d" * 64)
+        core.record_composition("published", "C2", {"SP-1": 1}, "d" * 64, tree_digest="e" * 40)
+        core.write(promote_ready)
+        self.assertEqual(core.snapshot().tasks["T5"]["state"], "ready")
+        self.assertFalse(any(item.get("task_id") == "T4" for item in core.snapshot().attention))
+
+    def test_reopened_gate_drops_hold_when_member_version_changes(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.write(lambda ctx: setattr(ctx.state.tasks["T4"], "state", "completed"))
+        core.hold_composition_gate("T4", "C1", "proof mismatch")
+        core.write(lambda ctx: setattr(ctx.state.tasks["T4"], "state", "pending"))
+        core.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
+        self.assertNotIn("T4", core.read(lambda ctx: ctx.state.composition_holds))
+
+    def test_snapshot_attention_exposes_completed_composition_hold(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        core.write(lambda ctx: setattr(ctx.state.tasks["T4"], "state", "completed"))
+        core.hold_composition_gate("T4", "C1", "proof mismatch")
+        attention = core.snapshot().attention
+        self.assertTrue(any(item.get("kind") == "composition_gate_held" and item.get("task_id") == "T4"
+                            for item in attention), attention)
+
+    def test_published_composition_rebinds_idempotently_after_revision_bump(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64)
+        core.record_composition("published", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+
+        def bump_revision(ctx):
+            ctx.state.revision = 2
+            ctx.state.subplan_versions["SP-1"]["revision"] = 2
+
+        core.write(bump_revision)
+        core.record_composition("published", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        core.record_composition("published", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        self.assertEqual(core.read(lambda ctx: ctx.state.compositions["C1"]["revision"]), 2)
+
+    def test_reserved_candidate_rebinds_idempotently_after_revision_bump(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+
+        def bump_revision(ctx):
+            ctx.state.revision = 2
+            ctx.state.subplan_versions["SP-1"]["revision"] = 2
+
+        core.write(bump_revision)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        self.assertEqual(core.read(lambda ctx: ctx.state.compositions["C1"]["revision"]), 2)
+
+    def test_stale_store_version_advances_counter_without_satisfying_gate(self):
+        plan = make_plan()
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_stale_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        self.assertEqual(core.subplan_status()["SP-1"], "accepted")
+        core.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
+        self.assertEqual(core.subplan_status()["SP-1"], "published")
+
     @staticmethod
     def _accept(core, plan, task_id):
         core.claim(sc.Assignment(task_id, "fake"))

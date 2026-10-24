@@ -93,6 +93,20 @@ class VerificationMetadataExecutionTests(unittest.TestCase):
         self.assertEqual(result["status"], "NEEDS_REVIEW")
         self.assertEqual(runner.calls, [])
 
+    def test_missing_policy_authorization_is_reported_as_distinct_denial(self):
+        with tempfile.TemporaryDirectory() as temporary, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(temporary))
+            self.raw["verification"][0].update(environment="production",
+                                                authorization_needed="Owner permits production check")
+            runner = RecordingRunner()
+            result = QualityEngine(QualityPolicy(), store, runner=runner,
+                                   verification_authority=VerificationAuthority(
+                                       authorize_environment=lambda _environment, _needed:
+                                           "POLICY_ENTRY_MISSING_AUTHORIZATION")).verify(self.raw, source)
+        self.assertEqual(result["reason_code"], "POLICY_ENTRY_MISSING_AUTHORIZATION")
+        self.assertEqual(result["checks"][0]["reason_code"], "POLICY_ENTRY_MISSING_AUTHORIZATION")
+        self.assertEqual(runner.calls, [])
+
     def test_external_checks_with_declared_resources_are_not_reused_as_cached_passes(self):
         with tempfile.TemporaryDirectory() as temporary, QualityStore(":memory:") as store:
             _, source, _, _ = _make_snapshot(Path(temporary))

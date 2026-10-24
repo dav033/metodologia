@@ -14,6 +14,7 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from bt_scheduler_owner_composition import CompositionRuntimeError, OwnerCompositionRuntime, composition_store_path
+from bt_scheduler_owner_workspace import bind_owner_marker, ensure_owner_marker
 import bt_scheduler_adapter as m1_adapter
 from bt_scheduler_recovery_adapter import RecoveryAdapter
 from bt_composition_adapter import PropagationChange
@@ -23,6 +24,60 @@ m1 = m1_adapter.core
 
 
 class OwnerCompositionRuntimeTests(unittest.TestCase):
+    def test_store_version_counter_is_reconciled_before_next_publication(self):
+        owner = SimpleNamespace(plan=SimpleNamespace(plan_id="REQ-1", subplans=(SimpleNamespace(id="SP-1"),)),
+                                scheduler=object(), store=SimpleNamespace(list_versions=lambda *_: (
+                                    SimpleNamespace(version=1, commit="a" * 40, manifest_sha256="b" * 64),)))
+        with patch("bt_scheduler_owner_reconciliation.version_adapter.version_facts", return_value={}), \
+             patch("bt_scheduler_owner_reconciliation.m1_adapter.record_subplan_version",
+                   side_effect=RuntimeError("accepted identity is stale")) as record, \
+             patch("bt_scheduler_owner_reconciliation.version_adapter.record_stale_version") as stale:
+            OwnerCompositionRuntime._reconcile_store_version_counters(owner)
+        record.assert_called_once_with(owner.scheduler, "SP-1", 1, "a" * 40, "b" * 64)
+        stale.assert_called_once_with(owner.scheduler, "SP-1", 1, "a" * 40, "b" * 64)
+
+    def test_completed_published_gate_is_rebound_and_not_rebuilt(self):
+        gate = SimpleNamespace(task="T4", subplans=("SP-1",))
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        owner.plan = SimpleNamespace(composition_gates=(gate,), subplans=(SimpleNamespace(id="SP-1"),), revision=2)
+        owner.scheduler = SimpleNamespace(snapshot=lambda: SimpleNamespace(tasks={"T4": {"state": "completed"}}))
+        owner.store = object()
+        owner.git = SimpleNamespace(tree_oid=lambda _commit: "d" * 40)
+        candidate = SimpleNamespace(state="published", members={"SP-1": 1}, manifest_sha256="c" * 64,
+                                    integrated_commit="e" * 40)
+        fact = {"state": "published", "members": {"SP-1": 1}, "revision": 1}
+        with patch("bt_scheduler_owner_composition.m1_adapter.accepted_attempt_facts", return_value={}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.composition_facts", return_value={"C1": fact}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.subplan_publication_facts",
+                   return_value={"SP-1": {"version": 1, "revision": 2}}), \
+             patch("bt_scheduler_owner_composition.bt_composition_adapter.get_candidate", return_value=candidate), \
+             patch("bt_scheduler_owner_composition.m1_adapter.record_composition") as rebind:
+            self.assertEqual(OwnerCompositionRuntime.reconcile_compositions(owner), ())
+        rebind.assert_called_once_with(owner.scheduler, "published", "C1", candidate.members,
+                                       candidate.manifest_sha256, tree_digest="d" * 40)
+
+    def test_candidate_gate_fact_is_rebound_after_revision_without_rebuild(self):
+        gate = SimpleNamespace(task="T4", subplans=("SP-1",))
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        owner.plan = SimpleNamespace(composition_gates=(gate,), subplans=(SimpleNamespace(id="SP-1"),), revision=2)
+        owner.scheduler = SimpleNamespace(snapshot=lambda: SimpleNamespace(tasks={"T4": {"state": "completed"}}))
+        owner.store = object()
+        owner.git = SimpleNamespace(tree_oid=lambda _commit: "d" * 40)
+        candidate = SimpleNamespace(state="candidate", members={"SP-1": 1}, manifest_sha256="c" * 64,
+                                    integrated_commit="e" * 40)
+        fact = {"state": "candidate", "members": {"SP-1": 1}, "revision": 1}
+        with patch("bt_scheduler_owner_reconciliation.m1_adapter.accepted_attempt_facts", return_value={}), \
+             patch("bt_scheduler_owner_reconciliation.m1_adapter.composition_facts", return_value={"C1": fact}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.subplan_publication_facts",
+                   return_value={"SP-1": {"version": 1, "revision": 2}}), \
+             patch("bt_scheduler_owner_reconciliation.version_adapter.version_facts",
+                   return_value={"SP-1": {"version": 1, "revision": 2}}), \
+             patch("bt_scheduler_owner_reconciliation.bt_composition_adapter.get_candidate", return_value=candidate), \
+             patch("bt_scheduler_owner_reconciliation.m1_adapter.record_composition") as rebind:
+            self.assertEqual(OwnerCompositionRuntime.reconcile_compositions(owner), ())
+        rebind.assert_called_once_with(owner.scheduler, "candidate", "C1", candidate.members,
+                                       candidate.manifest_sha256, tree_digest="d" * 40)
+
     def _repo(self, path: Path) -> Path:
         path.mkdir()
         subprocess.run(["git", "-C", str(path), "init", "-q"], check=True)
@@ -86,6 +141,18 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
             self.assertEqual(marker["plan_id"], "REQ-1")
             owner.close()
 
+    def test_owner_marker_update_is_atomic_when_replace_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / ".owner.json"
+            ensure_owner_marker(marker, project="p", req="REQ-1", plan_id="REQ-1", revision=1,
+                                plan_sha256="a" * 64)
+            original = marker.read_bytes()
+            with patch("bt_scheduler_owner_workspace.os.replace", side_effect=OSError("crash")):
+                with self.assertRaises(OSError):
+                    bind_owner_marker(marker, project="p", req="REQ-1", plan_id="REQ-1", revision=2,
+                                      plan_sha256="b" * 64, run_id="run-1")
+            self.assertEqual(marker.read_bytes(), original)
+
     def test_blob_sha256_preserves_non_utf8_blob_bytes(self):
         with tempfile.TemporaryDirectory() as directory:
             repo = self._repo(Path(directory) / "repo")
@@ -127,7 +194,7 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
 
     def test_proof_mismatch_durably_holds_the_completed_composition_gate(self):
         gate = SimpleNamespace(task="G1", subplans=("SP-1",), audit_task=None)
-        candidate = SimpleNamespace(id="C1", members={"SP-1": 1}, manifest_sha256="2" * 64)
+        candidate = SimpleNamespace(id="C1", state="candidate", members={"SP-1": 1}, manifest_sha256="2" * 64)
         owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
         owner.scheduler = object()
         owner.plan = SimpleNamespace(composition_gates=(gate,), revision=1)
@@ -141,7 +208,7 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
         with patch("bt_scheduler_owner_composition.m1_adapter.accepted_attempt_facts",
                    return_value={"G1": {"verdict_id": "m6://result/" + "a" * 64}}), \
              patch("bt_scheduler_owner_composition.m1_adapter.composition_facts",
-                   return_value={"C1": {"state": "candidate", "members": {"SP-1": 1}}}), \
+                   return_value={"C1": {"state": "candidate", "members": {"SP-1": 1}, "revision": 1}}), \
              patch("bt_scheduler_owner_composition.bt_composition_adapter.get_candidate",
                    return_value=candidate), \
              patch("bt_scheduler_owner_composition.m1_adapter.hold_composition_gate") as hold:

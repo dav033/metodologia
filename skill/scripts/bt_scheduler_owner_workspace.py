@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import os
 import stat
+import tempfile
 from pathlib import Path
 
 
@@ -38,5 +39,16 @@ def bind_owner_marker(path: Path, *, project: str, req: str, plan_id: str, revis
         raise ValueError("OWNER_COMPOSITION_WORKSPACE_REVISION_MISMATCH")
     marker.update(project=project, req=req, plan_id=plan_id, run_id=run_id, revision=revision,
                   plan_sha256=plan_sha256)
-    path.write_text(json.dumps(marker, sort_keys=True), encoding="utf-8")
-    os.chmod(path, 0o600, follow_symlinks=False)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(json.dumps(marker, sort_keys=True))
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o600, follow_symlinks=False)
+        os.replace(temporary, path)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass

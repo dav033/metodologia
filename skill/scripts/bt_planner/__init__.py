@@ -8,6 +8,7 @@ from . import amendments
 from .contract import (COMPLEXITY, LATEST_SCHEMA_VERSION, LEVELS, SCHEMA_VERSION, SCOPE, PlanContractError, Report, canonicalize, dumps, load,
                        loads, validate)
 from .resources import example_text, schema_text
+from .owner_validation import validate_owner_composition
 from .revisions import latest, list_revisions, load_revision, plan_ref, run_reference, verify_store
 from .sync import (APPROVED_STATES, PLAN_JSON, approve_freeze, bind_approved, check, compat, consistency, default_plan_id, freeze_if_present,
                    plan_status, skeleton, write_skeleton)
@@ -16,4 +17,4 @@ __all__ = ["amendments", "PLAN_JSON", "COMPLEXITY", "LATEST_SCHEMA_VERSION", "LE
            "approve_freeze", "bind_approved", "canonicalize", "check", "compat", "consistency", "default_plan_id", "dumps",
            "example_text", "freeze_if_present", "latest", "list_revisions", "load", "load_revision", "loads", "plan_ref",
            "plan_status",
-           "run_reference", "schema_text", "skeleton", "validate", "verify_store", "write_skeleton"]
+           "run_reference", "schema_text", "skeleton", "validate", "validate_owner_composition", "verify_store", "write_skeleton"]

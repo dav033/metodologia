@@ -11,4 +11,4 @@ class VerificationAuthority:
     """Host-owned probes; plan content can request decisions but cannot supply them."""
 
     resource_available: Callable[[str], bool] | None = None
-    authorize_environment: Callable[[str, str | None], bool] | None = None
+    authorize_environment: Callable[[str, str | None], bool | str] | None = None

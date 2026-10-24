@@ -62,6 +62,10 @@ never grants permission. Missing or failing ports block without running commands
 and is settled only by the existing attestation receipt port. The 1.3 capability is M6-local: the overall Planner
 gate remains closed until M1, M2, M3 and M6 all declare and prove their exact consumer support.
 
+Every non-sandbox policy entry must include an `authorization` field matching the requested authorization text. An
+entry that matches the environment and requirement but omits that field is denied with
+`POLICY_ENTRY_MISSING_AUTHORIZATION`. In `secrets.env`, `NAME=""` and `NAME=''` are treated as unavailable resources.
+
 The M3 adapter supplies trusted repository and artifact paths plus the captured handoff identity:
 
 ```json

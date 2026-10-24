@@ -110,7 +110,7 @@
           "exit_code": {"type": ["integer", "null"]},
           "duration_ms": {"type": "integer", "minimum": 0},
           "issue_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{0,63}$"},
-          "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN"]},
+          "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN", "POLICY_ENTRY_MISSING_AUTHORIZATION"]},
           "tree_digest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},
           "stdout_ref": {"type": "string", "pattern": "^m6://artifact/[a-f0-9]{64}$"},
           "stderr_ref": {"type": "string", "pattern": "^m6://artifact/[a-f0-9]{64}$"}
@@ -118,7 +118,7 @@
       }
     },
     "status": {"enum": ["PASS", "FAIL", "NEEDS_REVIEW", "STALE"]},
-    "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN"]},
+    "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN", "POLICY_ENTRY_MISSING_AUTHORIZATION"]},
     "issues": {
       "type": "array",
       "items": {

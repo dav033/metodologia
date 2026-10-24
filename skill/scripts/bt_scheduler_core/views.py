@@ -45,6 +45,9 @@ def attention(plan: Plan, state: RunState) -> list[dict[str, str]]:
            for a in state.attempts.values() if a.state == A.UNCERTAIN.value]
     out += [{"kind": "blocked_task", "task_id": tid, "reason": rec.reason}
             for tid, rec in state.tasks.items() if rec.state == T.BLOCKED.value]
+    out += [{"kind": "composition_gate_held", "task_id": task_id,
+             "composition_id": hold["composition_id"], "reason": hold["reason"]}
+            for task_id, hold in state.composition_holds.items()]
     out += [{"kind": "composition_waiting", "task_id": gate.task,
              "reason": ";".join(f"{reason}:{member}" for member, reason in
                                 stale_subplan_members(plan, state, gate.task))}
