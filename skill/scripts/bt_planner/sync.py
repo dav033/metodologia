@@ -155,6 +155,8 @@ def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list
     json_tasks = {t["id"]: t for t in json_list}
     schema_12 = pc.schema_tuple(plan) >= pc.EXTENSIONS_SINCE
     schema_13 = pc.schema_tuple(plan) >= pc.SCHEMA_13
+    if schema_13:
+        problems += doc["annotation_problems"]
     for tid in sorted({t["id"] for t in json_list if sum(1 for o in json_list if o["id"] == t["id"]) > 1}):
         problems.append(f"{tid}: defined more than once in PLAN.json")
     for tid in sorted(md_tasks.keys() - json_tasks.keys()):

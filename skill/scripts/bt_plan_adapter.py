@@ -18,7 +18,7 @@ from bt_planner import revisions as planner_revisions
 APPROVED_STATES = ("approved", "launched", "done", "merged")
 LEDGER_COMMAND = "bitacora.py audit-ledger check"
 PLAN_SCHEMA_CONSUMER_GATE_SINCE = (1, 2, 0)
-_SCHEMA_VERSION_RE = re.compile(r"([0-9]+)\.([0-9]+)\.([0-9]+)")
+_SCHEMA_VERSION_RE = re.compile(r"([0-9]{1,6})\.([0-9]{1,6})\.([0-9]{1,6})")
 
 
 def _schema_version(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
@@ -108,7 +108,8 @@ def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | N
     unavailable, supported = [], []
     if compatibility.get("required_schema_version") != version[0]:
         reported = compatibility.get("required_schema_version")
-        unavailable.append(f"capability report (schema {reported if isinstance(reported, str) else 'unknown'})")
+        shown = reported if isinstance(reported, str) and _schema_version_value(reported) else "unknown"
+        unavailable.append(f"capability report (schema {shown})")
     for name in ("M1", "M2", "M6"):
         consumer = consumers.get(name)
         status = consumer.get("status") if isinstance(consumer, dict) else "unknown"

@@ -117,6 +117,18 @@ class Contradictions(PlanDir):
         ))
         self.assertEqual(self.errors(), "")
 
+    def test_free_words_after_ui_or_subplan_only_matter_to_a_schema_13_plan(self):
+        text = PLAN_MD.format(status="approved").replace(
+            "verify: `pytest tests/auth -q`", "verify: `pytest tests/auth -q` · ui: needs mockups · subplan: later")
+        self.md(text=text)
+        self.assertEqual(self.sync.consistency(self.rdir, self.plan), [])
+        self.assertEqual(self.sync.md_problems(self.rdir), [])
+        self.plan["schema_version"] = "1.3.0"
+        self.write(self.plan)
+        out = "\n".join(self.sync.consistency(self.rdir, self.plan))
+        self.assertIn("T1: ui: must be yes or no", out)
+        self.assertIn("T1: subplan: must be SP-n", out)
+
     def test_skeleton_derives_spec_requirements_and_leaves_covers_empty(self):
         skeleton = self.sync.skeleton(self.rdir)
         self.assertEqual(skeleton["schema_version"], "1.2.0")

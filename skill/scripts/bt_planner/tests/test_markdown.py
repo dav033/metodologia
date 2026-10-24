@@ -51,10 +51,13 @@ class Grammar(unittest.TestCase):
         self.assertNotIn("subplan", self.by_id["T1"])
         self.assertNotIn("ui", self.by_id["T1"])
 
-    def test_invalid_schema_13_task_annotations_are_reported(self):
-        problems = md.parse_document("### M1 — Work\n- [ ] T1 — UI · subplan: SP-0 · ui: maybe\n")["problems"]
+    def test_invalid_schema_13_task_annotations_are_reported_apart_from_legacy_problems(self):
+        doc = md.parse_document("### M1 — Work\n- [ ] T1 — UI · subplan: SP-0 · ui: maybe · ui_work: x\n")
+        self.assertEqual(doc["problems"], [])  # a pre-1.3 plan keeps ignoring these words
+        problems = doc["annotation_problems"]
         self.assertTrue(any("subplan: must be SP-n" in problem for problem in problems), problems)
         self.assertTrue(any("ui: must be yes or no" in problem for problem in problems), problems)
+        self.assertTrue(any("'ui_work:' is not read" in problem for problem in problems), problems)
 
     def test_unsafe_files_are_dropped_as_a_whole(self):
         self.assertIsNone(self.by_id["T3a"]["files"])
