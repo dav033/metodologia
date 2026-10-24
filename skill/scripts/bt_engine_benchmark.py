@@ -227,7 +227,7 @@ def run_engine_benchmark() -> dict[str, Any]:
             "commit": subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
                                       capture_output=True, text=True).stdout.strip(),
             "config": {"parallelism": PARALLELISM, "token_proxy_per_attempt_minute": TOKEN_PROXY_PER_ATTEMPT_MINUTE},
-            "executed_command": "PYTHONPATH=skill/scripts python -m bt_engine_benchmark --recovery-baseline <pre-engine-v2-worktree> --json <result.json> --markdown <result.md>",
+            "reference_command": "PYTHONPATH=skill/scripts python -m bt_engine_benchmark --recovery-baseline <pre-engine-v2-worktree> --json <result.json> --markdown <result.md>",
             "defect_fixture": str(DEFECTS.relative_to(ROOT)),
             "defect_fixture_sha256": _sha(DEFECTS),
         },
