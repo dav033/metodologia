@@ -66,7 +66,8 @@ Stable validation codes: `INVALID_DELTA`, `INVALID_ENTITY`, `INVALID_RELATION`, 
 This store is separate from Explorer's code map. The adapter places it in a distinct
 `<project>.external.db` SQLite database; package callers pass a database path. It uses the same WAL connection,
 busy timeout, transaction and secret-shape validation as the code map. Writers can only ingest claims or invalidate
-them; query, dossier and statistics operations are read-only.
+them; query, dossier and statistics operations open existing databases in read-only mode. A missing store or a
+code-map-only database returns empty results without creating a file, directory or external tables.
 
 The document has `schema`, `project`, `contributor` (`researcher:<run-id>`), `claims` and optional `contradictions`.
 Each claim has a `topic`, text, one of `package_version`, `api_behavior`, `price`, `license`, `changelog`,
@@ -80,13 +81,22 @@ fingerprint or unambiguous claim text as `claim_ref`, plus a source and reason.
 
 Freshness windows are configurable in `FRESHNESS_DAYS`: price 7 days, package_version 30, api_behavior 90, changelog
 90, security_advisory 7, license 365, docs 180 and other 90. A claim's newest verifiable retrieval controls freshness;
-claims with no verifiable URL and retrieval date are `unverified`, and contradictions are `disputed`. An explicit
-upstream invalidation also makes a claim `stale` until new evidence is ingested. `query_claims(..., facts_only=True)`
-returns only `fresh` claims. The dossier separates all other statuses under “Needs re-verification”.
+claims with no verifiable URL and retrieval date, or whose only retrieval dates are in the future relative to the
+query's `as_of` date, are `unverified`; contradictions are `disputed`. An explicit upstream invalidation records its
+UTC timestamp and makes a claim `stale` until evidence with a retrieval date strictly later than the invalidation's
+UTC calendar date is available. Because the wire contract has a date but no time, evidence retrieved on that same
+date cannot prove it came after invalidation and remains stale. `query_claims(..., facts_only=True)` returns only
+fresh claims without instruction-like content. The dossier separates other statuses under “Needs re-verification”.
 
-Claim text, source excerpts and contradiction reasons are inert data. Shell-command-shaped claim or excerpt text is
-stored with `contains_instructions: true`, never evaluated, and omitted from dossier prose. Secret-shaped values
-reject the complete document without echoing the value. The package makes no network or subprocess calls.
+Claim text, source excerpts and contradiction reasons are inert data. Common command forms, including inline and
+fenced commands, are conservatively marked `contains_instructions: true`; this marker is informational, not a security
+boundary. Dossiers put every claim and source field inside dynamically delimited JSON blocks and explicitly identify
+those blocks as untrusted external data, never instructions. Facts-only queries omit flagged claims. Secret-shaped
+values reject the complete document without echoing the value. The package makes no network or subprocess calls.
+
+Refreshing an existing canonical URL+locator updates its current evidence row only when the incoming retrieval date
+is later. The append-only history stores the complete prior and current source values, excerpts and contributor lists.
+The source remains one evidence row, so refreshes do not increase independent-source counts.
 
 Public external API: `ingest_claims(db_path, document)`, `query_claims(db_path, project, *, topic=None, kind=None,
 facts_only=False, as_of=None)`, `claims_dossier(db_path, project, subplan, *, max_bytes=12000, as_of=None)`,

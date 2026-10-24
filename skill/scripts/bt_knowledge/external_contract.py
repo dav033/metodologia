@@ -12,8 +12,11 @@ from .contract import KnowledgeError, _secret_scan
 KINDS = {"package_version", "api_behavior", "price", "license", "changelog", "docs", "security_advisory", "other"}
 CONFIDENCE = {"high", "medium", "low"}
 INSTRUCTIONS = re.compile(
-    r"(?:^|[\n;|])\s*(?:sudo\s|rm\s+-|curl\s|wget\s|bash(?:\s|$)|sh(?:\s|$)|python\s+-c|"
-    r"pip\s+install|npm\s+install|git\s+(?:clone|push)|chmod\s|export\s+[A-Z_]+=)", re.I
+    r"(?:\b(?:sudo|curl|wget|chmod)\b|\brm\s+-[a-z]*r[a-z]*f\b|"
+    r"\b(?:bash|sh|python|python3)\s+-c\b|\b(?:pip|pip3|npm|pnpm|yarn)\s+install\b|"
+    r"\bgit\s+(?:clone|push|reset|checkout)\b|\bexport\s+[A-Z_]+=|\|\s*(?:sh|bash)\b|"
+    r"```[^`]*(?:sh|bash|shell)[^`]*```|`[^`]*(?:sudo|curl|wget|chmod|rm\s+-|pip\s+install|npm\s+install)[^`]*`)",
+    re.I | re.S,
 )
 
 
@@ -48,14 +51,15 @@ def _source(raw: object) -> dict:
     for value in (url, canonical):
         if value is None:
             continue
-        parsed = urlsplit(value)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
-            raise KnowledgeError("INVALID_SOURCE_URL", "source URLs must be absolute HTTP(S) URLs without credentials")
         try:
+            parsed = urlsplit(value)
+            hostname = parsed.hostname
             port = parsed.port
         except ValueError:
-            raise KnowledgeError("INVALID_SOURCE_URL", "source URL port is invalid") from None
-        hostname = parsed.hostname.lower() if parsed.hostname else ""
+            raise KnowledgeError("INVALID_SOURCE_URL", "source URL is malformed") from None
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc or parsed.username or parsed.password:
+            raise KnowledgeError("INVALID_SOURCE_URL", "source URLs must be absolute HTTP(S) URLs without credentials")
+        hostname = hostname.lower() if hostname else ""
         if ":" in hostname and not hostname.startswith("["):
             hostname = f"[{hostname}]"
         if port is not None and not ((parsed.scheme == "https" and port == 443) or
@@ -105,9 +109,9 @@ def validate_claims(raw: object) -> dict:
         claim = _text(row.get("claim"), "claim", maximum=2000)
         kind = row.get("kind")
         confidence = row.get("confidence")
-        if kind not in KINDS:
+        if not isinstance(kind, str) or kind not in KINDS:
             raise KnowledgeError("INVALID_KIND", "kind is not supported")
-        if confidence not in CONFIDENCE:
+        if not isinstance(confidence, str) or confidence not in CONFIDENCE:
             raise KnowledgeError("INVALID_CONFIDENCE", "confidence must be high, medium or low")
         subplans, independent_of = row.get("subplans", []), row.get("independent_of", [])
         if not isinstance(subplans, list) or any(not isinstance(v, str) or not v for v in subplans):

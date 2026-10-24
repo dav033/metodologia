@@ -17,14 +17,19 @@ FRESHNESS_DAYS = {
 
 
 def claim_status(kind: str, retrieved_dates: list[str], *, disputed: bool = False,
-                 invalidated: bool = False, as_of: date | None = None) -> str:
+                 invalidated: bool = False, invalidated_at: str | None = None,
+                 as_of: date | None = None) -> str:
     """Classify a claim using its newest verifiable retrieval date."""
     if disputed:
         return "disputed"
-    if not retrieved_dates:
-        return "unverified"
-    newest = max(date.fromisoformat(value) for value in retrieved_dates)
     current = as_of or date.today()
-    if invalidated or (current - newest).days > FRESHNESS_DAYS[kind]:
+    verified_dates = [date.fromisoformat(value) for value in retrieved_dates
+                      if date.fromisoformat(value) <= current]
+    if not verified_dates:
+        return "unverified"
+    newest = max(verified_dates)
+    invalidation_date = date.fromisoformat(invalidated_at[:10]) if invalidated_at else None
+    if (invalidated and (invalidation_date is None or newest <= invalidation_date)) or (
+            current - newest).days > FRESHNESS_DAYS[kind]:
         return "stale"
     return "fresh"
