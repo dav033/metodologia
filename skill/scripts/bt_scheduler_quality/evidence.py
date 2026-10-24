@@ -106,7 +106,7 @@ def build_evidence(
         "criteria": [item.to_dict() for item in criteria],
         "checks": check_rows,
         "status": status,
-        "reason_code": overall_reason_code(check_rows, status),
+        "reason_code": overall_reason_code(check_rows, status, issues),
         "finished_at": finished_at(),
     }
     if order.composition_id is not None:
@@ -165,12 +165,15 @@ def validate_result_contract(value: object) -> None:
     _validate_result_input(value["input"])
     _validate_result_verifier(value["verifier"])
     _validate_criterion_records(value["criteria"])
-    _validate_check_records(value["checks"])
+    legacy = value.get("schema_version") == "m6.verify-result/1"
+    _validate_check_records(value["checks"], legacy=legacy)
     _validate_result_completion(value)
     if "issues" in value:
         _validate_issue_records(value["issues"])
     if value.get("schema_version") == SCHEMA_VERSION and value.get("reason_code") not in REASON_CODES:
         raise QualityError("RESULT_INVALID", "result reason_code is invalid")
+    if legacy and value.get("reason_code") not in {None, "UNCLASSIFIED"}:
+        raise QualityError("RESULT_INVALID", "legacy result reason_code is invalid")
 
 
 def _validate_result_identity(identity: object) -> None:
@@ -271,14 +274,14 @@ def _validate_criterion_record(item: object) -> None:
         raise QualityError("RESULT_INVALID", "result criterion record is invalid")
 
 
-def _validate_check_records(checks: object) -> None:
+def _validate_check_records(checks: object, *, legacy: bool = False) -> None:
     if not isinstance(checks, list) or not checks:
         raise QualityError("RESULT_INVALID", "result checks must be a non-empty list")
     for item in checks:
-        _validate_check_record(item)
+        _validate_check_record(item, legacy=legacy)
 
 
-def _validate_check_record(item: object) -> None:
+def _validate_check_record(item: object, *, legacy: bool = False) -> None:
     check_keys = {
         "id",
         "command",
@@ -318,7 +321,8 @@ def _validate_check_record(item: object) -> None:
         raise QualityError("RESULT_INVALID", "result check record is invalid")
     if not _artifact_ref(item["stdout_ref"]) or not _artifact_ref(item["stderr_ref"]):
         raise QualityError("RESULT_INVALID", "result check record is invalid")
-    if item.get("reason_code") is not None and item["reason_code"] not in REASON_CODES:
+    allowed_reason_codes = REASON_CODES | ({"UNCLASSIFIED"} if legacy else set())
+    if item.get("reason_code") is not None and item["reason_code"] not in allowed_reason_codes:
         raise QualityError("RESULT_INVALID", "result check reason_code is invalid")
     tree = item.get("tree_digest")
     if tree is not None and (not isinstance(tree, str) or len(tree) not in (40, 64)
@@ -433,7 +437,11 @@ def reason_for_outcome(status: str, issue_code: str | None) -> str:
     return "BLOCKED_ENV"
 
 
-def overall_reason_code(checks: list[Mapping[str, object]], verdict_status: str) -> str:
+def overall_reason_code(
+    checks: list[Mapping[str, object]],
+    verdict_status: str,
+    issues: tuple[Mapping[str, str], ...] = (),
+) -> str:
     codes = [read_reason_code(check) for check in checks]
     if "FLAKY_SUSPECTED" in codes:
         return "FLAKY_SUSPECTED"
@@ -442,4 +450,10 @@ def overall_reason_code(checks: list[Mapping[str, object]], verdict_status: str)
     for code in ("FLAKY_SUSPECTED", "FAIL_CODE", "TIMEOUT", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "NOT_RUN"):
         if code in codes:
             return code
-    return "PASS" if codes and all(code == "PASS" for code in codes) else "BLOCKED_ENV"
+    if verdict_status == "FAIL":
+        return "FAIL_CODE"
+    if verdict_status == "NEEDS_REVIEW" and any(
+        str(issue.get("code", "")).startswith("REVIEW_") for issue in issues
+    ):
+        return "BLOCKED_EXTERNAL"
+    return "BLOCKED_ENV"

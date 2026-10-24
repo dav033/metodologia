@@ -74,6 +74,7 @@ class IndependentReviewTests(unittest.TestCase):
         result, _ = self._verify()
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_EXTERNAL")
         self.assertIn("REVIEW_REQUIRED", {item["code"] for item in result["issues"]})
 
     def test_independent_evidence_is_bound_to_order_and_persisted(self):
@@ -90,6 +91,7 @@ class IndependentReviewTests(unittest.TestCase):
         )
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_EXTERNAL")
         self.assertIn(
             "REVIEW_NOT_INDEPENDENT", {item["code"] for item in result["issues"]}
         )
@@ -98,12 +100,14 @@ class IndependentReviewTests(unittest.TestCase):
         result, _ = self._verify(reviewer=FixedReviewer(subject="0" * 64))
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_EXTERNAL")
         self.assertIn("REVIEW_INVALID", {item["code"] for item in result["issues"]})
 
     def test_reviewer_rejection_produces_fail(self):
         result, _ = self._verify(reviewer=FixedReviewer(approved=False))
 
         self.assertEqual(result["status"], "FAIL")
+        self.assertEqual(result["reason_code"], "FAIL_CODE")
         self.assertIn("REVIEW_REJECTED", {item["code"] for item in result["issues"]})
 
     def test_reviewer_evidence_cannot_persist_configured_secrets(self):
@@ -114,6 +118,7 @@ class IndependentReviewTests(unittest.TestCase):
         )
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_EXTERNAL")
         self.assertIn("REVIEW_INVALID", {item["code"] for item in result["issues"]})
 
 

@@ -22,6 +22,10 @@
     "input": {
       "type": "object",
       "additionalProperties": false,
+      "dependentRequired": {
+        "composition_id": ["manifest_sha256"],
+        "manifest_sha256": ["composition_id"]
+      },
       "required": ["snapshot_sha", "base_sha", "criteria_hash", "order_sha256", "checks_sha256", "tree_digest", "contract_identities", "environment_fingerprint"],
       "properties": {
         "snapshot_sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},

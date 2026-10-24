@@ -80,16 +80,34 @@ class ResultContractTests(unittest.TestCase):
             (FIXTURES.parents[1] / "api-contract.json").read_text(encoding="utf-8")
         )
         self.assertEqual(schema["$id"], "m6.verify-result/1.1")
+        self.assertEqual(schema["properties"]["input"]["dependentRequired"], {
+            "composition_id": ["manifest_sha256"],
+            "manifest_sha256": ["composition_id"],
+        })
 
     def test_legacy_stored_result_reads_as_unclassified_without_mutating_record(self):
         result = json.loads((FIXTURES / "result-pass.json").read_text(encoding="utf-8"))
-        validate_result_contract(result)
+        normalized = read_result(result)
+        validate_result_contract(normalized)
         self.assertEqual(read_reason_code(result["checks"][0]), "UNCLASSIFIED")
         self.assertNotIn("reason_code", result["checks"][0])
         loaded = read_result(result)
         self.assertEqual(loaded["reason_code"], "UNCLASSIFIED")
         self.assertEqual(loaded["checks"][0]["reason_code"], "UNCLASSIFIED")
         self.assertNotIn("reason_code", result["checks"][0])
+
+    def test_current_result_rejects_unclassified_reason_codes(self):
+        result = json.loads((FIXTURES / "result-pass.json").read_text(encoding="utf-8"))
+        result.update(schema_version="m6.verify-result/1.1", reason_code="UNCLASSIFIED")
+        result["checks"][0]["reason_code"] = "UNCLASSIFIED"
+        with self.assertRaises(QualityError):
+            validate_result_contract(result)
+
+    def test_runtime_rejects_partial_composition_identity(self):
+        raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+        raw["composition_id"] = "C7"
+        with self.assertRaises(QualityError):
+            VerifyRequest.from_mapping(raw)
 
     def test_v2_reason_code_is_validated_and_classified(self):
         result = json.loads((FIXTURES / "result-pass.json").read_text(encoding="utf-8"))
