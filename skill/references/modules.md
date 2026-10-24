@@ -107,10 +107,13 @@ be simulated with `bt_scheduler_core.simulators`.
   environment identity are passed to M6. Multi-repository plans fail closed with
   `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
   The planner default remains `1.2.0`: the owner runtime is not enabled by default because full stub-agent owner E2E,
-  M6 review hold/resume and composition-frontier producer wiring remain unproven. F4-9 also adds an M1 operation for
-  applying an explicit M5 frontier to exactly its named tasks, bound to the current published composition manifest
-  and tree; it does not expand descendants. The `m5.demonstrated-frontier/1` producer is not exposed by the accepted
-  composition API, so that callback still fails closed rather than manufacturing an action.
+  M6 review hold/resume and composition-frontier producer wiring remain unproven. M1 exposes an operation for applying
+  an explicit M5 frontier to exactly its named tasks, bound to the current published composition manifest and tree;
+  it does not expand descendants. Owner M6 checks resource names against the process environment and
+  `~/.config/flow/secrets.env` without persisting values. Sandbox needs no authorization; staging and production
+  require a matching entry in `<bitacora root>/<project>/verification-policy.json`, and missing, unreadable or
+  unmatched policy denies before command launch. The `m5.demonstrated-frontier/1` producer remains unwired, and the
+  defaults stay at 1.2.0 until the remaining owner acceptance tests pass.
 
 ### Verification inputs, analyst stops and audit ledgers
 

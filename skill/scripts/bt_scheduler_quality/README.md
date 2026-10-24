@@ -131,9 +131,12 @@ secret values are replaced with `[REDACTED]` before the outcome is returned.
 
 Deployment, publishing, release and migration commands are classified as operator review and are not launched. Offline
 checks such as `check_migrations.py` remain eligible when they inspect the snapshot without performing those actions.
-The legacy undeclared policy remains unchanged. F4-9 must wire trusted callbacks from operator-owned configuration
-and service probes into `QualityVerificationPort(verification_authority=...)`; it must not derive authorization from
-PLAN.json, task text or an agent supplied environment map.
+The legacy undeclared policy remains unchanged. The owner wires trusted callbacks into
+`QualityVerificationPort(verification_authority=...)`: resource names are checked against the owner process
+environment and `~/.config/flow/secrets.env` without persisting values; `sandbox` is allowed without an operator
+policy; `staging` and `production` require a matching entry in `<bitacora root>/<project>/verification-policy.json`.
+Missing, unreadable or unmatched policy denies before command launch. Authorization is never derived from PLAN.json,
+task text or an agent-supplied environment map.
 
 Artifacts are local, mode `0700` directories and mode `0600` files in a separate M6 store. The SQLite WAL ledger and
 verdict outbox are private to M6; neither M1 nor M3 stores are opened for writing by the package. A durable

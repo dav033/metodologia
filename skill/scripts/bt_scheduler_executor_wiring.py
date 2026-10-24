@@ -340,6 +340,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             import bt_scheduler_decisions
             from bt_scheduler_quality.store import QualityStore
             from bt_scheduler_quality_adapter import QualityVerificationPort
+            from bt_scheduler_verification_authority import owner_verification_authority
 
             if quality_path is None or quality_runtime_policy is None:
                 raise RuntimeError("M6 composition was not fully validated")
@@ -379,7 +380,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(
                     bt_config.get("gates.integration_rework_limit", 6)),
                 composition_identity=(getattr(composition_runtime, "verification_identity", None)
-                                      if composition_runtime is not None else None))
+                                      if composition_runtime is not None else None),
+                verification_authority=owner_verification_authority(rdir, project))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)
