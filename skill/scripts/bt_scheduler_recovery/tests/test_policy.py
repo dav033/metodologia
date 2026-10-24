@@ -83,6 +83,57 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(propose(source).action, "retry")
         self.assertEqual(propose(source, history=HistorySummary(1)).reason_code, "timeout_repeated")
 
+    def test_verification_timeout_is_counted_by_reason_before_generic_verification_retry(self):
+        source = case(core_cause="verification_rejected", technical_cause="verification_rejected",
+                      execution_state="finished", verification_ref="verdict:" + "d" * 64,
+                      reason_code="TIMEOUT")
+        self.assertEqual(propose(source).action, "retry")
+        repeated = propose(source, history=HistorySummary(timeout_decisions=1))
+        self.assertEqual((repeated.action, repeated.reason_code), ("block", "timeout_repeated"))
+
+    def test_timeout_reason_does_not_override_nonverification_technical_cause(self):
+        for cause, expected in (("killed", "permanent_or_unknown_cause"),
+                                ("artifact_error", "permanent_or_unknown_cause"),
+                                ("start_failed", "permanent_or_unknown_cause"),
+                                ("clean", "permanent_or_unknown_cause"),
+                                ("unknown", "permanent_or_unknown_cause"),
+                                ("quota_exhausted", "quota_reset_unknown"),
+                                ("timeout", "transience_unconfirmed")):
+            with self.subTest(cause=cause):
+                result = propose(case(reason_code="TIMEOUT", technical_cause=cause, transient_confirmed=False))
+                self.assertEqual((result.action, result.reason_code), ("block", expected))
+
+    def test_m6_blockers_precede_attempt_and_code_retry_exhaustion(self):
+        for reason in ("BLOCKED_EXTERNAL", "BLOCKED_ENV"):
+            with self.subTest(reason=reason):
+                result = propose(case(reason_code=reason, attempts_used=3, max_attempts=3),
+                                 history=HistorySummary(same_cause_attempts=100))
+                expected = ("m6_blocked_external_owner_must_restore_dependency" if reason == "BLOCKED_EXTERNAL"
+                            else "m6_blocked_env_operator_must_repair_environment")
+                self.assertEqual((result.action, result.reason_code), ("block", expected))
+                self.assertEqual(result.retry_budget_remaining, 0)
+
+    def test_reason_policy_taxonomy_never_routes_m6_pass_to_acceptance(self):
+        expected = {
+            "TIMEOUT": ("retry", None),
+            "FLAKY_SUSPECTED": ("block", "flaky_requires_m6_rerun_policy"),
+            "NOT_RUN": ("block", "m6_not_run"),
+            "FAIL_CODE": ("retry", None),
+            "PASS": ("block", "m6_pass_not_recovery"),
+        }
+        for reason, (action, decision_reason) in expected.items():
+            with self.subTest(reason=reason):
+                result = propose(case(reason_code=reason))
+                self.assertEqual(result.action, action)
+                if decision_reason is not None:
+                    self.assertEqual(result.reason_code, decision_reason)
+
+    def test_unclassified_legacy_decision_is_identical(self):
+        source = case()
+        self.assertEqual(source.to_dict()["schema_version"], "m5.recovery-case/2")
+        self.assertEqual(source.reason_code, "UNCLASSIFIED")
+        self.assertEqual(propose(source), propose(case(reason_code="UNCLASSIFIED")))
+
     def test_verification_rejection_never_accepts(self):
         source = case(core_cause="verification_rejected", technical_cause="verification_rejected",
                       execution_state="finished", verification_ref="verdict:" + "d" * 64)
@@ -91,6 +142,14 @@ class PolicyTests(unittest.TestCase):
         self.assertEqual(propose(replace(source, core_cause="execution_failed")).action, "block")
         self.assertEqual(propose(replace(source, technical_cause="clean")).action, "retry")
         self.assertEqual(propose(replace(source, execution_state="failed")).action, "block")
+
+    def test_m6_code_failure_uses_bounded_verification_rework(self):
+        source = case(core_cause="verification_rejected", technical_cause="verification_rejected",
+                      execution_state="finished", verification_ref="verdict:" + "d" * 64,
+                      reason_code="FAIL_CODE")
+        self.assertEqual(propose(source).action, "retry")
+        self.assertEqual(propose(source, history=HistorySummary(same_cause_attempts=2)).reason_code,
+                         "same_cause_limit")
 
     def test_largest_valid_timestamp_produces_bounded_decision(self):
         result = propose(case(now=1e12, failure_at=1e12))

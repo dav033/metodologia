@@ -20,6 +20,8 @@ CAUSES = ("clean", "quota_exhausted", "connection_lost", "agent_error", "timeout
           "incomplete_output", "start_failed", "lost", "artifact_error", "cancelled",
           "verification_rejected", "integration_conflict", "predecessor_missing", "unknown")
 CONFIDENCES = ("confirmed", "reported", "inferred", "unknown")
+M6_REASON_CODES = ("UNCLASSIFIED", "PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT",
+                   "FLAKY_SUSPECTED", "NOT_RUN")
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,7 @@ class RecoveryCase:
     max_wait_seconds: float = 3600
     failure_at: float = 0
     now: float = 0
+    reason_code: str = "UNCLASSIFIED"
 
     def __post_init__(self) -> None:
         for value in (self.run_id, self.plan_id, self.task_id, self.attempt_id):
@@ -60,6 +63,7 @@ class RecoveryCase:
         enum(self.core_cause, ("execution_failed", "verification_rejected", "lost"))
         enum(self.technical_cause, CAUSES)
         enum(self.confidence, CONFIDENCES)
+        enum(self.reason_code, M6_REASON_CODES)
         enum(self.execution_state, ("failed", "finished", "cancelled", "live", "unknown"))
         refs(self.evidence_refs)
         if self.handoff_sha is not None:
@@ -79,11 +83,20 @@ class RecoveryCase:
             number(self.reset_epoch)
 
     def to_dict(self) -> dict:
-        return {"schema_version": "m5.recovery-case/1", **asdict(self), "evidence_refs": list(self.evidence_refs)}
+        return {"schema_version": "m5.recovery-case/2", **asdict(self), "evidence_refs": list(self.evidence_refs)}
 
     @classmethod
     def from_dict(cls, raw: object) -> RecoveryCase:
-        data = decode(cls, raw, "m5.recovery-case/1")
+        require(type(raw) is dict, "INVALID_INPUT")
+        version = raw.get("schema_version")
+        if version == "m5.recovery-case/1":
+            require("reason_code" not in raw, "SCHEMA_MISMATCH")
+            data = decode(cls, raw, "m5.recovery-case/1")
+            data["reason_code"] = "UNCLASSIFIED"
+        elif version == "m5.recovery-case/2":
+            data = decode(cls, raw, "m5.recovery-case/2")
+        else:
+            require(False, "SCHEMA_MISMATCH")
         try:
             return cls(**data)
         except TypeError:
@@ -117,10 +130,12 @@ class Policy:
 class HistorySummary:
     same_cause_attempts: int = 0
     decisions: int = 0
+    timeout_decisions: int = 0
 
     def __post_init__(self) -> None:
         integer(self.same_cause_attempts)
         integer(self.decisions)
+        integer(self.timeout_decisions)
 
 
 @dataclass(frozen=True)
