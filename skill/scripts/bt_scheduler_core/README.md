@@ -127,8 +127,9 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
-Run-state schema 7 adds subplan-version, composition, frontier-application, code-attempt budget and M6 review-hold facts. The loader
-upgrades schemas 1 through 6 in memory and writes schema 7 on the next state change; older M1 versions reject schema 7
+Run-state schema 8 adds a structured executor failure classification to the schema 7 subplan-version, composition,
+frontier-application, code-attempt budget and M6 review-hold facts. The loader upgrades schemas 1 through 7 in memory
+and writes schema 8 on the next state change; older M1 versions reject schema 8
 rather than silently dropping facts. Historical attempts migrate as budget-consuming; new attempts consume the code
 retry budget only after M3 confirms execution began. Schema 3 carries guarded revision barriers and the bounded
 revision-application journal; schema 2 introduced

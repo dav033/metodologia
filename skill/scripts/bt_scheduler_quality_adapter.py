@@ -91,7 +91,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         publish_audit_observation: Callable[[str, str, dict], None] | None = None,
         publish_conflict_observation: Callable[[VerifyRequest, str, str, str], str] | None = None,
         composition_identity: Callable[[m1.VerifyOrder], Mapping[str, Any] | None] | None = None,
-        needs_review_handoff: Callable[[Mapping[str, Any], Mapping[str, Any]], None] | None = None,
+        needs_review_handoff: Callable[[Mapping[str, Any], Mapping[str, Any]], str | None] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes

@@ -8,7 +8,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import bt_audit_gate
-from bt_scheduler_quality_owner_adapter import evaluate_audit_ledgers, expected_environment_fingerprint
+from bt_scheduler_quality.contracts import QualityError
+from bt_scheduler_quality_owner_adapter import evaluate_audit_ledgers, expected_environment_fingerprint, handoff_needs_review
 
 
 class IndependentAuditLedgers(unittest.TestCase):
@@ -54,6 +55,26 @@ class IndependentAuditLedgers(unittest.TestCase):
 
         self.assertEqual(expected_environment_fingerprint(policy, contracts, identity),
                          bound_environment_fingerprint(policy, tuple(sorted(contracts.items())), identity))
+
+    def test_exhausted_m6_resume_ends_through_the_m1_block_operation(self):
+        calls = []
+
+        class Store:
+            def retry_m5_transient(self, _request_key):
+                raise QualityError("RETRY_EXHAUSTED", "already resumed")
+
+        class Core:
+            def block_exhausted_needs_review_resume(self, identity):
+                calls.append(identity)
+
+        class Runtime:
+            needs_review_handoff = staticmethod(lambda _identity, _result: "resumed")
+            store = Store()
+            core = Core()
+
+        identity = {"task_id": "T1", "attempt_id": "A-1"}
+        handoff_needs_review(Runtime(), "request-1", identity, {"status": "NEEDS_REVIEW"})
+        self.assertEqual(calls, [identity])
 
 
 if __name__ == "__main__":

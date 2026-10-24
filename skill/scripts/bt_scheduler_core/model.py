@@ -12,7 +12,7 @@ from typing import Any
 from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 7
+STATE_SCHEMA = 8
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -51,6 +51,7 @@ class AttemptRec:
     evidence: str = ""         # accepted/rejected verdict evidence
     verifier: str = ""
     budget_consumed: bool = False  # true only after M3 confirms code execution began
+    failure_classification: str = ""  # structured executor classification; detail text is informational
 
 
 @dataclass
@@ -121,7 +122,7 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, 6, STATE_SCHEMA}:
+            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, 6, 7, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
             routing_complete = data.get("routing_complete", False)
             if not isinstance(routing_complete, bool):

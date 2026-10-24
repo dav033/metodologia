@@ -147,6 +147,7 @@ class Subplans(unittest.TestCase):
         self.assertEqual(core.snapshot().tasks["T1"]["state"], "blocked")
         self.assertEqual(core.attempts_used("T1"), 0)
 
+
     def test_confirmed_execution_consumes_one_code_retry_without_reusing_attempt_ids(self):
         plan = load(plan_13())
         core = sc.SchedulerCore(plan, sc.InMemoryRepository())

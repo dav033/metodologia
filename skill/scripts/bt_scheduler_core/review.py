@@ -77,3 +77,23 @@ def handle_on_scheduler(scheduler, *, plan_id: str, revision: int, task_id: str,
     result = scheduler.write(lambda ctx: apply_needs_review_advice(ctx, identity, advice))
     scheduler._wake.set()
     return result
+
+
+def block_exhausted_resume(ctx: Ctx, identity: Mapping[str, object]) -> str:
+    """End an M1 review hold after M6 reports that its one same-attempt resume was consumed."""
+    attempt_id, task_id = identity.get("attempt_id"), identity.get("task_id")
+    hold = ctx.state.review_holds.get(attempt_id)
+    attempt = ctx.state.attempts.get(attempt_id)
+    if (not isinstance(attempt_id, str) or not isinstance(task_id, str) or task_id not in ctx.state.tasks or
+            hold is None or attempt is None or any(
+            hold.get(key) != identity.get(key) for key in ("plan_id", "revision", "task_id", "attempt_id", "token")
+            ) or
+            hold.get("state") != "resumed" or attempt.task_id != task_id or
+            attempt.state != A.VERIFYING.value or ctx.state.tasks[task_id].state != T.ACTIVE.value):
+        raise SchedulerError("NOT_ALLOWED", "M6 resume exhaustion does not match a resumed M1 review hold")
+    end_attempt(ctx, attempt_id, A.FAILED, "needs_review_retry_exhausted", "M6 same-attempt resume exhausted")
+    set_task(ctx, task_id, T.BLOCKED, reason="needs_review_retry_exhausted", evidence_ref=hold["evidence_ref"])
+    hold["state"] = "blocked"
+    hold["advice"] = "block"
+    ctx.audit("needs_review_retry_exhausted", task_id, attempt_id)
+    return "blocked"
