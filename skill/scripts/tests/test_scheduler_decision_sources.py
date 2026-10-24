@@ -38,6 +38,9 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
                              (("sonnet", "medium"),))
             self.assertEqual(m2_adapter._route_options("codex", tier, "audit"),
                              (("gpt-6.1-sol", "medium"),))
+            self.assertEqual(m2_adapter._route_options("claude", tier, "design"), (("opus", "high"),))
+            self.assertEqual(m2_adapter._route_options("codex", tier, "design"),
+                             (("gpt-6.1-sol", "high"),))
         for complexity in ("high", "L", "high_complexity"):
             self.assertEqual(m2_adapter._route_options("claude", 0, "audit", complexity),
                              (("sonnet", "high"),))
@@ -47,6 +50,29 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
                          (("gpt-6-luna", "low"),))
         self.assertEqual(m2_adapter._route_options("antigravity", 0, "implement"), ())
         self.assertEqual(m2_adapter._route_options("unsupported", 0, "implement"), ())
+
+    def test_visual_review_metadata_selects_reviewer_without_changing_audit_kind(self):
+        _task, kind, classifications = m2_adapter.task_facts(
+            "T9", {"title": "Review UI", "kind": "audit", "subplan_id": "SP-1", "review_axis": "visual"},
+            (), (), (), (), ()
+        )
+        self.assertEqual(kind, "audit")
+        self.assertEqual(classifications["review_axis"], "visual")
+        self.assertEqual(m2_adapter._route_role(kind, classifications), "reviewer")
+        self.assertEqual(m2_adapter._route_role(kind, {"risk": "low"}), "reviewer")
+
+    def test_design_metadata_selects_designer_and_both_declared_provider_profiles(self):
+        _task, kind, _classifications = m2_adapter.task_facts(
+            "T2", {"title": "UI contract", "kind": "design", "subplan_id": "SP-1"}, (), (), (), (), ()
+        )
+        self.assertEqual(kind, "design")
+        self.assertEqual(m2_adapter._route_role(kind, {}), "designer")
+        self.assertEqual(m2_adapter._route_options("claude", 0, kind), (("opus", "high"),))
+        self.assertEqual(m2_adapter._route_options("codex", 0, kind), (("gpt-6.1-sol", "high"),))
+
+    def test_schema_1_3_is_supported_without_changing_legacy_capabilities(self):
+        self.assertEqual(m2_adapter.PLAN_SCHEMA_CAPABILITIES,
+                         frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"}))
 
     def test_tier_floor_uses_task_kind_and_classification_rules_without_medium_risk_promotion(self):
         medium_risk = {"complexity": "low", "scope": "small_change", "coupling": "low",
