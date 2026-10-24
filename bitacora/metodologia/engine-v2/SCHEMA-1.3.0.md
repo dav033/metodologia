@@ -11,7 +11,7 @@ Authority: `CONTRACT.md` §2–3 and master §7. This is the contract every F4 c
 2. **No 1.3.0 field below 1.3.0.** `subplans`, `composition_gates`, task `subplan_id`, task `ui`, task kind `design`
    and verification `environment`/`requires`/`authorization_needed` in a document whose `schema_version` < 1.3.0
    are `SCHEMA_FIELD_UNSUPPORTED`: an **error at publication** (`check`, approval, `freeze` of a new revision) and a
-   **warning** for consumer validation/`load()`, so an already frozen document can never stop loading. (None of the
+   **nothing** for consumer validation/`load()` (output identical to the `pre-engine-v2` validator, so an already frozen document can never stop loading or change its report). Below 1.3.0 `kind: design` keeps the legacy enum error. (None of the
    5 live plans nor their revisions use these names; a test asserts it.)
 3. **One artifact.** Subplans live inside `PLAN.json`; freeze, revision, sha256, `bind_approved` and drift detection
    cover them with no second manifest (atomic by construction).
@@ -214,7 +214,7 @@ computes the exposure from the plan graph (not from a hard-coded number).
 `CONSUMER_CONTRACT_TEST_MISSING` (warning), `UI_WORK_UNDECLARED`, `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE` (adapter),
 `COMPOSITION_INVALID`, `COMPOSITION_MISSING`, `REQUIREMENT_ORPHAN`,
 `UI_GATE_MISSING`, `UI_GATE_ORDER`, `UI_REVIEW_ORDER`, `SECRET_VALUE_IN_PLAN`, `EXTERNAL_ONLY_IMPLEMENT`,
-`FILE_EXISTENCE_CHECK`. Each error line starts with `<CODE>: <where>: …` so consumers can match the code.
+`FILE_EXISTENCE_CHECK`, `VERIFICATION_ENV_INVALID`. Each error line starts with `<CODE>: <where>: …` so consumers can match the code.
 
 ## 10. Review log
 
@@ -224,3 +224,4 @@ computes the exposure from the plan graph (not from a hard-coded number).
   `LATE_CHECKPOINT` in 1.3.0; `TASK_KEYS_13` + frozen-revision hash test; `UI_WORK_UNDECLARED` by extension as an
   error; engine-capability refusal at approval in the adapter; `preview` moved to project config;
   `authorization_needed`; `verified_by`; gate-owned cross-cutting requirements; wider probe list.
+- 2026-10-23 implementation review (antagonist + reviewer spec/standards) of F1-A: chain off-by-one, malformed-input exceptions, plan-wide LATE_CHECKPOINT skipped with subplans, first-gate-only publication check, legacy output drift for `design`/`subplan_id`/`ui` below 1.3.0 (ruling: no new warning below 1.3.0 outside publication), probe detection of pipes, weak P-177 fixture, wrong codes. Sent back as F1-A2.
