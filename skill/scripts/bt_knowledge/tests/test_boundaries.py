@@ -55,8 +55,8 @@ class Boundaries(unittest.TestCase):
 
     def test_readme_documents_stable_api_and_errors(self):
         text = (PACKAGE / "README.md").read_text(encoding="utf-8")
-        for term in ("knowledge-delta/1", "content_fingerprint", "BEGIN IMMEDIATE", "ingest", "query", "stats", "export",
-                     "INVALID_DELTA", "SECRET_SHAPE", "historical", "unchanged_since:"):
+        for term in ("knowledge-delta/1", "research-claims/1", "content_fingerprint", "BEGIN IMMEDIATE", "ingest",
+                     "query", "stats", "export", "INVALID_DELTA", "SECRET_SHAPE", "historical", "unchanged_since:"):
             self.assertIn(term, text)
 
     def test_package_copy_passes_its_own_suite_from_an_unrelated_directory(self):

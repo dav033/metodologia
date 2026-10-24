@@ -23,3 +23,24 @@ def export(db_path: str | Path, project: str, format: str, *, commit: str | None
 
 def stats(db_path: str | Path, project: str) -> dict:
     return bt_knowledge.stats(db_path, project)
+
+
+def ingest_claims(db_path: str | Path, document: object) -> dict:
+    return bt_knowledge.ingest_claims(db_path, document)
+
+
+def query_claims(db_path: str | Path, project: str, *, topic: str | None = None, kind: str | None = None,
+                 facts_only: bool = False) -> list[dict]:
+    return bt_knowledge.query_claims(db_path, project, topic=topic, kind=kind, facts_only=facts_only)
+
+
+def claims_dossier(db_path: str | Path, project: str, subplan: str, *, max_bytes: int = 12000) -> str:
+    return bt_knowledge.claims_dossier(db_path, project, subplan, max_bytes=max_bytes)
+
+
+def invalidate_claims(db_path: str | Path, project: str, topic: str, reason: str, *, kind: str | None = None) -> dict:
+    return bt_knowledge.invalidate_claims(db_path, project, topic, reason, kind=kind)
+
+
+def claims_stats(db_path: str | Path, project: str) -> dict:
+    return bt_knowledge.claims_stats(db_path, project)
