@@ -61,13 +61,17 @@ def _list(raw: str | None, *, paths: bool) -> list[str] | None:
 
 NEAR_MISS_KEYS = {"repository": "repo", "depends": "after", "depends_on": "after", "dependencies": "after",
                   "deps": "after", "verification": "verify", "test": "verify", "tests": "verify", "file": "files",
-                  "paths": "files", "resource": "resources", "shared_resources": "resources", "cover": "covers"}
+                  "paths": "files", "resource": "resources", "shared_resources": "resources", "cover": "covers",
+                  "subplan_id": "subplan", "ui_work": "ui"}
+SCHEMA_13_KEYS = ("subplan", "ui")
 NEAR_TASK_RE = re.compile(r"^\s*[-*]\s+\[[ xX]\]\s+[*_`]*([Tt][-_.]?[0-9][\w.-]*?)[*_`]*(?:\s|$)")
 
 
-def parse_task_line(rest: str, problems: list[str] | None = None) -> dict:
-    """Fields of one task line. Pass `problems` to collect what the tolerant parsing would otherwise drop silently."""
+def parse_task_line(rest: str, problems: list[str] | None = None, annotations: list[str] | None = None) -> dict:
+    """Fields of one task line. Pass `problems` to collect what the tolerant parsing would otherwise drop silently;
+    `annotations` collects schema 1.3 `subplan`/`ui` issues, which only a 1.3 plan reports (legacy plans ignore them)."""
     issues = problems if problems is not None else []
+    notes = annotations if annotations is not None else issues
     verify = None
     found = re.search(r"verify:\s*`([^`]+)`", rest)
     if found:
@@ -81,7 +85,7 @@ def parse_task_line(rest: str, problems: list[str] | None = None) -> dict:
         if key in fields:
             issues.append(f"field '{key}' is given more than once")
         if key in NEAR_MISS_KEYS:
-            issues.append(f"field '{key}:' is not read; the field is '{NEAR_MISS_KEYS[key]}:'")
+            (notes if NEAR_MISS_KEYS[key] in SCHEMA_13_KEYS else issues).append(f"field '{key}:' is not read; the field is '{NEAR_MISS_KEYS[key]}:'")
         fields[key] = value.strip()
     if "verify" in fields and verify is None:
         issues.append("verify must be a backticked command (verify: `cmd`); it is ignored as written")
@@ -106,19 +110,33 @@ def parse_task_line(rest: str, problems: list[str] | None = None) -> dict:
     kind = fields.get("kind") or None
     if "kind" in fields and kind is None:
         issues.append("kind: needs a non-empty Scheduler-supported kind")
-    return {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify, "after": after,
-            "files": files, "resources": resources, "covers": covers, "kind": kind,
-            "complexity": (fields.get("complexity") or fields.get("size") or "").lower() or None,
-            "risk": (fields.get("risk") or "").lower() or None}
+    result = {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify, "after": after,
+              "files": files, "resources": resources, "covers": covers, "kind": kind,
+              "complexity": (fields.get("complexity") or fields.get("size") or "").lower() or None,
+              "risk": (fields.get("risk") or "").lower() or None}
+    if "subplan" in fields:
+        subplan = fields["subplan"].strip()
+        if re.fullmatch(r"SP-[1-9][0-9]*", subplan):
+            result["subplan"] = subplan
+        else:
+            notes.append("subplan: must be SP-n with a positive integer")
+    if "ui" in fields:
+        ui = fields["ui"].strip().lower()
+        if ui in ("yes", "no"):
+            result["ui"] = ui == "yes"
+        else:
+            notes.append("ui: must be yes or no")
+    return result
 
 
 def parse_document(text: str) -> dict:
-    """{tasks, milestones, problems}. Tasks keep document order and carry `line`; milestones list only those that
+    """{tasks, milestones, problems, annotation_problems}. Tasks keep document order and carry `line`; milestones list only those that
     contain tasks. `problems` are PLAN.md-only ambiguities (see module docstring), each naming its line."""
     tasks: list[dict] = []
     titles: dict[str, str] = {}
     headings: dict[str, list[tuple[int, str]]] = {}
     problems: list[str] = []
+    annotations: list[str] = []
     milestone = None
     for number, line in enumerate(_strip_comments(text).splitlines(), start=1):
         head = MILESTONE_RE.match(line)
@@ -137,8 +155,10 @@ def parse_document(text: str) -> dict:
                             "(use T1, T2.1, T3a); it is not part of the plan")
         if task:
             local: list[str] = []
-            fields = parse_task_line(task.group(3), local)
+            notes: list[str] = []
+            fields = parse_task_line(task.group(3), local, notes)
             problems += [f"PLAN.md line {number}: {task.group(2)}: {issue}" for issue in local]
+            annotations += [f"PLAN.md line {number}: {task.group(2)}: {issue}" for issue in notes]
             tasks.append({"id": task.group(2), "done": task.group(1) != " ", "milestone": milestone, "line": number,
                           **fields})
     seen: dict[str, list[int]] = {}
@@ -157,7 +177,8 @@ def parse_document(text: str) -> dict:
         if task["milestone"]:
             stones.setdefault(task["milestone"], {"id": task["milestone"], "title": titles.get(task["milestone"], ""),
                                                   "tasks": []})["tasks"].append(task["id"])
-    return {"tasks": tasks, "milestones": list(stones.values()), "problems": problems}
+    return {"tasks": tasks, "milestones": list(stones.values()), "problems": problems,
+            "annotation_problems": annotations}
 
 
 def parse(text: str) -> tuple[list[dict], list[dict]]:
@@ -170,7 +191,7 @@ def read_document(path: Path) -> dict:
     try:
         return parse_document(Path(path).read_text(encoding="utf-8"))
     except (OSError, UnicodeError):
-        return {"tasks": [], "milestones": [], "problems": []}
+        return {"tasks": [], "milestones": [], "problems": [], "annotation_problems": []}
 
 
 def read(path: Path) -> tuple[list[dict], list[dict]]:

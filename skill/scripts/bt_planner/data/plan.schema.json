@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "bitacora/plan.schema.json",
   "title": "Planner contract PLAN.json",
-  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Schema 1.2.0 adds requirement coverage, task kind, interface contracts and verification categories. Cross-field rules (unique ids, existing references, acyclic after, milestone order, traceability, interfaces, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
+  "description": "Structured work plan published by the planner for a deterministic scheduler. Classification fields are mandatory and never defaulted; from schema 1.1.0 every classification is also argued in classification_evidence. Schema 1.2.0 adds requirement coverage, task kind, interface contracts and verification categories. Schema 1.3.0 adds optional functional subplans, composition gates, UI contracts and verification environments. Cross-field rules (unique ids, existing references, acyclic after, milestone order, traceability, interfaces, evidence strength, unordered tasks that share a path, PLAN.md agreement) are enforced by the validator of this package (contract.validate / sync.check) and are not expressible here.",
   "type": "object",
   "required": ["schema_version", "plan_id", "revision", "spec_ref", "milestones", "tasks"],
   "properties": {
@@ -21,7 +21,9 @@
     "milestones": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/milestone"}},
     "tasks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/task"}},
     "requirements": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/requirement_id"}},
-    "interfaces": {"type": "array", "items": {"$ref": "#/$defs/interface"}}
+    "interfaces": {"type": "array", "items": {"$ref": "#/$defs/interface"}},
+    "subplans": {"type": "array", "maxItems": 64, "items": {"$ref": "#/$defs/subplan"}},
+    "composition_gates": {"type": "array", "maxItems": 32, "items": {"$ref": "#/$defs/composition_gate"}}
   },
   "allOf": [
     {"if": {"properties": {"schema_version": {"pattern": "^1\\.([1-9][0-9]*)\\."}}, "required": ["schema_version"]},
@@ -33,7 +35,10 @@
          "tasks": {"items": {"required": ["covers", "kind"],
                                "properties": {"verification": {"items": {"required": ["category"]}}}}}
        }
-     }}
+     }},
+    {"if": {"properties": {"schema_version": {"pattern": "^1\\.(?:0|1|2)\\."}}, "required": ["schema_version"]},
+     "then": {"properties": {"tasks": {"items": {"properties": {"kind": {"enum": ["implement", "test", "docs", "audit", "research"]}}}}}}
+    }
   ],
   "$defs": {
     "text": {"type": "string", "pattern": "\\S"},
@@ -79,7 +84,10 @@
         "expected": {"$ref": "#/$defs/text", "description": "required when type is manual"},
         "created_by": {"type": "string", "pattern": "^T[0-9]+(\\.[0-9]+)?[a-z]?$", "description": "task that creates a test that does not exist yet"},
         "category": {"enum": ["static", "functional", "integration", "regression", "product"],
-                     "description": "what this verification demonstrates, independent of command/manual execution type"}
+                     "description": "what this verification demonstrates, independent of command/manual execution type"},
+        "environment": {"enum": ["sandbox", "external_authorized", "production", "human_attestation"]},
+        "requires": {"type": "array", "items": {"type": "string", "pattern": "^(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})$"}},
+        "authorization_needed": {"$ref": "#/$defs/text"}
       }
     },
     "task": {
@@ -107,14 +115,33 @@
         "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/text"}},
         "verification": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/verification"}},
         "covers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/requirement_id"}},
-        "kind": {"enum": ["implement", "test", "docs", "audit", "research"],
+        "kind": {"enum": ["implement", "test", "docs", "audit", "research", "design"],
                  "description": "model-agnostic kind from the Scheduler-supported vocabulary"},
+        "subplan_id": {"type": "string", "pattern": "^SP-[1-9][0-9]*$"},
+        "ui": {"type": "boolean"},
         "scope_exception": {"type": "object", "required": ["reason"], "properties": {"reason": {"$ref": "#/$defs/text"}},
                             "description": "only with scope=full_system, for explicit review"}
       },
       "not": {"anyOf": [{"required": ["model"]}, {"required": ["agent"]}, {"required": ["account"]},
                         {"required": ["workers"]}, {"required": ["status"]}, {"required": ["attempts"]}]}
     },
+    "subplan": {
+      "type": "object", "required": ["id", "milestone_id", "title", "outcome", "covers", "acceptance_criteria", "integration_test_task", "audit_task"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^SP-[1-9][0-9]*$"}, "milestone_id": {"type": "string", "pattern": "^M[0-9]+$"},
+        "title": {"$ref": "#/$defs/text"}, "outcome": {"$ref": "#/$defs/text"},
+        "covers": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/requirement_id"}},
+        "acceptance_criteria": {"$ref": "#/$defs/texts"},
+        "produces": {"type": "array", "items": {"$ref": "#/$defs/produced_contract"}},
+        "consumes": {"type": "array", "items": {"$ref": "#/$defs/consumed_contract"}},
+        "checkpoints": {"type": "array", "items": {"type": "object", "required": ["task", "purpose"], "properties": {"task": {"type": "string"}, "purpose": {"$ref": "#/$defs/text"}}}},
+        "integration_test_task": {"type": "string"}, "audit_task": {"type": "string"}, "ui": {"$ref": "#/$defs/ui_contract"}
+      }
+    },
+    "produced_contract": {"type": "object", "required": ["contract", "version", "defined_by"], "properties": {"contract": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"}, "version": {"type": "integer", "minimum": 1, "maximum": 1000}, "defined_by": {"type": "string"}, "interfaces": {"type": "array", "items": {"type": "string", "pattern": "^IF-[1-9][0-9]*$"}}}},
+    "consumed_contract": {"type": "object", "required": ["contract", "version", "from", "dependency"], "properties": {"contract": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"}, "version": {"type": "integer", "minimum": 1, "maximum": 1000}, "from": {"type": "string", "pattern": "^(?:SP-[1-9][0-9]*|external)$"}, "dependency": {"enum": ["contract", "implementation", "publication"]}, "verified_by": {"type": "array", "items": {"type": "string"}}}},
+    "ui_contract": {"type": "object", "required": ["contract", "version", "design_task", "visual_review_task"], "properties": {"contract": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"}, "version": {"type": "integer", "minimum": 1, "maximum": 1000}, "design_task": {"type": "string"}, "visual_review_task": {"type": "string"}}},
+    "composition_gate": {"type": "object", "required": ["id", "subplans", "task", "criteria"], "properties": {"id": {"type": "string", "pattern": "^CG-[1-9][0-9]*$"}, "subplans": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^SP-[1-9][0-9]*$"}}, "task": {"type": "string"}, "audit_task": {"type": "string"}, "criteria": {"$ref": "#/$defs/texts"}}},
     "interface": {
       "type": "object",
       "required": ["id", "title", "owner", "producer_task", "consumer_tasks", "inputs", "outputs", "invariants",

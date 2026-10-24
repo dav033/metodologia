@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.3.0",
+  "plan_id": "REQ-EXAMPLE-13",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [{"id": "M1", "title": "Session validation", "acceptance_criteria": ["Expired sessions are rejected"]}],
+  "requirements": ["AUTH-1"],
+  "tasks": [{
+    "id": "T1", "milestone_id": "M1", "title": "Reject expired sessions",
+    "objective": "Reject expired sessions and keep valid sessions working", "repository": "backend", "after": [],
+    "complexity": "low", "scope": "isolated_fix", "estimated_minutes": 25,
+    "risk": "high", "coupling": "low", "confidence": "medium",
+    "estimate_rationale": "The session expiry branch and its test are localized",
+    "expected_paths": ["src/auth/session.py", "tests/auth/test_session.py"], "shared_resources": [],
+    "acceptance_criteria": ["Expired sessions are rejected"], "covers": ["AUTH-1"], "kind": "implement",
+    "verification": [{"type": "command", "value": "pytest tests/auth -q", "purpose": "check session behavior",
+                       "category": "functional", "environment": "sandbox", "requires": ["AUTH_TEST_CONFIG"]}],
+    "classification_evidence": {
+      "complexity": {"justification": "One known local validation branch changes", "evidence": ["file:src/auth/session.py"]},
+      "scope": {"justification": "Only session validation and its focused test change", "evidence": ["file:src/auth/session.py"]},
+      "duration": {"justification": "A localized code and test change fits a short task", "evidence": ["command:pytest tests/auth -q -> the focused auth tests pass"]},
+      "risk": {"justification": "Incorrect expiry behavior can reject valid users or accept expired sessions", "evidence": ["spec:SPEC.md#auth"]},
+      "coupling": {"justification": "The change is limited to one session contract and its tests", "evidence": ["file:src/auth/session.py"]},
+      "confidence": {"justification": "The affected code and focused test are known", "evidence": ["file:src/auth/session.py"]}
+    }
+  }]
+}

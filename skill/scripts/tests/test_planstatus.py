@@ -49,6 +49,21 @@ class Base(unittest.TestCase):
         return rdir
 
 
+class SubplanGrouping(Base):
+    def test_status_carries_membership_and_titles_without_hiding_unassigned_tasks(self):
+        plan = json.loads(json.dumps(PLAN))
+        plan["schema_version"] = "1.3.0"
+        plan["subplans"] = [{"id": "SP-1", "milestone_id": "M1", "title": "Auth slice"}]
+        plan["tasks"][0]["subplan_id"] = "SP-1"
+        plan["tasks"][1]["subplan_id"] = "SP-1"
+        status = ps.plan_status("demo", self.req(contract=plan))
+        self.assertEqual([task["subplan_id"] for task in status["milestones"][0]["tasks"]], ["SP-1", "SP-1"])
+        self.assertEqual([task["subplan_title"] for task in status["milestones"][0]["tasks"]],
+                         ["Auth slice", "Auth slice"])
+        self.assertEqual([task["id"] for milestone in status["milestones"] for task in milestone["tasks"]],
+                         ["T1", "T2", "T3", "T4"])
+
+
 class ContractPlan(Base):
     def test_derived_milestone_difficulty_and_counts(self):
         status = ps.plan_status("demo", self.req())

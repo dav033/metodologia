@@ -45,7 +45,10 @@ class SecondAuditor(unittest.TestCase):
 
     def test_the_consumer_gate_includes_it(self):
         path = write(1)
-        report = {"required_schema_version": "1.2.0", "supported": True}
+        report = {"required_schema_version": "1.2.0", "supported": True,
+                  "planner": {"status": "supported", "schema_version": "1.2.0"},
+                  "consumers": {name: {"status": "supported", "supported_schema_versions": ["1.2.0"]}
+                                for name in ("M1", "M2", "M6")}}
         self.assertIn("SECOND_AUDITOR_MISSING",
                       adapter.plan_consumer_problem(path.parent, compatibility_report=report, plan_path=path))
 

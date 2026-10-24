@@ -138,6 +138,24 @@ declared producer/consumer contract; `verification_categories` groups declared c
 `criteria_without_command` lists criteria whose verification does not provide one unique exact-purpose command for M6.
 None of these projections is an acceptance boolean.
 
+## Schema 1.3.0
+
+1.3.0 adds optional `subplans` and `composition_gates` in PLAN.json, plus task `subplan_id`/`ui`, the `design` task
+kind, and verification `environment`, `requires` and `authorization_needed`. A subplan owns task membership and
+requirement coverage, freezes its contracts, names an integration test and a final audit, and can declare checkpoints
+and a UI design/visual review contract. Composition gates record integration across accepted subplans. The Planner
+validates dependency order, declared cross-subplan edges, requirement coverage, UI review order, resource names,
+behavioral verification and early checkpoints; it never assigns execution or grants authorization.
+
+Every diagnostic added for 1.3.0 starts with its stable code (`SUBPLAN_*`, `COMPOSITION_*`, `UI_*`,
+`REQUIREMENT_ORPHAN`, `LATE_CHECKPOINT`, `SECRET_VALUE_IN_PLAN`, `EXTERNAL_ONLY_IMPLEMENT`,
+`FILE_EXISTENCE_CHECK`, `UI_WORK_UNDECLARED`, `SCHEMA_FIELD_UNSUPPORTED`,
+`SUBPLAN_EDGE`, `SUBPLAN_CONTRACT`, `VERIFICATION_ENV_INVALID`, `CONSUMER_CONTRACT_TEST_MISSING`). A 1.3.0-only
+field in an older plan does not change consumer validation output; it errors at publication. The legacy enum error for
+`kind: design` remains unchanged. Canonical ordering and hashing add the new fields only for 1.3.0; 1.0.0–1.2.0
+serialization stays fixed.
+`LATEST_SCHEMA_VERSION` is 1.3.0, while new skeletons remain 1.2.0 until engine consumers support the version.
+
 ### Rubric (the dimensions are independent)
 
 - **complexity** = reasoning needed, not time, file count or model quality. `low` known localized solution · `medium`

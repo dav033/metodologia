@@ -12,11 +12,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import evidence as ev
-from . import command_checks, generated, interfaces, milestone_audits, quality, traceability, verification
+from . import command_checks, generated, interfaces, milestone_audits, quality, schema_13 as schema13, traceability, verification
 
 SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
 EVIDENCE_SINCE = (1, 1, 0)
 EXTENSIONS_SINCE = (1, 2, 0)
+SCHEMA_13 = (1, 3, 0)
+LATEST_SCHEMA_VERSION = "1.3.0"
 SUPPORTED_MAJOR = 1
 MAX_BYTES = 2_000_000
 
@@ -25,6 +27,7 @@ SCOPE = ("isolated_fix", "small_change", "large_change", "full_feature", "full_s
 LEVELS = ("low", "medium", "high")  # risk, coupling and confidence share the three-step scale
 VERIFICATION_TYPES = ("command", "manual")
 TASK_KINDS = ("implement", "test", "docs", "audit", "research")
+TASK_KINDS_13 = TASK_KINDS + ("design",)
 VERIFICATION_CATEGORIES = quality.VERIFICATION_CATEGORIES
 TASK_ID_RE = re.compile(r"T[0-9]+(?:\.[0-9]+)?[a-z]?")  # ASCII digits only: \d would accept other scripts
 MILESTONE_ID_RE = re.compile(r"M[0-9]+")
@@ -39,6 +42,7 @@ MILESTONE_KEYS = ("id", "title", "acceptance_criteria")
 TASK_KEYS = ("id", "milestone_id", "title", "objective", "repository", "after", "complexity", "scope",
              "estimated_minutes", "risk", "coupling", "confidence", "estimate_rationale", "classification_evidence",
              "expected_paths", "shared_resources", "acceptance_criteria", "verification", "covers", "kind")
+TASK_KEYS_13 = TASK_KEYS + ("subplan_id", "ui")
 REQUIRED_TASK_KEYS = tuple(k for k in TASK_KEYS if k not in ("classification_evidence", "covers", "kind"))
 VERIFICATION_KEYS = ("type", "value", "purpose", "expected", "created_by", "category")
 # The plan classifies; scheduling and execution state belong to other systems (AC-11, AC-15).
@@ -178,7 +182,7 @@ def schema_tuple(plan: dict) -> tuple[int, int, int]:
 
 def _check_task(report: Report, task: object, index: int, milestones: dict[str, int], ids: set[str],
                 strict: bool = False, file_exists: ev.FileExists | None = None,
-                ref_exists: ev.RefExists | None = None, schema_12: bool = False) -> str | None:
+                ref_exists: ev.RefExists | None = None, schema_12: bool = False, schema_13: bool = False) -> str | None:
     where = f"tasks[{index}]"
     if not isinstance(task, dict):
         report.errors.append(f"{where}: must be an object")
@@ -201,7 +205,7 @@ def _check_task(report: Report, task: object, index: int, milestones: dict[str, 
     for key in ("risk", "coupling", "confidence"):
         _enum(report, where, task, key, LEVELS)
     if schema_12:
-        _enum(report, where, task, "kind", TASK_KINDS)
+        _enum(report, where, task, "kind", TASK_KINDS_13 if schema_13 else TASK_KINDS)
     minutes = task.get("estimated_minutes")
     if not _int(minutes) or not 0 < minutes <= MAX_MINUTES:
         shown = minutes if _int(minutes) and abs(minutes) <= MAX_MINUTES * 10 else type(minutes).__name__
@@ -335,10 +339,13 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.errors.append(f"{dup}: duplicate task id ({where_dup})")
     id_set = set(ids)
     strict = schema_tuple(plan) >= EVIDENCE_SINCE
+    schema_13 = supported_version and schema_tuple(plan) >= SCHEMA_13
     schema_12 = supported_version and schema_tuple(plan) >= EXTENSIONS_SINCE
+    unsupported = schema13.unsupported_fields(plan) if strict_publication and not schema_13 else []
+    report.errors.extend(unsupported)
     for index, task in enumerate(tasks):
         _check_task(report, task, index, milestones, id_set, strict, file_exists, ref_exists,
-                    schema_12=schema_12)
+                    schema_12=schema_12, schema_13=schema_13)
     _check_graph(report, [t for t in tasks if isinstance(t, dict)], milestones)
     if not report.errors or all("cycle" not in e for e in report.errors):
         (report.errors if strict else report.warnings).extend(quality.conflicts(plan))
@@ -375,6 +382,10 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.errors.extend(quality.audit_findings(plan))
         report.warnings.extend(quality.audit_advice(plan))
         report.warnings.extend(milestone_audits.advice(plan, quality.ancestors(plan)))
+    if schema_13:
+        extra_errors, extra_warnings = schema13.check(plan)
+        report.errors.extend(extra_errors)
+        report.warnings.extend(extra_warnings)
     command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
     report.errors.extend(command_errors)
     report.warnings.extend(command_warnings)
@@ -410,8 +421,10 @@ def canonicalize(plan: dict) -> dict:
     version = schema_tuple(plan)
     modern = version >= EVIDENCE_SINCE
     schema_12 = version >= EXTENSIONS_SINCE
-    task_keys = TASK_KEYS if schema_12 else SCHEMA_1_1_TASK_KEYS if modern else LEGACY_TASK_KEYS
-    verification_keys = VERIFICATION_KEYS if schema_12 else SCHEMA_1_1_VERIFICATION_KEYS
+    schema_13 = version >= SCHEMA_13
+    task_keys = TASK_KEYS_13 if schema_13 else TASK_KEYS if schema_12 else SCHEMA_1_1_TASK_KEYS if modern else LEGACY_TASK_KEYS
+    verification_keys = VERIFICATION_KEYS + ("environment", "requires", "authorization_needed") if schema_13 else \
+        VERIFICATION_KEYS if schema_12 else SCHEMA_1_1_VERIFICATION_KEYS
     top = _ordered(plan, TOP_REQUIRED[:4], modern)
     milestones = plan.get("milestones", [])
     top["milestones"] = [_ordered(m, MILESTONE_KEYS, modern) for m in milestones] if isinstance(milestones, list) \

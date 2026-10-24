@@ -133,7 +133,8 @@ def md_problems(directory: Path) -> list[str]:
 def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list[str]:
     """Differences between PLAN.md and PLAN.json (empty list = consistent): ids defined once on each side, milestone
     membership and titles, task titles, repo, `after`, stated verify command, and a legacy risk on the same scale.
-    Schema 1.2.0 also compares explicitly stated `covers` and `kind`; legacy plans keep their prior interpretation."""
+    Schema 1.2.0 also compares explicitly stated `covers` and `kind`; schema 1.3.0 compares `subplan` and `ui`.
+    Legacy plans keep their prior interpretation."""
     doc = md.read_document(Path(directory) / PLAN_MD)
     parsed, stones = doc["tasks"], doc["milestones"]
     problems: list[str] = list(doc["problems"])
@@ -153,6 +154,9 @@ def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list
     json_list = [t for t in _dicts(plan.get("tasks")) if isinstance(t.get("id"), str)]
     json_tasks = {t["id"]: t for t in json_list}
     schema_12 = pc.schema_tuple(plan) >= pc.EXTENSIONS_SINCE
+    schema_13 = pc.schema_tuple(plan) >= pc.SCHEMA_13
+    if schema_13:
+        problems += doc["annotation_problems"]
     for tid in sorted({t["id"] for t in json_list if sum(1 for o in json_list if o["id"] == t["id"]) > 1}):
         problems.append(f"{tid}: defined more than once in PLAN.json")
     for tid in sorted(md_tasks.keys() - json_tasks.keys()):
@@ -201,6 +205,17 @@ def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list
                                     f"{sorted(json_covers)}")
             if doc_t.get("kind") is not None and doc_t["kind"] != js.get("kind"):
                 problems.append(f"{tid}.kind: PLAN.md says {doc_t['kind']!r}, PLAN.json says {js.get('kind')!r}")
+        if schema_13:
+            if "subplan_id" in js or "subplan" in doc_t:
+                stated = doc_t.get("subplan")
+                declared = js.get("subplan_id")
+                if stated != declared:
+                    problems.append(f"{tid}.subplan_id: PLAN.md says {stated!r}, PLAN.json says {declared!r}")
+            if "ui" in js or "ui" in doc_t:
+                if "ui" not in doc_t:
+                    problems.append(f"{tid}.ui: PLAN.md does not declare ui, PLAN.json says {js.get('ui')!r}")
+                elif doc_t["ui"] != js.get("ui"):
+                    problems.append(f"{tid}.ui: PLAN.md says {doc_t['ui']!r}, PLAN.json says {js.get('ui')!r}")
     md_milestones = {m["id"]: m for m in stones}
     json_milestones = {m["id"]: m for m in _dicts(plan.get("milestones")) if isinstance(m.get("id"), str)}
     for mid in sorted(md_milestones.keys() - json_milestones.keys()):

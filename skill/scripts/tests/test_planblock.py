@@ -63,6 +63,24 @@ class Render(unittest.TestCase):
         self.assertIn("| T3 | Task T3 | media | pendiente | — | — | 0 |", block)
         self.assertFalse(re.search(r"^#|\[[ x]\]", block, re.M), "no heading or checkbox may appear in the block")
 
+    def test_subplan_tasks_are_grouped_and_unassigned_tasks_remain_visible(self):
+        status = fixture_status()
+        status["milestones"][0]["tasks"][0].update(subplan_id="SP-1", subplan_title="Auth slice")
+        block = pb.render_block(status, "2026-10-18T10:00:00+00:00")
+        self.assertIn("**SP-1 — Auth slice**", block)
+        self.assertIn("**Sin subplan**", block)
+        self.assertEqual(block.count("| T1 |"), 1)
+        self.assertEqual(block.count("| T2 |"), 1)
+
+    def test_terminal_status_groups_subplan_tasks_and_keeps_composition_tasks(self):
+        status = fixture_status()
+        status["milestones"][0]["tasks"][0].update(subplan_id="SP-1", subplan_title="Auth slice")
+        table = pb.status_table(status)
+        self.assertIn("SP-1 Auth slice", table)
+        self.assertIn("Sin subplan", table)
+        self.assertEqual(table.count("T1 "), 1)
+        self.assertEqual(table.count("T2 "), 1)
+
 
 class Refresh(Isolated):
     def setUp(self):

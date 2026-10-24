@@ -1,0 +1,36 @@
+{
+  "legacy_task_count": 24,
+  "legacy_first_barrier": "T24",
+  "defects": [
+    {
+      "defect": "F1",
+      "introducing_task": "T1",
+      "legacy_first_barrier": "T24",
+      "first_barrier": "T7"
+    },
+    {
+      "defect": "F2",
+      "introducing_task": "T2",
+      "legacy_first_barrier": "T24",
+      "first_barrier": "T7"
+    },
+    {
+      "defect": "F3",
+      "introducing_task": "T3",
+      "legacy_first_barrier": "T24",
+      "first_barrier": "T7"
+    },
+    {
+      "defect": "F4",
+      "introducing_task": "T10",
+      "legacy_first_barrier": "T24",
+      "first_barrier": "T14"
+    },
+    {
+      "defect": "F5",
+      "introducing_task": "T11",
+      "legacy_first_barrier": "T24",
+      "first_barrier": "T14"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ never writes run state: it inspects, writes, validates, hands over and ends.
 
 | File | Owner | Role |
 |---|---|---|
-| `SPEC.md`, `PLAN.md` | planner | what/why and the human narrative (schema 1.2.0 adds `covers:` and `kind:` annotations) |
+| `SPEC.md`, `PLAN.md` | planner | what/why and the human narrative (`covers:`/`kind:` since 1.2.0; `subplan:`/`ui:` in 1.3.0) |
 | `PLAN.json` | planner | the classified, validated contract the scheduler reads |
 | `plan-revisions/PLAN.r<N>.json` + `MANIFEST.json` | planner at approval | immutable approved revisions with sha256 |
 | `HANDOFF.md` | launch | context for a fresh executor session |
@@ -27,7 +27,8 @@ those keys). The scheduler run database is authority on state. A plan without a 
 
 1. Inspect the real project; never copy paths, commands or tests from another plan without checking they exist.
 2. Write `SPEC.md` and `PLAN.md` as usual (milestones `### M1 — …`, task lines with `after:` and backticked `verify:`;
-   schema 1.2.0 task lines may also state `covers:` and `kind:`).
+   schema 1.2.0 adds `covers:` and `kind:`, and schema 1.3.0 adds `subplan: SP-n` and `ui: yes|no`). Subplans are
+   functional work groups inside milestones, not milestone headings.
 3. `bitacora.py plan-json init REQ-NNN` derives the skeleton and requirement IDs from `SPEC.md`'s `Requirements`
    section. Each task starts with empty `covers` unless PLAN.md declares coverage; missing fields remain gaps.
 4. Fill the classification and requirement coverage in `PLAN.json` (rubric: `bt_planner/README.md`). **Argue every dimension**: schema 1.1.0 needs
@@ -37,9 +38,10 @@ those keys). The scheduler run database is authority on state. A plan without a 
 5. `bitacora.py plan-json check REQ-NNN` (exit 2 on any error) is the publication gate: schema, evidence (`file:`
    references are verified against the project's registered repositories; unverifiable ones are an error at approval and
    launch), PLAN.md ↔ PLAN.json agreement and unordered tasks that collide. For schema 1.2.0 it also validates
-   requirement coverage, interface contracts, task `kind` and verification `category`. Fix and rerun; do not present an
-   invalid plan for approval. `plan-json report REQ-NNN` adds planned coverage, declared interfaces and verification
-   projections for 1.2.0; these are not acceptance verdicts.
+   requirement coverage, interface contracts, task `kind` and verification `category`; for 1.3.0 it validates subplans,
+   composition gates, UI gates, early checkpoints, external-verification declarations and behavioral checks. Fix and
+   rerun; do not present an invalid plan for approval. Reports describe planned coverage and checks; they are not
+   acceptance verdicts.
 6. Approval freezes: `plan approve` (terminal), the web button and `handoff` validate PLAN.json and freeze exactly that
    revision (an invalid plan cannot be approved). **A launch never freezes**: a plan approved by editing `status:` by
    hand is refused with `PLAN_NOT_FROZEN` until `plan-json freeze REQ-NNN` records the approval (there is no `launch --force`). Later scope changes mean `revision: N+1` and a new approval.
@@ -49,21 +51,53 @@ those keys). The scheduler run database is authority on state. A plan without a 
    broken contract, never "an easy plan". `bitacora.py go REQ-NNN` classifies it through the Planner and runs it.
 7. Close the planning session; a later session reads `PLAN.json` / `plan-revisions/` only. Nothing here launches agents.
 
-`plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports what a legacy plan lacks
-(and any ambiguity in its PLAN.md). Schema 1.0.0/1.1.0 plans already frozen keep working; new revisions use 1.2.0.
-Publication-only rules reject new approvals and freezes, while consumer validation and binding of an already frozen
-plan keep those rules as advice. In particular, a private findings-ledger checker in an old plan remains loadable;
-`plan-json check` refuses it when preparing the next approval. `compat` does not rewrite or refreeze it.
-Do not approve, hand off, launch or resume a 1.2.0 plan until the T11 M1/M2/M6 compatibility migration and its
-fail-closed capability check are complete.
+`plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports legacy gaps, PLAN.md
+ambiguities and `consumer_supported`. Schema 1.0.0–1.2.0 plans retain their prior parsing, canonical bytes and hashes.
+The validator accepts schema 1.3.0, but `plan-json init` still creates 1.2.0 plans. The engine is not ready to publish
+1.3.0 until the downstream compatibility report says the Planner and M1, M2 and M6 all support that exact version;
+missing, malformed or unknown capability data fails closed with `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE`. The adapter checks
+this before changing owner approval status or writing a frozen revision. F4-7 owns the later capability/default switch.
+
+Frozen revisions are atomic: the complete `PLAN.json`, including subplans and composition gates, is canonicalized,
+hashed, frozen and rebound as one revision. There is no second subplan manifest. Existing frozen revisions remain
+loadable under consumer rules; publication-only validation can reject content before a new approval. The planner never
+sets runtime execution outcomes.
 
 ### What `check` compares between PLAN.md and PLAN.json
 
 Ids defined once on both sides, milestone membership and titles, task titles, `repo:` against `repository`, `after:`
 (as a set), a stated `verify:` against a command verification, a legacy `risk: low|medium|high`, and, for schema 1.2.0,
-explicit `covers:` and `kind:` values. A value PLAN.md does not
-state is not a contradiction; one it states differently is an error. Fields the parser would silently drop (a repeated
+explicit `covers:` and `kind:` values. For 1.3.0, declared `subplan:` and `ui:` annotations must agree with
+`subplan_id` and `ui`; omission is an error when JSON declares the field. Subplan headings are not required. A value
+PLAN.md does not state is not a contradiction unless JSON declares that 1.3.0 metadata; one it states differently is an
+error. Fields the parser would silently drop (a repeated
 field, an `after` entry that is not a task id, an unbackticked `verify`) are reported with their line.
+
+### Schema 1.3.0 fields and gates
+
+`subplans` (optional, at most 64) group tasks within one milestone. Each has `id` (`SP-n`), `milestone_id`, `title`,
+observable `outcome`, `covers`, and task-carried `acceptance_criteria`; optional producer/consumer contracts and
+checkpoints describe interfaces and early evidence. Every declared subplan needs its integration test and audit task.
+Tasks may declare `subplan_id` (one subplan) and `ui` (boolean); task kind adds `design`. `composition_gates` (optional,
+at most 32) identify real integration tests across one or more subplans and optional composition audits. Plans with
+subplans group status rows inside existing milestones; gate/final tasks without a subplan remain visible.
+
+For UI work, a subplan's `ui` block identifies its versioned Designer contract, `design_task`, and `visual_review_task`.
+Every `ui: true` implementation follows the design task, visual review follows all UI tasks, and the subplan audit
+follows visual review. The contract is required for UI work. A preview is optional and configured per project; it is
+not a PLAN.json field. `UI_WORK_UNDECLARED` catches UI-like expected paths without an explicit `ui` declaration.
+
+Verification entries may declare `environment` (`sandbox`, `external_authorized`, `production`, or `human_attestation`;
+absent means `sandbox`), `requires` (resource names only, never secret values), and `authorization_needed` for production.
+`EXTERNAL_ONLY_IMPLEMENT` rejects implementation tasks whose command checks all require non-sandbox environments;
+external checks belong on test tasks and missing access must remain a recoverable external block. Human attestation uses
+a manual verification with an expected result. `FILE_EXISTENCE_CHECK` rejects existence or syntax probes as behavioral
+evidence. These fields classify what a check needs; runtime support for the later `BLOCKED_EXTERNAL` result taxonomy is
+part of F4 and is not implied by Planner validation. Other schema 1.3 stable diagnostics include `SUBPLAN_INVALID`, `SUBPLAN_EMPTY`, `SUBPLAN_NO_OUTCOME`,
+`SUBPLAN_MILESTONE`, `SUBPLAN_COVERAGE`, `SUBPLAN_CRITERION_UNCARRIED`, `SUBPLAN_CONTRACT`, `SUBPLAN_ORDER`,
+`SUBPLAN_CYCLE`, `SUBPLAN_AUDIT`, `SUBPLAN_EDGE`, `SUBPLAN_LATE_CHECKPOINT`, `LATE_CHECKPOINT`,
+`TASK_OUTSIDE_SUBPLAN`, `CONSUMER_CONTRACT_TEST_MISSING` (warning), `UI_GATE_MISSING`, `UI_GATE_ORDER`,
+`UI_REVIEW_ORDER`, `SECRET_VALUE_IN_PLAN`, `REQUIREMENT_ORPHAN`, `COMPOSITION_INVALID`, and `COMPOSITION_MISSING`.
 
 ### Tracked generated outputs (optional, all 1.x plans)
 
