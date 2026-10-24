@@ -236,9 +236,13 @@ def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: s
     if current is not None and (current["state"] != "candidate" or fact_state == "candidate"):
         raise SchedulerError("NOT_ALLOWED", "composition facts are terminal after publication or rejection")
     state.compositions[composition_id] = fact
-    kind = {"candidate": "composition_candidate", "published": "composition_published",
-            "rejected": "composition_rejected"}[fact_state]
-    ctx.audit(kind, composition_id=composition_id, members=members, manifest_sha256=manifest_sha256, reason=reason)
+    detail = {"composition_id": composition_id, "members": members, "manifest_sha256": manifest_sha256, "reason": reason}
+    if fact_state == "published":
+        ctx.audit("composition_published", **detail)
+    elif fact_state == "rejected":
+        ctx.audit("composition_rejected", **detail)
+    else:
+        ctx.audit("composition_candidate", **detail)
 
 
 def adapter_record_subplan_version(scheduler: Any, subplan_id: str, version: int, commit: str,
