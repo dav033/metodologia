@@ -287,7 +287,9 @@ def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: s
         return
     if (current is not None and current["state"] == "candidate" and
             current["manifest_sha256"] != manifest_sha256):
-        raise SchedulerError("NOT_ALLOWED", "composition candidates are immutable under the same id; use a new candidate id")
+        # The composition engine keeps one manifest per candidate from open to publish; another one is another candidate.
+        raise SchedulerError("NOT_ALLOWED", f"composition {composition_id} keeps its candidate manifest; "
+                                            "a different manifest needs a new candidate id")
     if current is not None and (current["state"] != "candidate" or fact_state == "candidate"):
         raise SchedulerError("NOT_ALLOWED", "composition facts are terminal after publication or rejection")
     state.compositions[composition_id] = fact

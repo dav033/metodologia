@@ -245,6 +245,11 @@ class Subplans(unittest.TestCase):
             core.record_composition("candidate", "C2", fact[1], "d" * 64)
         self.assertEqual(caught.exception.code, "NOT_ALLOWED")
         self.assertIn("new candidate id", str(caught.exception))
+        # Publishing or rejecting is a transition of the verified candidate, so it keeps that candidate's manifest.
+        for terminal in ("published", "rejected"):
+            with self.assertRaises(sc.SchedulerError) as caught:
+                core.record_composition(terminal, "C2", fact[1], "d" * 64)
+            self.assertIn("keeps its candidate manifest", str(caught.exception))
 
     def test_gate_waits_with_attention_until_member_has_published_version(self):
         plan = load(plan_13())
