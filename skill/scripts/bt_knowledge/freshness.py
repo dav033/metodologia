@@ -1,7 +1,7 @@
 """Freshness policy for external research claims."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 
 FRESHNESS_DAYS = {
@@ -28,7 +28,8 @@ def claim_status(kind: str, retrieved_dates: list[str], *, disputed: bool = Fals
     if not verified_dates:
         return "unverified"
     newest = max(verified_dates)
-    invalidation_date = date.fromisoformat(invalidated_at[:10]) if invalidated_at else None
+    # Evidence dates are local calendar days; compare the UTC invalidation timestamp on the same clock.
+    invalidation_date = datetime.fromisoformat(invalidated_at).astimezone().date() if invalidated_at else None
     if (invalidated and (invalidation_date is None or newest <= invalidation_date)) or (
             current - newest).days > FRESHNESS_DAYS[kind]:
         return "stale"

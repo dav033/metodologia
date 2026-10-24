@@ -5,7 +5,7 @@ import multiprocessing
 import sqlite3
 import tempfile
 import unittest
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 from bt_knowledge import (
@@ -146,6 +146,27 @@ class ExternalKnowledgeTests(unittest.TestCase):
         claims_stats(external_db, "demo")
         after = {path.name for path in external_db.parent.iterdir()}
         self.assertEqual(after, before)
+
+    def test_reads_see_commits_still_in_an_unflushed_wal(self):
+        ingest_claims(self.db, report())
+        writer = sqlite3.connect(self.db)
+        try:
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+            writer.execute("SELECT count(*) FROM external_claims").fetchone()
+            ingest_claims(self.db, report(claim="requests 2.33 adds Python 3.13 support", excerpt="3.13 supported."))
+            self.assertTrue(Path(f"{self.db}-wal").exists())
+            self.assertEqual(claims_stats(self.db, "demo")["claims"], 2)
+            self.assertEqual(len(query_claims(self.db, "demo")), 2)
+        finally:
+            writer.close()
+
+    def test_invalidation_day_uses_the_local_clock_of_evidence_dates(self):
+        from bt_knowledge.freshness import claim_status
+        today = date.today()
+        tomorrow = (today + timedelta(days=1)).isoformat()
+        late_utc = datetime.combine(today, time(23, 30)).astimezone().astimezone(timezone.utc).isoformat()
+        self.assertEqual(claim_status("docs", [tomorrow], invalidated=True, invalidated_at=late_utc,
+                                      as_of=today + timedelta(days=1)), "fresh")
 
     def test_dossier_respects_byte_limit_without_splitting_external_records(self):
         ingest_claims(self.db, report(claim="Long claim " + "x" * 800))

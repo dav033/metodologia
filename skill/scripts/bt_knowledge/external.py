@@ -54,9 +54,12 @@ def _read_open(db_path: str | Path) -> sqlite3.Connection | None:
     path = Path(db_path)
     if not path.is_file():
         return None
-    db = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro&immutable=1", uri=True, timeout=30)
+    # immutable=1 skips the WAL, so it is only safe while no -wal file holds commits; otherwise read through it.
+    mode = "mode=ro" if Path(f"{path}-wal").exists() else "mode=ro&immutable=1"
+    db = sqlite3.connect(f"{path.resolve().as_uri()}?{mode}", uri=True, timeout=30)
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=30000")
+    db.execute("PRAGMA query_only=1")
     tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     if not {"external_claims", "external_evidence", "external_contradictions", "external_history"} <= tables:
         db.close()
