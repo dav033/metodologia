@@ -12,7 +12,7 @@ from .model import AttemptRec
 from .resources import claims_for, first_conflict
 from .states import AttemptState as A
 from .states import TaskState as T
-from .transitions import Ctx, add_outbox, live_attempt, set_task
+from .transitions import Ctx, add_outbox, enforce_gate_waiting, live_attempt, set_task
 
 
 @dataclass(frozen=True)
@@ -33,6 +33,7 @@ def free_slots(ctx: Ctx) -> int:
 
 def claim(ctx: Ctx, assignment: Assignment) -> ClaimResult:
     state = ctx.state
+    enforce_gate_waiting(ctx)
     task_id = getattr(assignment, "task_id", None)
     if not isinstance(assignment, Assignment) or not isinstance(task_id, str) or task_id not in state.tasks:
         return ClaimResult(False, "unknown_task", task_id=str(task_id))

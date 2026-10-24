@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
+import json
 import re
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
@@ -94,6 +96,49 @@ def _strings(value: object, *, nonempty: bool = False) -> bool:
             all(isinstance(item, str) and bool(item.strip()) for item in value))
 
 
+def _accepted_attempt(state: RunState, task_id: str) -> str | None:
+    rec = state.tasks.get(task_id)
+    if rec is None or rec.state != T.COMPLETED.value or not rec.attempts:
+        return None
+    attempt_id = rec.attempts[-1]
+    attempt = state.attempts.get(attempt_id)
+    return attempt_id if attempt is not None and attempt.state == "accepted" else None
+
+
+def _accepted_identity(plan: Plan, state: RunState, subplan: SubplanSpec) -> dict[str, str] | None:
+    """Bind publication to the accepted audit and all accepted member attempts."""
+    audit_attempt = _accepted_attempt(state, subplan.audit_task)
+    members = sorted(spec.id for spec in plan.tasks if spec.meta.get("subplan_id") == subplan.id)
+    accepted = {task_id: _accepted_attempt(state, task_id) for task_id in members}
+    if audit_attempt is None or any(attempt_id is None for attempt_id in accepted.values()):
+        return None
+    work_digest = hashlib.sha256(json.dumps(accepted, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    return {"audit_attempt_id": audit_attempt, "work_digest": work_digest}
+
+
+def _fact_is_current(plan: Plan, state: RunState, subplan: SubplanSpec) -> bool:
+    fact = state.subplan_versions.get(subplan.id, {})
+    identity = _accepted_identity(plan, state, subplan)
+    return (identity is not None and fact.get("plan_id") == state.plan_id and
+            fact.get("revision") == state.revision and
+            {key: fact.get(key) for key in identity} == identity)
+
+
+def stale_subplan_members(plan: Plan, state: RunState, task_id: str) -> tuple[tuple[str, str], ...]:
+    """Return missing or stale publications required by this gate, with an attention reason per member."""
+    gates = [gate for gate in plan.composition_gates if gate.task == task_id]
+    by_id = {subplan.id: subplan for subplan in plan.subplans}
+    waiting = []
+    for gate in gates:
+        for member in gate.subplans:
+            fact = state.subplan_versions.get(member)
+            if fact is None:
+                waiting.append((member, "unpublished_subplan_version"))
+            elif not _fact_is_current(plan, state, by_id[member]):
+                waiting.append((member, "stale_subplan_version"))
+    return tuple(waiting)
+
+
 def parse_plan_extensions(data: dict[str, Any], task_ids: set[str]) -> tuple[tuple[SubplanSpec, ...], tuple[CompositionGateSpec, ...]]:
     raw_subplans = data.get("subplans", [])
     raw_gates = data.get("composition_gates", [])
@@ -154,8 +199,7 @@ def parse_plan_extensions(data: dict[str, Any], task_ids: set[str]) -> tuple[tup
 def subplan_status(plan: Plan, state: RunState) -> dict[str, str]:
     statuses = {}
     for subplan in plan.subplans:
-        version_fact = state.subplan_versions.get(subplan.id, {})
-        if (version_fact.get("plan_id"), version_fact.get("revision")) == (state.plan_id, state.revision):
+        if _fact_is_current(plan, state, subplan):
             status = "published"
         else:
             audit_state = state.tasks[subplan.audit_task].state
@@ -170,15 +214,11 @@ def subplan_status(plan: Plan, state: RunState) -> dict[str, str]:
 
 
 def gate_ready(plan: Plan, state: RunState, task_id: str) -> bool:
-    gates = [gate for gate in plan.composition_gates if gate.task == task_id]
-    return all((fact := state.subplan_versions.get(member, {})).get("plan_id") == state.plan_id and
-               fact.get("revision") == state.revision for gate in gates for member in gate.subplans)
+    return not stale_subplan_members(plan, state, task_id)
 
 
 def gate_waiting(plan: Plan, state: RunState, task_id: str) -> bool:
-    gates = [gate for gate in plan.composition_gates if gate.task == task_id]
-    return any(any((fact := state.subplan_versions.get(member, {})).get("plan_id") != state.plan_id or
-                   fact.get("revision") != state.revision for member in gate.subplans) for gate in gates)
+    return bool(stale_subplan_members(plan, state, task_id))
 
 
 def validate_subplan_version(subplan_id: object, version: object, commit: object, digest: object) -> bool:
@@ -203,10 +243,22 @@ def record_subplan_version_fact(plan: Plan, state: RunState, ctx: Any, subplan_i
         raise SchedulerError("CONTRACT_VIOLATION", "subplan version fact is malformed")
     if plan.schema_version != "1.3.0" or subplan_id not in {item.id for item in plan.subplans}:
         raise SchedulerError("NOT_ALLOWED", "subplan version facts require a declared 1.3.0 subplan")
+    subplan = next(item for item in plan.subplans if item.id == subplan_id)
+    identity = _accepted_identity(plan, state, subplan)
+    if identity is None:
+        raise SchedulerError("NOT_ALLOWED", "subplan publication requires all member work and its audit to be accepted")
     current = state.subplan_versions.get(subplan_id)
     fact = {"plan_id": state.plan_id, "revision": state.revision, "version": version,
-            "commit": commit, "manifest_sha256": manifest_sha256}
+            "commit": commit, "manifest_sha256": manifest_sha256, **identity}
     if current == fact:
+        return
+    if (current is not None and current.get("version") == version and current.get("commit") == commit and
+            current.get("manifest_sha256") == manifest_sha256 and
+            {key: current.get(key) for key in identity} == identity and current.get("plan_id") == state.plan_id):
+        state.subplan_versions[subplan_id] = fact
+        ctx.audit("subplan_version_published", subplan_id=subplan_id, version=version, rebound=True,
+                  from_revision=current.get("revision"), to_revision=state.revision,
+                  commit=commit, manifest_sha256=manifest_sha256)
         return
     expected = 1 if current is None else current["version"] + 1
     if version != expected:
@@ -223,16 +275,19 @@ def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: s
     declared = {item.id for item in plan.subplans}
     if plan.schema_version != "1.3.0" or not members or not set(members).issubset(declared):
         raise SchedulerError("NOT_ALLOWED", "composition facts require declared 1.3.0 subplans")
+    specs = {subplan.id: subplan for subplan in plan.subplans}
     if fact_state == "published" and any(
-            (version_fact := state.subplan_versions.get(sid, {})).get("version") != version or
-            version_fact.get("plan_id") != state.plan_id or version_fact.get("revision") != state.revision
-            for sid, version in members.items()):
+            state.subplan_versions.get(sid, {}).get("version") != version or
+            not _fact_is_current(plan, state, specs[sid]) for sid, version in members.items()):
         raise SchedulerError("NOT_ALLOWED", "published composition members need matching published versions")
     fact = {"plan_id": state.plan_id, "revision": state.revision, "state": fact_state,
             "members": dict(members), "manifest_sha256": manifest_sha256, "reason": reason}
     current = state.compositions.get(composition_id)
     if current == fact:
         return
+    if (current is not None and current["state"] == "candidate" and
+            current["manifest_sha256"] != manifest_sha256):
+        raise SchedulerError("NOT_ALLOWED", "composition candidates are immutable under the same id; use a new candidate id")
     if current is not None and (current["state"] != "candidate" or fact_state == "candidate"):
         raise SchedulerError("NOT_ALLOWED", "composition facts are terminal after publication or rejection")
     state.compositions[composition_id] = fact

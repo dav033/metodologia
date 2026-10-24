@@ -14,7 +14,7 @@ from .contracts import ACK, Ack, CancelOrder, ExecutionStatus, PortNotReady, Sta
 from .recovery import apply_observation
 from .states import ATTEMPT_LIVE, ATTEMPT_TERMINAL
 from .states import AttemptState as A
-from .transitions import end_attempt, mark_delivered, set_attempt
+from .transitions import end_attempt, enforce_gate_waiting, mark_delivered, set_attempt
 
 if TYPE_CHECKING:
     from .scheduler import SchedulerCore
@@ -37,6 +37,7 @@ class Dispatcher:
         core = self.core
 
         def prepare(ctx):
+            enforce_gate_waiting(ctx)
             item = next((i for i in ctx.state.outbox if i.id == item_id), None)
             if item is None or item.status != "pending":
                 return None
@@ -68,7 +69,13 @@ class Dispatcher:
         if kind == "start" and before > 0:                         # maybe delivered already: ask before re-sending
             status = self._query(attempt_id)
             seen = core.write(lambda c: apply_observation(c, attempt_id, status))
-            if seen != "not_found" or not core.read(lambda c: self._still_unsent(c, attempt_id)):
+            if seen != "not_found":
+                return 1
+        if kind == "start":
+            def dispatchable(ctx):
+                enforce_gate_waiting(ctx, confirmed_unsent_attempt=attempt_id)
+                return self._still_unsent(ctx, attempt_id)
+            if not core.write(dispatchable):
                 return 1
         ack = self._send(kind, attempt_id, key, payload, task_id)
         if ack is None:

@@ -11,7 +11,7 @@ from .plan import Plan
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
-from .subplans import gate_waiting, subplan_status
+from .subplans import gate_waiting, stale_subplan_members, subplan_status
 
 
 def unreachable(plan: Plan, state: RunState) -> frozenset[str]:
@@ -45,7 +45,9 @@ def attention(plan: Plan, state: RunState) -> list[dict[str, str]]:
            for a in state.attempts.values() if a.state == A.UNCERTAIN.value]
     out += [{"kind": "blocked_task", "task_id": tid, "reason": rec.reason}
             for tid, rec in state.tasks.items() if rec.state == T.BLOCKED.value]
-    out += [{"kind": "composition_waiting", "task_id": gate.task, "reason": "composition_waiting"}
+    out += [{"kind": "composition_waiting", "task_id": gate.task,
+             "reason": ";".join(f"{reason}:{member}" for member, reason in
+                                stale_subplan_members(plan, state, gate.task))}
             for gate in plan.composition_gates
             if gate_waiting(plan, state, gate.task) and state.tasks[gate.task].state == T.PENDING.value]
     return out

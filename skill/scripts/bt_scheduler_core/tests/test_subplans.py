@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 import bt_scheduler_core as sc
 from support import approved, indep, plan_text
+from bt_scheduler_core.model import RunState
 
 
 def plan_13(*, schema="1.3.0", extra_tasks=()):
@@ -45,6 +46,15 @@ def load(text):
 
 
 class Subplans(unittest.TestCase):
+    def _accept(self, core, plan, task_id):
+        core.claim(sc.Assignment(task_id, "fake"))
+        attempt = core.snapshot().tasks[task_id]["attempt"]
+        core.ingest(sc.Event(f"e-{task_id}-{attempt}", plan.plan_id, plan.revision, task_id, attempt, "fake",
+                             "execution_finished"))
+        core.step()
+        core.submit_verdict(sc.Verdict(f"v-{task_id}-{attempt}", plan.plan_id, plan.revision, task_id, attempt,
+                                       True, "validator", "ok"))
+
     def test_schema_13_loads_subplans_gates_and_task_metadata(self):
         plan = load(plan_13())
         self.assertEqual(sc.PLAN_SCHEMA_CAPABILITIES, frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"}))
@@ -93,6 +103,8 @@ class Subplans(unittest.TestCase):
         repo = sc.InMemoryRepository()
         core = sc.SchedulerCore(plan, repo)
         core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
         before = core.snapshot().tasks
         core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
         core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64)
@@ -103,10 +115,120 @@ class Subplans(unittest.TestCase):
         self.assertIn("subplan_version_published", [row.kind for row in core.audit_log()])
         self.assertIn("composition_candidate", [row.kind for row in core.audit_log()])
 
+    def test_publication_requires_the_subplan_audit_to_be_accepted(self):
+        core = sc.SchedulerCore(load(plan_13()), sc.InMemoryRepository())
+        core.start()
+        with self.assertRaises(sc.SchedulerError) as caught:
+            core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+
+    def test_rework_stales_published_version_and_keeps_composition_gate_pending(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        from bt_scheduler_core.transitions import promote_ready
+        core.write(promote_ready)
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "ready")
+        self.assertEqual(sc.subplan_status(plan, core.read(lambda ctx: ctx.state))["SP-1"], "published")
+        core.rework(("T1",), "op", "redo")
+        self.assertEqual(sc.subplan_status(plan, core.read(lambda ctx: ctx.state))["SP-1"], "open")
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "pending")
+        with self.assertRaises(sc.SchedulerError) as caught:
+            core.record_composition("published", "C-stale", {"SP-1": 1}, "e" * 64)
+        self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+        self.assertTrue(any(row["kind"] == "composition_waiting" and "stale" in row["reason"]
+                            for row in core.snapshot().attention))
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.step()
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "pending")
+        core.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
+        core.step()
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "active")
+
+    def test_unaffected_rebase_can_rebind_same_version_but_affected_work_needs_next(self):
+        old = load(plan_13())
+        core = sc.SchedulerCore(old, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, old, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        from bt_scheduler_core.transitions import promote_ready
+        core.write(promote_ready)
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "ready")
+        data = json.loads(plan_13(schema="1.3.0", extra_tasks=[indep(
+            "T5", kind="docs", verification=[{"type": "command", "value": "true", "category": "functional"}])]))
+        data["revision"] = 2
+        target = load(json.dumps(data))
+        sc.rebase_run(core.repository, old, target)
+        revised = sc.SchedulerCore(target, core.repository)
+        revised.start()
+        self.assertEqual(revised.snapshot().tasks["T4"]["state"], "pending")
+        self.assertTrue(any(row["kind"] == "composition_waiting" and "stale_subplan_version" in row["reason"]
+                            for row in revised.snapshot().attention))
+        revised.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        self.assertEqual(revised.read(lambda ctx: ctx.state.subplan_versions["SP-1"]["revision"]), 2)
+        revised.rework(("T1",), "op", "redo")
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(revised, target, task_id)
+        with self.assertRaises(sc.SchedulerError) as caught:
+            revised.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+        revised.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
+        changed_data = json.loads(json.dumps(data))
+        changed_data["revision"] = 3
+        changed_data["tasks"][0]["acceptance_criteria"] = ["UI works with a changed criterion"]
+        changed_plan = load(json.dumps(changed_data))
+        sc.rebase_run(core.repository, target, changed_plan)
+        changed = sc.SchedulerCore(changed_plan, core.repository)
+        changed.start()
+        with self.assertRaises(sc.SchedulerError) as caught:
+            changed.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
+        self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+
+    def test_reserved_gate_is_cancelled_at_dispatch_boundary_if_its_fact_goes_stale(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        from bt_scheduler_core.transitions import promote_ready
+        core.write(promote_ready)
+        core.claim(sc.Assignment("T4", "fake"))
+        attempt_id = core.snapshot().tasks["T4"]["attempt"]
+        core.write(lambda ctx: setattr(ctx.state, "revision", 2))
+        core.step()
+        snap = core.snapshot()
+        self.assertEqual(snap.tasks["T4"]["state"], "pending")
+        self.assertEqual(snap.tasks["T4"]["attempt_state"], "cancelled")
+        self.assertTrue(any(row["kind"] == "composition_waiting" and "stale_subplan_version" in row["reason"]
+                            for row in snap.attention))
+        self.assertEqual(core.read(lambda ctx: next(item for item in ctx.state.outbox
+                                                    if item.attempt_id == attempt_id).status), "void")
+
+    def test_schema_four_facts_without_identity_load_as_stale_compatible_facts(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        document = core.read(lambda ctx: ctx.state.to_dict())
+        document["subplan_versions"]["SP-1"] = {
+            "plan_id": plan.plan_id, "revision": 1, "version": 1,
+            "commit": "a" * 40, "manifest_sha256": "b" * 64,
+        }
+        loaded = RunState.from_dict(document)
+        self.assertEqual(loaded.subplan_versions["SP-1"]["version"], 1)
+        self.assertNotEqual(sc.subplan_status(plan, loaded)["SP-1"], "published")
+
     def test_fact_retries_are_idempotent_and_published_composition_is_immutable(self):
         plan = load(plan_13())
         core = sc.SchedulerCore(plan, sc.InMemoryRepository())
         core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
         version = ("SP-1", 1, "a" * 40, "b" * 64)
         core.record_subplan_version(*version)
         audit_count = len(core.audit_log())
@@ -118,6 +240,11 @@ class Subplans(unittest.TestCase):
         with self.assertRaises(sc.SchedulerError) as caught:
             core.record_composition("candidate", fact[0], fact[1], "d" * 64)
         self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+        core.record_composition("candidate", "C2", fact[1], "c" * 64)
+        with self.assertRaises(sc.SchedulerError) as caught:
+            core.record_composition("candidate", "C2", fact[1], "d" * 64)
+        self.assertEqual(caught.exception.code, "NOT_ALLOWED")
+        self.assertIn("new candidate id", str(caught.exception))
 
     def test_gate_waits_with_attention_until_member_has_published_version(self):
         plan = load(plan_13())

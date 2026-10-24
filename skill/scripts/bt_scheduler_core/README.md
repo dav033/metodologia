@@ -64,7 +64,12 @@ are expected. `incident_observed` is an M4 audit reference with a strict v1.2.0 
 append an audit row but cannot change task, attempt or lease state, including for a matching terminal attempt.
 Schema 1.3.0 plans with subplans expose immutable `subplans` and `composition_gates`; `subplan_status(plan, state)`
 derives `open | auditing | accepted | published` without storing task state. A composition-gate task remains `pending`
-with `composition_waiting` attention until each member has a published subplan-version fact. The audited
+with `composition_waiting` attention until each member has a current published subplan-version fact. Each publication
+binds to the accepted audit attempt and a digest of every accepted member-task attempt. Rework or an affected revision
+makes that binding stale; the published fact remains in the audit history and the gate waits with a stale-version reason.
+An unaffected rebase can rebind the same version, commit, and manifest to the new revision when the accepted identity
+is unchanged. Changed accepted work requires the next version. Schema-4 facts written before identity binding still
+load, but are stale for status and gate purposes. The audited
 `record_subplan_version` and `record_composition(candidate|published|rejected, ...)` operations only persist adapter
 observations and never change task or attempt state; published compositions cannot be rewritten.
 Contract 1.1.0 appended optional, defaulted fields to `TaskView` and `AssignmentRequest`, preserving old positional
