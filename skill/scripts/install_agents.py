@@ -2,7 +2,7 @@
 """Install provider-neutral role sources as native Claude, Codex and Antigravity agents.
 
 Claude and Codex roles are installed into the default account plus every existing account directory registered in
-profiles.json. Antigravity discovers global agents under ~/.gemini/config/agents; the Planner's private resources
+profiles.json. Antigravity discovers global agents under ~/.gemini/config/agents; a selected role's private resources
 are copied inside its agent directory and attached only to that role.
 
 Only generated files carrying the methodology marker are overwritten. Hand-authored agents and skills are preserved.
@@ -102,10 +102,11 @@ def generated_claude(meta: dict[str, str], lines: list[str], body: str) -> str:
         lines = [line for line in lines if not line.startswith(("model:", "effort:"))]
         lines += [f"model: {choice[0]}", f"effort: {choice[1]}"]
     frontmatter = "\n".join(line for line in lines if not line.startswith("codex_"))
-    return f"---\n{frontmatter}\n---\n<!-- {MARKER} -->\n\n{body}"
+    return f"---\n{frontmatter}\n---\n<!-- {MARKER} -->\n\n{with_skill_root(meta['name'], body)}"
 
 
 def generated_codex(meta: dict[str, str], body: str) -> str:
+    body = with_skill_root(meta["name"], body)
     if "'''" in body:
         raise SystemExit(f"{meta['name']}: body can't contain TOML literal delimiter")
     values = [f"# {MARKER}", f"name = {toml_str(meta['name'])}",
@@ -116,8 +117,11 @@ def generated_codex(meta: dict[str, str], body: str) -> str:
     if choice:
         values.append(f"model = {toml_str(choice[0])}")
         values.append(f"model_reasoning_effort = {toml_str(choice[1])}")
-    elif meta.get("codex_effort"):
-        values.append(f"model_reasoning_effort = {toml_str(meta['codex_effort'])}")
+    else:
+        if meta.get("codex_model"):
+            values.append(f"model = {toml_str(meta['codex_model'])}")
+        if meta.get("codex_effort"):
+            values.append(f"model_reasoning_effort = {toml_str(meta['codex_effort'])}")
     values.append(f"developer_instructions = '''\n{body}'''")
     return "\n".join(values) + "\n"
 
@@ -141,6 +145,19 @@ def marked_skill(source: Path) -> str:
     if not match:
         raise SystemExit(f"{source}: missing SKILL.md frontmatter")
     return f"{match.group(1)}<!-- {MARKER} -->\n\n{match.group(2).lstrip()}"
+
+
+def with_skill_root(role: str, body: str) -> str:
+    root = resource_root().resolve()
+    paths = [f"agents/{role}/skills/{source.parent.name}/SKILL.md"
+             for source in antigravity_skill_sources(role)]
+    missing = [path for path in paths if path not in body]
+    inventory = "\n\nPrivate skill paths: load a skill only when its task condition in this role prompt applies."
+    if missing:
+        inventory += "\n" + "\n".join(f"- `{path}`" for path in missing)
+    return (f"Metodología skill root: `{root}`. Resolve every `agents/<role>/skills/...` and "
+            "`agents/<role>/references/...` path against this root. If a referenced resource cannot be resolved, "
+            "report `SKILL_UNAVAILABLE`; do not search elsewhere.\n\n" + body + inventory)
 
 
 def antigravity_skill_sources(name: str) -> list[Path]:
@@ -171,7 +188,7 @@ def generated_antigravity(meta: dict[str, str], body: str, skill_paths: list[str
     ]
     if skill_paths:
         lines.extend(["skills:", *(f"  - {yaml_str(skill)}" for skill in skill_paths)])
-    lines.extend(["---", f"<!-- {MARKER} -->", "", body])
+    lines.extend(["---", f"<!-- {MARKER} -->", "", with_skill_root(name, body)])
     return "\n".join(lines)
 
 
@@ -189,7 +206,8 @@ def write_antigravity(directory: Path, meta: dict[str, str], body: str, force: b
         if not methodology_link.is_symlink() or methodology_link.resolve() != expected_root:
             conflicts.append(methodology_link)
     if conflicts:
-        print(f"antigravity: SKIP {agent_path} (hand-authored path exists: {conflicts[0]})", file=sys.stderr)
+        print(f"antigravity: SKIP {conflicts[0]} (hand-authored path exists; use --force to overwrite)",
+              file=sys.stderr)
         return
 
     agent_dir.mkdir(parents=True, exist_ok=True)
@@ -204,11 +222,17 @@ def write_antigravity(directory: Path, meta: dict[str, str], body: str, force: b
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--force", action="store_true")
+    available_roles = sorted(path.stem for path in SRC.glob("*.md"))
+    parser = argparse.ArgumentParser(
+        description="Install Metodología roles for Claude, Codex and Antigravity.",
+        epilog="Available roles: " + ", ".join(available_roles) +
+        ". Claude and Codex install all roles by default; Antigravity installs Planner by default, or the selected "
+        "role with --agent. Private skills are copied into Antigravity role folders and resolved from the installed "
+        "Metodología skill root for Claude and Codex.")
+    parser.add_argument("--force", action="store_true", help="overwrite hand-authored agents or skill paths")
     parser.add_argument("--only", choices=["claude", "codex", "antigravity"],
                         help="provider to install; Antigravity installs Planner unless --agent selects another role")
-    parser.add_argument("--agent", help="install only this role (for example: planner)")
+    parser.add_argument("--agent", help="install only this role (available: " + ", ".join(available_roles) + ")")
     parser.add_argument("--claude-dir", action="append", type=Path,
                         help="agent directory (repeatable); default includes existing configured Claude accounts")
     parser.add_argument("--codex-dir", action="append", type=Path,
