@@ -272,3 +272,22 @@ Unresolved input 1 (asked together at the start of classification): the location
 DAVID_UI_SESSION_SECRET and DAVID_UI_REGISTRY_TOKEN. Alternatively the owner can explicitly defer each named secret
 with the fallback: securely generate during execution, store outside Git and load into Netlify. No values are requested.
 These three inputs are not yet claimed available or deferred; the plan cannot be declared ready while they remain unresolved.
+
+### Revision 10 note — 2026-10-24 reset (factual; scope and acceptance unchanged)
+
+The owner wiped all execution of revisions 1–9 on 2026-10-24: the run state, the local checkout `/home/david/dev/david-ui`,
+the Netlify site `david-ui-private` and `~/.config/david-ui/prod.env`. Rows above that call the repository directory
+"available" or point at the old site no longer hold; PLAN revision 10 recreates everything from zero. Observed on
+2026-10-24 by the planner: `/home/david/dev/david-ui` is absent, `netlify api listSites` lists no david site, and
+`gh repo view dav033/david-ui` still returns a private, non-empty repository (created 2026-10-23T11:18Z). No secret value
+was read or recorded.
+
+| # | Item | Where it lives | Supplier | Status |
+|---|---|---|---|---|
+| 1 | GitHub repository `dav033/david-ui` | Still exists on GitHub (private, non-empty); T1 must create it fresh | Owner | pending: delete it, or authorize T1 to reuse it with a new root history (force-push), or name another repository |
+| 2 | DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET, DAVID_UI_REGISTRY_TOKEN, DAVID_UI_PROD_URL | Previously `~/.config/david-ui/prod.env` (deleted). The production check reads names from `~/.config/flow/secrets.env` or the owner process environment | Owner | pending: give the location, or defer by name with the fallback "T59 generates the three secrets with a CSPRNG, writes them and DAVID_UI_PROD_URL to `~/.config/flow/secrets.env` (mode 600) and sets them as Netlify env vars" |
+| 3 | Operator verification policy for the production smoke (T60) | `/home/david/dev/metodologia/bitacora/david-ui/verification-policy.json` (absent); entry `environment: production`, `authorization` exactly "Owner authorizes read-only HTTPS smoke requests against the david-ui Netlify production site for REQ-001", `requirements: ["REQ-001"]` | Owner (operator file; the plan cannot grant it) | pending: create it, or accept that T60 ends BLOCKED_EXTERNAL until it exists |
+| 4 | Netlify site name | Team "dav033's team" (netlify CLI logged in) | Owner | pending: confirm `david-ui-private` (fallback: provider-assigned name if taken) |
+| 5 | Netlify GitHub app access to `dav033/david-ui` | Netlify team settings | Owner | pending: confirm access, or accept the fallback `netlify deploy --prod --build` from the checkout with the site still recording the repository |
+| 6 | Local repository path | `/home/david/dev/david-ui` (project.json role `app`) | Owner / project.json | location given; created by T1 |
+| 7 | Design contract approvals | `bitacora.py design approve REQ-001 <contract>@v1` or the web requirement page; six contracts in two rounds | Owner | expected during the run (D-127), not before approval |

@@ -7,6 +7,9 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
+2026-10-24 14:45: Pictures REQ-020 resumed on v2 (only active run, 28/31). david-ui wiped by owner order (david-ui D-002); GitHub repo pending `delete_repo` scope; REQ-001 being replanned on schema 1.3.0.
+
+2026-10-24 14:30: Designer integrated across the whole flow (metodologia D-127; owner approves each contract via CLI/web; gate holds UI tasks until approved). origin/main `330a09dad`. Disk /home 3.5 GiB free.
 2026-10-24 10:05: Engine v2 complete (session 1fbc12c7): F1–F5 closed and pushed, origin/main `b7c847d11`; default plan schema 1.3.0; 8 roles installed; temp worktrees/branches cleaned after archiving. Held runs (david-ui REQ-001, pictures REQ-020) still on owner hold. Details: metodologia day log 2026-10-24.
 2026-10-23: Engine v2 lead handoff prepared as `relay/RELAY-20261023-211009.md` for codex-2; manual continuation required. Main stays `48f45935e` with bitacora changes. Repairs/reviews and background tests remain pending; canonical checkpoint is `/home/david/dev/metodologia/bitacora/metodologia/engine-v2/CONTINUATION-01a16b88.md`. Held-run owner restrictions remain in force.
 2026-10-23 19:10: Engine v2 F2-C Implementer adaptations committed (`b1aa50a2d`); full suite ran 2,404 tests with only the 15 baseline failures from RULES.md and 6 skips.

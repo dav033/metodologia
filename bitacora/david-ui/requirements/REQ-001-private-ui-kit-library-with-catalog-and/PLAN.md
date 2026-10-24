@@ -1,575 +1,930 @@
 ---
 req: REQ-001
-status: launched
+status: review
 created: 2026-10-22
 ---
 # Plan — Private UI kit library with catalog and registry
 
-<!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: paused · hitos 6/7 · tareas 24/32 · generado: 2026-10-23T17:36:03-05:00
-
-**M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline** · dificultad alta · 6/6
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T1 | Scaffold `~/dev/david-ui`: Next 16 + TS strict + Tailwind 4 + shadcn init (Base UI style) + ESLint/Prettier + Vitest/Testing Library + Playwright/axe; scripts `verify`, `test`, `test:e2e`; `.gitignore` incl. `.evidence/`; `.env.example`; create private GitHub repo `dav033/david-ui` and push | alta | completada | sonnet | claude-work | 4 |
-| T2 | Compatibility and license spike: per each of the 22 enhancements and 7 capabilities, whether Animate UI ships a Base UI variant and its install path; Motion/React/Tailwind version matrix; Sonner vs Animate UI toast as single engine; licenses of shadcn, Animate UI, Bencho (per block) and React Bits; write `.evidence/T2-spike.md` and record the toast-engine and primitive rulings | alta | completada | sonnet | claude-work | 1 |
-| T3 | Design tokens and motion: `registry/david-ui/styles/tokens.css` (Catppuccin Latte/Mocha, mauve accent, radii, shadows, typography, spacing, motion durations/easings for subtle/natural/expressive), `ThemeProvider`, `MotionProfileProvider` (Motion `MotionConfig` + reduced motion), `useMotionProfile`; registry items for them | alta | completada | sonnet | claude-work | 4 |
-| T4 | Catalog manifest and license register: zod schema (R5), `catalog/entries.ts` with all 93 entries `pending` and the 22 enhancements linked to base entries, `catalog/licenses.ts` from T2, `npm run catalog:check` asserting counts, unique ids, base links and status/metadata rules | alta | completada | sonnet | claude-work | 5 |
-| T5 | Registry pipeline: `registry.json` generated from the manifest, `npm run registry:build` (`shadcn build` → `public/r/`), proof item `button`; integration script `scripts/registry-smoke.mjs` that creates a scratch Next app in a temp dir, installs `@david-ui/button` from a locally served registry and builds it | alta | completada | sonnet | claude-work | 5 |
-| T6 | Kit-only guard: ESLint `no-restricted-imports` outside `registry/` + `scripts/check-kit-only.ts` (forbidden imports and raw interactive JSX in `src/app`, `src/components`), with a test that plants violations | media | completada | sonnet | claude-work | 3 |
-
-**M2 — 30 P1 shadcn components with their Animate UI enhancements** · dificultad alta · 5/5
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T7 | Structure + forms: Button (+ variants), Card, Badge, Avatar, Field, Input, Textarea, Select*, Checkbox*, Switch*, Combobox* (* = Animate UI enhancement), demos with all states, manifest updated | alta | completada | sonnet | claude-work | 2 |
-| T8 | Navigation: Sidebar* (manual), Tabs*, Dropdown Menu*, Breadcrumb, Pagination* (manual) | alta | completada | gpt-6-luna | codex-2 | 4 |
-| T9 | Overlays and disclosure: Dialog*, Alert Dialog*, Sheet*, Popover*, Tooltip*, Accordion* | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T10 | Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart | alta | completada | gpt-6-luna | codex-2 | 6 |
-| T11 | P1 e2e and a11y suite: Playwright spec that opens every P1 demo, runs axe, exercises keyboard paths and repeats under `reducedMotion: 'reduce'`; promote passing entries to `validated` | alta | completada | gpt-6-luna | codex-2 | 2 |
-
-**M3 — Private catalog application built with the kit** · dificultad alta · 3/3
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T12 | Catalog shell and browse: layout with kit Sidebar/Breadcrumb, home grid of entries, filters (source, category, priority, status, type), command-palette search (adds `Command` and any shadcn piece needed, e.g. Toggle Group, as catalog-driven additions), theme toggle | alta | completada | gpt-6-luna | codex-2 | 2 |
-| T13 | Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none | alta | completada | gpt-6-luna | codex-1 | 4 |
-| T14 | Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers | alta | completada | gpt-6-luna | codex-2 | 2 |
-
-**M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities** · dificultad alta · 2/2
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T15 | P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest | alta | completada | gpt-6-luna | codex-1 | 2 |
-| T16 | Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) | alta | completada | gpt-6-luna | codex-1 | 2 |
-
-**M5 — Bencho UI (12)** · dificultad alta · 2/2
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T17 | New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) | alta | completada | gpt-6-luna | codex-luis | 5 |
-| T18 | Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) | alta | completada | gpt-6-luna | codex-luis | 3 |
-
-**M6 — React Bits Free (32)** · dificultad alta · 3/3
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T19 | Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text | alta | completada | gpt-6-luna | codex-luis | 3 |
-| T20 | UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T21 | Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence | alta | completada | gpt-6-luna | codex-luis | 5 |
-
-**M7 — Agent index, deployment and acceptance** · dificultad alta · 3/11
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T22 | Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes | alta | completada | gpt-6-luna | codex-luis | 3 |
-| T23 | Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it | alta | completada | gpt-6-luna | codex-luis | 10 |
-| T24 | Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T24a | Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance | media | pendiente | gpt-6-luna | codex-1 | 4 |
-| T25 | Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-1 | 2 |
-| T25b | Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger | alta | pendiente | gpt-6.1-sol | codex-2 | 1 |
-| T24.1a | Repair what blocks T24a | media | bloqueada | sonnet | claude-work | 4 |
-| T24.1 | Remediate T25 findings: security: anonymous access and token-protected index | alta | pendiente | — | — | 0 |
-| T24.2 | Remediate T25 findings: registry install: internal dependencies and import paths | alta | pendiente | — | — | 0 |
-| T24.3 | Remediate T25 findings: design tokens wired into the app | alta | pendiente | — | — | 0 |
-| T24.4 | Remediate T25 findings: kit-only guard coverage | media | pendiente | — | — | 0 |
-<!-- bitacora:status:end -->
+Revision 10 (working draft, schema 1.3.0). Awaiting owner approval; not frozen, not launched.
 
 ## Approach
-Greenfield repo `~/dev/david-ui` (private GitHub `dav033/david-ui`): one Next.js 16 app that is both the private catalog
-and a shadcn registry. Component sources live in `registry/david-ui/<category>/<name>/` and are built with
-`shadcn build` into `public/r/*.json` (namespace `@david-ui`). A typed catalog manifest (`catalog/entries.ts`, zod, assembling task-owned metadata fragments) is
-the single source of truth for the 93 entries, the 22 enhancements, their status and licenses; the gallery, the agent
-index and the registry metadata are all generated from it. Base UI is the only primitive family; Motion drives
-animation through a motion-profile provider over CSS tokens (Catppuccin Latte/Mocha, mauve accent). The catalog app is
-built only from kit components, enforced by `npm run check:kit-only` (R4). Work goes source by source, in the order of
-the inventory: foundation → P1 → catalog app → P2 + capabilities → Bencho → React Bits → agents + deploy + acceptance.
-A compatibility and license spike (T2) runs first because every later status depends on it.
+Greenfield again. On 2026-10-24 the owner wiped all execution of revisions 1–9: the run state, the local checkout
+`~/dev/david-ui`, the Netlify site `david-ui-private` and `~/.config/david-ui/prod.env`. Nothing counts as done. The
+GitHub repository `dav033/david-ui` was also reported deleted, but on 2026-10-24 `gh repo view` still shows it
+(private, non-empty, created 2026-10-23T11:18Z): see SPEC Inputs item 1. T1 creates everything from zero and never
+overwrites an existing remote.
+
+The product approach is unchanged (D-001): one Next.js 16 app that is both the private catalog and the shadcn registry
+`@david-ui`, Base UI as the only primitive family, Motion over shared tokens, a typed manifest as the single source of
+truth for catalog, registry and agent index, and a catalog built only from kit components. What changes is how the
+work is cut and checked:
+
+- **Nine functional subplans** inside the seven SPEC milestones, each with its own integration test against the real
+  server and an independent audit with a findings ledger. Revision 9 found 31 defects (25 high) only at its final audit;
+  here every family is audited before the next one consumes it.
+- **Four composition gates** (CG-1 foundation, CG-2 MVP, CG-3 control families, CG-4 final) re-run the real entry points
+  over all accepted subplans so far. The gates form the cumulative chain the owner runtime requires.
+- **Six Designer contracts** for the UI subplans, approved by the owner before any `ui: yes` task starts (D-127 in the
+  methodology). They are grouped in two rounds so the owner is asked twice, not six times.
+- **Registry files are never static**: `/r/*` (including `index.json` and `llms.txt`) is served only by a bearer-checked
+  route handler from the git-ignored `registry-dist/`, so the Netlify CDN cannot bypass the token.
+- **External checks are declared**: the production smoke is a `test` task in the `production` environment with named
+  resources and an authorization text; implementation tasks are all provable in the sandbox.
 
 ## Global constraints
 - Next.js 16 App Router, React 19, TypeScript strict, Tailwind 4, npm, Node 24; Base UI only (R2); Motion for animation.
-- The final `npm run verify` pipeline includes lint, typecheck, unit tests, `check:kit-only`, `catalog:check`,
-  `registry:build` and `build`. Bootstrap tasks run their available local checks; the full pipeline first runs at T7,
-  after T3–T6 have authored its prerequisites. Every component producer owns its unit tests and demo; no missing check is reported as passing.
-- Kit-only rule (R4): app code outside `registry/` never imports `@base-ui/react`, `motion`, Radix or upstream kits and
-  never renders raw interactive HTML. Missing piece → add from shadcn (catalog-driven addition) → else own animated component.
-- Before copying code from a source, its license is in `catalog/licenses.ts` (R10); unknown/forbidding → clean-room.
-- An entry may be set `validated` only when R6 holds; otherwise `implemented`, `blocked` or `discarded` with a reason.
-  Never leave an entry `pending` at the end of its milestone.
-- Tokens only (R3); keyboard/touch alternative for every gesture (R7); reduced motion respected (R8).
+- `npm run verify` = lint, typecheck, unit tests, `check:kit-only`, `catalog:check`, `registry:build`, production build.
+  It runs in integration tests and gates, not in every task; each task runs the focused tests of what it changes.
+- Kit-only (R4): app code outside `registry/` never imports `@base-ui/react`, `motion`, `framer-motion`, Radix,
+  `@animate-ui`, `sonner` or upstream kits and never renders raw interactive HTML. Missing piece → shadcn
+  (catalog-driven addition) → else an own animated component.
+- License first (R10): a source is in `catalog/compat.json` and `catalog/licenses.ts` before code is copied; unknown or
+  forbidding means clean-room with `own (inspired by <source>)`.
+- `validated` only when every R6 check passes; otherwise `implemented`, `blocked` or `discarded` with a written reason.
+  No entry stays `pending` after its subplan audit.
+- Dependencies: only T3 edits `package.json`/`package-lock.json` after T1. A component needing an unlisted package
+  records `dependency-not-pinned:<package>` and its subplan audit decides whether T2/T3 are reworked.
+- Tokens only (R3), keyboard/touch alternative for every gesture (R7), reduced motion respected (R8).
 - Catalog copy in Spanish; code, comments, identifiers and commits in English.
-- No secrets in the repo; `.env.example` lists `DAVID_UI_PASSWORD`, `DAVID_UI_SESSION_SECRET`, `DAVID_UI_REGISTRY_TOKEN`.
-- Evidence, reports and findings ledgers go to the git-ignored `.evidence/` and are copied to
-  `~/bitacora/david-ui/artifacts/REQ-001/`.
-- Owner-authorized production actions (2026-10-19): create the private GitHub repo `dav033/david-ui`, push to `main`,
-  deploy to Netlify. Nothing is published publicly.
+- No secrets in the repository or in this plan. Tests pass synthetic DAVID_UI_* values explicitly (Playwright
+  `webServer` env); nothing reads `.env` or the shell. Verification commands are single commands without shell syntax.
+- Evidence, reports, findings ledgers and screenshots go to the git-ignored `.evidence/` and are copied to
+  `~/bitacora/david-ui/artifacts/REQ-001/`. Data a later task reads is tracked (for example `catalog/compat.json`).
+- Owner-authorized production actions (2026-10-19): create the private GitHub repository, push to `main`, deploy to
+  Netlify. Nothing is published publicly.
 
-## Classification basis and readiness
+## Inputs and readiness
+The input inventory is in SPEC `## Inputs` (revision 10 note). Items 1–5 are pending owner answers: the surviving
+GitHub repository, the production secret locations, the operator verification policy for the production smoke, the
+Netlify site name and the Netlify GitHub-app access. No task that depends on them may start before they are resolved:
+T1 depends on item 1; T59 on items 2, 4 and 5; T60 on items 2 and 3.
 
-This update preserves the approved product scope: the same 93 candidates, 22 enhancements, catalog, private registry,
-agent integration and Netlify deployment. It does not approve, freeze or launch anything. PLAN.json already existed;
-`plan-json init` was not run. Status/frontmatter and revision remain unchanged.
+## Subplans
 
-Observed: the checkout contains only .git, has no commits and no package.json, application code, tests, CI or env
-example. project.json declares app and no guards. Therefore no future npm/Playwright command was executed or claimed
-as existing evidence. Each planned command names its producing task through created_by. The executable node/npm/gh/
-netlify tools exist; service sessions are located by TOOLS.md, not re-authenticated here. Private Planner resources
-(socratic elicitation, WBS, Mermaid projection and adversarial review), the contract, schema and validator code were read.
-SPEC, the full source inventory, existing PLAN files, project.json, shared tools, decisions and global brain were inspected.
-There is no david-ui brain index. No external source/license assertion has been newly verified; T2 remains responsible.
+| Subplan | Milestone | Tasks | Covers | Produces | Consumes (dependency) | Integration test | Audit | UI contract |
+|---|---|---|---|---|---|---|---|---|
+| SP-1 Bootstrapped private repository, compatibility ruling, pinned dependencies, manifest and kit-only guard | M1 | T1–T7 (7) | R1, R2, R4, R5, R10, R11, R16 | toolchain@1 (T1), upstream-compat@1 (T2), dependency-set@1 (T3), catalog-manifest@1 (T4), kit-only-guard@1 (T5) | — | T6 | T7 | — |
+| SP-2 Shared visual identity and installable registry | M1 | T8–T13 (6) | R1, R3, R4, R8 | kit-identity@1 (T8), theme-motion@1 (T9) | catalog-manifest@1 from SP-1 (implementation) | T11 | T13 | kit-identity@v1 (design T8, visual T12) |
+| SP-3 30 P1 components with their Animate UI enhancements | M2 | T15–T24 (10); checkpoint T17 | R2, R3, R6, R7, R8, R11 | p1-components@1 (T15) | kit-identity@1 from SP-2 (contract), theme-motion@1 from SP-2 (publication), catalog-manifest@1 from SP-1 (publication) | T22 | T24 | p1-components@v1 (design T15, visual T23) |
+| SP-4 Private catalog application built with the kit | M3 | T25–T31 (7) | R4, R9, R14 | catalog-app@1 (T25) | p1-components@1 from SP-3 (implementation), theme-motion@1 from SP-2 (publication), catalog-manifest@1 from SP-1 (publication) | T29 | T31 | catalog-app@v1 (design T25, visual T30) |
+| SP-5 P2 components, remaining enhancements and the seven Animate UI capabilities | M4 | T33–T38 (6) | R2, R5, R6, R7, R8 | p2-capabilities@1 (T33) | catalog-app@1 from SP-4 (publication), p1-components@1 from SP-3 (publication) | T36 | T38 | p2-capabilities@v1 (design T33, visual T37) |
+| SP-6 Twelve Bencho UI entries, clean-room where the license forbids copying | M5 | T39–T45 (7) | R6, R7, R10, R11, R12 | bencho-components@1 (T39) | p2-capabilities@1 from SP-5 (implementation), catalog-app@1 from SP-4 (publication), p1-components@1 from SP-3 (publication) | T43 | T45 | bencho-components@v1 (design T39, visual T44) |
+| SP-7 Thirty-two React Bits Free entries | M6 | T47–T54 (8) | R3, R6, R7, R8, R10, R12, R13 | reactbits-components@1 (T47) | bencho-components@1 from SP-6 (publication), catalog-app@1 from SP-4 (publication), p1-components@1 from SP-3 (publication) | T52 | T54 | reactbits-components@v1 (design T47, visual T53) |
+| SP-8 Agent discovery and verified installation | M7 | T55–T58 (4) | R1, R6, R10, R14, R15 | agent-index@1 (T55) | reactbits-components@1 from SP-7 (implementation), bencho-components@1 from SP-6 (publication), catalog-app@1 from SP-4 (publication) | T57 | T58 | — |
+| SP-9 Private production deployment on Netlify | M7 | T59–T61 (3) | R14, R16 | — | agent-index@1 from SP-8 (implementation), catalog-app@1 from SP-4 (publication) | T60 | T61 | — |
 
-Input inventory and the outstanding secrets-location question are recorded in SPEC Inputs. The classified contract may
-validate structurally while these execution inputs remain unresolved; structural validity is not readiness or approval.
+## Composition gates
 
-History was queried for implement, research, test and audit. Every response was status unknown: duration unit seconds,
-source quality unknown, no verified comparable sample count/range/median; retries/quality/consumption also unknown.
-The integer minute estimates below are provisional task breakdowns, including owned harness creation and local checks,
-not history-calibrated performance or limits. No provider, account, model, effort or execution assignment is selected.
-T2 is the bounded investigation before compatibility-dependent implementation; blocked/clean-room outcomes are explicit
-approved routes, so no later task needs an owner decision about a missing upstream variant or ambiguous license.
+| Gate | Subplans | Task | Audit | What it proves |
+|---|---|---|---|---|
+| CG-1 | SP-1, SP-2 | T14 | — | The foundation server starts and answers its health route on the composed SP-1 and SP-2 tree. The Button installs from the registry into a fresh app that builds on the composed foundation. The full verify pipeline passes on the composed foundation. |
+| CG-2 | SP-1, SP-2, SP-3, SP-4 | T32 | — | P1 demos, auth, browse and entry suites pass together through login on the composed tree. Every implemented or validated P1 entry installs through the app's protected registry route into a fresh consumer that builds. The verify pipeline passes on the composed MVP tree. |
+| CG-3 | SP-1, SP-2, SP-3, SP-4, SP-5, SP-6 | T46 | — | P1, P2, capability, Bencho and catalog suites pass together through login on the composed tree. Every implemented or validated control entry installs through the protected registry route into a fresh consumer that builds. The verify pipeline passes on the composed control-family tree. |
+| CG-4 | SP-1, SP-2, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9 | T62 | T63 | The complete browser matrix, including the reduced-motion project, passes against the production build. The acceptance harness installs every implemented or validated entry and at least one per source into fresh consumers that build. No inventory entry is pending, all 22 enhancements have results and every validated entry carries complete R6 evidence. The verify pipeline passes on the final tree. |
 
-## File ownership and execution contracts
+Cross-subplan `after` edges point only at a producer's contract-defining task, its audit task or a gate task. `publication` consumers wait for a gate that contains the producer and excludes the consumer; `implementation` consumers wait for the producer's audit; design tasks are exempt as the definers of their own contracts. A finding sends back only the tasks it names plus the dependents whose result it invalidates; a gate failure is re-verified after the named rework, not answered by reimplementing consumers.
 
-The following map lists every declared changed path before the tasks. A directory entry owns its descendants; later
-tasks import it. If an audit finds a defect in an earlier owner's file, that owner is reworked rather than assigning
-an opportunistic edit to the later task. Generated public/r and llms outputs are artifacts of the owning build scripts,
-not independently maintained sources. External notes/evidence use the approved existing paths, never a new brain layout.
+## Design contracts and owner approvals
+Each UI subplan has a `kind: design` task that writes `design/contracts/<contract>@v1.md` plus a changelog entry, and
+the owner approves that exact version (`bitacora.py design approve REQ-001 <contract>@v1` or the web requirement page)
+before its `ui: yes` tasks start; the run waits with an owner-attention reason meanwhile. Preview is off (project
+setting, not a plan field). Design tasks are serialized because they share `design/contracts/CHANGELOG.md`.
 
-| Owner | Paths to create or modify | Single responsibility |
+- **Round A — right after the SP-1 audit (T7):** `kit-identity@v1` (T8) → `p1-components@v1` (T15) →
+  `catalog-app@v1` (T25). Approving the three together unblocks the whole MVP.
+- **Round B — right after the MVP gate CG-2 (T32):** `p2-capabilities@v1` (T33) → `bencho-components@v1` (T39) →
+  `reactbits-components@v1` (T47). The owner sees the working MVP before approving the remaining families.
+
+Each UI subplan ends with a Reviewer `visual` audit (captures from `scripts/capture.mjs`) before its subplan audit.
+
+## File ownership
+One owner per file. A directory entry owns its descendants. Generated outputs (`catalog/resolved.ts`,
+`catalog/demo-map.ts`, `registry.json`) are rebuilt by `npm run catalog:build && npm run registry:build` and are declared
+in `generated_paths`. Two-owner files are sequential by design: `package.json`/`package-lock.json` (T1 creates, T3 pins),
+`src/app/layout.tsx` (T1 scaffold, T9 providers), `e2e/helpers.ts` (T21 harness, T26 login helper),
+`scripts/build-registry.ts` (T10 pipeline, T55 index generation) and `src/demos/structure` (T10 Button demo, T16 the rest).
+
+| Owner | Paths | Single responsibility |
 |---|---|---|
-| T1 | `package.json`, `package-lock.json`, `tsconfig.json`, `components.json`, `next.config.ts`, `eslint.config.mjs`, `vitest.config.mts`, `playwright.config.ts`, `.env.example`, `.gitignore`, `src/app/layout.tsx`, `src/app/not-found.tsx`, `scripts/check-spike.mjs`, `scripts/check-audit-ledger.mjs`, `scripts/check-planning-tools.test.ts` | A private greenfield checkout has the approved toolchain and named package scripts ready for the later producers, plus fail-closed report validators. |
-| T2 | `.evidence/T2-spike.md`, `.evidence/T2-spike.json` | A reproducible compatibility matrix and license record give every enhancement and capability a supported route or an explicit blocked result before source adoption. |
-| T3 | `registry/david-ui/styles/tokens.css`, `registry/david-ui/lib/theme-provider.tsx`, `registry/david-ui/lib/motion-profile.tsx`, `registry/david-ui/lib/motion-profile.test.tsx` | Consumers share one theme and motion contract, including a natural default and an overriding reduced-motion policy. |
-| T4 | `catalog/schema.ts`, `catalog/entries.ts`, `catalog/licenses.ts`, `catalog/check.ts`, `catalog/check.test.ts` | One validated aggregate exposes the 93 inventory candidates and 22 linked enhancements, with deterministic owned metadata updates and license provenance. |
-| T5 | `registry.json`, `scripts/build-registry.ts`, `scripts/registry-smoke.mjs`, `registry/david-ui/structure/button.tsx` | The generated shadcn registry installs its Button proof and dependencies into a fresh Next application that builds. |
-| T6 | `scripts/check-kit-only.ts`, `scripts/check-kit-only.test.ts` | The kit-only guard rejects forbidden primitive imports and raw interactive JSX while accepting kit consumers. |
-| T7 | `registry/david-ui/structure/card.tsx`, `registry/david-ui/structure/badge.tsx`, `registry/david-ui/structure/avatar.tsx`, `registry/david-ui/structure/button-variants.tsx`, `registry/david-ui/structure/button.test.tsx`, `registry/david-ui/forms`, `src/demos/structure`, `src/demos/forms`, `catalog/updates/p1-structure-forms.ts` | The eleven structure/form candidates and their linked enhancements have tokenized demos, behavior tests and recorded implementation outcomes. |
-| T8 | `registry/david-ui/navigation`, `src/demos/navigation`, `catalog/updates/p1-navigation.ts` | The five navigation candidates keep keyboard and touch navigation intact through their approved animation enhancements. |
-| T9 | `registry/david-ui/overlays`, `src/demos/overlays`, `catalog/updates/p1-overlays.ts` | The six overlay/disclosure candidates preserve focus return, dismissal and keyboard operation during animated transitions. |
-| T10 | `registry/david-ui/feedback`, `registry/david-ui/data`, `src/demos/feedback`, `src/demos/data`, `catalog/updates/p1-feedback-data.ts` | The nine feedback/data candidates provide tested feedback states and composable data operations on one notification engine. |
-| T11 | `e2e/p1.spec.ts`, `e2e/helpers.ts`, `src/app/demos/[...slug]/page.tsx`, `catalog/qa/p1.ts` | A real P1 demo route and browser suite establish the exact evidence required before any P1 entry becomes validated. |
-| T12 | `src/app/(catalog)/layout.tsx`, `src/app/(catalog)/page.tsx`, `src/components/catalog/browse`, `registry/david-ui/catalog/command.tsx`, `registry/david-ui/catalog/browse-controls`, `src/demos/catalog/browse`, `e2e/catalog-browse.spec.ts`, `catalog/updates/catalog-browse.ts` | The catalog shell browses the aggregate with five independent filters, command search and theme controls made from kit entries. |
-| T13 | `src/app/(catalog)/components/[slug]/page.tsx`, `src/components/catalog/entry`, `registry/david-ui/catalog/copy-button.tsx`, `registry/david-ui/catalog/entry-controls`, `src/demos/catalog/entry`, `e2e/catalog-entry.spec.ts`, `catalog/updates/catalog-entry.ts` | An entry view renders the selected entry demo, state/API metadata and install information with viewport and motion controls made from the kit. |
-| T14 | `src/lib/auth`, `src/proxy.ts`, `src/app/login/page.tsx`, `src/app/api/session/route.ts`, `e2e/auth.spec.ts` | Owner sessions and registry bearer authorization prevent unauthenticated access and source leakage, with explicit invalid-configuration failures. |
-| T15 | `registry/david-ui/p2`, `src/demos/p2`, `e2e/p2.spec.ts`, `catalog/updates/p2.ts`, `catalog/qa/p2.ts` | The twelve P2 inventory entries and the remaining seven enhancement outcomes satisfy the established status and interaction contracts. |
-| T16 | `registry/david-ui/motion`, `src/demos/motion`, `e2e/capabilities.spec.ts`, `catalog/updates/capabilities.ts`, `catalog/qa/capabilities.ts` | Seven Animate UI capabilities expose their documented APIs while reusing the existing Button, CopyButton and Scroll Area contracts. |
-| T17 | `registry/david-ui/bencho/capabilities`, `src/demos/bencho/capabilities`, `e2e/bencho-capabilities.spec.ts`, `catalog/updates/bencho-capabilities.ts` | Six Bencho capabilities have clean-room-safe origins, explicit failure states and operable keyboard/touch alternatives. |
-| T18 | `registry/david-ui/bencho/variants`, `src/demos/bencho/variants`, `e2e/bencho-variants.spec.ts`, `catalog/updates/bencho-variants.ts` | Six Bencho variants preserve the established boolean, selection, numeric and notification models without adding a second engine. |
-| T19 | `registry/david-ui/text`, `src/demos/text`, `e2e/reactbits-text.spec.ts`, `catalog/updates/reactbits-text.ts` | Nine React Bits text effects retain readable SSR content, license notices, token wiring and deterministic reduced-motion behavior. |
-| T20 | `registry/david-ui/showcase`, `src/demos/showcase`, `e2e/reactbits-ui.spec.ts`, `catalog/updates/reactbits-ui.ts` | Twelve React Bits interface and gallery entries preserve Card semantics and usable keyboard/touch navigation. |
-| T21 | `registry/david-ui/effects`, `registry/david-ui/backgrounds`, `src/demos/effects`, `src/demos/backgrounds`, `e2e/reactbits-effects.spec.ts`, `catalog/updates/reactbits-effects.ts` | Six interaction effects and five backgrounds obey lifecycle suspension and static-fallback rules with measured performance evidence. |
-| T22 | `scripts/agent-index.ts`, `scripts/agent-index.test.ts`, `AGENTS.md`, `CLAUDE.md`, `docs/consumption.md` | Manifest-generated agent metadata and consumption guidance agree with installable registry entries and QA states. |
-| T23 | `netlify.toml`, `scripts/prod-smoke.mjs`, `scripts/prod-smoke.test.mjs` | The linked private production catalog enforces both authorization boundaries and passes a reproducible deployed smoke check. |
-| T24 | `scripts/acceptance.mjs`, `scripts/acceptance.test.mjs`, `e2e/acceptance.spec.ts` | A self-contained acceptance harness starts the built application and validates login, discovery and isolated registry consumption without shell secrets. |
-| T24a | `.evidence/T24-run.md` | The finished acceptance commands run unchanged against real production entry points and retain exit codes and flow evidence for the audit. |
-| T25 | `.evidence/T25.md`, `.evidence/T25.findings.json` | A read-only review maps the integrated outcome to R1–R16 and records every confirmed defect in a valid blocking-findings ledger. |
+| T1 | `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.ts`, `components.json`, `eslint.config.mjs`, `vitest.config.mts`, `playwright.config.ts`, `.env.example`, `.gitignore`, `README.md`, `src/app/layout.tsx`, `src/app/not-found.tsx`, `src/app/not-found.test.tsx`, `src/app/api/health/route.ts`, `scripts/boot-smoke.mjs`, `scripts/prebuild.mjs`, `scripts/check-spike.mjs`, `scripts/check-design-contract.mjs`, `scripts/tooling.test.mjs` | A fresh private checkout builds a strict Next 16 app with the approved toolchain, every package script later producers need, and fail-closed validators for the spike matrix and design contracts. |
+| T2 | `catalog/compat.json`, `.evidence/T2-spike.md` | A reproducible tracked compatibility matrix gives every enhancement, capability and source a route, a license record and pinned dependencies before any code is adopted. |
+| T3 | `package.json`, `package-lock.json`, `scripts/check-deps.mjs`, `scripts/check-deps.test.mjs` | package.json and the lockfile carry exactly the pinned runtime and development dependencies the spike lists, so later component tasks import them without editing dependency files. |
+| T4 | `catalog/schema.ts`, `catalog/seed.ts`, `catalog/licenses.ts`, `catalog/build.ts`, `catalog/check.ts`, `catalog/check.test.ts`, `catalog/build.test.ts`, `catalog/resolved.ts`, `catalog/demo-map.ts` | One validated manifest exposes the 93 inventory entries and 22 linked enhancements, assembles task-owned update and QA fragments deterministically and enforces status, metadata and license rules. |
+| T5 | `scripts/check-kit-only.ts`, `scripts/check-kit-only.test.ts`, `scripts/fixtures/kit-only/violations.tsx`, `scripts/fixtures/kit-only/allowed.tsx` | The kit-only check fails when app code outside registry/ imports primitive or animation libraries directly or renders raw interactive elements, and accepts code built from kit components. |
+| T8 | `design/contracts/kit-identity@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract fixes the visual identity every component and the catalog consume: semantic tokens, light and dark themes, motion profiles, interaction states, focus and reduced-motion treatment. |
+| T9 | `registry/david-ui/styles/tokens.css`, `registry/david-ui/lib/theme-provider.tsx`, `registry/david-ui/lib/motion-profile.tsx`, `registry/david-ui/lib/theme-provider.test.tsx`, `registry/david-ui/lib/motion-profile.test.tsx`, `src/app/globals.css`, `src/app/layout.tsx`, `src/app/layout.test.tsx` | Every component and the app read colors, typography, spacing, radii, shadows and motion timings from shared tokens, switch light and dark and three motion profiles, and collapse motion under reduced motion. |
+| T10 | `scripts/build-registry.ts`, `scripts/build-registry.test.ts`, `scripts/registry-smoke.mjs`, `scripts/capture.mjs`, `registry/david-ui/structure/button.tsx`, `registry/david-ui/structure/button.test.tsx`, `src/demos/structure/button.demo.tsx`, `src/app/demos/[...slug]/page.tsx`, `catalog/updates/button.ts`, `e2e/visual/SP-2.routes.json`, `registry.json` | The manifest-generated shadcn registry installs @david-ui/button with its internal @david-ui dependencies into a fresh Next app that builds and renders it with kit tokens, and the demo route and capture script render any entry demo by state. |
+| T15 | `design/contracts/p1-components@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract specifies structure, states, keyboard and touch operation, enhancement motion and the demo gallery for each P1 entry on top of kit-identity@v1. |
+| T16 | `registry/david-ui/structure/button-variants.tsx`, `registry/david-ui/structure/card.tsx`, `registry/david-ui/structure/badge.tsx`, `registry/david-ui/structure/avatar.tsx`, `registry/david-ui/structure/structure.test.tsx`, `registry/david-ui/forms`, `src/demos/structure`, `src/demos/forms`, `catalog/updates/p1-structure-forms.ts`, `e2e/visual/SP-3-forms.routes.json` | The eleven structure and form entries have tokenized Base UI implementations, demos with every applicable state, behavior tests and recorded statuses with enhancement results. |
+| T18 | `registry/david-ui/navigation`, `src/demos/navigation`, `catalog/updates/p1-navigation.ts`, `e2e/visual/SP-3-navigation.routes.json` | The five navigation entries keep active selection, focus movement and keyboard and touch navigation through their enhancements. |
+| T19 | `registry/david-ui/overlays`, `src/demos/overlays`, `catalog/updates/p1-overlays.ts`, `e2e/visual/SP-3-overlays.routes.json` | The six overlay and disclosure entries preserve focus trapping, dismissal and focus return during animated transitions. |
+| T20 | `registry/david-ui/feedback`, `registry/david-ui/data`, `src/demos/feedback`, `src/demos/data`, `catalog/updates/p1-feedback-data.ts`, `e2e/visual/SP-3-feedback-data.routes.json` | The eight feedback and data entries provide tested feedback states, one notification engine and composable data operations. |
+| T21 | `e2e/p1.spec.ts`, `e2e/helpers.ts`, `catalog/qa/p1.ts`, `catalog/qa/p1.test.ts`, `e2e/visual/SP-3.routes.json` | A real-browser suite exercises every P1 demo with its states, keyboard and touch paths, axe and reduced motion, and only entries passing every R6 check are promoted to validated. |
+| T25 | `design/contracts/catalog-app@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract specifies the catalog's views, flows, states, responsive layout and Spanish copy using only P1 kit components. |
+| T26 | `src/lib/auth/config.ts`, `src/lib/auth/session.ts`, `src/lib/auth/registry-token.ts`, `src/lib/auth/auth.test.ts`, `src/proxy.ts`, `src/app/api/session/route.ts`, `src/app/login/page.tsx`, `src/app/r/[...path]/route.ts`, `scripts/app-registry-smoke.mjs`, `e2e/auth.spec.ts`, `e2e/helpers.ts`, `examples/consumer-components.json` | Pages require an owner session and every /r/* file, including index.json and llms.txt, requires the bearer token, with explicit failures for missing configuration and no source in refusals. |
+| T27 | `src/app/(catalog)/layout.tsx`, `src/app/(catalog)/page.tsx`, `src/components/catalog/browse`, `registry/david-ui/catalog/command.tsx`, `registry/david-ui/catalog/drawer.tsx`, `registry/david-ui/catalog/toggle-group.tsx`, `registry/david-ui/catalog/catalog-browse.test.tsx`, `src/demos/catalog/browse`, `e2e/catalog-browse.spec.ts`, `catalog/updates/catalog-browse.ts`, `e2e/visual/SP-4-browse.routes.json` | The logged-in owner browses every manifest entry with source, category, priority, status and type filters, command search and theme switching in a shell built only from kit components. |
+| T28 | `src/app/(catalog)/components/[slug]/page.tsx`, `src/app/(catalog)/gaps/page.tsx`, `src/components/catalog/entry`, `registry/david-ui/catalog/copy-button.tsx`, `registry/david-ui/catalog/scroll-area.tsx`, `registry/david-ui/catalog/code-block.tsx`, `registry/david-ui/catalog/catalog-entry.test.tsx`, `src/demos/catalog/entry`, `e2e/catalog-entry.spec.ts`, `catalog/updates/catalog-entry.ts`, `e2e/visual/SP-4.routes.json` | Each entry page shows the live demo, every applicable state, the API table, a copyable install command, provenance, light and dark, three viewports and motion profiles, and the gaps page lists every documented gap and blocked or discarded entry. |
+| T33 | `design/contracts/p2-capabilities@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract specifies states, interaction and motion for the twelve P2 entries and the seven capabilities, including where each capability appears in the catalog. |
+| T34 | `registry/david-ui/p2`, `src/demos/p2`, `e2e/p2.spec.ts`, `catalog/updates/p2.ts`, `catalog/qa/p2.ts`, `e2e/visual/SP-5-p2.routes.json` | The twelve P2 entries satisfy the established value, state and interaction contracts and the seven remaining enhancements have recorded results. |
+| T35 | `registry/david-ui/motion`, `src/demos/motion`, `src/app/(catalog)/template.tsx`, `e2e/capabilities.spec.ts`, `catalog/updates/capabilities.ts`, `catalog/qa/capabilities.ts`, `e2e/visual/SP-5-capabilities.routes.json` | The seven capabilities expose documented APIs that reuse existing Button, CopyButton and Scroll Area contracts, with PageTransition validated on the catalog's App Router. |
+| T39 | `design/contracts/bencho-components@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract specifies each Bencho entry's states, gestures and their keyboard or button alternatives, and the shared value models with Select, Checkbox, Slider and the notification engine. |
+| T40 | `registry/david-ui/bencho/capabilities`, `src/demos/bencho/capabilities`, `catalog/updates/bencho-capabilities.ts`, `e2e/visual/SP-6-capabilities.routes.json` | Six Bencho capabilities have license-driven origins, real browser behavior, explicit failure states and operable keyboard or button alternatives for every gesture. |
+| T41 | `registry/david-ui/bencho/variants`, `src/demos/bencho/variants`, `catalog/updates/bencho-variants.ts`, `e2e/visual/SP-6-variants.routes.json` | Six Bencho variants keep the established Select, Checkbox, Slider and notification models, and CreateMenu and ExpandingSearch keep focus management and keyboard operation. |
+| T42 | `e2e/bencho.spec.ts`, `catalog/qa/bencho.ts`, `catalog/qa/bencho.test.ts`, `e2e/visual/SP-6.routes.json` | A real-browser suite exercises all twelve Bencho entries with their alternatives and mobile scroll conflicts, and only entries passing every R6 check are promoted. |
+| T47 | `design/contracts/reactbits-components@v1.md`, `design/contracts/CHANGELOG.md` | An owner-approvable contract specifies token-driven tints, sizes and fonts, motion and reduced-motion behavior, non-pointer equivalents and background fallbacks for the 32 React Bits entries. |
+| T48 | `registry/david-ui/text`, `src/demos/text`, `e2e/reactbits-text.spec.ts`, `catalog/updates/reactbits-text.ts`, `e2e/visual/SP-7-text.routes.json` | Nine text effects keep readable server-rendered text, upstream notices and token wiring, animate when motion is allowed and stay static under reduced motion. |
+| T49 | `registry/david-ui/showcase`, `src/demos/showcase`, `e2e/reactbits-ui.spec.ts`, `catalog/updates/reactbits-ui.ts`, `e2e/visual/SP-7-ui.routes.json` | Twelve React Bits interface and gallery entries compose Card for card variants and stay operable by keyboard and touch. |
+| T50 | `registry/david-ui/effects`, `src/demos/effects`, `e2e/reactbits-effects.spec.ts`, `catalog/updates/reactbits-effects.ts`, `e2e/visual/SP-7-effects.routes.json` | Six interaction effects take tints from tokens, trigger on pointer and keyboard focus, and stay static under reduced motion. |
+| T51 | `registry/david-ui/backgrounds`, `src/demos/backgrounds`, `e2e/reactbits-backgrounds.spec.ts`, `catalog/updates/reactbits-backgrounds.ts`, `e2e/visual/SP-7-backgrounds.routes.json` | Five backgrounds load lazily, pause off-screen or in a hidden tab, fall back to static CSS without WebGL or with reduced motion, and record a measured mobile FPS. |
+| T55 | `scripts/agent-index.ts`, `scripts/agent-index.test.ts`, `scripts/build-registry.ts`, `AGENTS.md`, `CLAUDE.md`, `docs/consumption.md` | Manifest-generated agent metadata and repository guidance list every entry with variants, origin, install command, version, dependencies, license and QA status, behind the registry token. |
+| T56 | `scripts/acceptance.mjs`, `scripts/acceptance.test.mjs`, `e2e/acceptance.spec.ts` | A self-contained harness starts the production server, discovers entries through the token-protected index, installs every implemented or validated entry into fresh consumers that render and build, and drives the browser catalog flow. |
+| T59 | `netlify.toml`, `scripts/prod-smoke.mjs`, `scripts/prod-smoke.test.mjs`, `docs/deployment.md` | A recreated Netlify site builds the private repository's main branch with the three secrets only in Netlify env vars, and a reproducible smoke script checks the deployed boundaries. |
 
-T1 owns package scripts, bootstrap ESLint restrictions, tool configs, and the two report validators. T6 owns the AST
-kit-only scanner and negative fixtures; it does not edit T1's ESLint config. npm scripts point at the declared producer
-paths; bootstrap verification deliberately excludes commands whose implementation has not been produced yet.
-check-spike.mjs validates the structured spike's complete named matrix, versions, probe outcomes, license provenance
-and engine ruling; the manual source review establishes the meaning of that evidence. check-audit-ledger.mjs implements
-the inspected audit-findings/1 gate: malformed JSON/schema, duplicate finding IDs, invalid severity/status/task names,
-fixed without evidence and accepted without owner provenance fail; an open critical/high finding fails. Its fixtures
-prove these rejection cases. Its known task-ID list matches this contract. Neither validator treats file existence as QA.
+Integration tests, gates and audits write only their `.evidence/` report (and ledger for audits).
 
-T4 alone owns catalog/entries.ts: it seeds the 93 candidates and deterministically assembles catalog/updates and
-catalog/qa contributions. Seed completion is keyed by the existing inventory ID, not an added duplicate entry. Each ID
-has one owning metadata fragment; unknown IDs, duplicate update ownership and broken references fail. QA fragments
-can promote status only with all R6 evidence. The final assembled list is what consumers see. Additions needed by the
-catalog are tagged separately so the fixed 93-candidate counts stay exact. Every component task records a non-pending
-result for its candidates, including blocked/discarded reasons, and may only mark validated when R6 is complete.
+## Lessons carried from revisions 1–9 (precedent REQ-001)
+- Vitest failed in the verifier because `node_modules` was mounted read-only → T1 puts the Vitest cache outside it.
+- The final audit alone found anonymous `/components/*`, a public `llms.txt`, registry dependencies resolved to upstream
+  shadcn, `tokens.css` never imported, static stub effects and backgrounds, a VoiceNote that never recorded, an install
+  command that installed nothing, a guard that missed `motion`/`@animate-ui` and a performance test that measured
+  nothing → each now has an explicit criterion in its owning task (T26, T10, T9, T48–T51, T40, T56, T5, T51) and is
+  probed by that subplan's integration test and audit, not only at the end.
+- The production smoke failed in the sandbox for lack of credentials → it is now a `production`-environment test task
+  with named resources and an owner authorization text.
 
-T5 owns the proof Button implementation; T7 owns additional variants, tests and demos on that API. T11 creates the
-kit-based demo dispatcher and P1 QA/browser harness before the catalog shell exists. T12 owns Command and any required
-browse controls added early; T15 finalizes their QA without introducing another Command or editing T12's files.
-T13 similarly owns the early CopyButton and entry controls; T16 reuses them. T17 and T18 have separate source/demo/
-browser files. P2 occupies its own module subtree rather than claiming the entire registry. All source families retain
-license notices, tokens, browser-safe imports and truthful final statuses. Resources on task lines identify bounded coordination contracts; they are exclusive scheduling resources, not promises about concurrency. The five cross-task contracts are IF-1 to
-IF-5 in PLAN.json; their producers, consumers, invariants and integration criteria are authoritative there.
-
-All browser specifications start real Next routes using the T1 Playwright webServer configuration. e2e/helpers.ts
-(T11) supplies synthetic server-side credentials and authenticates through the public login flow once T14 exists;
-it never bypasses guards. Tests do not require an ignored .env, inherited shell variables or a .git directory.
-T24 constructs isolated fixtures, builds and starts next start on an available loopback port, polls readiness with a
-deadline, drives browser login → filters/search → entry → install copy, and invokes the real shadcn CLI against the
-bearer-protected registry in fresh Next consumers. It covers one installable item per source and the complete set of
-implemented/validated entries; an absent source representative fails instead of being silently skipped. Each child has
-explicit synthetic environment, bounded concurrency and deadlines. Failed startup, install/build errors and timeouts
-return nonzero; teardown touches only owned temporary processes/directories. T24a only executes these finished commands
-and records actual outcomes; failures return to the producer, and product judgment belongs to T25.
-
-Production smoke is distinct from local fixtures: T23 resolves the new site URL by its dav033/david-ui linkage using
-the existing authenticated Netlify CLI and reads required production credentials through that authenticated service
-boundary, without printing them. No verification relies on ignored .netlify/state.json or the shell environment.
-A missing identity, URL or secret produces a deliberate failure. Missing/wrong bearer tests must exercise actual static
-/r delivery on Netlify, including JSON indexes, not only Next handler imports. The unresolved secret locations must
-be resolved before T14/T23 execution; this classification session performs no production action.
-
-
-## Spec review amendments (2026-10-22)
-An independent spec review tightened SPEC.md after classification; task scope is unchanged, these details bind them:
-- T4: manifest fields `origin` (inventory / catalog-driven / own), normalized priority + raw source priority, type
-  enum, exposure form, `applicableStates`, incorporation date, dependency-compatibility result, `ownerApproved`;
-  `catalog:check` counts only `origin: inventory` (30/12 shadcn, 7, 6+6 Bencho, 9/12/6/5 React Bits) and verifies
-  license header notices on copied files. Status semantics are in SPEC "Status semantics".
-- T12/T13: inventory entries the catalog needs early (Command, Scroll Area, Drawer…) are built there and stay inventory
-  entries; T13 also adds the gaps page (R9).
-- T14/T22: the agent index is served at `/r/index.json` and `/r/llms.txt`, both behind the registry token (R14).
-- T16: Page Transition validated only on the Next App Router.
-- T17/T18: §10.3 slugs; each R12 rule has its own test.
-- T21: backgrounds measured with Pixel 7 emulation + 4× CPU throttle, median ≥ 30 FPS or static fallback by default on mobile (R13).
-- T22: `AGENTS.md` documents the deliberate upstream-update procedure (R10).
 ## Tasks
 
-### M1 — Foundation: repo, tokens, manifest, licenses, registry pipeline
-Acceptance: `npm run verify` passes on a fresh clone; the manifest check counts exactly 42/7/12/32 entries and 22 linked enhancements; the license register covers the four sources; `npx shadcn add` of a proof item from the local registry installs into a scratch Next app that builds; the kit-only check fails on a planted violation.
+### M1 — Foundation: repository, compatibility ruling, manifest, identity and registry pipeline
+Acceptance: The local repository ~/dev/david-ui and the private GitHub repository dav033/david-ui hold the same root history; `npm run verify` passes; the manifest counts exactly 42/7/12/32 inventory entries and 22 linked enhancements; the license matrix covers the four sources; the Button installs from the bearer-protected local registry into a fresh Next app that builds with kit tokens; the kit-only check fails on planted violations.
 
-- [ ] T1 — Scaffold `~/dev/david-ui`: Next 16 + TS strict + Tailwind 4 + shadcn init (Base UI style) + ESLint/Prettier + Vitest/Testing Library + Playwright/axe; scripts `verify`, `test`, `test:e2e`; `.gitignore` incl. `.evidence/`; `.env.example`; create private GitHub repo `dav033/david-ui` and push · repo: app · verify: `npm run build` · files: package.json, package-lock.json, tsconfig.json, components.json, next.config.ts, eslint.config.mjs, vitest.config.mts, playwright.config.ts, .env.example, .gitignore, src/app/layout.tsx, src/app/not-found.tsx, scripts/check-spike.mjs, scripts/check-audit-ledger.mjs, scripts/check-planning-tools.test.ts · resources: contract:verification-tools · covers: R1, R16 · kind: implement
+**SP-1 — Bootstrapped private repository, compatibility ruling, pinned dependencies, manifest and kit-only guard** · no UI. Outcome: A fresh private checkout builds and starts, every upstream piece has a license and compatibility route, dependencies are pinned, the 93-entry manifest validates and the kit-only guard rejects violations.
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 240 minutes.
+- [ ] T1 — Create the local repository ~/dev/david-ui with a root commit and the private GitHub repository dav033/david-ui, and scaffold the Next 16 toolchain · repo: app · verify: `npm run build` · files: package.json, package-lock.json, tsconfig.json, next.config.ts, components.json, eslint.config.mjs, vitest.config.mts, playwright.config.ts, .env.example, .gitignore, README.md, src/app/layout.tsx, src/app/not-found.tsx, src/app/not-found.test.tsx, src/app/api/health/route.ts, scripts/boot-smoke.mjs, scripts/prebuild.mjs, scripts/check-spike.mjs, scripts/check-design-contract.mjs, scripts/tooling.test.mjs · resources: contract:toolchain · covers: R1, R16 · kind: implement · subplan: SP-1 · ui: no
 
-  Objective: A private greenfield checkout has the approved toolchain and named package scripts ready for the later producers, plus fail-closed report validators.
+  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 300 minutes (60 repository and remote creation + 120 scaffold and tool configuration + 70 validators with fixtures + 50 bootstrap checks).
 
-  Estimate: Provisional engineering estimate in minutes: 150 scaffold and configurations + 50 checker fixtures + 40 bootstrap verification = 240. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: A fresh private checkout builds a strict Next 16 app with the approved toolchain, every package script later producers need, and fail-closed validators for the spike matrix and design contracts.
+  `git init` at /home/david/dev/david-ui on branch `main`, root commit, then `gh repo create dav033/david-ui --private --source . --push`. If `dav033/david-ui` already exists (it did on 2026-10-24, see SPEC Inputs), stop as a recoverable external block naming the conflict; never delete, rename or force-push an existing remote.
+  Next 16 App Router, React 19, TypeScript strict, Tailwind 4, `shadcn init` with the Base UI style, ESLint, Vitest + Testing Library with `cacheDir` outside `node_modules` (revision 9's verifier mounted node_modules read-only and Vitest failed with EROFS), Playwright + `@axe-core/playwright` with a `default` and a `reduced-motion` project and a `webServer` that runs `next start` on a free loopback port with synthetic DAVID_UI_* values passed explicitly (no `.env`, no shell variables).
+  Package scripts defined once here and pointing at their producers: dev, build, start, lint, typecheck, test, test:e2e, catalog:build (T4), catalog:check (T4), check:kit-only (T5), registry:build (T10), verify = lint → typecheck → test → check:kit-only → catalog:check → registry:build → build.
+  `scripts/prebuild.mjs` (the `prebuild` hook) runs `catalog:build` and `registry:build` once their producers (T4, T10) exist and prints which steps ran; `next.config.ts` includes `registry-dist/**` in the output file tracing of the `/r` route. The Playwright `webServer`, `boot-smoke.mjs` and every later server-starting script build first when `.next` is absent, because verification snapshots exclude it.
+  `.gitignore` covers `.evidence/`, `registry-dist/`, `.next/`, Playwright output; `.env.example` lists DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET, DAVID_UI_REGISTRY_TOKEN with no values.
+  `src/app/api/health/route.ts` answers `{ok:true}`. `scripts/boot-smoke.mjs` starts `next start` on a free port, polls the health route with a deadline, requests an unknown path expecting the not-found page and tears down only its own process; startup exit or timeout exits nonzero.
+  `scripts/check-spike.mjs <matrix>` fails unless the matrix lists 22 enhancement routes, 7 capability routes, the version matrix, a license per source with primary-source URL and retrieval date, exact dependency versions and exactly one notification engine. `scripts/check-design-contract.mjs <contract> --requires R…` fails unless the contract has the 12 Designer sections, a status of draft or approved, every listed requirement ID and a visual acceptance table whose rows have unique UI-AC ids with breakpoint, state and expectation.
 
-  - Acceptance / static: The bootstrap production build compiles the Next 16 strict-TypeScript scaffold with the approved React and Tailwind versions. Check: `npm run build` (authored by T1)
-  - Acceptance / functional: Bootstrap unit fixtures reject malformed compatibility reports and malformed or blocking audit ledgers. Check: `npm run test` (authored by T1)
-  - Acceptance / static: The scaffold lint rules accept the bootstrap files with no disabled rules. Check: `npx eslint .` (authored by T1)
-  - Acceptance / product: The GitHub repository dav033/david-ui is private and the scaffold is pushed using the authorized owner account. Check: manual: Outside the snapshot verifier, inspect gh repository visibility and the pushed commit with the existing authenticated CLI. Expected: Private visibility and the scaffold commit are confirmed; no secrets appear in tracked files.
+  - Acceptance / static: The strict Next 16 scaffold compiles a production build with the approved React, Tailwind and Base UI shadcn configuration. Check: `npm run build` (authored by T1)
+  - Acceptance / integration: The production server starts on a free loopback port, answers the health route and the not-found page, and the smoke fails on startup exit or timeout. Check: `node scripts/boot-smoke.mjs` (authored by T1)
+  - Acceptance / functional: Validator fixtures reject malformed compatibility matrices and design contracts missing sections, requirement IDs or unique visual acceptance rows, and the prebuild hook reports which pipeline steps ran. Check: `node --test scripts/tooling.test.mjs` (authored by T1)
+  - Acceptance / static: Lint accepts the scaffold with no disabled rules. Check: `npm run lint` (authored by T1)
+  - Acceptance / functional: Vitest runs a component test with its cache directory outside node_modules. Check: `npx vitest run src/app/not-found.test.tsx` (authored by T1)
 
-- [ ] T2 — Compatibility and license spike: per each of the 22 enhancements and 7 capabilities, whether Animate UI ships a Base UI variant and its install path; Motion/React/Tailwind version matrix; Sonner vs Animate UI toast as single engine; licenses of shadcn, Animate UI, Bencho (per block) and React Bits; write `.evidence/T2-spike.md` and record the toast-engine and primitive rulings · repo: app · after: T1 · verify: `node scripts/check-spike.mjs .evidence/T2-spike.json` · files: .evidence/T2-spike.md, .evidence/T2-spike.json · resources: contract:upstream-compatibility-licenses · covers: R2, R10, R11 · kind: research
+- [ ] T2 — Compatibility and license spike for the 22 enhancements, 7 capabilities, four sources and the notification engine · repo: app · after: T1 · verify: `node scripts/check-spike.mjs catalog/compat.json` · files: catalog/compat.json, .evidence/T2-spike.md · resources: contract:upstream-compat · covers: R2, R10, R11 · kind: research · subplan: SP-1
 
-  Classification: complexity high; scope small_change; risk high; coupling high; confidence low; estimate 240 minutes.
+  Classification: complexity high; scope small_change; risk high; coupling high; confidence low; estimate 240 minutes (110 version and install probes + 90 primary-source license evidence + 40 matrix assembly and validation).
 
-  Objective: A reproducible compatibility matrix and license record give every enhancement and capability a supported route or an explicit blocked result before source adoption.
+  Objective: A reproducible tracked compatibility matrix gives every enhancement, capability and source a route, a license record and pinned dependencies before any code is adopted.
+  For each of the 22 enhancements and 7 capabilities: whether Animate UI ships a Base UI variant, the install path and the candidate result (`compatible`, `manual`, `blocked`).
+  Version matrix for Next 16, React 19, Tailwind 4, Base UI and Motion; Sonner versus the Animate UI toast as the single engine (R11).
+  Licenses with primary-source URL and retrieval date for shadcn/ui, Animate UI, each Bencho block and React Bits Free (MIT + Commons Clause); unknown or ambiguous means clean-room (R10).
+  Exact npm dependency versions for every upstream piece the 93 entries use. `catalog/compat.json` is tracked product data (later tasks read it); the narrative stays in `.evidence/T2-spike.md`.
 
-  Estimate: Provisional engineering estimate in minutes: 120 version/install experiments + 90 source/license evidence + 30 matrix checks = 240. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed. Confidence is low specifically because the actual upstream license and compatibility outcomes are the research deliverable, not inspected implementation evidence.
+  - Acceptance / functional: The tracked matrix records all 22 enhancement routes, seven capability routes, the pinned version matrix, per-source licenses with primary-source URLs and one notification-engine ruling. Check: `node scripts/check-spike.mjs catalog/compat.json` (authored by T1)
 
-  - Acceptance / functional: The spike records all 22 enhancement routes, seven capability routes, pinned version probes and source licenses with evidence and one notification-engine ruling. Check: `node scripts/check-spike.mjs .evidence/T2-spike.json` (authored by T1)
-  - Acceptance / product: The spike conclusions are backed by primary-source license text and reproducible compatibility probes, applying clean-room whenever copying is not clearly allowed. Check: manual: Review the spike source references, pinned versions and probe outcomes before their adoption. Expected: Every source has license provenance; all enhancements/capabilities have a compatible, manual or explicitly blocked route; exactly one engine is chosen.
+- [ ] T3 — Install the pinned dependency set ruled by the spike · repo: app · after: T2 · verify: `node --test scripts/check-deps.test.mjs` · files: package.json, package-lock.json, scripts/check-deps.mjs, scripts/check-deps.test.mjs · resources: contract:dependency-set · covers: R2, R10 · kind: implement · subplan: SP-1 · ui: no
 
-- [ ] T3 — Design tokens and motion: `registry/david-ui/styles/tokens.css` (Catppuccin Latte/Mocha, mauve accent, radii, shadows, typography, spacing, motion durations/easings for subtle/natural/expressive), `ThemeProvider`, `MotionProfileProvider` (Motion `MotionConfig` + reduced motion), `useMotionProfile`; registry items for them · repo: app · after: T2 · verify: `npx vitest run registry/david-ui/lib` · files: registry/david-ui/styles/tokens.css, registry/david-ui/lib/theme-provider.tsx, registry/david-ui/lib/motion-profile.tsx, registry/david-ui/lib/motion-profile.test.tsx · resources: contract:motion-profile · covers: R3, R8 · kind: implement
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 90 minutes (40 installation of the pinned set + 30 drift checker with fixtures + 20 build confirmation).
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 180 minutes.
+  Objective: package.json and the lockfile carry exactly the pinned runtime and development dependencies the spike lists, so later component tasks import them without editing dependency files.
+  Later tasks never edit package.json or package-lock.json. An entry that truly needs an unlisted package is recorded with the reason `dependency-not-pinned:<package>` and surfaced to its subplan audit, which can send T2/T3 back.
 
-  Objective: Consumers share one theme and motion contract, including a natural default and an overriding reduced-motion policy.
+  - Acceptance / functional: Every runtime dependency in the matrix is installed at its exact pinned version and the dependency check fails on a missing, unlisted or ranged package. Check: `node --test scripts/check-deps.test.mjs` (authored by T3)
+  - Acceptance / static: The installed set matches the tracked matrix exactly. Check: `node scripts/check-deps.mjs catalog/compat.json` (authored by T3)
+  - Acceptance / regression: The production build still succeeds with the full dependency set installed. Check: `npm run build` (authored by T1)
 
-  Estimate: Provisional engineering estimate in minutes: 60 tokens + 70 providers and SSR behavior + 50 behavior checks = 180. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T4 — Catalog manifest, license register and catalog generator with exact inventory counts · repo: app · after: T3 · verify: `npm run catalog:check` · files: catalog/schema.ts, catalog/seed.ts, catalog/licenses.ts, catalog/build.ts, catalog/check.ts, catalog/check.test.ts, catalog/build.test.ts, catalog/resolved.ts, catalog/demo-map.ts · resources: contract:catalog-manifest · covers: R5, R10 · kind: implement · subplan: SP-1 · ui: no
 
-  - Acceptance / functional: Theme and motion tests cover light/dark, natural default, all three profiles, reduced-motion precedence and SSR-safe rendering. Check: `npx vitest run registry/david-ui/lib` (authored by T3)
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 240 minutes (90 schema, seed and license register + 70 generator and fragment ownership + 80 rule tests).
 
-- [ ] T4 — Catalog manifest and license register: zod schema (R5), `catalog/entries.ts` with all 93 entries `pending` and the 22 enhancements linked to base entries, `catalog/licenses.ts` from T2, `npm run catalog:check` asserting counts, unique ids, base links and status/metadata rules · repo: app · after: T2 · verify: `npm run catalog:check` · files: catalog/schema.ts, catalog/entries.ts, catalog/licenses.ts, catalog/check.ts, catalog/check.test.ts · resources: contract:upstream-compatibility-licenses, contract:catalog-schema · covers: R5, R10 · kind: implement
+  Objective: One validated manifest exposes the 93 inventory entries and 22 linked enhancements, assembles task-owned update and QA fragments deterministically and enforces status, metadata and license rules.
+  `catalog/schema.ts` (zod) carries every R5 field, `applicableStates`, incorporation date, dependency-compatibility result and `ownerApproved` (default false). `catalog/seed.ts` lists the 93 entries `pending` (kebab ids, section 10.3 slugs for Bencho) and the 22 enhancements linked to base ids. `catalog/licenses.ts` derives from `catalog/compat.json`.
+  `npm run catalog:build` globs `catalog/updates/*.ts`, `catalog/qa/*.ts` and `src/demos/**/*.demo.tsx` and writes the generated `catalog/resolved.ts` and `catalog/demo-map.ts`. Each entry id has exactly one owning update fragment; unknown ids, a second owner or a QA promotion without every R6 field fail.
+  `npm run catalog:check` counts only `origin: inventory` (30+12 shadcn, 7, 6+6 Bencho, 9/12/6/5 React Bits), checks the upstream license header on copied files and clean-room provenance (`upstream: n/a`, consulted URL and date, license note), and requires reasons for blocked or discarded entries; `--final` also fails on any pending entry or unresolved enhancement.
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 240 minutes.
+  - Acceptance / static: The catalog check accepts exactly 42 shadcn, 7 capability, 12 Bencho and 32 React Bits inventory entries plus 22 linked enhancements, counting catalog-driven and own additions separately. Check: `npm run catalog:check` (authored by T4)
+  - Acceptance / functional: Catalog tests reject duplicate ids, two fragments owning one entry, broken enhancement links, missing required metadata, validated status without R6 evidence, copied files without license notices and a pending entry in final mode. Check: `npx vitest run catalog` (authored by T4)
 
-  Objective: One validated aggregate exposes the 93 inventory candidates and 22 linked enhancements, with deterministic owned metadata updates and license provenance.
+- [ ] T5 — Kit-only guard for app code outside registry/ · repo: app · after: T1 · verify: `npm run check:kit-only` · files: scripts/check-kit-only.ts, scripts/check-kit-only.test.ts, scripts/fixtures/kit-only/violations.tsx, scripts/fixtures/kit-only/allowed.tsx · resources: contract:kit-only-guard · covers: R4 · kind: implement · subplan: SP-1 · ui: no
 
-  Estimate: Provisional engineering estimate in minutes: 100 typed schema and aggregation + 70 catalog rules + 70 invalid-data tests = 240. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (70 TypeScript AST scanner with alias resolution + 50 planted-violation fixtures + 30 clean-tree checks).
 
-  - Acceptance / static: Catalog checks accept exactly the 93 baseline candidates and 22 linked enhancements, counting catalog-driven additions separately. Check: `npm run catalog:check` (authored by T4)
-  - Acceptance / functional: Catalog tests reject duplicate IDs or updates, broken enhancement links, missing metadata, invalid QA promotion and unlicensed copying routes. Check: `npx vitest run catalog/check.test.ts` (authored by T4)
+  Objective: The kit-only check fails when app code outside registry/ imports primitive or animation libraries directly or renders raw interactive elements, and accepts code built from kit components.
+  Scans `src/**` (app, components, demos) with the TypeScript AST, resolving tsconfig path aliases and re-exports. Forbidden specifiers: `@base-ui/react*`, `motion`, `motion/*`, `framer-motion`, `@radix-ui/*`, `@animate-ui/*`, `sonner` and upstream React Bits/Bencho packages. Forbidden JSX: `button`, `input`, `select`, `textarea`, `dialog`, and `a` with a button role or button classes. Revision 9's audit found a guard that missed `motion` and `@animate-ui`.
 
-- [ ] T5 — Registry pipeline: `registry.json` generated from the manifest, `npm run registry:build` (`shadcn build` → `public/r/`), proof item `button`; integration script `scripts/registry-smoke.mjs` that creates a scratch Next app in a temp dir, installs `@david-ui/button` from a locally served registry and builds it · repo: app · after: T3, T4 · verify: `npm run registry:build` · files: registry.json, scripts/build-registry.ts, scripts/registry-smoke.mjs, registry/david-ui/structure/button.tsx · resources: contract:registry-button · covers: R1 · kind: implement
+  - Acceptance / static: The kit-only check passes on the current app tree and never scans registry/ or generated files. Check: `npm run check:kit-only` (authored by T5)
+  - Acceptance / functional: Guard fixtures reject motion, motion/react, framer-motion, @base-ui/react, @radix-ui, @animate-ui and sonner imports, aliased re-exports and raw interactive elements, while accepting kit component usage. Check: `npx vitest run scripts/check-kit-only.test.ts` (authored by T5)
 
-  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 210 minutes.
+- [ ] T6 — SP-1 integration: start the scaffold server and run the manifest, dependency and guard checks together · repo: app · after: T4, T5 · verify: `node scripts/boot-smoke.mjs` · files: .evidence/SP-1.integration.md · resources: contract:toolchain · covers: R1, R4, R5, R10, R16 · kind: test · subplan: SP-1
 
-  Objective: The generated shadcn registry installs its Button proof and dependencies into a fresh Next application that builds.
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes (15 server smoke + 15 static checks + 15 remote attestation and report).
 
-  Estimate: Provisional engineering estimate in minutes: 90 registry generation + 50 proof Button + 70 isolated consumer smoke = 210. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: The bootstrapped app starts as shipped while the manifest, dependency and kit-only checks pass on the same tree, and the private remote holds the pushed history.
+  Runs only established commands and reports actual outcomes; failures go back to their producer.
 
-  - Acceptance / static: Registry generation emits shadcn-compatible items with complete source and dependency references. Check: `npm run registry:build` (authored by T5)
-  - Acceptance / integration: The Button proof installs through the locally served registry into a fresh Next app whose production build succeeds. Check: `node scripts/registry-smoke.mjs` (authored by T5)
+  - Acceptance / integration: The shipped server starts and answers its health and not-found routes on the integrated SP-1 tree. Check: `node scripts/boot-smoke.mjs` (authored by T1)
+  - Acceptance / static: Manifest counts pass on the integrated SP-1 tree. Check: `npm run catalog:check` (authored by T4)
+  - Acceptance / static: Installed dependencies match the pinned matrix on the integrated SP-1 tree. Check: `node scripts/check-deps.mjs catalog/compat.json` (authored by T3)
+  - Acceptance / static: The kit-only guard passes on the integrated SP-1 tree. Check: `npm run check:kit-only` (authored by T5)
+  - Acceptance / product [human_attestation]: The private GitHub repository dav033/david-ui holds the same main commit as the local checkout. Manual: Run gh repo view dav033/david-ui --json visibility and git ls-remote origin main in /home/david/dev/david-ui. Expected: Visibility is PRIVATE and the remote main commit equals the local HEAD.
 
-- [ ] T6 — Kit-only guard: ESLint `no-restricted-imports` outside `registry/` + `scripts/check-kit-only.ts` (forbidden imports and raw interactive JSX in `src/app`, `src/components`), with a test that plants violations · repo: app · after: T1 · verify: `npm run check:kit-only` · files: scripts/check-kit-only.ts, scripts/check-kit-only.test.ts · resources: contract:verification-tools · covers: R4 · kind: implement
+- [ ] T7 — SP-1 audit: repository, spike evidence, dependency pins, manifest and guard · repo: app · after: T6 · verify: `bitacora.py audit-ledger check .evidence/SP-1.findings.json` · files: .evidence/SP-1.audit.md, .evidence/SP-1.findings.json · resources: ledger:SP-1 · covers: R1, R2, R4, R5, R10, R11, R16 · kind: audit · subplan: SP-1
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
 
-  Objective: The kit-only guard rejects forbidden primitive imports and raw interactive JSX while accepting kit consumers.
+  Objective: An independent read-only review confirms SP-1 against R1, R2, R4, R5, R10, R11 and R16 and records every confirmed defect in a blocking findings ledger.
+  Checks the primary-source license text behind every matrix row, that no secret is tracked, the guard's coverage of motion and @animate-ui, and the seed against inventory sections 3, 5, 10 and 11.
 
-  Estimate: Provisional engineering estimate in minutes: 60 source analysis + 40 planted violations + 20 clean-tree checks = 120. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / product: The SP-1 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-1.findings.json`
 
-  - Acceptance / static: The kit-only guard accepts the current catalog and never scans generated artifacts as source. Check: `npm run check:kit-only` (authored by T6)
-  - Acceptance / functional: Guard fixtures reject forbidden primitive imports and raw interactive JSX, including aliases and a styled as a button, while allowing kit components. Check: `npx vitest run scripts/check-kit-only.test.ts` (authored by T6)
+**SP-2 — Shared visual identity and installable registry** · UI contract `kit-identity@v1`. Outcome: Components share approved tokens, themes and motion profiles, and the Button installs from a bearer-protected registry into a fresh app that renders it with the kit identity.
+
+- [ ] T8 — Design contract kit-identity@v1: tokens, themes, motion profiles, state visuals and catalog voice · repo: app · after: T7 · verify: `node scripts/check-design-contract.mjs design/contracts/kit-identity@v1.md --requires R3,R8` · files: design/contracts/kit-identity@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R3, R8 · kind: design · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 150 minutes (60 token and theme system + 40 motion profiles and states + 50 acceptance criteria and review).
+
+  Objective: An owner-approvable contract fixes the visual identity every component and the catalog consume: semantic tokens, light and dark themes, motion profiles, interaction states, focus and reduced-motion treatment.
+  Catppuccin Latte (light) / Mocha (dark) with mauve accent (SPEC R3), typography, spacing, radii and shadows as semantic tokens; subtle, natural (default) and expressive durations and easings (inventory 6.2); hover, focus-visible, pressed, disabled, loading, success and error visuals; WCAG 2.2 AA contrast targets; breakpoints 360/768/1280; Spanish catalog voice.
+  The owner approves `kit-identity@v1` (`bitacora.py design approve REQ-001 kit-identity@v1` or the web page) before T9 and T10 start.
+
+  - Acceptance / static: The kit-identity@v1 contract contains every required section, traces R3 and R8 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/kit-identity@v1.md --requires R3,R8` (authored by T1)
+
+- [ ] T9 — Tokens, ThemeProvider and MotionProfileProvider wired into the app root · repo: app · after: T8 · verify: `npx vitest run registry/david-ui/lib` · files: registry/david-ui/styles/tokens.css, registry/david-ui/lib/theme-provider.tsx, registry/david-ui/lib/motion-profile.tsx, registry/david-ui/lib/theme-provider.test.tsx, registry/david-ui/lib/motion-profile.test.tsx, src/app/globals.css, src/app/layout.tsx, src/app/layout.test.tsx · resources: contract:theme-motion · covers: R3, R8 · kind: implement · subplan: SP-2 · ui: yes
+
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 180 minutes (60 tokens per contract + 70 providers with SSR-safe theme and reduced motion + 50 tests).
+
+  Objective: Every component and the app read colors, typography, spacing, radii, shadows and motion timings from shared tokens, switch light and dark and three motion profiles, and collapse motion under reduced motion.
+  ThemeProvider uses a class strategy without a flash of the wrong theme; MotionProfileProvider wraps Motion `MotionConfig`, defaults to natural and lets `prefers-reduced-motion` override any profile; `useMotionProfile` exposes durations and easings. `src/app/globals.css` imports `tokens.css` and maps the Tailwind theme to tokens; `layout.tsx` mounts both providers (revision 9's audit found tokens.css never imported).
+
+  - Acceptance / functional: Theme and motion tests cover light and dark, the natural default, all three profiles, reduced-motion precedence and SSR rendering without browser-only reads. Check: `npx vitest run registry/david-ui/lib` (authored by T9)
+  - Acceptance / functional: Rendering the app root layout applies the token stylesheet and both providers. Check: `npx vitest run src/app/layout.test.tsx` (authored by T9)
+
+- [ ] T10 — Registry pipeline with internal dependency rewriting, Button proof, demo route and capture script · repo: app · after: T9 · verify: `npx vitest run scripts/build-registry.test.ts` · files: scripts/build-registry.ts, scripts/build-registry.test.ts, scripts/registry-smoke.mjs, scripts/capture.mjs, registry/david-ui/structure/button.tsx, registry/david-ui/structure/button.test.tsx, src/demos/structure/button.demo.tsx, src/app/demos/[...slug]/page.tsx, catalog/updates/button.ts, e2e/visual/SP-2.routes.json, registry.json · resources: contract:registry-pipeline · covers: R1, R3, R4 · kind: implement · subplan: SP-2 · ui: yes
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 330 minutes (100 registry generation and dependency rewriting + 50 Button proof + 110 isolated consumer smoke + 70 demo route and capture).
+
+  Objective: The manifest-generated shadcn registry installs @david-ui/button with its internal @david-ui dependencies into a fresh Next app that builds and renders it with kit tokens, and the demo route and capture script render any entry demo by state.
+  `npm run registry:build` writes the generated `registry.json` from `catalog/resolved.ts` and runs `shadcn build` into the git-ignored `registry-dist/` (never `public/`). Internal imports become `@david-ui/<item>` registryDependencies; tokens and providers are registry items every component depends on (revision 9's audit found dependencies resolved to upstream shadcn).
+  `scripts/registry-smoke.mjs` exports `runSmoke({baseUrl, token, items})`. Its CLI serves `registry-dist/` on a free loopback port behind a synthetic bearer token, creates a scratch Next 16 app in a temp dir with a `components.json` registry header, runs the real `npx shadcn add @david-ui/<item>` for `--items a,b` or `--family <f>` (implemented/validated entries from the manifest), renders each item, runs `next build`, starts it and checks token CSS variables apply; it asserts a request without the token is refused, cleans up only its own temp dirs and processes, and exits nonzero on any failure.
+  `src/app/demos/[...slug]/page.tsx` renders the entry demo from `catalog/demo-map.ts` with `?state=&theme=&motion=` to force gallery states; an unknown slug renders not-found. Button is recorded `implemented`; P1 QA (T21) promotes it.
+  `scripts/capture.mjs <routes.json…>` starts `next start` with synthetic env, logs in through `/login` once that route exists, captures every route × 360/768/1280 × listed states × light/dark into `.evidence/visual/`, and fails on HTTP ≥ 400, console errors or hydration warnings.
+
+  - Acceptance / functional: Registry generation emits shadcn-compatible items whose internal imports resolve to @david-ui registry dependencies, never to upstream shadcn items. Check: `npx vitest run scripts/build-registry.test.ts` (authored by T10)
+  - Acceptance / static: The registry build writes registry.json and the registry-dist items from the manifest. Check: `npm run registry:build` (authored by T10)
+  - Acceptance / integration: The Button proof installs through a bearer-protected local registry into a fresh Next app that builds and renders it with kit tokens, and an unauthenticated request is refused. Check: `node scripts/registry-smoke.mjs --items button` (authored by T10)
+  - Acceptance / functional: Button behavior tests cover variants, disabled, loading, keyboard activation and focus-visible. Check: `npx vitest run registry/david-ui/structure/button.test.tsx` (authored by T10)
+
+- [ ] T11 — SP-2 integration: full verify, Button install and themed demo capture · repo: app · after: T10 · verify: `npm run verify` · files: .evidence/SP-2.integration.md · resources: contract:registry-pipeline · covers: R1, R3, R4, R8 · kind: test · subplan: SP-2
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes (25 verify + 20 consumer install + 15 capture).
+
+  Objective: The identity, providers and registry pipeline work together through the production server and a fresh consumer on one tree.
+  Runs only established commands; failures go back to their producer.
+
+  - Acceptance / regression: The full verify pipeline passes on the integrated foundation tree. Check: `npm run verify` (authored by T1)
+  - Acceptance / integration: The Button installs from the bearer-protected registry into a fresh app that builds and renders with kit tokens. Check: `node scripts/registry-smoke.mjs --items button` (authored by T10)
+  - Acceptance / integration: The Button demo renders through the real server in light and dark, three motion profiles and three breakpoints without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-2.routes.json` (authored by T10)
+
+- [ ] T12 — SP-2 visual review of the Button demo against kit-identity@v1 · repo: app · after: T11 · verify: `bitacora.py audit-ledger check .evidence/SP-2.visual.findings.json` · files: .evidence/SP-2.visual.md, .evidence/SP-2.visual.findings.json · resources: ledger:SP-2-visual · covers: R3, R8 · kind: audit · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (60 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares the captured breakpoints, states, themes and profiles with kit-identity@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with `node scripts/capture.mjs e2e/visual/SP-2.routes.json` and judges each UI-AC criterion of the approved contract.
+
+  - Acceptance / product: The SP-2 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-2.visual.findings.json`
+
+- [ ] T13 — SP-2 audit: identity, providers and registry pipeline · repo: app · after: T12 · verify: `bitacora.py audit-ledger check .evidence/SP-2.findings.json` · files: .evidence/SP-2.audit.md, .evidence/SP-2.findings.json · resources: ledger:SP-2 · covers: R1, R3, R4, R8 · kind: audit · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-2 against R1, R3, R4 and R8 and records every confirmed defect in a blocking findings ledger.
+  Checks token import in the app root, provider precedence, internal registry dependencies and the bearer refusal.
+
+  - Acceptance / product: The SP-2 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-2.findings.json`
+
+**CG-1 — composition gate over SP-1, SP-2**
+
+- [ ] T14 — CG-1 foundation composition: SP-1 and SP-2 started together · repo: app · after: T13 · verify: `node scripts/boot-smoke.mjs` · files: .evidence/CG-1.md · resources: contract:registry-pipeline · covers: R1, R3, R4, R5 · kind: test
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes (15 server smoke + 15 consumer install + 15 verify).
+
+  Objective: The scaffold server, manifest, guard, providers and registry work together on one accepted tree before any component family starts.
+  Composition gate over the accepted SP-1 and SP-2 audits; P1 work starts only after it passes.
+
+  - Acceptance / integration: The foundation server starts and answers its health route on the composed SP-1 and SP-2 tree. Check: `node scripts/boot-smoke.mjs` (authored by T1)
+  - Acceptance / integration: The Button installs from the registry into a fresh app that builds on the composed foundation. Check: `node scripts/registry-smoke.mjs --items button` (authored by T10)
+  - Acceptance / regression: The full verify pipeline passes on the composed foundation. Check: `npm run verify` (authored by T1)
 
 ### M2 — 30 P1 shadcn components with their Animate UI enhancements
-Acceptance: the 30 P1 entries (§3.1–3.6) are `validated` or `implemented`/`blocked` with reason; each of the P1-related enhancements (Select, Checkbox, Switch, Combobox, Sidebar, Tabs, Dropdown Menu, Pagination, Dialog, Alert Dialog, Sheet, Popover, Tooltip, Accordion, Toast) has a result; each validated entry has a demo, unit tests, an axe-clean e2e and a reduced-motion e2e; one notification engine.
+Acceptance: The 30 P1 entries are validated, or implemented, blocked or discarded with a written reason; the 15 P1-related enhancements have a result; `npx playwright test e2e/p1.spec.ts` passes for every validated P1 entry; there is exactly one notification engine.
 
-- [ ] T7 — Structure + forms: Button (+ variants), Card, Badge, Avatar, Field, Input, Textarea, Select*, Checkbox*, Switch*, Combobox* (* = Animate UI enhancement), demos with all states, manifest updated · repo: app · after: T5, T6 · verify: `npx vitest run registry/david-ui/structure registry/david-ui/forms` · files: registry/david-ui/structure/card.tsx, registry/david-ui/structure/badge.tsx, registry/david-ui/structure/avatar.tsx, registry/david-ui/structure/button-variants.tsx, registry/david-ui/structure/button.test.tsx, registry/david-ui/forms, src/demos/structure, src/demos/forms, catalog/updates/p1-structure-forms.ts · resources: contract:registry-button, contract:motion-profile · covers: R2, R3, R6, R7, R8 · kind: implement
+**SP-3 — 30 P1 components with their Animate UI enhancements** · UI contract `p1-components@v1`. Outcome: Every P1 entry has a tokenized Base UI implementation, demo, behavior tests and a recorded status, and validated entries pass the browser, accessibility and install checks.
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes.
+- [ ] T15 — Design contract p1-components@v1: the 30 P1 components, their enhancements, states and demo galleries · repo: app · after: T8 · verify: `node scripts/check-design-contract.mjs design/contracts/p1-components@v1.md --requires R2,R3,R6,R7,R8,R11` · files: design/contracts/p1-components@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R2, R3, R6, R7, R8, R11 · kind: design · subplan: SP-3
 
-  Objective: The eleven structure/form candidates and their linked enhancements have tokenized demos, behavior tests and recorded implementation outcomes.
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 210 minutes (150 views, states and flows + 60 acceptance criteria, changelog and self-check).
 
-  Estimate: Provisional engineering estimate in minutes: 220 component adaptations + 100 demos and metadata + 100 state and interaction tests = 420. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: An owner-approvable contract specifies structure, states, keyboard and touch operation, enhancement motion and the demo gallery for each P1 entry on top of kit-identity@v1.
+  Covers inventory sections 3.1–3.6 and the 15 P1-related enhancements of section 4, the single toast presentation (R11) and each entry's applicable states.
+  The owner approves `p1-components@v1` before any `ui: yes` task of SP-3 starts.
 
-  - Acceptance / functional: Structure and form tests cover all eleven candidates, applicable states, controlled values, keyboard/touch inputs and reduced-motion interruption. Check: `npx vitest run registry/david-ui/structure registry/david-ui/forms` (authored by T7)
-  - Acceptance / regression: The assembled P1 foundation passes lint, types, units, kit-only checks, catalog checks, registry generation and production build. Check: `npm run verify` (authored by T1)
+  - Acceptance / static: The p1-components@v1 contract contains every required section, traces R2, R3, R6, R7, R8 and R11 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/p1-components@v1.md --requires R2,R3,R6,R7,R8,R11` (authored by T1)
 
-- [ ] T8 — Navigation: Sidebar* (manual), Tabs*, Dropdown Menu*, Breadcrumb, Pagination* (manual) · repo: app · after: T7 · verify: `npx vitest run registry/david-ui/navigation` · files: registry/david-ui/navigation, src/demos/navigation, catalog/updates/p1-navigation.ts · resources: contract:navigation-browse · covers: R2, R6, R7, R8 · kind: implement
+- [ ] T16 — P1 structure and forms: Button variants, Card, Badge, Avatar, Field, Input, Textarea, Select, Checkbox, Switch, Combobox · repo: app · after: T15, T14 · verify: `npx vitest run registry/david-ui/structure registry/david-ui/forms` · files: registry/david-ui/structure/button-variants.tsx, registry/david-ui/structure/card.tsx, registry/david-ui/structure/badge.tsx, registry/david-ui/structure/avatar.tsx, registry/david-ui/structure/structure.test.tsx, registry/david-ui/forms, src/demos/structure, src/demos/forms, catalog/updates/p1-structure-forms.ts, e2e/visual/SP-3-forms.routes.json · resources: contract:p1-components · covers: R2, R3, R6, R7, R8 · kind: implement · subplan: SP-3 · ui: yes
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 300 minutes.
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes (220 component adaptations + 100 demos and fragments + 100 state and interaction tests).
 
-  Objective: The five navigation candidates keep keyboard and touch navigation intact through their approved animation enhancements.
+  Objective: The eleven structure and form entries have tokenized Base UI implementations, demos with every applicable state, behavior tests and recorded statuses with enhancement results.
+  Select, Checkbox, Switch and Combobox enhancements follow the matrix route (compatible, manual on Base UI, or blocked with reason). Select and Checkbox expose the value models later reused by PickerWheel and Checklist (IF-6).
 
-  Estimate: Provisional engineering estimate in minutes: 150 navigation adapters + 70 demos/metadata + 80 keyboard and routing tests = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: Structure and form tests cover the eleven entries, their applicable states, controlled and uncontrolled values, keyboard and touch input and interrupted enhancement motion. Check: `npx vitest run registry/david-ui/structure registry/david-ui/forms` (authored by T16)
+  - Acceptance / static: Each of the eleven entries records a non-pending status with the enhancement results for Select, Checkbox, Switch and Combobox. Check: `npm run catalog:check` (authored by T4)
 
-  - Acceptance / functional: All five navigation candidates preserve active selection, focus movement and keyboard/touch navigation with their documented enhancement results. Check: `npx vitest run registry/david-ui/navigation` (authored by T8)
-  - Acceptance / regression: Navigation integration preserves the full foundation verification pipeline. Check: `npm run verify` (authored by T1)
+- [ ] T17 — SP-3 checkpoint: form entries install from the registry and render on the real server · repo: app · after: T16 · verify: `node scripts/registry-smoke.mjs --items select,checkbox,combobox,field` · files: .evidence/SP-3.checkpoint.md · resources: contract:p1-components · covers: R2, R6, R7 · kind: test · subplan: SP-3
 
-- [ ] T9 — Overlays and disclosure: Dialog*, Alert Dialog*, Sheet*, Popover*, Tooltip*, Accordion* · repo: app · after: T7 · verify: `npx vitest run registry/david-ui/overlays` · files: registry/david-ui/overlays, src/demos/overlays, catalog/updates/p1-overlays.ts · resources: contract:overlays-entry · covers: R2, R6, R7, R8 · kind: implement
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes (45 established browser, install and capture runs + 15 outcome report).
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 330 minutes.
+  Objective: The first P1 family installs into a fresh consumer and renders through the production server before three more families copy its patterns.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
 
-  Objective: The six overlay/disclosure candidates preserve focus return, dismissal and keyboard operation during animated transitions.
+  - Acceptance / integration: Select, Checkbox, Combobox and Field install with their internal dependencies into a fresh app that builds. Check: `node scripts/registry-smoke.mjs --items select,checkbox,combobox,field` (authored by T10)
+  - Acceptance / integration: Structure and form demos render through the real server at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-3-forms.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with the structure and form entries integrated. Check: `npm run verify` (authored by T1)
 
-  Estimate: Provisional engineering estimate in minutes: 170 animated overlays + 70 demos/metadata + 90 focus/dismissal tests = 330. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T18 — P1 navigation: Sidebar, Tabs, Dropdown Menu, Breadcrumb, Pagination · repo: app · after: T17 · verify: `npx vitest run registry/david-ui/navigation` · files: registry/david-ui/navigation, src/demos/navigation, catalog/updates/p1-navigation.ts, e2e/visual/SP-3-navigation.routes.json · resources: registry-family:navigation · covers: R2, R6, R7, R8 · kind: implement · subplan: SP-3 · ui: yes
 
-  - Acceptance / functional: All six overlay candidates handle opening, interrupted closing, Escape, focus return and nested dismissal without keyboard traps. Check: `npx vitest run registry/david-ui/overlays` (authored by T9)
-  - Acceptance / regression: Overlay integration preserves the full foundation verification pipeline. Check: `npm run verify` (authored by T1)
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 300 minutes (150 navigation adapters + 70 demos and fragments + 80 keyboard and touch tests).
 
-- [ ] T10 — Feedback and data: Alert, Toast/Sonner* (single engine per T2, R11), Skeleton, Spinner, Empty, Table, Data Table (composition API: filter, sort, select, paginate), Chart · repo: app · after: T7 · verify: `npx vitest run registry/david-ui/feedback registry/david-ui/data` · files: registry/david-ui/feedback, registry/david-ui/data, src/demos/feedback, src/demos/data, catalog/updates/p1-feedback-data.ts · resources: contract:notification-values · covers: R6, R11 · kind: implement
+  Objective: The five navigation entries keep active selection, focus movement and keyboard and touch navigation through their enhancements.
+  Sidebar and Pagination enhancements are manual integrations on Base UI unless the matrix says otherwise.
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes.
+  - Acceptance / functional: Navigation tests cover active selection, roving focus, keyboard and touch operation and collapsed Sidebar behavior for the five entries. Check: `npx vitest run registry/david-ui/navigation` (authored by T18)
+  - Acceptance / static: The five navigation entries record non-pending statuses with results for the Sidebar, Tabs, Dropdown Menu and Pagination enhancements. Check: `npm run catalog:check` (authored by T4)
 
-  Objective: The nine feedback/data candidates provide tested feedback states and composable data operations on one notification engine.
+- [ ] T19 — P1 overlays and disclosure: Dialog, Alert Dialog, Sheet, Popover, Tooltip, Accordion · repo: app · after: T17 · verify: `npx vitest run registry/david-ui/overlays` · files: registry/david-ui/overlays, src/demos/overlays, catalog/updates/p1-overlays.ts, e2e/visual/SP-3-overlays.routes.json · resources: registry-family:overlays · covers: R2, R6, R7, R8 · kind: implement · subplan: SP-3 · ui: yes
 
-  Estimate: Provisional engineering estimate in minutes: 220 feedback/data APIs + 90 demos/metadata + 110 behavior tests = 420. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 330 minutes (170 animated overlays + 70 demos and fragments + 90 focus and dismissal tests).
 
-  - Acceptance / functional: Feedback and data tests cover nine candidates, notification deduplication and Data Table filter, sort, select and paginate composition. Check: `npx vitest run registry/david-ui/feedback registry/david-ui/data` (authored by T10)
-  - Acceptance / regression: Feedback and data integration preserves the full foundation verification pipeline. Check: `npm run verify` (authored by T1)
+  Objective: The six overlay and disclosure entries preserve focus trapping, dismissal and focus return during animated transitions.
+  Tooltip content is reachable by keyboard focus, never hover only (R7).
 
-- [ ] T11 — P1 e2e and a11y suite: Playwright spec that opens every P1 demo, runs axe, exercises keyboard paths and repeats under `reducedMotion: 'reduce'`; promote passing entries to `validated` · repo: app · after: T8, T9, T10 · verify: `npx playwright test e2e/p1.spec.ts` · files: e2e/p1.spec.ts, e2e/helpers.ts, src/app/demos/[...slug]/page.tsx, catalog/qa/p1.ts · resources: contract:demo-dispatch · covers: R6, R7, R8 · kind: implement
+  - Acceptance / functional: Overlay tests cover opening, interrupted closing, Escape, outside dismissal, focus trap and focus return for the six entries. Check: `npx vitest run registry/david-ui/overlays` (authored by T19)
+  - Acceptance / static: The six overlay entries record non-pending statuses with their enhancement results. Check: `npm run catalog:check` (authored by T4)
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 240 minutes.
+- [ ] T20 — P1 feedback and data: Alert, Toast on the single engine, Skeleton, Spinner, Empty, Table, Data Table, Chart · repo: app · after: T17 · verify: `npx vitest run registry/david-ui/feedback registry/david-ui/data` · files: registry/david-ui/feedback, registry/david-ui/data, src/demos/feedback, src/demos/data, catalog/updates/p1-feedback-data.ts, e2e/visual/SP-3-feedback-data.routes.json · resources: registry-family:feedback · covers: R2, R6, R7, R8, R11 · kind: implement · subplan: SP-3 · ui: yes
 
-  Objective: A real P1 demo route and browser suite establish the exact evidence required before any P1 entry becomes validated.
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes (220 feedback and data APIs + 90 demos and fragments + 110 behavior tests).
 
-  Estimate: Provisional engineering estimate in minutes: 90 demo dispatch and browser helpers + 100 state/a11y cases + 50 QA promotion checks = 240. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: The eight feedback and data entries provide tested feedback states, one notification engine and composable data operations.
+  Exactly one notification engine (Sonner unless the spike ruled otherwise); later ToastStack is only a presenter on it (IF-5).
 
-  - Acceptance / integration: Every P1 demo runs in a real browser with applicable states, keyboard/touch paths, zero axe violations and reduced-motion checks; QA promotion requires every R6 field. Check: `npx playwright test e2e/p1.spec.ts` (authored by T11)
+  - Acceptance / functional: Feedback and data tests cover the eight entries, toast queueing and deduplication on the single engine, and Data Table filter, sort, selection and pagination composition. Check: `npx vitest run registry/david-ui/feedback registry/david-ui/data` (authored by T20)
+  - Acceptance / static: The eight feedback and data entries record non-pending statuses and the toast enhancement result names the engine ruled by the spike. Check: `npm run catalog:check` (authored by T4)
+
+- [ ] T21 — P1 browser QA suite and status promotion · repo: app · after: T18, T19, T20 · verify: `npx playwright test e2e/p1.spec.ts` · files: e2e/p1.spec.ts, e2e/helpers.ts, catalog/qa/p1.ts, catalog/qa/p1.test.ts, e2e/visual/SP-3.routes.json · resources: contract:p1-components · covers: R6, R7, R8 · kind: implement · subplan: SP-3 · ui: no
+
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 270 minutes (100 browser helpers and state cases + 90 keyboard, axe and reduced-motion cases + 80 promotion rules and tests).
+
+  Objective: A real-browser suite exercises every P1 demo with its states, keyboard and touch paths, axe and reduced motion, and only entries passing every R6 check are promoted to validated.
+  Not UI work: it adds test harness and QA data only. Every browser spec uses the shared `test` fixture from `e2e/helpers.ts`, so T26's login helper applies to all suites without editing them.
+
+  - Acceptance / integration: Every P1 demo runs in a real browser with its applicable states, keyboard and touch paths, zero axe violations and a reduced-motion pass. Check: `npx playwright test e2e/p1.spec.ts` (authored by T21)
+  - Acceptance / functional: QA promotion marks an entry validated only when every R6 field is present and leaves failing entries implemented with the failing check written. Check: `npx vitest run catalog/qa/p1.test.ts` (authored by T21)
+
+- [ ] T22 — SP-3 integration: P1 browser suite, installs of every P1 entry and capture · repo: app · after: T21 · verify: `npx playwright test e2e/p1.spec.ts` · files: .evidence/SP-3.integration.md · resources: contract:p1-components · covers: R2, R6, R7, R8, R11 · kind: test · subplan: SP-3
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (75 established browser, install and capture runs + 15 outcome report).
+
+  Objective: All P1 entries render, operate and install through the real server and a fresh consumer on the integrated tree.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
+
+  - Acceptance / integration: The P1 browser suite passes against the production server. Check: `npx playwright test e2e/p1.spec.ts` (authored by T21)
+  - Acceptance / integration: Every implemented or validated P1 entry installs from the registry into a fresh app that builds. Check: `node scripts/registry-smoke.mjs --family p1` (authored by T10)
+  - Acceptance / integration: All P1 demo routes render at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-3.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with all P1 entries integrated. Check: `npm run verify` (authored by T1)
+
+- [ ] T23 — SP-3 visual review of P1 demos against p1-components@v1 · repo: app · after: T22 · verify: `bitacora.py audit-ledger check .evidence/SP-3.visual.findings.json` · files: .evidence/SP-3.visual.md, .evidence/SP-3.visual.findings.json · resources: ledger:SP-3-visual · covers: R3, R7 · kind: audit · subplan: SP-3
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares every captured P1 breakpoint and state with p1-components@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with `node scripts/capture.mjs e2e/visual/SP-3.routes.json`.
+
+  - Acceptance / product: The SP-3 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-3.visual.findings.json`
+
+- [ ] T24 — SP-3 audit: P1 components, enhancements, single notification engine and QA promotion · repo: app · after: T23 · verify: `bitacora.py audit-ledger check .evidence/SP-3.findings.json` · files: .evidence/SP-3.audit.md, .evidence/SP-3.findings.json · resources: ledger:SP-3 · covers: R2, R3, R6, R7, R8, R11 · kind: audit · subplan: SP-3
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-3 against R2, R3, R6, R7, R8 and R11 and records every confirmed defect in a blocking findings ledger.
+  Checks Base UI as the only primitive family, enhancement results, one notification engine and that validated means every R6 check passed.
+
+  - Acceptance / product: The SP-3 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-3.findings.json`
 
 ### M3 — Private catalog application built with the kit
-Acceptance: the catalog lists all entries from the manifest with filters by source, category, priority, status and type, command-palette search, entry pages with live demo, states, props table, install command, origin/license/version, light/dark, viewport preview and motion-profile switch; login protects pages and a bearer token protects `/r/*`; `check:kit-only` passes; every UI piece the app needed is a kit entry (catalog-driven additions recorded).
+Acceptance: Logged in, the owner browses every manifest entry with the five filters, command search, entry pages and the gaps page; anonymous page requests go to login and `/r/*` answers 401 without or with a wrong token; `npm run check:kit-only` passes; the MVP composition gate passes.
 
-- [ ] T12 — Catalog shell and browse: layout with kit Sidebar/Breadcrumb, home grid of entries, filters (source, category, priority, status, type), command-palette search (adds `Command` and any shadcn piece needed, e.g. Toggle Group, as catalog-driven additions), theme toggle · repo: app · after: T11 · verify: `npx playwright test e2e/catalog-browse.spec.ts` · files: src/app/(catalog)/layout.tsx, src/app/(catalog)/page.tsx, src/components/catalog/browse, registry/david-ui/catalog/command.tsx, registry/david-ui/catalog/browse-controls, src/demos/catalog/browse, e2e/catalog-browse.spec.ts, catalog/updates/catalog-browse.ts · resources: contract:navigation-browse, contract:demo-dispatch · covers: R4, R9 · kind: implement
+**SP-4 — Private catalog application built with the kit** · UI contract `catalog-app@v1`. Outcome: The logged-in owner browses, filters, searches and inspects every entry in a catalog made only of kit components, while anonymous pages redirect and registry files require the bearer token.
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 300 minutes.
+- [ ] T25 — Design contract catalog-app@v1: login, browse, command search, entry page and gaps page · repo: app · after: T15 · verify: `node scripts/check-design-contract.mjs design/contracts/catalog-app@v1.md --requires R4,R9,R14` · files: design/contracts/catalog-app@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R4, R9, R14 · kind: design · subplan: SP-4
 
-  Objective: The catalog shell browses the aggregate with five independent filters, command search and theme controls made from kit entries.
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 180 minutes (120 views, states and flows + 60 acceptance criteria, changelog and self-check).
 
-  Estimate: Provisional engineering estimate in minutes: 140 kit composition and early Command + 70 browse behavior + 90 e2e = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: An owner-approvable contract specifies the catalog's views, flows, states, responsive layout and Spanish copy using only P1 kit components.
+  Views: login (with invalid-password and configuration-error states), home grid with five filters and empty results, command palette, entry page (live demo, states gallery, props table, install command with copy feedback, origin/license/version, light/dark, viewport preview, motion switch), gaps page and not-found.
+  The owner approves `catalog-app@v1` before any `ui: yes` task of SP-4 starts.
 
-  - Acceptance / integration: Browse tests drive all five filters, empty results, command search, theme switching and keyboard navigation against the manifest. Check: `npx playwright test e2e/catalog-browse.spec.ts` (authored by T12)
-  - Acceptance / static: Catalog browsing uses only kit components and records all needed additions without changing baseline counts. Check: `npm run check:kit-only` (authored by T6)
+  - Acceptance / static: The catalog-app@v1 contract contains every required section, traces R4, R9 and R14 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/catalog-app@v1.md --requires R4,R9,R14` (authored by T1)
 
-- [ ] T13 — Entry page: live demo, states gallery, props/API table generated from manifest, install command with Copy Button, origin/license/version panel, viewport preview (mobile/tablet/desktop iframe), motion-profile switch; code-block component created as own animated entry if shadcn has none · repo: app · after: T12 · verify: `npx playwright test e2e/catalog-entry.spec.ts` · files: src/app/(catalog)/components/[slug]/page.tsx, src/components/catalog/entry, registry/david-ui/catalog/copy-button.tsx, registry/david-ui/catalog/entry-controls, src/demos/catalog/entry, e2e/catalog-entry.spec.ts, catalog/updates/catalog-entry.ts · resources: contract:overlays-entry, contract:demo-dispatch · covers: R4, R9 · kind: implement
+- [ ] T26 — Owner login, signed session, page guard and bearer-protected registry route · repo: app · after: T25, T24 · verify: `npx vitest run src/lib/auth` · files: src/lib/auth/config.ts, src/lib/auth/session.ts, src/lib/auth/registry-token.ts, src/lib/auth/auth.test.ts, src/proxy.ts, src/app/api/session/route.ts, src/app/login/page.tsx, src/app/r/[...path]/route.ts, scripts/app-registry-smoke.mjs, e2e/auth.spec.ts, e2e/helpers.ts, examples/consumer-components.json · resources: contract:owner-authorization · covers: R14 · kind: implement · subplan: SP-4 · ui: yes
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 300 minutes.
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 330 minutes (130 session, bearer and configuration boundary + 70 proxy, route handler and login page + 130 rejection tests, sweep and app smoke).
 
-  Objective: An entry view renders the selected entry demo, state/API metadata and install information with viewport and motion controls made from the kit.
+  Objective: Pages require an owner session and every /r/* file, including index.json and llms.txt, requires the bearer token, with explicit failures for missing configuration and no source in refusals.
+  `config.ts` reads DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET and DAVID_UI_REGISTRY_TOKEN; missing or short values fail closed with an explicit configuration error. `session.ts` issues an HMAC-signed HttpOnly, Secure, SameSite=Lax cookie with expiry; `registry-token.ts` compares `Authorization: Bearer` in constant time.
+  `src/proxy.ts` redirects every page route to `/login` except `/login`, `/api/session`, `/api/health` and static assets. `/r/*` is served only by `src/app/r/[...path]/route.ts`, which checks the bearer before reading `registry-dist/` (401 JSON without source, 404 for unknown files), so Netlify never serves registry files statically.
+  `e2e/auth.spec.ts` sweeps every route in the build's app-path manifest anonymously and every registry file, `index.json` and `llms.txt` without and with a wrong token (revision 9's audit found anonymous `/components/*` and a public `llms.txt`). `e2e/helpers.ts` gains a login helper used by all later browser suites. `scripts/app-registry-smoke.mjs` starts `next start` with synthetic env and calls `runSmoke` against the app's `/r` route.
 
-  Estimate: Provisional engineering estimate in minutes: 140 entry/demos and early CopyButton + 70 metadata controls + 90 e2e = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: Authentication units reject missing or short configuration, wrong passwords, tampered or expired sessions and missing or wrong bearer tokens without echoing secrets. Check: `npx vitest run src/lib/auth` (authored by T26)
+  - Acceptance / integration: The browser sweep sends every non-public route anonymously to the login page and answers 401 without component source for registry files, index.json and llms.txt without or with a wrong token. Check: `npx playwright test e2e/auth.spec.ts` (authored by T26)
+  - Acceptance / integration: Registry entries install through the app's bearer-protected route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --items button` (authored by T26)
 
-  - Acceptance / integration: Entry tests verify live demo and states, API/license/version metadata, install copy success/failure, three viewports, motion switching and a deliberate missing-slug result. Check: `npx playwright test e2e/catalog-entry.spec.ts` (authored by T13)
-  - Acceptance / static: Entry controls and any code-block implementation come through recorded kit entries. Check: `npm run check:kit-only` (authored by T6)
+- [ ] T27 — Catalog shell and browse: layout, entry grid, five filters, command palette and theme toggle · repo: app · after: T26 · verify: `npx playwright test e2e/catalog-browse.spec.ts` · files: src/app/(catalog)/layout.tsx, src/app/(catalog)/page.tsx, src/components/catalog/browse, registry/david-ui/catalog/command.tsx, registry/david-ui/catalog/drawer.tsx, registry/david-ui/catalog/toggle-group.tsx, registry/david-ui/catalog/catalog-browse.test.tsx, src/demos/catalog/browse, e2e/catalog-browse.spec.ts, catalog/updates/catalog-browse.ts, e2e/visual/SP-4-browse.routes.json · resources: contract:catalog-app · covers: R4, R9 · kind: implement · subplan: SP-4 · ui: yes
 
-- [ ] T14 — Privacy: owner login page (kit form components), signed HttpOnly session cookie, `proxy.ts` guard for pages, bearer-token guard for `/r/*` (401 without leaking source), `components.json` consumption example with `${DAVID_UI_REGISTRY_TOKEN}` headers · repo: app · after: T12 · verify: `npx vitest run src/lib/auth` · files: src/lib/auth, src/proxy.ts, src/app/login/page.tsx, src/app/api/session/route.ts, e2e/auth.spec.ts · resources: contract:owner-authorization · covers: R14 · kind: implement
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 300 minutes (130 shell, grid and early kit pieces + 70 URL-synced filters and search + 100 unit and browser tests).
 
-  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 300 minutes.
+  Objective: The logged-in owner browses every manifest entry with source, category, priority, status and type filters, command search and theme switching in a shell built only from kit components.
+  Command and Drawer are inventory P2 entries built early (R9) and stay `origin: inventory`; Toggle Group or any other shadcn piece added for the catalog is `catalog-driven`. SP-5 finalizes their QA and never reimplements them.
 
-  Objective: Owner sessions and registry bearer authorization prevent unauthenticated access and source leakage, with explicit invalid-configuration failures.
+  - Acceptance / integration: Browse tests drive the five filters, combined filters, empty results, command search, keyboard navigation and theme switching against the manifest. Check: `npx playwright test e2e/catalog-browse.spec.ts` (authored by T27)
+  - Acceptance / functional: Browse components and the early inventory pieces have unit tests for filtering, search ranking and empty states. Check: `npx vitest run src/components/catalog/browse registry/david-ui/catalog/catalog-browse.test.tsx` (authored by T27)
+  - Acceptance / static: The catalog shell and browse page use only kit components. Check: `npm run check:kit-only` (authored by T5)
 
-  Estimate: Provisional engineering estimate in minutes: 140 session and bearer boundary + 70 login/proxy + 90 rejection/e2e cases = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T28 — Entry page and gaps page: live demo, states gallery, API table, install command, provenance, viewport preview and motion switch · repo: app · after: T27 · verify: `npx playwright test e2e/catalog-entry.spec.ts` · files: src/app/(catalog)/components/[slug]/page.tsx, src/app/(catalog)/gaps/page.tsx, src/components/catalog/entry, registry/david-ui/catalog/copy-button.tsx, registry/david-ui/catalog/scroll-area.tsx, registry/david-ui/catalog/code-block.tsx, registry/david-ui/catalog/catalog-entry.test.tsx, src/demos/catalog/entry, e2e/catalog-entry.spec.ts, catalog/updates/catalog-entry.ts, e2e/visual/SP-4.routes.json · resources: contract:catalog-app · covers: R4, R9 · kind: implement · subplan: SP-4 · ui: yes
 
-  - Acceptance / functional: Authentication units reject missing configuration, incorrect passwords, invalid or expired sessions and incorrect registry tokens without exposing secrets. Check: `npx vitest run src/lib/auth` (authored by T14)
-  - Acceptance / integration: Browser authorization tests cover owner login, protected-page redirects, signed HttpOnly sessions and registry 401/200 outcomes without source leakage. Check: `npx playwright test e2e/auth.spec.ts` (authored by T14)
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 330 minutes (150 entry page, viewport iframe and early pieces + 60 gaps page + 120 unit and browser tests).
+
+  Objective: Each entry page shows the live demo, every applicable state, the API table, a copyable install command, provenance, light and dark, three viewports and motion profiles, and the gaps page lists every documented gap and blocked or discarded entry.
+  The install command reads `npx shadcn add @david-ui/<slug>`; SP-8 proves it installs. CopyButton (capability) and Scroll Area (P2) are built early as inventory entries; a code block is an own animated component if shadcn has none. The gaps page lists the section 11.5 gaps, Modal Cards and Hover Preview, and every blocked or discarded entry.
+
+  - Acceptance / integration: Entry tests verify live demo, states gallery, API and provenance metadata, install-command copy success and failure, three viewports, motion switching and the not-found result for an unknown slug. Check: `npx playwright test e2e/catalog-entry.spec.ts` (authored by T28)
+  - Acceptance / integration: The gaps page lists the documented gaps and every blocked or discarded entry with its reason. Check: `npx playwright test e2e/catalog-entry.spec.ts -g gaps` (authored by T28)
+  - Acceptance / functional: Entry components and the early inventory pieces have unit tests for copy feedback, scroll behavior and code-block rendering. Check: `npx vitest run src/components/catalog/entry registry/david-ui/catalog/catalog-entry.test.tsx` (authored by T28)
+  - Acceptance / static: The entry and gaps pages use only kit components. Check: `npm run check:kit-only` (authored by T5)
+
+- [ ] T29 — SP-4 integration: auth sweep, browse and entry flows, registry route and capture on the production server · repo: app · after: T28 · verify: `npx playwright test e2e/auth.spec.ts e2e/catalog-browse.spec.ts e2e/catalog-entry.spec.ts` · files: .evidence/SP-4.integration.md · resources: contract:owner-authorization · covers: R4, R9, R14 · kind: test · subplan: SP-4
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (75 established browser, install and capture runs + 15 outcome report).
+
+  Objective: The guard, catalog views and registry route work together through the production server, and the sweep covers routes added after the guard.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
+
+  - Acceptance / integration: Auth sweep, browse and entry suites pass together against the production server with every catalog route in place. Check: `npx playwright test e2e/auth.spec.ts e2e/catalog-browse.spec.ts e2e/catalog-entry.spec.ts` (authored by T26)
+  - Acceptance / integration: Registry entries install through the app's bearer-protected route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --items button,select` (authored by T26)
+  - Acceptance / integration: All catalog views render after login at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-4-browse.routes.json e2e/visual/SP-4.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with the catalog application integrated. Check: `npm run verify` (authored by T1)
+
+- [ ] T30 — SP-4 visual review of the catalog against catalog-app@v1 · repo: app · after: T29 · verify: `bitacora.py audit-ledger check .evidence/SP-4.visual.findings.json` · files: .evidence/SP-4.visual.md, .evidence/SP-4.visual.findings.json · resources: ledger:SP-4-visual · covers: R9 · kind: audit · subplan: SP-4
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares every captured catalog view, breakpoint and state with catalog-app@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with `node scripts/capture.mjs e2e/visual/SP-4-browse.routes.json e2e/visual/SP-4.routes.json`.
+
+  - Acceptance / product: The SP-4 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-4.visual.findings.json`
+
+- [ ] T31 — SP-4 audit: privacy boundary, kit-only catalog and R9 capabilities · repo: app · after: T30 · verify: `bitacora.py audit-ledger check .evidence/SP-4.findings.json` · files: .evidence/SP-4.audit.md, .evidence/SP-4.findings.json · resources: ledger:SP-4 · covers: R4, R9, R14 · kind: audit · subplan: SP-4
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-4 against R4, R9 and R14 with anonymous probes and records every confirmed defect in a blocking findings ledger.
+  Probes every route and registry file anonymously and with a wrong token, and checks that every catalog UI piece is a recorded kit entry.
+
+  - Acceptance / product: The SP-4 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-4.findings.json`
+
+**CG-2 — composition gate over SP-1, SP-2, SP-3, SP-4**
+
+- [ ] T32 — CG-2 MVP composition: P1 kit inside the private catalog · repo: app · after: T31 · verify: `npx playwright test e2e/p1.spec.ts e2e/auth.spec.ts e2e/catalog-browse.spec.ts e2e/catalog-entry.spec.ts` · files: .evidence/CG-2.md · resources: contract:owner-authorization · covers: R4, R6, R9, R14 · kind: test
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes (30 browser suites + 30 protected installs + 15 verify).
+
+  Objective: The P1 kit, the catalog and the privacy boundary work together on one accepted tree before the P2, Bencho and React Bits families start.
+  Composition gate over the accepted SP-1 to SP-4 audits (MVP, SPEC Priorities). The second design round (P2, Bencho, React Bits) starts after it.
+
+  - Acceptance / integration: P1 demos, auth, browse and entry suites pass together through login on the composed tree. Check: `npx playwright test e2e/p1.spec.ts e2e/auth.spec.ts e2e/catalog-browse.spec.ts e2e/catalog-entry.spec.ts` (authored by T21)
+  - Acceptance / integration: Every implemented or validated P1 entry installs through the app's protected registry route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --family p1` (authored by T26)
+  - Acceptance / regression: The verify pipeline passes on the composed MVP tree. Check: `npm run verify` (authored by T1)
 
 ### M4 — P2 components, remaining enhancements and the 7 Animate UI capabilities
-Acceptance: the 12 P2 entries (§3.7) and the 7 capabilities (§5) have a final status; the remaining enhancements (Radio Group, Navigation Menu, Drawer, Collapsible, Progress, Slider, Hover Card) have a result, so all 22 are resolved; each capability has its API decision (component, hook or variant) recorded in the manifest.
+Acceptance: The 12 P2 entries and 7 capabilities have a final status, all 22 enhancements have a result and each capability records exposure form, API summary and catalog location; `e2e/p2.spec.ts` and `e2e/capabilities.spec.ts` pass for validated entries.
 
-- [ ] T15 — P2: Calendar, Date Picker, Input Group, Radio Group*, Command (finalize), Navigation Menu*, Drawer*, Collapsible*, Scroll Area, Progress*, Slider*, Hover Card*; demos, unit tests, e2e + axe, manifest · repo: app · after: T13, T14 · verify: `npx vitest run registry/david-ui/p2` · files: registry/david-ui/p2, src/demos/p2, e2e/p2.spec.ts, catalog/updates/p2.ts, catalog/qa/p2.ts · resources: contract:p2-capability-composition · covers: R2, R6, R7, R8 · kind: implement
+**SP-5 — P2 components, remaining enhancements and the seven Animate UI capabilities** · UI contract `p2-capabilities@v1`. Outcome: The twelve P2 entries and seven capabilities reach a final status, all 22 enhancements have a result and each capability records its exposure form, API summary and catalog location.
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 480 minutes.
+- [ ] T33 — Design contract p2-capabilities@v1: P2 components, remaining enhancements and the seven capabilities · repo: app · after: T32 · verify: `node scripts/check-design-contract.mjs design/contracts/p2-capabilities@v1.md --requires R2,R5,R6,R7,R8` · files: design/contracts/p2-capabilities@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R2, R5, R6, R7, R8 · kind: design · subplan: SP-5
 
-  Objective: The twelve P2 inventory entries and the remaining seven enhancement outcomes satisfy the established status and interaction contracts.
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 180 minutes (120 views, states and flows + 60 acceptance criteria, changelog and self-check).
 
-  Estimate: Provisional engineering estimate in minutes: 280 P2 adaptations + 90 demos/metadata + 110 keyboard/a11y tests = 480. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: An owner-approvable contract specifies states, interaction and motion for the twelve P2 entries and the seven capabilities, including where each capability appears in the catalog.
+  Covers inventory 3.7, the seven remaining enhancements of section 4 and section 5 capabilities with their exposure form (component, hook or variant).
+  The owner approves `p2-capabilities@v1` before any `ui: yes` task of SP-5 starts.
 
-  - Acceptance / functional: The twelve P2 entries preserve controlled values and composition APIs and leave all remaining enhancements with a recorded result. Check: `npx vitest run registry/david-ui/p2` (authored by T15)
-  - Acceptance / integration: P2 demos support keyboard/touch operation, have no axe violations and obey reduced motion, including the existing Command entry. Check: `npx playwright test e2e/p2.spec.ts` (authored by T15)
+  - Acceptance / static: The p2-capabilities@v1 contract contains every required section, traces R2, R5, R6, R7 and R8 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/p2-capabilities@v1.md --requires R2,R5,R6,R7,R8` (authored by T1)
 
-- [ ] T16 — Capabilities: Animated Button (Button variant), CopyButton, Animated Icons kit, CountingNumber, AutoHeight, ScrollFade (Scroll Area option), PageTransition (validated with the Next App Router of the catalog) · repo: app · after: T15 · verify: `npx vitest run registry/david-ui/motion` · files: registry/david-ui/motion, src/demos/motion, e2e/capabilities.spec.ts, catalog/updates/capabilities.ts, catalog/qa/capabilities.ts · resources: contract:p2-capability-composition, contract:registry-button · covers: R5, R6, R8 · kind: implement
+- [ ] T34 — P2 components: Calendar, Date Picker, Input Group, Radio Group, Navigation Menu, Drawer, Collapsible, Scroll Area, Progress, Slider, Hover Card and Command QA · repo: app · after: T33 · verify: `npx vitest run registry/david-ui/p2` · files: registry/david-ui/p2, src/demos/p2, e2e/p2.spec.ts, catalog/updates/p2.ts, catalog/qa/p2.ts, e2e/visual/SP-5-p2.routes.json · resources: registry-family:p2 · covers: R2, R6, R7, R8 · kind: implement · subplan: SP-5 · ui: yes
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 330 minutes.
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 480 minutes (260 P2 adaptations + 90 demos and fragments + 130 unit and browser tests).
 
-  Objective: Seven Animate UI capabilities expose their documented APIs while reusing the existing Button, CopyButton and Scroll Area contracts.
+  Objective: The twelve P2 entries satisfy the established value, state and interaction contracts and the seven remaining enhancements have recorded results.
+  Command, Scroll Area and Drawer from T27/T28 get their enhancement result and QA by import; they are never reimplemented. Slider exposes `value`/`onValueChange`, min, max, step and keyboard steps reused by SloshSlider (IF-7).
 
-  Estimate: Provisional engineering estimate in minutes: 170 capability adapters + 70 demos/metadata + 90 router and motion tests = 330. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: P2 unit tests cover controlled values, date ranges and invalid dates, Slider value and onValueChange with min, max, step and keyboard steps, and the remaining seven enhancement results. Check: `npx vitest run registry/david-ui/p2` (authored by T34)
+  - Acceptance / integration: P2 demos, including the earlier Command, Scroll Area and Drawer, pass keyboard and touch operation, axe and reduced-motion checks in a real browser, and only fully passing entries are promoted. Check: `npx playwright test e2e/p2.spec.ts` (authored by T34)
 
-  - Acceptance / functional: All seven capability APIs reuse established value and provider contracts without duplicating Button, CopyButton or Scroll Area implementations. Check: `npx vitest run registry/david-ui/motion` (authored by T16)
-  - Acceptance / integration: Capability demos include App Router navigation and interrupted or reduced-motion behavior without hydration warnings. Check: `npx playwright test e2e/capabilities.spec.ts` (authored by T16)
+- [ ] T35 — Animate UI capabilities: Animated Button, CopyButton, Animated Icons, CountingNumber, AutoHeight, ScrollFade, PageTransition · repo: app · after: T33 · verify: `npx vitest run registry/david-ui/motion` · files: registry/david-ui/motion, src/demos/motion, src/app/(catalog)/template.tsx, e2e/capabilities.spec.ts, catalog/updates/capabilities.ts, catalog/qa/capabilities.ts, e2e/visual/SP-5-capabilities.routes.json · resources: registry-family:motion · covers: R5, R6, R8 · kind: implement · subplan: SP-5 · ui: yes
+
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 330 minutes (170 capability adapters + 70 demos and fragments + 90 router and motion tests).
+
+  Objective: The seven capabilities expose documented APIs that reuse existing Button, CopyButton and Scroll Area contracts, with PageTransition validated on the catalog's App Router.
+  Animated Button composes Button; CopyButton finalizes T28's entry; ScrollFade is a Scroll Area option; CountingNumber is a passive display distinct from RollingNumberInput (R12); PageTransition lives in `src/app/(catalog)/template.tsx` and other routers are documented as untested.
+
+  - Acceptance / functional: Capability tests cover each documented API, interrupted and reduced-motion behavior, and reuse of the existing Button, CopyButton and Scroll Area without duplicate implementations. Check: `npx vitest run registry/david-ui/motion` (authored by T35)
+  - Acceptance / integration: Capability demos, including App Router page transitions, pass in a real browser without hydration warnings, and each capability records its exposure form, API summary and catalog location. Check: `npx playwright test e2e/capabilities.spec.ts` (authored by T35)
+
+- [ ] T36 — SP-5 integration: P2 and capability suites, protected installs and capture · repo: app · after: T34, T35 · verify: `npx playwright test e2e/p2.spec.ts e2e/capabilities.spec.ts` · files: .evidence/SP-5.integration.md · resources: contract:p2-capabilities · covers: R2, R5, R6, R7, R8 · kind: test · subplan: SP-5
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (75 established browser, install and capture runs + 15 outcome report).
+
+  Objective: P2 entries and capabilities render, operate and install through the real server and a fresh consumer on the integrated tree.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
+
+  - Acceptance / integration: P2 and capability browser suites pass against the production server. Check: `npx playwright test e2e/p2.spec.ts e2e/capabilities.spec.ts` (authored by T34)
+  - Acceptance / integration: Every implemented or validated P2 and capability entry installs through the protected registry route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --family p2,capabilities` (authored by T26)
+  - Acceptance / integration: All P2 and capability demos render at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-5-p2.routes.json e2e/visual/SP-5-capabilities.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with P2 and capabilities integrated. Check: `npm run verify` (authored by T1)
+
+- [ ] T37 — SP-5 visual review of P2 and capability demos against p2-capabilities@v1 · repo: app · after: T36 · verify: `bitacora.py audit-ledger check .evidence/SP-5.visual.findings.json` · files: .evidence/SP-5.visual.md, .evidence/SP-5.visual.findings.json · resources: ledger:SP-5-visual · covers: R7, R8 · kind: audit · subplan: SP-5
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares every captured P2 and capability breakpoint and state with p2-capabilities@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with `node scripts/capture.mjs e2e/visual/SP-5-p2.routes.json e2e/visual/SP-5-capabilities.routes.json`.
+
+  - Acceptance / product: The SP-5 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-5.visual.findings.json`
+
+- [ ] T38 — SP-5 audit: P2 entries, all 22 enhancement results and capability APIs · repo: app · after: T37 · verify: `bitacora.py audit-ledger check .evidence/SP-5.findings.json` · files: .evidence/SP-5.audit.md, .evidence/SP-5.findings.json · resources: ledger:SP-5 · covers: R2, R5, R6, R7, R8 · kind: audit · subplan: SP-5
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-5 against R2, R5, R6, R7 and R8 and records every confirmed defect in a blocking findings ledger.
+  Checks that all 22 enhancements now have a result, capability exposure records and no duplicate Command, Scroll Area, Drawer or CopyButton implementation.
+
+  - Acceptance / product: The SP-5 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-5.findings.json`
 
 ### M5 — Bencho UI (12)
-Acceptance: the 12 Bencho entries have a final status with origin (`bencho` or `own (inspired by bencho)` per license); APIs follow §10.2/§10.3 (one value model with Slider/Select/Checkbox/Counting Number, Toast Stack is a presenter on the single engine); every gesture has a keyboard/button alternative; mobile scroll conflicts tested.
+Acceptance: The 12 Bencho entries have a final status, origin per the license matrix and their section 10.3 slugs; every R12 rule has its own test; `e2e/bencho.spec.ts` passes; the control-family composition gate passes.
 
-- [ ] T17 — New capabilities: RollingNumberInput, VoiceNote (UI + callbacks, permission-denied state), UploadDropzone (size/type rejection, no backend), SlideToConfirm (keyboard/button alternative), MagnifyingDock (focus and touch), PullToRefresh (button alternative, scroll conflicts) · repo: app · after: T16 · verify: `npx vitest run registry/david-ui/bencho/capabilities` · files: registry/david-ui/bencho/capabilities, src/demos/bencho/capabilities, e2e/bencho-capabilities.spec.ts, catalog/updates/bencho-capabilities.ts · resources: contract:bencho-controlled-inputs · covers: R6, R7, R10, R12 · kind: implement
+**SP-6 — Twelve Bencho UI entries, clean-room where the license forbids copying** · UI contract `bencho-components@v1`. Outcome: The twelve Bencho entries reach a final status under their section 10.3 slugs with license-driven origins, one value model per overlap and keyboard or button alternatives for every gesture.
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 480 minutes.
+- [ ] T39 — Design contract bencho-components@v1: the twelve Bencho entries with gesture alternatives and shared value models · repo: app · after: T33 · verify: `node scripts/check-design-contract.mjs design/contracts/bencho-components@v1.md --requires R6,R7,R10,R11,R12` · files: design/contracts/bencho-components@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R6, R7, R10, R11, R12 · kind: design · subplan: SP-6
 
-  Objective: Six Bencho capabilities have clean-room-safe origins, explicit failure states and operable keyboard/touch alternatives.
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 180 minutes (120 views, states and flows + 60 acceptance criteria, changelog and self-check).
 
-  Estimate: Provisional engineering estimate in minutes: 270 capability implementations + 90 demos/metadata + 120 permission/file/gesture tests = 480. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: An owner-approvable contract specifies each Bencho entry's states, gestures and their keyboard or button alternatives, and the shared value models with Select, Checkbox, Slider and the notification engine.
+  Uses section 10.3 slugs; specifies permission-denied, rejected-file and confirm states and the clean-room behavior description from public demos only.
+  The owner approves `bencho-components@v1` before any `ui: yes` task of SP-6 starts.
 
-  - Acceptance / functional: The six Bencho capability units cover denied microphone permission, rejected file size/type, numeric bounds and exactly-once alternative confirmation. Check: `npx vitest run registry/david-ui/bencho/capabilities` (authored by T17)
-  - Acceptance / integration: Bencho capability demos include accessible button/keyboard alternatives, touch/focus Dock operation and PullToRefresh native-scroll conflicts with recorded origins. Check: `npx playwright test e2e/bencho-capabilities.spec.ts` (authored by T17)
+  - Acceptance / static: The bencho-components@v1 contract contains every required section, traces R6, R7, R10, R11 and R12 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/bencho-components@v1.md --requires R6,R7,R10,R11,R12` (authored by T1)
 
-- [ ] T18 — Variants: ToastStack presenter (on the T10 engine), PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider (Slider value model) · repo: app · after: T17 · verify: `npx vitest run registry/david-ui/bencho/variants` · files: registry/david-ui/bencho/variants, src/demos/bencho/variants, e2e/bencho-variants.spec.ts, catalog/updates/bencho-variants.ts · resources: contract:bencho-controlled-inputs, contract:notification-values · covers: R6, R7, R11, R12 · kind: implement
+- [ ] T40 — Bencho capabilities: RollingNumberInput, VoiceNote, UploadDropzone, SlideToConfirm, MagnifyingDock, PullToRefresh · repo: app · after: T39, T38 · verify: `npx vitest run registry/david-ui/bencho/capabilities` · files: registry/david-ui/bencho/capabilities, src/demos/bencho/capabilities, catalog/updates/bencho-capabilities.ts, e2e/visual/SP-6-capabilities.routes.json · resources: registry-family:bencho-capabilities · covers: R6, R7, R10, R12 · kind: implement · subplan: SP-6 · ui: yes
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes.
+  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 450 minutes (250 capability implementations + 80 demos and fragments + 120 permission, file and gesture tests).
 
-  Objective: Six Bencho variants preserve the established boolean, selection, numeric and notification models without adding a second engine.
+  Objective: Six Bencho capabilities have license-driven origins, real browser behavior, explicit failure states and operable keyboard or button alternatives for every gesture.
+  VoiceNote records through real `getUserMedia`/`MediaRecorder`, stops, plays back and emits the blob by callback, with an explicit denied state (revision 9's audit found a VoiceNote that never recorded). UploadDropzone rejects size and type without a backend. SlideToConfirm emits one confirm intent and has a button and keyboard alternative. MagnifyingDock works by focus and touch. PullToRefresh has a button alternative and never hijacks native scroll. RollingNumberInput is an editable input distinct from CountingNumber.
 
-  Estimate: Provisional engineering estimate in minutes: 230 variant implementations + 80 demos/metadata + 110 semantic/gesture tests = 420. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: Bencho capability units cover recording start, stop and playback with a fake MediaRecorder, denied microphone permission, rejected file size and type, numeric bounds and exactly-once confirmation through drag, button and keyboard. Check: `npx vitest run registry/david-ui/bencho/capabilities` (authored by T40)
+  - Acceptance / static: Each Bencho capability records its section 10.3 slug and its origin from the license matrix, with clean-room provenance when copying is not clearly allowed. Check: `npm run catalog:check` (authored by T4)
 
-  - Acceptance / functional: The six Bencho variant units share Select, Checkbox and Slider value/event semantics and reuse the single notification engine. Check: `npx vitest run registry/david-ui/bencho/variants` (authored by T18)
-  - Acceptance / integration: Bencho variant demos verify wheel/slider bounds, focus and keyboard/touch alternatives, zero axe violations and reduced motion. Check: `npx playwright test e2e/bencho-variants.spec.ts` (authored by T18)
+- [ ] T41 — Bencho variants: ToastStack, PickerWheel, Checklist, CreateMenu, ExpandingSearch, SloshSlider · repo: app · after: T39, T38 · verify: `npx vitest run registry/david-ui/bencho/variants` · files: registry/david-ui/bencho/variants, src/demos/bencho/variants, catalog/updates/bencho-variants.ts, e2e/visual/SP-6-variants.routes.json · resources: registry-family:bencho-variants · covers: R6, R7, R11, R12 · kind: implement · subplan: SP-6 · ui: yes
+
+  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 420 minutes (230 variant implementations + 80 demos and fragments + 110 value-model and gesture tests).
+
+  Objective: Six Bencho variants keep the established Select, Checkbox, Slider and notification models, and CreateMenu and ExpandingSearch keep focus management and keyboard operation.
+  ToastStack is a presenter on the T20 engine with no second queue (R11).
+
+  - Acceptance / functional: Variant units prove ToastStack uses the single engine, PickerWheel emits the Select value contract, Checklist uses the Checkbox model and SloshSlider matches Slider value, bounds, step and keyboard behavior, with one test per R12 rule. Check: `npx vitest run registry/david-ui/bencho/variants` (authored by T41)
+  - Acceptance / static: Each Bencho variant records its section 10.3 slug and its origin from the license matrix. Check: `npm run catalog:check` (authored by T4)
+
+- [ ] T42 — Bencho browser QA suite and status promotion · repo: app · after: T40, T41 · verify: `npx playwright test e2e/bencho.spec.ts` · files: e2e/bencho.spec.ts, catalog/qa/bencho.ts, catalog/qa/bencho.test.ts, e2e/visual/SP-6.routes.json · resources: contract:bencho-components · covers: R6, R7, R12 · kind: implement · subplan: SP-6 · ui: no
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling high; confidence medium; estimate 210 minutes (120 browser cases with mobile emulation + 50 promotion rules + 40 tests).
+
+  Objective: A real-browser suite exercises all twelve Bencho entries with their alternatives and mobile scroll conflicts, and only entries passing every R6 check are promoted.
+  Not UI work: test harness and QA data only.
+
+  - Acceptance / integration: The Bencho browser suite passes keyboard and button alternatives, focus and touch Dock operation, mobile-emulated PullToRefresh scroll conflicts, axe and reduced motion for all twelve entries. Check: `npx playwright test e2e/bencho.spec.ts` (authored by T42)
+  - Acceptance / functional: Bencho QA promotion requires every R6 field and leaves failing entries implemented with the failing check written. Check: `npx vitest run catalog/qa/bencho.test.ts` (authored by T42)
+
+- [ ] T43 — SP-6 integration: Bencho suite, protected installs and capture · repo: app · after: T42 · verify: `npx playwright test e2e/bencho.spec.ts` · files: .evidence/SP-6.integration.md · resources: contract:bencho-components · covers: R6, R7, R12 · kind: test · subplan: SP-6
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes (60 established browser, install and capture runs + 15 outcome report).
+
+  Objective: Bencho entries render, operate and install through the real server and a fresh consumer on the integrated tree.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
+
+  - Acceptance / integration: The Bencho browser suite passes against the production server. Check: `npx playwright test e2e/bencho.spec.ts` (authored by T42)
+  - Acceptance / integration: Every implemented or validated Bencho entry installs through the protected registry route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --family bencho` (authored by T26)
+  - Acceptance / integration: All Bencho demos render at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-6.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with the Bencho entries integrated. Check: `npm run verify` (authored by T1)
+
+- [ ] T44 — SP-6 visual review of Bencho demos against bencho-components@v1 · repo: app · after: T43 · verify: `bitacora.py audit-ledger check .evidence/SP-6.visual.findings.json` · files: .evidence/SP-6.visual.md, .evidence/SP-6.visual.findings.json · resources: ledger:SP-6-visual · covers: R7, R12 · kind: audit · subplan: SP-6
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares every captured Bencho breakpoint and state with bencho-components@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with `node scripts/capture.mjs e2e/visual/SP-6.routes.json`.
+
+  - Acceptance / product: The SP-6 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-6.visual.findings.json`
+
+- [ ] T45 — SP-6 audit: Bencho origins, R12 value models and gesture alternatives · repo: app · after: T44 · verify: `bitacora.py audit-ledger check .evidence/SP-6.findings.json` · files: .evidence/SP-6.audit.md, .evidence/SP-6.findings.json · resources: ledger:SP-6 · covers: R6, R7, R10, R11, R12 · kind: audit · subplan: SP-6
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-6 against R6, R7, R10, R11 and R12 and records every confirmed defect in a blocking findings ledger.
+  Checks clean-room provenance against the license matrix, one test per R12 rule, a single notification engine and a real VoiceNote recording path.
+
+  - Acceptance / product: The SP-6 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-6.findings.json`
+
+**CG-3 — composition gate over SP-1, SP-2, SP-3, SP-4, SP-5, SP-6**
+
+- [ ] T46 — CG-3 control-family composition: P1, P2, capabilities and Bencho inside the catalog · repo: app · after: T45 · verify: `npx playwright test e2e/p1.spec.ts e2e/p2.spec.ts e2e/capabilities.spec.ts e2e/bencho.spec.ts e2e/catalog-browse.spec.ts` · files: .evidence/CG-3.md · resources: contract:bencho-components · covers: R6, R7, R11, R12 · kind: test
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (45 browser suites + 30 protected installs + 15 verify).
+
+  Objective: All functional control families and their shared value models work together in the catalog on one accepted tree before React Bits starts.
+  Composition gate over the accepted SP-1 to SP-6 audits, following the SPEC order (Bencho before React Bits).
+
+  - Acceptance / integration: P1, P2, capability, Bencho and catalog suites pass together through login on the composed tree. Check: `npx playwright test e2e/p1.spec.ts e2e/p2.spec.ts e2e/capabilities.spec.ts e2e/bencho.spec.ts e2e/catalog-browse.spec.ts` (authored by T42)
+  - Acceptance / integration: Every implemented or validated control entry installs through the protected registry route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --family p1,p2,capabilities,bencho` (authored by T26)
+  - Acceptance / regression: The verify pipeline passes on the composed control-family tree. Check: `npm run verify` (authored by T1)
 
 ### M6 — React Bits Free (32)
-Acceptance: the 32 entries (§11.1–11.4) have a final status, Commons Clause notices kept, tokens wired (tints, sizes, fonts), SSR/hydration clean, reduced-motion respected; backgrounds lazy-load, pause off-screen and fall back without WebGL.
+Acceptance: The 32 React Bits entries have a final status, keep their upstream license notice, render without hydration warnings, respect reduced motion and animate when motion is allowed; backgrounds meet R13 with measured FPS; `e2e/reactbits-*.spec.ts` pass.
 
-- [ ] T19 — Text (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text · repo: app · after: T16 · verify: `npx vitest run registry/david-ui/text` · files: registry/david-ui/text, src/demos/text, e2e/reactbits-text.spec.ts, catalog/updates/reactbits-text.ts · resources: contract:text-hydration · covers: R3, R6, R8, R10 · kind: implement
+**SP-7 — Thirty-two React Bits Free entries** · UI contract `reactbits-components@v1`. Outcome: The 32 React Bits entries reach a final status with license notices, token wiring, real animation when motion is allowed, static reduced-motion behavior and R13 lifecycle and FPS rules for backgrounds.
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 420 minutes.
+- [ ] T47 — Design contract reactbits-components@v1: text effects, interface and galleries, interaction effects and backgrounds · repo: app · after: T39 · verify: `node scripts/check-design-contract.mjs design/contracts/reactbits-components@v1.md --requires R3,R6,R7,R8,R12,R13` · files: design/contracts/reactbits-components@v1.md, design/contracts/CHANGELOG.md · resources: contract:design-changelog · covers: R3, R6, R7, R8, R12, R13 · kind: design · subplan: SP-7
 
-  Objective: Nine React Bits text effects retain readable SSR content, license notices, token wiring and deterministic reduced-motion behavior.
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 210 minutes (150 views, states and flows + 60 acceptance criteria, changelog and self-check).
 
-  Estimate: Provisional engineering estimate in minutes: 230 text adaptations + 80 demos/metadata + 110 hydration and accessibility tests = 420. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: An owner-approvable contract specifies token-driven tints, sizes and fonts, motion and reduced-motion behavior, non-pointer equivalents and background fallbacks for the 32 React Bits entries.
+  Covers inventory 11.1–11.4 and the duplication rules of 11.6 against Bencho and shadcn entries; graphic effects keep their own physics (11.6.8).
+  The owner approves `reactbits-components@v1` before any `ui: yes` task of SP-7 starts.
 
-  - Acceptance / functional: All nine text effects keep original readable text, shared tokens and pinned source notices through motion state changes. Check: `npx vitest run registry/david-ui/text` (authored by T19)
-  - Acceptance / integration: Text demos render without SSR hydration warnings and preserve accessible content under reduced motion and pointer-free input. Check: `npx playwright test e2e/reactbits-text.spec.ts` (authored by T19)
+  - Acceptance / static: The reactbits-components@v1 contract contains every required section, traces R3, R6, R7, R8, R12 and R13 and lists uniquely identified visual acceptance criteria per breakpoint and state. Check: `node scripts/check-design-contract.mjs design/contracts/reactbits-components@v1.md --requires R3,R6,R7,R8,R12,R13` (authored by T1)
 
-- [ ] T20 — UI, navigation and galleries (12): Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu, Stepper (card variants on top of Card, R12) · repo: app · after: T19 · verify: `npx vitest run registry/david-ui/showcase` · files: registry/david-ui/showcase, src/demos/showcase, e2e/reactbits-ui.spec.ts, catalog/updates/reactbits-ui.ts · resources: contract:card-semantics · covers: R6, R7, R12 · kind: implement
+- [ ] T48 — React Bits text effects (9): Blur Text, Decrypted Text, Text Type, Shuffle, True Focus, Text Pressure, Variable Proximity, Scroll Velocity, Split Text · repo: app · after: T47, T46 · verify: `npx vitest run registry/david-ui/text` · files: registry/david-ui/text, src/demos/text, e2e/reactbits-text.spec.ts, catalog/updates/reactbits-text.ts, e2e/visual/SP-7-text.routes.json · resources: registry-family:text · covers: R3, R6, R8, R10 · kind: implement · subplan: SP-7 · ui: yes
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 480 minutes.
+  Classification: complexity high; scope large_change; risk medium; coupling medium; confidence medium; estimate 420 minutes (230 text adaptations + 80 demos and fragments + 110 hydration and animation tests).
 
-  Objective: Twelve React Bits interface and gallery entries preserve Card semantics and usable keyboard/touch navigation.
+  Objective: Nine text effects keep readable server-rendered text, upstream notices and token wiring, animate when motion is allowed and stay static under reduced motion.
+  Copied files keep the MIT + Commons Clause header. Proximity effects have a non-pointer equivalent (revision 9's audit found static stubs).
 
-  Estimate: Provisional engineering estimate in minutes: 280 gallery/navigation implementations + 90 demos/metadata + 110 alternative-input tests = 480. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: Text effect units cover render, props, token wiring, reduced-motion fallback and the upstream license header for all nine entries. Check: `npx vitest run registry/david-ui/text` (authored by T48)
+  - Acceptance / integration: In a real browser each text effect changes its rendered frames over time when motion is allowed, stays static under reduced motion and hydrates without warnings. Check: `npx playwright test e2e/reactbits-text.spec.ts` (authored by T48)
 
-  - Acceptance / functional: All twelve showcase entries preserve their documented state and compose shared Card and navigation semantics. Check: `npx vitest run registry/david-ui/showcase` (authored by T20)
-  - Acceptance / integration: Showcase demos operate by keyboard and touch, pass axe and reduced-motion checks and have no hydration warnings. Check: `npx playwright test e2e/reactbits-ui.spec.ts` (authored by T20)
+- [ ] T49 — React Bits interface, navigation and galleries (12) composed on Card · repo: app · after: T47, T46 · verify: `npx vitest run registry/david-ui/showcase` · files: registry/david-ui/showcase, src/demos/showcase, e2e/reactbits-ui.spec.ts, catalog/updates/reactbits-ui.ts, e2e/visual/SP-7-ui.routes.json · resources: registry-family:showcase · covers: R6, R7, R10, R12 · kind: implement · subplan: SP-7 · ui: yes
 
-- [ ] T21 — Interaction effects (6) and backgrounds (5): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover; Aurora, Dot Grid, Orb, Silk, Iridescence with lazy loading, off-screen pause, static fallback; Playwright run with WebGL disabled and CPU throttling recording FPS evidence · repo: app · after: T19 · verify: `npx vitest run registry/david-ui/effects registry/david-ui/backgrounds` · files: registry/david-ui/effects, registry/david-ui/backgrounds, src/demos/effects, src/demos/backgrounds, e2e/reactbits-effects.spec.ts, catalog/updates/reactbits-effects.ts · resources: contract:motion-profile · covers: R6, R8, R13 · kind: implement
+  Classification: complexity high; scope large_change; risk medium; coupling medium; confidence medium; estimate 480 minutes (280 gallery and navigation implementations + 90 demos and fragments + 110 alternative-input tests).
 
-  Classification: complexity high; scope large_change; risk medium; coupling high; confidence medium; estimate 480 minutes.
+  Objective: Twelve React Bits interface and gallery entries compose Card for card variants and stay operable by keyboard and touch.
+  Animated List, Scroll Stack, Magic Bento, Circular Gallery, Masonry, Tilted Card, Spotlight Card, Card Swap, Stack, Gooey Nav, Staggered Menu and Stepper; card variants compose Card (R12).
 
-  Objective: Six interaction effects and five backgrounds obey lifecycle suspension and static-fallback rules with measured performance evidence.
+  - Acceptance / functional: Showcase units cover state, Card composition for card variants and keyboard and touch navigation for all twelve entries. Check: `npx vitest run registry/david-ui/showcase` (authored by T49)
+  - Acceptance / integration: Showcase demos operate by keyboard and touch, pass axe and reduced-motion checks and hydrate without warnings in a real browser. Check: `npx playwright test e2e/reactbits-ui.spec.ts` (authored by T49)
 
-  Estimate: Provisional engineering estimate in minutes: 250 effects/background adaptations + 100 lifecycle fallbacks + 130 traces/e2e = 480. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T50 — React Bits interaction effects (6): Pixel Transition, Electric Border, Animated Content, Magnet, Click Spark, Glare Hover · repo: app · after: T47, T46 · verify: `npx vitest run registry/david-ui/effects` · files: registry/david-ui/effects, src/demos/effects, e2e/reactbits-effects.spec.ts, catalog/updates/reactbits-effects.ts, e2e/visual/SP-7-effects.routes.json · resources: registry-family:effects · covers: R6, R7, R8, R10 · kind: implement · subplan: SP-7 · ui: yes
 
-  - Acceptance / functional: The six effects and five backgrounds release render resources when hidden or unmounted and keep a static fallback for unavailable WebGL or reduced motion. Check: `npx vitest run registry/david-ui/effects registry/david-ui/backgrounds` (authored by T21)
-  - Acceptance / integration: Effect demos run with WebGL disabled, off-screen and hidden-tab transitions and CPU throttling, recording FPS and memory without an invented performance threshold. Check: `npx playwright test e2e/reactbits-effects.spec.ts` (authored by T21)
+  Classification: complexity high; scope large_change; risk medium; coupling medium; confidence medium; estimate 300 minutes (150 effect adaptations + 60 demos and fragments + 90 trigger and reduced-motion tests).
+
+  Objective: Six interaction effects take tints from tokens, trigger on pointer and keyboard focus, and stay static under reduced motion.
+  Hover and proximity are never the only trigger (R7, inventory 11.6.7).
+
+  - Acceptance / functional: Interaction effect units cover render, props, token tints, reduced-motion fallback and a non-pointer trigger for every hover or proximity effect. Check: `npx vitest run registry/david-ui/effects` (authored by T50)
+  - Acceptance / integration: Interaction effects animate on pointer and keyboard focus in a real browser, stay static under reduced motion and hydrate without warnings. Check: `npx playwright test e2e/reactbits-effects.spec.ts` (authored by T50)
+
+- [ ] T51 — React Bits backgrounds (5) with lazy loading, off-screen and hidden-tab pause, static fallback and measured mobile FPS · repo: app · after: T47, T46 · verify: `npx vitest run registry/david-ui/backgrounds` · files: registry/david-ui/backgrounds, src/demos/backgrounds, e2e/reactbits-backgrounds.spec.ts, catalog/updates/reactbits-backgrounds.ts, e2e/visual/SP-7-backgrounds.routes.json · resources: registry-family:backgrounds · covers: R6, R8, R10, R13 · kind: implement · subplan: SP-7 · ui: yes
+
+  Classification: complexity high; scope large_change; risk medium; coupling medium; confidence medium; estimate 420 minutes (200 background adaptations + 90 lifecycle and fallback + 130 FPS harness and tests).
+
+  Objective: Five backgrounds load lazily, pause off-screen or in a hidden tab, fall back to static CSS without WebGL or with reduced motion, and record a measured mobile FPS.
+  Aurora, Dot Grid, Orb, Silk and Iridescence: client-only dynamic import; IntersectionObserver and `visibilitychange` pause the animation loop. The FPS spec counts animation-frame callbacks through CDP throttling and fails when zero frames are counted (revision 9's audit found a performance test that measured nothing); values are recorded in `catalog/updates/reactbits-backgrounds.ts`.
+
+  - Acceptance / functional: Background units cover lazy loading, pause when off-screen or hidden, resume, resource release on unmount and the static fallback without WebGL or with reduced motion. Check: `npx vitest run registry/david-ui/backgrounds` (authored by T51)
+  - Acceptance / integration: Under Pixel 7 emulation with 4x CPU throttling each background reports a non-zero median FPS over five seconds, and any background below 30 FPS ships with the static fallback as its mobile default and the measurement recorded. Check: `npx playwright test e2e/reactbits-backgrounds.spec.ts` (authored by T51)
+
+- [ ] T52 — SP-7 integration: React Bits suites, license notices, protected installs and capture · repo: app · after: T48, T49, T50, T51 · verify: `npx playwright test e2e/reactbits-text.spec.ts e2e/reactbits-ui.spec.ts e2e/reactbits-effects.spec.ts e2e/reactbits-backgrounds.spec.ts` · files: .evidence/SP-7.integration.md · resources: contract:reactbits-components · covers: R3, R6, R7, R8, R10, R12, R13 · kind: test · subplan: SP-7
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (105 established browser, install and capture runs + 15 outcome report).
+
+  Objective: React Bits entries render, animate, fall back and install through the real server and a fresh consumer on the integrated tree.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
+
+  - Acceptance / integration: All four React Bits browser suites pass against the production server. Check: `npx playwright test e2e/reactbits-text.spec.ts e2e/reactbits-ui.spec.ts e2e/reactbits-effects.spec.ts e2e/reactbits-backgrounds.spec.ts` (authored by T48)
+  - Acceptance / static: Copied React Bits files keep their upstream license notice and the catalog check passes. Check: `npm run catalog:check` (authored by T4)
+  - Acceptance / integration: Every implemented or validated React Bits entry installs through the protected registry route into a fresh consumer that builds. Check: `node scripts/app-registry-smoke.mjs --family reactbits` (authored by T26)
+  - Acceptance / integration: All React Bits demos render at every breakpoint and state without console errors or hydration warnings. Check: `node scripts/capture.mjs e2e/visual/SP-7-text.routes.json e2e/visual/SP-7-ui.routes.json e2e/visual/SP-7-effects.routes.json e2e/visual/SP-7-backgrounds.routes.json` (authored by T10)
+  - Acceptance / regression: The verify pipeline passes with the React Bits entries integrated. Check: `npm run verify` (authored by T1)
+
+- [ ] T53 — SP-7 visual review of React Bits demos against reactbits-components@v1 · repo: app · after: T52 · verify: `bitacora.py audit-ledger check .evidence/SP-7.visual.findings.json` · files: .evidence/SP-7.visual.md, .evidence/SP-7.visual.findings.json · resources: ledger:SP-7-visual · covers: R3, R8, R13 · kind: audit · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: A read-only Reviewer visual-axis pass compares every captured React Bits breakpoint and state with reactbits-components@v1 and records deviations in a findings ledger.
+  Reviewer axis `visual`: captures with the four SP-7 routes files.
+
+  - Acceptance / product: The SP-7 visual findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-7.visual.findings.json`
+
+- [ ] T54 — SP-7 audit: React Bits licenses, animation reality, hydration and R13 backgrounds · repo: app · after: T53 · verify: `bitacora.py audit-ledger check .evidence/SP-7.findings.json` · files: .evidence/SP-7.audit.md, .evidence/SP-7.findings.json · resources: ledger:SP-7 · covers: R3, R6, R7, R8, R10, R12, R13 · kind: audit · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (120 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-7 against R3, R6, R7, R8, R10, R12 and R13 and records every confirmed defect in a blocking findings ledger.
+  Probes that effects really animate, notices are kept, backgrounds pause and fall back, and FPS values were measured.
+
+  - Acceptance / product: The SP-7 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-7.findings.json`
 
 ### M7 — Agent index, deployment and acceptance
-Acceptance: `/r/index.json`, `/llms.txt` and repo `AGENTS.md`/`CLAUDE.md` list every entry with install command, origin, version, dependencies, license and QA status; the catalog is live on Netlify behind login, `/r/*` answers 401 without token; the end-to-end flow passes against the built app; the independent audit ledger has no open blocking finding.
+Acceptance: `/r/index.json`, `/r/llms.txt`, AGENTS.md and CLAUDE.md list every entry; `scripts/acceptance.mjs` installs entries through the index into fresh consumers that build; the Netlify production site passes `scripts/prod-smoke.mjs`; the final audits have no open blocking finding.
 
-- [ ] T22 — Agent integration: generate `/r/index.json` and `/llms.txt` from the manifest; write repo `AGENTS.md` + `CLAUDE.md` (how to pick and install components, kit-only rule, statuses); consumption guide for other projects; entry in `~/dev/cerebro` global notes · repo: app · after: T18, T20, T21 · verify: `npx vitest run scripts/agent-index.test.ts` · files: scripts/agent-index.ts, scripts/agent-index.test.ts, AGENTS.md, CLAUDE.md, docs/consumption.md · resources: contract:catalog-schema · covers: R15 · kind: implement
+**SP-8 — Agent discovery and verified installation** · no UI. Outcome: Agents read a token-protected index of every entry and install entries with the real shadcn CLI into fresh consumers that build, and the browser catalog flow ends in a working install command.
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 210 minutes.
+- [ ] T55 — Agent index: /r/index.json and /r/llms.txt from the manifest, AGENTS.md, CLAUDE.md and consumption guide · repo: app · after: T54 · verify: `npx vitest run scripts/agent-index.test.ts` · files: scripts/agent-index.ts, scripts/agent-index.test.ts, scripts/build-registry.ts, AGENTS.md, CLAUDE.md, docs/consumption.md · resources: contract:agent-index · covers: R10, R15 · kind: implement · subplan: SP-8 · ui: no
 
-  Objective: Manifest-generated agent metadata and consumption guidance agree with installable registry entries and QA states.
+  Classification: complexity medium; scope full_feature; risk medium; coupling high; confidence medium; estimate 210 minutes (90 index generation wired into registry build + 60 guidance documents + 60 drift tests).
 
-  Estimate: Provisional engineering estimate in minutes: 100 generated indexes + 50 consumption docs + 60 drift tests = 210. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Objective: Manifest-generated agent metadata and repository guidance list every entry with variants, origin, install command, version, dependencies, license and QA status, behind the registry token.
+  `registry:build` (via `scripts/build-registry.ts`) also writes `registry-dist/index.json` and `registry-dist/llms.txt`, served only through T26's bearer route. AGENTS.md and CLAUDE.md explain picking and installing entries, the kit-only rule, statuses and the deliberate upstream-update procedure (R10); `docs/consumption.md` shows `components.json` registry headers with `${DAVID_UI_REGISTRY_TOKEN}`. The existing ~/dev/cerebro/GLOBAL.md david-ui line already documents discovery; no file outside the repository changes.
 
-  - Acceptance / functional: Agent-index tests compare every aggregate entry and variant against both generated endpoints for install command, origin, version, dependencies, license and QA status. Check: `npx vitest run scripts/agent-index.test.ts` (authored by T22)
-  - Acceptance / regression: Agent-index generation and documentation integration preserve the complete verification pipeline. Check: `npm run verify` (authored by T1)
-  - Acceptance / product: The consumption guide and shared brain note explain discovery, private install headers, statuses and kit-only usage. Check: manual: Review docs/consumption.md, AGENTS.md and CLAUDE.md; add the approved global brain note at its existing location. Expected: The instructions agree with generated indexes and contain variable names only, with no secret values.
+  - Acceptance / functional: Agent-index tests compare every manifest entry and variant with both generated files for install command, origin, version, dependencies, license and QA status. Check: `npx vitest run scripts/agent-index.test.ts` (authored by T55)
+  - Acceptance / integration: index.json and llms.txt are served only through the bearer-protected registry route and answer 401 without the token. Check: `npx playwright test e2e/auth.spec.ts` (authored by T26)
 
-- [ ] T23 — Deploy: Netlify site linked to `dav033/david-ui`, env vars set, production build; smoke: login works, protected page redirects, `/r/button.json` 401 without token and 200 with it · repo: app · after: T22 · verify: `node --test scripts/prod-smoke.test.mjs` · files: netlify.toml, scripts/prod-smoke.mjs, scripts/prod-smoke.test.mjs · resources: contract:owner-authorization, netlify:private-david-ui-production · covers: R14, R16 · kind: implement
+- [ ] T56 — Acceptance harness: agent discovery through the index, real shadcn installs into fresh consumers and the browser catalog flow · repo: app · after: T55 · verify: `node --test scripts/acceptance.test.mjs` · files: scripts/acceptance.mjs, scripts/acceptance.test.mjs, e2e/acceptance.spec.ts · resources: contract:agent-index · covers: R1, R6, R14, R15 · kind: implement · subplan: SP-8 · ui: no
 
-  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 210 minutes.
+  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 300 minutes (130 process and fixture orchestration + 90 per-entry consumer matrix + 80 fault injection).
 
-  Objective: The linked private production catalog enforces both authorization boundaries and passes a reproducible deployed smoke check.
+  Objective: A self-contained harness starts the production server, discovers entries through the token-protected index, installs every implemented or validated entry into fresh consumers that render and build, and drives the browser catalog flow.
+  Starts `next start` on a free loopback port with synthetic env and a readiness deadline; reads `/r/index.json` with the token; for every implemented or validated entry (bounded concurrency, at least one per source, an absent source fails) creates a consumer whose `components.json` sends the bearer header, runs `npx shadcn add @david-ui/<slug>`, imports and renders the entry, and runs `next build` (revision 9's audit found a harness that installed only Button).
 
-  Estimate: Provisional engineering estimate in minutes: 80 deployment configuration + 70 smoke harness + 60 production verification = 210. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  - Acceptance / functional: Harness fault injection fails on server startup exit, timeout, refused token, a missing source representative and consumer build failure, and cleans up only its own processes and directories. Check: `node --test scripts/acceptance.test.mjs` (authored by T56)
+  - Acceptance / integration: The browser acceptance flow logs in, filters, searches, opens an entry and copies an install command that the harness then runs successfully in a fresh consumer. Check: `npx playwright test e2e/acceptance.spec.ts` (authored by T56)
 
-  - Acceptance / functional: Production-smoke unit fixtures reject login, redirect, token and static-registry bypass failures and missing deployment configuration. Check: `node --test scripts/prod-smoke.test.mjs` (authored by T23)
-  - Acceptance / product: The Netlify production smoke confirms successful login, protected-page redirects and registry denial without or with an incorrect token and success with the valid token. Check: `node scripts/prod-smoke.mjs` (authored by T23)
+- [ ] T57 — SP-8 integration: run the acceptance harness against the production server · repo: app · after: T56 · verify: `node scripts/acceptance.mjs` · files: .evidence/SP-8.integration.md · resources: contract:agent-index · covers: R1, R6, R14, R15 · kind: test · subplan: SP-8
 
-- [ ] T24 — Build end-to-end acceptance harness: production Next server, login and catalog flow, token-protected registry installs into scratch Next apps, final catalog checks · repo: app · after: T23 · verify: `node --test scripts/acceptance.test.mjs` · files: scripts/acceptance.mjs, scripts/acceptance.test.mjs, e2e/acceptance.spec.ts · resources: contract:acceptance-flow · covers: R1, R4, R5, R6, R9, R14, R15 · kind: implement
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 150 minutes (135 established browser, install and capture runs + 15 outcome report).
 
-  Classification: complexity high; scope full_feature; risk medium; coupling high; confidence medium; estimate 270 minutes.
+  Objective: The shipped server, the protected index and the real shadcn CLI work together for every installable entry.
+  Runs only established commands against the production server and reports actual outcomes; failures go back to the producing task.
 
-  Objective: A self-contained acceptance harness starts the built application and validates login, discovery and isolated registry consumption without shell secrets.
+  - Acceptance / integration: Starting the production server, the harness reads the token-protected index and installs one entry per source and every implemented or validated entry into fresh consumers that render and build. Check: `node scripts/acceptance.mjs` (authored by T56)
+  - Acceptance / regression: The verify pipeline passes with the agent index integrated. Check: `npm run verify` (authored by T1)
 
-  Estimate: Provisional engineering estimate in minutes: 130 process/fixture orchestration + 80 scratch-app matrix + 60 fault injection = 270. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T58 — SP-8 audit: agent index accuracy, token protection and installability · repo: app · after: T57 · verify: `bitacora.py audit-ledger check .evidence/SP-8.findings.json` · files: .evidence/SP-8.audit.md, .evidence/SP-8.findings.json · resources: ledger:SP-8 · covers: R1, R6, R10, R14, R15 · kind: audit · subplan: SP-8
 
-  - Acceptance / functional: Acceptance harness fault injection fails on server startup exit, timeout, authorization failure and consumer build failure and cleans up only its own resources. Check: `node --test scripts/acceptance.test.mjs` (authored by T24)
-  - Acceptance / integration: The authored production-flow browser spec drives login, browse, filter, search, entry metadata and install-command copy through real routes. Check: `npx playwright test e2e/acceptance.spec.ts` (authored by T24)
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes (90 evidence review and reproduction + 30 ledger validation).
 
-- [ ] T24a — Execute the shipped production entry points and full acceptance matrix; report actual results without changing code or judging product acceptance · repo: app · after: T24 · verify: `npm run test:e2e` · files: .evidence/T24-run.md · resources: contract:acceptance-flow · covers: R1, R4, R5, R6, R9, R14, R15 · kind: test
+  Objective: An independent read-only review confirms SP-8 against R1, R6, R10, R14 and R15 and records every confirmed defect in a blocking findings ledger.
+  Compares the index with the manifest and the registry, and checks that installs cover every installable entry.
 
-  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 240 minutes.
+  - Acceptance / product: The SP-8 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-8.findings.json`
 
-  Objective: The finished acceptance commands run unchanged against real production entry points and retain exit codes and flow evidence for the audit.
+**SP-9 — Private production deployment on Netlify** · no UI. Outcome: The catalog is deployed to a recreated Netlify site from the private GitHub repository with secrets only in Netlify env vars, and the production smoke confirms login, page protection and token enforcement.
 
-  Estimate: Provisional engineering estimate in minutes: 180 full browser/installation runs + 60 outcome and trace capture = 240. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+- [ ] T59 — Netlify production deployment: recreate the site linked to dav033/david-ui, set secrets as Netlify env vars and add the smoke script · repo: app · after: T58 · verify: `node --test scripts/prod-smoke.test.mjs` · files: netlify.toml, scripts/prod-smoke.mjs, scripts/prod-smoke.test.mjs, docs/deployment.md · resources: service:netlify-david-ui · covers: R14, R16 · kind: implement · subplan: SP-9 · ui: no
 
-  - Acceptance / regression: The complete browser matrix passes keyboard/touch, axe and reduced-motion checks against the built application. Check: `npm run test:e2e` (authored by T1)
-  - Acceptance / integration: The harness starts next start and the shadcn CLI, drives the authenticated catalog flow and installs at least one entry per source plus every installable entry into isolated Next consumers that build. Check: `node scripts/acceptance.mjs` (authored by T24)
-  - Acceptance / static: The final aggregate has no pending baseline candidate, all 22 enhancements resolved and complete required metadata and QA evidence for every validated entry. Check: `npm run catalog:check -- --final` (authored by T4)
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 210 minutes (70 site creation, linking and env vars + 70 smoke script and fixtures + 70 deploy and recording).
 
-- [ ] T25 — Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger · repo: app · after: T24a · verify: `node scripts/check-audit-ledger.mjs .evidence/T25.findings.json` · files: .evidence/T25.md, .evidence/T25.findings.json · resources: contract:acceptance-flow · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
-- [ ] T25b — Cross-check audit of T25: Independent audit of the whole requirement against SPEC R1–R16 and the inventory rules (§6, §10.2, §11.6): read-only review, findings ledger · repo: app · after: T24a · verify: `node scripts/check-audit-ledger.mjs .evidence/T25-crosscheck.findings.json` · files: .evidence/T25-crosscheck.md, .evidence/T25-crosscheck.findings.json · resources: contract:acceptance-flow · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
+  Objective: A recreated Netlify site builds the private repository's main branch with the three secrets only in Netlify env vars, and a reproducible smoke script checks the deployed boundaries.
+  Creates the site under team “dav033's team” with the name from SPEC Inputs item 4, linked to `dav033/david-ui` main (SPEC Inputs item 5 gives the fallback when the Netlify GitHub app lacks access). Sets DAVID_UI_PASSWORD, DAVID_UI_SESSION_SECRET and DAVID_UI_REGISTRY_TOKEN from the location in SPEC Inputs item 2 without printing them, and makes DAVID_UI_PROD_URL available to the owner's verification environment. `netlify.toml` builds with `npm run build`; registry files are served only by the route handler.
+  `scripts/prod-smoke.mjs` reads DAVID_UI_PROD_URL, DAVID_UI_PASSWORD and DAVID_UI_REGISTRY_TOKEN, fails on any missing value, logs in, checks redirects for `/`, `/components/button`, `/gaps`, `/demos/button`, and checks 401 without and with a wrong token and 200 with the token for `/r/button.json`, `/r/index.json` and `/r/llms.txt`, with no source in refusal bodies. `docs/deployment.md` records site name, URL and rollback (no secrets).
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 300 minutes.
+  - Acceptance / functional: Production-smoke fixtures fail on a broken login, a missing redirect, a registry file served without or with a wrong token, source in a refusal body and missing configuration. Check: `node --test scripts/prod-smoke.test.mjs` (authored by T59)
 
-  Objective: A read-only review maps the integrated outcome to R1–R16 and records every confirmed defect in a valid blocking-findings ledger.
+- [ ] T60 — SP-9 integration: production smoke against the deployed Netlify site · repo: app · after: T59 · verify: `node scripts/prod-smoke.mjs` · files: .evidence/SP-9.integration.md · resources: service:netlify-david-ui · covers: R14, R16 · kind: test · subplan: SP-9
 
-  Estimate: Provisional engineering estimate in minutes: 210 requirement/inventory review + 60 reproduction + 30 ledger validation = 300. Includes authoring and local checks where owned. History for this kind returned status unknown, no comparable sample count or measured duration; no empirical calibration is claimed.
+  Classification: complexity low; scope small_change; risk high; coupling medium; confidence medium; estimate 30 minutes (15 production smoke + 15 outcome report).
 
-  - Acceptance / product: The audit ledger conforms to audit-findings/1, names valid responsible plan tasks and has no open critical or high finding. Check: `node scripts/check-audit-ledger.mjs .evidence/T25-crosscheck.findings.json` (authored by T1)
+  Objective: The deployed production entry points enforce the owner login and the registry token exactly as the local suites do.
+  Runs in the `production` environment. Without the verification policy entry or the named resources it ends BLOCKED_EXTERNAL, a recoverable block that changes no code.
+
+  - Acceptance / integration [production]: The deployed site accepts the owner login, redirects anonymous page requests and refuses registry files, index.json and llms.txt without or with a wrong token while serving them with the valid token. Check: `node scripts/prod-smoke.mjs` (authored by T59)
+
+- [ ] T61 — SP-9 audit: deployment source, secret placement and production privacy · repo: app · after: T60 · verify: `bitacora.py audit-ledger check .evidence/SP-9.findings.json` · files: .evidence/SP-9.audit.md, .evidence/SP-9.findings.json · resources: ledger:SP-9 · covers: R14, R16 · kind: audit · subplan: SP-9
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes (60 evidence review and reproduction + 30 ledger validation).
+
+  Objective: An independent read-only review confirms SP-9 against R14 and R16 and records every confirmed defect in a blocking findings ledger.
+  Checks the site builds from the private repository, no secret is tracked or printed, and the production smoke evidence.
+
+  - Acceptance / product: The SP-9 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/SP-9.findings.json`
+
+**CG-4 — composition gate over SP-1, SP-2, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9**
+
+- [ ] T62 — CG-4 final acceptance: full browser matrix, acceptance harness, final catalog check and verify · repo: app · after: T61 · verify: `npm run test:e2e` · files: .evidence/CG-4.md · resources: contract:agent-index · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: test
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 180 minutes (90 full browser matrix + 60 acceptance installs + 30 final checks).
+
+  Objective: Every subplan works together on the final accepted tree: the full browser matrix, the acceptance harness, the final catalog rules and the verify pipeline.
+  Composition gate over all nine accepted subplans; the final audits read its evidence.
+
+  - Acceptance / regression: The complete browser matrix, including the reduced-motion project, passes against the production build. Check: `npm run test:e2e` (authored by T1)
+  - Acceptance / integration: The acceptance harness installs every implemented or validated entry and at least one per source into fresh consumers that build. Check: `node scripts/acceptance.mjs` (authored by T56)
+  - Acceptance / static: No inventory entry is pending, all 22 enhancements have results and every validated entry carries complete R6 evidence. Check: `npm run catalog:check -- --final` (authored by T4)
+  - Acceptance / regression: The verify pipeline passes on the final tree. Check: `npm run verify` (authored by T1)
+
+- [ ] T63 — Final independent audit of REQ-001 against R1–R16 and the inventory rules · repo: app · after: T62 · verify: `bitacora.py audit-ledger check .evidence/final.findings.json` · files: .evidence/final.audit.md, .evidence/final.findings.json · resources: ledger:final · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
+
+  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 300 minutes (210 requirement and inventory review with probes + 60 reproduction + 30 ledger validation).
+
+  Objective: A read-only review maps the integrated product to R1–R16 and inventory sections 6, 10.2 and 11.6 with real entry-point probes and records every confirmed defect in a blocking findings ledger.
+  A finding names only the tasks whose result is wrong; their necessary dependents are re-verified, not blanket-reworked.
+
+  - Acceptance / product: The final findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/final.findings.json`
+
+- [ ] T64 — Independent cross-check audit of REQ-001 without reading the T63 report · repo: app · after: T62 · verify: `bitacora.py audit-ledger check .evidence/final-crosscheck.findings.json` · files: .evidence/final-crosscheck.audit.md, .evidence/final-crosscheck.findings.json · resources: ledger:final-crosscheck · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14, R15, R16 · kind: audit
+
+  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 240 minutes (170 independent requirement review with probes + 40 reproduction + 30 ledger validation).
+
+  Objective: A second independent read-only review of the same scope, without reading the first audit's report or ledger, catches what one auditor omits.
+  Owner policy `gates.second_auditor` keeps an independent cross-check over the final scope.
+
+  - Acceptance / product: The cross-check findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/final-crosscheck.findings.json`
 
 ## Review focus
-
-1. Wrong primitive family, ambiguous license or incompatible versions: T2's full structured matrix and manual primary-source review, then T4's invalid license/status fixtures.
-2. Controlled values, focus traps and interrupted animation: T7/T9/T10 units, T11 keyboard/touch browser paths and T18 shared-model tests.
-3. Malformed credentials, forged/expired cookies, missing config and public static-file bypass: T14 auth units/browser suite and T23 deployed smoke (wrong as well as missing bearer).
-4. Browser capability and lifecycle gaps: T17 denied-permission/type/size cases; T19 hydration checks; T21 WebGL-disabled, reduced-motion, hidden-tab and off-screen tests with FPS/memory evidence.
-5. Registry metadata drift, missing transitive dependencies, startup exit and consumer build failure: T4 invalid manifest tests, T22 index comparisons, T24 fault injection and T24a isolated installs through real entry points.
+1. Privacy bypass (anonymous routes added after the guard, static registry files, wrong or missing bearer, forged or
+   expired cookies, missing configuration): T26 units and route sweep, re-run in T29, CG-2 and the production smoke T60.
+2. Registry install drift (upstream dependencies, broken import paths, missing tokens in consumers, an install command
+   that installs nothing): T10 dependency-rewrite tests, the T17 checkpoint, per-family installs in every integration
+   test, T56 per-entry harness.
+3. Controlled values and shared models (Select, Checkbox, Slider, single notification engine): T16, T20 and T34 units,
+   T41 one test per R12 rule, CG-3 cross-family suites.
+4. Browser capability and lifecycle gaps (denied microphone, rejected files, gestures without alternatives, hydration,
+   hidden tab, no WebGL, reduced motion): T40, T48–T51 units and browser specs, with frame-change and non-zero FPS
+   assertions so stubs fail.
+5. Status honesty (validated without R6 evidence, pending entries, unresolved enhancements, missing license notices):
+   T4 rule tests, T21/T42 promotion tests, `catalog:check -- --final` in CG-4.
 
 ## Semantic self-review
+Same-context adversarial self-review, not an independent approval. Deterministic validation is reported separately.
 
-This is same-context adversarial self-review, not independent approval. Deterministic validation is reported separately.
-
-- Demonstrated defect, high: original T11 authored a Playwright harness and promoted metadata while kind test; T22 generated TypeScript while kind docs; T24 authored the acceptance scripts while kind test. Corrected T11/T22/T24 to implement and isolated the existing final command execution as T24a (test). No component or feature was added.
-- Demonstrated defect, high: original T25 used test -s on a ledger and T2 used the same existence-only pattern for research. Replaced them with behavior-validating report checks; T25 still declares exactly one findings ledger and owns only report/ledger files. T24a is its real integration-test predecessor. A blocking finding sends named producing tasks back; the audit never repairs code.
-- Demonstrated defect, medium: catalog/entries.ts was declared by most component tasks. Kept T4 as its one owner and partitioned contributions by responsibility, including early Command/CopyButton ownership and separate QA evidence. Directory-level claims were narrowed; downstream consumers import existing APIs.
-- Demonstrated defect, medium: the bootstrap promised full verify before its own future commands existed. Bootstrap now runs actual available build/lint/unit checks; the final pipeline is first executed after M1 closes. This changes verification timing, not final required behavior.
-- Plausible risk, high: Netlify may serve generated static files outside the tested Next authorization path (SPEC R14/R16, original T14/T23). T23 must prove deployed source denial or correct the deployment boundary; local mocks cannot establish privacy.
-- Plausible risk, medium: CopyButton and Command are consumed before their source-family milestone. Explicit producer ownership and later QA-only reuse remove a backward dependency; T13 and T12 respectively own those early kit entries.
-- Fact: no application consumers, package commands, browser harness or source implementations exist in the checkout. Complexity is high where the work crosses state/lifecycle/security/contracts or creates an integration harness; T6 and T24a stay medium because their bounded responsibilities exclude those implementation decisions. No task needs extreme complexity or full_system scope. Estimates include missing harness work, remain provisional and use no unavailable history metrics.
-- Product decision retained: the approved scope has one independent final audit. The validator may recommend a second audit; this classification does not expand the approved review scope or assign its execution.
-- Fact: automated checks cannot establish the meaning of primary-source licenses, externally pushed GitHub state in an isolated snapshot. Independent product review is performed by T25 and accepted through its findings ledger, not through an additional report-attestation criterion. The three manual criteria explicitly state expected evidence and require coordinated attestation. Planned created_by warnings disclose unfinished work rather than pretending tests already exist.
+- Fact: the repository, Netlify site and prod env file do not exist (owner, 2026-10-24; `netlify api listSites` shows no
+  david site); `gh repo view dav033/david-ui` still returns a private non-empty repository. T1 refuses to reuse or
+  overwrite it until the owner answers SPEC Inputs item 1.
+- Demonstrated defect in revision 9, corrected: 31 defects surfaced only at the final audit. Every subplan now has its
+  own real-entry-point integration test and audit, the longest chain of non-barrier tasks is at most six, and SP-3 has
+  an early checkpoint (T17) after the first family.
+- Demonstrated defect in revision 9, corrected: the production smoke ran in the sandbox without credentials. It is now
+  T60 with `environment: production`, `requires` names only and an `authorization_needed` text that the operator policy
+  must match.
+- Plausible risk: Netlify could serve registry JSON from `public/` without the proxy. Registry files now live in the
+  git-ignored `registry-dist/` and only the route handler serves them; T60 probes the deployed `/r/*`.
+- Plausible risk: the pinned-dependency rule may block an entry whose upstream needs an unlisted package. The entry
+  records `dependency-not-pinned:<package>` and the subplan audit sends T2/T3 back; no silent edit of dependency files.
+- Plausible risk, accepted: React Bits (SP-7) waits for CG-3 although it does not consume Bencho code. This follows the
+  SPEC order (Bencho before React Bits), keeps the owner-runtime gate chain linear and lets the React Bits design read the
+  Bencho contract to avoid duplicates (inventory 11.6, 12).
+- Product decision retained: six design contracts need six owner approvals (D-127). They are grouped into two rounds.
+- Calibration: integration tests and gates are `low`/`medium` because they only run established commands; producers of
+  harnesses (T10, T21, T26, T42, T56) are `implement`, never `test`. No estimate is history-calibrated.
+- Naming: SPEC names `e2e/bencho.spec.ts`, `e2e/p1.spec.ts`, `e2e/p2.spec.ts`, `e2e/capabilities.spec.ts`,
+  `e2e/auth.spec.ts`, `e2e/catalog-browse.spec.ts`, `e2e/catalog-entry.spec.ts`, `e2e/reactbits-*.spec.ts`,
+  `scripts/acceptance.mjs` and `scripts/prod-smoke.mjs`; each has exactly one owning task here.
 
 ## Deterministic validation
-
-`python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json check REQ-001`
-returned exit 0 and `OK: PLAN.json is publishable`. The final run is repeated after this record is written.
-Final checker disclosures: 64 warnings. Fifty created_by checks refer to future producer work; three manual criteria
-require attestation (GitHub external state, primary-source spike review and consumption documentation/brain note); ten
-requirement-level product warnings distinguish planned checks from actual product acceptance; one recommends another audit. The approved single-audit scope is retained. There are no unmapped purposes, criteria without
-checks, ownership hotspots, missing classifications or structural errors. Structural publication is distinct from input
-readiness and scope approval. No product lint, typecheck, build or behavior test ran because no application exists yet.
+`python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json check REQ-001` → exit 0,
+`OK: PLAN.json is publishable`, 0 errors, 117 warnings: 115 are `created_by … is planned work, not existing evidence`
+(every product check is still to be written; none is claimed to exist), 1 is the `design/contracts/CHANGELOG.md`
+hotspot (the Designer role mandates one append-only changelog; the six design tasks are serialized so they never write
+it concurrently), and 1 is the deliberate manual attestation of the GitHub remote in T6. `plan-json report` → exit 0:
+64 tasks, provisional total 13,260 minutes, critical path 9,570 minutes, no unordered conflicts or redundant edges.
+`plan-json compat` → `consumer_supported: true` for schema 1.3.0 (Planner, M1, M2, M3, M6). `file:` evidence is not used
+because the repository does not exist yet. No product lint, build or test ran: there is no application.
 
 ## Rulings
-- Retain all approved naming, theme, Base UI, single-engine and clean-room rulings from SPEC and the original plan.
-- No approval, freeze, handoff, launch, implementation, revision or runtime-state operation is authorized by this classification update.
+- Retain all approved naming, theme, Base UI, single-engine and clean-room rulings from SPEC and D-001.
+- This revision approves, freezes, hands off and launches nothing. `plan-revisions/` is untouched.
 
 ## Progress log
 - 2026-10-22: spec and plan written from the owner's inventory v4 and interview round 1.
-- Classification update: completed task metadata, traceability, typed evidence, owned paths and categorized exact-purpose verification; deterministic check exit 0, no errors; product checks remain planned and secret locations remain unresolved.
-- 2026-10-23 06:07 plan APPROVED (terminal)
-- 2026-10-23 06:07 launched Scheduler supervisor from HQ in `/home/david/dev/david-ui`
+- 2026-10-23: revision 1 was approved and launched; revisions 2–9 followed during execution.
+- 2026-10-24: owner wiped all execution state, the local repository, the Netlify site and the prod env file.
+- 2026-10-24: revision 10 drafted from zero as schema 1.3.0 with nine subplans, four composition gates and six design contracts; status review.

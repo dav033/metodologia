@@ -7,7 +7,8 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
-_None_
+- P-183 · Delete GitHub repo `dav033/david-ui` (gh token lacks `delete_repo`; owner runs `gh auth refresh -h github.com -s delete_repo`) · urgency: med · complexity: S · added 2026-10-24 · D-002
+- P-184 · Owner approval of REQ-001 revision 10 (schema 1.3.0 subplans) before any launch · urgency: low · complexity: S · added 2026-10-24 · D-002
 
 ## Blocked
 _None_

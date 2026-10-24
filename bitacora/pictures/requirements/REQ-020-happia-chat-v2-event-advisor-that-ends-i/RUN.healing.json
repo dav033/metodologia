@@ -56,6 +56,19 @@
    "status": "unrepairable",
    "task": "T15b"
   },
+  "1f18d6207805b100": {
+   "applied": 0,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/f66049d73b07e482cda18c9d41b2e71a573628ed9debc1474372ea4a5a8eaca8",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1792872505.622,
+   "history": [],
+   "id": "1f18d6207805b100",
+   "status": "open",
+   "task": "T15.9"
+  },
   "260ee156420ff2ed": {
    "applied": 0,
    "class": "criterion_unmapped",

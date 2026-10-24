@@ -1,0 +1,23 @@
+{
+ "request": "T15.9:3",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "Falta phone-observations.md: solo David puede aportar las observaciones del teléfono",
+ "origin": "El verificador ejecuta `test -s docs/req-020/phone-observations.md` y sale con exit code 1 en los tres últimos intentos, así que el archivo no existe o está vacío en la copia final. La tarea dice que, si el archivo de origen no existe, el agente debe parar con estado blocked, porque solo David puede aportar esas observaciones; los intentos agotados muestran que eso no ocurrió. La comprobación [manual] tampoco puede pasar sin David, y la evidencia no dice si el archivo existe en /home/david/bitacora/pictures/artifacts/req020-r19-release/.",
+ "steps": [
+  "Comprueba la fuente: `test -s /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md && echo ok`.",
+  "Si no existe o está vacía, aporta tú las observaciones del teléfono físico en esa ruta; el agente no debe escribirlas ni inferirlas.",
+  "Cuando el archivo exista, consulta `bitacora.py --project pictures scheduler-op REQ-020 decisions` y reintenta la tarea T15.9 con la opción de reintento que aparezca.",
+  "Si prefieres dejar el run parado, mantén la decisión de detener y registra el motivo con `scheduler-op REQ-020 decide <id> stop --reason \"…\"`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-24T15:08:46",
+ "seconds": 20.0
+}
