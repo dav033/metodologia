@@ -21,7 +21,6 @@ en **Antigravity**:
   de interacción; revisión del impacto en consumidores y simplificaciones concretas. Adaptaciones selectivas de
   Antislop y Thermos, integradas en el flujo existente, sin dependencias ni nuevas puertas de aprobación.
   Detalle: `skill/references/interface-quality.md` y `skill/references/subagents.md`.
-
 - **Planes schema 1.3.0**: subplanes funcionales, contratos productor/consumidor, checkpoints, puertas de composición,
   y contrato Designer obligatorio cuando hay trabajo UI. Schema 1.2.0 sigue cargando como revisión heredada.
   Composición y estado de módulos: `skill/references/plan-contract.md` y `skill/references/modules.md`.

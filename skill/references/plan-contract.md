@@ -54,8 +54,7 @@ those keys). The scheduler run database is authority on state. A plan without a 
 `plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports legacy gaps, PLAN.md
 ambiguities and `consumer_supported`. Schema 1.3.0 is the default: `plan-json init` creates it and the validator accepts
 it. Schema 1.2.0 remains a loadable legacy revision with its prior parsing, canonical bytes and hashes. The downstream
-compatibility report must say
-the Planner and M1, M2, M3 and M6 all support that exact version;
+compatibility report must say the Planner and M1, M2, M3 and M6 all support that exact version;
 missing, malformed or unknown capability data fails closed with `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE`. M6 supports the
 verification metadata, and the adapter checks readiness before changing owner approval status or writing a frozen revision.
 For 1.3.0 plans with subplans, `plan-json check` also runs the owner's gate-chain, exact contract-path and single-repository
@@ -100,7 +99,9 @@ evidence. M6 records verification reasons (`BLOCKED_EXTERNAL`, `BLOCKED_ENV`, `F
 and, for composition checks, candidate and manifest. Runtime authorization comes from trusted operator configuration,
 never from the plan: the owner checks resource **names** against its process environment and
 `~/.config/flow/secrets.env`; sandbox checks need no authorization, while staging and production require a matching
-`<bitácora root>/<project>/verification-policy.json` entry before commands start. See decision D-126. These fields
+`<bitácora root>/<project>/verification-policy.json` entry before commands start: same `environment`, an `authorization`
+text equal to the plan's `authorization_needed`, and (if the entry lists `requirements`) the REQ id. An empty variable is
+not an available resource. See decision D-126. These fields
 describe needs; they do not grant access. Other schema 1.3 stable diagnostics include `SUBPLAN_INVALID`, `SUBPLAN_EMPTY`,
 `SUBPLAN_NO_OUTCOME`,
 `SUBPLAN_MILESTONE`, `SUBPLAN_COVERAGE`, `SUBPLAN_CRITERION_UNCARRIED`, `SUBPLAN_CONTRACT`, `SUBPLAN_ORDER`,
