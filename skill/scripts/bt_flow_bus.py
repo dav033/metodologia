@@ -1,20 +1,11 @@
 """The flow bus: every message between the Planner and the Scheduler modules, read from their own stores.
 
-The modules do not publish to a queue. Each one already keeps a durable, ordered record of what it did (M1 `audit`,
-the M2 decision ledger, the M3 executor ledger, the M4 normalized stream and incidents, M5 decisions, M6 verification
-requests), so the bus only TAILS those records, read-only (`mode=ro`), and normalises every row to one `FlowEvent`:
+The modules keep durable, ordered records; this bus tails them read-only and normalises each record to a `FlowEvent`.
+Unknown records remain visible. Provider-level M3 → M4 details stay quiet and fold into one digest per attempt.
+Missing, locked or foreign stores are skipped; the bus never writes or creates a file.
 
-    {v: 1, seq: "m1:28", ord: sortable string, at: ISO, at_epoch, run: "project/REQ-001", task, attempt,
-     from, to, kind, summary, ref: {store, id}, from_part?, to_part?, data?}
-
-`from`/`to` are one of planner|M1..M6|web|owner. A record nobody wrote a rule for becomes `kind: "unknown"` (visible,
-never silenced) so the contract test (`test_flow_contract`) can fail when a module grows a message the map ignores.
-Provider-level detail (the raw M3 -> M4 stream and info-only incidents) carries `quiet: true`: it is kept, but readers
-fold it into one digest per attempt instead of showing each row (`is_quiet`).
-A store that is absent, locked or foreign only skips that source for the cycle. Nothing here writes or creates a file.
-
-    collect(rdir, project, cursors=None) -> (events, cursors)   # events strictly after the cursors, in causal order
-    snapshot(rdir, project) -> events                           # the whole history (replay)
+    collect(rdir, project, cursors=None) -> (events, cursors)
+    snapshot(rdir, project) -> events
 """
 from __future__ import annotations
 
@@ -245,6 +236,7 @@ M1_RULES: dict[str, Callable] = {
     "needs_review_waiting": _m1("needs_review_wait", "M5", "M1", "M5 mantiene en espera {attempt}"),
     "needs_review_resumed": _m1("needs_review_resume", "M5", "M1", "M5 reanuda la verificación de {attempt}"),
     "needs_review_blocked": _m1("needs_review_block", "M5", "M1", "M5 bloquea la revisión no resuelta de {attempt}"),
+    "needs_review_retry_exhausted": _m1("needs_review_block", "M6", "M1", "M1 bloquea {attempt}: reintento M6 agotado"),
     "needs_review_resolved": _m1("needs_review_resolved", "M6", "M1", "M6 entrega el veredicto de {attempt}"),
 }
 

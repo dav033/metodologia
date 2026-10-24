@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -37,7 +38,7 @@ class VerificationAuthorityTests(unittest.TestCase):
             self.assertTrue(authority.authorize_environment("sandbox", None))
             self.assertFalse(authority.authorize_environment("staging", "owner approved"))
             self.assertFalse(authority.authorize_environment("production", "owner approved"))
-            policy.write_text(json.dumps({"allow": [{"environment": "staging", "operator": "owner"}]}),
+            policy.write_text(json.dumps({"allow": [{"environment": "staging", "authorization": "owner approved"}]}),
                               encoding="utf-8")
             self.assertTrue(authority.authorize_environment("staging", "owner approved"))
             self.assertFalse(authority.authorize_environment("production", "owner approved"))
@@ -47,12 +48,56 @@ class VerificationAuthorityTests(unittest.TestCase):
     def test_policy_requires_the_matching_environment_and_refuses_unknown_classes(self):
         with tempfile.TemporaryDirectory() as temporary:
             rdir, secrets, policy = self._paths(Path(temporary))
-            policy.write_text(json.dumps({"allow": [{"environment": "production"}]}), encoding="utf-8")
+            policy.write_text(json.dumps({"allow": [{"environment": "production", "authorization": "approved"}]}), encoding="utf-8")
             authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
-            self.assertTrue(authority.authorize_environment("production", None))
-            self.assertFalse(authority.authorize_environment("external_authorized", None))
+            self.assertTrue(authority.authorize_environment("production", "approved"))
+            self.assertFalse(authority.authorize_environment("external_authorized", "approved"))
             policy.write_text(json.dumps({"allow": "production"}), encoding="utf-8")
-            self.assertFalse(authority.authorize_environment("production", None))
+            self.assertFalse(authority.authorize_environment("production", "approved"))
+
+    def test_external_authority_binds_environment_authorization_and_requirement(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            rdir, secrets, policy = self._paths(Path(temporary))
+            policy.write_text(json.dumps({"allow": [{"environment": "staging", "authorization": "Owner approves staging",
+                                                       "requirements": ["REQ-001"]}]}), encoding="utf-8")
+            authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
+            self.assertTrue(authority.authorize_environment("staging", "Owner approves staging"))
+            self.assertFalse(authority.authorize_environment("staging", "other"))
+            self.assertFalse(authority.authorize_environment("staging", "Owner approves staging!"))
+
+    def test_empty_environment_values_and_empty_secret_assignments_are_unavailable(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            rdir, secrets, _ = self._paths(Path(temporary))
+            secrets.write_text("EMPTY_SECRET=\n", encoding="utf-8")
+            authority = owner_verification_authority(rdir, "demo", environ={"EMPTY_ENV": ""}, secrets_file=secrets)
+            self.assertFalse(authority.resource_available("EMPTY_SECRET"))
+            self.assertFalse(authority.resource_available("EMPTY_ENV"))
+
+    def test_policy_and_secret_reads_refuse_symlinks_and_oversized_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            rdir, secrets, policy = self._paths(root)
+            policy.unlink(missing_ok=True)
+            target = root / "policy-target"
+            target.write_text(json.dumps({"allow": [{"environment": "production", "authorization": "ok"}]}))
+            policy.symlink_to(target)
+            secrets.unlink()
+            secret_target = root / "secret-target"
+            secret_target.write_text("TOKEN=value\n")
+            secrets.symlink_to(secret_target)
+            authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
+            self.assertFalse(authority.authorize_environment("production", "ok"))
+            self.assertFalse(authority.resource_available("TOKEN"))
+
+    def test_authority_reads_refuse_fifos_and_files_over_the_size_cap(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            rdir, secrets, policy = self._paths(root)
+            os.mkfifo(policy)
+            secrets.write_text("TOKEN=value\n" + ("# padding\n" * 8000), encoding="utf-8")
+            authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
+            self.assertFalse(authority.authorize_environment("production", "approved"))
+            self.assertFalse(authority.resource_available("TOKEN"))
 
 
 if __name__ == "__main__":

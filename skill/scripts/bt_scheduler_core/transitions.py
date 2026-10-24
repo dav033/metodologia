@@ -162,13 +162,14 @@ def live_attempt(state: RunState, task_id: str) -> AttemptRec | None:
     return None
 
 
-def end_attempt(ctx: Ctx, attempt_id: str, new: A, cause: str, detail: str = "") -> None:
+def end_attempt(ctx: Ctx, attempt_id: str, new: A, cause: str, detail: str = "", *, classification: str = "") -> None:
     """Close an attempt as failed/rejected/cancelled: free its resources and move the task on.
 
     The task goes to RECOVERING (a decision is due) or, when a cancellation was authorised, to CANCELLED."""
     att = ctx.state.attempts[attempt_id]
     set_attempt(ctx, attempt_id, new, cause=cause)
     att.failure = detail or cause
+    att.failure_classification = classification
     release(ctx, attempt_id)
     void_outbox(ctx, attempt_id)
     rec = ctx.state.tasks[att.task_id]

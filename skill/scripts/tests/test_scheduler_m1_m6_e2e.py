@@ -336,6 +336,48 @@ class CompositionGuards(support.World):
         self.assertIsNotNone(wiring.verification_runtime)
         self.assertEqual(stat.S_IMODE(private_dir.stat().st_mode), stat.S_IRWXU)
 
+    def test_real_m6_handoff_replays_held_m1_review_after_wiring_restart_and_runs_resume(self):
+        from bt_scheduler_quality_owner_adapter import handoff_needs_review
+
+        quality_path = self.tmp / "quality.sqlite3"
+        recovery_path = self.tmp / "recovery.sqlite3"
+
+        def wire():
+            result = composition.wire(
+                self.rdir, project="proj", assignment=adapter.PinnedRoute("direct:claude/haiku"),
+                repos=self.repos, default_repository="app", quality_store_path=quality_path,
+                recovery_store_path=recovery_path, autostart=False,
+            )
+            self.wirings.append(result)
+            return result
+
+        wiring = wire()
+        wiring.scheduler.claim(core.Assignment("T1", "worker"))
+        attempt_id = wiring.scheduler.snapshot().tasks["T1"]["attempt"]
+        wiring.scheduler.ingest(core.Event("finished-review", wiring.scheduler.plan.plan_id,
+                                            wiring.scheduler.plan.revision, "T1", attempt_id, "worker",
+                                            "execution_finished"))
+        wiring.scheduler.step()
+        identity = {"plan_id": wiring.scheduler.plan.plan_id, "revision": wiring.scheduler.plan.revision,
+                    "task_id": "T1", "attempt_id": attempt_id, "token": 1}
+        result = {"status": "NEEDS_REVIEW", "evidence_manifest": "m6://result/" + "d" * 64}
+        wiring.recovery.needs_review_advice = lambda _case: (_ for _ in ()).throw(RuntimeError("M5 offline"))
+        with self.assertRaisesRegex(RuntimeError, "M5 offline"):
+            wiring.verification_runtime.needs_review_handoff(identity, result)
+        self.assertEqual(wiring.scheduler.read(lambda ctx: ctx.state.review_holds[attempt_id]["state"]), "held")
+
+        wiring.close()
+        restarted = wire()
+        self.assertEqual(restarted.scheduler.read(lambda ctx: ctx.state.review_holds[attempt_id]["state"]), "waiting")
+        restarted.recovery.needs_review_advice = lambda _case: "resume"
+        retried = []
+        restarted.verification_runtime.store.retry_m5_transient = retried.append
+
+        handoff_needs_review(restarted.verification_runtime, "request-key", identity, result)
+
+        self.assertEqual(retried, ["request-key"])
+        self.assertEqual(restarted.scheduler.read(lambda ctx: ctx.state.review_holds[attempt_id]["state"]), "resumed")
+
 
 class ShutdownOrder(unittest.TestCase):
     def test_m6_and_m5_close_before_stream_and_m3(self):

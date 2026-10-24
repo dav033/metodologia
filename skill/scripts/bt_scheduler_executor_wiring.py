@@ -363,7 +363,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 if wiring.recovery is None:
                     raise RuntimeError("M5 recovery is unavailable for M6 NEEDS_REVIEW")
                 evidence_ref = result.get("evidence_manifest")
-                scheduler.handle_needs_review(
+                return scheduler.handle_needs_review(
                     plan_id=identity.get("plan_id"), revision=identity.get("revision"),
                     task_id=identity.get("task_id"), attempt_id=identity.get("attempt_id"),
                     token=identity.get("token"), evidence_ref=evidence_ref,

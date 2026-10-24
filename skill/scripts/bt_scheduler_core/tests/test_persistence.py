@@ -40,7 +40,7 @@ class Contract:
         document.pop("subplan_versions")
         document.pop("compositions")
         upgraded = RunState.from_dict(document)
-        self.assertEqual(upgraded.schema, 7)
+        self.assertEqual(upgraded.schema, 8)
         self.assertEqual((upgraded.subplan_versions, upgraded.compositions), ({}, {}))
         upgraded.subplan_versions["SP-1"] = {"plan_id": upgraded.plan_id, "revision": upgraded.revision,
                                                "version": 1, "commit": "a" * 40,

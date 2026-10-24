@@ -17,8 +17,14 @@ def handoff_needs_review(runtime, request_key: str, identity: Mapping[str, objec
     """Call the owner supplied M1/M5 bridge and execute M6's bounded same-attempt resume when advised."""
     outcome = runtime.needs_review_handoff(identity, result)
     if outcome == "resumed":
-        runtime.store.retry_m5_transient(request_key)
-        runtime._wake.set()
+        try:
+            runtime.store.retry_m5_transient(request_key)
+        except QualityError as error:
+            if error.code != "RETRY_EXHAUSTED":
+                raise
+            runtime.core.block_exhausted_needs_review_resume(identity)
+        else:
+            runtime._wake.set()
 
 
 def resume_needs_review_handoffs(runtime) -> int:

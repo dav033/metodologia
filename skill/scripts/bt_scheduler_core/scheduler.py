@@ -258,6 +258,14 @@ class SchedulerCore:
                                           attempt_id=attempt_id, token=token, evidence_ref=evidence_ref,
                                           advice_port=advice_port)
 
+    def block_exhausted_needs_review_resume(self, identity: Mapping[str, object]) -> str:
+        """Block a held M6 review after the bounded same-attempt resume was exhausted."""
+        from .review import block_exhausted_resume
+
+        result = self.write(lambda ctx: block_exhausted_resume(ctx, identity))
+        self._wake.set()
+        return result
+
     # ------------------------------------------------------------------ inbound facts
     def ingest(self, event: Event | Mapping[str, Any]) -> IngestResult:
         try:

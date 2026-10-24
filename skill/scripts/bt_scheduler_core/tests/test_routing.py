@@ -66,7 +66,7 @@ class FullPlanRouting(unittest.TestCase):
         self.assertEqual(before.tasks["T2"]["state"], "pending")
         self.assertTrue(all(before.tasks[task_id]["route_status"] == "recommended"
                             for task_id in ("T1", "T2", "T3")))
-        self.assertEqual(scheduler.read(lambda ctx: (ctx.state.schema, ctx.state.routing_complete)), (7, True))
+        self.assertEqual(scheduler.read(lambda ctx: (ctx.state.schema, ctx.state.routing_complete)), (8, True))
 
         report = scheduler.step()
         after = scheduler.snapshot()
