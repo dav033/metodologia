@@ -1146,3 +1146,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - − Each project that wants staging/production checks needs an operator policy file before its first 1.3 run.
 - **Source:** engine-v2 F4-9b (lead session 1fbc12c7)
 - **Refinement 2026-10-24 (after F4-9 reviews):** a policy entry authorizes only when `environment` matches, its `authorization` text equals the plan's `authorization_needed`, and (if it lists `requirements`) the REQ is listed; an empty variable is not an available resource. Policy and secrets reads refuse symlinks, non-regular files and files over 64 KiB.
+
+## D-127 — The owner approves every design contract before UI work starts
+
+- **Date:** 2026-10-24 · **Status:** Accepted · **Refines:** D-126
+- **Decision:** The Designer is integrated through the whole flow. Every design contract version (`design/contracts/<c>@vN.md`) needs the owner's approval — web requirement page or `bitacora.py design approve|changes REQ-NNN <c>@vN`, mirroring plan approval — and the approval pins the contract blob sha256. The M3 gate starts a `ui:true` task only when the contract is in the base tree, approved, and its blob matches the approved hash; otherwise the task waits with an owner-attention reason, without failing or spending code-retry budget. The Runner captures the visual evidence (screenshots per breakpoint × state) that the Reviewer `visual` axis judges. Plans without UI subplans are unchanged.
+- **Consequences:**
+  - \+ The owner sees and signs off every design before code is written against it.
+  - − UI subplans pause at each contract version until the owner answers.
+- **Source:** owner, 2026-10-24 (lead session 1fbc12c7)

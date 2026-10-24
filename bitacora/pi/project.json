@@ -1,0 +1,8 @@
+{
+ "repos": {
+  "harness": {
+   "remote": "https://github.com/dav033/pi.git",
+   "hint": "~/dev/pi"
+  }
+ }
+}
