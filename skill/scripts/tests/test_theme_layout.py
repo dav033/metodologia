@@ -10,9 +10,11 @@ CSS = (Path(__file__).resolve().parents[2] / "assets" / "style.css").read_text(e
 class ThemeForcing(unittest.TestCase):
     def test_layout_reads_theme_from_the_query_string(self):
         html = bt_pages.layout("T", "<p>x</p>")
-        self.assertIn("get('theme')", html)
-        self.assertIn("dataset.theme=t", html)
-        self.assertLess(html.index("get('theme')"), html.index("style.css"))   # before paint: no flash of the wrong theme
+        script = (Path(__file__).resolve().parents[2] / "assets" / "theme.js").read_text(encoding="utf-8")
+        self.assertIn('/static/theme.js', html)
+        self.assertIn("get('theme')", script)
+        self.assertIn("dataset.theme = t", script)
+        self.assertLess(html.index("/static/theme.js"), html.index("style.css"))  # before paint: no wrong-theme flash
 
     def test_both_forced_themes_exist_in_the_stylesheet(self):
         self.assertIn(':root[data-theme="dark"]', CSS)
@@ -38,8 +40,9 @@ class VendoredComponents(unittest.TestCase):
 
     def test_layout_loads_it_locally_and_marks_the_dark_theme_class(self):
         html = bt_pages.layout("T", "x")
+        theme = (Path(__file__).resolve().parents[2] / "assets" / "theme.js").read_text(encoding="utf-8")
         self.assertIn('/static/vendor/shoelace-2.20.1/shoelace-autoloader.js', html)
-        self.assertIn("sl-theme-dark", html)
+        self.assertIn("sl-theme-dark", theme)
         self.assertNotIn("cdn.jsdelivr", html)
 
     def test_no_runtime_cdn_in_our_own_pages_and_assets(self):
