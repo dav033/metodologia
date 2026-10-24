@@ -12,6 +12,7 @@ PRIVATE_SKILLS = {
     "agents/planner/skills/wbs-dag-decomposition/SKILL.md",
     "agents/planner/skills/plan-mermaid-view/SKILL.md",
     "agents/planner/skills/adversarial-plan-review/SKILL.md",
+    "agents/planner/skills/functional-subplan-decomposition/SKILL.md",
 }
 
 
@@ -23,7 +24,7 @@ class PlannerProfileTests(unittest.TestCase):
             for name in PRIVATE_SKILLS
         }
 
-    def test_profile_references_exactly_its_four_private_skills(self):
+    def test_profile_references_exactly_its_five_private_skills(self):
         references = set(re.findall(r"`(agents/planner/skills/[^`]+)`", self.profile))
         self.assertEqual(references, PRIVATE_SKILLS)
 
@@ -64,7 +65,7 @@ class PlannerProfileTests(unittest.TestCase):
 
     def test_profile_names_schema_1_2_fields_and_history_command(self):
         for expected in (
-            "schema 1.2.0", "`covers`", "`interfaces`", "`kind`", "`category`",
+            "schema 1.2.0", "schema 1.3.0", "`covers`", "`interfaces`", "`kind`", "`category`",
             "plan-json history --kind <kind>",
         ):
             self.assertIn(expected, self.profile)
