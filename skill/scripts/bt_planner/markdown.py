@@ -61,7 +61,8 @@ def _list(raw: str | None, *, paths: bool) -> list[str] | None:
 
 NEAR_MISS_KEYS = {"repository": "repo", "depends": "after", "depends_on": "after", "dependencies": "after",
                   "deps": "after", "verification": "verify", "test": "verify", "tests": "verify", "file": "files",
-                  "paths": "files", "resource": "resources", "shared_resources": "resources", "cover": "covers"}
+                  "paths": "files", "resource": "resources", "shared_resources": "resources", "cover": "covers",
+                  "subplan_id": "subplan", "ui_work": "ui"}
 NEAR_TASK_RE = re.compile(r"^\s*[-*]\s+\[[ xX]\]\s+[*_`]*([Tt][-_.]?[0-9][\w.-]*?)[*_`]*(?:\s|$)")
 
 
@@ -106,10 +107,23 @@ def parse_task_line(rest: str, problems: list[str] | None = None) -> dict:
     kind = fields.get("kind") or None
     if "kind" in fields and kind is None:
         issues.append("kind: needs a non-empty Scheduler-supported kind")
-    return {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify, "after": after,
-            "files": files, "resources": resources, "covers": covers, "kind": kind,
-            "complexity": (fields.get("complexity") or fields.get("size") or "").lower() or None,
-            "risk": (fields.get("risk") or "").lower() or None}
+    result = {"title": parts[0].strip(), "repo": fields.get("repo") or None, "verify": verify, "after": after,
+              "files": files, "resources": resources, "covers": covers, "kind": kind,
+              "complexity": (fields.get("complexity") or fields.get("size") or "").lower() or None,
+              "risk": (fields.get("risk") or "").lower() or None}
+    if "subplan" in fields:
+        subplan = fields["subplan"].strip()
+        if re.fullmatch(r"SP-[1-9][0-9]*", subplan):
+            result["subplan"] = subplan
+        else:
+            issues.append("subplan: must be SP-n with a positive integer")
+    if "ui" in fields:
+        ui = fields["ui"].strip().lower()
+        if ui in ("yes", "no"):
+            result["ui"] = ui == "yes"
+        else:
+            issues.append("ui: must be yes or no")
+    return result
 
 
 def parse_document(text: str) -> dict:

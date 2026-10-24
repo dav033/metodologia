@@ -115,12 +115,17 @@ def _detail(raw: dict) -> dict[str, Any]:
 def _contract_structure(data: dict) -> tuple[list[dict], list[dict]]:
     milestones = [{"id": m.get("id"), "title": m.get("title"), "tasks": []}
                   for m in data.get("milestones") or [] if isinstance(m, dict)]
+    subplans = {item.get("id"): item.get("title") for item in data.get("subplans") or []
+                if isinstance(item, dict) and isinstance(item.get("id"), str)}
     tasks = []
     for raw in data.get("tasks") or []:
         if not isinstance(raw, dict):
             continue
         task = _blank_task(str(raw.get("id")), raw.get("title"), raw.get("milestone_id"))
         task.update({key: raw.get(key) for key in ("complexity", "scope", "risk", "kind")})
+        if subplans:
+            task["subplan_id"] = raw.get("subplan_id")
+            task["subplan_title"] = subplans.get(raw.get("subplan_id"))
         task["after"] = [str(a) for a in raw.get("after") or []]
         task["detail"] = _detail(raw)
         tasks.append(task)

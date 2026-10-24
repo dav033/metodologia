@@ -144,7 +144,7 @@ class PlanContractCompatibility(Isolated):
 
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", None):
             compatibility = scheduler_adapter.plan_compatibility_report(self.rdir)
-            with self.assertRaisesRegex(SystemExit, "PLAN_CONSUMER_INCOMPATIBLE"):
+            with self.assertRaisesRegex(SystemExit, "PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE"):
                 import bt_rounds
                 bt_rounds.plan_decide(self.rdir, True, "", "compat-test")
             self.assertEqual(planner.plan_status(self.rdir), "review")
@@ -153,19 +153,19 @@ class PlanContractCompatibility(Isolated):
                                              compatibility_report=compatibility), 2)
             self.assertEqual(planner.list_revisions(self.rdir), [])
 
-            self.assertTrue(any("PLAN_CONSUMER_INCOMPATIBLE" in problem
+            self.assertTrue(any("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE" in problem
                                 for problem in adapter.handoff_problems(
                                     self.rdir, compatibility_report=compatibility
                                 )))
             self.set_status("approved")
-            with self.assertRaisesRegex(SystemExit, "PLAN_CONSUMER_INCOMPATIBLE"):
+            with self.assertRaisesRegex(SystemExit, "PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE"):
                 adapter.freeze_approved(self.rdir, compatibility_report=compatibility)
             self.assertEqual(planner.list_revisions(self.rdir), [])
-            self.assertIn("PLAN_CONSUMER_INCOMPATIBLE", adapter.launch_problem(
+            self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.launch_problem(
                 self.rdir, freeze=True, forced=True, compatibility_report=compatibility
             ) or "")
             self.assertEqual(planner.list_revisions(self.rdir), [])
-            self.assertIn("PLAN_CONSUMER_INCOMPATIBLE", adapter.resume_problem(
+            self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.resume_problem(
                 self.rdir, {}, compatibility_report=compatibility
             ) or "")
 
@@ -175,6 +175,7 @@ class PlanContractCompatibility(Isolated):
             report = json.loads("\n".join(messages))
             compatibility = report["downstream_compatibility"]
             self.assertFalse(compatibility["supported"])
+            self.assertFalse(report["consumer_supported"])
             self.assertEqual(compatibility["planner"]["status"], "supported")
             self.assertEqual(set(compatibility["consumers"]), {"M1", "M2", "M6"})
             self.assertEqual(compatibility["consumers"]["M6"]["status"], "unknown")
@@ -182,6 +183,26 @@ class PlanContractCompatibility(Isolated):
         for module in (m1_plan, m2, m6_contracts):
             with self.subTest(consumer=module.__name__), patch.object(module, "PLAN_SCHEMA_CAPABILITIES", None):
                 self.assertFalse(scheduler_adapter.downstream_compatibility()["supported"])
+
+    def test_schema_13_requires_complete_capability_report_before_owner_approval(self):
+        plan = self.good_plan()
+        plan["schema_version"] = "1.3.0"
+        self._write(plan)
+        capabilities = scheduler_adapter.plan_compatibility_report(self.rdir)
+        self.assertFalse(capabilities["supported"])
+        self.set_status("review")
+        before = (self.rdir / "PLAN.md").read_bytes()
+        with self.assertRaisesRegex(SystemExit, "PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE"):
+            import bt_rounds
+            bt_rounds.plan_decide(self.rdir, True, "", "compat-test")
+        self.assertEqual((self.rdir / "PLAN.md").read_bytes(), before)
+        self.assertEqual(planner.list_revisions(self.rdir), [])
+        self.assertFalse((self.rdir / "plan-revisions").exists())
+
+        malformed = {"required_schema_version": "1.3.0", "supported": True,
+                     "planner": {"status": "supported"}, "consumers": {}}
+        problem = adapter.plan_consumer_problem(self.rdir, compatibility_report=malformed)
+        self.assertTrue(problem.startswith("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE:"), problem)
 
     def test_rollback_restores_frozen_1_1_bytes_without_rewriting_hash(self):
         _legacy, legacy_bytes = self._legacy_plan()
@@ -193,7 +214,7 @@ class PlanContractCompatibility(Isolated):
         self.good_plan()
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", frozenset()):
             compatibility = scheduler_adapter.plan_compatibility_report(self.rdir)
-            self.assertIn("PLAN_CONSUMER_INCOMPATIBLE", adapter.launch_problem(
+            self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.launch_problem(
                 self.rdir, freeze=False, compatibility_report=compatibility
             ) or "")
 

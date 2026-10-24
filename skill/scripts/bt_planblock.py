@@ -34,6 +34,26 @@ def _cell(value: Any) -> str:
     return "—" if value in (None, "") else str(value).replace("|", "/").replace("\n", " ")
 
 
+def _task_groups(tasks: list[dict[str, Any]]) -> list[tuple[str | None, str | None, list[dict[str, Any]]]]:
+    """Preserve legacy flat rendering; group 1.3 tasks and leave composition tasks visible."""
+    if not any(task.get("subplan_id") for task in tasks):
+        return [(None, None, tasks)]
+    groups: dict[str, list[dict[str, Any]]] = {}
+    titles: dict[str, str | None] = {}
+    unassigned = []
+    for task in tasks:
+        sid = task.get("subplan_id")
+        if not isinstance(sid, str) or not sid:
+            unassigned.append(task)
+            continue
+        groups.setdefault(sid, []).append(task)
+        titles.setdefault(sid, task.get("subplan_title"))
+    result = [(sid, titles[sid], grouped) for sid, grouped in groups.items()]
+    if unassigned:
+        result.append(("Sin subplan", None, unassigned))
+    return result
+
+
 def _level(value: str | None) -> str:
     return _LEVEL.get(value or "", "—")
 
@@ -55,15 +75,21 @@ def render_block(status: dict[str, Any], generated_at: str | None = None) -> str
         progress = milestone["progress"]
         title = f" — {_cell(milestone.get('title'))}" if milestone.get("title") else ""
         lines += ["", f"**{_cell(milestone['id'])}{title}** · dificultad {_level(milestone.get('difficulty'))} · "
-                      f"{progress['done']}/{progress['total']}", "",
-                  "| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |",
-                  "|---|---|---|---|---|---|---|"]
-        for task in milestone["tasks"]:
-            attempt = task.get("attempt") or {}
-            lines.append("| " + " | ".join((
-                _cell(task["id"]), _cell(task.get("title")), _level(task.get("complexity")),
-                _STATE.get(task["state"], task["state"]), _cell(attempt.get("model_requested")),
-                _cell(attempt.get("account") or attempt.get("account_ref")), str(task.get("attempts") or 0))) + " |")
+                      f"{progress['done']}/{progress['total']}"]
+        for subplan, subplan_title, tasks in _task_groups(milestone["tasks"]):
+            if subplan is not None:
+                label = f"**{_cell(subplan)}"
+                if subplan_title:
+                    label += f" — {_cell(subplan_title)}"
+                lines += ["", label + "**"]
+            lines += ["", "| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |",
+                      "|---|---|---|---|---|---|---|"]
+            for task in tasks:
+                attempt = task.get("attempt") or {}
+                lines.append("| " + " | ".join((
+                    _cell(task["id"]), _cell(task.get("title")), _level(task.get("complexity")),
+                    _STATE.get(task["state"], task["state"]), _cell(attempt.get("model_requested")),
+                    _cell(attempt.get("account") or attempt.get("account_ref")), str(task.get("attempts") or 0))) + " |")
     lines.append(STATUS_END)
     return "\n".join(lines) + "\n"
 
@@ -140,11 +166,15 @@ def status_table(status: dict[str, Any]) -> str:
         progress = milestone["progress"]
         out.append(f"  {_cell(milestone['id'])} {_cell(milestone.get('title'))} · "
                    f"{_level(milestone.get('difficulty'))} · {progress['done']}/{progress['total']}")
-        for task in milestone["tasks"]:
-            attempt = task.get("attempt") or {}
-            out.append(f"    {task['id']} {_STATE.get(task['state'], task['state'])} · {_level(task.get('complexity'))}"
-                       f" · {_cell(attempt.get('model_requested'))} · {_cell(attempt.get('account') or attempt.get('account_ref'))}"
-                       f" · intentos {task.get('attempts') or 0} · {_cell(task.get('title'))}")
+        for subplan, subplan_title, tasks in _task_groups(milestone["tasks"]):
+            if subplan is not None:
+                out.append(f"    {subplan}" + (f" {_cell(subplan_title)}" if subplan_title else ""))
+            for task in tasks:
+                attempt = task.get("attempt") or {}
+                indent = "      " if subplan is not None else "    "
+                out.append(f"{indent}{task['id']} {_STATE.get(task['state'], task['state'])} · {_level(task.get('complexity'))}"
+                           f" · {_cell(attempt.get('model_requested'))} · {_cell(attempt.get('account') or attempt.get('account_ref'))}"
+                           f" · intentos {task.get('attempts') or 0} · {_cell(task.get('title'))}")
     return "\n".join(out)
 
 

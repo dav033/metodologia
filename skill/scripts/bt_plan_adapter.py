@@ -1,9 +1,4 @@
-"""The only place where the methodology touches the planner module (`bt_planner`).
-
-Dependency direction: methodology -> this adapter -> bt_planner. The module knows nothing about the methodology; the
-methodology-specific meaning (which PLAN.md status words mean "approved", how a requirement folder maps to a plan id,
-what to do on a launch) lives here. No other file may import `bt_planner` (test_plan_integration enforces it).
-"""
+"""Methodology → adapter → `bt_planner`; sole importer boundary is enforced by test_plan_integration."""
 from __future__ import annotations
 
 import json
@@ -97,38 +92,63 @@ def second_auditor_problem(plan_path: Path) -> str | None:
 
 def plan_consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
                           plan_path: Path | None = None) -> str | None:
-    """The consumer gate (capability report) and the owner's gate policies for the plan."""
+    """Apply downstream capability and owner policy gates."""
     return _consumer_problem(rdir, compatibility_report=compatibility_report, plan_path=plan_path) or \
         second_auditor_problem(plan_path or (Path(rdir) / planner.PLAN_JSON))
 
 
 def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
                       plan_path: Path | None = None) -> str | None:
-    """Evaluate a caller-supplied capability report without importing downstream consumers here."""
+    """Evaluate a caller-supplied capability report without importing downstream consumers."""
     version = _schema_version(plan_path or (Path(rdir) / planner.PLAN_JSON))
     if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
         return None
     compatibility = compatibility_report if isinstance(compatibility_report, dict) else {}
-    if compatibility.get("required_schema_version") == version[0] and compatibility.get("supported") is True:
-        return None
-    consumers = compatibility.get("consumers")
-    consumers = consumers if isinstance(consumers, dict) else {}
-    unavailable = []
+    consumers = compatibility.get("consumers") if isinstance(compatibility.get("consumers"), dict) else {}
+    unavailable, supported = [], []
     if compatibility.get("required_schema_version") != version[0]:
         reported = compatibility.get("required_schema_version")
         unavailable.append(f"capability report (schema {reported if isinstance(reported, str) else 'unknown'})")
     for name in ("M1", "M2", "M6"):
         consumer = consumers.get(name)
         status = consumer.get("status") if isinstance(consumer, dict) else "unknown"
-        if status != "supported":
-            unavailable.append(f"{name} ({status if isinstance(status, str) else 'unknown'})")
-    planner_status = compatibility.get("planner")
-    planner_status = planner_status.get("status") if isinstance(planner_status, dict) else "unknown"
-    if not isinstance(planner_status, str) or planner_status != "supported":
-        unavailable.insert(0, f"Planner ({planner_status if isinstance(planner_status, str) else 'unknown'})")
-    return (f"PLAN_CONSUMER_INCOMPATIBLE: PLAN.json schema {version[0]} requires compatible M1/M2/M6 consumers; "
+        versions = consumer.get("supported_schema_versions") if isinstance(consumer, dict) else None
+        valid = isinstance(versions, list) and all(_schema_version_value(item) for item in versions)
+        if not valid or (status == "supported" and version[0] not in versions):
+            status = "malformed"
+        if status not in ("supported", "unsupported", "unknown"):
+            status = "malformed"
+        supported.append(status == "supported")
+        if status != "supported": unavailable.append(f"{name} ({status})")
+    planner_info = compatibility.get("planner")
+    planner_status = planner_info.get("status") if isinstance(planner_info, dict) else "unknown"
+    planner_version = _schema_version_value(planner_info.get("schema_version")) if isinstance(planner_info, dict) else None
+    if planner_version is None or (planner_status == "supported" and (planner_version[0] != version[1][0]
+                                                                        or planner_version < version[1])):
+        planner_status = "malformed"
+    if planner_status not in ("supported", "unsupported", "unknown"):
+        planner_status = "malformed"
+    if planner_status != "supported":
+        unavailable.insert(0, f"Planner ({planner_status})")
+    if type(compatibility.get("supported")) is not bool or compatibility["supported"] != (planner_status == "supported" and all(supported)):
+        unavailable.append("capability report (malformed or inconsistent summary)")
+    if not unavailable:
+        return None
+    return (f"PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE: PLAN.json schema {version[0]} requires compatible M1/M2/M6 consumers; "
             f"unsupported or unknown: {', '.join(unavailable)}. Check `bitacora.py plan-json compat "
             f"{plan_id(rdir)}` before approval or execution")
+
+
+def _schema_version_value(value: object) -> tuple[int, int, int] | None:
+    match = _SCHEMA_VERSION_RE.fullmatch(value) if isinstance(value, str) else None
+    return tuple(int(part) for part in match.groups()) if match else None
+
+
+def _compat_consumer_supported(rdir: Path, compatibility_report: dict[str, object] | None) -> bool:
+    """Compat's publication-readiness answer; plans without a PLAN.json remain legacy-compatible."""
+    path = Path(rdir) / planner.PLAN_JSON
+    return not path.exists() or (_schema_version(path) is not None and
+                                 _consumer_problem(rdir, compatibility_report=compatibility_report, plan_path=path) is None)
 
 
 def plan_id(rdir: Path) -> str:
@@ -229,6 +249,7 @@ def run_cli(action: str, rdir: Path, *, force: bool = False, as_json: bool = Fal
             return 2
         if compatibility_report is not None:
             report["downstream_compatibility"] = compatibility_report
+        report["consumer_supported"] = _compat_consumer_supported(rdir, compatibility_report)
         emit(json.dumps(report, indent=1, ensure_ascii=False))
         return 0
     if action in {"freeze", "bind"}:
@@ -372,6 +393,8 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
     """Approval gate: a PLAN.json that is invalid, or contradicts PLAN.md, cannot be approved. None for legacy plans."""
     if not (Path(rdir) / planner.PLAN_JSON).exists():
         return None
+    if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
+        return problem
     try:
         report = planner.check(rdir, plan_id=plan_id(rdir), repo_roots=repo_roots(rdir), verify_files=True,
                                ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir),
@@ -380,7 +403,7 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if report.ok:
-        return (None if allow_unmapped else mapping_problem(rdir)) or plan_consumer_problem(rdir, compatibility_report=compatibility_report)
+        return None if allow_unmapped else mapping_problem(rdir)
     more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
     return ("PLAN_INVALID: the plan cannot be approved while PLAN.json has errors: " + "; ".join(report.errors[:5]) +
             more + f" (bitacora.py plan-json check {plan_id(rdir)})")

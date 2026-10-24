@@ -80,6 +80,34 @@ class Contradictions(PlanDir):
         self.assertIn("T1.covers: PLAN.md has ['R2'], PLAN.json has ['R1']", out)
         self.assertIn("T1.kind: PLAN.md says 'audit', PLAN.json says 'implement'", out)
 
+    def test_schema_13_membership_and_ui_annotations_round_trip(self):
+        self.plan["schema_version"] = "1.3.0"
+        self.plan["tasks"][0]["subplan_id"] = "SP-1"
+        self.plan["tasks"][0]["ui"] = True
+        self.write(self.plan)
+        text = PLAN_MD.format(status="approved").replace(
+            "verify: `pytest tests/auth -q`",
+            "verify: `pytest tests/auth -q` · subplan: SP-1 · ui: yes",
+        )
+        self.md(text=text)
+        self.assertEqual(self.sync.consistency(self.rdir, self.plan), [])
+
+    def test_schema_13_reports_omitted_and_mismatched_membership_and_ui(self):
+        self.plan["schema_version"] = "1.3.0"
+        self.plan["tasks"][0]["subplan_id"] = "SP-1"
+        self.plan["tasks"][0]["ui"] = True
+        self.write(self.plan)
+        out = "\n".join(self.sync.consistency(self.rdir, self.plan))
+        self.assertIn("T1.subplan_id: PLAN.md says None, PLAN.json says 'SP-1'", out)
+        self.assertIn("T1.ui: PLAN.md does not declare ui, PLAN.json says True", out)
+
+        text = PLAN_MD.format(status="approved").replace(
+            "verify: `pytest tests/auth -q`", "verify: `pytest tests/auth -q` · subplan: SP-2 · ui: no")
+        self.md(text=text)
+        out = "\n".join(self.sync.consistency(self.rdir, self.plan))
+        self.assertIn("T1.subplan_id: PLAN.md says 'SP-2', PLAN.json says 'SP-1'", out)
+        self.assertIn("T1.ui: PLAN.md says False, PLAN.json says True", out)
+
     def test_legacy_schema_does_not_compare_new_markdown_fields(self):
         self.plan["schema_version"] = "1.1.0"
         self.write(self.plan)
