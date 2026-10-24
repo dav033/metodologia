@@ -99,21 +99,24 @@ be simulated with `bt_scheduler_core.simulators`.
   The owner loop drains M3 output into M4 and delivers its audit-only incidents through M1; M5 and M6 use M1's
   existing recovery and verification ports. The legacy launcher stays separate, and low-level compositions retain
   their optional port seam. `NEEDS_REVIEW` remains operator-owned.
-- F4-9 adds an opt-in owner runtime for frozen `1.3.0` plans that declare subplans. It creates a dedicated
-  `.state/composition/<project>-<REQ>.db`, bound to project, requirement, M1 run, plan revision/hash and repository
-  identity. Accepted M3 line refs and M6 result manifests are reconciled through public M1/M3/M6 and composition
-  adapters; an M1 version fact is current only while its accepted audit/member-attempt identity remains current.
-  Composition candidates are built in declared plan order and their commit/tree, manifest, contract identities and
-  environment identity are passed to M6. Multi-repository plans fail closed with
-  `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
-  The planner default remains `1.2.0`: the owner runtime is not enabled by default because full stub-agent owner E2E,
-  M6 review hold/resume and composition-frontier producer wiring remain unproven. M1 exposes an operation for applying
-  an explicit M5 frontier to exactly its named tasks, bound to the current published composition manifest and tree;
-  it does not expand descendants. Owner M6 checks resource names against the process environment and
+- F4-9 adds an opt-in owner runtime for frozen `1.3.0` plans that declare subplans. `bt_scheduler_run.py` owns the
+  reconciliation loop; `bt_scheduler_owner_composition.py` handles subplan versions, durable gate reservations and
+  verified publication, while `bt_scheduler_owner_propagation.py` derives declared downstream consumers and calls
+  M5's `composition_propagation` port before applying the exact returned frontier through M1. It creates a dedicated
+  `.state/composition/<project>-<REQ>.db` and owned workspaces under `.state/composition/workspaces/`, bound to the
+  project, requirement, M1 run, plan revision/hash and repository identity. Accepted M3 line refs and M6 result
+  manifests are reconciled through public M1/M3/M6 and composition adapters; stale versions are filtered, candidates
+  are reserved once and loaded by manifest identity after restart, and per-gate errors emit owner attention records.
+  M6 PASS/FAIL proofs bind the candidate, manifest, contract identities and tree. Multi-repository plans fail closed
+  with `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
+  The planner default remains `1.2.0`: full stub-agent owner E2E and M6 review hold/resume remain unproven. M1 exposes
+  an operation for applying an explicit M5 frontier to exactly its named tasks, bound to the current published
+  composition manifest and tree; it does not expand descendants. Owner M6 checks resource names against the process environment and
   `~/.config/flow/secrets.env` without persisting values. Sandbox needs no authorization; staging and production
   require a matching entry in `<bitacora root>/<project>/verification-policy.json`, and missing, unreadable or
-  unmatched policy denies before command launch. The `m5.demonstrated-frontier/1` producer remains unwired, and the
-  defaults stay at 1.2.0 until the remaining owner acceptance tests pass.
+  unmatched policy denies before command launch. The owner propagation producer is wired for changed published
+  subplan versions included by a published composition; M5 evidence must carry stable evidence ids, and M1 applies
+  actions idempotently by change id. The defaults stay at 1.2.0 until the remaining owner acceptance tests pass.
 
 ### Verification inputs, analyst stops and audit ledgers
 
@@ -306,7 +309,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   and evidence of each finding even when the system did not send it back itself;
 - **proportional verification** (REQ-030, `bt_scheduler_quality/reuse.py`, `bt_attestation`): see the quality README. The pass cache key leaves out the report files a `test`/`audit` task itself writes (`reuse.own_outputs`; `verifier.cache_ignores_outputs`, on): REQ-020's T14a rewrote `docs/req-020/integration-results.json` at every attempt, so three real attempts had 3 distinct trees but ONE tree ignoring that file, and its 10-minute `npm run gate` was paid each time. A check that names the file keeps it in its key; an implementing task's paths are never ignored. The
   environment guards are configurable and name their cause: `verifier.max_workspace_mb`, `scheduler.min_free_mb`;
-- **M5 reason-aware recovery** (`bt_scheduler_recovery_adapter.py`): the optional `m6_evidence_reader` loads the persisted content-addressed M6 manifest and checks its request identity, revision, token and captured `snapshot_sha` before passing a closed reason code into `m5.recovery-case/2`; the snapshot is the binding identity, while tree digests are informational unless executor facts provide a comparable tree id, in which case M5 compares them. Absent reason codes remain `UNCLASSIFIED` with `/1` policy behavior. External/environment blocks return fixed actionable codes before retry exhaustion and never enter code-retry history; a verification `TIMEOUT` retries once, counted by reason across the task history; flaky and not-run evidence block; code failures use bounded rework; PASS never accepts. The optional `composition_propagation` port returns a validated `m5.demonstrated-frontier/1` with one preserved action identity (`reverify`, `reintegrate`, `audit`, `adapt_contract`, `modify`, `reimplement`) and only current scheduler task ids other than the source task; internal changes carry `none` and an empty frontier. M5 does not derive descendants or mutate M1. F4-9 must provide both ports and any M1 application/wait operation;
+- **M5 reason-aware recovery** (`bt_scheduler_recovery_adapter.py`): the optional `m6_evidence_reader` loads the persisted content-addressed M6 manifest and checks its request identity, revision, token and captured `snapshot_sha` before passing a closed reason code into `m5.recovery-case/2`; the snapshot is the binding identity, while tree digests are informational unless executor facts provide a comparable tree id, in which case M5 compares them. Absent reason codes remain `UNCLASSIFIED` with `/1` policy behavior. External/environment blocks return fixed actionable codes before retry exhaustion and never enter code-retry history; a verification `TIMEOUT` retries once, counted by reason across the task history; flaky and not-run evidence block; code failures use bounded rework; PASS never accepts. The optional `composition_propagation` port returns a validated `m5.demonstrated-frontier/1` with one preserved action identity (`reverify`, `reintegrate`, `audit`, `adapt_contract`, `modify`, `reimplement`) and only current scheduler task ids other than the source task; internal changes carry `none` and an empty frontier. M5 does not derive descendants or mutate M1. The F4-9 owner derives declared consumers in `bt_scheduler_owner_propagation.py` and applies actions through M1's idempotent demonstrated-frontier operation;
 - **a refused verification order** (`Ack.permanent`, `bt_scheduler_core/dispatch.py`, `bt_scheduler_recovery_adapter.py`): the M6 adapter marks a malformed order, one that differs from the approved plan and an idempotency conflict as permanent; the core then fails the attempt (`verify rejected: <code>`) instead of re-sending it at every lease expiry, M5 blocks it as `m5:verify_rejected_<code>` (not owner-only, the work done stays for the retry) and the self-healing sees the text. A busy store stays transient. The watcher's notice for an attempt stuck in `verifying` after 3 identical rejections remains for ports that do not set the flag;
 - **checks that map to criteria** (`bt_planner.quality.unmapped_checks`, `bt_plan_adapter.mapping_problem`): the verifier compares a check's `purpose` with the criteria of its task by exact text. Over four real runs the two most frequent stops were `CHECK_UNMAPPED` (59) and `CRITERION_MANUAL` (45), and REQ-020's plan carried 37 unmapped checks, 2 criteria without a check and 11 proven only manually. `plan-json check` now warns for each unmapped check with its closest criterion; `plan-json freeze` (the approval) refuses unmapped checks and criteria without a check (`planner.require_mapped_checks`, on by default; `--force` approves anyway); revisions the scheduler makes itself and plans already frozen are not gated. The Planner agent's instructions carry the rule;
 - **self-healing** (REQ-030, `bt_scheduler_healing`, `bt_healing_classify`): the watchdog's `heal` runs a bounded cycle over the

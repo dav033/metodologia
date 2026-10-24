@@ -42,6 +42,14 @@ class GitSubprocessPort:
             raise GitCommandError(detail[-1] if detail else "git_command_failed")
         return result
 
+    def _run_bytes(self, *arguments: str, check: bool = True) -> subprocess.CompletedProcess[bytes]:
+        result = subprocess.run(self._command(*arguments), env=self._environment(),
+                                capture_output=True, text=False, check=False)
+        if check and result.returncode:
+            detail = result.stderr.decode("utf-8", "replace").strip().splitlines()
+            raise GitCommandError(detail[-1] if detail else "git_command_failed")
+        return result
+
     def _command(self, *arguments: str) -> list[str]:
         return ["git", "-c", "core.hooksPath=/dev/null", "-c", "gc.auto=0", "-c", "commit.gpgSign=false",
                 "-C", str(self.repository), *arguments]
@@ -85,10 +93,10 @@ class GitSubprocessPort:
         fields = entry.stdout.rstrip("\n").split("\t", 1)[0].split()
         if len(fields) != 3 or fields[0] not in {"100644", "100755"} or fields[1] != "blob":
             return None
-        body = self._run("cat-file", "blob", fields[2], check=False)
+        body = self._run_bytes("cat-file", "blob", fields[2], check=False)
         if body.returncode:
             return None
-        return hashlib.sha256(body.stdout.encode("utf-8")).hexdigest()
+        return hashlib.sha256(body.stdout).hexdigest()
 
     def merge_tree(self, base: str, ours: str, theirs: str) -> GitResult:
         result = self._run("merge-tree", "--write-tree", "--name-only", "--no-messages",
@@ -236,5 +244,10 @@ def propagate(change: PropagationChange, consumers: Sequence[dict[str, object]],
     return _propagate(change, consumers, evidence)
 
 
+def get_candidate(store: Store, candidate_id: str):
+    """Load a durable candidate reservation by its manifest identity."""
+    return store.get_candidate(candidate_id)
+
+
 __all__ = ["Action", "EvidenceKey", "GitCommandError", "GitSubprocessPort", "PropagationChange", "VerdictProof",
-           "create_engine", "propagate"]
+           "create_engine", "get_candidate", "propagate"]

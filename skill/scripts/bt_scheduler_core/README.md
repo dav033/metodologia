@@ -134,8 +134,10 @@ retry budget only after M3 confirms execution began. Schema 3 carries guarded re
 revision-application journal; schema 2 introduced
 durable per-task route recommendations and the completed-map marker. These fields remain available after the upgrades.
 
-The composition owner passes real `propagate` actions through M5's `composition_propagation` port and applies each
-action with its exact task list, evidence refs, and published composition id/manifest/tree. M1 validates and journals
+The wired caller is `bt_scheduler_run.py` through `bt_scheduler_owner_composition.py` and
+`bt_scheduler_owner_propagation.py`: it derives changes from published subplan versions in a published composition,
+passes real `propagate` actions through M5's `composition_propagation` port, and applies each action with its exact
+task list, evidence refs, and published composition id/manifest/tree. M1 validates and journals
 each identity idempotently, refuses live attempts and touches only listed tasks. Multiple actions demonstrated against
 the same composition snapshot apply atomically and retain their distinct operation labels; M1 never infers descendants.
 

@@ -347,11 +347,17 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
             last_heartbeat = 0.0
             last_m4_pending_notice = 0.0
             while True:
-                report = scheduler.step()
                 owner_composition = getattr(wiring, "composition_runtime", None)
                 if owner_composition is not None:
+                    owner_composition.reserve_candidates()
+                report = scheduler.step()
+                if owner_composition is not None:
+                    owner_composition.reserve_candidates()
                     owner_composition.reconcile_subplans()
                     owner_composition.reconcile_compositions()
+                    owner_composition.reconcile_propagation()
+                    for identity, reason in owner_composition.drain_attentions():
+                        print(f"OWNER_COMPOSITION_ATTENTION: {identity}: {reason}", file=sys.stderr)
                 steps += 1
                 recovery_tick = getattr(wiring.recovery, "tick_diagnostic_recovery", None)
                 if callable(recovery_tick):

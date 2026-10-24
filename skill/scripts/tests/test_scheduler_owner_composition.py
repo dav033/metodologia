@@ -7,6 +7,7 @@ import tempfile
 import unittest
 import hashlib
 import json
+from unittest.mock import patch
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -16,6 +17,7 @@ from bt_scheduler_owner_composition import CompositionRuntimeError, OwnerComposi
 import bt_scheduler_adapter as m1_adapter
 from bt_scheduler_recovery_adapter import RecoveryAdapter
 from bt_composition_adapter import PropagationChange
+from bt_composition_adapter import GitSubprocessPort
 
 m1 = m1_adapter.core
 
@@ -48,6 +50,81 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
                                                plan=self._plan(("main", "web")), repositories={"main": repo},
                                                verifier_id="m6")
 
+    def test_create_refuses_non_file_contract_paths_and_non_cumulative_gate_chains(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = self._repo(Path(directory) / "repo")
+            plan = self._plan()
+            producer = SimpleNamespace(expected_paths=("contracts/**",))
+            plan.task = lambda _task_id: producer
+            plan.subplans = (SimpleNamespace(id="SP-1", produces=({"contract": "api", "version": 1,
+                                                                      "defined_by": "T1"},), ui=None),)
+            plan.composition_gates = ()
+            with self.assertRaisesRegex(CompositionRuntimeError, "DEFINED_BY_PATHS_NOT_EXACT_FILES"):
+                OwnerCompositionRuntime.create(rdir=Path(directory) / "bitacora", project="p", req="REQ-1",
+                                               plan=plan, repositories={"main": repo}, verifier_id="m6")
+
+            plan.subplans = (SimpleNamespace(id="SP-1", produces=({"contract": "api", "version": 1,
+                                                                      "defined_by": "T1"},), ui=None),
+                             SimpleNamespace(id="SP-2", produces=(), ui=None))
+            plan.tasks = (SimpleNamespace(id="T1", repository="main", expected_paths=("src/api.md",)),)
+            plan.task = lambda _task_id: plan.tasks[0]
+            plan.composition_gates = (SimpleNamespace(subplans=("SP-1", "SP-2"), task="G1"),
+                                      SimpleNamespace(subplans=("SP-2",), task="G2"))
+            with self.assertRaisesRegex(CompositionRuntimeError, "GATE_CHAIN_UNSUPPORTED"):
+                OwnerCompositionRuntime.create(rdir=Path(directory) / "bitacora", project="p", req="REQ-1",
+                                               plan=plan, repositories={"main": repo}, verifier_id="m6")
+
+    def test_workspace_lives_under_owned_run_state_directory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self._repo(root / "repo")
+            rdir = root / "bitacora" / "p" / "requirements" / "REQ-1-name"
+            owner = OwnerCompositionRuntime.create(rdir=rdir, project="p", req="REQ-1", plan=self._plan(),
+                                                   repositories={"main": repo}, verifier_id="m6")
+            self.assertEqual(owner.workspace_root, rdir.parents[2] / ".state" / "composition" / "workspaces" / "p-REQ-1")
+            marker = json.loads((owner.workspace_root / ".owner.json").read_text(encoding="utf-8"))
+            self.assertEqual(marker["plan_id"], "REQ-1")
+            owner.close()
+
+    def test_blob_sha256_preserves_non_utf8_blob_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = self._repo(Path(directory) / "repo")
+            (repo / "binary-contract").write_bytes(b"contract\xff\r\n")
+            subprocess.run(["git", "-C", str(repo), "add", "binary-contract"], check=True)
+            subprocess.run(["git", "-C", str(repo), "-c", "user.name=Test", "-c", "user.email=test@example.invalid",
+                            "commit", "-qm", "binary"], check=True)
+            port = GitSubprocessPort(repo, Path(directory) / "workspaces")
+            head = port.rev_parse("HEAD")
+            self.assertEqual(port.blob_sha256(head, "binary-contract"),
+                             hashlib.sha256(b"contract\xff\r\n").hexdigest())
+
+    def test_identity_query_loads_the_manifest_reservation_without_building(self):
+        candidate = SimpleNamespace(id="C1", integrated_commit="1" * 40, members={"SP-1": 1},
+                                    manifest_sha256="2" * 64)
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        owner.scheduler = object()
+        owner.plan = SimpleNamespace(revision=2, subplans=(SimpleNamespace(id="SP-1"),),
+                                      composition_gates=(SimpleNamespace(task="G1", subplans=("SP-1",)),))
+        owner.store = SimpleNamespace(get_candidate=lambda _id: candidate)
+        owner.candidates = {}
+        with patch("bt_scheduler_owner_composition.m1_adapter.subplan_publication_facts",
+                   return_value={"SP-1": {"version": 1, "revision": 2}}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.composition_facts",
+                   return_value={"C1": {"members": {"SP-1": 1}, "state": "candidate"}}), \
+             patch("bt_scheduler_owner_composition.bt_composition_adapter.get_candidate",
+                   return_value=candidate), \
+             patch.object(OwnerCompositionRuntime, "_members_for_gate", return_value=({"SP-1": 1}, ("SP-1",))):
+            self.assertEqual(owner.composition_base("G1"), "1" * 40)
+
+    def test_stale_publication_version_is_not_used_for_candidate_reservation(self):
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        owner.scheduler = object()
+        owner.plan = SimpleNamespace(revision=2, subplans=(SimpleNamespace(id="SP-1"),),
+                                      composition_gates=(SimpleNamespace(task="G1", subplans=("SP-1",)),))
+        with patch("bt_scheduler_owner_composition.m1_adapter.subplan_publication_facts",
+                   return_value={"SP-1": {"version": 1, "revision": 1}}):
+            self.assertEqual(owner._members_for_gate(owner.plan.composition_gates[0]), ({}, ()))
+
     def test_same_run_revision_cannot_rebind_composition_store_to_another_repo(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -61,6 +138,9 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
                                         audit_log=lambda: [])
             owner.bind_scheduler(scheduler)
             owner.close()
+            resumed = OwnerCompositionRuntime.create(**args, repositories={"main": first})
+            resumed.bind_scheduler(scheduler)
+            resumed.close()
             other = OwnerCompositionRuntime.create(**args, repositories={"main": second})
             with self.assertRaisesRegex(CompositionRuntimeError, "OWNER_COMPOSITION_STORE_IDENTITY_MISMATCH"):
                 other.bind_scheduler(scheduler)
