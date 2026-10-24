@@ -35,6 +35,7 @@ from pathlib import Path
 from typing import Any
 
 import bt_agents
+from bt_design_scope import designer_scope_refusal  # noqa: F401  (public through this adapter)
 import bt_agy
 import bt_core
 import bt_driver
@@ -62,7 +63,6 @@ BINARIES = {"claude": "claude", "codex": "codex", "antigravity": bt_agy.BIN}
 DIRECT = re.compile(r"^direct:(?P<provider>[a-z]+)/(?P<model>[A-Za-z0-9._:-]+)(?:@(?P<profile>[A-Za-z0-9._-]+))?"
                     r"(?:#(?P<effort>[a-z]+))?$")
 _PLAN_SHA256 = re.compile(r"[0-9a-f]{64}\Z")
-_DESIGN_SCOPE_VERSION = (1, 3, 0)
 # efforts each provider accepts: Claude takes the catalogue ladder; Codex has no "max"; an Antigravity effort is part of the model id
 EFFORTS_OF = {"claude": tuple(bt_agents.EFFORTS), "codex": tuple(e for e in bt_agents.EFFORTS if e != "max"), "antigravity": ()}
 # Parent-session state is never handed down to an agent (the profile layer already does this for Antigravity), and a route
@@ -92,48 +92,6 @@ def _max_turns() -> int:
 
     value = bt_config.get("scheduler.max_turns", 120)
     return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else 120
-
-
-def designer_scope_refusal(repository: Path | str, base_sha: str, snapshot_sha: str, *, kind: str,
-                           role: str, preview_enabled: bool = False,
-                           plan_version: str = "1.3.0") -> tuple[str, tuple[str, ...]] | None:
-    """Return the permanent refusal for a Designer result, comparing both sides of renames."""
-    try:
-        version = tuple(int(part) for part in plan_version.split("."))
-    except (AttributeError, ValueError):
-        return None
-    if version < _DESIGN_SCOPE_VERSION or (kind != "design" and role != "designer"):
-        return None
-    import subprocess
-
-    try:
-        done = subprocess.run(["git", "-C", str(repository), "diff", "--name-status", "-z", "-M", base_sha, snapshot_sha],
-                              capture_output=True, timeout=60, check=False)
-    except (OSError, subprocess.TimeoutExpired):
-        return "DESIGN_SCOPE_UNAVAILABLE", ()
-    if done.returncode:
-        return "DESIGN_SCOPE_UNAVAILABLE", ()
-    fields = done.stdout.decode("utf-8", "surrogateescape").split("\0")
-    changed = []
-    scope_violations = set()
-    index = 0
-    while index < len(fields) and fields[index]:
-        status = fields[index]
-        index += 1
-        count = 2 if status.startswith(("R", "C")) else 1
-        paths = fields[index:index + count]
-        changed.extend(paths)
-        if count == 2 and any(not path.startswith("design/") for path in paths):
-            scope_violations.update(paths)
-        index += count
-    offending = tuple(sorted(scope_violations | {path for path in changed if not path.startswith("design/")}))
-    if offending:
-        return "DESIGN_SCOPE_VIOLATION", offending
-    if not preview_enabled:
-        preview = tuple(sorted(path for path in set(changed) if path.startswith("design/preview/")))
-        if preview:
-            return "DESIGN_PREVIEW_DISABLED", preview
-    return None
 
 
 def _quota_deadline_is_fresh(value: object, now: float) -> bool:

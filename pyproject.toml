@@ -197,6 +197,7 @@ py-modules = [
   "bt_scheduler_decision_benchmark",
   "bt_scheduler_decisions",
   "bt_scheduler_executor_adapter",
+  "bt_design_scope",
   "bt_scheduler_executor_wiring",
   "bt_scheduler_healing",
   "bt_scheduler_integrator",
