@@ -48,6 +48,7 @@ import bt_cli_review
 import bt_cli_requirements_gate
 import bt_cli_plan
 import bt_cli_planner
+import bt_cli_knowledge
 
 # ---------------------------------------------------------------- CLI
 
@@ -110,6 +111,7 @@ def main() -> None:
     bt_cli_requirements_gate.add_parser(sub)
     bt_cli_plan.add_parser(sub)
     bt_cli_plan.add_status_parser(sub)
+    bt_cli_knowledge.add_parser(sub)
     bt_cli_planner.register(sub)
     bt_cli_delegate.register(sub)
     bt_cli_review.register(sub)
@@ -333,6 +335,8 @@ def main() -> None:
     project = resolve_project(cwd, None, a.project)
     if not project:
         sys.exit("No project: pass --project <name>, run inside a git repo, or create a .bitacora marker file.")
+    if a.cmd == "knowledge":
+        sys.exit(bt_cli_knowledge.dispatch(a, project, ROOT))
     pdir, created = ensure_project(project)
 
     if a.cmd in ("where", "init"):

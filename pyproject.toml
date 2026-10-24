@@ -25,7 +25,7 @@ bitacora-inventory = "migration_inventory:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_knowledge", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality"]
 py-modules = [
   "bitacora",
   "bt_agent_models",
@@ -50,6 +50,7 @@ py-modules = [
   "bt_cli_docs",
   "bt_cli_flows",
   "bt_cli_go",
+  "bt_cli_knowledge",
   "bt_cli_launch",
   "bt_cli_learn",
   "bt_cli_plan",
@@ -249,6 +250,7 @@ py-modules = [
 # test_package_install.py keeps py-modules complete against skill/scripts.
 [tool.setuptools.package-data]
 bt_planner = ["data/*.json", "README.md"]
+bt_knowledge = ["README.md"]
 plan_bench = ["data/*.json", "README.md"]
 bt_scheduler_core = ["README.md"]
 bt_scheduler_decision = ["api-contract.json", "README.md", "laya-requirements.in", "laya-requirements.lock"]
