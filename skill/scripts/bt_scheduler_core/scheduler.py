@@ -40,6 +40,7 @@ from .repository import StateRepository
 from .resources import claims_for, first_conflict
 from .simulators import FifoAssignment
 from .subplans import record_composition_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
+from .frontier import apply_demonstrated_frontier as apply_frontier
 from .states import ATTEMPT_LIVE, RunStatus
 from .states import AttemptState as A
 from .states import TaskState as T
@@ -203,6 +204,10 @@ class SchedulerCore:
     def snapshot(self) -> Snapshot:
         return self.read(lambda c: snapshot(self.plan, c.state))
 
+    def attempts_used(self, task_id: str) -> int:
+        """Current M1 code-retry usage, distinct from monotonically allocated attempt ids."""
+        return self.read(lambda ctx: recovery.attempts_used(ctx.state, task_id))
+
     def audit_log(self, since: int = 0) -> list[AuditEntry]:
         return self.repository.audit_log(since)
 
@@ -222,13 +227,25 @@ class SchedulerCore:
         self._wake.set()
 
     def record_composition(self, state: str, composition_id: str, members: Mapping[str, int],
-                           manifest_sha256: str, reason: str = "") -> None:
+                           manifest_sha256: str, reason: str = "", tree_digest: str = "") -> None:
         """Record candidate/publication/rejection evidence as an immutable audited observation."""
         if not isinstance(members, Mapping):
             raise SchedulerError("CONTRACT_VIOLATION", "composition members must be a mapping")
         self.write(lambda ctx: record_composition_fact(self.plan, ctx.state, ctx, state, composition_id,
-                                                       dict(members), manifest_sha256, reason))
+                                                       dict(members), manifest_sha256, reason, tree_digest))
         self._wake.set()
+
+    def apply_demonstrated_frontier(self, *, change_id: str, source_task_id: str, composition_id: str,
+                                    manifest_sha256: str, tree_digest: str, action: str,
+                                    task_ids: tuple[str, ...], evidence_refs: tuple[str, ...]) -> tuple[str, ...]:
+        """M1-owned, idempotent application of the exact frontier demonstrated by M5."""
+        moved = self.write(lambda ctx: apply_frontier(ctx, change_id=change_id, source_task_id=source_task_id,
+                                                      composition_id=composition_id,
+                                                      manifest_sha256=manifest_sha256, tree_digest=tree_digest,
+                                                      action=action, task_ids=task_ids,
+                                                      evidence_refs=evidence_refs))
+        self._wake.set()
+        return moved
 
     # ------------------------------------------------------------------ inbound facts
     def ingest(self, event: Event | Mapping[str, Any]) -> IngestResult:

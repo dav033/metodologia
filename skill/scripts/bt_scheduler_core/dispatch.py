@@ -126,7 +126,16 @@ class Dispatcher:
             ctx.audit("dispatch_rejected", att.task_id, attempt_id, kind=kind, detail=ack.detail[:200])
             item.status = "void"
             if kind == "start" and A(att.state) in ATTEMPT_LIVE:
-                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {ack.detail[:200]}")
+                blocked_environment = (ack.classification == "blocked_environment"
+                                       or "[blocked-environment]" in ack.detail
+                                       or ack.detail.startswith(("COMPOSITION_BASE_MISSING:",
+                                                                 "COMPOSITION_BASE_UNAVAILABLE:")))
+                failure_detail = ack.detail[:200]
+                if blocked_environment and "[blocked-environment]" not in failure_detail:
+                    failure_detail = (failure_detail + " [blocked-environment]")[:200]
+                if not blocked_environment:
+                    att.budget_consumed = True
+                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {failure_detail}")
             elif kind == "verify" and ack.permanent and A(att.state) == A.VERIFYING:
                 # the verifier refuses the ORDER itself: asking again at every lease expiry never changes that (REQ-020 att-0087 waited
                 # 99 minutes and 20 re-sends). The attempt ends; whatever the executor kept of its work stays there for the retry
@@ -137,6 +146,7 @@ class Dispatcher:
         if kind == "cancel" and A(att.state) in ATTEMPT_LIVE:
             att.needs_reconcile = True             # an ack is not a confirmation: the next step asks what became of it
         if kind == "start" and A(att.state) == A.RESERVED:
+            att.budget_consumed = True
             set_attempt(ctx, attempt_id, A.DISPATCHED, ack=ack.status)
         return 1
 

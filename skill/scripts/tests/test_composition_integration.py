@@ -90,6 +90,12 @@ class CompositionIntegrationTests(unittest.TestCase):
             try:
                 with self.assertRaisesRegex(ValueError, "STORE_PATH_INSIDE_REPOSITORY"):
                     adapter.create_engine(repo, repo / "state.db", root / "other-workspaces")
+                owner_store = repo / "bitacora" / ".state" / "composition" / "metodologia-REQ-001.db"
+                with self.assertRaisesRegex(ValueError, "STORE_PATH_INSIDE_REPOSITORY"):
+                    adapter.create_engine(repo, owner_store, root / "other-workspaces")
+                _owner_engine, owner_db = adapter.create_engine(
+                    repo, owner_store, root / "other-workspaces", allow_owner_state=True)
+                owner_db.close()
                 with self.assertRaisesRegex(ValueError, "WORKSPACE_ROOT_OVERLAPS_REPOSITORY"):
                     adapter.GitSubprocessPort(repo, repo / "worktrees")
                 for sp, commit in (("S1", s1v1), ("S2", s2v1), ("S3", s3v1)):

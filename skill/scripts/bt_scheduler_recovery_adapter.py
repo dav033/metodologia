@@ -76,12 +76,12 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
         return self.store
 
     def _official(self, context):
+        used = self.scheduler.attempts_used(context.task_id)
         def read(ctx):
             task = ctx.state.tasks.get(context.task_id)
             attempt = ctx.state.attempts.get(context.attempt_id)
             if task is None or attempt is None:
                 return None
-            used = len(task.attempts) - task.budget_base
             current = ((context.plan_id, context.cause, context.attempts_used, context.max_attempts) ==
                        (ctx.state.plan_id, task.reason, used, ctx.config.max_attempts)
                        and task.attempts[-1:] == [context.attempt_id] and attempt.task_id == context.task_id
@@ -125,6 +125,9 @@ class RecoveryAdapter(DiagnosticRecoveryLifecycle):
             refs += (verification_ref,)
         reason_code = self._m6_reason(official, facts, verified)
         values = {k: v for k, v in official.items() if k not in {"evidence", "verifier", "failure"}}
+        # M5's historical case contract requires at least one observed attempt. A start refused before
+        # M3 execution is represented as the current failed attempt; M1's code-retry counter remains zero.
+        values["attempts_used"] = max(1, int(official["attempts_used"]))
         values["manual_cancel"] = official["manual_cancel"] or verified and facts.get("cancel_requested") is True
         return m5.RecoveryCase(
             **values, run_id=self.run_id, core_cause=context.cause,

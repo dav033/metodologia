@@ -347,7 +347,9 @@ def rebase_run(repository: StateRepository, old: Plan, new: Plan, *, config: Con
         for task_id in report.reset:
             rec = state.tasks[task_id]
             before = rec.state
-            state.tasks[task_id] = TaskRec(T.PENDING.value, attempts=list(rec.attempts), budget_base=len(rec.attempts))
+            state.tasks[task_id] = TaskRec(
+                T.PENDING.value, attempts=list(rec.attempts),
+                budget_base=sum(state.attempts[attempt_id].budget_consumed for attempt_id in rec.attempts))
             ctx.audit("task_transition", task_id, **{"from": before, "to": T.PENDING.value}, reason="rebase",
                       decision="rebase")
         for task_id in report.added:

@@ -565,6 +565,55 @@ def is_stalled(scheduler: core.SchedulerCore, snapshot: core.Snapshot | None = N
     return scheduler._stalled(snapshot or scheduler.snapshot())
 
 
+def accepted_attempt_facts(scheduler: core.SchedulerCore) -> dict[str, dict[str, Any]]:
+    """Read M1-owned acceptance and verdict identity through the methodology adapter's public view."""
+    def read(ctx):
+        facts = {}
+        for task_id, task in ctx.state.tasks.items():
+            if task.state != "completed":
+                continue
+            accepted = next((ctx.state.attempts[attempt_id] for attempt_id in reversed(task.attempts)
+                             if ctx.state.attempts[attempt_id].state == "accepted"), None)
+            if accepted is not None:
+                facts[task_id] = {"task_id": task_id, "attempt_id": accepted.id, "token": accepted.token,
+                                  "verdict_id": accepted.evidence, "verifier": accepted.verifier}
+        return facts
+    return scheduler.read(read)
+
+
+def subplan_publication_facts(scheduler: core.SchedulerCore) -> dict[str, dict[str, Any]]:
+    """Read M1's current revision-bound subplan facts for owner reconciliation."""
+    def read(ctx):
+        return {subplan_id: dict(fact) for subplan_id, fact in ctx.state.subplan_versions.items()
+                if fact.get("plan_id") == ctx.state.plan_id and fact.get("revision") == ctx.state.revision}
+    return scheduler.read(read)
+
+
+def composition_facts(scheduler: core.SchedulerCore) -> dict[str, dict[str, Any]]:
+    """Read M1's durable candidate and terminal composition observations."""
+    return scheduler.read(lambda ctx: {key: dict(value) for key, value in ctx.state.compositions.items()
+                                       if value.get("plan_id") == ctx.state.plan_id
+                                       and value.get("revision") == ctx.state.revision})
+
+
+def apply_demonstrated_frontier(scheduler: core.SchedulerCore, advice: Any) -> tuple[str, ...]:
+    """Apply one validated M5 frontier through M1's bounded, idempotent state operation."""
+    required = ("change_id", "source_task_id", "composition_id", "manifest_sha256", "tree_digest", "action",
+                "frontier", "evidence_refs")
+    if any(not hasattr(advice, field) for field in required):
+        raise ValueError("M5 demonstrated frontier contract is incomplete")
+    return scheduler.apply_demonstrated_frontier(
+        change_id=advice.change_id, source_task_id=advice.source_task_id,
+        composition_id=advice.composition_id, manifest_sha256=advice.manifest_sha256,
+        tree_digest=advice.tree_digest, action=advice.action, task_ids=advice.frontier,
+        evidence_refs=advice.evidence_refs)
+
+
+def subplan_status(scheduler: core.SchedulerCore) -> dict[str, str]:
+    """Return M1's derived subplan lifecycle through the methodology boundary."""
+    return scheduler.subplan_status()
+
+
 def simulate_audit(plan_path: Path, *, fail: dict[str, int] | None = None, reject: dict[str, int] | None = None,
                    start: float | None = None) -> list[dict[str, Any]]:
     """Run a plan file through the core's deterministic doubles (no provider, no database, nothing written) and return

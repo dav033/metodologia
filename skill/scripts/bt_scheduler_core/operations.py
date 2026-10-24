@@ -78,7 +78,8 @@ def reopen(ctx: Ctx, task_id: str, by: str, reason: str = "") -> None:
     rec = ctx.state.tasks[task_id]
     if rec.state not in (T.BLOCKED.value, T.RECOVERING.value) or ctx.state.cancel_requested:
         raise SchedulerError("NOT_ALLOWED", f"only a blocked or recovering task of a live run can be reopened ({task_id} is {rec.state})")
-    rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
+    rec.budget_base = sum(ctx.state.attempts[attempt_id].budget_consumed for attempt_id in rec.attempts)
+    rec.reason, rec.hold_until, rec.waits = "", 0.0, 0
     waiting = [a for a in ctx.plan.ancestors(task_id) if ctx.state.tasks[a].state != T.COMPLETED.value]
     # a task whose prerequisites are being redone waits for them like any other pending task
     set_task(ctx, task_id, T.PENDING if waiting else T.READY, by=by, reason=reason, decision="reopen")
@@ -158,7 +159,8 @@ def rework(ctx: Ctx, task_ids: tuple[str, ...], by: str, reason: str = "", *, al
         rec = ctx.state.tasks[task_id]
         if rec.state in (T.PENDING.value, T.CANCELLED.value):
             continue
-        rec.budget_base, rec.reason, rec.hold_until, rec.waits = len(rec.attempts), "", 0.0, 0
+        rec.budget_base = sum(ctx.state.attempts[attempt_id].budget_consumed for attempt_id in rec.attempts)
+        rec.reason, rec.hold_until, rec.waits = "", 0.0, 0
         rec.reworks += 1
         set_task(ctx, task_id, T.PENDING, by=by, reason=reason, decision="rework")
         moved.append(task_id)

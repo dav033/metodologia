@@ -240,6 +240,7 @@ M1_RULES: dict[str, Callable] = {
     "revision_applied": _m1("revision_applied", "planner", "M1", "La revisión {to_rev} se aplicó conservando el trabajo no afectado"),
     "subplan_version_published": _m1("subplan_version", "M6", "M1", "{subplan_id} publica la versión {version}"),
     **{f"composition_{s}": _m1("composition", "M6", "M1", f"Composición {{composition_id}}: {es}") for s, es in _COMPOSITION_STATES},
+    "demonstrated_frontier_applied": _m1("recovery_frontier", "M5", "M1", "M1 aplica la frontera explícita de M5"),
 }
 
 

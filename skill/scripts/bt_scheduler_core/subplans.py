@@ -108,7 +108,12 @@ def _accepted_attempt(state: RunState, task_id: str) -> str | None:
 def _accepted_identity(plan: Plan, state: RunState, subplan: SubplanSpec) -> dict[str, str] | None:
     """Bind publication to the accepted audit and all accepted member attempts."""
     audit_attempt = _accepted_attempt(state, subplan.audit_task)
-    members = sorted(spec.id for spec in plan.tasks if spec.meta.get("subplan_id") == subplan.id)
+    members = {spec.id for spec in plan.tasks if spec.meta.get("subplan_id") == subplan.id}
+    if subplan.ui is not None:
+        # Designer implementation and visual review are mandatory accepted members even if a plan omitted their
+        # redundant task-level subplan_id annotation. Reworking either one must stale the published version.
+        members.update((subplan.ui.design_task, subplan.ui.visual_review_task))
+    members = sorted(members)
     accepted = {task_id: _accepted_attempt(state, task_id) for task_id in members}
     if audit_attempt is None or any(attempt_id is None for attempt_id in accepted.values()):
         return None
@@ -122,6 +127,13 @@ def _fact_is_current(plan: Plan, state: RunState, subplan: SubplanSpec) -> bool:
     return (identity is not None and fact.get("plan_id") == state.plan_id and
             fact.get("revision") == state.revision and
             {key: fact.get(key) for key in identity} == identity)
+
+
+def composition_members_current(plan: Plan, state: RunState, members: dict[str, int]) -> bool:
+    """Whether every member version is still bound to its current accepted audit and member attempts."""
+    specs = {subplan.id: subplan for subplan in plan.subplans}
+    return all(subplan_id in specs and state.subplan_versions.get(subplan_id, {}).get("version") == version and
+               _fact_is_current(plan, state, specs[subplan_id]) for subplan_id, version in members.items())
 
 
 def stale_subplan_members(plan: Plan, state: RunState, task_id: str) -> tuple[tuple[str, str], ...]:
@@ -228,13 +240,14 @@ def validate_subplan_version(subplan_id: object, version: object, commit: object
 
 
 def validate_composition(state: object, composition_id: object, members: object, digest: object,
-                         reason: object = "") -> bool:
+                         reason: object = "", tree_digest: object = "") -> bool:
     return (isinstance(state, str) and state in {"candidate", "published", "rejected"} and
             isinstance(composition_id, str) and
             1 <= len(composition_id) <= 128 and isinstance(members, dict) and 1 <= len(members) <= 64 and
             all(isinstance(key, str) and bool(_ID.fullmatch(key)) and type(value) is int and value >= 1
                 for key, value in members.items()) and isinstance(digest, str) and bool(_SHA.fullmatch(digest)) and
-            isinstance(reason, str) and len(reason) <= 500)
+            isinstance(reason, str) and len(reason) <= 500 and isinstance(tree_digest, str) and
+            (not tree_digest or bool(_COMMIT.fullmatch(tree_digest))))
 
 
 def record_subplan_version_fact(plan: Plan, state: RunState, ctx: Any, subplan_id: str, version: int,
@@ -269,29 +282,35 @@ def record_subplan_version_fact(plan: Plan, state: RunState, ctx: Any, subplan_i
 
 
 def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: str, composition_id: str,
-                            members: dict[str, int], manifest_sha256: str, reason: str = "") -> None:
-    if not validate_composition(fact_state, composition_id, members, manifest_sha256, reason):
+                            members: dict[str, int], manifest_sha256: str, reason: str = "",
+                            tree_digest: str = "") -> None:
+    if not validate_composition(fact_state, composition_id, members, manifest_sha256, reason, tree_digest):
         raise SchedulerError("CONTRACT_VIOLATION", "composition fact is malformed")
     declared = {item.id for item in plan.subplans}
     if plan.schema_version != "1.3.0" or not members or not set(members).issubset(declared):
         raise SchedulerError("NOT_ALLOWED", "composition facts require declared 1.3.0 subplans")
+    if fact_state == "published" and not tree_digest:
+        raise SchedulerError("NOT_ALLOWED", "published composition facts require the M6-verified tree digest")
     specs = {subplan.id: subplan for subplan in plan.subplans}
-    if fact_state == "published" and any(
-            state.subplan_versions.get(sid, {}).get("version") != version or
-            not _fact_is_current(plan, state, specs[sid]) for sid, version in members.items()):
+    if fact_state == "published" and not composition_members_current(plan, state, members):
         raise SchedulerError("NOT_ALLOWED", "published composition members need matching published versions")
     fact = {"plan_id": state.plan_id, "revision": state.revision, "state": fact_state,
-            "members": dict(members), "manifest_sha256": manifest_sha256, "reason": reason}
+            "members": dict(members), "manifest_sha256": manifest_sha256, "reason": reason,
+            "tree_digest": tree_digest}
     current = state.compositions.get(composition_id)
     if current == fact:
         return
-    if (current is not None and current["state"] == "candidate" and
-            current["manifest_sha256"] != manifest_sha256):
-        # The composition engine keeps one manifest per candidate from open to publish; another one is another candidate.
-        raise SchedulerError("NOT_ALLOWED", f"composition {composition_id} keeps its candidate manifest; "
-                                            "a different manifest needs a new candidate id")
-    if current is not None and (current["state"] != "candidate" or fact_state == "candidate"):
-        raise SchedulerError("NOT_ALLOWED", "composition facts are terminal after publication or rejection")
+    if current is None and fact_state != "candidate":
+        raise SchedulerError("NOT_ALLOWED", "composition must be durably reserved as a candidate before publication or rejection")
+    if current is not None:
+        if (current["state"] == "candidate" and current["manifest_sha256"] != manifest_sha256):
+            # The composition engine keeps one manifest per candidate from open to publish; another one is another candidate.
+            raise SchedulerError("NOT_ALLOWED", f"composition {composition_id} keeps its candidate manifest; "
+                                                "a different manifest needs a new candidate id")
+        if current.get("tree_digest", "") not in ("", tree_digest):
+            raise SchedulerError("NOT_ALLOWED", f"composition {composition_id} keeps its candidate tree identity")
+        if current["state"] != "candidate" or fact_state == "candidate":
+            raise SchedulerError("NOT_ALLOWED", "composition facts are terminal after publication or rejection")
     state.compositions[composition_id] = fact
     detail = {"composition_id": composition_id, "members": members, "manifest_sha256": manifest_sha256, "reason": reason}
     if fact_state == "published":
@@ -309,5 +328,5 @@ def adapter_record_subplan_version(scheduler: Any, subplan_id: str, version: int
 
 
 def adapter_record_composition(scheduler: Any, state: str, composition_id: str, members: dict[str, int],
-                               manifest_sha256: str, reason: str = "") -> None:
-    scheduler.record_composition(state, composition_id, members, manifest_sha256, reason)
+                               manifest_sha256: str, reason: str = "", tree_digest: str = "") -> None:
+    scheduler.record_composition(state, composition_id, members, manifest_sha256, reason, tree_digest)

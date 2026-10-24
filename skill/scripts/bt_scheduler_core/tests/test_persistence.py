@@ -33,14 +33,14 @@ class Contract:
         doc = h.core.read(lambda c: c.state.to_dict())
         self.assertEqual(RunState.from_dict(json.loads(json.dumps(doc))).to_dict(), doc)
 
-    def test_schema_three_upgrades_in_memory_and_preserves_schema_four_facts(self):
+    def test_schema_three_upgrades_in_memory_and_preserves_schema_five_facts(self):
         h = self.harness()
         document = h.core.read(lambda ctx: ctx.state.to_dict())
         document["schema"] = 3
         document.pop("subplan_versions")
         document.pop("compositions")
         upgraded = RunState.from_dict(document)
-        self.assertEqual(upgraded.schema, 4)
+        self.assertEqual(upgraded.schema, 6)
         self.assertEqual((upgraded.subplan_versions, upgraded.compositions), ({}, {}))
         upgraded.subplan_versions["SP-1"] = {"plan_id": upgraded.plan_id, "revision": upgraded.revision,
                                                "version": 1, "commit": "a" * 40,

@@ -36,6 +36,7 @@ from bt_scheduler_quality.store import QualityStore
 from bt_scheduler_quality_orders import (
     matches_approved_plan as _matches_approved_plan,
 )
+from bt_scheduler_quality_owner_adapter import combined_audit_ledger, evaluate_audit_ledgers
 from bt_scheduler_quality_orders import (
     order_mapping as _order_mapping,
 )
@@ -57,8 +58,6 @@ m1 = scheduler_adapter.core
 m3 = executor_adapter.m3
 RepositoryResolver = Callable[[m1.VerifyOrder], Path | str | None]
 LOGGER = logging.getLogger(__name__)
-
-
 class QualityVerificationPort(QualityDeliveryMethods):
     """Persist M1 admission first, then verify asynchronously with bounded workers."""
 
@@ -90,6 +89,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         verification_authority: VerificationAuthority | None = None,
         publish_audit_observation: Callable[[str, str, dict], None] | None = None,
         publish_conflict_observation: Callable[[VerifyRequest, str, str, str], str] | None = None,
+        composition_identity: Callable[[m1.VerifyOrder], Mapping[str, Any] | None] | None = None,
     ):
         self.core = core
         self.rework_notes = rework_notes
@@ -107,6 +107,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         self.remediate = remediate                        # (audit, attempt, findings) -> True when they became remediation tasks
         self.publish_audit_observation = publish_audit_observation
         self.publish_conflict_observation = publish_conflict_observation
+        self.composition_identity = composition_identity
         self.executor = executor
         self.store = store
         self.policy = policy
@@ -197,6 +198,12 @@ class QualityVerificationPort(QualityDeliveryMethods):
                 value = getattr(order, name, None)
                 if value is not None:
                     raw_order[name] = value
+            if self.composition_identity is not None:
+                identity = self.composition_identity(order)
+                if identity is not None:
+                    if not isinstance(identity, Mapping):
+                        raise ValueError("composition verification identity is malformed")
+                    raw_order.update(identity)
             parsed = VerifyRequest.from_mapping(raw_order)
         except (QualityError, TypeError, ValueError) as error:
             code = error.code if isinstance(error, QualityError) else "ORDER_INVALID"
@@ -405,32 +412,38 @@ class QualityVerificationPort(QualityDeliveryMethods):
             return None
         if task.meta.get("kind") != "audit":
             return None
-        path = bt_audit_gate.ledger_path(task.expected_paths)
-        if path is None:
+        paths = tuple(path for path in task.expected_paths if isinstance(path, str)
+                      and path.endswith(bt_audit_gate.LEDGER_SUFFIX))
+        if not paths:
             if not self.audit_policy.ledger_required:
                 self.core.record("audit_gate_skipped", task_id=order.task_id, attempt_id=order.attempt_id,
                                  why="no findings ledger declared and gates.audit_ledger_required is off")
                 return None
             return bt_audit_gate.Gate(
-                False, (f"an audit task must declare one *{bt_audit_gate.LEDGER_SUFFIX} file",), (), ()
+                False, (f"an audit task must declare at least one *{bt_audit_gate.LEDGER_SUFFIX} file",), (), ()
             )
-        raw_ledger = self._read_ledger(order, path)
-        gate = bt_audit_gate.evaluate(
-            raw_ledger, [spec.id for spec in self.core.plan.tasks], order.task_id,
-            self.audit_policy,
-        )
-        if not gate.problems and raw_ledger is not None and self.publish_audit_observation is not None:
+        raw_ledgers = tuple(self._read_ledger(order, path) for path in paths)
+        task_ids = [spec.id for spec in self.core.plan.tasks]
+        gate = evaluate_audit_ledgers(raw_ledgers, task_ids, order.task_id, self.audit_policy)
+        combined = combined_audit_ledger(raw_ledgers)
+        if not gate.problems and combined is not None and self.publish_audit_observation is not None:
             try:
                 source = self._snapshot_source(order)
                 status = "evaluated" if evaluate_gate else "not_run"
-                observation = audit_observation_from_ledger(order, source, raw_ledger, gate_status=status)
+                observation = audit_observation_from_ledger(order, source, combined, gate_status=status)
                 self.publish_audit_observation(order.task_id, order.attempt_id, observation)
             except (UnicodeDecodeError, ValueError, TypeError, KeyError) as error:
                 raise RuntimeError("validated audit observation could not be published") from error
         if not evaluate_gate:
             return None
-        if not gate.problems and raw_ledger is not None:
-            gate = quality_audit_evidence.check(self, order, raw_ledger, gate)
+        if gate.ok:
+            for raw_ledger in raw_ledgers:
+                if raw_ledger is None:
+                    continue
+                checked = quality_audit_evidence.check(self, order, raw_ledger, gate)
+                if not checked.ok:
+                    gate = bt_audit_gate.Gate(False, checked.problems, checked.blocking, checked.rework)
+                    break
         stray = bt_audit_gate.stray_changes(self._read_changes(order), task.expected_paths) \
             if self.audit_policy.read_only else ()
         if stray:
@@ -439,21 +452,20 @@ class QualityVerificationPort(QualityDeliveryMethods):
         return gate
 
     def _only_ledger_checks_failed(self, order: VerifyRequest, result) -> bool:
-        """Whether the task is an audit whose every failed check names its own findings ledger. REQ-029 T8 verified with
-        `recovery_acceptance.py audit --ledger <ledger>`, which exits 1 while a blocking finding is open: the audit could
-        never pass, the gate that turns findings into remediation tasks never ran, and three attempts were spent."""
+        """Whether every failed check names a findings ledger declared by this audit task."""
         try:
             task = self.core.plan.task(order.task_id)
         except m1.SchedulerError:
             return False
-        path = bt_audit_gate.ledger_path(task.expected_paths) if task.meta.get("kind") == "audit" else None
-        if path is None:
+        paths = tuple(path for path in task.expected_paths if isinstance(path, str)
+                      and path.endswith(bt_audit_gate.LEDGER_SUFFIX)) if task.meta.get("kind") == "audit" else ()
+        if not paths:
             return False
-        # a check that was never run (CHECK_DEFERRED: a cheaper one failed first) is no failure of its own: REQ-020's T15 had `npm run gate`
-        # deferred behind its two ledger checks, so «every failed check names the ledger» was false and the gate never spoke for 18 attempts
-        failed = [c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"
-                  and c.get("issue_code") != "CHECK_DEFERRED"]
-        return bool(failed) and all(str(c.get("command") or "").find(path) >= 0 for c in failed)
+        failed = [check for check in result.get("checks") or ()
+                  if isinstance(check, Mapping) and check.get("status") != "pass"
+                  and check.get("issue_code") != "CHECK_DEFERRED"]
+        return bool(failed) and all(any(str(check.get("command") or "").find(path) >= 0 for path in paths)
+                                    for check in failed)
 
     def _recovery_coverage_gate(self, order: VerifyRequest, result: Mapping[str, Any]) -> bt_audit_gate.Gate | None:
         """Rechecks changed recovery surfaces against an M3 map and actual M6 check records."""

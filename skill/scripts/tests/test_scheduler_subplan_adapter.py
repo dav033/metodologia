@@ -28,7 +28,7 @@ class SubplanAdapter(unittest.TestCase):
         adapter.record_composition(scheduler, "published", "C2", {"SP-1": 2}, "c" * 64)
         self.assertEqual(scheduler.calls, [
             ("version", ("SP-1", 2, "a" * 40, "b" * 64)),
-            ("composition", ("published", "C2", {"SP-1": 2}, "c" * 64, "")),
+            ("composition", ("published", "C2", {"SP-1": 2}, "c" * 64, "", "")),
         ])
 
 

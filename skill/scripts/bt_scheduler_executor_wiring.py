@@ -13,26 +13,31 @@ from bitacora_platform import conflict_publisher
 def close(wiring: api.Wiring) -> None:
     """Close required verification, recovery, stream and executor resources in dependency order."""
     try:
-        if wiring.verification_runtime is not None:
-            wiring.verification_runtime.close(wait=True)
-    finally:
         try:
-            if wiring.verification_store is not None:
-                wiring.verification_store.close()
+            if wiring.verification_runtime is not None:
+                wiring.verification_runtime.close(wait=True)
         finally:
-            if wiring.recovery is not None:
-                try:
-                    wiring.recovery.close()
-                finally:
+            try:
+                if wiring.verification_store is not None:
+                    wiring.verification_store.close()
+            finally:
+                if wiring.recovery is not None:
+                    try:
+                        wiring.recovery.close()
+                    finally:
+                        try:
+                            wiring.stream_adapter.close_all()
+                        finally:
+                            wiring.executor.close()
+                else:
                     try:
                         wiring.stream_adapter.close_all()
                     finally:
                         wiring.executor.close()
-            else:
-                try:
-                    wiring.stream_adapter.close_all()
-                finally:
-                    wiring.executor.close()
+    finally:
+        owner_composition = getattr(wiring, "composition_runtime", None)
+        if owner_composition is not None:
+            owner_composition.close()
 
 
 LINE_MARKER = "RUN.integration-line"
@@ -116,7 +121,12 @@ def _with_owner_notes(rdir, plan, base):
         try:
             task = plan.task(request.task_id)
             if task.meta.get("kind") == "audit":
-                parts.append(bt_audit_gate.ledger_help(bt_audit_gate.ledger_path(task.expected_paths)))
+                ledgers = tuple(path for path in task.expected_paths if isinstance(path, str)
+                                and path.endswith(bt_audit_gate.LEDGER_SUFFIX))
+                parts.append(bt_audit_gate.ledger_help(ledgers[0] if len(ledgers) == 1 else None))
+                if len(ledgers) > 1:
+                    parts.append("This audit has independent ledgers; write one complete audit-findings/1 record to each: "
+                                 + ", ".join(f"`{path}`" for path in ledgers) + ".")
         except api.core.SchedulerError:
             pass
         parts.append(base(request) if base else "")
@@ -136,7 +146,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
          recovery_policy: Mapping[str, object] | None = None,
          quality_store_path: Path | str | None = None,
          quality_policy: Mapping[str, object] | None = None,
-         composition_base: Callable[..., str | None] | None = None) -> api.Wiring:
+         composition_base: Callable[..., str | None] | None = None,
+         composition_runtime=None) -> api.Wiring:
     """A Scheduler core with optional decision, monitor, recovery, and quality-verification ports.
 
     Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the api.core's own rule). The
@@ -233,8 +244,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         workspaces=api.m3.GitWorkspaces(root / "ws", repo_of), sink=sink, config=executor_config, autostart=False)
     stream_adapter = api.M3StreamAdapter(executor.attempts_dir, max_open_streams=executor.cfg.max_running)
     wiring = api.Wiring(scheduler, executor, port, sink, stream_adapter)
+    wiring.composition_runtime = composition_runtime
     port.on_accepted_attempt = wiring.stream_candidates.track
     try:
+        if composition_runtime is not None:
+            composition_runtime.bind_scheduler(scheduler)
         monitor = api.create_monitor_runtime(stream_adapter, monitor_store_path, api.sched.run_db_path(rdir), scheduler)
         wiring.monitor = monitor
     except Exception:
@@ -288,6 +302,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         if recovery_store_path is not None:
             import bt_recovery_pipeline
             import bt_recovery_runtime
+            m6_evidence_reader = (lambda reference: wiring.verification_store.get_result_manifest(reference)
+                                  if wiring.verification_store is not None else None)
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
                                              default_repository=default_repository,
                                              snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
@@ -296,7 +312,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
                 describe=continuation.describe, policy=recovery_policy, rdir=rdir,
                 recovery_sources=lambda: bt_recovery_runtime.sources(rdir, api.run_identity(scheduler)),
-                diagnostic_pipeline=bt_recovery_pipeline.owner_pipeline(rdir))
+                diagnostic_pipeline=bt_recovery_pipeline.owner_pipeline(rdir),
+                m6_evidence_reader=m6_evidence_reader,
+                composition_propagation=(getattr(composition_runtime, "demonstrated_frontier", None)
+                                         if composition_runtime is not None else None))
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
             if integrate is not None:
@@ -325,6 +344,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             if quality_path is None or quality_runtime_policy is None:
                 raise RuntimeError("M6 composition was not fully validated")
             wiring.verification_store = QualityStore(quality_path)
+            if composition_runtime is not None:
+                composition_runtime.bind_quality_policy(quality_runtime_policy)
 
             def repository_for_order(order):
                 try:
@@ -356,7 +377,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)),
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(
-                    bt_config.get("gates.integration_rework_limit", 6)))
+                    bt_config.get("gates.integration_rework_limit", 6)),
+                composition_identity=(getattr(composition_runtime, "verification_identity", None)
+                                      if composition_runtime is not None else None))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)

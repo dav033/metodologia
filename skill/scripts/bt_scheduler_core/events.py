@@ -90,13 +90,16 @@ def apply_event(ctx: Ctx, event: Event) -> IngestResult:
         return _reject(ctx, "stale" if reason == "already_past" else "invalid", reason, event.event_id, att.task_id, attempt_id)
     detail = str(event.payload.get("reason", ""))[:300]
     if kind == EventKind.EXECUTION_STARTED:
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         advance(ctx, attempt_id, A.RUNNING, source=event.source)
     elif kind == EventKind.EXECUTION_FINISHED:
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         advance(ctx, attempt_id, A.VERIFYING, source=event.source)
         request_verification(ctx, attempt_id)
     elif kind == EventKind.EXECUTION_FAILED:
+        att.budget_consumed = True
         end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", detail)
     else:
         end_attempt(ctx, attempt_id, A.CANCELLED, "execution_failed", detail or "cancelled_by_executor")

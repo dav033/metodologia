@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 from collections.abc import Sequence
 
-from bt_composition import CompositionEngine, GitResult, Store
+from bt_composition import CompositionEngine, GitResult, Store, VerdictProof
 
 
 class GitCommandError(RuntimeError):
@@ -72,6 +72,22 @@ class GitSubprocessPort:
             return None
         oid = result.stdout.strip()
         return oid if re.fullmatch(rf"[0-9a-f]{{{len(self.zero)}}}", oid) else None
+
+    def blob_sha256(self, commit: str, path: str) -> str | None:
+        """Hash a regular-file blob from an immutable tree; paths and content never enter logs."""
+        if (not isinstance(path, str) or not path or path.startswith("/") or ".." in Path(path).parts
+                or "\n" in path or "\r" in path):
+            return None
+        entry = self._run("ls-tree", "--full-tree", commit, "--", path, check=False)
+        if entry.returncode or not entry.stdout:
+            return None
+        fields = entry.stdout.rstrip("\n").split("\t", 1)[0].split()
+        if len(fields) != 3 or fields[0] not in {"100644", "100755"} or fields[1] != "blob":
+            return None
+        body = self._run("cat-file", "blob", fields[2], check=False)
+        if body.returncode:
+            return None
+        return hashlib.sha256(body.stdout.encode("utf-8")).hexdigest()
 
     def merge_tree(self, base: str, ours: str, theirs: str) -> GitResult:
         result = self._run("merge-tree", "--write-tree", "--name-only", "--no-messages",
@@ -201,14 +217,16 @@ class GitSubprocessPort:
 
 
 def create_engine(repository: str | Path, store_path: str | Path,
-                  workspace_root: str | Path) -> tuple[CompositionEngine, Store]:
+                  workspace_root: str | Path, *, allow_owner_state: bool = False) -> tuple[CompositionEngine, Store]:
     repo = Path(repository).resolve()
     state_path = Path(store_path).resolve()
-    if state_path == repo or repo in state_path.parents:
+    owner_state = (allow_owner_state is True and repo in state_path.parents and
+                   state_path.parent.name == "composition" and state_path.parent.parent.name == ".state")
+    if (state_path == repo or repo in state_path.parents) and not owner_state:
         raise ValueError("STORE_PATH_INSIDE_REPOSITORY")
     git = GitSubprocessPort(repository, workspace_root)
     store = Store(store_path)
     return CompositionEngine(git, store, workspace_root), store
 
 
-__all__ = ["GitCommandError", "GitSubprocessPort", "create_engine"]
+__all__ = ["GitCommandError", "GitSubprocessPort", "VerdictProof", "create_engine"]

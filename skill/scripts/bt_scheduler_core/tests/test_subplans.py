@@ -115,6 +115,114 @@ class Subplans(unittest.TestCase):
         self.assertIn("subplan_version_published", [row.kind for row in core.audit_log()])
         self.assertIn("composition_candidate", [row.kind for row in core.audit_log()])
 
+    def test_reserved_environment_block_does_not_consume_code_retry_budget(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        claimed = core.claim(sc.Assignment("T1", "fake"))
+        attempt = core.read(lambda ctx: ctx.state.attempts[claimed.attempt_id])
+        self.assertFalse(attempt.budget_consumed)
+        from bt_scheduler_core.recovery import attempts_used
+        self.assertEqual(core.read(lambda ctx: attempts_used(ctx.state, "T1")), 0)
+        self.assertEqual(sc.Ack("rejected", "MISSING_CREDENTIAL", True,
+                                classification="blocked_environment").classification, "blocked_environment")
+
+    def test_blocked_environment_start_ack_does_not_spend_m1_code_retry_budget(self):
+        class MissingResource:
+            def start(self, _order):
+                return sc.Ack("rejected", "MISSING_CREDENTIAL", True, classification="blocked_environment")
+
+            def cancel(self, _order):
+                return sc.Ack("accepted")
+
+            def query(self, _attempt_id):
+                return sc.ExecutionStatus("not_found")
+
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository(), ports=sc.Ports(execution=MissingResource()))
+        core.start()
+        core.step()
+        core.step()
+
+        self.assertEqual(core.snapshot().tasks["T1"]["state"], "blocked")
+        self.assertEqual(core.attempts_used("T1"), 0)
+
+    def test_confirmed_execution_consumes_one_code_retry_without_reusing_attempt_ids(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        first = core.claim(sc.Assignment("T1", "fake"))
+        core.ingest(sc.Event("started-1", plan.plan_id, plan.revision, "T1", first.attempt_id, "fake",
+                             "execution_started"))
+        from bt_scheduler_core.recovery import attempts_used
+        self.assertEqual(core.read(lambda ctx: attempts_used(ctx.state, "T1")), 1)
+        core.ingest(sc.Event("failed-1", plan.plan_id, plan.revision, "T1", first.attempt_id, "fake",
+                             "execution_failed"))
+        core.reopen("T1", "operator", "retry")
+        second = core.claim(sc.Assignment("T1", "fake"))
+        self.assertNotEqual(first.attempt_id, second.attempt_id)
+        self.assertGreater(second.attempt_id, first.attempt_id)
+        self.assertEqual(core.read(lambda ctx: attempts_used(ctx.state, "T1")), 0)
+
+    def test_pre_budget_attempt_state_migration_counts_historical_attempts(self):
+        from bt_scheduler_core.model import AttemptRec, RunState, TaskRec
+
+        state = RunState("P", 1, "a" * 64, 1.0)
+        state.tasks["T1"] = TaskRec("recovering", attempts=["att-0001"])
+        state.attempts["att-0001"] = AttemptRec("att-0001", "T1", 1, "failed", 1, "fake", "key", 1.0, 1.0, 2.0)
+        document = state.to_dict()
+        document["schema"] = 4
+        document["attempts"]["att-0001"].pop("budget_consumed")
+        restored = RunState.from_dict(document)
+        self.assertTrue(restored.attempts["att-0001"].budget_consumed)
+
+    def test_m5_frontier_application_is_tree_bound_explicit_and_idempotent(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3", "T4"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        core.record_composition("published", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+
+        moved = core.apply_demonstrated_frontier(
+            change_id="change-1", source_task_id="T4", composition_id="C1", manifest_sha256="c" * 64,
+            tree_digest="d" * 40, action="modify", task_ids=("T2",), evidence_refs=("m6:" + "e" * 64,))
+        before_second = core.snapshot().tasks
+        retried = core.apply_demonstrated_frontier(
+            change_id="change-1", source_task_id="T4", composition_id="C1", manifest_sha256="c" * 64,
+            tree_digest="d" * 40, action="modify", task_ids=("T2",), evidence_refs=("m6:" + "e" * 64,))
+
+        self.assertEqual(moved, ("T2",))
+        self.assertEqual(retried, moved)
+        self.assertEqual(core.snapshot().tasks, before_second)
+        self.assertEqual(core.snapshot().tasks["T2"]["state"], "pending")
+        self.assertEqual(core.snapshot().tasks["T3"]["state"], "completed")
+        self.assertEqual(core.snapshot().tasks["T4"]["state"], "pending")
+        with self.assertRaises(sc.SchedulerError) as stale:
+            core.apply_demonstrated_frontier(
+                change_id="change-2", source_task_id="T4", composition_id="C1", manifest_sha256="c" * 64,
+                tree_digest="f" * 40, action="modify", task_ids=("T1",), evidence_refs=("m6:" + "e" * 64,))
+        self.assertEqual(stale.exception.code, "NOT_ALLOWED")
+
+    def test_frontier_refuses_a_composition_with_a_redone_member(self):
+        plan = load(plan_13())
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        core.record_composition("candidate", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        core.record_composition("published", "C1", {"SP-1": 1}, "c" * 64, tree_digest="d" * 40)
+        core.rework(("T1",), "operator", "redo accepted member")
+        with self.assertRaises(sc.SchedulerError) as stale:
+            core.apply_demonstrated_frontier(
+                change_id="change-stale", source_task_id="T4", composition_id="C1",
+                manifest_sha256="c" * 64, tree_digest="d" * 40, action="modify", task_ids=("T2",),
+                evidence_refs=("m6:" + "e" * 64,))
+        self.assertEqual(stale.exception.code, "NOT_ALLOWED")
+
     def test_publication_requires_the_subplan_audit_to_be_accepted(self):
         core = sc.SchedulerCore(load(plan_13()), sc.InMemoryRepository())
         core.start()
@@ -148,6 +256,23 @@ class Subplans(unittest.TestCase):
         core.record_subplan_version("SP-1", 2, "c" * 40, "d" * 64)
         core.step()
         self.assertEqual(core.snapshot().tasks["T4"]["state"], "active")
+
+    def test_external_visual_review_task_is_part_of_subplan_publication_identity(self):
+        data = json.loads(plan_13(extra_tasks=[indep(
+            "T5", ["T3"], kind="audit",
+            verification=[{"type": "command", "value": "true", "category": "functional"}])]))
+        data["subplans"][0]["ui"]["visual_review_task"] = "T5"
+        plan = load(json.dumps(data))
+        core = sc.SchedulerCore(plan, sc.InMemoryRepository())
+        core.start()
+        for task_id in ("T1", "T2", "T3", "T5"):
+            self._accept(core, plan, task_id)
+        core.record_subplan_version("SP-1", 1, "a" * 40, "b" * 64)
+        self.assertEqual(sc.subplan_status(plan, core.read(lambda ctx: ctx.state))["SP-1"], "published")
+
+        core.rework(("T5",), "operator", "repeat visual review")
+
+        self.assertEqual(sc.subplan_status(plan, core.read(lambda ctx: ctx.state))["SP-1"], "accepted")
 
     def test_unaffected_rebase_can_rebind_same_version_but_affected_work_needs_next(self):
         old = load(plan_13())
@@ -235,12 +360,12 @@ class Subplans(unittest.TestCase):
         core.record_subplan_version(*version)
         self.assertEqual(len(core.audit_log()), audit_count)
         fact = ("C1", {"SP-1": 1}, "c" * 64)
-        core.record_composition("candidate", fact[0], fact[1], fact[2])
-        core.record_composition("published", fact[0], fact[1], fact[2])
+        core.record_composition("candidate", fact[0], fact[1], fact[2], tree_digest="d" * 40)
+        core.record_composition("published", fact[0], fact[1], fact[2], tree_digest="d" * 40)
         with self.assertRaises(sc.SchedulerError) as caught:
             core.record_composition("candidate", fact[0], fact[1], "d" * 64)
         self.assertEqual(caught.exception.code, "NOT_ALLOWED")
-        core.record_composition("candidate", "C2", fact[1], "c" * 64)
+        core.record_composition("candidate", "C2", fact[1], "c" * 64, tree_digest="d" * 40)
         with self.assertRaises(sc.SchedulerError) as caught:
             core.record_composition("candidate", "C2", fact[1], "d" * 64)
         self.assertEqual(caught.exception.code, "NOT_ALLOWED")
@@ -248,7 +373,7 @@ class Subplans(unittest.TestCase):
         # Publishing or rejecting is a transition of the verified candidate, so it keeps that candidate's manifest.
         for terminal in ("published", "rejected"):
             with self.assertRaises(sc.SchedulerError) as caught:
-                core.record_composition(terminal, "C2", fact[1], "d" * 64)
+                core.record_composition(terminal, "C2", fact[1], "d" * 64, tree_digest="d" * 40)
             self.assertIn("keeps its candidate manifest", str(caught.exception))
 
     def test_gate_waits_with_attention_until_member_has_published_version(self):

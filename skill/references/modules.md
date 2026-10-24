@@ -99,6 +99,18 @@ be simulated with `bt_scheduler_core.simulators`.
   The owner loop drains M3 output into M4 and delivers its audit-only incidents through M1; M5 and M6 use M1's
   existing recovery and verification ports. The legacy launcher stays separate, and low-level compositions retain
   their optional port seam. `NEEDS_REVIEW` remains operator-owned.
+- F4-9 adds an opt-in owner runtime for frozen `1.3.0` plans that declare subplans. It creates a dedicated
+  `.state/composition/<project>-<REQ>.db`, bound to project, requirement, M1 run, plan revision/hash and repository
+  identity. Accepted M3 line refs and M6 result manifests are reconciled through public M1/M3/M6 and composition
+  adapters; an M1 version fact is current only while its accepted audit/member-attempt identity remains current.
+  Composition candidates are built in declared plan order and their commit/tree, manifest, contract identities and
+  environment identity are passed to M6. Multi-repository plans fail closed with
+  `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
+  The planner default remains `1.2.0`: the owner runtime is not enabled by default because full stub-agent owner E2E,
+  M6 review hold/resume and composition-frontier producer wiring remain unproven. F4-9 also adds an M1 operation for
+  applying an explicit M5 frontier to exactly its named tasks, bound to the current published composition manifest
+  and tree; it does not expand descendants. The `m5.demonstrated-frontier/1` producer is not exposed by the accepted
+  composition API, so that callback still fails closed rather than manufacturing an action.
 
 ### Verification inputs, analyst stops and audit ledgers
 
