@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 import bt_role_policy
@@ -48,13 +50,71 @@ def parse(path: Path) -> tuple[dict[str, str], list[str], str]:
     return meta, lines, match.group(2).strip() + "\n"
 
 
-def can_write(path: Path, force: bool) -> bool:
+def destination_problem(agent_dir: Path, path: Path) -> str | None:
+    """Return why a destination is unsafe, allowing the configured root itself to be an alias."""
+    try:
+        relative = path.relative_to(agent_dir)
+    except ValueError:
+        return "path is outside the configured agent directory"
+
+    current = agent_dir
+    for part in relative.parts:
+        current = current / part
+        if current.is_symlink():
+            return f"symlink path component: {current}"
+
+    try:
+        root = agent_dir.resolve(strict=False)
+        resolved = path.resolve(strict=False)
+        resolved.relative_to(root)
+    except ValueError:
+        return "resolved path is outside the configured agent directory"
+    except (OSError, RuntimeError):
+        return "destination cannot be resolved safely"
+    return None
+
+
+def can_write(path: Path, force: bool, agent_dir: Path | None = None) -> bool:
+    if agent_dir is not None and destination_problem(agent_dir, path):
+        return False
     if not path.exists() or force:
         return True
     try:
         return MARKER in path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return False
+
+
+def write_text_safely(agent_dir: Path, path: Path, content: str) -> str | None:
+    """Write without following a leaf symlink, including one swapped in after validation."""
+    problem = destination_problem(agent_dir, path)
+    if problem:
+        return problem
+    path.parent.mkdir(parents=True, exist_ok=True)
+    problem = destination_problem(agent_dir, path)
+    if problem:
+        return problem
+    try:
+        if hasattr(os, "O_NOFOLLOW"):
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW
+            descriptor = os.open(path, flags, 0o666)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(content)
+        else:  # Windows fallback: replace the directory entry instead of opening the leaf.
+            descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+            try:
+                with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                    stream.write(content)
+                problem = destination_problem(agent_dir, path)
+                if problem:
+                    return problem
+                os.replace(temporary, path)
+            finally:
+                if os.path.exists(temporary):
+                    os.unlink(temporary)
+    except OSError as error:
+        return f"safe write failed: {error.strerror or error}"
+    return None
 
 
 def toml_str(value: str) -> str:
@@ -201,23 +261,39 @@ def write_antigravity(directory: Path, meta: dict[str, str], body: str, force: b
     methodology_link = agent_dir / "skills" / "metodologia" if name == "planner" else None
     expected_root = resource_root().resolve()
 
-    conflicts = [path for path in [agent_path, *(target for _, target in targets)] if not can_write(path, force)]
+    conflicts: list[tuple[Path, str]] = []
+    for path in [agent_path, *(target for _, target in targets)]:
+        problem = destination_problem(directory, path)
+        if problem:
+            conflicts.append((path, problem))
+        elif not can_write(path, force):
+            conflicts.append((path, "hand-authored path exists; use --force to overwrite"))
     if methodology_link is not None and (methodology_link.exists() or methodology_link.is_symlink()):
         if not methodology_link.is_symlink() or methodology_link.resolve() != expected_root:
-            conflicts.append(methodology_link)
+            conflicts.append((methodology_link, "methodology link does not resolve to the installed methodology root"))
+    if methodology_link is not None:
+        parent_problem = destination_problem(directory, methodology_link.parent / "methodology-link-check")
+        if parent_problem:
+            conflicts.append((methodology_link.parent, parent_problem))
     if conflicts:
-        print(f"antigravity: SKIP {conflicts[0]} (hand-authored path exists; use --force to overwrite)",
-              file=sys.stderr)
+        path, reason = conflicts[0]
+        print(f"antigravity: SKIP {path} ({reason})", file=sys.stderr)
         return
 
     agent_dir.mkdir(parents=True, exist_ok=True)
     for source, target in targets:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(marked_skill(source), encoding="utf-8")
+        problem = write_text_safely(directory, target, marked_skill(source))
+        if problem:
+            print(f"antigravity: SKIP {target} ({problem})", file=sys.stderr)
+            return
     if methodology_link is not None and not methodology_link.is_symlink():
         methodology_link.parent.mkdir(parents=True, exist_ok=True)
         methodology_link.symlink_to(expected_root, target_is_directory=True)
-    agent_path.write_text(generated_antigravity(meta, body, antigravity_skill_paths(name, sources)), encoding="utf-8")
+    problem = write_text_safely(
+        directory, agent_path, generated_antigravity(meta, body, antigravity_skill_paths(name, sources)))
+    if problem:
+        print(f"antigravity: SKIP {agent_path} ({problem})", file=sys.stderr)
+        return
     print(f"antigravity: {agent_path}")
 
 
@@ -260,18 +336,30 @@ def main() -> None:
             for directory in claude_dirs:
                 directory.mkdir(parents=True, exist_ok=True)
                 target = directory / f"{name}.md"
-                if can_write(target, args.force):
-                    target.write_text(generated_claude(meta, lines, body), encoding="utf-8")
-                    print(f"claude: {target}")
+                problem = destination_problem(directory, target)
+                if problem:
+                    print(f"claude: SKIP {target} ({problem})", file=sys.stderr)
+                elif can_write(target, args.force, directory):
+                    problem = write_text_safely(directory, target, generated_claude(meta, lines, body))
+                    if problem:
+                        print(f"claude: SKIP {target} ({problem})", file=sys.stderr)
+                    else:
+                        print(f"claude: {target}")
                 else:
                     print(f"claude: SKIP {target} (not ours; use --force to overwrite)", file=sys.stderr)
         if args.only in (None, "codex"):
             for directory in codex_dirs:
                 directory.mkdir(parents=True, exist_ok=True)
                 target = directory / f"{name}.toml"
-                if can_write(target, args.force):
-                    target.write_text(generated_codex(meta, body), encoding="utf-8")
-                    print(f"codex: {target}")
+                problem = destination_problem(directory, target)
+                if problem:
+                    print(f"codex: SKIP {target} ({problem})", file=sys.stderr)
+                elif can_write(target, args.force, directory):
+                    problem = write_text_safely(directory, target, generated_codex(meta, body))
+                    if problem:
+                        print(f"codex: SKIP {target} ({problem})", file=sys.stderr)
+                    else:
+                        print(f"codex: {target}")
                 else:
                     print(f"codex:  SKIP {target} (not ours; use --force to overwrite)", file=sys.stderr)
         if args.only == "antigravity" or (args.only is None and (args.agent or name == "planner")):
