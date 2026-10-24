@@ -35,7 +35,7 @@ class BoundaryTests(unittest.TestCase):
         for name in ("GitPort", "Store", "CompositionEngine", "EvidenceKey", "propagate", "reusable"):
             self.assertIn(name, api)
             self.assertIn(name, readme)
-        for state in ("candidate", "published", "rejected"):
+        for state in ("candidate", "verifying", "published", "rejected"):
             self.assertIn(f"`{state}`", readme)
         for code in ("INVALID_IDENTIFIER", "git_text_conflict", "COMPOSITION_CURRENT_MOVED",
                      "SUBPLAN_VERSION_CONFLICT", "PUBLISHED_COMPOSITION_IMMUTABLE"):

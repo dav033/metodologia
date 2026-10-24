@@ -123,6 +123,72 @@ class CompositionIntegrationTests(unittest.TestCase):
             finally:
                 store.close()
 
+    def test_real_git_c1_to_c2_publish_refs_oid_validation_digest_and_wal(self):
+        with tempfile.TemporaryDirectory(prefix="composition-real-") as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            repo.mkdir()
+            self.git(repo, "init", "-q")
+            self.git(repo, "config", "user.name", "Test")
+            self.git(repo, "config", "user.email", "test@example.invalid")
+            (repo / "base.txt").write_text("base\n", encoding="utf-8")
+            self.git(repo, "add", "base.txt")
+            self.git(repo, "commit", "-qm", "base")
+            base = self.git(repo, "rev-parse", "HEAD")
+
+            def commit_file(name: str, text: str, parent: str) -> str:
+                self.git(repo, "read-tree", parent)
+                (repo / name).write_text(text, encoding="utf-8")
+                self.git(repo, "add", name)
+                tree = self.git(repo, "write-tree")
+                return self.git(repo, "commit-tree", tree, "-p", parent, input_text=f"{name}\n")
+
+            s1v1 = commit_file("s1.txt", "one\n", base)
+            s2v1 = commit_file("s2.txt", "two\n", base)
+            s3v1 = commit_file("s3.txt", "three\n", base)
+            engine, store = adapter.create_engine(repo, root / "state.db", root / "workspaces")
+            try:
+                self.assertEqual(store.connection.execute("PRAGMA journal_mode").fetchone()[0].lower(), "wal")
+                port = engine.git
+                self.assertTrue(port.tree_digest(base, ("base.txt",)))
+                self.assertEqual(port.diff_paths(base, s1v1), ("s1.txt",))
+                with self.assertRaisesRegex(ValueError, "EMPTY_RELEVANT_PATHS"):
+                    port.tree_digest(base, ())
+                with self.assertRaisesRegex(ValueError, "TREE_PATHS_MISSING"):
+                    port.tree_digest(base, ("missing.txt",))
+
+                version = engine.publish_subplan_version("P", "r1", "HEADSP", "HEAD", "HEAD", {}, [])
+                self.assertEqual(version.commit, base)
+                a, b = s1v1, s2v1
+                injected = f"{a}\nupdate refs/heads/evil {b}"
+                with self.assertRaisesRegex(ValueError, "INVALID_VERSION_COMMIT"):
+                    engine.publish_subplan_version("P", "r1", "INJECTED", injected, base, {}, [])
+                with self.assertRaisesRegex(ValueError, "INVALID_REF_OID"):
+                    port.update_refs((("refs/compositions/P/candidates/C999", injected, None),))
+                self.assertIsNone(port.rev_parse("refs/heads/evil"))
+
+                engine.publish_subplan_version("P", "r1", "S1", s1v1, base, {"api@1": "declared"}, [])
+                engine.publish_subplan_version("P", "r1", "S2", s2v1, base, {"api@1": "declared"}, [])
+                engine.publish_subplan_version("P", "r1", "S3", s3v1, base, {"api@1": "declared"}, [])
+                c1 = engine.build_candidate("P", {"S1": 1, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
+                self.assertTrue(engine.publish(c1.id, {"M6": "PASS"}))
+                s2_ref = port.rev_parse("refs/subplans/P/S2/v1")
+                s3_ref = port.rev_parse("refs/subplans/P/S3/v1")
+                s1v2 = commit_file("s1.txt", "one\nnew\n", s1v1)
+                engine.publish_subplan_version("P", "r2", "S1", s1v2, s1v1, {"api@1": "declared"}, [])
+                c2 = engine.build_candidate("P", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
+                workspace = Path(engine.open_workspace(c2.id))
+                self.assertTrue(workspace.exists())
+                self.assertIn(str(workspace), engine.prune_workspaces())
+                self.assertFalse(workspace.exists())
+                self.assertTrue(engine.publish(c2.id, {"M6": "PASS"}))
+                self.assertEqual(port.rev_parse("refs/compositions/P/current"), c2.integrated_commit)
+                self.assertEqual(port.rev_parse("refs/compositions/P/C1"), c1.integrated_commit)
+                self.assertEqual(port.rev_parse("refs/subplans/P/S2/v1"), s2_ref)
+                self.assertEqual(port.rev_parse("refs/subplans/P/S3/v1"), s3_ref)
+            finally:
+                store.close()
+
     def test_package_is_declared_for_distribution(self):
         config = tomllib.loads((REPO / "pyproject.toml").read_text(encoding="utf-8"))
         setuptools = config["tool"]["setuptools"]

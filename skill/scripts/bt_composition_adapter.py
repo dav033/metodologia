@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import re
+import shutil
 import subprocess
 import tempfile
 from pathlib import Path
@@ -15,6 +18,12 @@ class GitCommandError(RuntimeError):
 
 
 class GitSubprocessPort:
+    LOCATION_VARS = frozenset({"GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
+                               "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR", "GIT_NAMESPACE", "GIT_PREFIX"})
+    IDENTITY = {"GIT_AUTHOR_NAME": "composition-engine", "GIT_AUTHOR_EMAIL": "composition@localhost",
+                "GIT_COMMITTER_NAME": "composition-engine", "GIT_COMMITTER_EMAIL": "composition@localhost",
+                "GIT_AUTHOR_DATE": "1970-01-01T00:00:00+0000", "GIT_COMMITTER_DATE": "1970-01-01T00:00:00+0000"}
+
     def __init__(self, repository: str | Path, workspace_root: str | Path):
         self.repository = Path(repository).resolve()
         self.workspace_root = Path(workspace_root).resolve()
@@ -24,16 +33,35 @@ class GitSubprocessPort:
         self.zero = "0" * (64 if result.stdout.strip() == "sha256" else 40)
 
     def _run(self, *arguments: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-        result = subprocess.run(["git", "-C", str(self.repository), *arguments],
+        result = subprocess.run(self._command(*arguments), env=self._environment(),
                                 capture_output=True, text=True, check=False)
         if check and result.returncode:
             detail = result.stderr.strip().splitlines()
             raise GitCommandError(detail[-1] if detail else "git_command_failed")
         return result
 
+    def _command(self, *arguments: str) -> list[str]:
+        return ["git", "-c", "core.hooksPath=/dev/null", "-c", "gc.auto=0", "-c", "commit.gpgSign=false",
+                "-C", str(self.repository), *arguments]
+
+    @classmethod
+    def _environment(cls) -> dict[str, str]:
+        environment = {key: value for key, value in os.environ.items() if key not in cls.LOCATION_VARS}
+        environment.update(cls.IDENTITY)
+        environment.update({"GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0",
+                            "GIT_OPTIONAL_LOCKS": "0", "LC_ALL": "C"})
+        return environment
+
     def rev_parse(self, revision: str) -> str | None:
-        result = self._run("rev-parse", "--verify", f"{revision}^{{commit}}", check=False)
-        return result.stdout.strip() if result.returncode == 0 else None
+        if not isinstance(revision, str) or not revision or any(char.isspace() for char in revision):
+            return None
+        result = self._run("rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}", check=False)
+        if result.returncode:
+            return None
+        oid = result.stdout.strip()
+        if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", oid):
+            raise GitCommandError("git_commit_oid_invalid")
+        return oid
 
     def merge_tree(self, base: str, ours: str, theirs: str) -> GitResult:
         result = self._run("merge-tree", "--write-tree", "--name-only", "--no-messages",
@@ -57,28 +85,43 @@ class GitSubprocessPort:
     def update_refs(self, updates: Sequence[tuple[str, str | None, str | None]]) -> None:
         commands = ["start"]
         for ref, new, expected in updates:
-            if not (ref.startswith("refs/subplans/") or ref.startswith("refs/compositions/")):
+            if (not isinstance(ref, str) or any(char.isspace() for char in ref)
+                    or not (ref.startswith("refs/subplans/") or ref.startswith("refs/compositions/"))
+                    or self._run("check-ref-format", ref, check=False).returncode):
                 raise ValueError("COMPOSITION_REF_OUTSIDE_NAMESPACE")
             old = self.zero if expected is None else expected
+            oid_pattern = rf"(?:[0-9a-f]{{{len(self.zero)}}})"
+            if not re.fullmatch(oid_pattern, old) or (new is not None and not re.fullmatch(oid_pattern, new)):
+                raise ValueError("INVALID_REF_OID")
             if new is None:
                 commands.append(f"delete {ref} {old}")
             else:
                 commands.append(f"update {ref} {new} {old}")
         commands.extend(("prepare", "commit", ""))
-        result = subprocess.run(["git", "-C", str(self.repository), "update-ref", "--stdin"],
+        result = subprocess.run(self._command("update-ref", "--stdin"), env=self._environment(),
                                 input="\n".join(commands), capture_output=True, text=True, check=False)
         if result.returncode:
             detail = result.stderr.strip().splitlines()
             raise GitCommandError(detail[-1] if detail else "git_ref_transaction_failed")
 
     def tree_digest(self, commit: str, paths: Sequence[str]) -> str:
+        if not paths:
+            raise ValueError("EMPTY_RELEVANT_PATHS")
         entries: list[str] = []
+        missing: list[str] = []
         for path in sorted(set(paths)):
-            if path.startswith("/") or ".." in Path(path).parts:
+            if (not path or path.startswith("/") or ".." in Path(path).parts
+                    or "\n" in path or "\r" in path):
                 raise ValueError("INVALID_RELEVANT_PATH")
-            result = self._run("ls-tree", "-r", commit, "--", path)
-            entries.extend(line for line in result.stdout.splitlines() if line)
-        return hashlib.sha256("\n".join(entries).encode("utf-8")).hexdigest()
+            result = self._run("ls-tree", "-r", "--full-tree", commit, "--", path)
+            found = [line for line in result.stdout.splitlines() if line]
+            if found:
+                entries.extend(found)
+            else:
+                missing.append(path)
+        if missing:
+            raise ValueError("TREE_PATHS_MISSING: " + ", ".join(missing))
+        return hashlib.sha256("\n".join((*sorted(set(paths)), *sorted(entries))).encode("utf-8")).hexdigest()
 
     def diff_paths(self, a: str, b: str) -> tuple[str, ...]:
         output = self._run("diff", "--name-only", "--no-renames", a, b, "--").stdout
@@ -99,6 +142,23 @@ class GitSubprocessPort:
         if self.workspace_root not in resolved.parents:
             raise ValueError("WORKTREE_PATH_OUTSIDE_ROOT")
         self._run("worktree", "remove", "--force", str(resolved))
+
+    def prune_workspaces(self) -> tuple[str, ...]:
+        self.workspace_root.mkdir(parents=True, exist_ok=True)
+        output = self._run("worktree", "list", "--porcelain").stdout
+        removed: list[str] = []
+        for line in output.splitlines():
+            if not line.startswith("worktree "):
+                continue
+            path = Path(line.removeprefix("worktree ")).resolve()
+            if path == self.workspace_root or self.workspace_root not in path.parents:
+                continue
+            self._run("worktree", "remove", "--force", str(path), check=False)
+            if path.exists():
+                shutil.rmtree(path)
+            removed.append(str(path))
+        self._run("worktree", "prune")
+        return tuple(removed)
 
 
 def create_engine(repository: str | Path, store_path: str | Path,

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Protocol, Sequence
 
@@ -21,6 +22,7 @@ class GitPort(Protocol):
     def diff_paths(self, a: str, b: str) -> tuple[str, ...]: ...
     def add_worktree(self, commit: str, parent: str | Path) -> str: ...
     def remove_worktree(self, path: str | Path) -> None: ...
+    def prune_workspaces(self) -> tuple[str, ...]: ...
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,8 @@ class Candidate:
     required_verdicts: tuple[str, ...]
     reason_code: str | None = None
     conflict_paths: tuple[str, ...] = ()
+    conflicts: dict[str, tuple[str, ...]] | None = None
+    member_order: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -57,6 +61,7 @@ class EvidenceKey:
     tree_digest: str
     contracts: dict[str, str]
     environment: str
+    paths: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -67,6 +72,7 @@ class PropagationChange:
     public_surface_changed: bool = False
     git_conflict: bool = False
     producer_broke_declared_major: bool = False
+    conflicting_members: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -77,6 +83,7 @@ class Action:
 
 
 class StorePort(Protocol):
+    def write_transaction(self) -> AbstractContextManager[None]: ...
     def next_version(self, plan_id: str, subplan_id: str) -> int: ...
     def get_version(self, plan_id: str, subplan_id: str, version: int) -> SubplanVersion | None: ...
     def find_version(self, request_sha256: str) -> SubplanVersion | None: ...
