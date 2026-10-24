@@ -15,7 +15,6 @@ from bt_scheduler_executor import gates
 from bt_scheduler_executor.prompt import build_prompt
 import scheduler_executor_support as support
 from scheduler_executor_support import adapter, core, git
-from bt_scheduler_core.recovery import attempts_used
 
 
 class M3SubplanGates(unittest.TestCase):
@@ -209,7 +208,9 @@ class M3SubplanGates(unittest.TestCase):
         self.assertEqual(snapshot.tasks["T2"]["state"], "blocked")
         attempt = scheduler.read(lambda ctx: ctx.state.attempts[ctx.state.tasks["T2"].attempts[-1]])
         self.assertFalse(attempt.budget_consumed)
-        self.assertEqual(attempts_used(scheduler.read(lambda ctx: ctx.state), "T2"), 0)
+        consumed = scheduler.read(lambda ctx: sum(ctx.state.attempts[attempt].budget_consumed
+                                                   for attempt in ctx.state.tasks["T2"].attempts))
+        self.assertEqual(consumed, 0)
         approved["state"] = "approved"
         scheduler.reopen("T2", "owner", "contract approved")
         self.assertEqual(scheduler.snapshot().tasks["T2"]["state"], "ready")
