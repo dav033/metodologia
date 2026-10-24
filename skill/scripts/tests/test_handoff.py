@@ -305,6 +305,9 @@ class ContextTests(IsolatedCase):
         self.assertIn("learn add", context)
         self.assertIn("learn confirm|reject", context)
         self.assertIn(learned, context)
+        self.assertIn("Designer", context)
+        self.assertIn("bitacora.py design approve", context)
+        self.assertIn("design.preview", context)
 
 
 if __name__ == "__main__":

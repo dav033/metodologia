@@ -49,7 +49,7 @@ AUDIT_LADDER = {
     "antigravity": (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)),
 }
 _KIND_WORDS = (("audit", ("audit", "review", "revis", "auditor")),
-               ("design", ("design contract", "ui contract", "design task", "designer task")),
+               ("design", ("design contract", "ui contract", "design task", "designer task", "mockup", "wireframe")),
                ("docs", ("docs", "documentation", "readme", "document", "changelog", "skill.md")),
                ("test", ("test", "e2e", "coverage", "prueba")),
                ("research", ("research", "investigate", "compare", "spike")))

@@ -68,8 +68,34 @@ class ModelSelectionTests(AgentTests):
         self.assertEqual(bt_agents.infer_kind("Review implementation"), "audit")
         self.assertEqual(bt_agents.infer_kind("Implement a new parser"), "implement")
 
+    def test_delegate_and_route_cli_accept_design_kind(self):
+        import argparse
+        import bt_cli_accounts
+        import bt_cli_delegate
+
+        for register, command, action, args in (
+            (bt_cli_delegate.register, "delegate", "start", ["start", "Design a UI", "--kind", "design"]),
+            (bt_cli_accounts.register, "agents", "route", ["route", "--kind", "design"]),
+        ):
+            parser = argparse.ArgumentParser()
+            sub = parser.add_subparsers(dest="command")
+            register(sub)
+            parsed = parser.parse_args([command, *args])
+            self.assertEqual(getattr(parsed, "kind"), "design")
+
     def test_invalid_explicit_kind_falls_back_to_title(self):
         self.assertEqual(bt_agents.infer_kind("run tests", "unknown"), "test")
+
+    def test_design_is_a_distinct_kind_and_inferred_from_ui_language(self):
+        self.assertIn("design", bt_agents.KINDS)
+        for title in ("Design checkout mockup", "Create a wireframe", "Write the UI contract"):
+            with self.subTest(title=title):
+                self.assertEqual(bt_agents.infer_kind(title), "design")
+        self.assertEqual(bt_agents.infer_kind("Design a UI", " DESIGN "), "design")
+
+    def test_design_keeps_its_own_hard_tier_ceiling(self):
+        self.assertIn("design", bt_agents.MAX_KIND_TIER)
+        self.assertEqual(bt_agents.start_tier("architecture", "design"), 2)
 
     def test_start_tier_architecture_and_audit(self):
         self.assertEqual(bt_agents.start_tier(" ARCHITECTURE ", "docs"), 0)
@@ -350,6 +376,22 @@ class CatalogTests(AgentTests):
 
 
 class EventSummaryTests(AgentTests):
+    def test_design_telemetry_is_a_separate_bucket_from_implement(self):
+        rows = [{"agent": "claude", "kind": "design", "result": "done", "seconds": 10,
+                 "usage": {"total_tokens": 100}},
+                {"agent": "claude", "kind": "implement", "result": "done", "seconds": 10,
+                 "usage": {"total_tokens": 100}}]
+        groups = bt_events.summary(rows, by=("kind",))
+        self.assertEqual({row["kind"] for row in groups}, {"design", "implement"})
+
+    def test_design_efficiency_is_a_separate_bucket_from_implement(self):
+        import bt_efficiency
+        rows = [{"kind": kind, "result": "done", "seconds": 10, "usage": {}, "agent": "claude",
+                 "tasks": ["T1"], "task_results": {"T1": "done"}, "task_outcomes": [{"id": "T1", "kind": kind,
+                 "result": "done"}]} for kind in ("design", "implement")]
+        groups = bt_efficiency.summarize(rows)
+        self.assertEqual({row["kind"] for row in groups}, {"design", "implement"})
+
     def test_summary_groups_by_default_and_uses_implicit_implement_kind(self):
         rows = [
             {"agent": "claude", "profile": "a", "model": "haiku", "effort": None, "result": "done",

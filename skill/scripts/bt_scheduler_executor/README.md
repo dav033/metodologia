@@ -58,7 +58,10 @@ accepted member-task deltas and accepted ancestors are folded under `refs/m3/lin
 redo replaces the prior delta and conflicts stay visible. Non-subplan tasks use the candidate/current commit injected by
 the owner adapter and fail closed with `COMPOSITION_BASE_MISSING` when it is absent. UI implementer starts require the
 exact declared design contract blob in the selected base tree plus the matching owner approval hash. The stable blockers
-are `DESIGN_CONTRACT_UNAPPROVED` and `DESIGN_CONTRACT_HASH_MISMATCH`. A visual audit
+are `DESIGN_CONTRACT_UNAPPROVED` and `DESIGN_CONTRACT_HASH_MISMATCH`. The executor
+prompt accepts the declared contract path and version for Designer, UI implementer and visual Reviewer tasks; when
+provided, Designers are scoped to `design/` and cannot approve their own contract, UI implementers must read and report
+conformance, and visual Reviewers request Runner screenshots for every breakpoint × state. A visual audit
 brief carries `review_axis: visual` from the frozen subplan metadata. `GitWorkspaces.reconstruct_subplan()` reconstructs a
 scope commit; `allocate_integration()` checks out a candidate, and `release()` safely cleans either candidate workspace
 repeatedly. Attempt workspaces retain their existing per-attempt lifecycle and receipt binding.
