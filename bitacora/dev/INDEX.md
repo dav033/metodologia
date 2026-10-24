@@ -1,6 +1,6 @@
 # Index — dev
 
-_Generated 2026-10-23 18:17 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-23 19:12 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  
@@ -21,9 +21,9 @@ _Generated 2026-10-23 18:17 by `bitacora.py index`. Do not edit by hand._
 - **repo-marketplace-control-frontend** → `/home/david/dev/marketplace-control-frontend`
 - **repo-maros-nest-ci** → `/home/david/dev/maros-nest-ci`
 - **repo-metodologia** → `/home/david/dev/metodologia`
-- **repo-metodologia-m2** → `/home/david/dev/metodologia-m2`
-- **repo-metodologia-m5** → `/home/david/dev/metodologia-m5`
-- **repo-metodologia-m6-quality** → `/home/david/dev/metodologia-m6-quality`
+- **repo-metodologia-m2** → `/home/david/dev/metodologia-m2` (not cloned here)
+- **repo-metodologia-m5** → `/home/david/dev/metodologia-m5` (not cloned here)
+- **repo-metodologia-m6-quality** → `/home/david/dev/metodologia-m6-quality` (not cloned here)
 - **repo-oraldenti** → `/home/david/dev/oraldenti`
 - **repo-pictures** → `/home/david/dev/pictures`
 - **repo-proposal-studio** → `/home/david/dev/proposal-studio`
@@ -45,11 +45,11 @@ _None yet._
 
 ## Recent decisions
 
+- D-021 — Provenance follows the license at the pinned upstream revision
 - D-020 — A run asks its owner through decision requests; the watchdog waits for the answer
 - D-019 — M4 treats a replayed event as the same event when only its read time differs
 - D-018 — A port that is not composed yet says «not ready», not «unknown»
 - D-017 — The verifier accepts a publication snapshot already on origin/main; `scheduler-op retry`
-- D-016 — A watchdog keeps a run alive; operator moves are commands; the verifier has an end-to-end smoke test
 
 ## Timeline
 

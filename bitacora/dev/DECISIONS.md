@@ -182,3 +182,11 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + the owner answers with one command and sees the consequence first; + the same answers will back the Telegram buttons of REQ-027; − the agent still cannot ask: only run state produces requests (no `needs` field in the plan yet); − panel and Telegram do not show requests yet; − no «other route/account» option until the route pin of REQ-027 exists.
 - **Source:** [day log](2026-10/W4/2026-10-19.md) · session 8eef50ee
 
+## D-021 — Provenance follows the license at the pinned upstream revision
+- **Date:** 2026-10-23 · **Status:** Accepted
+- **Context:** F2-C's methodology master identifies the Caveman skill as MIT under its earlier split-license regime, while the fetched pinned HEAD's `LICENSING.md` says Apache-2.0 applies from 3.0.0.
+- **Decision:** Record the license stated at the exact fetched SHA in Implementer provenance and adapt principles in original wording only; do not copy upstream text or runtime components.
+- **Alternatives:** Use the historical MIT label from the master — it conflicts with the pinned revision's license metadata.
+- **Consequences:** + Provenance matches the reviewed source revision; − a future upstream SHA requires a fresh license check.
+- **Source:** [day log](2026-10/W4/2026-10-23.md) · session 01a16b2e
+
