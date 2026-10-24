@@ -22,6 +22,7 @@ file-guard = "file_guard:main"
 install-agents = "install_agents:main"
 install-rtk = "bt_entrypoints:install_rtk"
 bitacora-inventory = "migration_inventory:main"
+bt-engine-benchmark = "bt_engine_benchmark:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
@@ -72,6 +73,7 @@ py-modules = [
   "bt_diagram",
   "bt_driver",
   "bt_efficiency",
+  "bt_engine_benchmark",
   "bt_entrypoints",
   "bt_events",
   "bt_evolution",
