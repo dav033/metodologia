@@ -110,9 +110,10 @@ class M3SubplanGates(unittest.TestCase):
         executor = Executor()
         port = adapter.CoreExecutionPort(executor, self.plan, project="proj", base_ref=selected,
                                          repo_of=lambda role: self.repo)
+        port.design_approval = lambda repo, base, path: {"state": "unapproved"}
         blocked = port.start(ui_order)
         self.assertEqual(blocked.status, "rejected")
-        self.assertIn("DESIGN_CONTRACT_MISSING", blocked.detail)
+        self.assertIn("DESIGN_CONTRACT_UNAPPROVED", blocked.detail)
         self.assertEqual(blocked.classification, "blocked_environment")
         self.assertFalse(executor.called)
         self.assertTrue(gates.has_blob(self.repo, selected, "design/contracts/checkout@v1.md"))
@@ -138,10 +139,36 @@ class M3SubplanGates(unittest.TestCase):
         executor = Executor()
         port = adapter.CoreExecutionPort(executor, self.plan, project="proj", base_ref=selected,
                                          repo_of=lambda role: self.repo)
+        port.design_approval = lambda repo, base, path: {"state": "approved"}
         ack = port.start(ui_order)
         self.assertEqual(ack.status, "accepted")
         self.assertTrue(executor.called)
         self.assertEqual(executor.request.base_ref, selected)
+
+    def test_ui_task_with_an_approved_but_changed_contract_is_held_without_starting(self):
+        contract = self.repo / "design/contracts/checkout@v2.md"
+        contract.parent.mkdir(parents=True)
+        contract.write_text("new contract\n")
+        git(self.repo, "add", "design/contracts/checkout@v2.md")
+        git(self.repo, "commit", "-m", "new contract")
+        selected = git(self.repo, "rev-parse", "HEAD")
+
+        class Executor:
+            called = False
+
+            def start(self, request):
+                self.called = True
+                return m3.Receipt("accepted", attempt_id=request.attempt_id)
+
+        executor = Executor()
+        ui_order = SimpleNamespace(**{**vars(self.order), "task_id": "T2"})
+        port = adapter.CoreExecutionPort(executor, self.plan, project="proj", base_ref=selected,
+                                         repo_of=lambda role: self.repo)
+        port.design_approval = lambda repo, base, path: {"state": "hash-mismatch"}
+        ack = port.start(ui_order)
+        self.assertEqual(ack.classification, "blocked_environment")
+        self.assertIn("DESIGN_CONTRACT_HASH_MISMATCH", ack.detail)
+        self.assertFalse(executor.called)
 
     def test_visual_axis_is_derived_only_for_the_frozen_visual_review_task(self):
         review = SimpleNamespace(id="T3", repository="app", meta={"kind": "audit"}, verification=(),

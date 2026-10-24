@@ -198,9 +198,15 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
     plan = api.sched.approved_plan(rdir)
     repo_of = api.repositories(project, repos)
+    import bt_design_approval
+
+    def check_design_approval(repository, base, path):
+        return bt_design_approval.check_tree(rdir, repository, base, path)
+
     port = api.CoreExecutionPort(None, plan, project=project, base_ref=base_ref,
                                  default_repository=default_repository, composition_base=composition_base,
                                  repo_of=repo_of)
+    port.design_approval = check_design_approval
     routing = assignment if callable(getattr(assignment, "plan", None)) else None
     scheduler = api.sched.open_scheduler(rdir, ports=api.core.Ports(assignment=assignment, routing=routing,
                                                             execution=port, verification=verification,
@@ -238,9 +244,31 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
     from dataclasses import replace
 
     executor_config = replace(executor_config or api.m3.Config(), prompt_rtk=bt_config.get("prompts.rtk", True))
+    def design_notes(request):
+        task = scheduler.plan.task(request.task_id)
+        ui = next((item.ui for item in scheduler.plan.subplans if item.ui and
+                   item.ui.design_task == request.task_id), None)
+        ui_task = task.meta.get("ui") is True
+        if not ui_task and ui is None:
+            return ""
+        if ui_task:
+            path = f"design/contracts/{ui.contract}@v{ui.version}.md" if ui else ""
+        else:
+            path = f"design/contracts/{ui.contract}@v{ui.version}.md"
+        repository = repo_of(task.repository or default_repository)
+        state = "unavailable"
+        digest = ""
+        if repository is not None and path:
+            gate = check_design_approval(repository, request.base_ref, path)
+            state = gate.get("state", "unapproved")
+            digest = gate.get("sha256") or ""
+        return (f"Design contract: {path}\nTask kind: {task.meta.get('kind', '')}\n"
+                f"UI task: {str(ui_task).lower()}\n"
+                f"Approval: {state}\nSHA-256: {digest}")
+
     executor = api.m3.AgentExecutor(
         root, resolver=resolver or api.RouteResolver(project, m2_lookup=m2_lookup, repos=repo_of, allow_direct=allow_direct),
-        briefs=api.PlanBriefs(scheduler.plan), driver=driver or api.MethodologyDriver(project),
+        briefs=api.PlanBriefs(scheduler.plan, notes=design_notes), driver=driver or api.MethodologyDriver(project),
         workspaces=api.m3.GitWorkspaces(root / "ws", repo_of), sink=sink, config=executor_config, autostart=False)
     stream_adapter = api.M3StreamAdapter(executor.attempts_dir, max_open_streams=executor.cfg.max_running)
     wiring = api.Wiring(scheduler, executor, port, sink, stream_adapter)

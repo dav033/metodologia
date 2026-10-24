@@ -36,3 +36,12 @@ def has_blob(repo, revision: str, path: str) -> bool:
     mode, _, rest = entry.partition(" ")
     # A regular file only: a symlink (120000) is also a blob, but it is link text, not the contract.
     return mode in ("100644", "100755") and rest.startswith("blob ") and "\n" not in entry
+
+
+def approval_problem(state: str) -> str | None:
+    """Map the owner approval read model to a stable blocked-environment reason."""
+    if state == "approved":
+        return None
+    if state == "hash-mismatch":
+        return "DESIGN_CONTRACT_HASH_MISMATCH"
+    return "DESIGN_CONTRACT_UNAPPROVED"

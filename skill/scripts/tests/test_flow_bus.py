@@ -80,6 +80,18 @@ class Bus(unittest.TestCase):
         unknown = [e for e in events if e["kind"] == "unknown"]
         self.assertEqual([e["data"]["audit"] for e in unknown], ["brand_new_kind"])
 
+    def test_owner_design_approval_is_a_durable_flow_event(self):
+        file = self.rdir / "design-approvals.json"
+        file.write_text(json.dumps({"schema_version": 1, "approvals": {"checkout@v2": {
+            "status": "approved", "sha256": "a" * 64, "who": "owner", "via": "web",
+            "when": "2026-10-24T10:30:00+00:00"}}}), encoding="utf-8")
+        events, cursors = bus.collect(self.rdir, "demo")
+        approval = next(item for item in events if item["kind"] == "design_approval")
+        self.assertEqual(approval["data"]["contract"], "checkout@v2")
+        self.assertEqual(approval["data"]["state"], "approved")
+        later, _ = bus.collect(self.rdir, "demo", cursors)
+        self.assertFalse([item for item in later if item["kind"] == "design_approval"])
+
     def test_m6_verdict_is_not_lost_when_a_queued_request_finishes_after_the_cursor_passed_it(self):
         m6 = next(self.db.parent.glob("*-modules")) / "m6-quality.sqlite3"
         sql(m6, "CREATE TABLE requests (idempotency_key TEXT PRIMARY KEY, request_json TEXT, state TEXT, "

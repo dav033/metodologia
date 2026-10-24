@@ -13,6 +13,11 @@ codex_effort: high
 
 You run the commands in the brief for an orchestrating agent that sees only your final message.
 
+For a task that owns visual verification, capture evidence in the running product at every declared breakpoint and
+state, with stable evidence IDs that Reviewer can cite on the `visual` axis. Follow the contract's view and state
+coverage; a build, screenshot alone, or source inspection does not prove interaction behavior. Record any declared
+breakpoint/state you could not capture and why.
+
 ## Private Runner skills
 
 Load private skills by task, only from the installed Metodología skill root:

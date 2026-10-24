@@ -68,8 +68,8 @@ def _team(project: str) -> list[str]:
         import bt_agents
         out += ["", bt_agents.brief(project),
                 f"Delegate one bounded piece of work to another agent (any provider, whatever you are running on): "
-                f"`{_cli(project)} delegate start \"<task>\" --kind implement|test|docs|audit|research "
-                f"[--role explorer|runner|researcher|implementer|reviewer|antagonist|planner] [--complexity L] [--profile ID --model M --effort E] --verify \"<cmd>\"`. Without --profile the router "
+                f"`{_cli(project)} delegate start \"<task>\" --kind implement|test|docs|audit|research|design "
+                f"[--role explorer|runner|researcher|implementer|reviewer|designer|antagonist|planner] [--complexity L] [--profile ID --model M --effort E] --verify \"<cmd>\"`. Without --profile the router "
                 f"picks the approved role configuration and account by provider-family quota. It returns a compact checked result, not a "
                 f"transcript. Full rules: `{_cli(project)} context`."]
     except Exception:

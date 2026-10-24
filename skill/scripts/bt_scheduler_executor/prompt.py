@@ -41,6 +41,24 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
     ]
     if brief.objective:
         parts.append(f"\n## Objective\n{brief.objective}")
+    notes = brief.notes or ""
+    contract_line = next((line.strip() for line in notes.splitlines()
+                          if line.strip().lower().startswith("design contract:")), "")
+    if contract_line:
+        contract_path = contract_line.split(":", 1)[1].strip()
+        task_kind = next((line.split(":", 1)[1].strip().lower() for line in notes.splitlines()
+                          if line.strip().lower().startswith(("task kind:", "kind:"))), "")
+        ui_task = any(line.strip().lower() in ("ui task: true", "ui: true") for line in notes.splitlines())
+        if task_kind == "design":
+            instructions = [f"Author the contract at `{contract_path}`. Read any existing file there first; keep "
+                            "contract changes within `design/`."]
+        else:
+            instructions = [f"Read `{contract_path}` before making changes and follow its requirements."]
+            if ui_task:
+                instructions.append("Before editing, verify the notes include approval status `approved` and the approved SHA-256. "
+                                    "Compare that digest with the contract file; if either is missing or differs, stop and "
+                                    "report the task as blocked without changing UI code.")
+        parts.append("\n## Design contract\n" + "\n".join(f"- {instruction}" for instruction in instructions))
     if brief.review_axis == "visual":
         parts.append("\n## Reviewer axis\nvisual")
     parts.append(f"\n## Acceptance criteria\n{bullets(brief.acceptance_criteria or request.acceptance_criteria)}")

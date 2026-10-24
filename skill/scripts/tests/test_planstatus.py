@@ -39,6 +39,23 @@ class Base(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name).resolve()
 
+    def test_status_carries_contract_version_and_owner_approval_per_ui_subplan(self):
+        plan = {**PLAN, "schema_version": "1.3.0", "subplans": [{"id": "SP-1", "title": "Checkout",
+                 "ui": {"contract": "checkout", "version": 3, "design_task": "T1",
+                        "visual_review_task": "T4"}}]}
+        rdir = self.req(contract=plan)
+        status = ps.plan_status("demo", rdir)
+        item = status["design_subplans"][0]
+        self.assertEqual(item["contract"], "checkout@v3")
+        self.assertEqual(item["design_state"], "pending")
+        self.assertIsNone(item["approval"])
+        import bt_planblock
+        self.assertIn("checkout@v3", bt_planblock.status_table(status))
+        self.assertIn("checkout@v3", bt_planblock.render_block(status))
+        (rdir / "design-approvals.json").write_text(json.dumps({"schema_version": 1, "approvals": {
+            "checkout@v3": {"status": "approved", "sha256": "a" * 64}}}), encoding="utf-8")
+        self.assertEqual(ps.plan_status("demo", rdir)["design_subplans"][0]["approval"]["status"], "approved")
+
     def req(self, project="demo", name="REQ-001-demo", *, plan=True, md="status: approved", contract=PLAN):
         rdir = self.root / project / "requirements" / name
         rdir.mkdir(parents=True, exist_ok=True)

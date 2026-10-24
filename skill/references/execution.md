@@ -69,6 +69,13 @@ Audits use Sonnet 5.5 medium, Opus 5.5 high for escalation/high risk, or Sol med
 they do not inherit the implementation ladder's effort. Reuse milestone audits for closing review rather than
 launching duplicate full passes; the final session consolidates evidence and cross-milestone risks.
 
+**UI subplans:** execution follows design task → owner approval of the exact `design/contracts/<contract>@vN.md`
+content → `ui: true` implementation tasks → Reviewer `visual` review → subplan audit. A missing contract is
+`DESIGN_CONTRACT_MISSING`; a contract without matching owner approval waits as `DESIGN_CONTRACT_UNAPPROVED` (or
+`DESIGN_CONTRACT_HASH_MISMATCH` if its content changed). These are blocked/waiting states, not implementation
+failures, and do not spend code-retry budget. Approval makes the waiting UI tasks eligible to retry. Plans without
+UI subplans keep their existing behavior.
+
 **Account profiles** (`bitacora.py profiles list|doctor`, `launch --profile ID`): a profile is a provider plus the
 env that selects its account (`CLAUDE_CONFIG_DIR`, `CODEX_HOME`); credentials stay in each provider's own directory.
 Only `work_only` profiles (`claude-work`) are gated: they run solely for projects with `"work": true` in

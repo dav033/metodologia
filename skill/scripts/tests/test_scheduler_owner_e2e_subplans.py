@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import bt_scheduler_adapter as scheduler_adapter
 import bt_scheduler_run as scheduler_run
 import bt_config
+import bt_design_approval
 from bt_scheduler_owner_composition import OwnerCompositionRuntime
 import owner_e2e_support as support
 import scheduler_chain_support as chain
@@ -80,6 +81,13 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
     def _run_13_owner(self, plan=None, *, max_steps=300, resume=False, agent_factory=SuccessfulAgent):
         plan = plan or support.three_subplan_plan()
         support.freeze_plan(self.rdir, plan)
+        ui = next((item.get("ui") for item in plan.get("subplans", [])
+                   if isinstance(item, dict) and isinstance(item.get("ui"), dict)), None)
+        if ui is not None and self.contract is not None:
+            ref = f"{ui['contract']}@v{ui['version']}"
+            if bt_design_approval.approvals(self.rdir).get(ref, {}).get("status") != "approved":
+                bt_design_approval.decide(self.rdir, self.repo, ref, True, "E2E fixture approval",
+                                          "fixture-owner", "test")
         captured = {}
         original_wire = scheduler_run._wire
 

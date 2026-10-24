@@ -1,8 +1,10 @@
 # Interface and content quality
 
 Read for interface creation/audits, visual mockups or product copy; apply only the relevant sections. Use the
-existing requirements, engineering and verification flow. This reference adds no installation, mode question,
-approval gate, mandatory design file or separate audit report.
+existing requirements, engineering and verification flow. For a plan with UI subplans, a versioned design contract
+and owner approval of that exact contract version are mandatory before any `ui: true` implementation task starts.
+This reference is the quality guidance that Designer and Reviewer apply; it does not replace the approved contract
+or the normal verification and audit gates.
 
 ## Direction before decoration
 
@@ -14,6 +16,11 @@ For a new interface, establish audience, primary task and visual character in th
 Record the direction briefly in the spec/day log, or reuse an existing DESIGN.md; do not require another document.
 Ask only if a missing choice materially changes the result. When authorized to proceed with assumptions, label
 the proposed direction as provisional and record it; a mockup does not prove a working product.
+
+When the work is a planned UI subplan, the Designer turns that direction into a versioned contract under
+`design/contracts/`. The owner approves each contract version from the requirement page or CLI before UI
+implementation begins. A changed contract needs a new version and its own approval; approval applies to the exact
+file contents, not only its path.
 
 Judge techniques by purpose, not by a blacklist. Cards, gradients, icons, badges, monospace and motion may serve
 grouping, hierarchy, meaning or identity. Remove redundant decoration; justify consequential or disputed choices

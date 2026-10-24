@@ -13,10 +13,12 @@ class CoreExecutionPort:
     def __init__(self, executor, plan, *, project: str, core, m3, integrator,
                  start_rejection_detail, gates, base_ref="HEAD", default_repository="",
                  composition_base: Callable[..., str | None] | None = None,
-                 repo_of: Callable[[str], Path | None] | None = None):
+                 repo_of: Callable[[str], Path | None] | None = None,
+                 design_approval: Callable[[Path, str, str], dict] | None = None):
         self.executor, self.plan, self.project = executor, plan, project
         self.base_ref, self.default_repository = base_ref, default_repository
         self.composition_base, self.repo_of = composition_base, repo_of
+        self.design_approval = design_approval
         self.core, self.m3, self.integrator = core, m3, integrator
         self.start_rejection_detail, self.gates = start_rejection_detail, gates
         self.on_accepted_attempt = None
@@ -49,9 +51,19 @@ class CoreExecutionPort:
         path = self.gates.contract_path(self.plan, order.task_id)
         if path is not None:
             repository = self.repo_of(repo) if self.repo_of else None
-            if repository is None or not self.gates.has_blob(repository, base, path):
-                return self.core.Ack("rejected", f"DESIGN_CONTRACT_MISSING: {path or 'invalid frozen UI contract'}",
+            if repository is None or not path:
+                return self.core.Ack("rejected", f"DESIGN_CONTRACT_UNAPPROVED: {path or 'invalid frozen UI contract'}",
                                      True, classification="blocked_environment")
+            try:
+                result = self.design_approval(repository, base, path) if self.design_approval else {"state": "unapproved"}
+                state = result.get("state") if isinstance(result, dict) else "unapproved"
+            except Exception as error:  # noqa: BLE001 - approval storage is a fail-closed boundary
+                return self.core.Ack("rejected", f"DESIGN_CONTRACT_UNAPPROVED: approval unavailable ({type(error).__name__})",
+                                     True, classification="blocked_environment")
+            reason = self.gates.approval_problem(state)
+            if reason:
+                return self.core.Ack("rejected", f"{reason}: {path}", True,
+                                     classification="blocked_environment")
         request = self.m3.StartRequest(
             idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
             attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,

@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import bt_planstatus as planstatus
+import bt_page_design
 STATUS_BEGIN = "<!-- bitacora:status:begin -->"   # the marker shape is `<owner>:status:begin|end` (bt_planner ignores it)
 STATUS_END = "<!-- bitacora:status:end -->"
 
@@ -90,6 +91,10 @@ def render_block(status: dict[str, Any], generated_at: str | None = None) -> str
                     _cell(task["id"]), _cell(task.get("title")), _level(task.get("complexity")),
                     _STATE.get(task["state"], task["state"]), _cell(attempt.get("model_requested")),
                     _cell(attempt.get("account") or attempt.get("account_ref")), str(task.get("attempts") or 0))) + " |")
+    for subplan in status.get("design_subplans", []):
+        approval = bt_page_design.approval_label((subplan.get("approval") or {}).get("status", "pending"))
+        lines.append(f"- Contrato de diseño { _cell(subplan.get('subplan_id')) }: "
+                     f"`{_cell(subplan.get('contract'))}` · aprobación {approval}")
     lines.append(STATUS_END)
     return "\n".join(lines) + "\n"
 
@@ -175,6 +180,9 @@ def status_table(status: dict[str, Any]) -> str:
                 out.append(f"{indent}{task['id']} {_STATE.get(task['state'], task['state'])} · {_level(task.get('complexity'))}"
                            f" · {_cell(attempt.get('model_requested'))} · {_cell(attempt.get('account') or attempt.get('account_ref'))}"
                            f" · intentos {task.get('attempts') or 0} · {_cell(task.get('title'))}")
+    for subplan in status.get("design_subplans", []):
+        approval = bt_page_design.approval_label((subplan.get("approval") or {}).get("status", "pending"))
+        out.append(f"  contrato {subplan.get('subplan_id')} · {subplan.get('contract')} · aprobación {approval}")
     return "\n".join(out)
 
 

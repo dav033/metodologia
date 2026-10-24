@@ -15,13 +15,13 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Callable
 
+import bt_design_flow
 import bt_run_stores
 import bt_scheduler_adapter as scheduler_
-
 VERSION = 1
 PARTIES = ("planner", "M1", "M2", "M3", "M4", "M5", "M6", "web", "owner")
 LIMIT = 2000                                    # rows per store per cycle: bounded work, the cursor catches up
-STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal", "cyc")
+STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal", "cyc", "design")
 
 
 # What each module's database holds and what the bus does with it. A table nobody classified here fails
@@ -54,7 +54,6 @@ IGNORED_TABLES = {
     "outbox": "M6 delivery queue to M1: the delivery shows as M1's dispatch_ack", "reviews": "M6 human-review queue",
 }
 
-# ---------------------------------------------------------------- helpers
 def _ro(path: Path | None) -> sqlite3.Connection | None:
     if path is None or not Path(path).exists():
         return None
@@ -64,7 +63,6 @@ def _ro(path: Path | None) -> sqlite3.Connection | None:
         return conn
     except sqlite3.Error:
         return None
-
 
 def _rows(path: Path | None, sql: str, args: tuple = ()) -> list[sqlite3.Row]:
     conn = _ro(path)
@@ -77,14 +75,12 @@ def _rows(path: Path | None, sql: str, args: tuple = ()) -> list[sqlite3.Row]:
     finally:
         conn.close()
 
-
 def _json(text: Any) -> dict[str, Any]:
     try:
         value = json.loads(text) if isinstance(text, (str, bytes)) else text
     except ValueError:
         return {}
     return value if isinstance(value, dict) else {}
-
 
 def _epoch(value: Any) -> float | None:
     if isinstance(value, (int, float)) and not isinstance(value, bool):
@@ -94,10 +90,8 @@ def _epoch(value: Any) -> float | None:
     except ValueError:
         return None
 
-
 def _iso(epoch: float) -> str:
     return dt.datetime.fromtimestamp(epoch, dt.UTC).isoformat(timespec="milliseconds")
-
 
 def event(run: str, store: str, ident: int, at: float, frm: str, to: str, kind: str, summary: str, *,
           task: str = "", attempt: str = "", from_part: str = "", to_part: str = "", data: dict | None = None
@@ -445,6 +439,11 @@ def sources(rdir: Path, project: str) -> dict[str, tuple[str, int]]:
             out[name] = (str(path), 0)
     out["m4i"] = out["m4"]
     out["cyc"] = out["m5"]
+    try:
+        approval_file = Path(rdir) / "design-approvals.json"
+        out["design"] = (str(approval_file), approval_file.stat().st_ino)
+    except OSError:
+        out["design"] = (str(approval_file), 0)
     interventions = Path(rdir) / "RUN.interventions.jsonl"
     try:
         out["heal"] = (str(interventions), interventions.stat().st_ino)
@@ -476,6 +475,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
         "m6": _m6_events(run, paths.get("m6"), cur["m6"]),
         "heal": _heal_events(run, rdir, cur["heal"]),
         "cyc": _cycle_events(run, paths.get("m5"), cur["cyc"]),
+        "design": bt_design_flow.events(rdir, project, cur["design"]),
     }
     merged = []
     for name, items in events.items():

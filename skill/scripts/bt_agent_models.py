@@ -5,7 +5,7 @@ import re
 from bt_routing_policy import MAX_KIND_TIER, cap_tier
 
 PROVIDERS = ("claude", "codex", "antigravity")
-KINDS = ("implement", "test", "docs", "audit", "research")
+KINDS = ("implement", "test", "docs", "audit", "research", "design")
 TOP = 2
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 
@@ -49,6 +49,7 @@ AUDIT_LADDER = {
     "antigravity": (("gemini-3.8-flash-low", None), ("gemini-3.8-flash-low", None), ("gemini-3.8-flash-medium", None)),
 }
 _KIND_WORDS = (("audit", ("audit", "review", "revis", "auditor")),
+               ("design", ("design contract", "ui contract", "design task", "designer task")),
                ("docs", ("docs", "documentation", "readme", "document", "changelog", "skill.md")),
                ("test", ("test", "e2e", "coverage", "prueba")),
                ("research", ("research", "investigate", "compare", "spike")))

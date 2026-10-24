@@ -30,6 +30,15 @@ class TaskAlerts(unittest.TestCase):
                                                                     ev("state_change", "running")]), 1)
             n.assert_called_once()
 
+    def test_design_waiting_notification_is_sent_once_per_contract_version(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as d, patch.object(bt_notify, "notify") as send:
+            self.assertTrue(bt_notify.notify_design_waiting(Path(d), "proj", "REQ-1", "checkout@v1"))
+            self.assertFalse(bt_notify.notify_design_waiting(Path(d), "proj", "REQ-1", "checkout@v1"))
+            self.assertTrue(bt_notify.notify_design_waiting(Path(d), "proj", "REQ-1", "checkout@v2"))
+            self.assertEqual(send.call_count, 2)
+            self.assertIn("Contrato de diseño esperando aprobación", send.call_args_list[0].args[1])
+
 
 if __name__ == "__main__":
     unittest.main()

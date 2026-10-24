@@ -50,7 +50,7 @@ _LEGACY_TASK = {"todo": "pending", "in_progress": "running", "done": "completed"
 _SCHEDULER_TASK = {"pending": "pending", "ready": "ready", "active": "running", "recovering": "rejected",
                    "completed": "completed", "blocked": "blocked", "cancelled": "cancelled"}
 _LEGACY_RESULT = {"done": "completed", "blocked": "blocked"}
-_WATCHED = ("PLAN.json", "PLAN.md", "RUN.json", scheduler_.PROJECTION)
+_WATCHED = ("PLAN.json", "PLAN.md", "RUN.json", scheduler_.PROJECTION, "design-approvals.json")
 
 
 def _iso(epoch: Any) -> str | None:
@@ -326,6 +326,9 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
         milestone["state"] = _milestone_state(milestone["tasks"])
         milestone["progress"] = {"done": sum(t["state"] == "completed" for t in milestone["tasks"]),
                                  "total": len(milestone["tasks"])}
+    import bt_design_approval
+    design_states = {task["id"]: task.get("state", "pending") for task in task_list}
+    design_subplans = bt_design_approval.ui_contracts(rdir, project, design_states)
     plan_md = rdir / "PLAN.md"
     ref = (run or {}).get("plan_ref") if authority == "scheduler" else None
     ref = ref if isinstance(ref, dict) else {}
@@ -344,7 +347,7 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
                     "milestones_total": len(milestones),
                     "milestones_done": sum(m["state"] == "completed" for m in milestones),
                     "difficulty": _highest([t["complexity"] for t in task_list])},
-        "milestones": milestones, "evolution": evolution}
+        "milestones": milestones, "evolution": evolution, "design_subplans": design_subplans}
 
 
 def _evolution(rdir: Path, tasks: list[dict], revision: Any) -> dict[str, Any]:
@@ -406,7 +409,8 @@ def list_plans(root: Path | None = None, include_inactive: bool = True) -> list[
                      "active": status["run"]["active"],
                      "progress": {"done": summary["tasks_done"], "total": summary["tasks_total"]},
                      "difficulty": summary["difficulty"], "updated_at": status["run"]["updated_at"]
-                     or _mtime_iso(rdir / "PLAN.md"), "asks": _asks(rdir)})
+                     or _mtime_iso(rdir / "PLAN.md"), "asks": _asks(rdir),
+                     "design_subplans": status.get("design_subplans", [])})
     return rows
 
 

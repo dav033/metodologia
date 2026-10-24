@@ -209,6 +209,8 @@ Before closing, review your own diff (the `reviewer` subagent for larger changes
 - Errors handled at boundaries, inputs validated, no secrets, no leftover debug code.
 - ARCHITECTURE.md still true (modules, public APIs, owned tables, integrations, key flows).
 - Tests cover the new behavior and pass; no test was weakened.
+- For a UI subplan, implementation conforms to the owner-approved contract version and Reviewer `visual` findings
+  have been resolved or accepted through the existing audit process.
 - No speculative abstractions, no obvious comments, no dead code.
 
 ## 7. Debugging

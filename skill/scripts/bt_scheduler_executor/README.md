@@ -57,7 +57,8 @@ The methodology adapter derives subplan line membership from the frozen plan. In
 accepted member-task deltas and accepted ancestors are folded under `refs/m3/line/<run>/<repository-role>/<SP-id>`;
 redo replaces the prior delta and conflicts stay visible. Non-subplan tasks use the candidate/current commit injected by
 the owner adapter and fail closed with `COMPOSITION_BASE_MISSING` when it is absent. UI implementer starts require the
-exact declared design contract blob in the selected base commit tree (`DESIGN_CONTRACT_MISSING` otherwise). A visual audit
+exact declared design contract blob in the selected base tree plus the matching owner approval hash. The stable blockers
+are `DESIGN_CONTRACT_UNAPPROVED` and `DESIGN_CONTRACT_HASH_MISMATCH`. A visual audit
 brief carries `review_axis: visual` from the frozen subplan metadata. `GitWorkspaces.reconstruct_subplan()` reconstructs a
 scope commit; `allocate_integration()` checks out a candidate, and `release()` safely cleans either candidate workspace
 repeatedly. Attempt workspaces retain their existing per-attempt lifecycle and receipt binding.
@@ -176,8 +177,11 @@ x.wait_idle(); x.describe(attempt_id); x.flush_events(); x.close()   # close() s
 `LEDGER_ERROR`, `CONFIG_INVALID`, `PLATFORM_UNSUPPORTED`, `ROOT_BUSY`, `PORT_ERROR`.
 
 The methodology adapter also returns typed start blockers in its core acknowledgment detail: `COMPOSITION_BASE_MISSING`,
-`COMPOSITION_BASE_UNAVAILABLE`, and `DESIGN_CONTRACT_MISSING`. The latter is tagged `blocked-environment`; M1's current
-`Ack` has no result-classification field, so an owner/runtime contract update is needed before M1 can preserve that class.
+`COMPOSITION_BASE_UNAVAILABLE`, `DESIGN_CONTRACT_UNAPPROVED` and `DESIGN_CONTRACT_HASH_MISMATCH`. UI tasks require the
+exact contract blob in the selected base commit and an owner approval in the requirement's `design-approvals.json`;
+the approval SHA256 is read from `git show HEAD:<path>` in the design task's repository. Both design blockers are
+classified `blocked_environment`, so M1 does not consume the code retry budget. Once the owner approves the matching
+blob, the owner adapter reopens UI tasks held for this gate. Legacy and non-UI tasks keep their existing behavior.
 
 (`tests/test_resilience.py` also generates one test per crash point — accept, allocate, before/after RUNNING, before/after SETTLING,
 during/after the handoff, before/after the terminal transaction, between delivery and the delivered mark — each killing the executor with

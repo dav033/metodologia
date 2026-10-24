@@ -34,6 +34,14 @@ As a <actor>, I want <capability> so that <benefit>.
 - R3. While <state>, the system shall <response>.
 For business processes, "the system" can be a role or the process ("the approver shall…"). -->
 
+## UI / design contract (optional)
+<!-- Include when the requirement contains user-facing UI. Record users, supported flows/views, existing design
+system or visual direction and any meaningful accessibility constraints. The plan defines UI subplans; Designer
+authors a versioned contract and the owner approves each version before UI implementation. -->
+- UI scope / users:
+- Visual direction / existing system:
+- Accessibility or interaction constraints:
+
 ## Edge cases & errors
 -
 

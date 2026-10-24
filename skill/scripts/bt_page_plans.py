@@ -258,10 +258,12 @@ def _row(r: dict) -> str:
     title = _plain_title(r["title"], r["req_id"])
     tone = "info" if r["active"] else _tone(r["plan_status"])
     trail = f"{done}/{total}" if total else e(_label(r))
+    import bt_page_design
+    design = bt_page_design.index_chips(r)
     return (f'<div class="prow{" done" if _finished(r) else ""}"><span class="id">{e(r["req_id"])}</span>'
             f'<a class="t" href="{_purl(r["project"], r["req_id"])}" title="{e(title)}">{e(title)}</a>'
             f'<span class="st {tone}" title="{e(r["plan_status"] or "")}"><i class="dot {tone}{" live" if r["active"] else ""}">'
-            f'</i>{trail}</span>{_asks_pill(r)}</div>')
+            f'</i>{trail}</span>{design}{_asks_pill(r)}</div>')
 
 
 def _asks_pill(r: dict) -> str:
@@ -337,6 +339,8 @@ def detail_fragment(s: dict) -> str:
     asks = {r["task"]: r for r in s.get("decisions") or [] if r.get("task")}
     for m in s["milestones"]:
         parts.append(f'<div class="ms">{_milestone_head(m)}{"".join(_task(t, asks) for t in m["tasks"])}</div>')
+    import bt_page_design
+    parts.append(bt_page_design.plan_panel(s.get("design_subplans", [])))
     return "".join(parts)
 
 

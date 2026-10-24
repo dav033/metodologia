@@ -6,6 +6,7 @@ from html import escape as e
 import bt_trace as tr
 from bt_core import *  # noqa: F403
 from bt_pages import layout, purl
+import bt_page_design
 
 TYPES = [("REQ", "Requerimientos"), ("US", "Historias"), ("R", "Requisitos"), ("T", "Tareas"),
          ("D", "Decisiones"), ("P", "Pendientes"), ("C", "Commits"), ("F", "Archivos")]
@@ -27,6 +28,7 @@ def graph_page(project: str) -> str:
         or '<li class="muted">Sin problemas: cada requisito tiene tarea y no hay referencias rotas.</li>'
     health = (f'<span class="badge done">trazabilidad limpia</span>' if not issues else
               f'<span class="badge changes-requested">{len(issues)} problema(s)</span>')
+    design = _design_status(project)
     legend = "".join(f'<span><i class="ln {k}"></i>{v}</span>' for k, v in
                      [("covers", "cubre"), ("plans", "planifica"), ("defines", "define"), ("refs", "commit cita"),
                       ("supersedes", "reemplaza"), ("mentions", "mencionados juntos")])
@@ -40,10 +42,27 @@ clic para fijarlo.</p></div><div>{health}</div></div>
 <button id="zoom-fit" title="Ver todo">⤢</button></div>
 <div class="graph-legend">{legend}</div></div>
 <aside class="card node-panel" id="node-info"></aside></div>
-<h2>Chequeo de trazabilidad</h2><ul class="plain">{lint_rows}</ul>
+{design}<h2>Chequeo de trazabilidad</h2><ul class="plain">{lint_rows}</ul>
 <script type="application/json" id="graph-data">{payload}</script>
 <script src="/static/cytoscape.min.js"></script><script src="/static/graph.js"></script>"""
     return layout(f"Grafo {project}", body, [(project, purl(project)), ("grafo", purl(project, "graph"))])
+
+
+def _design_status(project: str) -> str:
+    import bt_planstatus
+
+    rows = [row for row in bt_planstatus.list_plans(ROOT) if row["project"] == project and row.get("design_subplans")]
+    if not rows:
+        return ""
+    items = []
+    for row in rows:
+        for subplan in row["design_subplans"]:
+            state = (subplan.get("approval") or {}).get("status", "pending")
+            label = bt_page_design.approval_label(state)
+            items.append(f'<li><a href="{purl(project, "req", row["req_id"])}?tab=plan">{e(row["req_id"])}</a> · '
+                         f'{e(str(subplan.get("subplan_id") or ""))} · <code>{e(subplan["contract"])}</code> · '
+                         f'aprobación {e(label)}</li>')
+    return '<h2>Contratos de diseño</h2><ul class="plain">' + "".join(items) + '</ul>'
 
 
 def coverage_panel(project: str, rid: str) -> str:
@@ -67,4 +86,18 @@ def coverage_panel(project: str, rid: str) -> str:
     return (f'<div style="overflow-x:auto"><table class="matrix"><tr><th>Requisito / historia</th>{head}</tr>'
             f'{"".join(rows)}</table></div><p class="muted">● la tarea lo cubre · ⚠ nadie lo cubre · ✓ tarea hecha</p>'
             f'<h3>Commits que lo citan</h3><ul class="plain">{commit_list}</ul>'
+            f'{_design_status_for_req(project, rid)}'
             f'<p><a href="{purl(project, "graph")}">Ver en el grafo →</a></p>')
+
+
+def _design_status_for_req(project: str, rid: str) -> str:
+    import bt_planstatus
+
+    row = next((item for item in bt_planstatus.list_plans(ROOT) if item["project"] == project and
+                item["req_id"] == rid), None)
+    if not row or not row.get("design_subplans"):
+        return ""
+    values = "".join(f'<li>{e(item["subplan_id"])} · <code>{e(item["contract"])}</code> · aprobación '
+                     f'{e({"approved": "aprobado", "changes-requested": "cambios solicitados"}.get((item.get("approval") or {}).get("status"), "pendiente"))}</li>'
+                     for item in row["design_subplans"])
+    return '<h3>Contratos de diseño</h3><ul class="plain">' + values + "</ul>"

@@ -101,6 +101,12 @@ Deferred**. Topics that don't apply are marked Clear with "n/a".
 For business requirements also cover: KPIs, process owner, rollout/communication, what happens to the current way
 of doing it.
 
+For user-facing work, establish whether the scope includes a UI and who uses it. Ask one concise question about the
+visual direction when it is not already clear (for example, an existing design system or a reference to follow).
+Capture the chosen direction and the UI scope in the spec; do not ask for pixel-level decisions that belong in the
+Designer contract. A UI subplan must plan a versioned design contract and owner approval of that version before UI
+implementation, followed by visual review before the subplan audit.
+
 ## 4. Ask in rounds
 
 Think of the open decisions as a tree. A round contains the **frontier**: the questions whose prerequisites are
@@ -218,6 +224,10 @@ If the requirement has a `PLAN.json` (classified tasks, `references/plan-contrac
 or one that contradicts PLAN.md; approval freezes that revision and every launch path (standard, web, foreground, new
 run, resume) refuses anything that is not exactly the approved revision (a launch never freezes it itself). Run `plan-json check REQ-NNN` and read
 `plan-json report REQ-NNN` before.
+
+For plans with UI subplans, plan approval does not approve design contracts. Each contract version needs a separate
+owner decision from the requirement page or `bitacora.py design approve|changes REQ-NNN <contract>@vN`; UI
+implementation remains waiting until its exact contract content is approved.
 
 **One command for the whole chain:** `bitacora.py --project P go REQ-NNN` takes a written SPEC.md + PLAN.md, creates the
 PLAN.json skeleton, has the Planner agent classify every task (router-chosen model, up to 2 rounds, `--no-ai` to skip),

@@ -492,4 +492,9 @@ def catalog(project: str | None = None) -> dict:
             "kinds": list(KINDS), "accounts": accounts,
             "pool": pool_for(project) if project else None}
 
-from bt_agent_views import brief  # public compatibility surface
+from bt_agent_views import brief as _catalog_brief
+
+def brief(project: str | None = None) -> str:
+    return _catalog_brief(project) + (
+        "\n\nDesigner authors UI contracts in `design/contracts/`; UI implementation follows the "
+        "owner-approved contract. Optional preview uses `design.preview`.")

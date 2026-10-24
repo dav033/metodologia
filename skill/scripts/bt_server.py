@@ -178,6 +178,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(graph_page(project))
         if kind == "req" and len(rest) == 2:
             return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", "")))
+        if kind == "req" and len(rest) == 3 and rest[2] == "preview":
+            import bt_design_web
+            rdir = find_req(ROOT / project, rest[1])
+            preview = bt_design_web.preview_file(ROOT, project, rdir, q.get("contract", ""))
+            if preview is None:
+                return self.send("Preview not found", 404, "text/plain")
+            return self.file(preview)
         self.send("Not found", 404, "text/plain")
 
     # ------------------------------------------------------------ POST
@@ -231,6 +238,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self.redirect(f"{base}?tab=run&msg={quote(msg)}")
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
+                return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
+            if action == "design":
+                import bt_design_web
+                msg = bt_design_web.decide(ROOT, project, rid, rdir, form,
+                                           lambda path, text: commit(path, text, push=False))
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
         except SystemExit as exc:
             return self.send(pages.layout("Error", f"<p>{exc}</p>"), 400)

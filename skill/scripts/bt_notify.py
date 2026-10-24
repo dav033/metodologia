@@ -10,6 +10,7 @@ that resumes the supervisor
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import os
 import re
@@ -166,3 +167,22 @@ def notify_task_events(project_dir: Path, events: list[dict]) -> int:
             notify(*alert)
             sent += 1
     return sent
+
+
+def notify_design_waiting(root: Path, project: str, req: str, contract: str) -> bool:
+    """Send one local notification per requirement and contract version, even across server restarts."""
+    key = hashlib.sha256(f"{project}/{req}/{contract}".encode()).hexdigest()
+    claim = Path(root) / ".state" / "design-notifications" / f"{key}.sent"
+    claim.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(claim, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        return False
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(f"{project}/{req}/{contract}\n")
+        notify("Bitácora", f"Contrato de diseño esperando aprobación · {project}/{req} · {contract}")
+        return True
+    except OSError:
+        claim.unlink(missing_ok=True)
+        return False

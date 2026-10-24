@@ -40,8 +40,15 @@ for a handoff or a subagent brief; `trace --file <name>` answers "which requirem
 central files. The web UI shows it as an interactive graph (project → Grafo) and per requirement (Trazabilidad).
 
 **Web UI:** `bitacora.py web [--project X]` starts the local server (127.0.0.1:8765) if needed and opens it:
-dashboard of projects, every document rendered, artifacts, question rounds and plan approval. It starts by itself
+dashboard of projects, every document rendered, artifacts, question rounds, plan approval and owner approval of
+each design-contract version. It starts by itself
 when a session opens in the HQ.
+
+**Design contracts:** a UI subplan's Designer writes its versioned contract at `design/contracts/<contract>@vN.md`
+in the project repo. Each version has an independent owner approval record pinned to the file's SHA-256; changing
+the contents requires a new version and approval. The requirement page renders the contract and approval state and,
+when `design.preview` is enabled, links to the optional preview. The `/plans` view and generated PLAN.md status block
+show the contract version and its approval state. Preview is a convenience for review, not approval evidence.
 
 **Plan progress:** `bitacora.py [--project P] plan-status [REQ-NNN|--all] [--write] [--json]` reads it from PLAN.json,
 `SCHEDULER.db`/`RUN.projection.json` and PLAN.md (read-only; `--write` refreshes the block below). `launch` and every

@@ -8,6 +8,7 @@ import bt_rounds as rounds
 from bt_core import *  # noqa: F403
 from bt_core import _first_heading, _front
 from bt_page_run import ACTIVE, has_run, load_run, run_panel
+import bt_page_design
 from bt_pages import badge, layout, md, purl, read
 
 REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
@@ -36,7 +37,7 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     elif tab == "rounds":
         content = rounds_panel(project, rid, rdir, token)
     elif tab == "plan":
-        content = plan_panel(project, rid, plan, plan_status, token) if plan.exists() else \
+        content = (plan_panel(project, rid, plan, plan_status, token) + design_panel(project, rid, rdir, token)) if plan.exists() else \
             '<p class="muted">Todavía no hay plan.</p>'
     elif tab == "review":
         from bt_page_review import review_panel
@@ -113,3 +114,52 @@ def plan_panel(project: str, rid: str, plan: Path, status: str | None, token: st
     elif status in ("approved", "launched", "in-progress", "done"):
         form = f'<div class="notice">Plan {e(status)}.</div>'
     return md("doc", read(plan)) + form
+
+
+def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
+    import bt_config
+    import bt_design_approval as approval
+    rows = approval.ui_contracts(rdir, project)
+    if not rows:
+        return ""
+    enabled = bt_config.get("design.preview", False) is True or project in bt_config.get("design.preview_projects", [])
+    parts = ['<section id="design-contracts"><h2>Contratos de diseño</h2>']
+    for row in rows:
+        ref = row["contract"]
+        record = row["approval"] or {}
+        state = record.get("status", "pending")
+        state_label = bt_page_design.approval_label(state)
+        repo = approval.repository_for_contract(ROOT, project, rdir, ref)
+        contract = repo / row["path"] if repo else None
+        try:
+            text = contract.read_text(encoding="utf-8") if contract and contract.is_file() else ""
+        except (OSError, UnicodeError):
+            text = ""
+        body = md("doc", text) if text else \
+            '<p class="muted">El archivo del contrato todavía no está disponible en el repositorio asignado.</p>'
+        approved = record.get("status") == "approved"
+        waiting = row["design_state"] == "completed" and not approved
+        if waiting:
+            import bt_notify
+            bt_notify.notify_design_waiting(ROOT, project, rid, ref)
+        actions = ""
+        if waiting:
+            actions = (f'<form class="q" method="post" action="{purl(project, "req", rid, "design")}" style="margin-top:16px">'
+                       f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="contract" value="{e(ref)}">'
+                       '<div class="question"><strong>Comentarios</strong> <span class="muted">(obligatorios si pides cambios)</span>'
+                       '<textarea name="comments"></textarea></div><div class="actions">'
+                       '<button type="submit" name="decision" value="approve">Aprobar</button>'
+                       '<button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>')
+        preview = ""
+        if enabled and repo:
+            preview_file = repo / "design/preview/index.html"
+            if preview_file.is_file():
+                preview = (f'<p><a href="{purl(project, "req", rid, "preview")}?contract={e(ref)}" '
+                           'target="_blank" rel="noopener">Abrir preview →</a></p>')
+        detail = (f'<details class="card"><summary><strong>{e(row.get("title") or row["subplan_id"])}</strong> · '
+                  f'<code>{e(ref)}</code> · aprobación {e(state_label)} · diseño {e(row["design_state"])}</summary>'
+                  f'<p class="muted">Contrato: <code>{e(row["path"])}</code> · tarea de diseño {e(str(row["design_task"]))}</p>'
+                  f'{preview}{body}{actions}</details>')
+        parts.append(detail)
+    parts.append('</section>')
+    return "".join(parts)

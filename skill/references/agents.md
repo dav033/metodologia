@@ -18,6 +18,7 @@ Automatic role routes select the Claude/Codex family by subscription headroom an
 | Role | Default | Alternative / explicit high complexity |
 |---|---|---|
 | Planner | Astra high | Opus xhigh |
+| Designer | Opus high | GPT-6.1 Sol high |
 | Reviewer | Sol medium / Sonnet medium | The same pair at high |
 | Explorer | Luna high | Sonnet medium; high complexity uses Sol medium / Sonnet medium |
 | Implementer | Sonnet medium | Luna high for quota/availability; complexity does not change preferences |

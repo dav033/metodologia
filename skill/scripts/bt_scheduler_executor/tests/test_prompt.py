@@ -122,5 +122,28 @@ class PromptWholeSuites(unittest.TestCase):
         self.assertNotIn("do NOT run them yourself", prompt(("functional: npx vitest run a.test.ts",)))
 
 
+class PromptDesignContract(unittest.TestCase):
+    def test_design_task_reads_contract_and_ui_task_requires_approval_metadata(self):
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+
+        request = SimpleNamespace(task_id="T2", acceptance_criteria=())
+
+        def render(notes):
+            return build_prompt(Brief(title="UI work", notes=notes), request,
+                                workdir="/w", branch="b", report_path="/r.json")
+
+        design = render("Task kind: design\nDesign contract: design/contracts/shop@v2.md")
+        self.assertIn("Author the contract at `design/contracts/shop@v2.md`", design)
+        self.assertIn("keep contract changes within `design/`", design)
+
+        ui = render("Task kind: implement\nUI task: true\nDesign contract: design/contracts/shop@v2.md\n"
+                    "Approval: approved\nSHA-256: " + "a" * 64)
+        self.assertIn("Read `design/contracts/shop@v2.md`", ui)
+        self.assertIn("approval status `approved`", ui)
+        self.assertIn("approved SHA-256", ui)
+        self.assertIn("stop and", ui)
+
+
 if __name__ == "__main__":
     unittest.main()

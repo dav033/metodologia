@@ -449,3 +449,15 @@ and without injected P-177-shaped defects. It compares redone work, discarded ac
 simulated wall time and a clearly labeled token proxy; it does not call providers or observe real token usage. The
 command can also compare a supplied recovery baseline. Results are deterministic JSON/Markdown artifacts; see the
 script's `--help` and `skill/scripts/tests/test_engine_benchmark.py`.
+
+## UI design contract approval
+
+For every `ui:true` task, M3 checks the versioned contract at `design/contracts/<contract>@v<N>.md` in the selected
+base tree and the requirement's durable owner approval record (`design-approvals.json`). The record pins SHA256 of
+`git show HEAD:<contract path>` in the repository assigned to the design task; M3 compares it with the selected
+base-tree blob before dispatch. Missing approval returns `blocked_environment` with
+`DESIGN_CONTRACT_UNAPPROVED`; a different or absent base-tree blob returns
+`DESIGN_CONTRACT_HASH_MISMATCH`. These holds do not consume the code retry budget and are reconsidered after approval.
+Every contract version needs its own approval. Use `bitacora.py design list|show|approve|changes REQ-NNN` or the
+requirement page. A changes request records the owner's comments and reworks the accepted design task through the
+M1 operator adapter so the Designer can publish a new version.

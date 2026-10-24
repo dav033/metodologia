@@ -19,7 +19,9 @@ def text(project: str | None) -> str:
            "### Routing (what runs where, decided by the supervisor, not by habit)",
            "- Tier 0 light, 1 standard, 2 top. A task starts at 0 (`level: architecture` -> 2, audits -> 1); each "
            "failed attempt climbs one tier, and prefers ANOTHER provider than the one that failed.",
-           "- Kinds: implement, test, docs, audit, research (PLAN line `kind:`, else inferred from the title). An "
+           "- Kinds: implement, test, docs, audit, research, design (PLAN line `kind:`, else inferred from the title). "
+           "Design work routes to the Designer; UI subplans require an owner-approved contract, and optional previews "
+           "use `design.preview`. An "
            "audit goes to another provider than the builder's.",
            "- An account that reports a usage limit is skipped until its reset; work continues on the others. Only "
            "when every account is cooling down does a run wait.",

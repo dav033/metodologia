@@ -9,6 +9,7 @@ whatever the reasons. Thresholds: bt_config (approval.*). Rules: references/requ
 """
 from __future__ import annotations
 
+import json
 import re
 
 import bt_config
@@ -165,6 +166,13 @@ def assess(project: str, rdir: Path) -> dict:
             reasons += [f"{source.name}: {r}" for r in _risky_text(source.read_text(encoding="utf-8"))]
         except OSError:
             pass
+    try:
+        plan_contract = json.loads((rdir / "PLAN.json").read_text(encoding="utf-8"))
+        if any(isinstance(item, dict) and isinstance(item.get("ui"), dict)
+               for item in plan_contract.get("subplans", [])):
+            reasons.append("UI subplans require owner approval of each versioned design contract before implementation")
+    except (OSError, UnicodeError, ValueError, AttributeError):
+        pass
     if not bt_config.get("approval.auto", True):
         reasons.append("automatic approval is turned off (config approval.auto)")
     return {"ok": not problems, "problems": problems, "reasons": reasons, "auto": not problems and not reasons,

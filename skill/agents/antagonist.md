@@ -39,6 +39,9 @@ Scope: the diff the brief gives you (usually `git diff --staged`, per repo), the
 depend on. Read the user's standards first: `~/.claude/skills/metodologia/references/engineering.md` (+ the
 matching `stacks/*.md`), and the spec/plan if the brief points to them.
 
+For UI subplans, check that implementation consumes the approved contract version and that its content matches the
+approval fingerprint. Treat a path/version match without verified approval or matching content as contract drift.
+
 Use `bt_review_policy.py` as the gate source: run per-commit only when no pending independent milestone audit
 covers this work. With coverage, the milestone audit reviews the consolidated diff; security checks always apply.
 

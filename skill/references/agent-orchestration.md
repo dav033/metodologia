@@ -36,6 +36,10 @@ Execute in dependency waves:
    needs architectural or correctness judgment. Reconcile conflicts centrally, then mark tasks complete only with
    evidence. Recompute the ready set from the plan; do not dispatch work whose dependency failed.
 
+For a UI subplan, preserve its serial boundary: Designer authors the versioned contract, the owner approves that
+version, then `ui: true` implementation begins; visual review with captured evidence precedes the subplan audit.
+Do not parallelize implementation across that approval boundary.
+
 Use isolated worktrees for parallel writers whenever the harness supports them. Never let concurrent writers share
 the same working tree or own the same file. If isolation is unavailable, run writers sequentially; read-only agents
 may work concurrently when their evidence sources do not conflict. Do not ask subagents to commit, merge, push,

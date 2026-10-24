@@ -231,5 +231,17 @@ renames a check's `purpose` to its criterion's exact text; it never lowers a che
 freezes the next revision without the added task. Rebasing onto it keeps every accepted task whose own content is unchanged
 (`gates.rebase_cascade: content`).
 
+## Owner approval for UI design contracts
+
+Each schema 1.3.0 UI subplan declares its contract id, version and design task. Once the design task is accepted, the
+owner must approve that exact version through `bitacora.py design approve REQ-NNN <contract>@vN` or the requirement
+page before any `ui:true` implementation task can start. The approval record is per requirement, durable and immutable
+after approval; it stores who, channel, timestamp, comments and SHA256 of the contract bytes read from
+`git show HEAD:<contract path>` in the repository assigned to the design task. M3 checks that the exact blob exists
+in the selected base tree and matches the pinned hash. Missing approval is a `blocked_environment` hold
+(`DESIGN_CONTRACT_UNAPPROVED`); drift or a missing base blob is a non-retry hold
+(`DESIGN_CONTRACT_HASH_MISMATCH`). Approval of vN never approves vN+1. Plans without UI subplans keep their existing
+behavior.
+
 ## Checks map to criteria by exact text
 The verifier compares a check's `purpose` with the acceptance criteria of its task character by character. `plan-json check` warns for a check whose purpose is no criterion (`CHECK_UNMAPPED`, with the closest criterion), a criterion no check carries (`CRITERION_UNVERIFIABLE`) and a criterion proven only manually (`CRITERION_MANUAL`: the run waits for `scheduler-op REQ attest`). `plan-json freeze` (the approval) refuses the first two unless `--force` or `planner.require_mapped_checks=false`; revisions the scheduler makes itself (healing, remediation, recovery) are not gated, and plans already frozen are not re-gated.
