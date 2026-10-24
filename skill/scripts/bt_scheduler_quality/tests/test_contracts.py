@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 from bt_scheduler_quality import QualityError, VerifyRequest
-from bt_scheduler_quality.evidence import validate_result_contract
+from bt_scheduler_quality.evidence import read_reason_code, read_result, reason_for_outcome, validate_result_contract
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -47,6 +47,16 @@ class VerifyRequestTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, "ORDER_INVALID")
 
+    def test_accepts_optional_composition_contract_and_environment_identities(self):
+        raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+        raw.update({"composition_id": "C7", "manifest_sha256": "a" * 64,
+                    "contract_identities": {"api@1": "b" * 64},
+                    "environment_fingerprint": "c" * 64})
+        order = VerifyRequest.from_mapping(raw)
+        self.assertEqual(order.composition_id, "C7")
+        self.assertEqual(order.manifest_sha256, "a" * 64)
+        self.assertEqual(order.contract_identities, (("api@1", "b" * 64),))
+
     def test_rejects_duplicate_acceptance_criteria_that_make_coverage_ambiguous(self):
         raw = json.loads(
             (FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8")
@@ -69,7 +79,39 @@ class ResultContractTests(unittest.TestCase):
         schema = json.loads(
             (FIXTURES.parents[1] / "api-contract.json").read_text(encoding="utf-8")
         )
-        self.assertEqual(schema["$id"], "m6.verify-result/1")
+        self.assertEqual(schema["$id"], "m6.verify-result/1.1")
+
+    def test_legacy_stored_result_reads_as_unclassified_without_mutating_record(self):
+        result = json.loads((FIXTURES / "result-pass.json").read_text(encoding="utf-8"))
+        validate_result_contract(result)
+        self.assertEqual(read_reason_code(result["checks"][0]), "UNCLASSIFIED")
+        self.assertNotIn("reason_code", result["checks"][0])
+        loaded = read_result(result)
+        self.assertEqual(loaded["reason_code"], "UNCLASSIFIED")
+        self.assertEqual(loaded["checks"][0]["reason_code"], "UNCLASSIFIED")
+        self.assertNotIn("reason_code", result["checks"][0])
+
+    def test_v2_reason_code_is_validated_and_classified(self):
+        result = json.loads((FIXTURES / "result-pass.json").read_text(encoding="utf-8"))
+        result["schema_version"] = "m6.verify-result/1.1"
+        result["reason_code"] = "PASS"
+        result["checks"][0]["reason_code"] = "PASS"
+        validate_result_contract(result)
+        self.assertEqual(read_reason_code(result["checks"][0]), "PASS")
+        result["checks"][0]["reason_code"] = "MAYBE"
+        with self.assertRaises(QualityError):
+            validate_result_contract(result)
+
+    def test_runner_outcomes_map_to_the_compatible_reason_taxonomy(self):
+        cases = (("pass", None, "PASS"), ("fail", None, "FAIL_CODE"),
+                 ("unknown", "CHECK_TIMEOUT", "TIMEOUT"),
+                 ("unknown", "CHECK_UNAVAILABLE", "BLOCKED_EXTERNAL"),
+                 ("unknown", "SANDBOX_UNAVAILABLE", "BLOCKED_ENV"),
+                 ("unknown", "CHECK_NOT_RUN", "NOT_RUN"),
+                 ("pass", "FLAKY_SUSPECTED", "FLAKY_SUSPECTED"))
+        for status, issue, expected in cases:
+            with self.subTest(issue=issue):
+                self.assertEqual(reason_for_outcome(status, issue), expected)
 
     def test_result_rejects_malformed_per_check_issue_code(self):
         result = json.loads(

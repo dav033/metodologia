@@ -66,12 +66,27 @@ class QualityEngineTests(unittest.TestCase):
             self.assertEqual(result["criteria"][0]["status"], "pass")
             self.assertEqual(result["input"]["snapshot_sha"], source.snapshot_sha)
             self.assertEqual(result["input"]["base_sha"], source.base_sha)
+            self.assertEqual(result["input"]["tree_digest"], result["checks"][0]["tree_digest"])
+            self.assertEqual(result["checks"][0]["reason_code"], "PASS")
             self.assertIn(b"unit suite evidence", stdout)
             self.assertIn(b"checks_sha256", manifest)
             validate_result_contract(result)
             self.assertEqual(_git(repo, "show-ref"), before_refs)
             self.assertEqual(_git(repo, "rev-parse", "HEAD"), before_head)
             store.close()
+
+    def test_composition_verdict_records_manifest_and_candidate_tree_identity(self):
+        with tempfile.TemporaryDirectory() as temporary, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(temporary))
+            raw = {**self.raw, "composition_id": "C7", "manifest_sha256": "a" * 64,
+                   "contract_identities": {"api@1": "b" * 64}, "environment_fingerprint": "c" * 64}
+            result = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner()).verify(raw, source)
+            manifest = json.loads(store.get_result_manifest(result["evidence_manifest"]))
+        self.assertEqual(result["input"]["composition_id"], "C7")
+        self.assertEqual(result["input"]["manifest_sha256"], "a" * 64)
+        self.assertEqual(result["input"]["tree_digest"], result["checks"][0]["tree_digest"])
+        self.assertEqual(manifest["reason_code"], "PASS")
+        self.assertEqual(manifest["input"]["snapshot_sha"], source.snapshot_sha)
 
     def test_nonzero_required_check_produces_fail_not_a_pass(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -101,7 +116,8 @@ class QualityEngineTests(unittest.TestCase):
                     result = QualityEngine(QualityPolicy(rerun_failed_checks=reruns), store, runner=runner).verify(
                         self.raw, source)
                     note = store.get_artifact(result["checks"][0]["stderr_ref"]) if reruns else b""
-            self.assertEqual((result["status"], len(runner.calls)), (status, calls))
+            self.assertEqual((result["status"], len(runner.calls)), (("NEEDS_REVIEW" if reruns else status), calls))
+            self.assertEqual(result["checks"][0]["reason_code"], "FLAKY_SUSPECTED" if reruns else "FAIL_CODE")
             if reruns:
                 self.assertIn(b"flaky under load", note)
 

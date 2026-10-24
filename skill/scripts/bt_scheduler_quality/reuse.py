@@ -87,8 +87,19 @@ def command_key(spec: CheckSpec) -> str:
     return hashlib.sha256(json.dumps([list(spec.argv), spec.cwd]).encode()).hexdigest()
 
 
-def pass_key(tree: str, spec: CheckSpec, fingerprint: str) -> str:
+def pass_key(tree: str, spec: CheckSpec, fingerprint: str, contract_identities=(), environment_identity=None) -> str:
+    if contract_identities or environment_identity is not None:
+        bound = json.dumps([list(contract_identities), environment_identity], sort_keys=True, separators=(",", ":"))
+        fingerprint = hashlib.sha256(f"{fingerprint}\0{bound}".encode()).hexdigest()
     return hashlib.sha256(f"{tree}\0{command_key(spec)}\0{fingerprint}".encode()).hexdigest()
+
+
+def bound_environment_fingerprint(policy: QualityPolicy, contracts=(), environment_identity=None) -> str:
+    base = environment_fingerprint(policy)
+    if not contracts and environment_identity is None:
+        return base
+    body = json.dumps([base, list(contracts), environment_identity], sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(body.encode()).hexdigest()
 
 
 def is_expensive(spec: CheckSpec, last_ms: int | None, policy: QualityPolicy) -> bool:

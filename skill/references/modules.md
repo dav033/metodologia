@@ -151,7 +151,14 @@ Sampling is best effort and identity-checked; see the executor README for caps a
 An audit task is accepted by what it **found**, not by the existence of its report. It lists one `*.findings.json`
 ledger (`{"schema": "audit-findings/1", "findings": [{id, severity critical|high|medium|low, status
 open|fixed|accepted, summary, tasks: [plan task ids whose result is wrong], evidence (fixed), accepted_by: "owner" +
-reason (accepted)}]}`; the auditor's prompt carries this format). `bt_scheduler_quality_adapter` reads the ledger from
+reason (accepted), semantic_fingerprint?}]}`; the auditor's prompt carries this format). The optional fingerprint is
+64 lowercase hexadecimal characters: SHA-256 of canonical compact JSON `[contract_id, failure_mechanism, trigger,
+affected_frontier]`, after Unicode NFKC normalization, case-folding and whitespace collapse on each string; a frontier
+list is normalized, sorted and deduplicated. The gate merges open blocking findings only when both carry the same
+fingerprint, merging evidence references and task scope. Findings without fingerprints stay separate; different
+fingerprints stay distinct even at the same location. `audit-ledger check` validates the field while older
+`audit-findings/1` ledgers remain valid. `evaluate_many` combines independent ledgers and counts matching fingerprints
+once across auditors. `bt_scheduler_quality_adapter` reads the ledger from
 the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evaluate`:
 
 - an open critical/high finding, a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
@@ -332,8 +339,15 @@ No agent and no operator has to reopen anything by hand: the system does it from
 
 M6 checks the exact approved M1 `VerifyOrder` against the matching, validated M3 handoff snapshot. Its standard-library-only
 package stores private durable evidence, runs commands in the required bubblewrap sandbox, and sends correlated PASS/FAIL
-verdicts through M1. `NEEDS_REVIEW` creates a durable review item and leaves M1 in `VERIFYING`; an Ack means admission,
-not acceptance. The M6 package imports no methodology module.
+verdicts through M1. Verdict values and meanings stay unchanged. Evidence is `m6.verify-result/1.1`; its additive
+per-check and aggregate `reason_code` values are `PASS`, `FAIL_CODE`, `BLOCKED_EXTERNAL`, `BLOCKED_ENV`, `TIMEOUT`,
+`FLAKY_SUSPECTED` and `NOT_RUN`. A check that fails then passes on the same evidence key is `FLAKY_SUSPECTED` and
+leaves the verdict at `NEEDS_REVIEW`, never a clean PASS. Missing taxonomy in an old record reads as `UNCLASSIFIED`.
+Evidence binds checks to snapshot/tree identity, contract identities and environment fingerprint. Pass reuse adds
+contract and declared environment identities only when supplied, preserving legacy keys. Optional `composition_id` and
+`manifest_sha256` must appear together; M6 records them with the candidate tree. M1 receives the taxonomy through its
+existing `m6://result/<sha256>` evidence reference. `NEEDS_REVIEW` creates a durable review item and leaves M1 in
+`VERIFYING`; an Ack means admission, not acceptance. The M6 package imports no methodology module.
 
 - Sandbox policy (config `verifier.*`, D-095): checks share the host network by default (`QualityPolicy.network`, so live
   services and a database are reachable; name resolution and TLS files are mounted read-only) and may run deploy/migrate-style

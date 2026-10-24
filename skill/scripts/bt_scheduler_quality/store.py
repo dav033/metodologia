@@ -17,9 +17,10 @@ from typing import Any, Literal, Self
 
 from .contracts import QualityError, VerifyRequest
 from .evidence import canonical_json, finished_at
+from .evidence import read_result
 from .recovery import retry_attested, retry_interrupted
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 
 class QualityStore:
@@ -78,7 +79,7 @@ class QualityStore:
         self._connection.row_factory = sqlite3.Row
         try:
             version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, _SCHEMA_VERSION):
+            if version not in (0, 1, _SCHEMA_VERSION):
                 raise QualityError(
                     "STORE_SCHEMA_UNSUPPORTED", "M6 store schema version is unsupported"
                 )
@@ -87,6 +88,9 @@ class QualityStore:
             self._connection.execute("PRAGMA synchronous=FULL")
             self._connection.execute("PRAGMA secure_delete=ON")
             self._connection.executescript(_SCHEMA)
+            pass_columns = {row[1] for row in self._connection.execute("PRAGMA table_info(check_pass_cache)")}
+            if "status" not in pass_columns:
+                self._connection.execute("ALTER TABLE check_pass_cache ADD COLUMN status TEXT NOT NULL DEFAULT 'pass'")
             self._connection.execute(f"PRAGMA user_version={_SCHEMA_VERSION}")
             self._secure_database_files()
         except QualityError:
@@ -273,7 +277,7 @@ class QualityStore:
             raise QualityError(
                 "STORE_CORRUPT", "persisted result failed its content hash"
             )
-        return json.loads(row[0])
+        return read_result(json.loads(row[0]))
 
     def get_artifact(self, reference: str) -> bytes | None:
         if not isinstance(reference, str) or not reference.startswith("m6://artifact/"):
@@ -592,16 +596,33 @@ class QualityStore:
             return None
         with self._lock:
             row = self._connection.execute(
-                "SELECT exit_code, duration_ms, stdout, stderr, created_at FROM check_pass_cache WHERE key = ?",
+                "SELECT exit_code, duration_ms, stdout, stderr, created_at FROM check_pass_cache "
+                "WHERE key = ? AND status='pass'",
                 (key,)).fetchone()
         return row if row is not None and now - row["created_at"] <= max_age else None
 
     def remember_pass(self, key: str, exit_code: int | None, duration_ms: int, stdout: bytes, stderr: bytes,
                       now: float) -> None:
         with self._lock, self._transaction() as connection:
-            connection.execute("INSERT OR REPLACE INTO check_pass_cache VALUES (?, ?, ?, ?, ?, ?)",
+            connection.execute("INSERT OR REPLACE INTO check_pass_cache "
+                               "(key,exit_code,duration_ms,stdout,stderr,created_at,status) "
+                               "VALUES (?, ?, ?, ?, ?, ?, 'pass')",
                                (key, exit_code, duration_ms, stdout, stderr, now))
             connection.execute("DELETE FROM check_pass_cache WHERE created_at < ?", (now - 7 * 86_400,))
+
+    def record_check_outcome(self, key: str, status: str, now: float) -> bool:
+        """Persist an evidence-key outcome; return true when this pass follows a prior failure."""
+        if status not in {"pass", "fail"}:
+            return False
+        with self._lock, self._transaction() as connection:
+            row = connection.execute("SELECT status FROM check_pass_cache WHERE key=?", (key,)).fetchone()
+            flaky = status == "pass" and row is not None and row["status"] in {"fail", "flaky"}
+            recorded = "flaky" if flaky else status
+            if status == "fail" or flaky or row is None:
+                connection.execute("INSERT OR REPLACE INTO check_pass_cache "
+                                   "(key,exit_code,duration_ms,stdout,stderr,created_at,status) "
+                                   "VALUES (?,NULL,0,X'',X'',?,?)", (key, now, recorded))
+        return flaky
 
     def last_check_ms(self, command_key: str) -> int | None:
         with self._lock:
@@ -728,7 +749,8 @@ CREATE TABLE IF NOT EXISTS check_pass_cache (
     duration_ms INTEGER NOT NULL,
     stdout BLOB NOT NULL,
     stderr BLOB NOT NULL,
-    created_at REAL NOT NULL
+    created_at REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pass' CHECK(status IN ('pass','fail','flaky'))
 );
 CREATE TABLE IF NOT EXISTS check_stats (
     command_key TEXT PRIMARY KEY,

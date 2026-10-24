@@ -18,6 +18,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+import unicodedata
 from dataclasses import dataclass
 
 from bt_audit_evidence import DIGEST, evidence_gate, evidence_outputs, evidence_paths, tree_digest
@@ -31,6 +33,7 @@ REWORK_SCOPES = ("named", "downstream")
 MAX_BYTES = 1 << 20
 MAX_FINDINGS = 200
 MAX_TEXT = 600
+SEMANTIC_FINGERPRINT = re.compile(r"^[0-9a-f]{64}$")
 
 def ledger_help(path: str | None = None) -> str:
     """The instruction an auditor reads: where to write the ledger (its declared path) and in which format."""
@@ -41,7 +44,10 @@ LEDGER_HELP = (
     f"Besides the report, write the findings ledger `<report>{LEDGER_SUFFIX}` (JSON, schema `{SCHEMA}`): "
     '{"schema": "audit-findings/1", "findings": [{"id": "F1", "severity": "critical|high|medium|low", '
     '"status": "open|fixed|accepted", "summary": "...", "tasks": ["<plan task id whose result is wrong>"], '
-    '"evidence": "required when fixed", "accepted_by": "owner", "reason": "required when accepted"}]}. '
+    '"evidence": "required when fixed", "accepted_by": "owner", "reason": "required when accepted", '
+    '"semantic_fingerprint": "optional lowercase sha256"}]}. '
+    "semantic_fingerprint is sha256 of compact JSON [contract_id, failure_mechanism, trigger, affected_frontier] "
+    "after Unicode NFKC normalization, case-folding and whitespace collapse; a frontier array is sorted and unique. "
     "List every finding you confirm. A critical or high finding left `open` rejects this audit and sends the tasks it "
     "names back to be redone. An audit is read-only: change only your report and this ledger, never source, tests or "
     "configuration (a change outside them rejects the audit). Use `fixed` only for a finding you re-checked and found "
@@ -142,6 +148,11 @@ def _finding_problems(item: object, index: int) -> list[str]:
         out.append(f"{where}.status: one of {', '.join(STATUSES)}")
     if not _text(item.get("summary")):
         out.append(f"{where}.summary: missing")
+    if "semantic_fingerprint" in item and (
+        not isinstance(item["semantic_fingerprint"], str)
+        or not SEMANTIC_FINGERPRINT.fullmatch(item["semantic_fingerprint"])
+    ):
+        out.append(f"{where}.semantic_fingerprint: expected 64 lowercase hexadecimal characters")
     tasks = _tasks(item)
     if not isinstance(tasks, list) or not all(isinstance(t, str) and t.strip() for t in tasks):
         out.append(f"{where}.tasks: a list of plan task ids")
@@ -195,14 +206,77 @@ def evaluate(raw: bytes | str | None, plan_task_ids, audit_task_id: str, policy:
     findings = data["findings"]
     known = set(plan_task_ids)
     blocking, rework = [], []
+    by_fingerprint: dict[str, int] = {}
     for item in findings:
         if item["severity"] in policy.blocking and item["status"] == "open":
             tasks = [t.strip() for t in _tasks(item) if t.strip() in known and t.strip() != audit_task_id]
-            blocking.append({"id": _text(item["id"]), "severity": item["severity"],
-                             "summary": _text(item["summary"])[:MAX_TEXT], "tasks": tasks,
-                             "evidence": _text(item.get("evidence"))[:MAX_TEXT]})
+            record = _blocking_record(item, tasks)
+            fingerprint = record.get("semantic_fingerprint")
+            if fingerprint and fingerprint in by_fingerprint:
+                _merge_blocking(blocking[by_fingerprint[fingerprint]], record)
+            else:
+                if fingerprint:
+                    by_fingerprint[fingerprint] = len(blocking)
+                blocking.append(record)
             rework += [t for t in tasks if t not in rework]
     return Gate(not blocking, (), tuple(blocking), tuple(rework))
+
+
+def semantic_fingerprint(contract_id: str, failure_mechanism: str, trigger: str,
+                         affected_frontier: str | list[str] | tuple[str, ...]) -> str:
+    """Hash NFKC, case-folded, whitespace-collapsed JSON fields; frontier lists are sorted and unique."""
+    def normalize(value: str) -> str:
+        return " ".join(unicodedata.normalize("NFKC", value).casefold().split())
+
+    frontier = affected_frontier if isinstance(affected_frontier, (list, tuple)) else [affected_frontier]
+    canonical = [normalize(contract_id), normalize(failure_mechanism), normalize(trigger),
+                 sorted({normalize(value) for value in frontier})]
+    body = json.dumps(canonical, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    return hashlib.sha256(body).hexdigest()
+
+
+def evaluate_many(raw_ledgers, plan_task_ids, audit_task_id: str, policy: Policy = Policy()) -> Gate:
+    """Combine independent audit ledgers; only matching explicit fingerprints merge."""
+    gates = [evaluate(raw, plan_task_ids, audit_task_id, policy) for raw in raw_ledgers]
+    problems = tuple(problem for gate in gates for problem in gate.problems)
+    if problems:
+        return Gate(False, problems[:20], (), ())
+    blocking: list[dict] = []
+    by_fingerprint: dict[str, int] = {}
+    rework: list[str] = []
+    for gate in gates:
+        for record in gate.blocking:
+            fingerprint = record.get("semantic_fingerprint")
+            if fingerprint and fingerprint in by_fingerprint:
+                _merge_blocking(blocking[by_fingerprint[fingerprint]], record)
+            else:
+                if fingerprint:
+                    by_fingerprint[fingerprint] = len(blocking)
+                blocking.append(dict(record))
+            rework.extend(task for task in record["tasks"] if task not in rework)
+    return Gate(not blocking, (), tuple(blocking), tuple(rework))
+
+
+def _blocking_record(item: dict, tasks: list[str]) -> dict:
+    evidence_refs = item.get("evidence_refs", [])
+    if not isinstance(evidence_refs, list) or not all(isinstance(value, str) for value in evidence_refs):
+        evidence_refs = []
+    record = {"id": _text(item["id"]), "severity": item["severity"],
+              "summary": _text(item["summary"])[:MAX_TEXT], "tasks": tasks,
+              "evidence": _text(item.get("evidence"))[:MAX_TEXT],
+              "evidence_entries": ((_text(item.get("evidence"))[:MAX_TEXT],) if _text(item.get("evidence")) else ()),
+              "evidence_refs": tuple(dict.fromkeys(evidence_refs))}
+    if "semantic_fingerprint" in item:
+        record["semantic_fingerprint"] = item["semantic_fingerprint"]
+    return record
+
+
+def _merge_blocking(target: dict, other: dict) -> None:
+    target["tasks"] = list(dict.fromkeys((*target["tasks"], *other["tasks"])))
+    target["evidence_entries"] = tuple(dict.fromkeys((*target.get("evidence_entries", ()), *other.get("evidence_entries", ()))))
+    target["evidence_refs"] = tuple(dict.fromkeys((*target.get("evidence_refs", ()), *other.get("evidence_refs", ()))))
+    if not target.get("evidence") and other.get("evidence"):
+        target["evidence"] = other["evidence"]
 
 
 def note_for(gate: Gate, task_id: str, audit_task_id: str) -> str:

@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "m6.verify-result/1",
+  "$id": "m6.verify-result/1.1",
   "title": "M6 verification result",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "identity", "input", "verifier", "criteria", "checks", "status", "evidence_manifest", "finished_at"],
+  "required": ["schema_version", "identity", "input", "verifier", "criteria", "checks", "status", "reason_code", "evidence_manifest", "finished_at"],
   "properties": {
-    "schema_version": {"const": "m6.verify-result/1"},
+    "schema_version": {"const": "m6.verify-result/1.1"},
     "identity": {
       "type": "object",
       "additionalProperties": false,
@@ -22,13 +22,18 @@
     "input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["snapshot_sha", "base_sha", "criteria_hash", "order_sha256", "checks_sha256"],
+      "required": ["snapshot_sha", "base_sha", "criteria_hash", "order_sha256", "checks_sha256", "tree_digest", "contract_identities", "environment_fingerprint"],
       "properties": {
         "snapshot_sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},
         "base_sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},
         "criteria_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "order_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-        "checks_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "checks_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "tree_digest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},
+        "contract_identities": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+        "environment_fingerprint": {"type": ["string", "null"], "pattern": "^[0-9a-f]{24,64}$"},
+        "composition_id": {"type": "string", "minLength": 1, "maxLength": 256},
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
     },
     "verifier": {
@@ -62,7 +67,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "command", "argv", "status", "exit_code", "duration_ms", "issue_code", "stdout_ref", "stderr_ref"],
+        "required": ["id", "command", "argv", "status", "exit_code", "duration_ms", "issue_code", "reason_code", "tree_digest", "stdout_ref", "stderr_ref"],
         "properties": {
           "id": {"type": "string", "minLength": 1, "maxLength": 64},
           "command": {"type": "string", "minLength": 1, "maxLength": 4096},
@@ -71,12 +76,15 @@
           "exit_code": {"type": ["integer", "null"]},
           "duration_ms": {"type": "integer", "minimum": 0},
           "issue_code": {"type": ["string", "null"], "pattern": "^[A-Z][A-Z0-9_]{0,63}$"},
+          "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN"]},
+          "tree_digest": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40,64}$"},
           "stdout_ref": {"type": "string", "pattern": "^m6://artifact/[a-f0-9]{64}$"},
           "stderr_ref": {"type": "string", "pattern": "^m6://artifact/[a-f0-9]{64}$"}
         }
       }
     },
     "status": {"enum": ["PASS", "FAIL", "NEEDS_REVIEW", "STALE"]},
+    "reason_code": {"enum": ["PASS", "FAIL_CODE", "BLOCKED_EXTERNAL", "BLOCKED_ENV", "TIMEOUT", "FLAKY_SUSPECTED", "NOT_RUN"]},
     "issues": {
       "type": "array",
       "items": {
