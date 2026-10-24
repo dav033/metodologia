@@ -88,6 +88,7 @@ py-modules = [
   "bt_interventions",
   "bt_launch",
   "bt_learn",
+  "bt_knowledge_adapter",
   "bt_links",
   "bt_live_api",
   "bt_lock",

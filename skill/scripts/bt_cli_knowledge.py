@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-import bt_knowledge
+import bt_knowledge_adapter as adapter
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
@@ -35,19 +35,19 @@ def dispatch(args: argparse.Namespace, project: str, root: Path) -> int:
         action = args.knowledge_action
         if action == "ingest":
             raw = sys.stdin.read() if args.delta == "-" else Path(args.delta).read_text(encoding="utf-8")
-            result = bt_knowledge.ingest(db_path, json.loads(raw), args.repo_path)
+            result = adapter.ingest(db_path, json.loads(raw), args.repo_path)
             _print(result, args.json)
         elif action == "query":
-            result = bt_knowledge.query(db_path, project, commit=args.commit, area=args.area, status=args.status,
-                                        repo_path=args.repo_path)
+            result = adapter.query(db_path, project, commit=args.commit, area=args.area, status=args.status,
+                                   repo_path=args.repo_path)
             _print(result, args.json)
         elif action == "export":
-            print(bt_knowledge.export(db_path, project, args.format, commit=args.commit))
+            print(adapter.export(db_path, project, args.format, commit=args.commit))
         else:
-            _print(bt_knowledge.stats(db_path, project), args.json)
+            _print(adapter.stats(db_path, project), args.json)
         return 0
-    except (bt_knowledge.KnowledgeError, json.JSONDecodeError, OSError) as exc:
-        if isinstance(exc, bt_knowledge.KnowledgeError):
+    except (adapter.KnowledgeError, json.JSONDecodeError, OSError) as exc:
+        if isinstance(exc, adapter.KnowledgeError):
             print(str(exc), file=sys.stderr)
         elif isinstance(exc, json.JSONDecodeError):
             print("INVALID_JSON: delta is not valid JSON", file=sys.stderr)
