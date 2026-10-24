@@ -7,6 +7,7 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
+2026-10-23: Engine v2 lead handoff prepared as `relay/RELAY-20261023-211009.md` for codex-2; manual continuation required. Main stays `48f45935e` with bitacora changes. Repairs/reviews and background tests remain pending; canonical checkpoint is `/home/david/dev/metodologia/bitacora/metodologia/engine-v2/CONTINUATION-01a16b88.md`. Held-run owner restrictions remain in force.
 2026-10-23 19:10: Engine v2 F2-C Implementer adaptations committed (`b1aa50a2d`); full suite ran 2,404 tests with only the 15 baseline failures from RULES.md and 6 skips.
 2026-10-23 11:38: david-ui REQ-001 in a full rework after its final audit (P-177, 5/32); REQ-020 regenerating T14a evidence before T15. Audit-readiness branch awaiting suites before merge.
 2026-10-23 11:08: david-ui REQ-001 26/28 (over its 5 h window by ~30 min, P-175); REQ-020 in production, T15 repair T15.2 running (plan r15). Codex branches merged into main.
