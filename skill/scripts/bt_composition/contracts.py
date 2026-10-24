@@ -57,6 +57,7 @@ class Candidate:
     conflicts: dict[str, tuple[str, ...]] | None = None
     member_order: tuple[str, ...] = ()
     required_verifiers: dict[str, str] | None = None
+    verdict_proofs: dict[str, dict[str, str]] | None = None  # who proved each verdict; not part of the manifest
 
 
 @dataclass(frozen=True)

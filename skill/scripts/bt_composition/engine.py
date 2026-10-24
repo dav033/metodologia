@@ -268,6 +268,7 @@ class CompositionEngine:
         if candidate.state not in ("candidate", "verifying"):
             return False
         clean_verdicts: dict[str, str] = {}
+        proofs: dict[str, dict[str, str]] = {}
         for name in candidate.required_verdicts:
             proof = verdicts.get(name)
             if (not isinstance(proof, VerdictProof) or proof.candidate_id != candidate.id
@@ -280,9 +281,10 @@ class CompositionEngine:
                     or not re.fullmatch(r"sha256:[0-9a-f]{64}", proof.evidence_id)):
                 raise ValueError("VERDICT_PROOF_INVALID")
             clean_verdicts[name] = proof.verdict
+            proofs[name] = {"verdict": proof.verdict, "verifier_id": proof.verifier_id, "evidence_id": proof.evidence_id}
         complete = all(clean_verdicts.get(name) == "PASS" for name in candidate.required_verdicts)
         if not complete:
-            self._reject(candidate_id, {"verdicts": clean_verdicts})
+            self._reject(candidate_id, {"verdicts": clean_verdicts, "proofs": proofs})
             return False
         current_ref = f"refs/compositions/{candidate.plan_id}/current"
         published_ref = f"refs/compositions/{candidate.plan_id}/{candidate.id}"
@@ -295,7 +297,7 @@ class CompositionEngine:
         if self.git.rev_parse(current_ref) != expected_current:
             if (self.git.rev_parse(current_ref) == candidate.integrated_commit
                     and self.git.rev_parse(published_ref) == candidate.integrated_commit):
-                updated = _candidate_manifest(replace(candidate, state="published", verdicts=clean_verdicts))
+                updated = _candidate_manifest(replace(candidate, state="published", verdicts=clean_verdicts, verdict_proofs=proofs))
                 self.store.update_candidate(updated)
                 return True
             raise RuntimeError("COMPOSITION_CURRENT_MOVED")
@@ -304,7 +306,7 @@ class CompositionEngine:
         if published_commit is None or current_commit != candidate.integrated_commit:
             self.git.update_refs(((published_ref, candidate.integrated_commit, None),
                                   (current_ref, candidate.integrated_commit, expected_current)))
-        updated = _candidate_manifest(replace(candidate, state="published", verdicts=clean_verdicts))
+        updated = _candidate_manifest(replace(candidate, state="published", verdicts=clean_verdicts, verdict_proofs=proofs))
         self.store.update_candidate(updated)
         return True
 

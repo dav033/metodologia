@@ -106,6 +106,7 @@ class Store:
         body["conflict_paths"] = tuple(body["conflict_paths"])
         body["member_order"] = tuple(body.get("member_order", ()))
         body.setdefault("required_verifiers", None)
+        body.setdefault("verdict_proofs", None)
         if body.get("conflicts") is not None:
             body["conflicts"] = {key: tuple(paths) for key, paths in body["conflicts"].items()}
         return Candidate(**body)

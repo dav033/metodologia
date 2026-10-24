@@ -26,6 +26,8 @@ compatibility.
     evaluated commit and tree, the gate's expected verifier id, and an evidence id of `sha256:<64 lowercase hex>`.
     It atomically creates `refs/compositions/<plan>/C<N>` and
     moves `current` only when all candidate-required verdicts are `PASS`; otherwise it rejects and returns `False`.
+    The stored candidate keeps `verdict_proofs` (`verdict`, `verifier_id`, `evidence_id` per gate) outside the manifest;
+    a rejection keeps the same proofs in its evidence.
   - `reject(candidate_id, evidence)` records a rejected candidate. Published compositions cannot be rejected.
 - `EvidenceKey(tree_digest, contracts, environment, paths=())` and `reusable(old, new)` bind evidence to equal tree
   digests, contract hashes, environments and sorted relevant-path sets. The real Git port refuses an empty path list

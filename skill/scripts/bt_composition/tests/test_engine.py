@@ -383,6 +383,18 @@ class CompositionTests(unittest.TestCase):
                 proof.candidate_id, proof.manifest_sha256, proof.evaluated_commit, proof.evaluated_tree,
                 proof.verdict, proof.verifier_id, "not-an-evidence-id")})
 
+    def test_published_candidate_keeps_who_proved_it(self):
+        self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1},
+                                                member_order=("S1", "S2", "S3"))
+        proof = self.proof(candidate)
+        self.assertTrue(self.engine.publish(candidate.id, {"M6": proof}))
+        stored = self.store.get_candidate(candidate.id)
+        self.assertEqual(stored.verdict_proofs, {"M6": {"verdict": "PASS", "verifier_id": proof.verifier_id,
+                                                        "evidence_id": proof.evidence_id}})
+        self.assertEqual(stored.manifest_sha256, candidate.manifest_sha256)
+
     def test_candidate_reservation_survives_orphan_ref_and_retries_same_request(self):
         self.publish_version("S1", "s1v1", "base")
         self.publish_version("S2", "s2v1", "base")
