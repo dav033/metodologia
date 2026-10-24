@@ -107,7 +107,7 @@ class CompositionTests(unittest.TestCase):
     def proof(self, candidate, verdict="PASS", *, candidate_id=None, commit=None, manifest=None):
         return VerdictProof(candidate_id or candidate.id, manifest or candidate.manifest_sha256,
                             commit or candidate.integrated_commit,
-                            self.git.tree_oid(commit or candidate.integrated_commit), verdict, "M6", "evidence-1")
+                            self.git.tree_oid(commit or candidate.integrated_commit), verdict, "M6", "sha256:" + "a" * 64)
 
     def verdicts(self, candidate, verdict="PASS"):
         return {"M6": self.proof(candidate, verdict)}
@@ -115,7 +115,7 @@ class CompositionTests(unittest.TestCase):
     def initial_composition(self):
         for sp, commit in (("S1", "s1v1"), ("S2", "s2v1"), ("S3", "s3v1")):
             self.publish_version(sp, commit, "base")
-        c1 = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1})
+        c1 = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.assertTrue(self.engine.publish(c1.id, self.verdicts(c1)))
         return c1
 
@@ -132,37 +132,37 @@ class CompositionTests(unittest.TestCase):
     def test_selective_candidate_publish_preserves_other_versions(self):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.engine.publish(c2.id, self.verdicts(c2))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c2.integrated_commit)
         self.assertEqual(c2.members, {"S1": 2, "S2": 1, "S3": 1})
         self.assertEqual(self.git.refs["refs/subplans/P1/S2/v1"], "s2v1")
         self.assertEqual(self.git.refs["refs/compositions/P1/C1"], c1.integrated_commit)
-        self.assertEqual(self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}).id, "C2")
+        self.assertEqual(self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3")).id, "C2")
 
     def test_failed_verdict_leaves_current_intact(self):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.assertFalse(self.engine.publish(c2.id, self.verdicts(c2, "FAIL")))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c1.integrated_commit)
 
     def test_publish_ref_failure_leaves_current_and_candidate_retryable(self):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.git.fail_updates = True
         with self.assertRaisesRegex(RuntimeError, "git_update_ref_failed"):
             self.engine.publish(c2.id, self.verdicts(c2))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c1.integrated_commit)
         self.git.fail_updates = False
-        self.assertEqual(self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}).id, c2.id)
+        self.assertEqual(self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3")).id, c2.id)
         self.assertTrue(self.engine.publish(c2.id, self.verdicts(c2)))
 
     def test_publish_reconciles_store_failure_after_refs_move(self):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         original = self.store.update_candidate
         self.store.update_candidate = lambda candidate: (_ for _ in ()).throw(RuntimeError("store write failed"))
         with self.assertRaisesRegex(RuntimeError, "store write failed"):
@@ -177,7 +177,7 @@ class CompositionTests(unittest.TestCase):
     def test_reject_waits_for_publish_and_cannot_overwrite_published_state(self):
         self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         entered, resume = threading.Event(), threading.Event()
         original_hook = self.git.update_hook
         def pause_after_refs():
@@ -222,12 +222,12 @@ class CompositionTests(unittest.TestCase):
 
         for sp, commit in (("S2", "s2v1"), ("S3", "s3v1")):
             self.publish_version(sp, commit, "base")
-        original_put_candidate = self.store.put_candidate
-        self.store.put_candidate = lambda candidate, request: (_ for _ in ()).throw(RuntimeError("candidate row failed"))
+        original_put_candidate = self.store.complete_candidate
+        self.store.complete_candidate = lambda candidate, request: (_ for _ in ()).throw(RuntimeError("candidate row failed"))
         with self.assertRaisesRegex(RuntimeError, "candidate row failed"):
-            self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1})
-        self.store.put_candidate = original_put_candidate
-        candidate = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1})
+            self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
+        self.store.complete_candidate = original_put_candidate
+        candidate = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.assertEqual(candidate.id, "C1")
 
     def test_same_oid_different_version_request_cannot_claim_reserved_number(self):
@@ -245,7 +245,7 @@ class CompositionTests(unittest.TestCase):
     def test_candidate_manifest_is_stable_when_state_changes(self):
         self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         manifest = candidate.manifest_sha256
         self.engine.open_workspace(candidate.id)
         verifying = self.store.get_candidate(candidate.id)
@@ -255,13 +255,14 @@ class CompositionTests(unittest.TestCase):
     def test_run_base_is_bootstrap_only_when_current_is_published(self):
         published = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, run_base="base")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, run_base="base",
+                                                member_order=("S1", "S2", "S3"))
         self.assertEqual(candidate.base_commit, published.integrated_commit)
 
     def test_proof_for_another_candidate_or_commit_cannot_publish(self):
         self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         with self.assertRaisesRegex(ValueError, "VERDICT_PROOF_INVALID"):
             self.engine.publish(candidate.id, {"M6": self.proof(candidate, candidate_id="C999")})
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], self.store.get_candidate(candidate.parent).integrated_commit)
@@ -269,16 +270,16 @@ class CompositionTests(unittest.TestCase):
     def test_rejected_candidate_does_not_suppress_next_attempt(self):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.engine.reject(c2.id, {"reason": "retry"})
-        c3 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c3 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.assertEqual(c3.id, "C3")
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c1.integrated_commit)
 
     def test_candidate_workspace_enters_verifying_state(self):
         self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.engine.open_workspace(candidate.id)
         self.assertEqual(self.store.get_candidate(candidate.id).state, "verifying")
 
@@ -286,7 +287,7 @@ class CompositionTests(unittest.TestCase):
         c1 = self.initial_composition()
         self.git.deltas["s1v2"] = ("two",)
         self.publish_version("S1", "s1v2", "s1v1")
-        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         self.assertEqual(c2.state, "rejected")
         self.assertEqual(c2.reason_code, "git_text_conflict")
         self.assertEqual(c2.conflict_paths, ("two",))
@@ -356,6 +357,74 @@ class CompositionTests(unittest.TestCase):
                             [{"id": "S2", "old_evidence_key": empty, "new_evidence_key": empty}], [])
         self.assertEqual([item.operation for item in actions], ["reverify"])
 
+    def test_reusable_rejects_invalid_paths(self):
+        for path in ("", "../src", "src/../secret", "/absolute", "src//file"):
+            key = EvidenceKey("same", {"api@1": "same"}, "env", (path,))
+            self.assertFalse(reusable(key, key), path)
+
+    def test_multiple_members_require_explicit_plan_order(self):
+        self.publish_version("S1", "s1v1", "base")
+        self.publish_version("S2", "s2v1", "base")
+        with self.assertRaisesRegex(ValueError, "MEMBER_ORDER_REQUIRED"):
+            self.engine.build_candidate("P1", {"S1": 1, "S2": 1})
+
+    def test_verdict_proofs_must_match_expected_verifier_and_sha256_evidence(self):
+        self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1},
+                                                member_order=("S1", "S2", "S3"))
+        proof = self.proof(candidate)
+        with self.assertRaisesRegex(ValueError, "VERDICT_PROOF_INVALID"):
+            self.engine.publish(candidate.id, {"M6": VerdictProof(
+                proof.candidate_id, proof.manifest_sha256, proof.evaluated_commit, proof.evaluated_tree,
+                proof.verdict, "different-verifier", proof.evidence_id)})
+        with self.assertRaisesRegex(ValueError, "VERDICT_PROOF_INVALID"):
+            self.engine.publish(candidate.id, {"M6": VerdictProof(
+                proof.candidate_id, proof.manifest_sha256, proof.evaluated_commit, proof.evaluated_tree,
+                proof.verdict, proof.verifier_id, "not-an-evidence-id")})
+
+    def test_candidate_reservation_survives_orphan_ref_and_retries_same_request(self):
+        self.publish_version("S1", "s1v1", "base")
+        self.publish_version("S2", "s2v1", "base")
+        self.git.fail_updates = True
+        with self.assertRaisesRegex(RuntimeError, "git_update_ref_failed"):
+            self.engine.build_candidate("P1", {"S1": 1, "S2": 1}, member_order=("S1", "S2"))
+        self.assertEqual(self.store.next_candidate("P1"), 2)
+        self.git.fail_updates = False
+        other = self.engine.build_candidate("P1", {"S1": 1, "S2": 1},
+                                           required_verdicts=("M7",), member_order=("S1", "S2"))
+        self.assertEqual(other.id, "C2")
+        candidate = self.engine.build_candidate("P1", {"S1": 1, "S2": 1}, member_order=("S1", "S2"))
+        self.assertEqual(candidate.id, "C1")
+
+    def test_unreserved_orphan_candidate_ref_is_skipped_for_new_request(self):
+        self.publish_version("S1", "s1v1", "base")
+        self.publish_version("S2", "s2v1", "base")
+        self.git.refs["refs/compositions/P1/candidates/C1"] = "another"
+        candidate = self.engine.build_candidate("P1", {"S1": 1, "S2": 1}, member_order=("S1", "S2"))
+        self.assertEqual(candidate.id, "C2")
+        self.assertEqual(self.git.refs["refs/compositions/P1/candidates/C1"], "another")
+
+    def test_candidate_reports_conflicts_for_both_pairs_around_rejected_member(self):
+        for subplan, commit in (("A", "s1v1"), ("B", "s2v1"), ("C", "s3v1")):
+            self.publish_version(subplan, commit, "base")
+        self.git.deltas["s1v1"] = ("x",)
+        self.git.deltas["s2v1"] = ("x", "y")
+        self.git.deltas["s3v1"] = ("y",)
+        candidate = self.engine.build_candidate("P1", {"A": 1, "B": 1, "C": 1},
+                                                member_order=("A", "B", "C"))
+        self.assertEqual(candidate.state, "rejected")
+        self.assertEqual(candidate.conflicts["A"], ("x",))
+        self.assertEqual(candidate.conflicts["B"], ("x", "y"))
+        self.assertEqual(candidate.conflicts["C"], ("y",))
+        self.assertNotIn("refs/compositions/P1/current", self.git.refs)
+
+    def test_subplan_publication_records_non_hashed_published_at(self):
+        version = self.publish_version("S1", "s1v1", "base")
+        self.assertTrue(self.store.get_version("P1", "S1", version.version).published_at)
+        before = version.manifest_sha256
+        self.assertEqual(self.store.get_version("P1", "S1", version.version).manifest_sha256, before)
+
     def test_fold_uses_requested_plan_order_and_rejects_backwards_members(self):
         self.initial_composition()
         self.publish_version("S2", "different", "s2v1")
@@ -383,7 +452,7 @@ class CompositionTests(unittest.TestCase):
         for sp, commit in (("S1", "s1v1"), ("S2", "s2v1"), ("S3", "s3v1")):
             self.publish_version(sp, commit, "base")
         self.publish_version("S1", "s1v2", "s1v1")
-        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
         path = self.engine.open_workspace(candidate.id)
         self.assertTrue(path.endswith(candidate.integrated_commit))
         self.engine.close_workspace(path)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import subprocess
 import sys
@@ -21,7 +22,8 @@ class CompositionIntegrationTests(unittest.TestCase):
     @staticmethod
     def proofs(engine, candidate, verdict="PASS"):
         return {"M6": VerdictProof(candidate.id, candidate.manifest_sha256, candidate.integrated_commit,
-                                    engine.git.tree_oid(candidate.integrated_commit), verdict, "M6", "integration-evidence")}
+                                    engine.git.tree_oid(candidate.integrated_commit), verdict, "M6",
+                                    "sha256:" + hashlib.sha256(b"integration-evidence").hexdigest())}
 
     def test_only_adapter_imports_module(self):
         offenders = []
@@ -92,23 +94,25 @@ class CompositionIntegrationTests(unittest.TestCase):
                     adapter.GitSubprocessPort(repo, repo / "worktrees")
                 for sp, commit in (("S1", s1v1), ("S2", s2v1), ("S3", s3v1)):
                     engine.publish_subplan_version("P", "r1", sp, commit, base, {"api@1": "declared"}, [])
-                c1 = engine.build_candidate("P", {"S1": 1, "S2": 1, "S3": 1})
+                c1 = engine.build_candidate("P", {"S1": 1, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
                 self.assertTrue(engine.publish(c1.id, self.proofs(engine, c1)))
                 current = self.git(repo, "rev-parse", "refs/compositions/P/current")
                 s1v2 = commit_file("s1.txt", "one\nnew\n", s1v1)
                 engine.publish_subplan_version("P", "r2", "S1", s1v2, s1v1, {"api@1": "declared"}, [])
-                c2 = engine.build_candidate("P", {"S1": 2, "S2": 1, "S3": 1})
+                c2 = engine.build_candidate("P", {"S1": 2, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
                 self.assertFalse(engine.publish(c2.id, self.proofs(engine, c2, "FAIL")))
                 self.assertEqual(self.git(repo, "rev-parse", "refs/compositions/P/current"), current)
 
                 # A later candidate whose atomic ref transaction fails remains retryable.
                 s1v3 = commit_file("s1.txt", "one\nnew\nnewer\n", s1v2)
                 engine.publish_subplan_version("P", "r3", "S1", s1v3, s1v1, {"api@1": "declared"}, [])
-                c3 = engine.build_candidate("P", {"S1": 3, "S2": 1, "S3": 1})
+                c3 = engine.build_candidate("P", {"S1": 3, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
                 self.assertEqual(c3.state, "candidate", c3.conflict_paths)
                 workspace = engine.open_workspace(c3.id)
                 self.assertTrue(Path(workspace).is_relative_to(workspaces))
+                marker_path = workspaces / f"{Path(workspace).name}.composition-owner.json"
                 engine.close_workspace(workspace)
+                self.assertFalse(marker_path.exists())
                 original_update = engine.git.update_refs
                 def fail_once(updates):
                     engine.git.update_refs = original_update
@@ -117,12 +121,12 @@ class CompositionIntegrationTests(unittest.TestCase):
                 with self.assertRaisesRegex(adapter.GitCommandError, "simulated_update_ref_failure"):
                     engine.publish(c3.id, self.proofs(engine, c3))
                 self.assertEqual(self.git(repo, "rev-parse", "refs/compositions/P/current"), current)
-                self.assertEqual(engine.build_candidate("P", {"S1": 3, "S2": 1, "S3": 1}).id, c3.id)
+                self.assertEqual(engine.build_candidate("P", {"S1": 3, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3")).id, c3.id)
                 self.assertTrue(engine.publish(c3.id, self.proofs(engine, c3)))
 
                 s1v4 = commit_file("s2.txt", "two changed\n", s1v3)
                 engine.publish_subplan_version("P", "r4", "S1", s1v4, s1v1, {"api@1": "declared"}, [])
-                conflict = engine.build_candidate("P", {"S1": 4, "S2": 1, "S3": 1})
+                conflict = engine.build_candidate("P", {"S1": 4, "S2": 1, "S3": 1}, member_order=("S1", "S2", "S3"))
                 self.assertEqual(conflict.state, "rejected")
                 self.assertEqual(conflict.reason_code, "git_text_conflict")
                 self.assertEqual(self.git(repo, "rev-parse", "refs/compositions/P/current"), c3.integrated_commit)
@@ -193,6 +197,7 @@ class CompositionIntegrationTests(unittest.TestCase):
                 marker_path.write_text(json.dumps(marker), encoding="utf-8")
                 self.assertIn(str(workspace), engine.prune_workspaces())
                 self.assertFalse(workspace.exists())
+                self.assertFalse(marker_path.exists())
                 self.assertTrue(engine.publish(c2.id, self.proofs(engine, c2)))
                 self.assertEqual(port.rev_parse("refs/compositions/P/current"), c2.integrated_commit)
                 self.assertEqual(port.rev_parse("refs/compositions/P/C1"), c1.integrated_commit)
@@ -217,12 +222,43 @@ class CompositionIntegrationTests(unittest.TestCase):
             self.git(repo, "symbolic-ref", "refs/compositions/P/current", target_ref)
             port = adapter.GitSubprocessPort(repo, root / "workspaces")
             replacement = self.git(repo, "rev-parse", "HEAD^{tree}")
-            port.update_refs((("refs/compositions/P/current", replacement, main_before),))
+            port.update_refs((("refs/compositions/P/candidates/C1", main_before, None),
+                              ("refs/compositions/P/current", replacement, main_before)))
             self.assertEqual(self.git(repo, "rev-parse", target_ref), main_before)
             self.assertEqual(self.git(repo, "rev-parse", "refs/compositions/P/current"), replacement)
             symbolic = subprocess.run(["git", "-C", str(repo), "symbolic-ref", "-q",
                                        "refs/compositions/P/current"], capture_output=True, check=False)
             self.assertNotEqual(symbolic.returncode, 0)
+
+    def test_git_ref_transaction_does_not_follow_symrefs_on_later_delete(self):
+        with tempfile.TemporaryDirectory(prefix="composition-symref-delete-") as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            repo.mkdir()
+            self.git(repo, "init", "-q")
+            self.git(repo, "config", "user.name", "Test")
+            self.git(repo, "config", "user.email", "test@example.invalid")
+            (repo / "base.txt").write_text("base\n", encoding="utf-8")
+            self.git(repo, "add", "base.txt")
+            self.git(repo, "commit", "-qm", "base")
+            main_ref = self.git(repo, "symbolic-ref", "HEAD")
+            main_before = self.git(repo, "rev-parse", "HEAD")
+            self.git(repo, "symbolic-ref", "refs/compositions/P/current", main_ref)
+            port = adapter.GitSubprocessPort(repo, root / "workspaces")
+            port.update_refs((("refs/compositions/P/candidates/C1", main_before, None),
+                              ("refs/compositions/P/current", None, main_before)))
+            self.assertEqual(self.git(repo, "rev-parse", main_ref), main_before)
+            self.assertEqual(self.git(repo, "rev-parse", "refs/compositions/P/candidates/C1"), main_before)
+
+    def test_tree_digest_rejects_option_like_commit(self):
+        with tempfile.TemporaryDirectory(prefix="composition-tree-args-") as directory:
+            root = Path(directory)
+            repo = root / "repo"
+            repo.mkdir()
+            self.git(repo, "init", "-q")
+            port = adapter.GitSubprocessPort(repo, root / "workspaces")
+            with self.assertRaisesRegex(ValueError, "INVALID_TREE_COMMIT"):
+                port.tree_digest("--help", ("README.md",))
 
     def test_workspace_root_ancestor_of_repository_is_rejected(self):
         with tempfile.TemporaryDirectory(prefix="composition-overlap-") as directory:
@@ -261,6 +297,8 @@ class CompositionIntegrationTests(unittest.TestCase):
             self.assertTrue(active_path.exists())
             foreign_path = workspaces / "foreign"
             self.git(repo, "worktree", "add", "--detach", str(foreign_path), base)
+            with self.assertRaisesRegex(ValueError, "WORKTREE_OWNERSHIP_UNVERIFIED"):
+                port.remove_worktree(foreign_path)
             self.assertEqual(port.prune_workspaces(), ())
             self.assertTrue(foreign_path.exists())
 

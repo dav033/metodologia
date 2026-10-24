@@ -13,7 +13,9 @@ compatibility.
     `SP@vN`, creates `refs/subplans/<plan>/<SP>/v<N>` with create-only CAS, and returns a manifest-bound version.
   - `build_candidate(plan_id, members, *, run_base=None, required_verdicts=("M6",), member_order=None)` starts from
     published `current`; `run_base` is used only when no composition is published (bootstrap). It folds changed
-    member deltas in the supplied plan order (or mapping insertion order) and creates
+    member deltas in the supplied plan order; multiple members require explicit `member_order`. `required_verdicts`
+    may map each gate to its expected `verifier_id`. Candidate number, request hash and stable manifest are durably
+    reserved before its ref is published, so retries reconcile an interrupted publication. It creates
     `refs/compositions/<plan>/candidates/C<N>`. A repeated identical live request reuses the same candidate; requesting
     the already-current member set returns that published composition. Text conflicts produce a `rejected` candidate
     with `reason_code="git_text_conflict"` and per-member conflict paths. A rejection permits a fresh candidate number.
@@ -21,7 +23,8 @@ compatibility.
     caller-provided workspace root; opening moves the candidate to `verifying`. `prune_workspaces()` removes only
     worktrees with an ownership marker and proven dead owner. Unknown, foreign, active, locked and failed removals stay.
   - `publish(candidate_id, verdicts)` requires `VerdictProof` values bound to the candidate id, stable manifest hash,
-    evaluated commit and tree, verifier id and evidence id. It atomically creates `refs/compositions/<plan>/C<N>` and
+    evaluated commit and tree, the gate's expected verifier id, and an evidence id of `sha256:<64 lowercase hex>`.
+    It atomically creates `refs/compositions/<plan>/C<N>` and
     moves `current` only when all candidate-required verdicts are `PASS`; otherwise it rejects and returns `False`.
   - `reject(candidate_id, evidence)` records a rejected candidate. Published compositions cannot be rejected.
 - `EvidenceKey(tree_digest, contracts, environment, paths=())` and `reusable(old, new)` bind evidence to equal tree
@@ -37,7 +40,9 @@ provide `id`, optional `contract_test_executed` / `contract_test_failed`, matchi
 and `old_evidence_key` / `new_evidence_key`. A Git conflict triggers `reintegrate` only for a consumer with conflict
 paths. Finding mappings use
 `demonstrated: true`, the matching `consumer`, and `design_cannot_meet_contract: true` to authorize `reimplement`.
-An `ancestry_only` change always yields at most `reverify`, even if contradictory evidence is supplied. Candidate
+An `ancestry_only` change always yields at most `reverify`, even if contradictory evidence is supplied. Evidence paths
+must be non-empty normalized relative paths with no `..` components. Subplan `published_at` is store metadata and is
+excluded from the manifest hash. Candidate
 `manifest_sha256` covers stable identity and does not change with lifecycle state or verdicts. `run_base` never
 overrides a published current composition.
 
@@ -55,7 +60,8 @@ Input and stored-fact errors are `INVALID_IDENTIFIER`, `INVALID_VERSION_INPUT`, 
 `INVALID_MEMBERS`, `REQUIRED_VERDICTS_MISSING`, `SUBPLAN_VERSION_MISSING`, `COMPOSITION_BASE_MISSING`,
 `SUBPLAN_VERSION_CONFLICT`, `CANDIDATE_MISSING`, `CANDIDATE_NOT_OPENABLE`, `CONSUMER_ID_MISSING`,
 `PUBLISHED_COMPOSITION_IMMUTABLE`, `COMPOSITION_CANDIDATE_CONFLICT`, `EMPTY_RELEVANT_PATHS`, `TREE_PATHS_MISSING`,
-and `INVALID_RELEVANT_PATH`. Ref validation errors use `INVALID_REF_OID`; merge failures use `GIT_MERGE_TREE_FAILED`; textual
+and `INVALID_RELEVANT_PATH`, `MEMBER_ORDER_REQUIRED`, `VERDICT_PROOF_INVALID`, `INVALID_TREE_COMMIT`, and
+`WORKTREE_OWNERSHIP_UNVERIFIED`. Ref validation errors use `INVALID_REF_OID`; merge failures use `GIT_MERGE_TREE_FAILED`; textual
 conflicts use `git_text_conflict`. Ref failures are surfaced by the `GitPort` implementation; the adapter reports Git
 command/CAS failures without claiming success. `current` movement is reported as `COMPOSITION_CURRENT_MOVED` and a
 missing parent as `COMPOSITION_PARENT_MISSING`. CLI validation uses `INVALID_MANIFEST`.

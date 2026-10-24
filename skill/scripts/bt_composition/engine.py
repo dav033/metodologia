@@ -6,7 +6,9 @@ import json
 import re
 import threading
 from dataclasses import replace
+from datetime import datetime, timezone
 from pathlib import Path
+from pathlib import PurePosixPath
 from collections.abc import Mapping, Sequence
 
 from .contracts import Action, Candidate, EvidenceKey, GitPort, PropagationChange, StorePort, SubplanVersion, VerdictProof
@@ -28,6 +30,8 @@ def _candidate_manifest(candidate: Candidate) -> Candidate:
     immutable_fields = ("id", "plan_id", "parent", "members", "member_order", "base_commit", "integrated_commit",
                         "required_verdicts", "reason_code", "conflict_paths", "conflicts")
     body = {key: getattr(candidate, key) for key in immutable_fields}
+    if candidate.required_verifiers is not None:
+        body["required_verifiers"] = candidate.required_verifiers
     return replace(candidate, manifest_sha256=_sha(body))
 
 
@@ -86,7 +90,8 @@ class CompositionEngine:
                 version_number = self.store.next_version(plan_id, subplan_id)
                 manifest = {**request, "version": version_number}
                 version = SubplanVersion(plan_id, plan_revision, subplan_id, version_number, resolved_commit, resolved_base,
-                                         dict(contracts), tuple(dict(item) for item in evidence), _sha(manifest))
+                                         dict(contracts), tuple(dict(item) for item in evidence), _sha(manifest),
+                                         datetime.now(timezone.utc).isoformat())
                 self.store.reserve_version(version, request_sha)
         ref = self.version_ref(plan_id, subplan_id, version.version)
         ref_commit = self.git.rev_parse(ref)
@@ -110,17 +115,27 @@ class CompositionEngine:
         return version
 
     def build_candidate(self, plan_id: str, members: Mapping[str, int], *, run_base: str | None = None,
-                        required_verdicts: Sequence[str] = ("M6",),
+                        required_verdicts: Sequence[str] | Mapping[str, str] = ("M6",),
                         member_order: Sequence[str] | None = None) -> Candidate:
         _validate_identifier(plan_id, "INVALID_IDENTIFIER")
         if not members or any(type(version) is not int or version < 1 for version in members.values()):
             raise ValueError("INVALID_MEMBERS")
         for subplan in members:
             _validate_identifier(subplan, "INVALID_IDENTIFIER")
-        required = tuple(sorted(set(required_verdicts)))
+        if isinstance(required_verdicts, Mapping):
+            required_verifiers = dict(required_verdicts)
+            required = tuple(sorted(required_verifiers))
+        else:
+            required = tuple(sorted(set(required_verdicts)))
+            required_verifiers = {name: name for name in required}
         if not required or any(not value for value in required):
             raise ValueError("REQUIRED_VERDICTS_MISSING")
+        if any(not isinstance(key, str) or not key or not isinstance(value, str) or not value
+               for key, value in required_verifiers.items()):
+            raise ValueError("REQUIRED_VERDICTS_MISSING")
         versions: dict[str, SubplanVersion] = {}
+        if member_order is None and len(members) > 1:
+            raise ValueError("MEMBER_ORDER_REQUIRED")
         order = tuple(member_order) if member_order is not None else tuple(members)
         if len(order) != len(members) or set(order) != set(members):
             raise ValueError("INVALID_MEMBERS")
@@ -147,10 +162,13 @@ class CompositionEngine:
             raise ValueError("COMPOSITION_BASE_MISSING")
         base = resolved_base
         request_sha = _sha({"plan_id": plan_id, "members": {key: members[key] for key in order}, "base": base,
-                            "required_verdicts": required, "order": order})
+                            "required_verdicts": required, "required_verifiers": required_verifiers, "order": order})
         existing = self.store.find_candidate(request_sha)
         if existing is not None:
             return existing
+        reservation = self.store.find_candidate_reservation(request_sha)
+        if reservation is not None:
+            return self._complete_candidate_reservation(reservation, request_sha)
         previous_members = parent_candidate.members if parent_candidate else {}
         integrated = base
         conflicts: set[str] = set()
@@ -191,24 +209,33 @@ class CompositionEngine:
             existing = self.store.find_candidate(request_sha)
             if existing is not None:
                 return existing
-            sequence = self.store.next_candidate(plan_id)
-            candidate_id = f"C{sequence}"
-            candidate_ref = self.candidate_ref(plan_id, candidate_id)
-            ref_commit = self.git.rev_parse(candidate_ref)
-            computed_commit = integrated
-            if ref_commit is not None and ref_commit != computed_commit:
-                raise ValueError("COMPOSITION_CANDIDATE_CONFLICT")
-            if ref_commit is not None:
-                integrated = ref_commit
-            state = "rejected" if conflicts else "candidate"
-            candidate = Candidate(candidate_id, plan_id, parent, dict(members), base, integrated,
-                                  "", state, {}, required,
-                                  "git_text_conflict" if conflicts else None, tuple(sorted(conflicts)), member_conflicts,
-                                  order)
-            candidate = _candidate_manifest(candidate)
-            if ref_commit is None:
-                self.git.update_refs(((candidate_ref, integrated, None),))
-            self.store.put_candidate(candidate, request_sha)
+            reservation = self.store.find_candidate_reservation(request_sha)
+            if reservation is None:
+                sequence = self.store.next_candidate(plan_id)
+                while self.git.rev_parse(self.candidate_ref(plan_id, f"C{sequence}")) is not None:
+                    sequence += 1
+                candidate_id = f"C{sequence}"
+                state = "rejected" if conflicts else "candidate"
+                candidate = Candidate(candidate_id, plan_id, parent, dict(members), base, integrated,
+                                      "", state, {}, required,
+                                      "git_text_conflict" if conflicts else None, tuple(sorted(conflicts)), member_conflicts,
+                                      order, required_verifiers)
+                reservation = _candidate_manifest(candidate)
+                self.store.reserve_candidate(reservation, request_sha)
+        return self._complete_candidate_reservation(reservation, request_sha)
+
+    def _complete_candidate_reservation(self, candidate: Candidate, request_sha: str) -> Candidate:
+        ref = self.candidate_ref(candidate.plan_id, candidate.id)
+        ref_commit = self.git.rev_parse(ref)
+        if ref_commit is not None and ref_commit != candidate.integrated_commit:
+            raise ValueError("COMPOSITION_CANDIDATE_CONFLICT")
+        if ref_commit is None:
+            self.git.update_refs(((ref, candidate.integrated_commit, None),))
+        with self.store.write_transaction():
+            existing = self.store.find_candidate(request_sha)
+            if existing is not None:
+                return existing
+            self.store.complete_candidate(candidate, request_sha)
         return candidate
 
     def open_workspace(self, candidate_id: str) -> str:
@@ -247,7 +274,10 @@ class CompositionEngine:
                     or proof.manifest_sha256 != candidate.manifest_sha256
                     or proof.evaluated_commit != candidate.integrated_commit
                     or proof.evaluated_tree != self.git.tree_oid(candidate.integrated_commit)
-                    or proof.verdict not in {"PASS", "FAIL"} or not proof.verifier_id or not proof.evidence_id):
+                    or proof.verdict not in {"PASS", "FAIL"}
+                    or proof.verifier_id != (candidate.required_verifiers or {}).get(name, name)
+                    or not isinstance(proof.evidence_id, str)
+                    or not re.fullmatch(r"sha256:[0-9a-f]{64}", proof.evidence_id)):
                 raise ValueError("VERDICT_PROOF_INVALID")
             clean_verdicts[name] = proof.verdict
         complete = all(clean_verdicts.get(name) == "PASS" for name in candidate.required_verdicts)
@@ -310,8 +340,23 @@ class CompositionEngine:
 
 
 def reusable(old: EvidenceKey, new: EvidenceKey) -> bool:
-    return (bool(old.paths) and bool(new.paths) and old.tree_digest == new.tree_digest and old.contracts == new.contracts
+    return (_valid_paths(old.paths) and _valid_paths(new.paths)
+            and old.tree_digest == new.tree_digest and old.contracts == new.contracts
             and old.environment == new.environment and tuple(sorted(old.paths)) == tuple(sorted(new.paths)))
+
+
+def _valid_paths(paths: Sequence[str]) -> bool:
+    if not paths:
+        return False
+    for path in paths:
+        if not isinstance(path, str) or not path or "\\" in path:
+            return False
+        pure = PurePosixPath(path)
+        if pure.is_absolute() or any(part in {"", ".", ".."} for part in path.split("/")):
+            return False
+        if pure.as_posix() != path:
+            return False
+    return True
 
 
 def propagate(change: PropagationChange, consumers: Sequence[Mapping[str, object]],

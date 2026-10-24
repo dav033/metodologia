@@ -37,6 +37,7 @@ class SubplanVersion:
     contracts: dict[str, str]
     evidence: tuple[dict[str, object], ...]
     manifest_sha256: str
+    published_at: str | None = None
 
 
 @dataclass(frozen=True)
@@ -55,6 +56,7 @@ class Candidate:
     conflict_paths: tuple[str, ...] = ()
     conflicts: dict[str, tuple[str, ...]] | None = None
     member_order: tuple[str, ...] = ()
+    required_verifiers: dict[str, str] | None = None
 
 
 @dataclass(frozen=True)

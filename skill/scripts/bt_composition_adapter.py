@@ -104,9 +104,9 @@ class GitSubprocessPort:
             if not re.fullmatch(oid_pattern, old) or (new is not None and not re.fullmatch(oid_pattern, new)):
                 raise ValueError("INVALID_REF_OID")
             if new is None:
-                commands.append(f"delete {ref} {old}")
+                commands.extend(("option no-deref", f"delete {ref} {old}"))
             else:
-                commands.append(f"update {ref} {new} {old}")
+                commands.extend(("option no-deref", f"update {ref} {new} {old}"))
         commands.extend(("prepare", "commit", ""))
         result = subprocess.run(self._command("update-ref", "--stdin"), env=self._environment(),
                                 input="\n".join(commands), capture_output=True, text=True, check=False)
@@ -117,13 +117,15 @@ class GitSubprocessPort:
     def tree_digest(self, commit: str, paths: Sequence[str]) -> str:
         if not paths:
             raise ValueError("EMPTY_RELEVANT_PATHS")
+        if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit):
+            raise ValueError("INVALID_TREE_COMMIT")
         entries: list[str] = []
         missing: list[str] = []
         for path in sorted(set(paths)):
             if (not path or path.startswith("/") or ".." in Path(path).parts
                     or "\n" in path or "\r" in path):
                 raise ValueError("INVALID_RELEVANT_PATH")
-            result = self._run("ls-tree", "-r", "--full-tree", commit, "--", path)
+            result = self._run("ls-tree", "-r", "--full-tree", "--end-of-options", commit, "--", path)
             found = [line for line in result.stdout.splitlines() if line]
             if found:
                 entries.extend(found)
@@ -146,14 +148,23 @@ class GitSubprocessPort:
         path.rmdir()
         self._run("worktree", "add", "--detach", str(path), commit)
         marker = {"owner_pid": os.getpid(), "path": str(path)}
-        (root / f"{path.name}.composition-owner.json").write_text(json.dumps(marker), encoding="utf-8")
+        (self.workspace_root / f"{path.name}.composition-owner.json").write_text(json.dumps(marker), encoding="utf-8")
         return str(path)
 
     def remove_worktree(self, path: str | Path) -> None:
         resolved = Path(path).resolve()
         if self.workspace_root not in resolved.parents:
             raise ValueError("WORKTREE_PATH_OUTSIDE_ROOT")
+        marker_path = self.workspace_root / f"{resolved.name}.composition-owner.json"
+        try:
+            marker = json.loads(marker_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError("WORKTREE_OWNERSHIP_UNVERIFIED") from error
+        if (not isinstance(marker, dict) or marker.get("path") != str(resolved)
+                or marker.get("owner_pid") != os.getpid()):
+            raise ValueError("WORKTREE_OWNERSHIP_UNVERIFIED")
         self._run("worktree", "remove", "--force", str(resolved))
+        marker_path.unlink()
 
     def prune_workspaces(self) -> tuple[str, ...]:
         self.workspace_root.mkdir(parents=True, exist_ok=True)

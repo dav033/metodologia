@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime, timezone
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -11,7 +12,7 @@ from .contracts import Candidate, SubplanVersion
 
 
 class Store:
-    SCHEMA_VERSION = 2
+    SCHEMA_VERSION = 3
 
     def __init__(self, path: str | Path):
         self.path = Path(path)
@@ -19,7 +20,7 @@ class Store:
         self.connection = sqlite3.connect(self.path, timeout=5.0, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
         schema_version = int(self.connection.execute("PRAGMA user_version").fetchone()[0])
-        if schema_version not in (0, 1, self.SCHEMA_VERSION):
+        if schema_version not in (0, 1, 2, self.SCHEMA_VERSION):
             self.connection.close()
             raise ValueError("UNSUPPORTED_SCHEMA_VERSION")
         self.connection.execute("PRAGMA journal_mode=WAL")
@@ -48,7 +49,11 @@ class Store:
                 plan_id TEXT NOT NULL, subplan_id TEXT NOT NULL, version INTEGER NOT NULL,
                 body TEXT NOT NULL, request_sha256 TEXT NOT NULL UNIQUE,
                 PRIMARY KEY(plan_id, subplan_id, version))""")
+            self.connection.execute("""CREATE TABLE IF NOT EXISTS candidate_reservations(
+                id TEXT PRIMARY KEY, plan_id TEXT NOT NULL, request_sha256 TEXT NOT NULL UNIQUE,
+                body TEXT NOT NULL)""")
             self.connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS versions_request ON versions(request_sha256)")
+            self._backfill_published_at()
             self.connection.execute(f"PRAGMA user_version={self.SCHEMA_VERSION}")
             self.connection.commit()
         except BaseException:
@@ -59,6 +64,16 @@ class Store:
 
     def _copy_legacy_candidates(self) -> None:
         self.connection.execute("INSERT INTO candidates SELECT id,plan_id,request_sha256,body FROM candidates_v1")
+
+    def _backfill_published_at(self) -> None:
+        rows = self.connection.execute("SELECT plan_id,subplan_id,version,body FROM versions").fetchall()
+        published_at = datetime.now(timezone.utc).isoformat()
+        for row in rows:
+            body = json.loads(row["body"])
+            if "published_at" not in body:
+                body["published_at"] = published_at
+                self.connection.execute("UPDATE versions SET body=? WHERE plan_id=? AND subplan_id=? AND version=?",
+                                        (self._dump(body), row["plan_id"], row["subplan_id"], row["version"]))
 
     @contextmanager
     def write_transaction(self) -> Iterator[None]:
@@ -90,6 +105,7 @@ class Store:
         body["required_verdicts"] = tuple(body["required_verdicts"])
         body["conflict_paths"] = tuple(body["conflict_paths"])
         body["member_order"] = tuple(body.get("member_order", ()))
+        body.setdefault("required_verifiers", None)
         if body.get("conflicts") is not None:
             body["conflicts"] = {key: tuple(paths) for key, paths in body["conflicts"].items()}
         return Candidate(**body)
@@ -159,8 +175,25 @@ class Store:
         return None
 
     def next_candidate(self, plan_id: str) -> int:
-        rows = self.connection.execute("SELECT id FROM candidates WHERE plan_id=?", (plan_id,)).fetchall()
+        rows = self.connection.execute("SELECT id FROM candidates WHERE plan_id=? UNION ALL "
+                                       "SELECT id FROM candidate_reservations WHERE plan_id=?",
+                                       (plan_id, plan_id)).fetchall()
         return max((int(row["id"].rsplit("C", 1)[1]) for row in rows), default=0) + 1
+
+    def find_candidate_reservation(self, request_sha256: str) -> Candidate | None:
+        row = self.connection.execute("SELECT body FROM candidate_reservations WHERE request_sha256=?",
+                                      (request_sha256,)).fetchone()
+        return self._candidate(row)
+
+    def reserve_candidate(self, candidate: Candidate, request_sha256: str) -> None:
+        self._execute_write("INSERT INTO candidate_reservations VALUES(?,?,?,?)",
+                            (candidate.id, candidate.plan_id, request_sha256, self._dump(candidate.__dict__)))
+
+    def complete_candidate(self, candidate: Candidate, request_sha256: str) -> None:
+        if self.get_candidate(candidate.id) is None:
+            self._execute_write("INSERT INTO candidates VALUES(?,?,?,?)",
+                                (candidate.id, candidate.plan_id, request_sha256, self._dump(candidate.__dict__)))
+        self._execute_write("DELETE FROM candidate_reservations WHERE request_sha256=?", (request_sha256,))
 
     def put_candidate(self, candidate: Candidate, request_sha256: str) -> None:
         body = self._dump(candidate.__dict__)
