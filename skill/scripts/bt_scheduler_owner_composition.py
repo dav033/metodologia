@@ -90,7 +90,8 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         repository = repositories.get(role)
         if repository is None or not Path(repository).is_dir():
             raise CompositionRuntimeError(f"OWNER_COMPOSITION_REPOSITORY_MISSING: registered role {role}")
-        validation_errors = bt_plan_adapter.validate_owner_composition(plan)
+        view = bt_scheduler_owner_workspace.owner_composition_view(plan)
+        validation_errors = bt_plan_adapter.validate_owner_composition(*view)
         if validation_errors:
             raise CompositionRuntimeError(validation_errors[0])
         path = composition_store_path(rdir, project, req)

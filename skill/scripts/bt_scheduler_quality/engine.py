@@ -328,10 +328,7 @@ class QualityEngine:
         artifact_bodies: dict[str, bytes] = {}
         for spec in specs:
             outcome = _unknown(code)
-            stdout_digest, stderr_digest = (
-                sha256_bytes(outcome.stdout),
-                sha256_bytes(outcome.stderr),
-            )
+            stdout_digest, stderr_digest = sha256_bytes(outcome.stdout), sha256_bytes(outcome.stderr)
             artifact_bodies[stdout_digest] = outcome.stdout
             artifact_bodies[stderr_digest] = outcome.stderr
             checks_list.append(

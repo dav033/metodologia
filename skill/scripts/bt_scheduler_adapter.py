@@ -585,7 +585,8 @@ def subplan_publication_facts(scheduler: core.SchedulerCore) -> dict[str, dict[s
     """Read M1's current revision-bound subplan facts for owner reconciliation."""
     def read(ctx):
         return {subplan_id: dict(fact) for subplan_id, fact in ctx.state.subplan_versions.items()
-                if fact.get("plan_id") == ctx.state.plan_id and fact.get("revision") == ctx.state.revision}
+                if fact.get("plan_id") == ctx.state.plan_id and fact.get("revision") == ctx.state.revision
+                and not fact.get("stale")}
     return scheduler.read(read)
 
 

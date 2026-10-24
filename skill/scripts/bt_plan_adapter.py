@@ -51,22 +51,8 @@ def validate_candidate(plan: object) -> tuple[str, ...]:
     report = planner.validate(plan)
     return tuple(report.errors)
 
-
-def validate_owner_composition(plan: object) -> tuple[str, ...]:
-    """Apply Planner-owned composition constraints to a loaded M1 plan through a normalized view."""
-    subplans = []
-    for item in getattr(plan, "subplans", ()):
-        ui = getattr(item, "ui", None)
-        subplans.append({"id": getattr(item, "id", ""),
-                         "produces": [dict(value) for value in getattr(item, "produces", ())],
-                         "ui": ({"contract": ui.contract, "version": ui.version} if ui and
-                                hasattr(ui, "contract") and hasattr(ui, "version") else None)})
-    gates = [{"subplans": tuple(getattr(item, "subplans", ()))}
-             for item in getattr(plan, "composition_gates", ())]
-    tasks = [{"id": getattr(task, "id", ""), "repository": getattr(task, "repository", ""),
-              "expected_paths": tuple(getattr(task, "expected_paths", ()))}
-             for task in getattr(plan, "tasks", ())]
-    return planner.validate_owner_composition(subplans, gates, tasks)
+def validate_owner_composition(subplans, gates, tasks) -> tuple[str, ...]:
+    return planner.validate_owner_composition(subplans, gates, tasks)  # Planner rules over the owner's plan view
 
 def second_auditor_required(plan: object) -> bool:
     """Expose the owner cross-check gate to pure plan transformations."""
@@ -334,14 +320,12 @@ def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False,
                      compatibility_report: dict[str, object] | None = None) -> None:
     """Standard/web launch: refuse (SystemExit with the cause) unless the run would execute exactly the approved,
     frozen revision. A dry run verifies and writes nothing."""
-    problem = launch_problem(rdir, freeze=not dry_run, forced=forced,
-                             compatibility_report=compatibility_report)
+    problem = launch_problem(rdir, freeze=not dry_run, forced=forced, compatibility_report=compatibility_report)
     if problem:
         raise SystemExit(problem)
 
 
-def resume_problem(rdir: Path, state: dict, *,
-                   compatibility_report: dict[str, object] | None = None) -> str | None:
+def resume_problem(rdir: Path, state: dict, *, compatibility_report: dict[str, object] | None = None) -> str | None:
     """A RESUMED run must not go on executing content nobody approved. When the run carries a `plan_ref` (or the plan
     has frozen revisions): PLAN.json must still exist, be valid and be the latest approved revision, the PLAN.md prose
     must be the approved one, and the run's own `plan_ref` must point at that same revision (a run started under r1

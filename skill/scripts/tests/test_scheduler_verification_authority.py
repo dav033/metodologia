@@ -63,6 +63,15 @@ class VerificationAuthorityTests(unittest.TestCase):
             self.assertEqual(authority.authorize_environment("production", "approved"),
                              "POLICY_ENTRY_MISSING_AUTHORIZATION")
 
+    def test_a_later_matching_entry_still_authorizes_after_one_without_authorization(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            rdir, secrets, policy = self._paths(Path(temporary))
+            policy.write_text(json.dumps({"allow": [{"environment": "production"},
+                                                    {"environment": "production", "authorization": "approved"}]}),
+                              encoding="utf-8")
+            authority = owner_verification_authority(rdir, "demo", environ={}, secrets_file=secrets)
+            self.assertIs(authority.authorize_environment("production", "approved"), True)
+
     def test_external_authority_binds_environment_authorization_and_requirement(self):
         with tempfile.TemporaryDirectory() as temporary:
             rdir, secrets, policy = self._paths(Path(temporary))

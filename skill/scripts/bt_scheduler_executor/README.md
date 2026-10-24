@@ -50,6 +50,8 @@ A clean exit is the event `execution_finished` = "the agent stopped". There is n
 never persisted. Own types: `StartRequest` (idempotency key, plan/revision and optional approved SHA-256, task, attempt,
 fencing token, route reference, repository role, base ref, optional timeout), `Route`, `Receipt` (`accepted | duplicate | rejected` + code),
 `AttemptStatus`, `TechnicalEvent`, `Brief` (including optional frozen-plan `review_axis`), `Workspace` (kind `attempt`, `subplan` or `integration`), `Launch`, `Classification`.
+`PLAN_SCHEMA_CAPABILITIES` — plan schemas M3 consumes (1.0.0–1.3.0; 1.3.0 adds subplan integration lines, the Designer
+base-tree gate and the `composition_base` seam).
 
 The methodology adapter derives subplan line membership from the frozen plan. In schema 1.3.0 plans with subplans,
 accepted member-task deltas and accepted ancestors are folded under `refs/m3/line/<run>/<repository-role>/<SP-id>`;

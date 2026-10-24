@@ -52,3 +52,18 @@ def bind_owner_marker(path: Path, *, project: str, req: str, plan_id: str, revis
             os.unlink(temporary)
         except FileNotFoundError:
             pass
+
+
+def owner_composition_view(plan: object) -> tuple[list[dict], list[dict], list[dict]]:
+    """Normalize a loaded M1 plan into the plain view the Planner's composition rules read."""
+    subplans = []
+    for item in getattr(plan, "subplans", ()):
+        ui = getattr(item, "ui", None)
+        subplans.append({"id": getattr(item, "id", ""),
+                         "produces": [dict(value) for value in getattr(item, "produces", ())],
+                         "ui": ({"contract": ui.contract, "version": ui.version} if ui and
+                                hasattr(ui, "contract") and hasattr(ui, "version") else None)})
+    gates = [{"subplans": tuple(getattr(item, "subplans", ()))} for item in getattr(plan, "composition_gates", ())]
+    tasks = [{"id": getattr(task, "id", ""), "repository": getattr(task, "repository", ""),
+              "expected_paths": tuple(getattr(task, "expected_paths", ()))} for task in getattr(plan, "tasks", ())]
+    return subplans, gates, tasks

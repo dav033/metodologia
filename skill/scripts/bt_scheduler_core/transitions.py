@@ -113,10 +113,10 @@ def mark_delivered(ctx: Ctx, attempt_id: str, kind: str) -> None:
 
 
 def promote_ready(ctx: Ctx) -> int:
-    prune_composition_holds(ctx.plan, ctx.state)
     """PENDING -> READY for tasks whose every prerequisite is COMPLETED (which only a verdict can cause). The test is on
     every ancestor, not only the direct ones: after a rework that sends back a task and not what depends on it, a task can
     have all its direct prerequisites completed while one further up is being redone."""
+    prune_composition_holds(ctx.plan, ctx.state)
     enforce_gate_waiting(ctx)
     moved = 0
     for spec in ctx.plan.tasks:

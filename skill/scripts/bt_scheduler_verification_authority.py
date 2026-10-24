@@ -72,6 +72,7 @@ def _policy_allows(path: Path, environment: str, authorization_needed: str | Non
         return False
     if not isinstance(authorization_needed, str) or not authorization_needed.strip() or not req_id:
         return False
+    missing_authorization = False
     for item in policy["allow"]:
         if not isinstance(item, Mapping) or item.get("environment") != environment:
             continue
@@ -79,11 +80,12 @@ def _policy_allows(path: Path, environment: str, authorization_needed: str | Non
         if requirements is not None and (not isinstance(requirements, list) or req_id not in requirements):
             continue
         if "authorization" not in item:
-            return "POLICY_ENTRY_MISSING_AUTHORIZATION"
+            missing_authorization = True  # a later complete entry may still grant it
+            continue
         if item.get("authorization") != authorization_needed.strip():
             continue
         return True
-    return False
+    return "POLICY_ENTRY_MISSING_AUTHORIZATION" if missing_authorization else False
 
 
 def owner_verification_authority(rdir: Path | str, project: str, *,

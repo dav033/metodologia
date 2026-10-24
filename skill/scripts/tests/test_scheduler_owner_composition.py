@@ -27,13 +27,26 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
     def test_store_version_counter_is_reconciled_before_next_publication(self):
         owner = SimpleNamespace(plan=SimpleNamespace(plan_id="REQ-1", subplans=(SimpleNamespace(id="SP-1"),)),
                                 scheduler=object(), store=SimpleNamespace(list_versions=lambda *_: (
-                                    SimpleNamespace(version=1, commit="a" * 40, manifest_sha256="b" * 64),)))
+                                    SimpleNamespace(version=1, commit="a" * 40, manifest_sha256="b" * 64),)),
+                                _line_commits=lambda _subplan: ("c" * 40, "a" * 40))
         with patch("bt_scheduler_owner_reconciliation.version_adapter.version_facts", return_value={}), \
              patch("bt_scheduler_owner_reconciliation.m1_adapter.record_subplan_version",
                    side_effect=RuntimeError("accepted identity is stale")) as record, \
              patch("bt_scheduler_owner_reconciliation.version_adapter.record_stale_version") as stale:
             OwnerCompositionRuntime._reconcile_store_version_counters(owner)
         record.assert_called_once_with(owner.scheduler, "SP-1", 1, "a" * 40, "b" * 64)
+        stale.assert_called_once_with(owner.scheduler, "SP-1", 1, "a" * 40, "b" * 64)
+
+    def test_store_version_whose_commit_is_not_the_line_tip_is_recorded_stale(self):
+        owner = SimpleNamespace(plan=SimpleNamespace(plan_id="REQ-1", subplans=(SimpleNamespace(id="SP-1"),)),
+                                scheduler=object(), store=SimpleNamespace(list_versions=lambda *_: (
+                                    SimpleNamespace(version=1, commit="a" * 40, manifest_sha256="b" * 64),)),
+                                _line_commits=lambda _subplan: ("c" * 40, "e" * 40))
+        with patch("bt_scheduler_owner_reconciliation.version_adapter.version_facts", return_value={}), \
+             patch("bt_scheduler_owner_reconciliation.m1_adapter.record_subplan_version") as record, \
+             patch("bt_scheduler_owner_reconciliation.version_adapter.record_stale_version") as stale:
+            OwnerCompositionRuntime._reconcile_store_version_counters(owner)
+        record.assert_not_called()
         stale.assert_called_once_with(owner.scheduler, "SP-1", 1, "a" * 40, "b" * 64)
 
     def test_completed_published_gate_is_rebound_and_not_rebuilt(self):

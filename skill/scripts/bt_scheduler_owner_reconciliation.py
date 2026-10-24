@@ -11,10 +11,14 @@ def reconcile_store_version_counters(runtime) -> None:
     facts = version_adapter.version_facts(runtime.scheduler, include_stale=True)
     for subplan in runtime.plan.subplans:
         number = int(facts.get(subplan.id, {}).get("version", 0))
+        _, line_tip = runtime._line_commits(subplan.id)
         for version in runtime.store.list_versions(runtime.plan.plan_id, subplan.id):
             if version.version <= number:
                 continue
             try:
+                # Only the version built from the current line tip can still be the verified work; anything else is stale.
+                if version.commit != line_tip:
+                    raise RuntimeError("OWNER_COMPOSITION_STORE_VERSION_NOT_AT_LINE_TIP")
                 m1_adapter.record_subplan_version(runtime.scheduler, subplan.id, version.version,
                                                   version.commit, version.manifest_sha256)
             except Exception:
