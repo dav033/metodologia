@@ -16,12 +16,14 @@ from .diagnostic_store import DiagnosticStore
 from .history import DecisionStore, inspect_store
 from .policy import propose
 from .progress import assess_progress
+from .propagation import DemonstratedFrontier
 from .validation import RecoveryError
 
 __all__ = [
            "DecisionStore",
            "DiagnosticCase",
            "DiagnosticStore",
+           "DemonstratedFrontier",
            "FindingOccurrence",
            "FindingRelation",
            "HistorySummary",

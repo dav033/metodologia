@@ -15,6 +15,8 @@ EMPTY_HISTORY = HistorySummary()
 def logical_key(case: RecoveryCase, policy: Policy) -> str:
     identity = {key: getattr(case, key) for key in (
         "run_id", "plan_id", "revision", "plan_sha256", "task_id", "attempt_id", "token", "recovery_round")}
+    if case.reason_code != "UNCLASSIFIED":
+        identity["reason_code"] = case.reason_code
     encoded = json.dumps({"identity": identity, "policy": asdict(policy)}, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode()).hexdigest()
 
@@ -58,6 +60,17 @@ def propose(case: RecoveryCase, policy: Policy = DEFAULT_POLICY,
         return block("evidence_stale")
     if not case.evidence_refs or case.confidence not in ("confirmed", "reported"):
         return block("evidence_insufficient")
+    reason = case.reason_code
+    if reason == "BLOCKED_EXTERNAL":
+        return block("m6_blocked_external_owner_must_restore_dependency")
+    if reason == "BLOCKED_ENV":
+        return block("m6_blocked_env_operator_must_repair_environment")
+    if reason == "FLAKY_SUSPECTED":
+        return block("flaky_requires_m6_rerun_policy")
+    if reason == "NOT_RUN":
+        return block("m6_not_run")
+    if reason == "PASS":
+        return block("m6_pass_not_recovery")
     if remaining <= 0:
         return block("attempts_exhausted")
     if history.decisions >= policy.max_decisions:
@@ -66,7 +79,7 @@ def propose(case: RecoveryCase, policy: Policy = DEFAULT_POLICY,
         return block("elapsed_limit")
     if history.same_cause_attempts >= policy.max_same_cause:
         return block("same_cause_limit")
-    cause = case.technical_cause
+    cause = "timeout" if reason == "TIMEOUT" else case.technical_cause
     if case.core_cause == "verification_rejected" or cause == "verification_rejected":
         if case.core_cause != "verification_rejected" or case.verification_ref is None:
             return block("verification_evidence_missing")
@@ -87,7 +100,7 @@ def propose(case: RecoveryCase, policy: Policy = DEFAULT_POLICY,
             return block("quota_reset_unknown")
         return deferred(case.reset_epoch + policy.reset_margin_seconds, "quota_reset", "reevaluate")
     if cause in ("connection_lost", "incomplete_output", "agent_error", "timeout"):
-        if not case.transient_confirmed:
+        if not case.transient_confirmed and reason != "TIMEOUT":
             return block("transience_unconfirmed")
         if cause == "timeout" and history.same_cause_attempts >= 1:
             return block("timeout_repeated")
