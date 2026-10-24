@@ -60,6 +60,13 @@ class InstallerSymlinkSafetyTests(unittest.TestCase):
                 self.assertTrue("symlink" in errors.lower() or "link" in errors.lower())
                 target.unlink()
 
+    def test_dangling_configured_directory_is_skipped_without_a_traceback(self):
+        self.claude.parent.mkdir(parents=True)
+        self.claude.symlink_to(self.base / "nowhere")
+        errors = self.run_install("--only", "claude")
+        self.assertIn(f"claude: SKIP {self.claude}", errors)
+        self.assertFalse((self.base / "nowhere").exists())
+
     def test_dangling_antigravity_leaf_symlink_creates_nothing_outside(self):
         target = self.antigravity / "fixture-role" / "skills" / "fixture-skill" / "SKILL.md"
         outside = self.base / "missing" / "created.md"

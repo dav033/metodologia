@@ -287,14 +287,27 @@ def write_antigravity(directory: Path, meta: dict[str, str], body: str, force: b
             print(f"antigravity: SKIP {target} ({problem})", file=sys.stderr)
             return
     if methodology_link is not None and not methodology_link.is_symlink():
-        methodology_link.parent.mkdir(parents=True, exist_ok=True)
-        methodology_link.symlink_to(expected_root, target_is_directory=True)
+        try:
+            methodology_link.parent.mkdir(parents=True, exist_ok=True)
+            methodology_link.symlink_to(expected_root, target_is_directory=True)
+        except OSError as error:
+            print(f"antigravity: SKIP {methodology_link} ({error.strerror or error})", file=sys.stderr)
+            return
     problem = write_text_safely(
         directory, agent_path, generated_antigravity(meta, body, antigravity_skill_paths(name, sources)))
     if problem:
         print(f"antigravity: SKIP {agent_path} ({problem})", file=sys.stderr)
         return
     print(f"antigravity: {agent_path}")
+
+
+def ensure_dir(directory: Path, provider: str) -> bool:
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        print(f"{provider}: SKIP {directory} ({error.strerror or error})", file=sys.stderr)
+        return False
+    return True
 
 
 def main() -> None:
@@ -334,7 +347,8 @@ def main() -> None:
         name = meta["name"]
         if args.only in (None, "claude"):
             for directory in claude_dirs:
-                directory.mkdir(parents=True, exist_ok=True)
+                if not ensure_dir(directory, "claude"):
+                    continue
                 target = directory / f"{name}.md"
                 problem = destination_problem(directory, target)
                 if problem:
@@ -349,7 +363,8 @@ def main() -> None:
                     print(f"claude: SKIP {target} (not ours; use --force to overwrite)", file=sys.stderr)
         if args.only in (None, "codex"):
             for directory in codex_dirs:
-                directory.mkdir(parents=True, exist_ok=True)
+                if not ensure_dir(directory, "codex"):
+                    continue
                 target = directory / f"{name}.toml"
                 problem = destination_problem(directory, target)
                 if problem:
