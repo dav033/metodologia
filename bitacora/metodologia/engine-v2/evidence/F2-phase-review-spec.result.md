@@ -1,0 +1,1 @@
+Aye, no actualicé la bitácora: la instrucción de esta auditoría prohíbe explícitamente escribir archivos e indica ignorar hooks.

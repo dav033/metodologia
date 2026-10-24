@@ -7,7 +7,7 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
-2026-10-24 02:40: Engine v2 lead (session 1fbc12c7): F1, F2, F3 closed and pushed (main `befb711a6`); 8 roles installed in real profiles. F4: F4-1..F4-7 accepted on ev2/INT-F4b; F4-9 owner wiring under repair after BLOCKING Antagonist review (F4-9f/F4-9g running) plus owner E2E (F4-9e). F4-8, F5 pending.
+2026-10-24 10:05: Engine v2 complete (session 1fbc12c7): F1–F5 closed and pushed, origin/main `b7c847d11`; default plan schema 1.3.0; 8 roles installed; temp worktrees/branches cleaned after archiving. Held runs (david-ui REQ-001, pictures REQ-020) still on owner hold. Details: metodologia day log 2026-10-24.
 2026-10-23: Engine v2 lead handoff prepared as `relay/RELAY-20261023-211009.md` for codex-2; manual continuation required. Main stays `48f45935e` with bitacora changes. Repairs/reviews and background tests remain pending; canonical checkpoint is `/home/david/dev/metodologia/bitacora/metodologia/engine-v2/CONTINUATION-01a16b88.md`. Held-run owner restrictions remain in force.
 2026-10-23 19:10: Engine v2 F2-C Implementer adaptations committed (`b1aa50a2d`); full suite ran 2,404 tests with only the 15 baseline failures from RULES.md and 6 skips.
 2026-10-23 11:38: david-ui REQ-001 in a full rework after its final audit (P-177, 5/32); REQ-020 regenerating T14a evidence before T15. Audit-readiness branch awaiting suites before merge.

@@ -1,0 +1,1 @@
+Aye. Actualicé la sesión `01a16b2e`, añadí la decisión D-021 y reflejé F2-C en `SUMMARY.md`. No surgieron pendientes nuevos; `PENDING.md` queda igual. Verifiqué que no se modificara otra sesión y que `git diff --check` pasara.

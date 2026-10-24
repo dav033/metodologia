@@ -1,0 +1,18 @@
+53b83af55 engine-v2 F4-8: reproducible D-10 benchmark
+test_incompatible_candidate_is_rejected_and_current_composition_is_preserved (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_incompatible_candidate_is_rejected_and_current_composition_is_preserved) ... OWNER_COMPOSITION_ATTENTION: T12: OWNER_COMPOSITION_CANDIDATE_REJECTED
+ok
+test_legacy_plan_keeps_runtime_refs_stores_and_states_through_owner (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_legacy_plan_keeps_runtime_refs_stores_and_states_through_owner) ... ok
+test_legacy_plan_remains_loadable_with_unchanged_task_shape (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_legacy_plan_remains_loadable_with_unchanged_task_shape) ... ok
+test_missing_required_credential_blocks_without_spending_code_retry (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_missing_required_credential_blocks_without_spending_code_retry) ... ok
+test_old_verdict_and_candidate_are_stale_until_next_subplan_revision (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_old_verdict_and_candidate_are_stale_until_next_subplan_revision) ... ok
+test_owner_publishes_three_subplans_and_composition_through_real_entrypoint (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_owner_publishes_three_subplans_and_composition_through_real_entrypoint) ... ok
+test_restart_boundaries_reconcile_reservation_reference_and_m1_fact_idempotently (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_restart_boundaries_reconcile_reservation_reference_and_m1_fact_idempotently) ... ok
+test_subplan_revision_publishes_new_version_without_changing_other_members (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_subplan_revision_publishes_new_version_without_changing_other_members) ... ok
+test_ui_subplan_without_base_designer_contract_blocks_before_publication (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_ui_subplan_without_base_designer_contract_blocks_before_publication) ... integration line cannot check T4 (INTEGRATION_GIT: INTEGRATION_GIT: git rev-parse --verify e816bfed5a3dd9f911d34ed5ae076f972b13a118^1^{commit}: fatal: Needed a single revision): using the predecessor check
+ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 381.883s
+
+OK
+EXIT: 0

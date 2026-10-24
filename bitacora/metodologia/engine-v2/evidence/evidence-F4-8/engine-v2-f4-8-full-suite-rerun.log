@@ -1,0 +1,369 @@
+.F......F.................F....................................F...................................FFFFF..............................F.....F.....FF..................FF..............................................................................................................................................................................................................................................[task] secret filter unavailable (RuntimeError); text withheld
+......................................................................................................................................................................................................................./home/david/dev/.engine-v2-wt/F4-8/skill/scripts/tests/test_flow_bus.py:246: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e261f4130>
+  [(100 + n, 200.0 + n) for n in range(bus.LIMIT + 50)])
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........................................................[explore] reservation refused (fail closed): LockUnavailable: explore ledger lock busy for 0.3s
+....[explore] 1 malformed ledger line(s) quarantined and counted as reserved
+.[explore] reservation refused (fail closed): OSError: read-only
+...........[explore] reservation refused (fail closed): LockUnavailable: explore ledger lock busy for 0.3s
+.....[explore] 1 malformed ledger line(s) quarantined and counted as reserved
+.[explore] 1 malformed ledger line(s) quarantined and counted as reserved
+.[explore] reservation refused (fail closed): OSError: read-only
+..[explore] 1 malformed ledger line(s) quarantined and counted as reserved
+.......................................................................................................................................................................................................................integration line unavailable for T2 (INTEGRATION_GIT): using the predecessor merge
+integration line cannot check T3 (INTEGRATION_GIT: INTEGRATION_GIT: git rev-parse: FileNotFoundError): using the predecessor check
+integration line not recomputed (INTEGRATION_GIT: INTEGRATION_GIT: git rev-parse: FileNotFoundError)
+...............................................................................................................................................................................................................................................F........................................................................................................................./usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e270333d0>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...............................................................................................[events] defects not recorded: RuntimeError: boom
+.................................................................................................................................................................../usr/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 403: 'Forbidden'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/usr/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 303: 'See Other'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+/usr/lib/python3.14/subprocess.py:1139: ResourceWarning: subprocess 3663314 is still running
+  _warn("subprocess %s is still running" % self.pid,
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................../usr/lib/python3.14/subprocess.py:832: ResourceWarning: unclosed file <_io.BufferedReader name=5>
+  _cleanup()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................................................................................................................................................../usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e26e85120>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e26e86020>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e26e84310>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e26359c60>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e2635b970>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e2635a980>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/unittest/mock.py:2259: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e2635ab60>
+  def __init__(self, name, parent):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+............................./usr/lib/python3.14/pkgutil.py:444: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e26359c60>
+  m = _NAME_PATTERN.match(name)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/usr/lib/python3.14/pkgutil.py:444: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e2635ab60>
+  m = _NAME_PATTERN.match(name)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+................................................................................/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/tests/test_scheduler_bench_quality.py:24: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e2635ad40>
+  cases = [{
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+............................................................................................................................................................integration line not recomputed (INTEGRATION_REPOSITORY: INTEGRATION_REPOSITORY: repository 'ghost' is not registered)
+................sss................................................................................................................................integration line not recomputed (INTEGRATION_REPOSITORY: INTEGRATION_REPOSITORY: repository 'app' is not registered)
+integration line not recomputed (INTEGRATION_REPOSITORY: INTEGRATION_REPOSITORY: repository 'app' is not registered)
+...s.....s....................s.................................................................xF.Fxx.xxx......................................................................../home/david/dev/.engine-v2-wt/F4-8/skill/scripts/bt_scheduler_core/model.py:121: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e269a88b0>
+  "outbox": [{**vars(o), "payload": dict(o.payload)} for o in self.outbox],
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/bt_scheduler_core/model.py:121: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e240998a0>
+  "outbox": [{**vars(o), "payload": dict(o.payload)} for o in self.outbox],
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/bt_scheduler_core/model.py:121: ResourceWarning: unclosed database in <sqlite3.Connection object at 0x7f2e24099a80>
+  "outbox": [{**vars(o), "payload": dict(o.payload)} for o in self.outbox],
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.......................................................[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmperbuzntp/REQ-042-demo/PLAN.json'
+[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmperbuzntp/REQ-042-demo/PLAN.json'
+[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmperbuzntp/REQ-042-demo/PLAN.json'
+[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmperbuzntp/REQ-042-demo/PLAN.json'
+........[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmpds1f2ktb/REQ-042-demo/PLAN.json'
+[attempt-log] not synced: FileNotFoundError: [Errno 2] No such file or directory: '/home/david/.local/tmp/tmpds1f2ktb/REQ-042-demo/PLAN.json'
+................................................................................................[events] attempt not recorded: RuntimeError: boom
+.........[events] ignored 1 invalid attempt rows in attempts-2026-10.jsonl
+.[events] ignored 4 invalid attempt rows in attempts-2026-10.jsonl
+[events] ignored 4 invalid attempt rows in attempts-2026-10.jsonl
+.[events] ignored 7 invalid attempt rows in attempts-2026-10.jsonl
+.....................................................
+======================================================================
+FAIL: test_no_legacy_test_module_lost_tests_against_the_recorded_baseline (migration.test_collection_identity.CollectionIdentityTests.test_no_legacy_test_module_lost_tests_against_the_recorded_baseline)
+tests/migration/legacy-test-counts.json holds tests per module at the 2026-10-13 baseline. A module may
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_collection_identity.py", line 42, in test_no_legacy_test_module_lost_tests_against_the_recorded_baseline
+    self.assertEqual(lost, {}, "tests disappeared from these modules (recorded, now)")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'test_relay_run': (52, 48)} != {}
+- {'test_relay_run': (52, 48)}
++ {} : tests disappeared from these modules (recorded, now)
+
+======================================================================
+FAIL: test_retries_climb_once_and_stop_on_repeated_normalized_error (migration.test_delegate_modes.DelegateModeTests.test_retries_climb_once_and_stop_on_repeated_normalized_error)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_delegate_modes.py", line 127, in test_retries_climb_once_and_stop_on_repeated_normalized_error
+    self.assertEqual(tiers, [1])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: Lists differ: [] != [1]
+
+Second list contains 1 additional elements.
+First extra element 0:
+1
+
+- []
++ [1]
+?  +
+
+
+======================================================================
+FAIL: test_isolated_run_import_preserves_an_existing_test_root (migration.test_discovery_isolation.DiscoveryIsolationTests.test_isolated_run_import_preserves_an_existing_test_root)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_discovery_isolation.py", line 26, in test_isolated_run_import_preserves_an_existing_test_root
+    self.assertEqual(done.returncode, 0, done.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import os, sys; from pathlib import Path; sys.path[:0] = ['skill/scripts', 'tests']; import bt_core; before = bt_core.ROOT; import migration.test_isolated_run; assert Path(os.environ['BITACORA_ROOT']) == before, (before, os.environ['BITACORA_ROOT'])
+                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'migration.test_isolated_run'
+
+
+======================================================================
+FAIL: test_router_rows_point_to_existing_files_and_notices_name_every_adaptation (migration.test_glossary_methodology.ReferenceHygieneTests.test_router_rows_point_to_existing_files_and_notices_name_every_adaptation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_glossary_methodology.py", line 64, in test_router_rows_point_to_existing_files_and_notices_name_every_adaptation
+    self.assertLess(len(router.encode()), 14000, "the always-on router grew past the recorded budget")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 14219 not less than 14000 : the always-on router grew past the recorded budget
+
+======================================================================
+FAIL: test_every_command_answers_help_with_exit_zero (migration.test_legacy_contracts.CommandMatrixTests.test_every_command_answers_help_with_exit_zero) (command='monitor')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_legacy_contracts.py", line 80, in test_every_command_answers_help_with_exit_zero
+    self.assertEqual(done.returncode, 0, done.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : usage: bitacora.py [-h] [--project PROJECT] [--cwd CWD]
+                   {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay} ...
+bitacora.py: error: argument cmd: invalid choice: 'monitor' (choose from 'audit-ledger', 'where', 'init', 'id', 'req', 'index', 'rollups', 'bind', 'launch', 'watch', 'round', 'plan', 'workspace', 'profiles', 'work', 'requirements-gate', 'plan-json', 'plan-status', 'knowledge', 'planner', 'delegate', 'review', 'metrics', 'agents', 'usage', 'config', 'diagram', 'glossary', 'recovery', 'scheduler-run', 'scheduler-watch', 'scheduler-evolve', 'attestation-key', 'scheduler-op', 'go', 'learn', 'handoff', 'context', 'audit', 'serve', 'serve-remote', 'graph', 'web', 'secrets', 'pending', 'trace', 'commit', 'hook', 'relay')
+
+
+======================================================================
+FAIL: test_every_command_answers_help_with_exit_zero (migration.test_legacy_contracts.CommandMatrixTests.test_every_command_answers_help_with_exit_zero) (command='run')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_legacy_contracts.py", line 80, in test_every_command_answers_help_with_exit_zero
+    self.assertEqual(done.returncode, 0, done.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : usage: bitacora.py [-h] [--project PROJECT] [--cwd CWD]
+                   {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay} ...
+bitacora.py: error: argument cmd: invalid choice: 'run' (choose from 'audit-ledger', 'where', 'init', 'id', 'req', 'index', 'rollups', 'bind', 'launch', 'watch', 'round', 'plan', 'workspace', 'profiles', 'work', 'requirements-gate', 'plan-json', 'plan-status', 'knowledge', 'planner', 'delegate', 'review', 'metrics', 'agents', 'usage', 'config', 'diagram', 'glossary', 'recovery', 'scheduler-run', 'scheduler-watch', 'scheduler-evolve', 'attestation-key', 'scheduler-op', 'go', 'learn', 'handoff', 'context', 'audit', 'serve', 'serve-remote', 'graph', 'web', 'secrets', 'pending', 'trace', 'commit', 'hook', 'relay')
+
+
+======================================================================
+FAIL: test_every_command_answers_help_with_exit_zero (migration.test_legacy_contracts.CommandMatrixTests.test_every_command_answers_help_with_exit_zero) (command='run-control')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_legacy_contracts.py", line 80, in test_every_command_answers_help_with_exit_zero
+    self.assertEqual(done.returncode, 0, done.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : usage: bitacora.py [-h] [--project PROJECT] [--cwd CWD]
+                   {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay} ...
+bitacora.py: error: argument cmd: invalid choice: 'run-control' (choose from 'audit-ledger', 'where', 'init', 'id', 'req', 'index', 'rollups', 'bind', 'launch', 'watch', 'round', 'plan', 'workspace', 'profiles', 'work', 'requirements-gate', 'plan-json', 'plan-status', 'knowledge', 'planner', 'delegate', 'review', 'metrics', 'agents', 'usage', 'config', 'diagram', 'glossary', 'recovery', 'scheduler-run', 'scheduler-watch', 'scheduler-evolve', 'attestation-key', 'scheduler-op', 'go', 'learn', 'handoff', 'context', 'audit', 'serve', 'serve-remote', 'graph', 'web', 'secrets', 'pending', 'trace', 'commit', 'hook', 'relay')
+
+
+======================================================================
+FAIL: test_every_command_answers_help_with_exit_zero (migration.test_legacy_contracts.CommandMatrixTests.test_every_command_answers_help_with_exit_zero) (command='task')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_legacy_contracts.py", line 80, in test_every_command_answers_help_with_exit_zero
+    self.assertEqual(done.returncode, 0, done.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 2 != 0 : usage: bitacora.py [-h] [--project PROJECT] [--cwd CWD]
+                   {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay} ...
+bitacora.py: error: argument cmd: invalid choice: 'task' (choose from 'audit-ledger', 'where', 'init', 'id', 'req', 'index', 'rollups', 'bind', 'launch', 'watch', 'round', 'plan', 'workspace', 'profiles', 'work', 'requirements-gate', 'plan-json', 'plan-status', 'knowledge', 'planner', 'delegate', 'review', 'metrics', 'agents', 'usage', 'config', 'diagram', 'glossary', 'recovery', 'scheduler-run', 'scheduler-watch', 'scheduler-evolve', 'attestation-key', 'scheduler-op', 'go', 'learn', 'handoff', 'context', 'audit', 'serve', 'serve-remote', 'graph', 'web', 'secrets', 'pending', 'trace', 'commit', 'hook', 'relay')
+
+
+======================================================================
+FAIL: test_every_legacy_command_is_still_registered (migration.test_legacy_contracts.CommandMatrixTests.test_every_legacy_command_is_still_registered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_legacy_contracts.py", line 66, in test_every_legacy_command_is_still_registered
+    self.assertTrue(LEGACY_COMMANDS <= listed, f"removed commands: {sorted(LEGACY_COMMANDS - listed)}")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : removed commands: ['monitor', 'run', 'run-control', 'task']
+
+======================================================================
+FAIL: test_module_and_cli_commands_work_from_an_unrelated_directory (migration.test_package_install.InstalledRuntimeTests.test_module_and_cli_commands_work_from_an_unrelated_directory)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_package_install.py", line 150, in test_module_and_cli_commands_work_from_an_unrelated_directory
+    self.assertRegex(help_text, r"\{where,init,id,")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Regex didn't match: '\\{where,init,id,' not found in "usage: python -m bitacora [-h] [--project PROJECT] [--cwd CWD]\n                          {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay} ...\n\nBitácora: deterministic half of the `metodologia` skill.\n\nCreates and locates the per-project documentation tree, hands out IDs, keeps INDEX.md\nin sync, and implements the Claude Code hooks (SessionStart / Stop / SessionEnd).\nThe agent writes the content; this script never invents prose.\n\nLayout (root = $BITACORA_ROOT or ~/bitacora):\n  <root>/<project>/\n    SUMMARY.md ARCHITECTURE.md DECISIONS.md PENDING.md INDEX.md\n    requirements/REQ-001-<slug>/SPEC.md, PLAN.md\n    2026-10/MONTH.md\n    2026-10/W2/WEEK.md\n    2026-10/W2/2026-10-08.md          (one file per day, one section per session)\n\nWeeks are week-of-month, Monday-based: W1 is the (possibly partial) week containing day 1.\n\npositional arguments:\n  {audit-ledger,where,init,id,req,index,rollups,bind,launch,watch,round,plan,workspace,profiles,work,requirements-gate,plan-json,plan-status,knowledge,planner,delegate,review,metrics,agents,usage,config,diagram,glossary,recovery,scheduler-run,scheduler-watch,scheduler-evolve,attestation-key,scheduler-op,go,learn,handoff,context,audit,serve,serve-remote,graph,web,secrets,pending,trace,commit,hook,relay}\n    audit-ledger        validate the engine-owned audit ledger contract\n    where               ensure today's files exist and print all paths\n    init                create the project tree\n    id                  next free ID\n    req                 requirements\n    index               regenerate INDEX.md\n    rollups             list past week/month summaries still in draft\n    bind                bind a session to a project (for non-repo folders)\n    launch              HQ: start the Scheduler run of an approved, frozen\n                        plan (plan-json freeze first)\n    watch               wait for the next news of a run (settled session,\n                        block, wait, end), print it and exit; run it in the\n                        background and re-arm it\n    round               question rounds shared with the web UI\n    plan                plan review shared with the web UI\n    workspace           the project's repos (a project is a workspace of\n                        repos)\n    profiles            account profiles: list, doctor, or check one against a\n                        project\n    work                show or set the project's work flag (gates work-only\n                        profiles)\n    requirements-gate   record/check requirements-v1 revalidation\n    plan-json           manage PLAN.json or read the conservative planning-\n                        history projection\n    plan-status         progress of one plan or all plans (read-only unless\n                        --write)\n    knowledge           ingest, query, export or inspect the project knowledge\n                        map\n    planner             invoke the canonical Planner through a selected local\n                        AI profile\n    delegate            run ONE task in a headless agent session and get a\n                        compact checked result\n    review              independently review current changes in a detached\n                        worktree\n    metrics             attempt telemetry per agent/profile/model/effort (null\n                        = not reported)\n    agents              agent catalog: models, ladder, accounts and usage-\n                        limit state; route preview\n    usage               subscription 5h/weekly quotas without model calls\n    config              machine settings (.state/config.json): get | set KEY\n                        VALUE | unset KEY\n    diagram             architecture/workflow/sequence/dataflow/lifecycle\n                        diagrams (pinned Archify, standalone HTML + source IR\n                        in the project's artifacts)\n    glossary            create the project's GLOSSARY.md from the template if\n                        missing; print its path\n    recovery            consultar decisiones de recuperación M5\n    scheduler-run       iniciar o reanudar un plan con Scheduler M1–M6\n    scheduler-watch     vigilar un plan: reanuda el scheduler si muere, hasta\n                        que termine\n    scheduler-evolve    aprender de las intervenciones: analizar, proponer,\n                        probar con A/B y aplicar lo seguro\n    attestation-key     la clave que sella las atestaciones de checks\n                        manuales: ver su estado o rotarla\n    scheduler-op        mover un plan en marcha: cancelar intento, reabrir\n                        tarea, revisar el plan\n    go                  classify the plan with the Planner agent, approve when\n                        safe and run it\n    learn               evidence-backed project, owner and skill learnings\n    handoff             validate a plan, approve it when safe and start it in\n                        the background\n    context             one screen for an agent: who is available, routing,\n                        delegation, learnings, docs\n    audit               prepare a read-only inventory for a workspace\n                        architecture audit\n    serve               run the local web server in the foreground\n    serve-remote        run the loopback-only remote API listener\n    graph               open the trace graph of the project in the browser\n                        (starts the server)\n    web                 start the web server if needed, open the browser,\n                        print the URL\n    secrets             install the gitleaks pre-commit hook in every\n                        workspace repo on this machine\n    pending             sort PENDING.md by urgency then complexity (all\n                        projects with --all)\n    trace               trace graph from IDs (REQ/US/R/T/D/P), commits and\n                        files; lint drift\n    commit              commit the bitácora (local git)\n    hook                Claude Code hook entry point (reads JSON on stdin)\n    relay               quota relay: hand an interactive session over to\n                        another account\n\noptions:\n  -h, --help            show this help message and exit\n  --project PROJECT     override project name\n  --cwd CWD\n"
+
+======================================================================
+FAIL: test_quality_verifier_package_and_adapter_import_from_installed_wheel (migration.test_package_install.InstalledRuntimeTests.test_quality_verifier_package_and_adapter_import_from_installed_wheel)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_package_install.py", line 205, in test_quality_verifier_package_and_adapter_import_from_installed_wheel
+    self.assertEqual(probe.returncode, 0, probe.stderr)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 1 != 0 : Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys;from bt_scheduler_quality.policy import QualityPolicy;from bt_scheduler_quality.store import QualityStore;import bt_scheduler_quality_adapter as adapter;import bt_scheduler_executor_wiring as wiring;store=QualityStore(sys.argv[1]);store.close();print(adapter.__file__,wiring.__file__,QualityPolicy().version)
+                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/david/.local/tmp/package-install-0mxndswp/venv/lib/python3.14/site-packages/bt_scheduler_quality_adapter.py", line 14, in <module>
+    import bt_audit_gate
+  File "/home/david/.local/tmp/package-install-0mxndswp/venv/lib/python3.14/site-packages/bt_audit_gate.py", line 25, in <module>
+    from bt_audit_evidence import DIGEST, evidence_gate, evidence_outputs, evidence_paths, tree_digest
+ModuleNotFoundError: No module named 'bt_audit_evidence'
+
+
+======================================================================
+FAIL: test_py_modules_cover_every_runtime_script_and_nothing_else (migration.test_package_install.WheelContentsTests.test_py_modules_cover_every_runtime_script_and_nothing_else)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_package_install.py", line 62, in test_py_modules_cover_every_runtime_script_and_nothing_else
+    self.assertEqual(shipped, runtime_modules(),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     "update [tool.setuptools] py-modules in pyproject.toml")
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'bt_prompt_context'
+'bt_audit_evidence' : update [tool.setuptools] py-modules in pyproject.toml
+
+======================================================================
+FAIL: test_resources_travel_in_the_wheel_and_tests_do_not (migration.test_package_install.WheelContentsTests.test_resources_travel_in_the_wheel_and_tests_do_not)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_package_install.py", line 95, in test_resources_travel_in_the_wheel_and_tests_do_not
+    self.assertFalse([n for n in names if "/tests/" in n or n.startswith("tests/") or "ops_" in n])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ['bitacora_platform/scheduler_ops_apply.py'] is not false
+
+======================================================================
+FAIL: test_audit_without_other_signals_goes_to_claude_sonnet_medium (migration.test_routing_parity.RoutingParityTests.test_audit_without_other_signals_goes_to_claude_sonnet_medium)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_routing_parity.py", line 58, in test_audit_without_other_signals_goes_to_claude_sonnet_medium
+    self.assertEqual((route["agent"], route["model"], route["effort"]), ("claude", "sonnet", "medium"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6.1-sol', 'medium') != ('claude', 'sonnet', 'medium')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6.1-sol', 'medium')
++ ('claude', 'sonnet', 'medium')
+
+======================================================================
+FAIL: test_escalated_audit_uses_high_not_xhigh (migration.test_routing_parity.RoutingParityTests.test_escalated_audit_uses_high_not_xhigh)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/tests/migration/test_routing_parity.py", line 72, in test_escalated_audit_uses_high_not_xhigh
+    self.assertEqual((route["agent"], route["model"], route["effort"]), ("claude", "opus", "high"))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Tuples differ: ('codex', 'gpt-6.1-sol', 'medium') != ('claude', 'opus', 'high')
+
+First differing element 0:
+'codex'
+'claude'
+
+- ('codex', 'gpt-6.1-sol', 'medium')
++ ('claude', 'opus', 'high')
+
+======================================================================
+FAIL: test_schema_1_3_requires_m3_readiness_while_legacy_capabilities_stay_unchanged (test_plan_contract_compat.PlanContractCompatibility.test_schema_1_3_requires_m3_readiness_while_legacy_capabilities_stay_unchanged)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/tests/test_plan_contract_compat.py", line 131, in test_schema_1_3_requires_m3_readiness_while_legacy_capabilities_stay_unchanged
+    self.assertEqual(report_13["consumers"]["M3"]["status"], "unknown")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'supported' != 'unknown'
+- supported
++ unknown
+
+
+======================================================================
+FAIL: test_legacy_plan_keeps_runtime_refs_stores_and_states_through_owner (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_legacy_plan_keeps_runtime_refs_stores_and_states_through_owner)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/tests/test_scheduler_owner_e2e_subplans.py", line 205, in test_legacy_plan_keeps_runtime_refs_stores_and_states_through_owner
+    self.assertEqual(state["snapshot"].status, "completed")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'blocked' != 'completed'
+- blocked
++ completed
+
+
+======================================================================
+FAIL: test_missing_required_credential_blocks_without_spending_code_retry (test_scheduler_owner_e2e_subplans.OwnerSubplanEntryPoint.test_missing_required_credential_blocks_without_spending_code_retry)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/david/dev/.engine-v2-wt/F4-8/skill/scripts/tests/test_scheduler_owner_e2e_subplans.py", line 185, in test_missing_required_credential_blocks_without_spending_code_retry
+    self.assertTrue(results, "missing-credential verification produced no M6 result")
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: [] is not true : missing-credential verification produced no M6 result
+
+----------------------------------------------------------------------
+Ran 2528 tests in 742.624s
+
+FAILED (failures=18, skipped=6, expected failures=6)
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/antagonist.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/antagonist.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/designer.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/designer.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/explorer.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/explorer.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/implementer.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/implementer.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/planner.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/planner.toml
+antigravity: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-antigravity/agents/planner/agent.md
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/researcher.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/researcher.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/reviewer.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/reviewer.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/runner.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/runner.toml
+claude: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-claude/agents/designer.md
+codex: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-codex/agents/designer.toml
+antigravity: /home/david/.local/tmp/agent-skills-install-houwxvbc/real-antigravity/agents/designer/agent.md
+  RTK 0.51.0: /home/david/.local/tmp/metodologia-rtk-install-ey380rq2/rtk
+claude: /home/david/.local/tmp/install-symlink-test-xxhvm9_k/agents-alias/fixture-role.md
+antigravity: /home/david/.local/tmp/install-symlink-test-w6chqqrz/antigravity/agents/planner/agent.md
+claude: /home/david/.local/tmp/install-symlink-test-c5dhir6g/claude/agents/other-role.md
+no session record links this session to a terminal client. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-r55vefkb && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/claude 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-r55vefkb/bitacora/.state/relay/RELAY-20261024-052316.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+no session record links this session to a terminal client. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-fsj9mf7s && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/claude 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-fsj9mf7s/bitacora/.state/relay/RELAY-20261024-052316.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+Command 'zellij' timed out after 10 seconds. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-ehmuvvz9/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-ehmuvvz9/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+zellij. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-ehmuvvz9/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-ehmuvvz9/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+the terminal client was not verified: nothing is closed or typed. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-g2sasgde/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-g2sasgde/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+no session record links this session to a terminal client. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-8gw9yzzt/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-8gw9yzzt/bitacora/.state/relay/RELAY-20261024-052316.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+the agent (pid 8) is still running: nothing is typed into its pane. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-yh9qgqbe/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-yh9qgqbe/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+'tmux' is not on PATH: nothing could be typed. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-_qbvq77i/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-_qbvq77i/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+successor cwd /home/david/.local/tmp/relay-unit-vzam_jnc/work/gone does not exist. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-vzam_jnc/work/gone && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-vzam_jnc/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+No detecté zellij, tmux ni kitty en la sesión. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-86lv8vh9/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-86lv8vh9/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+no end-of-turn marker arrived (is the Stop hook installed?). Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-cd90pdtq/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-cd90pdtq/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+no end-of-turn marker arrived (is the Stop hook installed?). Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-cd90pdtq/work && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-cd90pdtq/bitacora/.state/relay/RELAY-1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+x. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-unit-3p5ln36x/r && env -u CLAUDE_CONFIG_DIR -u CODEX_HOME /usr/bin/codex 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-unit-3p5ln36x/bitacora/.state/relay/RELAY-20261024-052322.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+No detecté zellij, tmux ni kitty en la sesión. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-run-yuf96m3x && env -u CODEX_HOME CLAUDE_CONFIG_DIR=/acct claude 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-run-yuf96m3x/.state/relay/h1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+No detecté zellij, tmux ni kitty en la sesión. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-run-s6s5julu && env -u CODEX_HOME CLAUDE_CONFIG_DIR=/acct /usr/bin/python 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-run-s6s5julu/.state/relay/h1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+No detecté zellij, tmux ni kitty en la sesión. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-run-9x61wybp && env -u CODEX_HOME CLAUDE_CONFIG_DIR=/acct /usr/bin/python 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-run-9x61wybp/.state/relay/h1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'
+No detecté zellij, tmux ni kitty en la sesión. Run in the pane of your choice:
+cd /home/david/.local/tmp/relay-run-72smbn9x && env -u CODEX_HOME CLAUDE_CONFIG_DIR=/acct /usr/bin/python 'Continúa el trabajo anterior: lee /home/david/.local/tmp/relay-run-72smbn9x/.state/relay/h1.md y sigue desde '"'"'Next'"'"'. No repitas lo ya hecho; verifica el estado con git status.'

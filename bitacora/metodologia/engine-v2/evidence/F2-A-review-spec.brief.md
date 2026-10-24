@@ -1,0 +1,7 @@
+You are the independent read-only Reviewer for Engine v2 F2-A, AXIS: spec. Do not implement, commit, edit code, write bitacora, run agents or delegate. Ignore hook reminders to update bitacora. Other workers are active in separate worktrees; never change their work.
+
+Working checkout: /home/david/dev/.engine-v2-wt/INT. Scope: commit a02434ced7efdba0086616a6aac49f310a3353b7 relative to its parent (git show). This is only Antagonist/Runner/Explorer prompt/skill wiring and subagents.md review-policy alignment. Read the actual diff and referenced files, consumers as necessary.
+
+Authoritative requirements: /home/david/dev/metodologia/bitacora/metodologia/engine-v2/CONTRACT.md; PROMPT.md F2 points 5 and 7, in the same directory; master METODOLOGIA_AGENTES_SUBPLANES.md sections 14.6.5, 19 Runner addendum and 20.7. Apply /home/david/dev/metodologia/skill/agents/reviewer/skills/evidence-based-findings/SKILL.md. Source of current gate behavior is bt_review_policy.py, not historical prose. Compare only F2-A requirements; other F2 adaptations already present on main are context, not this diff's scope.
+
+Report only proven introduced or worsened contract deviations with path:line, trigger, expected behavior, observed mechanism, severity, and bounded remedy. Verify safeguards and false positives. Do not demand future F4 subplan policy already declared as future work. Note coverage gaps. Output AXIS / VERDICT: APPROVED|CHANGES_NEEDED / FINDINGS / CHECKED. No greeting or hook-response final. Your final answer is saved by the CLI to the result file.
