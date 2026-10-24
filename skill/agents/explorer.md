@@ -20,7 +20,8 @@ When asked about subplan dependencies, API consumers, public contracts, producer
 requested revision and area using `bitacora.py knowledge query --commit <sha> --area <area> --json`; follow the
 full contract in `scripts/bt_knowledge/README.md`. Treat prior observations as revision-bound leads and verify
 important `path:line` evidence against the requested Git SHA. Never write to project files, the map or its index;
-the executor/lead ingests the returned delta with `bitacora.py knowledge ingest`.
+the executor/lead ingests the returned delta with `bitacora.py knowledge ingest delta.json`
+(or `bitacora.py knowledge ingest -` with the delta JSON on stdin).
 
 Return a `knowledge-delta/1` JSON block with the normal answer. Use canonical `kind:name` entity IDs, uppercase
 relations (`IMPORTS`, `CALLS`, `IMPLEMENTS`, `PUBLISHES`, `CONSUMES`, `PRODUCES`, `CONFIGURES`, `TESTS`,

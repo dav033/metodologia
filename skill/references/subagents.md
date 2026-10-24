@@ -4,20 +4,21 @@ Subagents are for **context control**, not role-play. Use one when its work woul
 only need the conclusion of (searching, reading docs, noisy test output), or when you need eyes without your bias
 (review). Everything else stays in the main session.
 
-## The seven roles
+## The eight roles
 
 Defined in the skill's `agents/` folder (source of truth; after editing run `python <skill>/scripts/install_agents.py`).
-The six helper roles install for Claude Code and Codex. Planner installs for Claude Code, Codex, and Antigravity;
+All eight roles install for Claude Code and Codex. Planner and explicitly selected roles install for Antigravity;
 Claude and Codex account profiles registered on this machine receive their own copy. Tool limits are enforced by the
 definition, not by asking nicely.
 
 | Role | Use for | Writes? | Private skills | Model |
 |---|---|---|---|---|
 | `planner` | Inspecting a requirement and codebase, then drafting a scoped milestone/task plan under `PLAN.json` | Requirement documents only | `functional-subplan-decomposition`, `adversarial-plan-review`, `plan-mermaid-view`, `socratic-elicitation`, `wbs-dag-decomposition` | Astra high / Opus xhigh |
+| `designer` | Versioned UI/UX contracts and an optional mock-data preview before UI implementation | `design/` only, enforced by runtime | `ui-ux-contract-authoring`, `design-contract-versioning-and-impact`, `preview-prototype-maintenance` when enabled | Sol high / Opus high |
 | `explorer` | Where is X, what calls Y, how is Z done here, find similar examples | No | `subplan-dependency-analysis` for contract, producer/consumer or impact questions | Luna high / Sonnet medium |
-| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | None currently listed | Luna high / Sonnet low |
+| `researcher` | External docs, library comparisons, API/version checks, web research | Notes file only | `external-research-memory`, `source-freshness-verification` | Luna high / Sonnet low |
 | `implementer` | One plan task in a fresh context | Yes | `contract-driven-implementation`, `focused-verification-and-evidence`, `safe-worktree-contribution` | Sonnet medium / Luna high |
-| `reviewer` | Fresh-eyes review on one axis: `spec` or `standards` | No | `subplan-contract-review`, `integration-compatibility-review`, `evidence-based-findings` | Sol medium / Sonnet medium; high for explicit complexity |
+| `reviewer` | Fresh-eyes review on one axis: `spec`, `standards` or `visual` | No | `subplan-contract-review`, `integration-compatibility-review`, `evidence-based-findings`, `rendered-ui-fidelity-audit` for visual work | Sol medium / Sonnet medium; high for explicit complexity |
 | `runner` | Test suites, builds, lint/typecheck, logs, server status — returns only failures | No | `scoped-verification-execution`, `failure-deduplication-and-triage`, `subplan-integration-smoke` | Luna high / Sonnet low |
 | `antagonist` | When required by `bt_review_policy.py`, attacks the scoped change (architecture, correctness, security, tests) | No | `adversarial-contract-breakage`, `cross-subplan-failure-scenarios`, `failure-mode-and-boundary-analysis` | Sonnet medium / Opus high |
 
