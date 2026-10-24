@@ -32,4 +32,7 @@ def has_blob(repo, revision: str, path: str) -> bool:
                                   f"{revision}^{{commit}}"], check=False)
     if not re.fullmatch(r"[0-9a-f]{40,64}", resolved):
         return False
-    return gitutil.run(repo, ["cat-file", "-t", "--", f"{resolved}:{path}"], check=False) == "blob"
+    entry = gitutil.run(repo, ["ls-tree", "--end-of-options", resolved, "--", path], check=False)
+    mode, _, rest = entry.partition(" ")
+    # A regular file only: a symlink (120000) is also a blob, but it is link text, not the contract.
+    return mode in ("100644", "100755") and rest.startswith("blob ") and "\n" not in entry

@@ -34,6 +34,15 @@ class M3SubplanGates(unittest.TestCase):
                                      attempt_id="att-1", token=1, executor="direct:claude/sonnet#high",
                                      acceptance_criteria=(), verification=())
 
+    def test_ui_gate_refuses_a_symlink_in_place_of_the_contract(self):
+        contract = self.repo / "design" / "contracts" / "checkout@v2.md"
+        contract.parent.mkdir(parents=True, exist_ok=True)
+        (self.repo / "outside.md").write_text("not the contract\n", encoding="utf-8")
+        contract.symlink_to("../../outside.md")
+        git(self.repo, "add", "outside.md", "design/contracts/checkout@v2.md")
+        git(self.repo, "commit", "-m", "linked contract")
+        self.assertFalse(gates.has_blob(self.repo, git(self.repo, "rev-parse", "HEAD"), "design/contracts/checkout@v2.md"))
+
     def test_ui_gate_requires_the_exact_version_as_a_blob_in_the_selected_tree(self):
         good_path = self.repo / "design/contracts/checkout@v2.md"
         good_path.parent.mkdir(parents=True)
