@@ -215,7 +215,12 @@ def subplan_status(plan: Plan, state: RunState) -> dict[str, str]:
             status = "published"
         else:
             audit_state = state.tasks[subplan.audit_task].state
-            if audit_state == T.COMPLETED.value:
+            members = {task.id for task in plan.tasks if task.meta.get("subplan_id") == subplan.id}
+            if subplan.ui is not None:
+                members.update((subplan.ui.design_task, subplan.ui.visual_review_task))
+            if any(state.tasks[task_id].state == T.BLOCKED.value for task_id in members):
+                status = "blocked"
+            elif audit_state == T.COMPLETED.value:
                 status = "accepted"
             elif audit_state in {T.READY.value, T.ACTIVE.value, T.RECOVERING.value}:
                 status = "auditing"

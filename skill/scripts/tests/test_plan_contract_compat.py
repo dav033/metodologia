@@ -121,23 +121,15 @@ class PlanContractCompatibility(Isolated):
                 self.assertTrue(scheduler_adapter.downstream_compatibility(version)["supported"])
         self.assertFalse(scheduler_adapter.downstream_compatibility("1.2.1")["supported"])
 
-    def test_schema_1_3_requires_m3_readiness_while_legacy_capabilities_stay_unchanged(self):
-        self.assertEqual(plan_compat.DEFAULT_PLAN_SCHEMA_VERSION, "1.2.0")
-        self.assertEqual(adapter.planner.SCHEMA_VERSION, "1.2.0")
+    def test_schema_1_3_is_default_and_legacy_capabilities_stay_unchanged(self):
+        self.assertEqual(plan_compat.DEFAULT_PLAN_SCHEMA_VERSION, "1.3.0")
+        self.assertEqual(adapter.planner.SCHEMA_VERSION, "1.3.0")
         report_12 = scheduler_adapter.downstream_compatibility("1.2.0")
         report_13 = scheduler_adapter.downstream_compatibility("1.3.0")
         self.assertEqual(set(report_12["consumers"]), {"M1", "M2", "M6"})
         self.assertTrue(report_12["supported"])
-        self.assertEqual(report_13["consumers"]["M3"]["status"], "unknown")
-        self.assertFalse(report_13["supported"])
-
-        plan = self.good_plan()
-        plan["schema_version"] = "1.3.0"
-        self._write(plan)
-        self.set_status("approved")
-        problem = adapter.launch_problem(self.rdir, compatibility_report=report_13)
-        self.assertTrue(problem.startswith("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE:"), problem)
-        self.assertEqual(planner.list_revisions(self.rdir), [])
+        self.assertEqual(report_13["consumers"]["M3"]["status"], "supported")
+        self.assertTrue(report_13["supported"])
 
     def test_malformed_m3_capabilities_remain_unknown_and_block_schema_1_3(self):
         executor_adapter = __import__("bt_scheduler_executor_adapter")
@@ -180,7 +172,9 @@ class PlanContractCompatibility(Isolated):
             VerifyRequest.from_mapping(categorized)
 
     def test_unknown_consumer_capability_blocks_approval_handoff_launch_and_resume(self):
-        self.good_plan()
+        plan = self.good_plan()
+        plan["schema_version"] = "1.2.0"
+        self._write(plan)
         self.set_status("review")
 
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", None):
@@ -225,20 +219,14 @@ class PlanContractCompatibility(Isolated):
             with self.subTest(consumer=module.__name__), patch.object(module, "PLAN_SCHEMA_CAPABILITIES", None):
                 self.assertFalse(scheduler_adapter.downstream_compatibility()["supported"])
 
-    def test_schema_13_requires_complete_capability_report_before_owner_approval(self):
+    def test_schema_13_default_has_complete_capability_report(self):
         plan = self.good_plan()
         plan["schema_version"] = "1.3.0"
         self._write(plan)
         capabilities = scheduler_adapter.plan_compatibility_report(self.rdir)
-        self.assertFalse(capabilities["supported"])
-        self.set_status("review")
-        before = (self.rdir / "PLAN.md").read_bytes()
-        with self.assertRaisesRegex(SystemExit, "PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE"):
-            import bt_rounds
-            bt_rounds.plan_decide(self.rdir, True, "", "compat-test")
-        self.assertEqual((self.rdir / "PLAN.md").read_bytes(), before)
-        self.assertEqual(planner.list_revisions(self.rdir), [])
-        self.assertFalse((self.rdir / "plan-revisions").exists())
+        self.assertTrue(capabilities["supported"])
+        self.assertEqual(capabilities["consumers"]["M3"]["status"], "supported")
+        self.assertIsNone(adapter.plan_consumer_problem(self.rdir, compatibility_report=capabilities))
 
         malformed = {"required_schema_version": "1.3.0", "supported": True,
                      "planner": {"status": "supported"}, "consumers": {}}
@@ -269,7 +257,9 @@ class PlanContractCompatibility(Isolated):
         self.assertEqual(planner.list_revisions(self.rdir)[0]["sha256"], entry["sha256"])
 
     def test_scheduler_rechecks_capability_against_the_frozen_revision(self):
-        self.good_plan()
+        plan = self.good_plan()
+        plan["schema_version"] = "1.2.0"
+        self._write(plan)
         self.set_status("approved")
         entry = planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
         self.assertEqual(entry["revision"], 1)

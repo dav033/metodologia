@@ -54,7 +54,7 @@ class Schema13Tests(unittest.TestCase):
 
     def test_version_constants_and_legacy_canonical_output_are_separate(self):
         plan = base_plan()
-        self.assertEqual(pc.SCHEMA_VERSION, "1.2.0")
+        self.assertEqual(pc.SCHEMA_VERSION, "1.3.0")
         self.assertEqual(pc.LATEST_SCHEMA_VERSION, "1.3.0")
         self.assertEqual(pc.TASK_KEYS_13[-2:], ("subplan_id", "ui"))
         legacy = json.loads((GOLDEN / "input-1.2.0.json").read_text(encoding="utf-8"))

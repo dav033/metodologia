@@ -131,7 +131,7 @@ class Contradictions(PlanDir):
 
     def test_skeleton_derives_spec_requirements_and_leaves_covers_empty(self):
         skeleton = self.sync.skeleton(self.rdir)
-        self.assertEqual(skeleton["schema_version"], "1.2.0")
+        self.assertEqual(skeleton["schema_version"], "1.3.0")
         self.assertEqual(skeleton["requirements"], ["R1"])
         self.assertTrue(all(task["covers"] == [] for task in skeleton["tasks"]))
         self.assertTrue(all("kind" not in task for task in skeleton["tasks"]))

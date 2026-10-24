@@ -348,13 +348,15 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
             last_m4_pending_notice = 0.0
             while True:
                 owner_composition = getattr(wiring, "composition_runtime", None)
+                owner_progress = False
                 if owner_composition is not None:
-                    owner_composition.reserve_candidates()
+                    owner_progress = bool(owner_composition.reserve_candidates())
                 report = scheduler.step()
                 if owner_composition is not None:
-                    owner_composition.reserve_candidates()
-                    owner_composition.reconcile_subplans()
-                    owner_composition.reconcile_compositions()
+                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
+                    owner_progress = bool(owner_composition.reconcile_subplans()) or owner_progress
+                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
+                    owner_progress = bool(owner_composition.reconcile_compositions()) or owner_progress
                     owner_composition.reconcile_propagation()
                     for identity, reason in owner_composition.drain_attentions():
                         print(f"OWNER_COMPOSITION_ATTENTION: {identity}: {reason}", file=sys.stderr)
@@ -391,7 +393,8 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     adapter.write_projection(rdir, scheduler)
                     return 0
                 _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
-                terminal_run = snap.status in {"completed", "cancelled"} or adapter.is_stalled(scheduler, snap)
+                terminal_run = (snap.status in {"completed", "cancelled"} or
+                                (not owner_progress and adapter.is_stalled(scheduler, snap)))
                 if terminal_run and not m4_runtime.has_pending_streams(wiring) \
                         and not m4_runtime.has_pending_incidents(wiring):
                     _remove_autostart(project, req)

@@ -29,6 +29,7 @@ def make_repository(path: Path) -> Path:
         (path / "src" / f"T{number}_check.py").write_text(
             "from pathlib import Path\nassert Path('README.md').read_text(encoding='utf-8').startswith('owner e2e')\n",
             encoding="utf-8")
+        (path / "src" / f"t{number}.txt").write_text(f"contract fixture {number}\n", encoding="utf-8")
         (path / "docs" / f"T{number}.findings.json").write_text(
             '{"schema":"audit-findings/1","findings":[]}\n', encoding="utf-8")
     git(path, "add", "README.md", "src", "docs")
@@ -150,6 +151,7 @@ def three_subplan_plan(*, revision: int = 1, include_designer_contract: bool = T
     gate_id = gate_task["id"]
     gate_criterion = "All owner scenarios preserve their durable invariants"
     gate_task["acceptance_criteria"] = [gate_criterion]
+    gate_task["verification"][0]["purpose"] = gate_criterion
     gate_task["covers"] = ["R4"]
     tasks.append(gate_task)
     task_number += 1

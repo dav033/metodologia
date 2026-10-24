@@ -34,6 +34,8 @@ from bt_planner import revisions as planner_revisions  # noqa: E402
 
 def classified(rdir: Path) -> dict:
     plan = planner.skeleton(rdir, plan_id=adapter.plan_id(rdir))
+    # These integration fixtures exercise the frozen 1.2 contract; 1.3 has dedicated coverage.
+    plan["schema_version"] = "1.2.0"
     for milestone in plan["milestones"]:
         milestone["title"] = milestone["title"] or milestone["id"]
         milestone["acceptance_criteria"] = [f"{milestone['id']} delivered"]

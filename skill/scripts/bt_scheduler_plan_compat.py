@@ -9,7 +9,7 @@ from pathlib import Path
 import bt_plan_adapter as plan_adapter
 
 PLAN_SCHEMA_CAPABILITY_SINCE = (1, 2, 0)
-DEFAULT_PLAN_SCHEMA_VERSION = "1.2.0"
+DEFAULT_PLAN_SCHEMA_VERSION = "1.3.0"
 _CONSUMERS = (
     ("M2", "bt_scheduler_decision_adapter"),
     ("M6", "bt_scheduler_quality.contracts"),

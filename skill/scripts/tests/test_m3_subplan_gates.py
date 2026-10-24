@@ -113,7 +113,7 @@ class M3SubplanGates(unittest.TestCase):
         blocked = port.start(ui_order)
         self.assertEqual(blocked.status, "rejected")
         self.assertIn("DESIGN_CONTRACT_MISSING", blocked.detail)
-        self.assertIn("blocked-environment", blocked.detail)
+        self.assertEqual(blocked.classification, "blocked_environment")
         self.assertFalse(executor.called)
         self.assertTrue(gates.has_blob(self.repo, selected, "design/contracts/checkout@v1.md"))
         self.assertFalse(gates.has_blob(self.repo, selected, "design/contracts/checkout@v2.md"))

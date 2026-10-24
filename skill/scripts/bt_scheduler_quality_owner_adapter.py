@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import logging
 from collections.abc import Mapping
 from pathlib import Path
@@ -122,3 +123,36 @@ def expected_environment_fingerprint(policy, contract_identities: Mapping[str, s
 
     contracts = tuple(sorted(contract_identities.items()))
     return bound_environment_fingerprint(policy, contracts, environment_identity)
+
+
+def environment_fingerprint_matches(policy, contract_identities: Mapping[str, str],
+                                    environment_identity: object, observed: object) -> bool:
+    """Compare M6's recorded fingerprint with the value M6 derives from this verification identity."""
+    if policy is None or not isinstance(observed, str) or not observed or len(observed) > 128:
+        return False
+    return observed == expected_environment_fingerprint(policy, contract_identities, environment_identity)
+
+
+def verified_result_identity(store, reference: str, *, plan_id: str, revision: int, task_id: str,
+                             attempt_id: str, token: int, policy) -> dict[str, str] | None:
+    """Validate accepted M6 result identity and return its own tree and environment fingerprint."""
+    if not isinstance(reference, str) or not reference.startswith("m6://result/"):
+        return None
+    raw = store.get_result_manifest(reference)
+    if not isinstance(raw, bytes) or len(raw) > 1024 * 1024:
+        return None
+    try:
+        manifest = json.loads(raw)
+        request, evidence = manifest["request"], manifest["input"]
+        tree, environment = evidence.get("tree_digest"), evidence.get("environment_fingerprint")
+        if ((request["plan_id"], request["task_id"], request["attempt_id"], request["token"])
+                != (plan_id, task_id, attempt_id, token)
+                or type(request["revision"]) is not int or not 1 <= request["revision"] <= revision
+                or manifest.get("reason_code") != "PASS"
+                or not isinstance(tree, str) or re.fullmatch(r"[0-9a-f]{40,64}", tree) is None
+                or not environment_fingerprint_matches(policy, {}, request.get("environment_fingerprint"),
+                                                       environment)):
+            return None
+        return {"tree_digest": tree, "environment": environment}
+    except (KeyError, TypeError, ValueError):
+        return None

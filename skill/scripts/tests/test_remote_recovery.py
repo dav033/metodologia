@@ -48,6 +48,10 @@ class RemoteRecoveryTests(unittest.TestCase):
         self.rdir = self.root / "req"
         self.rdir.mkdir()
         self.ledger = commands.Ledger(self.root / "commands.db")
+        import bt_config
+        config = patch.object(bt_config, "get", side_effect=lambda _key, default=None: default)
+        config.start()
+        self.addCleanup(config.stop)
 
     def tearDown(self):
         self.temp.cleanup()

@@ -23,6 +23,7 @@ import bt_integration_line
 from bt_scheduler_owner_errors import CompositionRuntimeError
 from bt_scheduler_owner_propagation import OwnerPropagationMixin
 from bt_scheduler_owner_validation import validate_contract_paths, validate_gate_chain
+import bt_scheduler_owner_workspace
 
 
 def composition_store_path(rdir: Path, project: str, req: str) -> Path:
@@ -112,8 +113,11 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                                 "repo_head TEXT NOT NULL, PRIMARY KEY(project, req, run_id, revision))")
             rows = connection.execute("SELECT DISTINCT project,req,plan_id,run_id,repository "
                                       "FROM owner_identity").fetchall()
-            if any(row[:2] != (self.project, self.req) or row[2] != self.plan.plan_id
-                   or row[3] != self.run_id or row[4] != repository_id for row in rows):
+            same_revision_runs = connection.execute(
+                "SELECT run_id FROM owner_identity WHERE project=? AND req=? AND revision=?",
+                (self.project, self.req, self.plan.revision)).fetchall()
+            if (any(row[:2] != (self.project, self.req) or row[2] != self.plan.plan_id or row[4] != repository_id
+                    for row in rows) or any(row[0] != self.run_id for row in same_revision_runs)):
                 raise CompositionRuntimeError("OWNER_COMPOSITION_STORE_IDENTITY_MISMATCH")
             connection.execute("INSERT OR IGNORE INTO owner_identity VALUES (?,?,?,?,?,?,?,?)",
                                (self.project, self.req, self.plan.plan_id, self.run_id, self.plan.revision,
@@ -161,38 +165,23 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
             raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_DIRECTORY_UNSAFE")
         os.chmod(workspace, 0o700, follow_symlinks=False)
         marker_path = workspace / ".owner.json"
-        marker = {"project": self.project, "req": self.req, "plan_id": self.plan.plan_id}
         try:
-            marker_info = marker_path.lstat()
-            if (not stat.S_ISREG(marker_info.st_mode) or stat.S_ISLNK(marker_info.st_mode)
-                    or marker_info.st_uid != os.getuid()):
-                raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_OWNERSHIP_UNVERIFIED")
-            existing = json.loads(marker_path.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            existing = None
-        except CompositionRuntimeError:
-            raise
-        except (OSError, json.JSONDecodeError):
-            raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_OWNERSHIP_UNVERIFIED") from None
-        if existing is not None and (not isinstance(existing, dict)
-                                      or any(existing.get(key) != value for key, value in marker.items())
-                                      or ("run_id" in existing and not isinstance(existing["run_id"], str))):
-            raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_OWNERSHIP_MISMATCH")
-        if existing is None:
-            descriptor = os.open(marker_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
-                json.dump(marker, stream, sort_keys=True)
+            bt_scheduler_owner_workspace.ensure_owner_marker(
+                marker_path, project=self.project, req=self.req, plan_id=self.plan.plan_id,
+                revision=self.plan.revision, plan_sha256=self.plan.sha256)
+        except ValueError as error:
+            raise CompositionRuntimeError(str(error)) from None
 
     def bind_scheduler(self, scheduler) -> None:
         self.scheduler = scheduler
         self.run_id = m3_adapter.run_identity(scheduler)
         marker_path = self.workspace_root / ".owner.json"
-        marker = json.loads(marker_path.read_text(encoding="utf-8"))
-        if marker.get("run_id") not in (None, self.run_id):
-            raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_RUN_MISMATCH")
-        marker["run_id"] = self.run_id
-        marker_path.write_text(json.dumps(marker, sort_keys=True), encoding="utf-8")
-        os.chmod(marker_path, 0o600, follow_symlinks=False)
+        try:
+            bt_scheduler_owner_workspace.bind_owner_marker(
+                marker_path, project=self.project, req=self.req, plan_id=self.plan.plan_id,
+                revision=self.plan.revision, plan_sha256=self.plan.sha256, run_id=self.run_id)
+        except ValueError as error:
+            raise CompositionRuntimeError(str(error)) from None
         self._bind_identity()
         self.engine.prune_workspaces()
 
@@ -212,24 +201,13 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         reference = fact.get("verdict_id")
         if not isinstance(reference, str) or not reference.startswith("m6://result/"):
             raise CompositionRuntimeError("OWNER_COMPOSITION_M6_EVIDENCE_MISSING")
-        raw = self._read_m6_manifest(reference)
-        if raw is None:
+        identity = m6_adapter.verified_result_identity(
+            self._m6_store, reference, plan_id=self.plan.plan_id, revision=self.plan.revision,
+            task_id=task_id, attempt_id=fact["attempt_id"], token=fact["token"], policy=self._quality_policy)
+        if identity is None:
             raise CompositionRuntimeError("OWNER_COMPOSITION_M6_EVIDENCE_UNAVAILABLE")
-        try:
-            manifest = json.loads(raw)
-            request, evidence_input = manifest["request"], manifest["input"]
-            identity_ok = (request["plan_id"], request["task_id"], request["attempt_id"], request["revision"],
-                           request["token"]) == (self.plan.plan_id, task_id, fact["attempt_id"],
-                                                  self.plan.revision, fact["token"])
-            tree, environment = evidence_input.get("tree_digest"), evidence_input.get("environment_fingerprint")
-            if (not identity_ok or manifest.get("reason_code") != "PASS"
-                    or not isinstance(tree, str) or re.fullmatch(r"[0-9a-f]{40,64}", tree) is None
-                    or not isinstance(environment, str) or re.fullmatch(r"[0-9a-f]{64}", environment) is None):
-                raise ValueError
-        except (KeyError, TypeError, ValueError):
-            raise CompositionRuntimeError("OWNER_COMPOSITION_M6_EVIDENCE_IDENTITY_MISMATCH") from None
         return {"task_id": task_id, "kind": str(self.plan.task(task_id).meta.get("kind", "task")),
-                "verdict_id": reference, "tree_digest": tree, "environment": environment}
+                "verdict_id": reference, **identity}
 
     def bind_m6_store(self, store) -> None:
         """Use the already-open M6 store through its public content-addressed evidence reader."""
@@ -274,9 +252,15 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                     self._attend(subplan.id, "OWNER_COMPOSITION_LINE_TREE_MISMATCH")
                     continue
                 contracts = self._contract_hashes(subplan.id, line_commit)
-                version = self.engine.publish_subplan_version(
-                    self.plan.plan_id, f"r{self.plan.revision}:{self.plan.sha256}", subplan.id,
-                    line_commit, line_base, contracts, evidence)
+                versions = self.store.list_versions(self.plan.plan_id, subplan.id)
+                version = versions[-1] if versions and (
+                    versions[-1].commit, versions[-1].line_base, versions[-1].contracts,
+                    tuple(dict(item) for item in versions[-1].evidence)) == (
+                    line_commit, line_base, contracts, tuple(dict(item) for item in evidence)) else None
+                if version is None:
+                    version = self.engine.publish_subplan_version(
+                        self.plan.plan_id, f"r{self.plan.revision}:{self.plan.sha256}", subplan.id,
+                        line_commit, line_base, contracts, evidence)
                 m1_adapter.record_subplan_version(self.scheduler, subplan.id, version.version, version.commit,
                                                   version.manifest_sha256)
                 published.append(subplan.id)
@@ -313,7 +297,8 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
     def _candidate_for_gate(self, task_id: str):
         if self.scheduler is None:
             raise CompositionRuntimeError("OWNER_COMPOSITION_M1_UNAVAILABLE")
-        gate = next((item for item in self.plan.composition_gates if item.task == task_id), None)
+        gate = next((item for item in self.plan.composition_gates
+                     if task_id in {item.task, getattr(item, "audit_task", None)}), None)
         if gate is None:
             return None
         members, _order = self._members_for_gate(gate)
@@ -383,8 +368,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                     for subplan, number in candidate.members.items()}
         contracts = {key: value for version in versions.values() for key, value in version.contracts.items()}
         return {"composition_id": candidate.id, "manifest_sha256": candidate.manifest_sha256,
-                "contract_identities": contracts,
-                "environment_fingerprint": hashlib.sha256(b"composition-owner-env/1").hexdigest()}
+                "contract_identities": contracts}
 
     def reconcile_compositions(self) -> tuple[str, ...]:
         if self.scheduler is None:
@@ -414,10 +398,12 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                     audit_fact = accepted.get(gate.audit_task)
                     if audit_fact is None:
                         continue
-                    try:
-                        self._m6_evidence(gate.audit_task, audit_fact)
-                    except CompositionRuntimeError as error:
-                        self._attend(gate.task, error)
+                    audit_proof = self._composition_proof(candidate, gate.audit_task, audit_fact,
+                                                          audit_fact.get("verdict_id"))
+                    if audit_proof is None or audit_proof.verdict != "PASS":
+                        self._hold_composition_gate(gate.task, candidate.id,
+                                                    "OWNER_COMPOSITION_AUDIT_PROOF_MISMATCH")
+                        self._attend(gate.task, "OWNER_COMPOSITION_AUDIT_PROOF_MISMATCH")
                         continue
                 proof = self._composition_proof(candidate, gate.task, fact, fact.get("verdict_id"))
                 if proof is None:
@@ -469,25 +455,22 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
             request, evidence_input = manifest["request"], manifest["input"]
             tree = self.git.tree_oid(candidate.integrated_commit)
             contracts = self.verification_identity_for(candidate)
-            environment = hashlib.sha256(b"composition-owner-env/1").hexdigest()
-            expected_environment = (m6_adapter.expected_environment_fingerprint(
-                self._quality_policy, contracts, request.get("environment_fingerprint"))
-                if self._quality_policy is not None and isinstance(request.get("environment_fingerprint"), str)
-                else None)
+            environment_matches = (self._quality_policy is not None and m6_adapter.environment_fingerprint_matches(
+                    self._quality_policy, contracts, request.get("environment_fingerprint"),
+                    evidence_input.get("environment_fingerprint")))
+            request_revision = request.get("revision")
             if (manifest.get("reason_code") not in {"PASS", "FAIL"} or
-                    (request.get("plan_id"), request.get("revision"), request.get("task_id"),
-                     request.get("attempt_id"), request.get("token")) !=
-                    (self.plan.plan_id, self.plan.revision, task_id, fact["attempt_id"], fact["token"])
+                    (request.get("plan_id"), request.get("task_id"), request.get("attempt_id"),
+                     request.get("token")) != (self.plan.plan_id, task_id, fact["attempt_id"], fact["token"])
+                    or type(request_revision) is not int or not 1 <= request_revision <= self.plan.revision
                     or request.get("attempt_id") != fact["attempt_id"]
                     or request.get("composition_id") != candidate.id
                     or request.get("manifest_sha256") != candidate.manifest_sha256
                     or request.get("contract_identities") != contracts
-                    or request.get("environment_fingerprint") != environment
                     or evidence_input.get("composition_id") != candidate.id
                     or evidence_input.get("manifest_sha256") != candidate.manifest_sha256
                     or evidence_input.get("tree_digest") != tree
-                    or evidence_input.get("contract_identities") != contracts
-                    or evidence_input.get("environment_fingerprint") != expected_environment):
+                    or evidence_input.get("contract_identities") != contracts or not environment_matches):
                 return None
             verdict = manifest.get("reason_code")
             if verdict not in {"PASS", "FAIL"}:

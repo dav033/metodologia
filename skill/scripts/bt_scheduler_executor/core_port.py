@@ -50,7 +50,8 @@ class CoreExecutionPort:
         if path is not None:
             repository = self.repo_of(repo) if self.repo_of else None
             if repository is None or not self.gates.has_blob(repository, base, path):
-                return self.core.Ack("rejected", f"DESIGN_CONTRACT_MISSING: {path or 'invalid frozen UI contract'} [blocked-environment]", True)
+                return self.core.Ack("rejected", f"DESIGN_CONTRACT_MISSING: {path or 'invalid frozen UI contract'}",
+                                     True, classification="blocked_environment")
         request = self.m3.StartRequest(
             idempotency_key=order.idempotency_key, plan_id=order.plan_id, revision=order.revision, task_id=order.task_id,
             attempt_id=order.attempt_id, token=order.token, executor=order.executor, repository=repo,
