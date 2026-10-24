@@ -99,6 +99,21 @@ class PlanContractCompatibility(Isolated):
 
         self.assertEqual(kind, "audit")
 
+    def test_legacy_fixture_routing_golden_is_unchanged(self):
+        fixture = Path(bt_agents.__file__).parent / "bt_scheduler_core" / "tests" / "fixtures" / "plan.example.json"
+        plan = json.loads(fixture.read_text(encoding="utf-8"))
+        self.assertEqual(plan["schema_version"], "1.0.0")
+        task = next(item for item in plan["tasks"] if item["id"] == "T1")
+        _facts, kind, route_facts = m2.task_facts(
+            task["id"], task, task["after"], task["acceptance_criteria"], task["verification"],
+            task["shared_resources"], task["expected_paths"]
+        )
+        self.assertEqual(kind, "implement")
+        self.assertEqual(route_facts["risk"], "high")
+        self.assertNotIn("review_axis", route_facts)
+        self.assertEqual(m2._route_role(kind, route_facts), "implementer")
+        self.assertEqual(m2._route_options("claude", 0, kind), (("sonnet", "medium"),))
+
     def test_consumer_capabilities_report_legacy_support_and_unknown_future_versions(self):
         for version in ("1.0.0", "1.1.0"):
             with self.subTest(schema_version=version):

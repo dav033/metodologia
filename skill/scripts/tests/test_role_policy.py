@@ -14,6 +14,7 @@ class RolePolicyTests(unittest.TestCase):
         expected = {
             "planner": [("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")],
             "reviewer": [("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")],
+            "designer": [("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")],
             "explorer": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")],
             "implementer": [("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")],
             "researcher": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")],
@@ -58,6 +59,10 @@ class RolePolicyTests(unittest.TestCase):
     def test_kind_mapping_and_unknown_roles(self):
         self.assertEqual([policy.role_for_kind(k) for k in ("implement", "test", "audit", "research")],
                          ["implementer", "runner", "reviewer", "researcher"])
+        self.assertEqual(policy.role_for_kind("design"), "designer")
+        self.assertEqual(policy.role_for_task("audit", "visual"), "reviewer")
+        self.assertEqual(policy.role_for_task("audit", None), "reviewer")
+        self.assertIsNone(policy.role_for_task("unknown", "visual"))
         for unknown in ("docs", "unknown", None):
             self.assertIsNone(policy.role_for_kind(unknown))
             self.assertEqual(policy.options(unknown), [])

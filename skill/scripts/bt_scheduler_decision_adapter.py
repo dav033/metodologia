@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from bt_scheduler_monitor_adapter import MetricSample
 
 POLICY_VERSION = "m2-methodology-v1"
-PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
 _INVALID_AUTH = {"invalid_credentials", "http_401", "http_403", "unauthorized", "authentication_failed"}
 _VERIFIED_FAILURES = {"verify_failed", "verification_rejected"}
 _CLAIMED = {"claimed", "claimed_unverified"}
@@ -150,6 +150,11 @@ def _route_options(provider: str, tier: int, task_kind: str, complexity: str | N
     return tuple(options)
 
 
+def _route_role(task_kind: str, classifications: Mapping[str, object]) -> str | None:
+    """Apply M1's optional task metadata without changing task kind or learning identity."""
+    return bt_role_policy.role_for_task(task_kind, classifications.get("review_axis"))
+
+
 def _history_snapshot(rows: Sequence[Mapping[str, Any]]) -> dict[tuple[str, str, str, str, str], RouteHistory]:
     """Route history per (provider, model, profile, effort, kind). Quality comes from TASK outcomes (bt_outcomes: the same
     verdicts the router learns from), so a session with two verified tasks and one failure is 2 + 1, not one failure;
@@ -215,12 +220,15 @@ def task_facts(task_id: str, meta_value: object, dependencies: Sequence[str], ac
     brief = "\n".join(part for part in brief_parts if part)[:2048]
     classifications = {key: meta.get(key) for key in
                        ("complexity", "scope", "estimated_minutes", "risk", "coupling", "confidence")}
+    route_classifications = dict(classifications)
+    if meta.get("review_axis") == "visual":
+        route_classifications["review_axis"] = "visual"
     evidence = meta.get("classification_evidence")
-    kind = bt_agents.infer_kind(title, meta.get("kind"))
+    kind = "design" if meta.get("kind") == "design" else bt_agents.infer_kind(title, meta.get("kind"))
     task = TaskFacts(task_id, brief, classifications, evidence if isinstance(evidence, Mapping) else {},
                      tuple(dependencies), tuple(acceptance_criteria), tuple(verification),
                      tuple(shared_resources), tuple(expected_paths))
-    return task, kind, classifications
+    return task, kind, route_classifications
 
 
 def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, object], now: float
@@ -233,7 +241,7 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     tier = _tier_for(classifications, task_kind)
     routes, _ = bt_agents.candidates(project, pool, tier, task_kind, risk=str(classifications.get("risk") or "") or None,
                                     complexity=str(classifications.get("complexity") or "") or None,
-                                    allow_explore=False, role=bt_role_policy.role_for_kind(task_kind))
+                                    allow_explore=False, role=_route_role(task_kind, classifications))
     router_rank = {
         (route.get("profile"), route.get("agent"), route.get("model"), route.get("effort")): index
         for index, route in enumerate(routes)
