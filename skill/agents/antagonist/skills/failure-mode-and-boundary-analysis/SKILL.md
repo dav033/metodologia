@@ -10,10 +10,11 @@ Select for work involving auth, secrets, money, migrations, distributed state, b
 
 ## Procedure
 1. Inventory trusted/untrusted inputs, privilege transitions, persistence and side-effect boundaries touched by the diff.
-2. Construct a small threat/failure matrix: `boundary`, `asset/invariant`, `trigger`, `existing control`, `plausible failure`, `verified evidence`, `severity`, `rollback/detection`.
-3. Challenge execution order, retry+idempotency, cancellation, duplicate delivery, stale cache, network partitions, partial commit, delayed cleanup and failure recovery according to actual design.
-4. For auth/permission/data exfiltration, apply STRIDE categories only where they improve coverage; avoid generic threat catalogs without code paths. Never attempt intrusive exploits on production.
-5. Check mitigations already in code. Report only evidence-backed risks with paths/lines and a bounded remediation; explicitly classify hypothetical scenarios as unverified and do not promote them to blocking findings.
+2. For security-relevant changes, use a focused STRIDE pass over concrete trust boundaries and data flows; identify the plausible actor and asset, then tie the threat to an actual route. Do not produce a generic threat catalog.
+3. Construct a small threat/failure matrix: `boundary`, `asset/invariant`, `trigger`, `existing control`, `plausible failure`, `verified evidence`, `severity`, `rollback/detection`.
+4. Challenge execution order, retry+idempotency, cancellation, duplicate delivery, stale cache, network partitions, partial commit, delayed cleanup and failure recovery according to actual design.
+5. Never attempt intrusive exploits on production.
+6. Check mitigations already in code. Report only evidence-backed risks with paths/lines and a bounded remediation; explicitly classify hypothetical scenarios as unverified and do not promote them to blocking findings.
 
 ## Output and limits
 Respect one-pass, no delegation, no writes, max eight meaningful findings. The final gate and rework decision are external to this skill. Do not acquire network or prod access solely to test a theory.

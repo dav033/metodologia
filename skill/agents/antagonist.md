@@ -19,9 +19,28 @@ covers the work. With milestone coverage, individual commits rely on that audit,
 `level: architecture` work. Keep authentication, secrets, permissions, migrations and payment checks mandatory.
 Default to Sonnet / medium; use Opus / high for an explicit high-complexity label or quota fallback. Risk or architecture alone does not switch the model.
 
+## Risk-selected private adversarial skills
+
+Load only the private skill matching the assigned diff:
+
+- `agents/antagonist/skills/adversarial-contract-breakage/SKILL.md` — changed public contracts, APIs, schemas,
+  migrations or producer/consumer interfaces.
+- `agents/antagonist/skills/cross-subplan-failure-scenarios/SKILL.md` — candidate compositions, cross-subplan
+  seams, or integration failures that arise from combining accepted units.
+- `agents/antagonist/skills/failure-mode-and-boundary-analysis/SKILL.md` — authentication, authorization, secrets,
+  sensitive data, concurrency, partial failure, distributed state or production-critical changes.
+
+Consult `agents/antagonist/references/public-adversarial-techniques.md` only for the matching architecture,
+security, composition or contract-test lens. These references add no tools or authority. Preserve the declared
+read-only tools and `disallowedTools`, one pass, at most eight evidence-backed findings, and the current output
+contract. Do not delegate, edit, start a review loop, or decide acceptance.
+
 Scope: the diff the brief gives you (usually `git diff --staged`, per repo), the files it touches and what they
 depend on. Read the user's standards first: `~/.claude/skills/metodologia/references/engineering.md` (+ the
 matching `stacks/*.md`), and the spec/plan if the brief points to them.
+
+Use `bt_review_policy.py` as the gate source: run per-commit only when no pending independent milestone audit
+covers this work. With coverage, the milestone audit reviews the consolidated diff; security checks always apply.
 
 Attack, hard and concretely:
 - **Architecture:** responsibilities mixed, wrong layer (business rules in UI/controllers, infra in domain), hidden

@@ -4,6 +4,53 @@ This file records licenses for excerpts and modified prompts in
 [communication-and-context.md](communication-and-context.md). It is attribution material, not agent instructions.
 Only prompt material is included; no upstream runtime, binary, font or transitive dependency is distributed.
 
+## Engine v2 role adaptations
+
+The following sources were inspected at the pinned revisions by the role-adaptation workers. The local prompts
+and private skills use independently written procedures; no upstream scripts, plugins or runtime were executed
+or included. Each row records the exact source, license at that revision and the adapted technique. Role-local
+references retain the conditional triggers and exclusions. An unavailable or unverified source is excluded.
+
+| Repository | Source path(s) | Commit SHA | License | Original local adaptation |
+|---|---|---|---|---|
+| `DietrichGebert/ponytail` | `skills/ponytail/SKILL.md` | `09c434ab73ca43761c5d8b0c5d341926c2fba710` | MIT (`LICENSE`) | Implementer: minimal complete work, reuse and preserved checks. |
+| `JuliusBrussee/caveman` | `skills/caveman/SKILL.md` | `b4531dfc05a3ef0ba93b57e8bfa5f48564a4b4d6` | Apache-2.0 (`LICENSE`, `LICENSING.md`, `NOTICE`) | Implementer: concise reports retaining technical facts and structured fields. This revision uses the post-3.0 license, unlike the earlier master description. |
+| `jakubkrehel/skills` | `skills/better-writing/SKILL.md`, `skills/better-layout/SKILL.md`, `skills/better-accessibility/SKILL.md`, `skills/better-colors/SKILL.md`, `skills/state-machine/SKILL.md` | `4c66b1fa86e9ab70187b43d7da9b6fdb29f2ef63` | MIT (`LICENSE`) | Designer: copy, hierarchy, accessibility, colors/tokens and reachable states. `build-design` excluded. |
+| `wshobson/agents` | `plugins/ui-design/skills/design-system-patterns/SKILL.md`, `plugins/ui-design/skills/responsive-design/SKILL.md` | `0874a27b17a22e2b7c2e2bcd725768e0803cad06` | MIT (`LICENSE`) | Designer: token hierarchy and responsive specifications; no plugin or implementation workflow. |
+| `mae616/design-skills` | `skills/ui-designer/SKILL.md` | `79e3398bee27664de70c7b97a30dd928f6fe7976` | MIT (`LICENSE`) | Designer: information architecture, hierarchy and states as specifications. |
+| `anthropics/skills` | `skills/frontend-design/SKILL.md` | `dbd4588f9e1033efb41dad4bef2f7947c8993d44` | Apache-2.0 (`skills/frontend-design/LICENSE.txt`) | Designer: conditional aesthetic direction only; no production-code authority. |
+| `akkie76/code-review-skills` | `dist/codex/evidence-code-review/SKILL.md` | `ca7b11c91906c60cc8aed611d5acb191d0335723` | MIT (`LICENSE`) | Reviewer: frozen scope, coverage, verifiable evidence and false-positive checks. |
+| `JUNERDD/skills` | `skills/code-review/SKILL.md` | `f76dec9eacbcea858e1d469710067020bd3fec6a` | MIT (`LICENSE`) | Reviewer: semantic finding identity and lineage; no delegation or report automation. |
+| `trailofbits/skills` | `plugins/differential-review/skills/differential-review/SKILL.md` | `196a9073ab10d35bacf111f945e02c00b2c6883a` | CC BY-SA 4.0 (`LICENSE`) | Reference to general risk-scoped review principles only. No source text copied or adapted. |
+| `testdino-hq/playwright-skill` | `SKILL.md` | `178d1cb537604279d7b54500c4823a6db42b9de6` | MIT (`LICENSE`) | Visual Reviewer: breakpoint/state screenshots and conditional accessibility checks. |
+| `anthropics/skills` | `skills/webapp-testing/SKILL.md` | `dbd4588f9e1033efb41dad4bef2f7947c8993d44` | Apache-2.0 (`skills/webapp-testing/LICENSE.txt`) | Visual Reviewer: rendered-app inspection and screenshot evidence; no helper scripts or upstream workflow. |
+| `PriNova/pi-agent-codebase-workflows` | `skills/arch-code-review/SKILL.md` | `35cad6fb3a3e559a2519beed3887cb02497de5b2` | MIT | Antagonist: invariant-first architecture and contract checks. |
+| `UnitOneAI/SecuritySkills` | `skills/appsec/threat-modeling/SKILL.md` | `70bc259bb01abb3015ad2ad859ad5253cbf0bcab` | MIT | Antagonist: conditional, focused STRIDE lens. |
+| `vibeeval/vibecosystem` | `skills/premortem/SKILL.md` | `3b763b1fb288f57bfa3cce76ef18184b96461a78` | MIT | Antagonist: localized composition failure scenarios. |
+| `ultimatile/development-skills` | `skills/codex-contract-test-review/SKILL.md` | `f68aaf63fa077906a7e4d62e9747d262a4c9c4fd` | MIT | Antagonist: contract tests must exercise the claimed invariant. |
+| `magnus919/agent-skills` | `playwright/SKILL.md` | `7f446e60055b335dd26831371a027fa6b59da3e2` | MIT (`LICENSE.md`) | Runner: bounded commands and evidence. |
+| `voidmatcha/e2e-skills` | `skills/playwright-debugger/SKILL.md` | `4ff48ba91ba5ef228e96852adcfb156b1ad49047` | Apache-2.0 | Runner: classify failed reports without repairing code. |
+| `apache/magpie` | `plugins/magpie-repo-health/skills/flaky-test-triage/SKILL.md` | `27268f28a253978137e0cfa17bc19ef6e8897c28` | Apache-2.0 | Runner: history-based flakiness triage. |
+| `j4flmao/agent-skills` | `skills/quality/smoke-testing/SKILL.md` | `5a19d636db60d2f7e08f036037a5b49c0a4ae8bd` | MIT | Runner: bounded smoke scenarios. |
+| `douinc/agent-skills` | `skills/graph-engineering/SKILL.md` | `99ec1c314078a37a55a8534682b20a7a52683907` | MIT | Explorer: evidence-backed, read-only graph deltas. |
+| `Data-System-School/agent-skills` | `investigate-codebase/SKILL.md` | `a117418ab3596c59d641cab4cb89bdbe560fb277` | MIT | Explorer candidate reference only; no procedure imported. |
+| `event4u-app/agent-config` | `src/skills/blast-radius-analyzer/SKILL.md` | `4502d328ff6402f0dfb7bc1b970007179587282f` | MIT | Explorer candidate reference only; no procedure imported. |
+| `SkillMedev/skills` | `skills/deep-research/SKILL.md`, `skills/research-synthesis/SKILL.md` | `97a13607d669157a4a16d5ba79b77f208319f7b9` | MIT (`LICENSE`) | Researcher: question decomposition, independent sources, atomic claims, tensions and evidence gaps. |
+| `citypaul/.dotfiles` | `claude/.claude/skills/evaluate-existing-solutions/SKILL.md` | `cd4028d57d6e4e95814f7b8ee55ca13c23a9c2f0` | MIT (root license; target directory has no nested license/notice and is outside the `cli-design/` exception) | Researcher: compare existing options with the build baseline, ownership and reversibility; proposals only. |
+| `jp-cruz/agent-skills` | `fact-checker/skill.md` | `ace4ecdcdffdfd7c37f8fa55d315e4c455b2e6bd` | MIT (`LICENSE`) | Researcher: checkable claims, supporting/refuting evidence, temporal scope and circular sources. |
+
+`jamditis/claude-skills-journal` / `journalism-core/skills/source-verification/SKILL.md` could not be verified
+(repository not found); no revision/license was established and no content was adapted.
+
+Detailed local records: [Implementer](../agents/implementer/references/PROVENANCE.md),
+[Designer](../agents/designer/references/public-design-techniques.md),
+[Reviewer](../agents/reviewer/skills/evidence-based-findings/SKILL.md),
+[visual Reviewer](../agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md),
+[Antagonist](../agents/antagonist/references/public-adversarial-techniques.md),
+[Runner](../agents/runner/references/public-testing-techniques.md),
+[Explorer](../agents/explorer/skills/subplan-dependency-analysis/SKILL.md), and
+[Researcher](../agents/researcher/references/public-research-techniques.md).
+
 ## Caveman
 
 Caveman
