@@ -61,6 +61,45 @@ class PromptPublication(unittest.TestCase):
         self.assertIn("The only remote action allowed is the publication above", publish)
 
 
+class DesignerPrompt(unittest.TestCase):
+    def test_design_and_ui_prompts_carry_contract_scope_and_conformance_rules(self):
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+
+        def make(kind, ui=False):
+            brief = Brief(title="Design checkout", objective="Design the checkout UI")
+            object.__setattr__(brief, "task_kind", kind)
+            object.__setattr__(brief, "contract_path", "design/contracts/checkout@v2.md")
+            object.__setattr__(brief, "contract_version", 2)
+            object.__setattr__(brief, "ui_task", ui)
+            object.__setattr__(brief, "preview_enabled", False)
+            return build_prompt(brief, SimpleNamespace(task_id="T1", acceptance_criteria=()),
+                                workdir="/w", branch="b", report_path="/r.json", rtk=False)
+
+        design = make("design")
+        self.assertIn("design/contracts/checkout@v2.md", design)
+        self.assertIn("version 2", design)
+        self.assertIn("Write only within `design/`", design)
+        self.assertIn("must never approve its own contract", design)
+        self.assertIn("only when the preview is enabled", design)
+        ui = make("implement", True)
+        self.assertIn("Read it before implementing", ui)
+        self.assertIn("report conformance", ui)
+
+    def test_visual_review_requests_runner_screenshots_per_breakpoint_and_state(self):
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+
+        brief = Brief(title="Review checkout", review_axis="visual")
+        object.__setattr__(brief, "contract_path", "design/contracts/checkout@v2.md")
+        object.__setattr__(brief, "contract_version", 2)
+        prompt = build_prompt(brief, SimpleNamespace(task_id="T3", acceptance_criteria=()),
+                              workdir="/w", branch="b", report_path="/r.json", rtk=False)
+        self.assertIn("design/contracts/checkout@v2.md", prompt)
+        self.assertIn("Request Runner screenshots", prompt)
+        self.assertIn("each breakpoint and each state", prompt)
+
+
 class PromptRemoteActions(unittest.TestCase):
     def test_a_task_that_creates_and_pushes_its_own_repository_may_use_gh_and_push_never_force(self):
         from bt_scheduler_executor.model import Brief

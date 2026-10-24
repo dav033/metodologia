@@ -43,6 +43,20 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
         parts.append(f"\n## Objective\n{brief.objective}")
     if brief.review_axis == "visual":
         parts.append("\n## Reviewer axis\nvisual")
+    contract_path = getattr(brief, "contract_path", "")
+    contract_version = getattr(brief, "contract_version", None)
+    contract = f"`{contract_path}`" if contract_path else "the declared UI contract"
+    version = f" (version {contract_version})" if contract_version is not None else ""
+    if getattr(brief, "task_kind", "") == "design":
+        parts.append(f"\n## Designer contract\nWrite the contract at {contract}{version}. Write only within `design/`. "
+                     "Use `design/preview` only when the preview is enabled in configuration. The Designer authors the "
+                     "contract and must never approve its own contract.")
+    if getattr(brief, "ui_task", False):
+        parts.append(f"\n## Approved UI contract\nRead it before implementing: the approved contract at {contract}{version}; "
+                     "then report conformance to it.")
+    if brief.review_axis == "visual":
+        parts.append(f"\n## Visual evidence\nUse the UI contract at {contract}{version}. Request Runner screenshots for each "
+                     "breakpoint and each state, and base the visual review on that evidence.")
     parts.append(f"\n## Acceptance criteria\n{bullets(brief.acceptance_criteria or request.acceptance_criteria)}")
     if brief.verification:
         parts.append(f"\n## How the work will be checked (by someone else)\n{bullets(brief.verification)}\n\n"

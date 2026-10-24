@@ -17,7 +17,7 @@ def register(sub):
     p_ag = sub.add_parser("agents", help="agent catalog: models, ladder, accounts and usage-limit state; route preview")
     p_ag.add_argument("action", nargs="?", choices=["list", "route", "brief", "quota-clear"], default="list")
     p_ag.add_argument("profile", nargs="?", help="quota-clear: profile id")
-    p_ag.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"], default="implement")
+    p_ag.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research", "design"], default="implement")
     from bt_role_policy import ROLES
     p_ag.add_argument("--role", choices=ROLES)
     p_ag.add_argument("--complexity", choices=["S", "M", "L"])

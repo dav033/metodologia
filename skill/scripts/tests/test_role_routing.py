@@ -61,6 +61,12 @@ class RoleRoutingTests(AgentTests):
             self.assertEqual(self.route('implementer')['agent'], 'claude')
             self.assertEqual(self.route('researcher')['agent'], 'codex')
 
+    def test_design_routes_to_designer_without_reviewer_independence(self):
+        chosen = bt_agents.route('personal-project', {'pool': self.pool}, 0, kind='design',
+                                 avoid_providers={'claude'})
+        self.assertEqual(chosen['role'], 'designer')
+        self.assertEqual(chosen['agent'], 'claude')
+
     def test_explicit_complexity_changes_explorer_and_reviewer_only_to_approved_models(self):
         normal = self.route('explorer', risk='high')
         complex_route = self.route('explorer', complexity='L')

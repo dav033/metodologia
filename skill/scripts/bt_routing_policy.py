@@ -6,7 +6,7 @@ docs never exceed tier 0, tests/research never exceed tier 1. Architecture and r
 from __future__ import annotations
 
 TOP = 2
-MAX_KIND_TIER = {"docs": 0, "test": 1, "research": 1}
+MAX_KIND_TIER = {"docs": 0, "test": 1, "research": 1, "design": 2}
 HIGH_PRESSURE = 85.0
 EFFORTS = ("low", "medium", "high", "xhigh", "max")
 # Heuristic weights of the quota a model burns at an effort, relative to its default effort. Estimates, never

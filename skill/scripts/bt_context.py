@@ -19,11 +19,13 @@ def text(project: str | None) -> str:
            "### Routing (what runs where, decided by the supervisor, not by habit)",
            "- Tier 0 light, 1 standard, 2 top. A task starts at 0 (`level: architecture` -> 2, audits -> 1); each "
            "failed attempt climbs one tier, and prefers ANOTHER provider than the one that failed.",
-           "- Kinds: implement, test, docs, audit, research (PLAN line `kind:`, else inferred from the title). An "
+           "- Kinds: implement, test, docs, audit, research, design (PLAN line `kind:`, else inferred from the title). An "
            "audit goes to another provider than the builder's.",
            "- An account that reports a usage limit is skipped until its reset; work continues on the others. Only "
            "when every account is cooling down does a run wait.",
            "- Among equal candidates: best measured success rate for that kind, then the least used account.",
+           "- The Designer authors UI contracts; the owner approves each version with `bitacora.py design approve`. "
+           "`design.preview` configures whether the optional preview is enabled.",
            "", "### Delegate (any agent to any agent)",
            f"- Let the router choose: `{cli} delegate start \"<task>\" --kind audit --verify \"<cmd>\"`",
            f"- Pin it: `{cli} delegate start \"<task>\" --profile <id> --model <model> --effort <low|medium|high|xhigh|max>`",

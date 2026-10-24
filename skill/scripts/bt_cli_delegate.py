@@ -13,7 +13,7 @@ def register(sub) -> None:
     p_del.add_argument("target", nargs="?", help="start: task text; exec/status/resume/cleanup: delegation id")
     p_del.add_argument("--profile", help="account profile (sets the agent; work gate applies)")
     p_del.add_argument("--agent", choices=["claude", "codex", "antigravity"], help="when no --profile (neither: the router chooses)")
-    p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research"],
+    p_del.add_argument("--kind", choices=["implement", "test", "docs", "audit", "research", "design"],
                        help="what the work is (routing; default: inferred from the task text)")
     from bt_role_policy import ROLES
     p_del.add_argument("--role", choices=ROLES, help="approved role model policy; otherwise inferred from kind")
