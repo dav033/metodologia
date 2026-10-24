@@ -39,14 +39,12 @@ from .plan import Plan
 from .repository import StateRepository
 from .resources import claims_for, first_conflict
 from .simulators import FifoAssignment
-from .subplans import record_composition_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
+from .subplans import hold_gate_on_scheduler, record_composition_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
 from .frontier import (apply_demonstrated_frontier as apply_frontier,
                        apply_batch_to_scheduler as apply_frontier_batch_to_scheduler,
                        apply_to_scheduler as apply_frontier_to_scheduler)
 from .review import handle_on_scheduler as handle_review_on_scheduler
-from .states import ATTEMPT_LIVE, RunStatus
-from .states import AttemptState as A
-from .states import TaskState as T
+from .states import ATTEMPT_LIVE, RunStatus, AttemptState as A, TaskState as T
 from .transitions import Ctx, promote_ready, prune_outbox, set_task
 from .views import Snapshot, snapshot
 
@@ -237,6 +235,9 @@ class SchedulerCore:
         self.write(lambda ctx: record_composition_fact(self.plan, ctx.state, ctx, state, composition_id,
                                                        dict(members), manifest_sha256, reason, tree_digest))
         self._wake.set()
+
+    def hold_composition_gate(self, gate_task_id: str, composition_id: str, reason: str) -> None:
+        hold_gate_on_scheduler(self, gate_task_id, composition_id, reason)
 
     def apply_demonstrated_frontier(self, *, change_id: str, source_task_id: str, composition_id: str,
                                     manifest_sha256: str, tree_digest: str, action: str,

@@ -146,6 +146,14 @@ class Malformed(unittest.TestCase):
         self.assertEqual([e["kind"] for e in events], ["incident", "run_created"])
         self.assertIn("(?)", events[0]["summary"])
 
+    def test_composition_gate_hold_audit_is_a_named_flow_event(self):
+        ctx = bus.Ctx(None, "p/REQ-1")
+        rows = [{"seq": 3, "at": 12.0, "kind": "composition_gate_held", "task_id": "G1",
+                 "attempt_id": "", "detail": json.dumps({"composition_id": "C1", "reason": "proof mismatch"})}]
+        [event] = bus.audit_events("p/REQ-1", rows, ctx)
+        self.assertEqual((event["kind"], event["from"], event["to"]), ("composition_hold", "owner", "M1"))
+        self.assertEqual(event["data"]["audit"], "composition_gate_held")
+
 
 class ManyRuns(unittest.TestCase):
     """Reviewer's worry: one run's high ids must never hide another run's lower ones (cursors are per run)."""

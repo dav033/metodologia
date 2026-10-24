@@ -130,26 +130,31 @@ def promote_ready(ctx: Ctx) -> int:
 
 
 def enforce_gate_waiting(ctx: Ctx, *, confirmed_unsent_attempt: str = "") -> int:
-    """Demote gates whose publication facts went stale before they are reserved or dispatched."""
+    """Demote blocked gates and descendants before they are reserved or dispatched."""
     moved = 0
-    for gate in ctx.plan.composition_gates:
-        rec = ctx.state.tasks[gate.task]
-        if not gate_waiting(ctx.plan, ctx.state, gate.task):
+    for spec in ctx.plan.tasks:
+        rec = ctx.state.tasks[spec.id]
+        if not gate_waiting(ctx.plan, ctx.state, spec.id):
             continue
-        reasons = ",".join(f"{kind}:{member}" for member, kind in
-                           stale_subplan_members(ctx.plan, ctx.state, gate.task))
+        held_gate = next((gate for gate in ctx.plan.composition_gates
+                          if gate.task in ({spec.id} | ctx.plan.ancestors(spec.id)) and
+                          gate.task in ctx.state.composition_holds), None)
+        reasons = (f"composition_hold:{held_gate.task}:"
+                   f"{ctx.state.composition_holds[held_gate.task]['composition_id']}"
+                   if held_gate else ",".join(f"{kind}:{member}" for member, kind in
+                                                stale_subplan_members(ctx.plan, ctx.state, spec.id)))
         if rec.state == T.READY.value:
-            set_task(ctx, gate.task, T.PENDING, reason="composition_waiting", detail=reasons)
+            set_task(ctx, spec.id, T.PENDING, reason="composition_waiting", detail=reasons)
             moved += 1
         elif rec.state == T.ACTIVE.value:
-            attempt = live_attempt(ctx.state, gate.task)
+            attempt = live_attempt(ctx.state, spec.id)
             pending_start = next((item for item in ctx.state.outbox if attempt is not None and
                                   item.attempt_id == attempt.id and item.kind == "start" and
                                   item.status == "pending" and
                                   (item.deliveries == 0 or item.attempt_id == confirmed_unsent_attempt)), None)
             if attempt is not None and A(attempt.state) == A.RESERVED and pending_start is not None:
                 end_attempt(ctx, attempt.id, A.CANCELLED, "composition_waiting", reasons)
-                set_task(ctx, gate.task, T.PENDING, reason="composition_waiting", detail=reasons)
+                set_task(ctx, spec.id, T.PENDING, reason="composition_waiting", detail=reasons)
                 moved += 1
     return moved
 

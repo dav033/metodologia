@@ -230,7 +230,57 @@ def gate_ready(plan: Plan, state: RunState, task_id: str) -> bool:
 
 
 def gate_waiting(plan: Plan, state: RunState, task_id: str) -> bool:
-    return bool(stale_subplan_members(plan, state, task_id))
+    blocked_by_hold = any(gate.task in ({task_id} | plan.ancestors(task_id))
+                          for gate in plan.composition_gates if gate.task in state.composition_holds)
+    return blocked_by_hold or bool(stale_subplan_members(plan, state, task_id))
+
+
+def hold_composition_gate(plan: Plan, state: RunState, ctx: Any, gate_task_id: str,
+                          composition_id: str, reason: str) -> bool:
+    """Durably stop a completed gate's descendants until its exact candidate is published."""
+    if (not isinstance(gate_task_id, str) or not isinstance(composition_id, str) or
+            len(composition_id) > 128 or not isinstance(reason, str) or
+            not reason.strip() or len(reason) > 500 or any(ord(char) < 32 for char in reason)):
+        raise SchedulerError("CONTRACT_VIOLATION", "composition gate hold is malformed")
+    gate = next((item for item in plan.composition_gates if item.task == gate_task_id), None)
+    if gate is None:
+        raise SchedulerError("NOT_ALLOWED", "composition holds require a declared gate task")
+    hold = {"composition_id": composition_id, "reason": reason}
+    if state.composition_holds.get(gate_task_id) == hold:
+        return False
+    if state.tasks[gate_task_id].state != "completed":
+        raise SchedulerError("NOT_ALLOWED", "composition holds require a completed gate task")
+    expected_members = {member: state.subplan_versions.get(member, {}).get("version") for member in gate.subplans}
+    already_published = any(
+        (not composition_id or candidate_id == composition_id) and fact.get("plan_id") == state.plan_id and
+        fact.get("revision") == state.revision and fact.get("state") == "published" and
+        fact.get("members") == expected_members
+        for candidate_id, fact in state.compositions.items())
+    if already_published:
+        return False
+    state.composition_holds[gate_task_id] = hold
+    ctx.audit("composition_gate_held", task_id=gate_task_id, composition_id=composition_id, reason=reason)
+    return True
+
+
+def hold_gate_on_scheduler(scheduler: Any, gate_task_id: str, composition_id: str, reason: str) -> None:
+    from .transitions import enforce_gate_waiting
+
+    def apply(ctx: Any) -> None:
+        hold_composition_gate(scheduler.plan, ctx.state, ctx, gate_task_id, composition_id, reason)
+        enforce_gate_waiting(ctx)
+    scheduler.write(apply)
+    scheduler._wake.set()
+
+
+def release_published_composition_holds(plan: Plan, state: RunState,
+                                        composition_id: str, members: dict[str, int]) -> None:
+    for gate in plan.composition_gates:
+        hold = state.composition_holds.get(gate.task)
+        if (hold is None or hold["composition_id"] not in ("", composition_id) or
+                set(members) != set(gate.subplans)):
+            continue
+        del state.composition_holds[gate.task]
 
 
 def validate_subplan_version(subplan_id: object, version: object, commit: object, digest: object) -> bool:
@@ -315,6 +365,7 @@ def record_composition_fact(plan: Plan, state: RunState, ctx: Any, fact_state: s
     detail = {"composition_id": composition_id, "members": members, "manifest_sha256": manifest_sha256, "reason": reason}
     if fact_state == "published":
         ctx.audit("composition_published", **detail)
+        release_published_composition_holds(plan, state, composition_id, members)
     elif fact_state == "rejected":
         ctx.audit("composition_rejected", **detail)
     else:

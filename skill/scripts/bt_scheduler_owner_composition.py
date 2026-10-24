@@ -331,6 +331,17 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         self.candidates[task_id] = candidate
         return candidate
 
+    def _hold_composition_gate(self, task_id: str, composition_id: str | None, reason: str) -> None:
+        if self.scheduler is None:
+            return
+        if not composition_id:
+            members, _ = self._members_for_gate(next((gate for gate in self.plan.composition_gates
+                                                       if gate.task == task_id), None))
+            composition_id = next((candidate_id for candidate_id, fact in
+                                   m1_adapter.composition_facts(self.scheduler).items()
+                                   if fact.get("state") == "candidate" and fact.get("members") == members), None)
+        m1_adapter.hold_composition_gate(self.scheduler, task_id, composition_id or "", str(reason)[:500])
+
     def reserve_candidates(self) -> tuple[str, ...]:
         """Build and durably reserve candidates before M1 can dispatch a gate task."""
         if self.scheduler is None:
@@ -382,6 +393,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
         published = []
         for gate in self.plan.composition_gates:
             fact = accepted.get(gate.task)
+            candidate_id = None
             # M1's manifest evidence names the immutable candidate; restart never rebuilds it.
             if fact is None:
                 continue
@@ -390,6 +402,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                 candidate = (bt_composition_adapter.get_candidate(self.store, candidate_id)
                              if candidate_id else None)
                 if candidate is None:
+                    self._hold_composition_gate(gate.task, candidate_id, "OWNER_COMPOSITION_CANDIDATE_UNAVAILABLE")
                     self._attend(gate.task, "OWNER_COMPOSITION_CANDIDATE_UNAVAILABLE")
                     continue
                 composition_fact = m1_adapter.composition_facts(self.scheduler).get(candidate.id)
@@ -408,6 +421,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                         continue
                 proof = self._composition_proof(candidate, gate.task, fact, fact.get("verdict_id"))
                 if proof is None:
+                    self._hold_composition_gate(gate.task, candidate.id, "OWNER_COMPOSITION_PROOF_MISMATCH")
                     self._attend(gate.task, "OWNER_COMPOSITION_PROOF_MISMATCH")
                     continue
                 if proof.verdict == "FAIL":
@@ -425,6 +439,7 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                     published.append(candidate.id)
             except RuntimeError as error:
                 if "COMPOSITION_CURRENT_MOVED" in str(error):
+                    self._hold_composition_gate(gate.task, candidate_id, "COMPOSITION_CURRENT_MOVED")
                     self._attend(gate.task, "COMPOSITION_CURRENT_MOVED")
                     continue
                 self._attend(gate.task, getattr(error, "code", str(error)))

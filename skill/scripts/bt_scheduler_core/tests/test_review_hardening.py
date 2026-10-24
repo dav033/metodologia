@@ -64,7 +64,7 @@ class RecoveryHardening(unittest.TestCase):
             attempt.pop("failure_classification", None)
         restored = sc.RunState.from_dict(old)
         attempt = next(iter(restored.attempts.values()))
-        self.assertEqual(restored.schema, 8)
+        self.assertEqual(restored.schema, 9)
         self.assertEqual(attempt.failure_classification, "")
 
     def test_reconciled_execution_consumes_budget_when_start_ack_was_lost(self):

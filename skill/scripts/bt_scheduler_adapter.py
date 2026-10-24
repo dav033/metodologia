@@ -596,6 +596,12 @@ def composition_facts(scheduler: core.SchedulerCore) -> dict[str, dict[str, Any]
                                        and value.get("revision") == ctx.state.revision})
 
 
+def hold_composition_gate(scheduler: core.SchedulerCore, gate_task_id: str,
+                          composition_id: str, reason: str) -> None:
+    """Forward the owner's proof hold into M1's durable gate operation."""
+    scheduler.hold_composition_gate(gate_task_id, composition_id, reason)
+
+
 def apply_demonstrated_frontier(scheduler: core.SchedulerCore, advice: Any) -> tuple[str, ...]:
     """Apply one validated M5 frontier through M1's bounded, idempotent state operation."""
     required = ("change_id", "source_task_id", "composition_id", "manifest_sha256", "tree_digest", "action",

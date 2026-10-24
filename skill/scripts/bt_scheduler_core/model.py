@@ -12,7 +12,7 @@ from typing import Any
 from .contracts import route_metadata_valid
 from .errors import SchedulerError
 
-STATE_SCHEMA = 8
+STATE_SCHEMA = 9
 SEEN_LIMIT = 5000       # applied ids remembered; older ones are still refused by the attempt/token/state guards
 REJECTED_LIMIT = 200
 OUTBOX_LIMIT = 1000     # above this, settled orders of closed attempts are dropped (the audit log keeps the story)
@@ -85,6 +85,7 @@ class RunState:
     revision_applications: dict[str, dict[str, Any]] = field(default_factory=dict)
     subplan_versions: dict[str, dict[str, Any]] = field(default_factory=dict)
     compositions: dict[str, dict[str, Any]] = field(default_factory=dict)
+    composition_holds: dict[str, dict[str, Any]] = field(default_factory=dict)
     frontier_applications: dict[str, dict[str, Any]] = field(default_factory=dict)
     review_holds: dict[str, dict[str, Any]] = field(default_factory=dict)
     schema: int = STATE_SCHEMA
@@ -109,6 +110,7 @@ class RunState:
             "revision_applications": {key: dict(value) for key, value in self.revision_applications.items()},
             "subplan_versions": {key: dict(value) for key, value in self.subplan_versions.items()},
             "compositions": {key: dict(value) for key, value in self.compositions.items()},
+            "composition_holds": {key: dict(value) for key, value in self.composition_holds.items()},
             "frontier_applications": {key: dict(value) for key, value in self.frontier_applications.items()},
             "review_holds": {key: dict(value) for key, value in self.review_holds.items()},
             "counters": dict(self.counters), "seen_events": list(self.seen_events),
@@ -122,7 +124,7 @@ class RunState:
     @classmethod
     def from_dict(cls, data: Any) -> RunState:
         try:
-            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, 6, 7, STATE_SCHEMA}:
+            if not isinstance(data, dict) or data.get("schema") not in {1, 2, 3, 4, 5, 6, 7, 8, STATE_SCHEMA}:
                 raise ValueError("unsupported or missing schema")
             routing_complete = data.get("routing_complete", False)
             if not isinstance(routing_complete, bool):
@@ -193,6 +195,14 @@ class RunState:
                      re.fullmatch(r"[0-9a-f]{40,64}", value["tree_digest"]) is None)
                     for key, value in compositions.items()):
                 raise ValueError("composition facts are invalid")
+            composition_holds = data.get("composition_holds", {})
+            if not isinstance(composition_holds, dict) or any(
+                    not isinstance(gate_id, str) or not gate_id or not isinstance(value, dict) or
+                    set(value) != {"composition_id", "reason"} or
+                    not isinstance(value["composition_id"], str) or len(value["composition_id"]) > 128 or
+                    not isinstance(value["reason"], str) or not value["reason"] or len(value["reason"]) > 500
+                    for gate_id, value in composition_holds.items()):
+                raise ValueError("composition holds are invalid")
             frontier_applications = data.get("frontier_applications", {})
             frontier_fields = {"source_task_id", "composition_id", "manifest_sha256", "tree_digest", "action",
                                "task_ids", "evidence_refs", "plan_id", "revision", "applied_task_ids"}
@@ -243,6 +253,7 @@ class RunState:
                         revision_applications={key: dict(value) for key, value in applications.items()},
                         subplan_versions={key: dict(value) for key, value in versions.items()},
                         compositions={key: dict(value) for key, value in compositions.items()},
+                        composition_holds={key: dict(value) for key, value in composition_holds.items()},
                         frontier_applications={key: dict(value) for key, value in frontier_applications.items()},
                         review_holds={key: dict(value) for key, value in review_holds.items()},
                         seen_events=list(data["seen_events"]), rejected_recent=list(data.get("rejected_recent", [])))

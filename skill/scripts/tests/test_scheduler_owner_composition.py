@@ -125,6 +125,29 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
                    return_value={"SP-1": {"version": 1, "revision": 1}}):
             self.assertEqual(owner._members_for_gate(owner.plan.composition_gates[0]), ({}, ()))
 
+    def test_proof_mismatch_durably_holds_the_completed_composition_gate(self):
+        gate = SimpleNamespace(task="G1", subplans=("SP-1",), audit_task=None)
+        candidate = SimpleNamespace(id="C1", members={"SP-1": 1}, manifest_sha256="2" * 64)
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        owner.scheduler = object()
+        owner.plan = SimpleNamespace(composition_gates=(gate,), revision=1)
+        owner.store = object()
+        owner.verifier_id = "m6"
+        owner.engine = object()
+        owner._attend = lambda *args: None
+        owner._manifest_candidate_id = lambda _reference: "C1"
+        owner._members_for_gate = lambda _gate: ({"SP-1": 1}, ("SP-1",))
+        owner._composition_proof = lambda *_args: None
+        with patch("bt_scheduler_owner_composition.m1_adapter.accepted_attempt_facts",
+                   return_value={"G1": {"verdict_id": "m6://result/" + "a" * 64}}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.composition_facts",
+                   return_value={"C1": {"state": "candidate", "members": {"SP-1": 1}}}), \
+             patch("bt_scheduler_owner_composition.bt_composition_adapter.get_candidate",
+                   return_value=candidate), \
+             patch("bt_scheduler_owner_composition.m1_adapter.hold_composition_gate") as hold:
+            self.assertEqual(owner.reconcile_compositions(), ())
+        hold.assert_called_once_with(owner.scheduler, "G1", "C1", "OWNER_COMPOSITION_PROOF_MISMATCH")
+
     def test_same_run_revision_cannot_rebind_composition_store_to_another_repo(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
