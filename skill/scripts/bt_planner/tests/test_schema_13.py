@@ -407,9 +407,9 @@ class Schema13Tests(unittest.TestCase):
             directory.mkdir()
             (directory / "SPEC.md").write_text("# Spec\n## Requirements\n- AUTH-1. Session validation\n", encoding="utf-8")
             (directory / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan\n\n### M1 — Authentication\n"
-                                               "- [ ] T1 — Fix session validation · repo: backend\n"
-                                               "- [ ] T2 — Exercise integration · repo: backend · after: T1\n"
-                                               "- [ ] T3 — Audit the implementation · repo: backend · after: T2\n",
+                                               "- [ ] T1 — Fix session validation · repo: backend · subplan: SP-1\n"
+                                               "- [ ] T2 — Exercise integration · repo: backend · after: T1 · subplan: SP-1\n"
+                                               "- [ ] T3 — Audit the implementation · repo: backend · after: T2 · subplan: SP-1\n",
                                                encoding="utf-8")
             (directory / "PLAN.json").write_text(pc.dumps(plan), encoding="utf-8")
             frozen = revisions.freeze(directory, plan, "approval")
