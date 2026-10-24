@@ -110,6 +110,9 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
                 summary.update({"coverage": traceability.coverage_report(plan),
                                 "interfaces": interfaces.report(plan),
                                 **quality.verification_report(plan)})
+            if pc.schema_tuple(plan) >= pc.SCHEMA_13:
+                from . import subplan_graph
+                summary["subplans"] = subplan_graph.report(plan)
             emit(json.dumps(summary, indent=1, ensure_ascii=False))
             return 0
         if action == "freeze":

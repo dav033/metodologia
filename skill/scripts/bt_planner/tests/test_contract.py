@@ -330,7 +330,7 @@ class PublishedSchema(unittest.TestCase):
     def test_enums_match(self):
         self.assertEqual(tuple(self.task["complexity"]["enum"]), pc.COMPLEXITY)
         self.assertEqual(tuple(self.task["scope"]["enum"]), pc.SCOPE)
-        self.assertEqual(tuple(self.task["kind"]["enum"]), pc.TASK_KINDS)
+        self.assertEqual(tuple(self.task["kind"]["enum"]), pc.TASK_KINDS_13)
         self.assertEqual(tuple(self.schema["$defs"]["level"]["enum"]), pc.LEVELS)
         self.assertEqual(tuple(self.schema["$defs"]["verification"]["properties"]["type"]["enum"]),
                          pc.VERIFICATION_TYPES)

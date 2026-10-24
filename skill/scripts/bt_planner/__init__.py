@@ -5,14 +5,14 @@ revisions; never chooses who executes the work and never touches execution state
 nothing outside this package (enforced by tests/test_boundaries.py). Public API below; see README.md.
 """
 from . import amendments
-from .contract import (COMPLEXITY, LEVELS, SCHEMA_VERSION, SCOPE, PlanContractError, Report, canonicalize, dumps, load,
+from .contract import (COMPLEXITY, LATEST_SCHEMA_VERSION, LEVELS, SCHEMA_VERSION, SCOPE, PlanContractError, Report, canonicalize, dumps, load,
                        loads, validate)
 from .resources import example_text, schema_text
 from .revisions import latest, list_revisions, load_revision, plan_ref, run_reference, verify_store
 from .sync import (APPROVED_STATES, PLAN_JSON, approve_freeze, bind_approved, check, compat, consistency, default_plan_id, freeze_if_present,
                    plan_status, skeleton, write_skeleton)
 
-__all__ = ["amendments", "PLAN_JSON", "COMPLEXITY", "LEVELS", "SCHEMA_VERSION", "SCOPE", "APPROVED_STATES", "PlanContractError", "Report",
+__all__ = ["amendments", "PLAN_JSON", "COMPLEXITY", "LATEST_SCHEMA_VERSION", "LEVELS", "SCHEMA_VERSION", "SCOPE", "APPROVED_STATES", "PlanContractError", "Report",
            "approve_freeze", "bind_approved", "canonicalize", "check", "compat", "consistency", "default_plan_id", "dumps",
            "example_text", "freeze_if_present", "latest", "list_revisions", "load", "load_revision", "loads", "plan_ref",
            "plan_status",

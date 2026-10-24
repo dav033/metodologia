@@ -1,0 +1,10 @@
+{
+  "legacy_task_count": 24,
+  "defects": [
+    {"defect": "F1", "introducing_task": "T1", "first_barrier": "T3"},
+    {"defect": "F2", "introducing_task": "T5", "first_barrier": "T7"},
+    {"defect": "F3", "introducing_task": "T9", "first_barrier": "T11"},
+    {"defect": "F4", "introducing_task": "T13", "first_barrier": "T15"},
+    {"defect": "F5", "introducing_task": "T17", "first_barrier": "T19"}
+  ]
+}
