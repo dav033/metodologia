@@ -14,13 +14,21 @@ en **Antigravity**:
 - **Telemetría y aprendizaje**: cada intento queda medido por agente, modelo y esfuerzo; lo aprendido sobre el
   proyecto y tus preferencias se guarda con evidencia y se inyecta en las sesiones siguientes.
 - **Estándares de ingeniería** (responsabilidad única, features, Atomic Design, alerta de 500 líneas, tests
-  pragmáticos, stacks por defecto) y **7 agentes**: Planner más explorer, researcher, implementer, reviewer, runner y
-  antagonist. Planner está disponible en Claude Code, Codex y Antigravity; los perfiles configurados de Claude y Codex
-  reciben su propia instalación.
+  pragmáticos, stacks por defecto) y **8 roles**: Planner, Designer, Explorer, Researcher, Implementer, Reviewer,
+  Runner y Antagonist. Designer produce contratos UI/UX versionados y un preview opcional; Reviewer tiene ejes
+  `spec`, `standards` y `visual`.
 - **Calidad de interfaces y revisiones con evidencia**: dirección visual explícita, contenido real y cobertura
   de interacción; revisión del impacto en consumidores y simplificaciones concretas. Adaptaciones selectivas de
   Antislop y Thermos, integradas en el flujo existente, sin dependencias ni nuevas puertas de aprobación.
   Detalle: `skill/references/interface-quality.md` y `skill/references/subagents.md`.
+
+- **Planes schema 1.3.0**: subplanes funcionales, contratos productor/consumidor, checkpoints, puertas de composición,
+  y contrato Designer obligatorio cuando hay trabajo UI. Schema 1.2.0 sigue cargando como revisión heredada.
+  Composición y estado de módulos: `skill/references/plan-contract.md` y `skill/references/modules.md`.
+- **Verificación con autoridad externa**: cada check puede declarar entorno y recursos requeridos; secretos se
+  consultan por nombre desde el entorno operador y `~/.config/flow/secrets.env`. Staging y producción requieren una
+  política coincidente en `<bitácora>/<proyecto>/verification-policy.json`; los campos de PLAN.json nunca autorizan
+  por sí solos (D-126).
 - **Uso real por suscripción, sin agentes**: `bitacora.py usage poll` consulta ventanas de 5 horas y semana;
   `usage show` muestra muestras y errores. En Linux, `usage install-timer` activa la consulta horaria con systemd
   de usuario. El router favorece cuentas con más margen, conserva las restricciones del proyecto y usa datos
@@ -93,7 +101,7 @@ Eso es todo. `install.py` se puede correr las veces que quieras: lo que ya está
 | **1. Accesos directos** | Crea `~/.claude/skills/metodologia` y `~/.agents/skills/metodologia` → `skill/` (Claude y Codex encuentran la skill) y `~/bitacora` → `bitacora/`. Si alguna ruta ya existe como **carpeta real**, se detiene sin tocar nada y avisa. |
 | **2. Hooks** | Agrega a `~/.claude/settings.json` y `~/.codex/hooks.json` los hooks de inicio, cierre (recordatorio de documentar), fin de sesión y aviso de archivos de más de 500 líneas, con las rutas de esa máquina. Conserva tus otros hooks y ajustes. |
 | **3. Siempre activa** | Agrega a `~/.claude/CLAUDE.md` el import de `SKILL.md` y a `~/.codex/AGENTS.md` la indicación de usar la skill. No duplica si ya están. |
-| **4. Subagentes** | Instala los 5 roles en `~/.claude/agents/` y `~/.codex/agents/` desde `skill/agents/`. |
+| **4. Roles de agentes** | `scripts/install_agents.py` instala los 8 prompts en `~/.claude/agents/` y `~/.codex/agents/`, incluidos perfiles registrados. Planner se instala por defecto en Antigravity; `--agent` selecciona otro rol. Las skills privadas se resuelven desde la raíz de Metodología en Claude/Codex y se copian junto al agente en Antigravity. Solo reemplaza archivos marcados como generados; rechaza componentes destino que sean symlinks. |
 | **5. Workspaces** | Busca en esa computadora dónde están clonados los repos de cada proyecto (por su URL de GitHub) e informa cuáles faltan. No clona nada todavía. |
 | **6. Secretos** | Instala gitleaks si falta (winget) y pone un hook de pre-commit con gitleaks en cada repo de los workspaces (no toca repos que ya tienen su propio hook). |
 | **7. CodeGraph** *(opcional)* | Si hay npm, instala CodeGraph globalmente. Registrarlo como MCP es manual: ver `skill/references/codegraph.md`. |

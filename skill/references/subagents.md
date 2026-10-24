@@ -6,10 +6,13 @@ only need the conclusion of (searching, reading docs, noisy test output), or whe
 
 ## The eight roles
 
-Defined in the skill's `agents/` folder (source of truth; after editing run `python <skill>/scripts/install_agents.py`).
-All eight roles install for Claude Code and Codex. Planner and explicitly selected roles install for Antigravity;
-Claude and Codex account profiles registered on this machine receive their own copy. Tool limits are enforced by the
-definition, not by asking nicely.
+Defined in `skill/agents/<role>.md`; each role's private skills live in
+`skill/agents/<role>/skills/<skill>/SKILL.md` and load only under the prompt's trigger. Run
+`python <skill>/scripts/install_agents.py` to install all eight roles for Claude Code and Codex, and Planner plus
+selected roles for Antigravity (Planner is the default). Claude and Codex registered account profiles receive their own
+generated prompts and resolve private skills from the methodology skill root; Antigravity gets the selected role's
+private skills beside its agent file. The installer overwrites only files carrying its generated marker and refuses
+symlinked destination components. Tool limits are enforced by the runtime, not by asking nicely.
 
 | Role | Use for | Writes? | Private skills | Model |
 |---|---|---|---|---|
@@ -161,8 +164,9 @@ edit; do not run another pass for deferred items. If it times out or errors, com
 
 An independent pending milestone audit covers the unit's own milestone only; work without such coverage keeps the
 per-commit gate. High risk or architecture level does not override audit coverage. The supervisor's prompts take
-this rule from `bt_review_policy.commit_review_rule`. Engine v2 F4 is planned to extend this coverage to subplan
-audits; that extension is not implemented yet.
+this rule from `bt_review_policy.commit_review_rule`. For frozen 1.3.0 plans, coverage also applies when the current
+unit belongs to a subplan whose declared audit is still pending or in progress; the unit and audit identity must match
+the frozen plan. Consult `bt_review_policy.py` for the exact check. Composition gates remain distinct from subplan audits.
 
 ## Where they plug into the flow
 

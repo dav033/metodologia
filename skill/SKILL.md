@@ -94,6 +94,7 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 | A spec is ready (or the request was Quick track) → plan, get it approved, run it as a loop (Claude Code) or goal (Codex) | `references/execution.md` |
 | A spec and plan are written → leave the conversation: validate, auto-approve when safe, run in the background by milestones | `references/requirements.md` §8 (`bitacora.py handoff REQ-NNN`) |
 | Writing, validating, freezing or consuming a plan's classified tasks / `PLAN.json` (complexity, scope, risk, coupling, confidence, estimates) | `references/plan-contract.md` (`bitacora.py plan-json init\|check\|freeze\|compat REQ-NNN`; `report` before approval) |
+| Schema 1.3.0 subplans, composition candidates, subplan versions or composition gates | `references/plan-contract.md` + `references/modules.md` §Composition engine and Scheduler owner runtime |
 | Extracting or adding a module (a part of the methodology split out as an isolated package like `bt_planner`), module boundaries, adapters | `references/modules.md` |
 | Running an approved, frozen plan through the deterministic scheduler core (`bt_scheduler_core`: state machine, ports, `SCHEDULER.db`), or building a sibling module (decision, executor, monitor, recovery) that plugs into it | `references/modules.md` §Scheduler core, then `scripts/bt_scheduler_core/README.md` |
 | Which agent/model/effort for a piece of work, delegating to another provider or subscription, usage limits, telemetry, what was learned | `references/agents.md` (live copy: `bitacora.py context`) |
@@ -103,6 +104,8 @@ files in the bitácora, versioned with local git — no dependency on any agent 
 | Large independent workstreams, safe concurrency, agent delegation, or work that must resume across sessions | `references/agent-orchestration.md` (+ `references/subagents.md`; use `references/execution.md` §1c for multi-day execution) |
 | Designing, writing, refactoring, reviewing or debugging code | `references/engineering.md` (+ the `references/stacks/*.md` it points to) |
 | Building or auditing interfaces, visual mockups or product copy | `references/interface-quality.md` (direction, honest content and interaction evidence; use the existing requirements/review flow) |
+| Writing a versioned UI/UX contract, maintaining its optional preview, or reviewing rendered UI against it | `agents/designer.md` and its private skills; Reviewer `visual` axis: `agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md` |
+| Declaring verification environments/resources or authorizing staging/production checks | `references/plan-contract.md` and the operator-owned `verification-policy.json` (D-126); plan metadata grants no authority |
 | Anything worth recording happened; wrap-up; Stop hook reminder; rollups; "¿en qué estamos?"; a visual page/artifact would help; the web UI; plan progress (`plan-status`, the "Planes" context section, web `/plans`, the generated status block in PLAN.md) | `references/documentation.md` |
 | An ambiguous or conflicting domain term; creating or editing `GLOSSARY.md` | `references/domain-glossary.md` (file format: `glossary-conventions.md`) |
 | Something broken, failing, flaky or slow, before any repair | `references/diagnosing-bugs.md` |
@@ -148,9 +151,10 @@ session on their own errors; if one seems silent, run the script by hand to see 
 
 ## Subagents installed
 
-Six helper roles — `explorer`, `researcher`, `implementer`, `reviewer`, `runner`, `antagonist` — are defined in
-`agents/` and installed for Claude Code and Codex. Planner is installed for Claude Code, Codex, and Antigravity; each
-registered Claude/Codex account receives its own copy. Run `scripts/install_agents.py` after editing `agents/`.
+Eight roles — Planner, Designer, Explorer, Researcher, Implementer, Reviewer, Runner and Antagonist — are defined in
+`agents/`. `scripts/install_agents.py` installs their prompts and role-private skills for Claude Code, Codex and
+Antigravity; Claude/Codex registered profiles receive generated copies. The installer preserves hand-authored files
+and refuses symlinked destination paths.
 
 ## Templates
 

@@ -52,8 +52,9 @@ those keys). The scheduler run database is authority on state. A plan without a 
 7. Close the planning session; a later session reads `PLAN.json` / `plan-revisions/` only. Nothing here launches agents.
 
 `plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports legacy gaps, PLAN.md
-ambiguities and `consumer_supported`. Schema 1.0.0–1.2.0 plans retain their prior parsing, canonical bytes and hashes.
-The validator accepts schema 1.3.0 and `plan-json init` creates 1.3.0 plans. The downstream compatibility report must say
+ambiguities and `consumer_supported`. Schema 1.3.0 is the default: `plan-json init` creates it and the validator accepts
+it. Schema 1.2.0 remains a loadable legacy revision with its prior parsing, canonical bytes and hashes. The downstream
+compatibility report must say
 the Planner and M1, M2, M3 and M6 all support that exact version;
 missing, malformed or unknown capability data fails closed with `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE`. M6 supports the
 verification metadata, and the adapter checks readiness before changing owner approval status or writing a frozen revision.
@@ -94,8 +95,14 @@ absent means `sandbox`), `requires` (resource names only, never secret values), 
 `EXTERNAL_ONLY_IMPLEMENT` rejects implementation tasks whose command checks all require non-sandbox environments;
 external checks belong on test tasks and missing access must remain a recoverable external block. Human attestation uses
 a manual verification with an expected result. `FILE_EXISTENCE_CHECK` rejects existence or syntax probes as behavioral
-evidence. These fields classify what a check needs; runtime support for the later `BLOCKED_EXTERNAL` result taxonomy is
-part of F4 and is not implied by Planner validation. Other schema 1.3 stable diagnostics include `SUBPLAN_INVALID`, `SUBPLAN_EMPTY`, `SUBPLAN_NO_OUTCOME`,
+evidence. M6 records verification reasons (`BLOCKED_EXTERNAL`, `BLOCKED_ENV`, `FAIL_CODE`, `TIMEOUT`,
+`FLAKY_SUSPECTED`, `NOT_RUN`) and binds evidence to the verified snapshot/tree, contract identities, declared environment
+and, for composition checks, candidate and manifest. Runtime authorization comes from trusted operator configuration,
+never from the plan: the owner checks resource **names** against its process environment and
+`~/.config/flow/secrets.env`; sandbox checks need no authorization, while staging and production require a matching
+`<bitácora root>/<project>/verification-policy.json` entry before commands start. See decision D-126. These fields
+describe needs; they do not grant access. Other schema 1.3 stable diagnostics include `SUBPLAN_INVALID`, `SUBPLAN_EMPTY`,
+`SUBPLAN_NO_OUTCOME`,
 `SUBPLAN_MILESTONE`, `SUBPLAN_COVERAGE`, `SUBPLAN_CRITERION_UNCARRIED`, `SUBPLAN_CONTRACT`, `SUBPLAN_ORDER`,
 `SUBPLAN_CYCLE`, `SUBPLAN_AUDIT`, `SUBPLAN_EDGE`, `SUBPLAN_LATE_CHECKPOINT`, `LATE_CHECKPOINT`,
 `TASK_OUTSIDE_SUBPLAN`, `CONSUMER_CONTRACT_TEST_MISSING` (warning), `UI_GATE_MISSING`, `UI_GATE_ORDER`,

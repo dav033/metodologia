@@ -70,6 +70,27 @@ be simulated with `bt_scheduler_core.simulators`.
   crash-at-every-commit restarts) and `tests/test_scheduler_integration.py` (boundary from outside, frozen-plan hand-over,
   authority rules, historical `RUN.json` byte-identical).
 
+### Composition engine (`bt_composition`, F4)
+
+`bt_composition` is the isolated composition engine; `bt_composition_adapter.py` is its only methodology importer and
+owns the real Git port. It publishes immutable `SP@vN` refs, creates disposable `C<N>` candidates from published
+subplan versions, and advances `current` only after candidate-bound M6 verdict proofs pass. Rejected candidates leave
+the published composition intact. Selective propagation returns only evidence-supported actions; ancestry alone never
+triggers reimplementation. The package does not know project paths or launch agents.
+
+The opt-in owner path lives in `bt_scheduler_owner_composition.py` and
+`bt_scheduler_owner_propagation.py`, wired by `bt_scheduler_run.py`. It binds its composition store and owned workspaces
+to the project, requirement, M1 run, frozen plan identity and one repository. Multi-repository plans fail closed until
+there is a cross-repository candidate contract. M1 stores durable scheduler facts and gate holds; the composition
+store owns candidate/version manifests and refs. M5 proposes a demonstrated downstream action, and the owner applies
+that exact task frontier through M1 idempotently.
+
+M1 persisted run-state schema 9 carries subplan version facts, composition facts and durable composition holds, M6
+`NEEDS_REVIEW` holds, and structured executor failure classification/code-attempt accounting. Legacy schemas 1–8 load
+and upgrade in memory; schema 9 is written on the next state change. Composition facts are bound to accepted audit and
+member-task attempt identities; stale facts keep gates pending. A `NEEDS_REVIEW` hold lets M5 resume, wait or block the
+same verification attempt without spending a code attempt.
+
 ### Scheduler owner runtime (REQ-022)
 
 - Start a run with `bitacora.py --project <project> launch <REQ>` (or `handoff`, or the web approval). There is no other
@@ -410,3 +431,21 @@ existing `m6://result/<sha256>` evidence reference. `NEEDS_REVIEW` creates a dur
 - Package: `bt_scheduler_quality` and its JSON fixtures/contracts are declared in `pyproject.toml`; the methodology
   adapter and runtime composition are shipped as modules. M6 is mandatory for the supported Scheduler owner commands;
   the low-level composition seam stays opt-in.
+
+## Knowledge stores (`bt_knowledge`, F3)
+
+The isolated `bt_knowledge` package backs both revision-bound project knowledge and Researcher's external research
+claims. `bt_knowledge_adapter.py` owns the methodology boundary and database locations; Explorer produces a validated
+delta and the ingestor writes it. The code map deduplicates relation evidence, preserves conflicts and stale history,
+and supports commit/project/area queries with Markdown, Mermaid or JSON projections. The separate external store
+keeps atomic sourced claims, retrieval/version/locator metadata, freshness, contradictions and subplan links; stale,
+unverified or instruction-like claims do not enter facts-only dossiers. The package itself does not call agents, the
+network or CodeGraph. See `skill/scripts/bt_knowledge/README.md` for its versioned contracts and stable errors.
+
+## Engine benchmark (`bt_engine_benchmark`, D-10)
+
+`bt_engine_benchmark.py` reproducibly replays the legacy and subplan plans against the real M1 `SchedulerCore`, with
+and without injected P-177-shaped defects. It compares redone work, discarded accepted minutes, attempt minutes,
+simulated wall time and a clearly labeled token proxy; it does not call providers or observe real token usage. The
+command can also compare a supplied recovery baseline. Results are deterministic JSON/Markdown artifacts; see the
+script's `--help` and `skill/scripts/tests/test_engine_benchmark.py`.

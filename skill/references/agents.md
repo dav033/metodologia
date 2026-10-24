@@ -5,6 +5,14 @@ can print the live version of this page for a project with `bitacora.py --projec
 
 ## Active owner role policy (2026-10-18; Implementer amended by D-072)
 
+The eight role prompts are in `skill/agents/<role>.md`; their private skills live in each role's
+`skill/agents/<role>/skills/<skill>/SKILL.md` and load only when the prompt's trigger applies. Run
+`python <skill>/scripts/install_agents.py` to install role prompts for Claude Code, Codex and Antigravity. Claude/Codex
+prompts resolve private skills from the methodology skill root; Antigravity receives the selected role's skills beside
+its agent file. Claude/Codex registered profiles receive their own generated copy. Antigravity installs Planner by
+default or a selected role with `--agent`. The installer refuses symlinked destination paths and only overwrites
+generated files carrying its marker. The role list and write boundaries are in `subagents.md`.
+
 Automatic role routes select the Claude/Codex family by subscription headroom and then an eligible account; no fixed production profile. The family score uses its best eligible account, with aliases deduplicated, existing10-point pressure buckets and weekly pacing. Missing/stale usage is neutral50%, >=85% is fallback priority and100% excludes. Work-only gates, cooldowns, busy-account protection and independent-review provider avoidance remain. Ties use the role preference and pool order; measured quality/cold-start experiments do not replace the selected configurations.
 
 | Role | Default | Alternative / explicit high complexity |
