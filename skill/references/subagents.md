@@ -104,6 +104,21 @@ STOP IF: ambiguity that changes the design, missing context → return NEEDS_CON
 OUTPUT: your role's output contract; full notes to <path> if any
 ```
 
+For a UI subplan, a design-task brief can use this scoped form:
+
+```
+GOAL: Author contract <contract>@vN for UI subplan <id> from the approved SPEC direction.
+CONTEXT: D-127; owner approval is required before any `ui: true` task starts.
+POINTERS: spec=<path> plan=<path> contract=design/contracts/<contract>@vN.md
+SCOPE: Write the versioned UI/UX contract and its changelog in `design/` only. Do not implement UI or approve the contract.
+VERIFY: Check the contract against the SPEC, approved interface guidance, and prior contract version if present.
+STOP IF: the requirement or prior contract has a material unresolved contradiction.
+OUTPUT: contract path, version, acceptance evidence, and owner-approval command `bitacora.py design approve REQ-NNN <contract>@vN`.
+```
+
+Every implementer assigned a `ui: true` task reads the owner-approved contract version named by its plan before editing UI.
+If the contract is missing or its approval is pending, return the blocker; do not start implementation.
+
 ## Evidence for diff reviews
 
 Use this protocol within the existing `spec`/`standards` passes; do not launch a second pair just to emulate

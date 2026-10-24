@@ -18,12 +18,15 @@ Automatic role routes select the Claude/Codex family by subscription headroom an
 | Role | Default | Alternative / explicit high complexity |
 |---|---|---|
 | Planner | Astra high | Opus xhigh |
+| Designer | Opus high | GPT-6.1 Sol high |
 | Reviewer | Sol medium / Sonnet medium | The same pair at high |
 | Explorer | Luna high | Sonnet medium; high complexity uses Sol medium / Sonnet medium |
 | Implementer | Sonnet medium | Luna high for quota/availability; complexity does not change preferences |
 | Researcher | Luna high | Sonnet low |
 | Runner | Luna high | Sonnet low |
 | Antagonist | Sonnet medium | Opus high |
+
+For Designer, the Claude route is Opus high and the Codex route is GPT-6.1 Sol high; M2 selects an eligible family.
 
 Quota may select the approved alternative. For Implementer, complexity never reverses preferences or outranks quota: subscription headroom selects the family and equal pressure uses Sonnet medium. No stronger configuration is inferred from the fallback's effort label. For other roles, an explicit `complexity: L` (API aliases `high`/`high_complexity`) prefers the high-complexity option among healthy routes; quota protection can force another approved option. Risk, architecture, failure count and time alone do not switch role models/efforts. Explicit caller model/effort/account/provider selections stay pinned. Documentation tasks without an explicit role retain their existing budget. Restricted orchestration's structured reasoning boundary is a separate pinned runtime.
 

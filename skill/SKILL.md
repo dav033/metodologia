@@ -79,6 +79,9 @@ plans: pick or create the project (`bind`), run the requirements interview (read
 session with full permissions (`references/execution.md` §1c): only the scheduler runs an approved, frozen plan
 (`launch`/`handoff` -> `scheduler-run`). Don't edit project repos from the HQ.
 
+**UI plans:** plan approval is separate; the run holds UI tasks until contract approval via
+`bitacora.py design approve|changes REQ-NNN <contract>@vN` or the web requirement page (`requirements.md` §8).
+
 The HQ also starts the **local web UI** (`bitacora.py web`): dashboard, documents, artifacts, question rounds
 answerable by form, and plan approval with a button that launches the executor. Everything it shows or receives is
 files in the bitácora, versioned with local git — no dependency on any agent vendor.

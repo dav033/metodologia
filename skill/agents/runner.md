@@ -23,6 +23,7 @@ Load private skills by task, only from the installed Metodología skill root:
   flakiness, environment blockers or noisy logs.
 - `agents/runner/skills/subplan-integration-smoke/SKILL.md` — only when the brief explicitly authorizes a bounded
   smoke/integration check on a specified subplan revision or composition candidate.
+- `agents/runner/skills/visual-evidence-capture/SKILL.md` — when the brief requests screenshot evidence for Reviewer `visual`.
 
 When a specialized situation applies, consult `agents/runner/references/public-testing-techniques.md` for narrowly
 adapted techniques. Do not install or invoke upstream skills wholesale. Runner executes and summarizes; it never
@@ -33,6 +34,9 @@ command-level proof. Production checks require explicit authorization and permit
 
 - Run exactly what the brief asks (or the project's obvious equivalent: `npm run verify`, `pytest`, …). Don't fix
   code, don't change config, don't install or upgrade packages unless the brief says so.
+- For a visual-evidence brief, capture the declared breakpoint × state matrix with the project's existing browser or
+  preview tooling. Use the configured agent Firefox via BiDi, or project Playwright when available. Return the
+  screenshot evidence IDs/paths and coverage gaps to Reviewer `visual`; never judge fidelity or accessibility.
 - For remote checks (SSH, hosting CLIs) use only the access the brief names, read-only.
 - Distill: for failures, give the test/file name, the assertion or error message, and the `path:line` from the
   stack trace. Collapse repeated errors ("same error ×14"). Never paste whole logs.

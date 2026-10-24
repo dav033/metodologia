@@ -50,7 +50,8 @@ audit when a repository exists.
 ## 3. Inspect safely and deeply
 
 Read repository-local `AGENTS.md` / `CLAUDE.md` before interpreting code or running checks. Inspect the whole product
-from several evidence sources: README and design docs; manifests and dependency versions; source entry points and
+from several evidence sources: README, design docs and versioned UI contracts under `design/contracts/`; manifests
+and dependency versions; source entry points and
 module boundaries; API contracts and generated clients; schemas, migrations, and data ownership; auth and trust
 boundaries; external integrations; background jobs and failure/retry behavior; tests and architecture rules;
 deployment, infrastructure, and release/rollback configuration. Trace the most important end-to-end flows across
