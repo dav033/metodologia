@@ -84,6 +84,36 @@ class KnowledgeCli(unittest.TestCase):
             self.assertEqual(rows[0]["subject"], "module:checkout")
             self.assertEqual(rows[0]["object"], "contract:auth")
 
+    def test_external_claim_cli_uses_separate_database_and_dossier(self):
+        with tempfile.TemporaryDirectory(prefix="knowledge-claims-cli-") as temp:
+            root = Path(temp) / "bitacora"
+            document = Path(temp) / "claims.json"
+            document.write_text(json.dumps({
+                "schema": "research-claims/1", "project": "sample", "contributor": "researcher:integration",
+                "claims": [{"topic": "library:requests", "claim": "Requests documents session reuse",
+                    "kind": "docs", "source": {"url": "https://docs.example.test/requests", "canonical":
+                    "https://docs.example.test/requests", "retrieved_at": "2026-10-23", "published": "v2",
+                    "locator": "sessions", "excerpt": "Sessions reuse connections."}, "confidence": "high",
+                    "subplans": ["SP-1"], "independent_of": []}], "contradictions": [],
+            }), encoding="utf-8")
+            env = dict(os.environ, BITACORA_ROOT=str(root))
+            command = [sys.executable, str(SCRIPTS / "bitacora.py"), "--project", "sample", "knowledge", "claims"]
+            ingested = subprocess.run([*command, "ingest", str(document), "--json"], cwd=REPO, env=env,
+                                      text=True, capture_output=True, timeout=30)
+            self.assertEqual(ingested.returncode, 0, ingested.stdout + ingested.stderr)
+            self.assertEqual(json.loads(ingested.stdout)["claims_added"], 1)
+            database_dir = root / ".state" / "knowledge"
+            self.assertTrue((database_dir / "sample.external.db").exists())
+            self.assertFalse((database_dir / "sample.db").exists())
+            dossier = subprocess.run([*command, "dossier", "--subplan", "SP-1"], cwd=REPO, env=env,
+                                     text=True, capture_output=True, timeout=30)
+            self.assertEqual(dossier.returncode, 0, dossier.stdout + dossier.stderr)
+            self.assertIn("Requests documents session reuse", dossier.stdout)
+            query = subprocess.run([*command, "query", "--facts-only", "--json"], cwd=REPO, env=env,
+                                   text=True, capture_output=True, timeout=30)
+            self.assertEqual(query.returncode, 0, query.stdout + query.stderr)
+            self.assertEqual(json.loads(query.stdout)[0]["status"], "fresh")
+
 
 if __name__ == "__main__":
     unittest.main()
