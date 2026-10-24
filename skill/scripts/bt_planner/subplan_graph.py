@@ -5,27 +5,28 @@ from collections import defaultdict, deque
 
 from . import quality
 
-_BARRIERS = {"test", "audit"}
-_NON_BARRIERS = {"implement", "docs", "design", "research"}
+_BARRIERS = frozenset({"test", "audit"})
+_NON_BARRIERS = frozenset({"implement", "docs", "design", "research"})
+
+
+def _is_kind(task: dict, allowed: frozenset[str]) -> bool:
+    kind = task.get("kind")
+    return isinstance(kind, str) and kind in allowed
 
 
 def _dict_list(value: object) -> list[dict]:
     return [x for x in value if isinstance(x, dict)] if isinstance(value, list) else []
 
 
-def graph(plan: dict) -> tuple[dict[str, dict], dict[str, set[str]], dict[str, set[str]]]:
+def graph(plan: dict) -> tuple[dict[str, dict], dict[str, set[str]]]:
     tasks = {t["id"]: t for t in _dict_list(plan.get("tasks")) if isinstance(t.get("id"), str)}
     ancestors = quality.ancestors(plan)
-    descendants: dict[str, set[str]] = defaultdict(set)
-    for tid, parents in ancestors.items():
-        for parent in parents:
-            descendants[parent].add(tid)
-    return tasks, ancestors, descendants
+    return tasks, ancestors
 
 
 def exposure(plan: dict, task_ids: set[str] | None = None, introducing_task: str | None = None) -> int:
     """Maximum tasks downstream of a task before its first same-scope test/audit barrier."""
-    tasks, _, _ = graph(plan)
+    tasks, _ = graph(plan)
     users: dict[str, list[str]] = defaultdict(list)
     for tid, task in tasks.items():
         for dependency in task.get("after", []) if isinstance(task.get("after"), list) else []:
@@ -36,7 +37,7 @@ def exposure(plan: dict, task_ids: set[str] | None = None, introducing_task: str
     sources = {introducing_task} if introducing_task is not None else subset & tasks.keys()
     for tid in sources & tasks.keys():
         task = tasks[tid]
-        if task.get("kind") in _BARRIERS:
+        if _is_kind(task, _BARRIERS):
             continue
         scope = task.get("subplan_id")
         frontier = deque(child for child in users.get(tid, ())
@@ -49,7 +50,7 @@ def exposure(plan: dict, task_ids: set[str] | None = None, introducing_task: str
                 continue
             seen.add(node)
             current = tasks[node]
-            if current.get("kind") in _BARRIERS:
+            if _is_kind(current, _BARRIERS):
                 continue
             distance += 1
             frontier.extend(child for child in users.get(node, ())
@@ -60,7 +61,7 @@ def exposure(plan: dict, task_ids: set[str] | None = None, introducing_task: str
 
 def first_barrier(plan: dict, introducing_task: str, task_ids: set[str] | None = None) -> str | None:
     """Nearest same-scope test/audit descendant of a task, with task id as a stable tie breaker."""
-    tasks, _, _ = graph(plan)
+    tasks, _ = graph(plan)
     source = tasks.get(introducing_task)
     if source is None:
         return None
@@ -74,7 +75,7 @@ def first_barrier(plan: dict, introducing_task: str, task_ids: set[str] | None =
     frontier = sorted(users.get(introducing_task, []))
     visited: set[str] = set()
     while frontier:
-        barriers = [tid for tid in frontier if tid in subset and tasks[tid].get("kind") in _BARRIERS
+        barriers = [tid for tid in frontier if tid in subset and _is_kind(tasks[tid], _BARRIERS)
                     and (scope is None or tasks[tid].get("subplan_id") == scope)]
         if barriers:
             return barriers[0]
@@ -88,9 +89,11 @@ def first_barrier(plan: dict, introducing_task: str, task_ids: set[str] | None =
     return None
 
 
-def longest_unbarriered_chain(plan: dict, task_ids: set[str] | None = None) -> int:
-    """Longest chain of implement/docs/design/research tasks before a same-scope barrier."""
-    tasks, _, _ = graph(plan)
+def longest_unbarriered_chain(plan: dict, task_ids: set[str] | None = None, *,
+                              tasks: dict[str, dict] | None = None) -> int:
+    """Longest chain of implement/docs/design/research tasks before a barrier."""
+    if tasks is None:
+        tasks, _ = graph(plan)
     subset = (task_ids if task_ids is not None else set(tasks)) & tasks.keys()
     users: dict[str, list[str]] = defaultdict(list)
     indegree = {tid: 0 for tid in subset}
@@ -112,21 +115,20 @@ def longest_unbarriered_chain(plan: dict, task_ids: set[str] | None = None) -> i
     depth: dict[str, int] = {}
     for tid in reversed(order):
         task = tasks[tid]
-        if task.get("kind") in _BARRIERS:
+        if _is_kind(task, _BARRIERS):
             depth[tid] = 0
-        elif task.get("kind") in _NON_BARRIERS:
+        elif _is_kind(task, _NON_BARRIERS):
             scope = task.get("subplan_id")
-            depth[tid] = max((depth.get(child, 0) if tasks[child].get("kind") in _BARRIERS else
-                              1 + depth.get(child, 0)
+            depth[tid] = 1 + max((0 if _is_kind(tasks[child], _BARRIERS) else depth.get(child, 0)
                               for child in users.get(tid, [])
-                              if scope is None or tasks[child].get("subplan_id") == scope), default=1)
+                              if task_ids is None or tasks[child].get("subplan_id") == scope), default=0)
         else:
             depth[tid] = 0
     return max(depth.values(), default=0)
 
 
 def report(plan: dict) -> list[dict[str, object]]:
-    tasks, _, _ = graph(plan)
+    tasks, _ = graph(plan)
     rows = []
     for subplan in _dict_list(plan.get("subplans")):
         members = {tid for tid, task in tasks.items() if task.get("subplan_id") == subplan.get("id")}

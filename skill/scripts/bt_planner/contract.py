@@ -204,7 +204,7 @@ def _check_task(report: Report, task: object, index: int, milestones: dict[str, 
     _enum(report, where, task, "scope", SCOPE)
     for key in ("risk", "coupling", "confidence"):
         _enum(report, where, task, key, LEVELS)
-    if schema_12 and (schema_13 or task.get("kind") != "design"):
+    if schema_12:
         _enum(report, where, task, "kind", TASK_KINDS_13 if schema_13 else TASK_KINDS)
     minutes = task.get("estimated_minutes")
     if not _int(minutes) or not 0 < minutes <= MAX_MINUTES:
@@ -341,8 +341,8 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
     strict = schema_tuple(plan) >= EVIDENCE_SINCE
     schema_13 = supported_version and schema_tuple(plan) >= SCHEMA_13
     schema_12 = supported_version and schema_tuple(plan) >= EXTENSIONS_SINCE
-    unsupported = [] if schema_13 else schema13.unsupported_fields(plan)
-    (report.errors if strict_publication else report.warnings).extend(unsupported)
+    unsupported = schema13.unsupported_fields(plan) if strict_publication and not schema_13 else []
+    report.errors.extend(unsupported)
     for index, task in enumerate(tasks):
         _check_task(report, task, index, milestones, id_set, strict, file_exists, ref_exists,
                     schema_12=schema_12, schema_13=schema_13)

@@ -5,22 +5,17 @@ import re
 from collections import defaultdict
 
 from . import subplan_graph
+from .subplan_graph import _BARRIERS, _dict_list
 
 _SUBPLAN = re.compile(r"SP-[1-9][0-9]*")
 _GATE = re.compile(r"CG-[1-9][0-9]*")
 _CONTRACT = re.compile(r"[a-z0-9][a-z0-9-]{0,63}")
 _RESOURCE = re.compile(r"(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})")
 _UI_EXTENSIONS = (".tsx", ".jsx", ".vue", ".svelte", ".astro", ".css", ".scss", ".sass", ".less", ".html")
-_BARRIERS = {"test", "audit"}
-_NON_BARRIERS = {"implement", "docs", "design", "research"}
 
 
 def _err(code: str, where: str, message: str) -> str:
     return f"{code}: {where}: {message}"
-
-
-def _dict_list(value: object) -> list[dict]:
-    return [x for x in value if isinstance(x, dict)] if isinstance(value, list) else []
 
 
 def _string_set(value: object) -> set[str]:
@@ -39,20 +34,20 @@ def unsupported_fields(plan: dict) -> list[str]:
         for i, task in enumerate(tasks):
             if isinstance(task, dict):
                 found.extend((f"tasks[{i}].{key}", task[key]) for key in ("subplan_id", "ui") if key in task)
+                if task.get("kind") == "design":
+                    found.append((f"tasks[{i}].kind", task["kind"]))
                 verifications = task.get("verification")
                 if isinstance(verifications, list):
                     found.extend((f"tasks[{i}].verification[{j}].{key}", v[key])
                                  for j, v in enumerate(verifications) if isinstance(v, dict)
                                  for key in ("environment", "requires", "authorization_needed") if key in v)
-                if task.get("kind") == "design":
-                    found.append((f"tasks[{i}].kind", "design"))
     return [_err("SCHEMA_FIELD_UNSUPPORTED", where, f"{value!r} requires schema 1.3.0") for where, value in found]
 
 
 def check(plan: dict) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
-    tasks, ancestors, _ = subplan_graph.graph(plan)
+    tasks, ancestors = subplan_graph.graph(plan)
     requirements = _string_set(plan.get("requirements"))
     subplans_raw = plan.get("subplans", [])
     gates_raw = plan.get("composition_gates", [])
@@ -60,6 +55,7 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
         errors.append(_err("SUBPLAN_INVALID", "subplans", "must be a list with at most 64 entries"))
     if not isinstance(gates_raw, list) or len(gates_raw) > 32:
         errors.append(_err("COMPOSITION_INVALID", "composition_gates", "must be a list with at most 32 entries"))
+    milestones = {m.get("id") for m in _dict_list(plan.get("milestones")) if isinstance(m.get("id"), str)}
     if isinstance(subplans_raw, list):
         errors.extend(_err("SUBPLAN_INVALID", f"subplans[{i}]", "must be an object")
                       for i, item in enumerate(subplans_raw) if not isinstance(item, dict))
@@ -79,8 +75,8 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
         for field in ("produces", "consumes", "checkpoints"):
             if field in sp and not isinstance(sp[field], list):
                 errors.append(_err("SUBPLAN_INVALID", f"{sid}.{field}", "must be a list"))
-        milestone_ids = {m.get("id") for m in _dict_list(plan.get("milestones")) if isinstance(m.get("id"), str)}
-        if sp.get("milestone_id") not in milestone_ids:
+        milestone_id = sp.get("milestone_id")
+        if not isinstance(milestone_id, str) or milestone_id not in milestones:
             errors.append(_err("SUBPLAN_MILESTONE", f"{sid}.milestone_id", "must name an existing milestone"))
         title, outcome = sp.get("title"), sp.get("outcome")
         if not isinstance(title, str) or not title.strip() or not isinstance(outcome, str) or len(outcome.split()) < 4 or outcome == title:
@@ -106,13 +102,13 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
             errors.append(_err("SUBPLAN_CRITERION_UNCARRIED", sid, "criteria must be carried exactly by own tasks"))
         if len(members) > 8 and not sp.get("checkpoints"):
             errors.append(_err("SUBPLAN_LATE_CHECKPOINT", sid, "more than eight tasks requires a checkpoint"))
-        if subplan_graph.longest_unbarriered_chain(plan, members) > 6:
+        if subplan_graph.longest_unbarriered_chain(plan, members, tasks=tasks) > 6:
             errors.append(_err("SUBPLAN_LATE_CHECKPOINT", sid, "dependency exposure exceeds six before an own test/audit barrier"))
         for ci, checkpoint in enumerate(sp.get("checkpoints", []) if isinstance(sp.get("checkpoints"), list) else []):
             check_task = _task(tasks, checkpoint.get("task")) if isinstance(checkpoint, dict) else None
             if (not isinstance(checkpoint, dict) or not isinstance(checkpoint.get("purpose"), str)
                     or not checkpoint["purpose"].strip() or not check_task or check_task.get("subplan_id") != sid
-                    or check_task.get("kind") not in _BARRIERS):
+                    or not isinstance(check_task.get("kind"), str) or check_task.get("kind") not in _BARRIERS):
                 errors.append(_err("SUBPLAN_INVALID", f"{sid}.checkpoints[{ci}]", "must name an own test/audit task and purpose"))
         _validate_contracts(errors, warnings, sid, sp, members, tasks, ancestors, plan)
         _validate_ui(errors, sid, sp, members, tasks, ancestors)
@@ -121,7 +117,8 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
             errors.append(_err("SUBPLAN_AUDIT", sid, "integration_test_task must be an own integration test"))
         audit_id = sp.get("audit_task")
         audit = _task(tasks, audit_id)
-        if not audit or audit.get("subplan_id") != sid or audit.get("kind") != "audit" or not (members - {audit_id}) <= ancestors.get(audit_id, set()):
+        if (not audit or audit.get("subplan_id") != sid or audit.get("kind") != "audit"
+                or not isinstance(audit_id, str) or not (members - {audit_id}) <= ancestors.get(audit_id, set())):
             errors.append(_err("SUBPLAN_AUDIT", sid, "audit_task must be own audit after every task"))
     for tid, task in tasks.items():
         sid = task.get("subplan_id")
@@ -134,7 +131,7 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
         _validate_requirements(errors, requirements, plan, tasks, subplans, gates)
         _validate_dependency_cycles(errors, warnings, by_sp, gates)
     _validate_verifications(errors, tasks)
-    if not subplans and subplan_graph.longest_unbarriered_chain(plan) > 6:
+    if subplan_graph.longest_unbarriered_chain(plan, tasks=tasks) > 6:
         errors.append(_err("LATE_CHECKPOINT", "tasks", "dependency exposure exceeds six before a test/audit barrier"))
     return errors, warnings
 
@@ -148,8 +145,8 @@ def _has_category(task: dict, category: str) -> bool:
 
 def _validate_contracts(errors: list[str], warnings: list[str], sid: str, sp: dict, members: set[str],
                         tasks: dict[str, dict], ancestors: dict[str, set[str]], plan: dict) -> None:
-    # Remaining contract and ordering checks are below to keep the main validation flow readable.
-    interface_ids = {item.get("id") for item in _dict_list(plan.get("interfaces"))}
+    interface_ids = {item.get("id") for item in _dict_list(plan.get("interfaces"))
+                     if isinstance(item.get("id"), str)}
     producers = sp.get("produces", [])
     for i, item in enumerate(producers if isinstance(producers, list) else []):
         where = f"{sid}.produces[{i}]"
@@ -181,7 +178,7 @@ def _validate_contracts(errors: list[str], warnings: list[str], sid: str, sp: di
                                          or not item["verified_by"]
                                          or any(not isinstance(tid, str) or tid not in members or tasks[tid].get("kind") != "test"
                                                 for tid in item["verified_by"])):
-            errors.append(_err("SUBPLAN_ORDER", f"{where}.verified_by", "must name own consumer-side test tasks"))
+            errors.append(_err("SUBPLAN_CONTRACT", f"{where}.verified_by", "must name own consumer-side test tasks"))
 
 
 def _validate_ui(errors: list[str], sid: str, sp: dict, members: set[str], tasks: dict[str, dict],
@@ -280,8 +277,16 @@ def _validate_contract_graph(errors: list[str], warnings: list[str], subplans: d
             elif dependency == "implementation":
                 required_task = subplans[source].get("audit_task")
             elif dependency == "publication":
-                required_task = next((gate.get("task") for gate in gates if isinstance(gate, dict)
-                                     and source in gate.get("subplans", []) and sid not in gate.get("subplans", [])), None)
+                consumer_tasks = [tid for tid, task in tasks.items()
+                                  if task.get("subplan_id") == sid and task.get("kind") not in ("research", "docs")
+                                  and tid not in {p.get("defined_by") for p in sp.get("produces", [])
+                                                  if isinstance(p, dict) and isinstance(p.get("defined_by"), str)}]
+                valid_gate_tasks = [gate.get("task") for gate in gates if isinstance(gate, dict)
+                                    and source in _string_set(gate.get("subplans"))
+                                    and sid not in _string_set(gate.get("subplans"))
+                                    and isinstance(gate.get("task"), str)
+                                    and all(gate["task"] in ancestors.get(tid, set()) for tid in consumer_tasks)]
+                required_task = valid_gate_tasks[0] if valid_gate_tasks else None
                 if required_task is None:
                     errors.append(_err("SUBPLAN_ORDER", where, "publication requires an accepted gate containing producer and excluding consumer"))
                     continue
@@ -313,10 +318,11 @@ def _validate_subplan_edges(errors: list[str], tasks: dict[str, dict], subplans:
             current_subplan = subplans.get(sid, {}) if isinstance(sid, str) else {}
             edge = any(isinstance(c, dict) and c.get("from") == source
                        for c in current_subplan.get("consumes", []))
-            allowed = (dep in gate_tasks
-                       or dep in {p.get("defined_by") for p in subplans[source].get("produces", [])
-                                  if isinstance(p, dict) and isinstance(p.get("defined_by"), str)}
-                       or dep == subplans[source].get("audit_task"))
+            allowed = (isinstance(dep, str) and
+                       (dep in gate_tasks
+                        or dep in {p.get("defined_by") for p in subplans[source].get("produces", [])
+                                   if isinstance(p, dict) and isinstance(p.get("defined_by"), str)}
+                        or dep == subplans[source].get("audit_task")))
             if not edge or not allowed:
                 errors.append(_err("SUBPLAN_EDGE", f"{tid}.after", f"cross-subplan dependency on {dep} is undeclared or not a contract/audit/gate boundary"))
 
@@ -326,14 +332,12 @@ def _validate_requirements(errors: list[str], requirements: set[object], plan: d
     covered = set().union(*(_string_set(sp.get("covers")) for sp in subplans if isinstance(sp.get("covers"), list)))
     gate_ids = {g.get("task") for g in gates if isinstance(g, dict) and isinstance(g.get("task"), str)}
     for req in requirements - covered:
-        if not any(req in tasks.get(tid, {}).get("covers", []) for tid in gate_ids):
+        if not any(req in _string_set(tasks.get(tid, {}).get("covers")) for tid in gate_ids):
             errors.append(_err("REQUIREMENT_ORPHAN", "requirements", f"{req} is not covered by a subplan or composition task"))
     if subplans:
         for tid, task in tasks.items():
             if task.get("subplan_id") is None and task.get("kind") in ("implement", "design"):
                 errors.append(_err("TASK_OUTSIDE_SUBPLAN", tid, "implement/design tasks need subplan_id when subplans exist"))
-            if task.get("subplan_id") is None and task.get("kind") == "test" and tid not in gate_ids:
-                errors.append(_err("TASK_OUTSIDE_SUBPLAN", tid, "unassigned test tasks must be composition gate tasks"))
 
 
 def _validate_dependency_cycles(errors: list[str], warnings: list[str], subplans: dict[str, dict],
@@ -381,8 +385,8 @@ def _validate_verifications(errors: list[str], tasks: dict[str, dict]) -> None:
         for i, verification in enumerate(v for v in verifications if isinstance(v, dict)):
             where = f"{tid}.verification[{i}]"
             env = verification.get("environment", "sandbox")
-            if env not in ("sandbox", "external_authorized", "production", "human_attestation"):
-                errors.append(_err("SECRET_VALUE_IN_PLAN", f"{where}.environment", "unknown environment"))
+            if not isinstance(env, str) or env not in ("sandbox", "external_authorized", "production", "human_attestation"):
+                errors.append(_err("VERIFICATION_ENV_INVALID", f"{where}.environment", "unknown environment"))
             requires = verification.get("requires", [])
             if not isinstance(requires, list) or any(not isinstance(r, str) or not _RESOURCE.fullmatch(r) for r in requires):
                 errors.append(_err("SECRET_VALUE_IN_PLAN", f"{where}.requires", "use resource names, never secret values"))
@@ -393,7 +397,7 @@ def _validate_verifications(errors: list[str], tasks: dict[str, dict]) -> None:
                                                    or re.search(r"\b(?:token|password|secret)\s*:\s*\S+", authorization, re.I)):
                 errors.append(_err("SECRET_VALUE_IN_PLAN", f"{where}.authorization_needed", "must describe authorization without secret values"))
             if env == "human_attestation" and (verification.get("type") != "manual" or not verification.get("expected")):
-                errors.append(_err("SECRET_VALUE_IN_PLAN", where, "human_attestation requires manual type and expected"))
+                errors.append(_err("VERIFICATION_ENV_INVALID", where, "human_attestation requires manual type and expected"))
             if verification.get("type") == "command" and verification.get("category") in ("functional", "integration", "product") and _file_probe(verification.get("value", "")):
                 errors.append(_err("FILE_EXISTENCE_CHECK", where, "file existence or syntax probes do not demonstrate behaviour"))
         expected_paths = task.get("expected_paths", [])
@@ -410,6 +414,7 @@ def _validate_verifications(errors: list[str], tasks: dict[str, dict]) -> None:
 def _file_probe(command: str) -> bool:
     if not isinstance(command, str):
         return False
-    # Split only on the explicitly permitted shell separators; any behavioral command makes this false.
-    probes = re.compile(r"^(?:test\s+-[sfed]\s+\S+|\[\s+-f\s+[^]]+\]|ls(?:\s+\S+)*|stat(?:\s+\S+)*|python\s+-m\s+json\.tool(?:\s+\S+)*|jq\s+empty(?:\s+\S+)*|cat(?:\s+\S+)*|head(?:\s+\S+)*|tail(?:\s+\S+)*|wc(?:\s+\S+)*|grep\s+-q(?:\s+\S+)*|diff\s+-q(?:\s+\S+)*|cmp(?:\s+\S+)*|file(?:\s+\S+)*)$")
+    if any(operator in command for operator in ("|", "$(", "`", ">", "<")):
+        return False
+    probes = re.compile(r"^(?:test\s+-[sfed]\s+\S+(?:\s+-a\s+-[sfed]\s+\S+)*|\[\s+-f\s+[^]]+\]|ls(?:\s+\S+)*|stat(?:\s+\S+)*|python\s+-m\s+json\.tool(?:\s+\S+)*|jq\s+empty(?:\s+\S+)*|cat(?:\s+\S+)*|head(?:\s+\S+)*|tail(?:\s+\S+)*|wc(?:\s+\S+)*|grep\s+-q(?:\s+\S+)*|diff\s+-q(?:\s+\S+)*|cmp(?:\s+\S+)*|file(?:\s+\S+)*)$")
     return all(probes.fullmatch(part.strip()) for part in re.split(r"&&|;", command) if part.strip())

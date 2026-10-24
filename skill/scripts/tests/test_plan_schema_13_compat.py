@@ -23,12 +23,20 @@ class PlanSchema13Compatibility(unittest.TestCase):
         cls.current = importlib.util.module_from_spec(current_spec)
         sys.modules[current_spec.name] = cls.current
         current_spec.loader.exec_module(cls.current)
+        inside = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], cwd=REPO,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if inside.returncode or inside.stdout.strip() != "true":
+            raise unittest.SkipTest("compatibility comparison requires a git checkout")
+        tag = subprocess.run(["git", "rev-parse", "--verify", "refs/tags/pre-engine-v2"], cwd=REPO,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if tag.returncode:
+            raise AssertionError("git tag pre-engine-v2 is required inside a git checkout")
         with tempfile.TemporaryDirectory() as temp:
             archive = Path(temp)
             result = subprocess.run(["git", "archive", "pre-engine-v2", "skill/scripts/bt_planner"],
                                     cwd=REPO, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if result.returncode:
-                raise unittest.SkipTest("git tag pre-engine-v2 is unavailable")
+                raise AssertionError(f"cannot extract required pre-engine-v2 tag: {result.stderr.decode(errors='replace')}")
             import tarfile
             import io
             with tarfile.open(fileobj=io.BytesIO(result.stdout)) as tar:
@@ -68,6 +76,32 @@ class PlanSchema13Compatibility(unittest.TestCase):
                         self.assertFalse({"environment", "requires", "authorization_needed"} & set(verification))
         for manifest in (REPO / "bitacora").glob("*/requirements/*/plan-revisions/MANIFEST.json"):
             self.assertEqual(self.current.verify_store(manifest.parent.parent), [], str(manifest))
+
+    def test_synthetic_legacy_plans_match_tag_with_schema_13_names(self):
+        golden = SCRIPTS / ("bt_" + "planner") / "tests" / "golden"
+        for version in ("1.0.0", "1.1.0", "1.2.0"):
+            plan = json.loads((golden / f"input-{version}.json").read_text(encoding="utf-8"))
+            plan["subplans"] = []
+            plan["composition_gates"] = []
+            task = plan["tasks"][0]
+            task["subplan_id"] = "SP-1"
+            task["ui"] = False
+            task["kind"] = "design"
+            for verification in task["verification"]:
+                verification["environment"] = "sandbox"
+                verification["requires"] = ["DATABASE_URL"]
+                verification["authorization_needed"] = "Owner approves a later production check"
+            with self.subTest(schema_version=version):
+                old = self.baseline.validate(plan)
+                consumer = self.current.contract.validate(plan)
+                self.assertEqual((consumer.errors, consumer.warnings), (old.errors, old.warnings))
+                publication = self.current.contract.validate(plan, strict_publication=True)
+                self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in publication.errors),
+                                publication.errors)
+                self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") and ".kind:" in line
+                                    for line in publication.errors), publication.errors)
+                self.assertFalse(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in consumer.errors),
+                                 consumer.errors)
 
 
 if __name__ == "__main__":

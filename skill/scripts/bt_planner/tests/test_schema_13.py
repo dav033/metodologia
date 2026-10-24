@@ -76,20 +76,24 @@ class Schema13Tests(unittest.TestCase):
         path = Path(__file__).parents[1] / "data" / "plan.example.1.3.0.json"
         self.assertEqual(pc.load(path)["schema_version"], "1.3.0")
 
-    def test_legacy_schema_fields_warn_for_consumers_and_error_at_publication(self):
+    def test_legacy_schema_fields_are_silent_for_consumers_and_error_at_publication(self):
         plan = json.loads((GOLDEN / "input-1.2.0.json").read_text(encoding="utf-8"))
         plan["tasks"][0]["subplan_id"] = "SP-1"
         warning = pc.validate(plan)
         self.assertFalse(warning.errors)
-        self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in warning.warnings))
+        self.assertFalse(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in warning.warnings))
         publication = pc.validate(plan, strict_publication=True)
         self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in publication.errors))
 
         plan = json.loads((GOLDEN / "input-1.2.0.json").read_text(encoding="utf-8"))
         plan["tasks"][0]["kind"] = "design"
         report = pc.validate(plan)
-        self.assertTrue(report.ok, report.errors)
-        self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in report.warnings))
+        self.assertFalse(report.ok)
+        self.assertTrue(any("kind" in line and "design" in line for line in report.errors), report.errors)
+        self.assertFalse(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") for line in report.warnings))
+        publication = pc.validate(plan, strict_publication=True)
+        self.assertTrue(any(line.startswith("SCHEMA_FIELD_UNSUPPORTED:") and "kind" in line
+                            for line in publication.errors), publication.errors)
 
     def test_ui_extension_requires_explicit_boolean_and_false_is_valid(self):
         plan = base_plan()
@@ -127,59 +131,32 @@ class Schema13Tests(unittest.TestCase):
         self.assertTrue(any(e.startswith("LATE_CHECKPOINT:") for e in pc.validate(plan).errors))
 
     def test_p177_fixture_has_large_legacy_exposure_and_bounded_subplan_exposure(self):
-        fixture = Path(__file__).parent / "fixtures" / "P-177-defect-map.json"
-        defect_map = json.loads(fixture.read_text(encoding="utf-8"))["defects"]
-        legacy = base_plan()
-        legacy["schema_version"] = "1.2.0"
-        legacy["tasks"] = []
-        for index in range(1, 25):
-            item = copy.deepcopy(base_plan()["tasks"][0])
-            item.pop("subplan_id", None)
-            item.update(id=f"T{index}", kind="implement",
-                        after=[f"T{index-1}"] if index > 1 else [], covers=["AUTH-1"],
-                        expected_paths=[f"src/feature{index}.py"], acceptance_criteria=[f"Feature {index} works"])
-            legacy["tasks"].append(item)
-        legacy["tasks"][-1].update(kind="audit", verification=[{"type": "command", "value": "engine audit-ledger check docs/T24.findings.json",
-                                                               "purpose": "audit", "category": "static"}])
-        legacy.pop("subplans", None)
-        self.assertEqual(len(legacy["tasks"]), defect_map and 24)
-        defect_exposures = [subplan_graph.exposure(legacy, introducing_task=item["introducing_task"])
-                            for item in defect_map]
-        self.assertGreaterEqual(max(defect_exposures), 20)
-        self.assertTrue(all(subplan_graph.first_barrier(legacy, item["introducing_task"]) == "T24" for item in defect_map))
+        fixtures = Path(__file__).parent / "fixtures"
+        defects = json.loads((fixtures / "P-177-defect-map.json").read_text(encoding="utf-8"))["defects"]
+        legacy = json.loads((fixtures / "P-177-legacy-1.2.0.json").read_text(encoding="utf-8"))
+        plan = json.loads((fixtures / "P-177-schema-1.3.0.json").read_text(encoding="utf-8"))
 
-        plan = base_plan()
-        plan["requirements"] = [f"R{i}" for i in range(1, 7)]
-        plan["subplans"] = []
-        plan["tasks"] = []
-        for group in range(6):
-            sid = f"SP-{group + 1}"
-            first = group * 4 + 1
-            for offset in range(4):
-                number = first + offset
-                item = copy.deepcopy(base_plan()["tasks"][0])
-                item.update(id=f"T{number}", subplan_id=sid, kind=("implement", "docs", "test", "audit")[offset],
-                            after=[f"T{number-1}"] if offset else [], covers=[f"R{group+1}"],
-                            expected_paths=[f"src/feature{number}.py"], acceptance_criteria=[f"Feature {number} works"])
-                if offset == 2:
-                    item["expected_paths"] = [f"tests/integration/T{number}/**"]
-                    item["verification"] = [{"type": "command", "value": "pytest tests/integration -q", "purpose": "real integration",
-                                              "category": "integration"}]
-                elif offset == 3:
-                    item["expected_paths"] = [f"docs/T{number}.findings.json"]
-                    item["verification"] = [{"type": "command", "value": f"engine audit-ledger check docs/T{number}.findings.json",
-                                              "purpose": "audit", "category": "static"}]
-                plan["tasks"].append(item)
-            plan["subplans"].append({"id": sid, "milestone_id": "M1", "title": f"Feature {group+1}",
-                                     "outcome": f"Feature {group+1} is verified end to end", "covers": [f"R{group+1}"],
-                                     "acceptance_criteria": [f"Feature {first} works"], "produces": [], "consumes": [],
-                                     "checkpoints": [{"task": f"T{first+2}", "purpose": "early integration check"}],
-                                     "integration_test_task": f"T{first+2}", "audit_task": f"T{first+3}"})
+        self.assertEqual(len(legacy["tasks"]), 24)
+        self.assertEqual(len(plan["tasks"]), 24)
+        self.assertGreaterEqual(max(subplan_graph.exposure(legacy, introducing_task=item["introducing_task"])
+                                    for item in defects), 20)
+        self.assertTrue(all(subplan_graph.first_barrier(legacy, item["introducing_task"])
+                            == item["legacy_first_barrier"] for item in defects))
         self.assertTrue(pc.validate(plan).ok, pc.validate(plan).errors)
-        self.assertTrue(all(subplan_graph.first_barrier(plan, item["introducing_task"]) == item["first_barrier"]
-                            for item in defect_map))
-        self.assertTrue(all(subplan_graph.exposure(plan, introducing_task=item["introducing_task"]) <= 6
-                            for item in defect_map))
+        exposures = [subplan_graph.exposure(plan, introducing_task=item["introducing_task"]) for item in defects]
+        self.assertTrue(all(subplan_graph.first_barrier(plan, item["introducing_task"])
+                            == item["first_barrier"] for item in defects))
+        self.assertTrue(all(exposure <= 6 for exposure in exposures), exposures)
+        self.assertTrue(any(3 <= exposure <= 6 for exposure in exposures), exposures)
+
+        # The cross-subplan edges cover both a frozen contract and audited implementation.
+        self.assertIn("T1", next(task for task in plan["tasks"] if task["id"] == "T10")["after"])
+        self.assertIn("T15", next(task for task in plan["tasks"] if task["id"] == "T16")["after"])
+        self.assertTrue(any(subplan["checkpoints"] for subplan in plan["subplans"]))
+        missing_checkpoint = copy.deepcopy(plan)
+        next(sp for sp in missing_checkpoint["subplans"] if sp["id"] == "SP-1")["checkpoints"] = []
+        self.assertTrue(any(line.startswith("SUBPLAN_LATE_CHECKPOINT:")
+                            for line in pc.validate(missing_checkpoint).errors))
 
     def test_file_probe_is_not_functional_verification(self):
         plan = base_plan()
@@ -329,7 +306,7 @@ class Schema13Tests(unittest.TestCase):
         check = plan["tasks"][0]["verification"][0]
         plan["tasks"][0]["kind"] = "test"
         check.update(environment="human_attestation")
-        self.assertTrue(any(e.startswith("SECRET_VALUE_IN_PLAN:") for e in pc.validate(plan).errors))
+        self.assertTrue(any(e.startswith("VERIFICATION_ENV_INVALID:") for e in pc.validate(plan).errors))
         check.update(type="manual", expected="Owner confirms the session behavior", environment="production",
                      authorization_needed="Owner grants staging deployment")
         report = pc.validate(plan)

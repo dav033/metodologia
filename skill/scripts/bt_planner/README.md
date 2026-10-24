@@ -150,8 +150,10 @@ behavioral verification and early checkpoints; it never assigns execution or gra
 Every diagnostic added for 1.3.0 starts with its stable code (`SUBPLAN_*`, `COMPOSITION_*`, `UI_*`,
 `REQUIREMENT_ORPHAN`, `LATE_CHECKPOINT`, `SECRET_VALUE_IN_PLAN`, `EXTERNAL_ONLY_IMPLEMENT`,
 `FILE_EXISTENCE_CHECK`, `UI_WORK_UNDECLARED`, `SCHEMA_FIELD_UNSUPPORTED`,
-`CONSUMER_CONTRACT_TEST_MISSING`). A 1.3.0-only field in an older plan warns during consumer validation and errors at
-publication. Canonical ordering and hashing add the new fields only for 1.3.0; 1.0.0–1.2.0 serialization stays fixed.
+`SUBPLAN_EDGE`, `SUBPLAN_CONTRACT`, `VERIFICATION_ENV_INVALID`, `CONSUMER_CONTRACT_TEST_MISSING`). A 1.3.0-only
+field in an older plan does not change consumer validation output; it errors at publication. The legacy enum error for
+`kind: design` remains unchanged. Canonical ordering and hashing add the new fields only for 1.3.0; 1.0.0–1.2.0
+serialization stays fixed.
 `LATEST_SCHEMA_VERSION` is 1.3.0, while new skeletons remain 1.2.0 until engine consumers support the version.
 
 ### Rubric (the dimensions are independent)

@@ -20,7 +20,7 @@ from pathlib import Path
 
 from .command_checks import IgnoredPath
 from . import contract as pc
-from . import amendments, interfaces, quality, resources, sync, traceability
+from . import amendments, interfaces, quality, resources, subplan_graph, sync, traceability
 from . import revisions as rev
 
 ACTIONS = ("retrofit-audit", "init", "check", "freeze", "bind", "report", "show", "compat", "validate", "schema", "example", "amend",
@@ -111,7 +111,6 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
                                 "interfaces": interfaces.report(plan),
                                 **quality.verification_report(plan)})
             if pc.schema_tuple(plan) >= pc.SCHEMA_13:
-                from . import subplan_graph
                 summary["subplans"] = subplan_graph.report(plan)
             emit(json.dumps(summary, indent=1, ensure_ascii=False))
             return 0
