@@ -50,8 +50,9 @@ def decide(root: Path, project: str, rid: str, rdir: Path, form: dict, commit, *
     if decision == "approve" and not _repo_matches_ui_tasks(root, project, rdir, ref, repo):
         raise approval.DesignApprovalError(
             f"Cannot approve {ref}: design task repository differs from ui:true task repository; "
-            "the gate checks the UI task repository's selected base (normally HEAD).")
-    record = approval.decide(rdir, repo, ref, decision == "approve", comments, "owner", via,
+            "the gate checks the UI task repository's selected base (the subplan line during a run).")
+    revision = approval.revision_for_contract(root, project, rdir, ref, repo)
+    record = approval.decide(rdir, repo, ref, decision == "approve", comments, "owner", via, revision=revision,
                              submitted_sha256=form.get("sha256") if decision == "approve" and via == "web" else None)
     commit(root, f"{project}: {rid} design contract {ref} {record['status']} (web)")
     if decision == "approve":

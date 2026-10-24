@@ -131,7 +131,7 @@ def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         state_label = bt_page_design.approval_label(state)
         repo = approval.repository_for_contract(ROOT, project, rdir, ref)
         try:
-            snapshot = approval.contract_snapshot(repo, row["path"]) if repo else None
+            snapshot = approval.contract_snapshot_for(ROOT, project, rdir, ref, repo) if repo else None
             text, digest = snapshot if snapshot else ("", "")
         except (OSError, UnicodeError):
             text, digest = "", ""
@@ -143,7 +143,7 @@ def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         actions = ""
         if waiting:
             approve_button = (f'<button type="submit" name="decision" value="approve">Aprobar</button>' if digest else
-                              '<span class="muted">Aprobar estará disponible cuando el contrato esté en HEAD.</span>')
+                              '<span class="muted">Aprobar estará disponible cuando el contrato esté en la base del Scheduler.</span>')
             actions = (f'<form class="q" method="post" action="{purl(project, "req", rid, "design")}" style="margin-top:16px">'
                        f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="contract" value="{e(ref)}">'
                        f'<input type="hidden" name="sha256" value="{e(digest)}">'

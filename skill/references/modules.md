@@ -454,8 +454,10 @@ script's `--help` and `skill/scripts/tests/test_engine_benchmark.py`.
 
 For every `ui:true` task, M3 checks the versioned contract at `design/contracts/<contract>@v<N>.md` in the selected
 base tree and the requirement's durable owner approval record (`design-approvals.json`). The record pins SHA256 of
-`git show HEAD:<contract path>` in the repository assigned to the design task; M3 compares it with the selected
-base-tree blob before dispatch. Missing approval returns `blocked_environment` with
+the design task's subplan line in its repository. The line uses the newest executor root for this requirement
+(through `bt_scheduler_executor_adapter.executor_root`) and `bt_integration_line.Line.ref`; before any executor run
+exists, approval falls back to that repository's HEAD. M3 compares the pinned hash with the selected base-tree blob
+before dispatch. Missing approval returns `blocked_environment` with
 `DESIGN_CONTRACT_UNAPPROVED`; a different or absent base-tree blob returns
 `DESIGN_CONTRACT_HASH_MISMATCH`. These holds do not consume the code retry budget and are reconsidered after approval.
 Every contract version needs its own approval. Use `bitacora.py design list|show|approve|changes REQ-NNN` or the

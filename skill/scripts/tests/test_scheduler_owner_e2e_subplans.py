@@ -43,6 +43,17 @@ class SuccessfulAgent:
         return executor_adapter.m3.Classification(status, terminal_event=terminal, text=raw[-200:])
 
 
+class ContractProducingAgent(SuccessfulAgent):
+    """Create the UI contract from the actual design task workspace, leaving HEAD unchanged."""
+
+    def prepare(self, route, prompt, workspace, timeout_seconds):
+        if "## Task T4:" in prompt:
+            contract = Path(workspace.path) / "design/contracts/interface@v1.md"
+            contract.parent.mkdir(parents=True, exist_ok=True)
+            contract.write_text("# Interface contract v1\n\nProduced by the design task.\n", encoding="utf-8")
+        return super().prepare(route, prompt, workspace, timeout_seconds)
+
+
 class ConflictingAgent(SuccessfulAgent):
     """Create incompatible changes from two member subplans on their real M3 worktrees."""
 
@@ -78,12 +89,13 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
         self.rdir = self.root / "REQ-900-owner-e2e"
         self.rdir.mkdir()
 
-    def _run_13_owner(self, plan=None, *, max_steps=300, resume=False, agent_factory=SuccessfulAgent):
+    def _run_13_owner(self, plan=None, *, max_steps=300, resume=False, agent_factory=SuccessfulAgent,
+                      approve_before_run=True):
         plan = plan or support.three_subplan_plan()
         support.freeze_plan(self.rdir, plan)
         ui = next((item.get("ui") for item in plan.get("subplans", [])
                    if isinstance(item, dict) and isinstance(item.get("ui"), dict)), None)
-        if ui is not None and self.contract is not None:
+        if approve_before_run and ui is not None and self.contract is not None:
             ref = f"{ui['contract']}@v{ui['version']}"
             if bt_design_approval.approvals(self.rdir).get(ref, {}).get("status") != "approved":
                 bt_design_approval.decide(self.rdir, self.repo, ref, True, "E2E fixture approval",
@@ -153,6 +165,34 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
         self.assertEqual(captured["subplan_status"], {"SP-1": "published", "SP-2": "published", "SP-3": "published"})
         self.assertEqual(len(captured["compositions"]), 1)
         self.assertEqual(next(iter(captured["compositions"].values()))["state"], "published")
+
+    def test_design_task_line_contract_is_approved_before_ui_task_starts(self):
+        self.repo = support.make_repository(self.root / "app-produced-contract")
+        self.contract = None
+        original = bt_design_approval.check_tree
+        approval_seen = {}
+
+        def owner_approves_when_gate_sees_design_output(rdir, repo, base, path):
+            if path == "design/contracts/interface@v1.md" and "approved" not in approval_seen:
+                revision = bt_design_approval.revision_for_contract(
+                    self.root, "proj", rdir, "interface@v1", repo)
+                snapshot = bt_design_approval.contract_snapshot(repo, path, revision)
+                if snapshot:
+                    record = bt_design_approval.decide(rdir, repo, "interface@v1", True,
+                                                       "Approved after design task", "fixture-owner", "test",
+                                                       revision=revision)
+                    approval_seen.update(revision=revision, digest=record["sha256"], base=base)
+            return original(rdir, repo, base, path)
+
+        with patch.object(bt_design_approval, "check_tree", side_effect=owner_approves_when_gate_sees_design_output):
+            result, state = self._run_13_owner(agent_factory=ContractProducingAgent,
+                                               approve_before_run=False)
+        self.assertEqual(result, 0)
+        self.assertIn("revision", approval_seen, "the owner gate never saw the design task's contract")
+        self.assertNotIn("design/contracts/interface@v1.md",
+                         support.git(self.repo, "ls-tree", "-r", "--name-only", "HEAD"))
+        self.assertEqual(approval_seen["digest"], bt_design_approval.approvals(self.rdir)["interface@v1"]["sha256"])
+        self.assertEqual(state["snapshot"].tasks["T5"]["state"], "completed")
 
     def test_legacy_plan_remains_loadable_with_unchanged_task_shape(self):
         plan = support.legacy_plan()

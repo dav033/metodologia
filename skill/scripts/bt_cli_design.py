@@ -28,6 +28,13 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
                         (not row["approval"] or row["approval"].get("status") != "approved")]
         if args.action == "show" and args.contract and not selected:
             raise SystemExit(f"No UI design contract {args.contract} in {args.req}")
+        if args.action == "show":
+            for row in selected:
+                repo = approval.repository_for_contract(root, project, rdir, row["contract"])
+                revision = approval.revision_for_contract(root, project, rdir, row["contract"], repo) if repo else "HEAD"
+                snapshot = approval.contract_snapshot(repo, row["path"], revision) if repo else None
+                row["revision"] = revision
+                row["text"], row["sha256"] = snapshot if snapshot else (None, None)
         print(json.dumps(selected, indent=1, ensure_ascii=False))
         return 0
     if not args.contract:

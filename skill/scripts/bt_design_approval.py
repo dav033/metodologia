@@ -1,8 +1,7 @@
 """Durable owner approvals for versioned UI contracts.
 
-The approved digest is SHA256 of `git show HEAD:<contract path>` in the repository assigned to the design task.
-UI tasks must use that same repository and start from its current integration-line tip (HEAD); M3 compares the
-approval with the blob at the exact selected base commit.
+Once a requirement has an executor run, the approved digest is read from that run's subplan line in the design task's
+repository. Before a run exists, approval uses HEAD so a contract can be reviewed before launch.
 """
 from __future__ import annotations
 
@@ -38,6 +37,52 @@ def parse_ref(value: str) -> tuple[str, int]:
 def contract_path(value: str) -> str:
     contract, version = parse_ref(value)
     return f"design/contracts/{contract}@v{version}.md"
+
+
+def revision_for_contract(root: Path, project: str, rdir: Path, ref: str, repo: Path) -> str:
+    """Resolve the digest source to the newest executor run's exact design subplan line, else HEAD.
+
+    `executor_root` supplies the requirement-specific root convention. Its identity suffix is the run identity used by
+    scheduler wiring, while `Line.ref` supplies the integration-line ref format and role/subplan escaping.
+    """
+    contract, version = parse_ref(ref)
+    try:
+        plan = json.loads((Path(rdir) / "PLAN.json").read_text(encoding="utf-8"))
+        subplan = next(item for item in plan["subplans"] if isinstance(item, dict) and
+                       isinstance(item.get("ui"), dict) and item["ui"].get("contract") == contract and
+                       item["ui"].get("version") == version)
+        design_id = subplan["ui"]["design_task"]
+        task = next(item for item in plan["tasks"] if isinstance(item, dict) and item.get("id") == design_id)
+        role = task.get("repository") or ""
+    except (OSError, UnicodeError, ValueError, KeyError, TypeError, StopIteration):
+        raise DesignApprovalError(f"Cannot resolve design task and repository for {ref}") from None
+
+    import bt_integration_line
+    import bt_scheduler_executor_adapter
+
+    if not role:
+        import bt_workspace
+        role = next((name for name, path in bt_workspace.repos(Path(root), project).items()
+                     if Path(path).resolve() == Path(repo).resolve()), "")
+    if not role:
+        raise DesignApprovalError(f"Cannot resolve design repository role for {ref}")
+    base = bt_scheduler_executor_adapter.executor_root(Path(rdir))
+    candidates = [path for path in base.parent.glob(base.name + "-*") if path.is_dir() and not path.is_symlink()]
+    if not candidates:
+        return "HEAD"
+    newest = max(candidates, key=lambda path: path.stat().st_mtime_ns)
+    identity = newest.name[len(base.name) + 1:]
+    if not identity:
+        raise DesignApprovalError(f"Cannot resolve the active Scheduler run identity for {ref}")
+    line = bt_integration_line.Line(
+        plan=None, accepted=lambda: {}, snapshot_of=lambda _attempt: None, repo_of=lambda _role: repo,
+        default_repository=role, identity=identity, scope_id=subplan["id"])
+    return line.ref(role)
+
+
+def contract_snapshot_for(root: Path, project: str, rdir: Path, ref: str, repo: Path) -> tuple[str, str] | None:
+    """Return the current run-scoped contract text and digest, or the pre-run HEAD snapshot."""
+    return contract_snapshot(repo, contract_path(ref), revision_for_contract(root, project, rdir, ref, repo))
 
 
 def _read_blob(repo: Path, revision: str, path: str) -> bytes | None:
@@ -94,7 +139,14 @@ def approvals(rdir: Path) -> dict[str, dict[str, Any]]:
 
 
 def decide(rdir: Path, repo: Path, ref: str, approve: bool, comments: str, who: str, via: str,
-           *, revision: str = "HEAD", submitted_sha256: str | None = None) -> dict[str, Any]:
+           *, revision: str | None = None, submitted_sha256: str | None = None) -> dict[str, Any]:
+    if revision is None:
+        rdir = Path(rdir)
+        if rdir.parent.name == "requirements":
+            project_dir = rdir.parent.parent
+            revision = revision_for_contract(project_dir.parent, project_dir.name, rdir, ref, repo)
+        else:
+            revision = "HEAD"
     with _decision_lock(Path(rdir)):
         return _decide_locked(rdir, repo, ref, approve, comments, who, via, revision, submitted_sha256)
 

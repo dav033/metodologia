@@ -236,9 +236,11 @@ freezes the next revision without the added task. Rebasing onto it keeps every a
 Each schema 1.3.0 UI subplan declares its contract id, version and design task. Once the design task is accepted, the
 owner must approve that exact version through `bitacora.py design approve REQ-NNN <contract>@vN` or the requirement
 page before any `ui:true` implementation task can start. The approval record is per requirement, durable and immutable
-after approval; it stores who, channel, timestamp, comments and SHA256 of the contract bytes read from
-`git show HEAD:<contract path>` in the repository assigned to the design task. M3 checks that the exact blob exists
-in the selected base tree and matches the pinned hash. Missing approval is a `blocked_environment` hold
+after approval; it stores who, channel, timestamp, comments and SHA256 of the contract bytes read from the design
+task's subplan line in the repository assigned to that task. The line is derived from the newest executor root for
+this requirement using the executor adapter's root convention and the integration-line API. Before any executor
+run exists, approval falls back to that repository's HEAD. M3 checks that the exact blob exists in the selected base
+tree and matches the pinned hash. Missing approval is a `blocked_environment` hold
 (`DESIGN_CONTRACT_UNAPPROVED`); drift or a missing base blob is a non-retry hold
 (`DESIGN_CONTRACT_HASH_MISMATCH`). Approval of vN never approves vN+1. Plans without UI subplans keep their existing
 behavior.

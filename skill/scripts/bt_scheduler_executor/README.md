@@ -182,7 +182,8 @@ x.wait_idle(); x.describe(attempt_id); x.flush_events(); x.close()   # close() s
 The methodology adapter also returns typed start blockers in its core acknowledgment detail: `COMPOSITION_BASE_MISSING`,
 `COMPOSITION_BASE_UNAVAILABLE`, `DESIGN_CONTRACT_UNAPPROVED` and `DESIGN_CONTRACT_HASH_MISMATCH`. UI tasks require the
 exact contract blob in the selected base commit and an owner approval in the requirement's `design-approvals.json`;
-the approval SHA256 is read from `git show HEAD:<path>` in the design task's repository. Both design blockers are
+the approval SHA256 is read from the design task's subplan line for the newest executor run. Before a run exists,
+approval falls back to that repository's HEAD. Both design blockers are
 classified `blocked_environment`, so M1 does not consume the code retry budget. Once the owner approves the matching
 blob, the owner adapter reopens UI tasks held for this gate. Legacy and non-UI tasks keep their existing behavior.
 
