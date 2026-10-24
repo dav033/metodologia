@@ -191,8 +191,8 @@ Sampling is best effort and identity-checked; see the executor README for caps a
   delta and conflicts remain explicit. Tasks outside subplans require the injected owner `composition_base(task_id, order)`
   identity; absent/empty identities are rejected as `COMPOSITION_BASE_MISSING` and are never rebuilt from all accepted work.
   The start gate checks each `ui: true` task's exact `design/contracts/<contract>@v<version>.md` blob in that selected
-  base tree before launch (`DESIGN_CONTRACT_MISSING`). The current M1 `Ack` contract can carry only rejection detail and
-  cannot yet represent a blocked-environment classification; that typed result remains an owner-interface dependency.
+  base tree before launch and its owner approval (D-127): `DESIGN_CONTRACT_UNAPPROVED` or `DESIGN_CONTRACT_HASH_MISMATCH`,
+  returned as a blocked-environment `Ack.classification` so no code-retry budget is spent.
   Reviewer briefs derive `review_axis: visual` only for frozen `subplan.ui.visual_review_task` tasks. Workspaces explicitly
   identify attempt, reconstructable subplan, and candidate integration kinds; integration cleanup is idempotent.
 - Predecessor hand-over (P-031): `skill/scripts/bt_scheduler_integrator.py`, used by `wire(..., integrate_predecessors=True)`. It merges

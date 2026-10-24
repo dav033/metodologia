@@ -72,10 +72,10 @@ launching duplicate full passes; the final session consolidates evidence and cro
 **UI subplans:** execute in this order: Designer `kind: design` task → owner approval of the contract version →
 `ui: true` implementation tasks → Reviewer `visual` task → subplan audit. The approval is an in-run owner gate,
 not plan approval. Use `bitacora.py design approve|changes REQ-NNN <contract>@vN` or the web requirement page.
-Until approved, the scheduler holds UI tasks with the waiting reason `awaiting owner contract approval`; this is
-not a task failure and does not spend code-retry budget. Approval releases the held tasks. A missing contract is
-reported as `DESIGN_CONTRACT_MISSING`; investigate the design task or base tree rather than retrying UI
-implementation. The gate also checks that the approved hash matches the contract blob in the base tree.
+Until approved, the gate holds UI tasks as `DESIGN_CONTRACT_UNAPPROVED`; this is not a task failure and does not
+spend code-retry budget, and approval releases them. A contract absent from the base tree, or whose blob differs from
+the approved hash, holds as `DESIGN_CONTRACT_HASH_MISMATCH`: investigate the design task or base tree rather than
+retrying UI implementation.
 Reviewer visual review consumes Runner's screenshot evidence for each declared breakpoint × state. Runner captures
 and reports evidence IDs/paths but does not judge fidelity; the Reviewer owns that judgment. See
 `interface-quality.md` and the Runner visual-evidence skill.
