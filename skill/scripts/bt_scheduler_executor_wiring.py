@@ -186,7 +186,6 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
     port = api.CoreExecutionPort(None, api.sched.approved_plan(rdir), project=project, base_ref=base_ref,
                              default_repository=default_repository)
-    sink = api.CoreEventSink()
     routing = assignment if callable(getattr(assignment, "plan", None)) else None
     scheduler = api.sched.open_scheduler(rdir, ports=api.core.Ports(assignment=assignment, routing=routing,
                                                             execution=port, verification=verification,
@@ -195,6 +194,32 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
     port.plan = scheduler.plan                         # one plan object for the api.core, the brief and the repository roles
     root = api.executor_root(rdir, api.run_identity(scheduler))
     repo_of = api.repositories(project, repos)
+    def designer_scope_check(event):
+        try:
+            task = scheduler.plan.task(event.task_id)
+        except api.core.SchedulerError:
+            return None
+        task_role = (event.payload or {}).get("role", task.meta.get("role", ""))
+        try:
+            plan_version = tuple(int(part) for part in scheduler.plan.schema_version.split("."))
+        except (AttributeError, ValueError):
+            return None
+        if plan_version < (1, 3, 0) or (task.meta.get("kind") != "design" and task_role != "designer"):
+            return None
+        handoff = (event.payload or {}).get("handoff") or {}
+        base_sha, snapshot_sha = handoff.get("base_sha"), handoff.get("snapshot_sha")
+        if not base_sha or not snapshot_sha:
+            return "DESIGN_SCOPE_UNAVAILABLE", ()
+        repository = repo_of(task.repository or default_repository)
+        import bt_config
+        preview_projects = bt_config.get("design.preview_projects", [])
+        preview_enabled = bt_config.get("design.preview", False) is True or project in preview_projects
+        return api.designer_scope_refusal(repository, base_sha, snapshot_sha,
+                                          kind=task.meta.get("kind", ""),
+                                          role=task_role,
+                                          preview_enabled=preview_enabled,
+                                          plan_version=scheduler.plan.schema_version)
+    sink = api.CoreEventSink(scope_check=designer_scope_check)
     import bt_config
     from dataclasses import replace
 

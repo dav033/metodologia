@@ -102,6 +102,8 @@ DEFAULTS: dict = {
     # coordinator (P-157): the projects whose manual LIVE checks («Coordinator runs `cmd` with .env.local») the scheduler runs itself
     # and attests; each one is the owner's explicit authorization (it uses that project's credentials and real services)
     "coordinator": {"projects": [], "command_seconds": 1800, "files": {}, "env_files": {}, "retries": 1},
+    # preview output is opt-in per project; project names listed here override the default.
+    "design": {"preview": False, "preview_projects": []},
     # self-healing of a run's stops (bt_scheduler_healing): a closed taxonomy of causes, the smallest safe repair of each, every
     # decision recorded; `scheduler-op REQ heal stop` switches it off for one run
     # model_diagnosis (REQ-029 R3/R4): a stop the rules cannot repair (or place) is answered with the diagnosing model's validated option,

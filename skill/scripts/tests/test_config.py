@@ -28,6 +28,18 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(bt_config.get("routing.pool"), [])
         self.assertIsNone(bt_config.get("unknown"))
         self.assertEqual(bt_config.get("unknown", "fallback"), "fallback")
+        self.assertFalse(bt_config.get("design.preview"))
+        self.assertEqual(bt_config.get("design.preview_projects"), [])
+
+    def test_design_preview_configuration_roundtrips_and_validates(self):
+        bt_config.set_value("design.preview", True)
+        bt_config.set_value("design.preview_projects", ["alpha", "beta"])
+        self.assertTrue(bt_config.get("design.preview"))
+        self.assertEqual(bt_config.get("design.preview_projects"), ["alpha", "beta"])
+        for key, value in (("design.preview", 1), ("design.preview_projects", ["alpha", 3]),
+                           ("design.preview_projects", "alpha")):
+            with self.subTest(key=key, value=value), self.assertRaises(bt_config.ConfigError):
+                bt_config.set_value(key, value)
 
     def test_set_get_roundtrip_for_each_type(self):
         values = {"executor.display": "window", "approval.auto": False, "approval.max_tasks": 0,

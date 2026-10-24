@@ -135,6 +135,9 @@ Sampling is best effort and identity-checked; see the executor README for caps a
   `bt_scheduler_adapter`, the only importer of the core) and exposes workspaces in `bt_worktree`'s allocation shape
   (`worktree_allocation`) so its scope/integration tooling can consume what M3 produced. `wire(rdir, ...)` is the opt-in entry
   point; nothing in an existing command changes. State lives in `<bitácora root>/.state/executor/<project>-<REQ>/`.
+- For schema 1.3.0 `design` tasks, M3 gates snapshots before verification: changes stay in `design/`; preview needs
+  `design.preview` or `design.preview_projects`. Refusals retain snapshots (`DESIGN_SCOPE_VIOLATION`,
+  `DESIGN_PREVIEW_DISABLED`).
 - Predecessor hand-over (P-031): `skill/scripts/bt_scheduler_integrator.py`, used by `wire(..., integrate_predecessors=True)`. It merges
   the accepted same-repository ancestors' handoff snapshots into one commit (`git merge-tree`, no worktree touched, kept under
   `refs/m3/integration/<run>/<task>`) and passes it as the task's `base_ref`; a conflict or a missing snapshot rejects the order
