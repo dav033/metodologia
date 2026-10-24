@@ -43,7 +43,7 @@ import bt_profiles
 import bt_scheduler_adapter as sched
 from bt_scheduler_recovery_adapter import start_rejection_detail
 import bt_scheduler_executor as m3
-from bt_scheduler_executor import gitutil  # noqa: F401 - re-exported: the only door to the executor module
+from bt_scheduler_executor import PLAN_SCHEMA_CAPABILITIES, gitutil  # noqa: F401 - re-exported: the only door to the executor module
 from bt_scheduler_executor.workspace import dirname_of  # noqa: F401 - re-exported, same reason
 import bt_scheduler_integrator as integrator
 from bt_scheduler_executor.core_port import CoreExecutionPort as _CoreExecutionPort

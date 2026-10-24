@@ -21,8 +21,10 @@ from .ports import AgentDriver, BriefSource, EventSink, RouteResolver, Workspace
 from .workspace import GitWorkspaces
 
 CONTRACT_VERSION = "1.0.0"
+# 1.3.0: subplan integration lines, the Designer base-tree gate and the composition_base seam (accepted F4-5).
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
 
 __all__ = ["AgentDriver", "AgentExecutor", "AttemptStatus", "Brief", "BriefSource", "CAUSES", "CODES",
-           "CONTRACT_VERSION", "Classification", "Config", "EVENT_KINDS", "EventSink", "ExecutorError", "GitWorkspaces",
+           "CONTRACT_VERSION", "Classification", "PLAN_SCHEMA_CAPABILITIES", "Config", "EVENT_KINDS", "EventSink", "ExecutorError", "GitWorkspaces",
            "Launch", "Receipt", "Route", "RouteResolver", "StartRequest", "TechnicalEvent", "Workspace",
            "WorkspaceManager"]

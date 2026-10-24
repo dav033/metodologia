@@ -27,9 +27,11 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
         self.rdir = self.root / "REQ-900-owner-e2e"
         self.rdir.mkdir()
 
-    def _run_13_owner(self):
+    def _run_13_owner(self, planner_default: str = "1.2.0"):
         support.freeze_plan(self.rdir, support.three_subplan_plan())
-        with patch.object(scheduler_run.bt_core, "ROOT", self.root), \
+        # planner_default="1.3.0" previews the one-line default switch the lead makes after these tests pass.
+        with patch.object(scheduler_adapter.plan_adapter.planner, "SCHEMA_VERSION", planner_default), \
+                patch.object(scheduler_run.bt_core, "ROOT", self.root), \
                 patch("bt_requirements_gate.require_ready"), \
                 patch("bt_workspace.repos", return_value={"app": self.repo}), \
                 patch.object(scheduler_run, "_remove_autostart"), \
@@ -38,18 +40,17 @@ class OwnerSubplanEntryPoint(unittest.TestCase):
             return scheduler_run.run("proj", "REQ-900", self.rdir, resume=False,
                                      no_autostart=True, max_steps=1)
 
-    @unittest.expectedFailure
     def test_owner_runs_three_subplans_with_ui_contract_through_real_entrypoint(self):
-        """Known gap: M3 has no declared 1.3.0 capability, so the owner refuses this plan before scheduling."""
+        """With the Planner default switched to 1.3.0 every consumer declares support and the owner schedules."""
         self.assertTrue(self.contract.is_file())
         self.assertEqual(support.git(self.repo, "show", "HEAD:design/contracts/interface@v1.md"),
                          "# Interface contract v1\n\nBase-tree fixture for the owner E2E.")
-        result = self._run_13_owner()
+        result = self._run_13_owner("1.3.0")
         self.assertEqual(result, 0)
 
-    def test_owner_refuses_to_load_13_plan_without_consumer_capabilities(self):
+    def test_owner_refuses_a_13_plan_while_the_planner_default_is_12(self):
         with self.assertRaisesRegex(scheduler_adapter.core.SchedulerError,
-                                    r"PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE.*M3 \(unknown\)"):
+                                    r"PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE.*Planner \(unsupported\)"):
             self._run_13_owner()
 
     def test_legacy_plan_remains_loadable_with_unchanged_task_shape(self):
