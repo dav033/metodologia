@@ -119,6 +119,7 @@ class Basics(LineCase):
         line = self.line({"T1": ([], "app")})
         self.assertEqual(line.tip("app"), self.head)
         self.assertEqual(line.needs_resolution("app"), {})
+        self.assertEqual(line.ref("app"), "refs/m3/line/r1-abc-1/app")
 
     def test_two_parallel_tasks_on_different_files_both_reach_the_tip(self):
         self.accept("T1", snapshot(self.app, self.head, {"a.txt": "a\n"}))

@@ -27,6 +27,7 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 |---|---|
 | `errors.py`, `config.py` | the single error type with stable codes; explicit operating limits (`Config`) |
 | `plan.py` | approved-plan loader (hash-bound), DAG validation, ancestors/descendants |
+| `subplans.py` | immutable schema 1.3.0 subplan/gate contracts, derived status and composition facts |
 | `states.py` | task / attempt / run vocabularies and the transition tables |
 | `model.py` | serialisable `RunState` (the one operational record) and `AuditEntry` |
 | `contracts.py` | versioned messages and the five ports (`typing.Protocol`) |
@@ -34,7 +35,7 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | `views.py` | read models: run status, per-task view, unreachable set, attention list |
 | `transitions.py` | the only place that changes a task/attempt state, hold or outbox row |
 | `reservation.py`, `resources.py` | atomic claim; resource claims and their conflicts |
-| `events.py`, `recovery.py`, `operations.py` | applying facts/verdicts, recovery decisions & reconciliation, operator actions |
+| `events.py`, `recovery.py`, `operations.py`, `frontier.py`, `review.py` | applying facts/verdicts, recovery decisions & reconciliation, operator actions, explicit M5 frontiers and durable M6 review holds |
 | `dispatch.py` | outbox delivery (write-ahead) and reconciliation queries |
 | `scheduler.py` | `SchedulerCore`: transactions + ports + `step()`/`run()` |
 | `rebase.py` | `rebase_run`: move a run onto revision N+1 keeping accepted, unchanged work (see *Rebase*) |
@@ -46,8 +47,8 @@ output (M4) and retry strategy (M5) live in sibling modules that implement the p
 | Port | Direction | Methods |
 |---|---|---|
 | `PlanRoutingPort` | M1 ↔ M2 | `plan(PlanRoutingRequest) -> [PlannedRoute]` — all approved-plan tasks, including dependency-blocked tasks; one route result per task, no reservation |
-| `AssignmentPort` | M1 ↔ M2 | `propose(AssignmentRequest) -> [Assignment]` — request includes the approved plan SHA-256, READY tasks, dependencies, acceptance criteria, verification and opaque classification metadata; M1 validates every proposal |
-| `ExecutionPort` | M1 → M3 | `start(StartOrder)`, `cancel(CancelOrder)`, `query(attempt_id)`; every order has an idempotency key |
+| `AssignmentPort` | M1 ↔ M2 | `propose(AssignmentRequest) -> [Assignment]` — request includes the approved plan SHA-256, READY tasks, dependencies, acceptance criteria, verification and opaque classification metadata; 1.3.0 plans with subplans also pass declared `subplan_id`, `ui`, and visual-review `review_axis`; M1 validates every proposal |
+| `ExecutionPort` | M1 → M3 | `start(StartOrder)`, `cancel(CancelOrder)`, `query(attempt_id)`; every order has an idempotency key; 1.3.0 subplan starts include the metadata in `StartOrder.meta` |
 | `EventPort` | M4 → M1 | `SchedulerCore.ingest(Event)` and `.submit_verdict(Verdict)` |
 | `RecoveryPort` | M1 ↔ M5 | `propose(FailureContext) -> RecoveryProposal` (`retry` \| `block` \| `wait`); advice only |
 | `VerificationPort` | validator → M1 | `request(VerifyOrder)` out; the verdict returns through `submit_verdict` |
@@ -61,6 +62,16 @@ occurred_at, payload, token, contract_version`; kinds `execution_started | execu
 execution_cancelled | heartbeat | incident_observed`. Events are not exactly-once: duplicates, late and reordered ones
 are expected. `incident_observed` is an M4 audit reference with a strict v1.2.0 allowlist and idempotency key; it may
 append an audit row but cannot change task, attempt or lease state, including for a matching terminal attempt.
+Schema 1.3.0 plans with subplans expose immutable `subplans` and `composition_gates`; `subplan_status(plan, state)`
+derives `open | auditing | accepted | published` without storing task state. A composition-gate task remains `pending`
+with `composition_waiting` attention until each member has a current published subplan-version fact. Each publication
+binds to the accepted audit attempt and a digest of every accepted member-task attempt. Rework or an affected revision
+makes that binding stale; the published fact remains in the audit history and the gate waits with a stale-version reason.
+An unaffected rebase can rebind the same version, commit, and manifest to the new revision when the accepted identity
+is unchanged. Changed accepted work requires the next version. Schema-4 facts written before identity binding still
+load, but are stale for status and gate purposes. The audited
+`record_subplan_version` and `record_composition(candidate|published|rejected, ...)` operations only persist adapter
+observations and never change task or attempt state; published compositions cannot be rewritten.
 Contract 1.1.0 appended optional, defaulted fields to `TaskView` and `AssignmentRequest`, preserving old positional
 calls. The scheduler emits 1.2.0 events by default; it continues to accept lifecycle events explicitly tagged 1.0.0,
 whose shape is unchanged.
@@ -116,10 +127,28 @@ concurrent threads and processes queue on the database lock. The in-memory repos
 event sourcing for simplicity at plan scale (hundreds of tasks); the audit log is the history. Historical files of the
 methodology are never read or written by this module; a `RUN.json`-style projection is the adapter's job.
 
-Run-state schema 3 adds guarded revision barriers and the bounded revision-application journal. The loader upgrades
-schema-1 and schema-2 state in memory and writes schema 3 on the next state change; older M1 versions reject schema 3
-rather than silently dropping revision state. Schema 2 introduced durable per-task route recommendations and the
-completed-map marker; those fields remain available after the additive upgrade.
+Run-state schema 9 adds durable `composition_holds` to schema 8's structured executor failure classification,
+subplan-version, composition, frontier-application, code-attempt budget and M6 review-hold facts. A hold appears in
+snapshot attention and is released when any composition publishes the gate's current member set, the gate reopens,
+or its reserved members become stale. The loader upgrades schemas 1 through 8 in memory and writes schema 9 on the next
+state change; older M1 versions reject schema 9
+rather than silently dropping facts. Historical attempts migrate as budget-consuming; new attempts consume the code
+retry budget only after M3 confirms execution began. Schema 3 carries guarded revision barriers and the bounded
+revision-application journal; schema 2 introduced
+durable per-task route recommendations and the completed-map marker. These fields remain available after the upgrades.
+Schema 4 through 7 successively extended persisted scheduler facts; schema 8 added structured execution failure
+classification. Schema 9 adds `composition_holds`.
+
+The wired caller is `bt_scheduler_run.py` through `bt_scheduler_owner_composition.py` and
+`bt_scheduler_owner_propagation.py`: it derives changes from published subplan versions in a published composition,
+passes real `propagate` actions through M5's `composition_propagation` port, and applies each action with its exact
+task list, evidence refs, and published composition id/manifest/tree. M1 validates and journals
+each identity idempotently, refuses live attempts and touches only listed tasks. Multiple actions demonstrated against
+the same composition snapshot apply atomically and retain their distinct operation labels; M1 never infers descendants.
+
+An M6 `NEEDS_REVIEW` result creates a durable M1 hold before M1 calls M5 outside its transaction. M5 may resume the
+same verification attempt once, wait with the attempt still `VERIFYING`, or block the task. None of these actions
+allocates an implementation attempt; only a correlated M6 verdict can complete the task.
 
 ## Dispatch and restart
 
@@ -183,14 +212,16 @@ application.
 
 Audit kinds: `revision_barrier {operation_key, source, target, deadline}` and
 `revision_applied {key, from_rev, to_rev, kept, reset, added, removed}`; each reset also has a
-`task_transition {decision: plan_revision}`. Ordinary `rebase_run`, `plan_rebase` and `fingerprint` retain their prior
-semantics.
+`task_transition {decision: plan_revision}`. Subplan facts use `subplan_version_published`, `composition_candidate`,
+`composition_published` and `composition_rejected`. Ordinary `rebase_run`, `plan_rebase` and `fingerprint` retain their
+prior semantics.
 
 ## Errors (stable codes, `SchedulerError.code`)
 
 `PLAN_UNREADABLE`, `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_SCHEMA_UNSUPPORTED`, `PLAN_MISMATCH`, `STATE_UNREADABLE`,
 `STATE_MISSING`, `STATE_UNAVAILABLE`, `ILLEGAL_TRANSITION`, `CONFIG_INVALID`, `UNKNOWN_TASK`, `UNKNOWN_ATTEMPT`,
-`NOT_ALLOWED`, `CONTRACT_VIOLATION`, `ROUTING_UNAVAILABLE`, `ROUTING_INVALID`.
+`NOT_ALLOWED`, `CONTRACT_VIOLATION`, `ROUTING_UNAVAILABLE`, `ROUTING_INVALID`; malformed schema 1.3.0 extensions use
+`PLAN_INVALID`, malformed fact operations use `CONTRACT_VIOLATION`, and invalid fact transitions use `NOT_ALLOWED`.
 
 ## Acceptance evidence (plan SC-AC01..20 → tests; `tests/test_readme.py` checks every name exists)
 

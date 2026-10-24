@@ -46,6 +46,12 @@ def tree_digest(root: Path) -> dict[str, str]:
             for p in sorted(root.rglob("*")) if p.is_file()}
 
 
+def classified_legacy(rdir: Path, *, plan_id: str | None = None) -> dict:
+    skeleton = sync.skeleton(rdir, plan_id=plan_id)
+    skeleton["schema_version"] = "1.2.0"
+    return classify(skeleton)
+
+
 class Base(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -64,7 +70,7 @@ class Base(unittest.TestCase):
         (self.rdir / "PLAN.json").write_text(pc.dumps(plan), encoding="utf-8")
 
     def good(self) -> dict:
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         self.write_json(plan)
         return plan
 
@@ -112,7 +118,7 @@ class Consistency(Base):
             self.assertIn(needle, out)
 
     def test_task_missing_from_json_and_extra_in_json(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         extra = dict(plan["tasks"][2], id="T4", after=["T3"])
         missing = plan["tasks"].pop(0)
         for t in plan["tasks"]:
@@ -122,20 +128,20 @@ class Consistency(Base):
                                  "T4: in PLAN.json but missing from PLAN.md")
 
     def test_wrong_milestone_and_wrong_dependencies(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         plan["tasks"][1]["milestone_id"] = "M2"
         plan["tasks"][2]["after"] = ["T1"]
         self.assertCheckMentions(plan, "T2.milestone_id", "PLAN.md puts it under M1", "T3.after")
 
     def test_milestone_mismatches(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         plan["milestones"][1] = {"id": "M3", "title": "x", "acceptance_criteria": ["y"]}
         plan["tasks"][2]["milestone_id"] = "M3"
         self.assertCheckMentions(plan, "M3: milestone in PLAN.json has no `### M3` heading",
                                  "M2: milestone heading in PLAN.md missing from PLAN.json")
 
     def test_plan_id_and_spec_ref(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         plan["plan_id"], plan["spec_ref"] = "REQ-999", "NOPE.md"
         self.assertCheckMentions(plan, "plan.plan_id", "plan.spec_ref")
 
@@ -226,7 +232,7 @@ class StoreRobustness(Base):
     """Reviewer findings on the revision store and the gate."""
 
     def test_check_never_raises_on_structurally_bad_plans(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         for mutate in (lambda p: p["tasks"][1].update(after=[[]]), lambda p: p.update(milestones=5),
                        lambda p: p["milestones"].__setitem__(0, {"id": []}), lambda p: p.update(tasks="x"),
                        lambda p: p["tasks"][0].update(milestone_id={})):
@@ -238,7 +244,7 @@ class StoreRobustness(Base):
             self.assertTrue(any("not evaluated" in w for w in report.warnings) or report.errors)
 
     def test_spec_ref_cannot_escape_the_requirement_folder(self):
-        plan = classify(sync.skeleton(self.rdir))
+        plan = classified_legacy(self.rdir)
         plan["spec_ref"] = "../../outside.md"
         self.write_json(plan)
         self.assertTrue(any("spec_ref" in e for e in sync.check(self.rdir).errors))
@@ -438,7 +444,7 @@ class Cli(Base):
         self.write_md("ready")
         self.assertEqual(self.run_cli("freeze")[0], 2)
         self.assertEqual(self.run_cli("freeze", approved_states=("ready",))[0], 0)
-        plan = classify(sync.skeleton(self.rdir, plan_id="OTHER-1"))
+        plan = classified_legacy(self.rdir, plan_id="OTHER-1")
         plan["revision"] = 2
         self.write_json(plan)
         self.assertEqual(self.run_cli("check")[0], 2)  # id derived from the directory name does not match

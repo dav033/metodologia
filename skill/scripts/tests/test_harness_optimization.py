@@ -277,6 +277,38 @@ class ReviewPolicyTests(unittest.TestCase):
         state = {"tasks": [task("M1-audit", kind="audit", synthetic=True, status="done")]}
         self.assertFalse(bt_review_policy.milestone_audit_active(state))
 
+    def test_only_the_frozen_subplans_own_pending_audit_covers_its_tasks(self):
+        plan_tasks = [
+            {"id": "T1", "kind": "implement", "subplan_id": "SP-1"},
+            {"id": "T2", "kind": "implement", "subplan_id": "SP-2"},
+            {"id": "A1", "kind": "audit", "subplan_id": "SP-1"},
+            {"id": "A2", "kind": "audit", "subplan_id": "SP-2"},
+        ]
+        frozen = {"schema_version": "1.3.0", "plan_id": "PLAN-X", "revision": 4,
+                  "tasks": plan_tasks,
+                  "subplans": [{"id": "SP-1", "audit_task": "A1"}, {"id": "SP-2", "audit_task": "A2"}]}
+        state = {"plan_id": "PLAN-X", "revision": 4, "frozen_plan": frozen,
+                 "tasks": [task("A1", kind="audit", status="todo"), task("A2", kind="audit", status="todo")]}
+        self.assertTrue(bt_review_policy.subplan_audit_active(state, [{"id": "T1"}]))
+        self.assertIn("Do NOT run the antagonist per commit",
+                      bt_review_policy.commit_review_rule(state, [{"id": "T1"}]))
+        state["tasks"][0]["status"] = "blocked"
+        self.assertFalse(bt_review_policy.subplan_audit_active(state, [{"id": "T1"}]))
+        self.assertIn("EVERY commit", bt_review_policy.commit_review_rule(state, [{"id": "T1"}]))
+        self.assertTrue(bt_review_policy.subplan_audit_active(state, [{"id": "T2"}]))
+        self.assertIn("Do NOT run the antagonist per commit",
+                      bt_review_policy.commit_review_rule(state, [{"id": "T2"}]))
+
+    def test_subplan_audit_requires_a_matching_frozen_plan_identity(self):
+        state = {"plan_id": "PLAN-X", "revision": 4,
+                 "frozen_plan": {"schema_version": "1.3.0", "plan_id": "PLAN-X", "revision": 3,
+                                 "tasks": [{"id": "T1", "subplan_id": "SP-1"},
+                                           {"id": "A1", "kind": "audit", "subplan_id": "SP-1"}],
+                                 "subplans": [{"id": "SP-1", "audit_task": "A1"}]},
+                 "tasks": [task("A1", kind="audit", status="todo")]}
+        self.assertFalse(bt_review_policy.subplan_audit_active(state, [{"id": "T1"}]))
+        self.assertIn("EVERY commit", bt_review_policy.commit_review_rule(state, [{"id": "T1"}]))
+
     def test_legacy_prompt_rules_follow_the_policy(self):  # 12
         state, unit = self.audited(), [task("T1")]
         audited = "\n".join(bt_runprompt._rules("p", "REQ-001", "T1", "feat", state=state, unit=unit))

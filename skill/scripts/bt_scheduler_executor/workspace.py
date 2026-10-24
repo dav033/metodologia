@@ -140,10 +140,51 @@ class GitWorkspaces:
         target = str(worktree.resolve())
         return any(line == f"worktree {target}" for line in listing.splitlines())
 
+    def reconstruct_subplan(self, role: str, line_ref: str, subplan_id: str) -> Workspace:
+        """Reconstruct a read-only subplan workspace from the immutable commit named by its line ref."""
+        return self._allocate_snapshot(role, line_ref, "subplan", f"{subplan_id}:{line_ref}")
+
+    def allocate_integration(self, role: str, candidate: str, composition_id: str) -> Workspace:
+        """Check out a named composition candidate in an isolated integration workspace."""
+        return self._allocate_snapshot(role, candidate, "integration", composition_id)
+
+    def _allocate_snapshot(self, role: str, revision: str, kind: str, identity: str) -> Workspace:
+        repo = self.repository(role)
+        base_sha = self._base(repo, revision)
+        name = f"{kind}-{dirname_of(identity)}"
+        trees = self.root / "worktrees"
+        worktree, manifest = trees / name, trees / f"{name}.json"
+        with self._repo_lock(repo):
+            self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
+            trees.mkdir(parents=True, exist_ok=True, mode=0o700)
+            data = {"kind": kind, "identity": identity, "repo": str(repo), "base_sha": base_sha,
+                    "worktree": str(worktree)}
+            if manifest.exists():
+                old = json.loads(manifest.read_text(encoding="utf-8"))
+                if any(old.get(key) != data[key] for key in ("kind", "identity", "repo", "base_sha")):
+                    raise ExecutorError("WORKSPACE_ERROR", f"manifest {manifest.name} belongs to another {kind} identity")
+            else:
+                tmp = manifest.with_name(f".{manifest.name}.tmp")
+                tmp.write_text(json.dumps(data, sort_keys=True), encoding="utf-8")
+                os.replace(tmp, manifest)
+            journal = self._journal(name, "allocating", kind=kind, base_sha=base_sha, worktree=str(worktree))
+            if worktree.exists() and not self._registered(repo, worktree):
+                raise ExecutorError("WORKSPACE_ERROR", f"{worktree} exists but is not a worktree of {repo.name}")
+            if not worktree.exists():
+                gitutil.run(repo, ["worktree", "prune"], check=False)
+                gitutil.run(repo, ["worktree", "add", "--detach", str(worktree), base_sha])
+            self._journal(name, "allocated", kind=kind, base_sha=base_sha, worktree=str(worktree))
+        return Workspace(str(worktree), "", base_sha, str(repo), journal, kind)
+
     def release(self, workspace: Workspace) -> None:
-        """Explicit operator cleanup: remove the checkout and its branch. The handoff refs under refs/m3/ stay."""
+        """Idempotent cleanup for candidate workspaces; attempt cleanup keeps its historical explicit branch removal."""
         repo = Path(workspace.repo)
         with self._repo_lock(repo):
-            gitutil.run(repo, ["worktree", "remove", "--force", workspace.path], check=False)
-            gitutil.run(repo, ["branch", "-D", workspace.branch], check=False)
-            self._journal(Path(workspace.path).name, "released", branch=workspace.branch)
+            if workspace.kind == "attempt":
+                gitutil.run(repo, ["worktree", "remove", "--force", workspace.path], check=False)
+                if workspace.branch:
+                    gitutil.run(repo, ["branch", "-D", workspace.branch], check=False)
+            else:
+                if Path(workspace.path).exists() and self._registered(repo, Path(workspace.path)):
+                    gitutil.run(repo, ["worktree", "remove", "--force", workspace.path], check=False)
+            self._journal(Path(workspace.path).name, "released", kind=workspace.kind, branch=workspace.branch)

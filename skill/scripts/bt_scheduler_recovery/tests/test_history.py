@@ -69,6 +69,51 @@ class HistoryTests(unittest.TestCase):
             independent = store.decide(case(task_id="T-002", attempt_id="A-004", token=4))
             self.assertEqual(independent.action, "retry")
 
+    def test_repeated_missing_environment_does_not_consume_code_retry_history(self):
+        with DecisionStore(self.path) as store:
+            for index, reason in enumerate(("BLOCKED_EXTERNAL", "BLOCKED_ENV", "BLOCKED_EXTERNAL"), start=1):
+                result = store.decide(case(attempt_id=f"A-{index:03d}", token=index, reason_code=reason),
+                                      Policy(max_same_cause=1))
+                self.assertEqual(result.action, "block")
+                self.assertEqual(result.retry_budget_remaining, 2)
+            code_failure = store.decide(case(attempt_id="A-004", token=4, reason_code="FAIL_CODE"),
+                                        Policy(max_same_cause=1))
+            self.assertNotEqual(code_failure.reason_code, "same_cause_limit")
+
+    def test_m6_timeout_allows_only_one_distinct_attempt_retry(self):
+        with DecisionStore(self.path) as store:
+            verification = {"core_cause": "verification_rejected", "technical_cause": "verification_rejected",
+                            "execution_state": "finished", "verification_ref": "verdict:" + "d" * 64}
+            first = store.decide(case(reason_code="TIMEOUT", **verification))
+            second = store.decide(case(attempt_id="A-002", token=2, reason_code="TIMEOUT", **verification))
+            self.assertEqual(first.action, "retry")
+            self.assertEqual((second.action, second.reason_code), ("block", "timeout_repeated"))
+
+    def test_verification_timeout_history_is_independent_of_technical_cause(self):
+        with DecisionStore(self.path) as store:
+            verification = {"core_cause": "verification_rejected", "execution_state": "finished",
+                            "verification_ref": "verdict:" + "d" * 64}
+            first = store.decide(case(reason_code="TIMEOUT", technical_cause="verification_rejected",
+                                      **verification))
+            second = store.decide(case(attempt_id="A-002", token=2, reason_code="TIMEOUT",
+                                       technical_cause="agent_error", **verification))
+            self.assertEqual(first.action, "retry")
+            self.assertEqual((second.action, second.reason_code), ("block", "timeout_repeated"))
+
+    def test_legacy_serialized_case_and_decision_database_remains_idempotent(self):
+        with DecisionStore(self.path) as store:
+            previous = store.decide(case())
+        with closing(sqlite3.connect(self.path)) as connection:
+            row = connection.execute("SELECT decision_id,case_json FROM decisions").fetchone()
+            legacy_case = json.loads(row[1])
+            legacy_case["schema_version"] = "m5.recovery-case/1"
+            legacy_case.pop("reason_code")
+            connection.execute("UPDATE decisions SET case_json=?", (json.dumps(legacy_case, sort_keys=True,
+                                                                                separators=(",", ":")),))
+            connection.commit()
+        with DecisionStore(self.path) as store:
+            self.assertEqual(store.decide(case()), previous)
+
     def test_twenty_duplicate_writers_record_one_decision(self):
         def worker(_):
             with DecisionStore(self.path, timeout_seconds=10) as store:

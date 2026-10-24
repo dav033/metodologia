@@ -14,7 +14,7 @@ from pathlib import Path
 from . import evidence as ev
 from . import command_checks, generated, interfaces, milestone_audits, quality, schema_13 as schema13, traceability, verification
 
-SCHEMA_VERSION = "1.2.0"  # 1.2.0 = requirement coverage, interfaces and verification evidence labels
+SCHEMA_VERSION = "1.3.0"  # latest planner schema; 1.2.0 remains an approved legacy revision
 EVIDENCE_SINCE = (1, 1, 0)
 EXTENSIONS_SINCE = (1, 2, 0)
 SCHEMA_13 = (1, 3, 0)

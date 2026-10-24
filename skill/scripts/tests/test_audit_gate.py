@@ -22,6 +22,12 @@ def finding(fid="F1", severity="high", status="open", tasks=("T1",), **extra):
 
 
 class Evaluate(unittest.TestCase):
+    def test_semantic_fingerprint_canonicalization_is_stable(self):
+        left = gate.semantic_fingerprint(" API  ", "Race Condition", "when X", ["T2", "T1", "T1"])
+        right = gate.semantic_fingerprint("api", "race condition", "WHEN   x", ["t1", "t2"])
+        self.assertEqual(left, right)
+        self.assertEqual(len(left), 64)
+
     def test_task_references_and_closed_are_compatible_spellings_of_tasks_and_fixed(self):
         canonical = finding(status="fixed", evidence="pytest: passed")
         alias = {**canonical, "status": "closed", "taskReferences": canonical["tasks"]}
@@ -108,6 +114,29 @@ class Evaluate(unittest.TestCase):
         a = self.judge(ledger(finding("F1")))
         self.assertEqual(a.digest(), self.judge(ledger(finding("F1"))).digest())
         self.assertNotEqual(a.digest(), self.judge(ledger(finding("F2"))).digest())
+
+    def test_fingerprint_is_shape_checked_and_duplicate_open_findings_merge_evidence(self):
+        one = finding("F1", tasks=("T1",), semantic_fingerprint="a" * 64, evidence_refs=["e1"])
+        two = finding("F2", tasks=("T2",), semantic_fingerprint="a" * 64, evidence_refs=["e2"])
+        result = self.judge(ledger(one, two))
+        self.assertEqual(len(result.blocking), 1)
+        self.assertEqual(result.rework, ("T1", "T2"))
+        self.assertEqual(result.blocking[0]["evidence_refs"], ("e1", "e2"))
+        self.assertEqual(gate.validate_ledger(json.loads(ledger(finding(semantic_fingerprint="A" * 64)))) != [], True)
+
+    def test_unfingerprinted_findings_and_distinct_same_line_fingerprints_stay_separate(self):
+        rows = [finding("F1"), finding("F2"),
+                finding("F3", semantic_fingerprint="a" * 64, location="x.py:9"),
+                finding("F4", semantic_fingerprint="b" * 64, location="x.py:9")]
+        result = self.judge(ledger(*rows))
+        self.assertEqual(len(result.blocking), 4)
+
+    def test_same_fingerprint_across_independent_ledgers_counts_once(self):
+        rows = [ledger(finding("F1", tasks=("T1",), semantic_fingerprint="a" * 64)),
+                ledger(finding("F2", tasks=("T2",), semantic_fingerprint="a" * 64))]
+        result = gate.evaluate_many(rows, PLAN, "T9")
+        self.assertEqual(len(result.blocking), 1)
+        self.assertEqual(result.rework, ("T1", "T2"))
 
 
 class Configured(unittest.TestCase):

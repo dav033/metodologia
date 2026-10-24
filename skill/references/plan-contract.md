@@ -53,10 +53,12 @@ those keys). The scheduler run database is authority on state. A plan without a 
 
 `plan-json show REQ-NNN` lists revisions; `plan-json compat REQ-NNN` is read-only and reports legacy gaps, PLAN.md
 ambiguities and `consumer_supported`. Schema 1.0.0–1.2.0 plans retain their prior parsing, canonical bytes and hashes.
-The validator accepts schema 1.3.0, but `plan-json init` still creates 1.2.0 plans. The engine is not ready to publish
-1.3.0 until the downstream compatibility report says the Planner and M1, M2 and M6 all support that exact version;
-missing, malformed or unknown capability data fails closed with `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE`. The adapter checks
-this before changing owner approval status or writing a frozen revision. F4-7 owns the later capability/default switch.
+The validator accepts schema 1.3.0 and `plan-json init` creates 1.3.0 plans. The downstream compatibility report must say
+the Planner and M1, M2, M3 and M6 all support that exact version;
+missing, malformed or unknown capability data fails closed with `PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE`. M6 supports the
+verification metadata, and the adapter checks readiness before changing owner approval status or writing a frozen revision.
+For 1.3.0 plans with subplans, `plan-json check` also runs the owner's gate-chain, exact contract-path and single-repository
+rules; stable `OWNER_COMPOSITION_*` errors identify plans the runtime cannot compose.
 
 Frozen revisions are atomic: the complete `PLAN.json`, including subplans and composition gates, is canonicalized,
 hashed, frozen and rebound as one revision. There is no second subplan manifest. Existing frozen revisions remain

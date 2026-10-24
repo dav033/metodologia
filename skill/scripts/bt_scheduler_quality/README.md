@@ -36,6 +36,11 @@ Input is the JSON-compatible `VerifyOrder` already created by M1:
 }
 ```
 
+M6 also accepts these optional additive order fields: `contract_identities` maps contract identity names to lowercase
+SHA-256 values; `environment_fingerprint` is a lowercase SHA-256 supplied by the order and is combined with M6's local
+environment fingerprint; `composition_id` and `manifest_sha256` must appear together. They are included in evidence
+and cache binding only when present, leaving legacy request hashes and cache keys unchanged.
+
 verification accepts the approved Planner v1 shape: type=command|manual, value, purpose, optional created_by, and for
 manual, expected. It also accepts an optional 1.2.0 category (static, functional, integration, regression or product).
 M1 requires and validates the category when loading a 1.2.0 plan; M6 validates and preserves it as typed evidence
@@ -45,6 +50,21 @@ compound syntax supported is a leading `cd <relative-path> && <argv>`. Shell ope
 working directories and paths escaping the snapshot are rejected. Each command's `purpose` must exactly equal an
 acceptance criterion string to cover it. A manual item or uncovered/ambiguous criterion is `unknown` and cannot
 PASS. This conservative rule avoids changing the shared M1/Planner contract.
+
+For schema 1.3.0, M6 additionally validates and preserves `environment`, name-only `requires`, and optional
+`authorization_needed`. Absent fields stay absent in the serialized order and its hash. `requires` accepts only
+environment variable names or `service:<slug>`; raw maps and values are rejected. Environment variables are checked
+against the trusted M6 operator environment by name, while services are checked through
+`VerificationAuthority.resource_available(name)`. A missing resource returns `BLOCKED_EXTERNAL` before command launch.
+`external_authorized` and `production` also require an explicit true result from
+`VerificationAuthority.authorize_environment(environment, authorization_needed)`; a plan's classification string
+never grants permission. Missing or failing ports block without running commands. `human_attestation` remains manual
+and is settled only by the existing attestation receipt port. The 1.3 capability is M6-local: the overall Planner
+gate remains closed until M1, M2, M3 and M6 all declare and prove their exact consumer support.
+
+Every non-sandbox policy entry must include an `authorization` field matching the requested authorization text. An
+entry that matches the environment and requirement but omits that field is denied with
+`POLICY_ENTRY_MISSING_AUTHORIZATION`. In `secrets.env`, `NAME=""` and `NAME=''` are treated as unavailable resources.
 
 The M3 adapter supplies trusted repository and artifact paths plus the captured handoff identity:
 
@@ -63,7 +83,9 @@ snapshot, and archives the snapshot into an owned temporary directory. The sourc
 artifact are read-only inputs. `PredecessorIntegrator` remains the only merge/conflict implementation; M3 records
 the base it used before execution.
 
-Result schema is `m6.verify-result/1`; PASS, FAIL, NEEDS_REVIEW and STALE are internal statuses. The full shape and
+Result schema is `m6.verify-result/1.1`; PASS, FAIL, NEEDS_REVIEW and STALE are internal statuses. Version 1.1 adds a
+per-check/result `reason_code` taxonomy and tree plus optional contract, environment and composition bindings. Stored
+version 1 results remain readable; a missing classification reads as `UNCLASSIFIED`. The full shape and
 illustrative examples live in `api-contract.json` and `tests/fixtures/`. Each check carries its own stable `issue_code`
 so aggregate metrics distinguish checks that were not run from checks that returned unknown for another reason.
 Mapping to M1 is deliberately binary:
@@ -72,7 +94,7 @@ Mapping to M1 is deliberately binary:
 |---|---|
 | PASS | Submit current correlated `Verdict(accepted=True, evidence="m6://...")` |
 | FAIL | Submit current correlated `Verdict(accepted=False, evidence="m6://...")` |
-| NEEDS_REVIEW | Persist a review item; send no verdict; attempt remains `VERIFYING` |
+| NEEDS_REVIEW | Persist a review item and M1 hold; send no verdict; M5 may resume the same verification once, wait, or block |
 | STALE | Record stale identity; send no verdict for a replacement attempt |
 
 An M1 Ack acknowledges only durable request admission. A check's exit 0 does not become PASS unless every criterion
@@ -84,7 +106,8 @@ until reconciled or is marked stale with the actual M1 response.
 
 - **Pass cache** (`reuse.py`, `QualityPolicy.cache_seconds`, default one day): a check that passed on this exact git tree
   with the same command and the same operator environment is not run again; its recorded output is returned with a note.
-  Failures are never reused. **Expensive checks last** (`defer_expensive`, `expensive_check_seconds`): a check that took
+  Failures are never reused. The existing `check_pass_cache` table also retains fail/flaky status for the same evidence key;
+  a later pass is classified `FLAKY_SUSPECTED` and is not cached. **Expensive checks last** (`defer_expensive`, `expensive_check_seconds`): a check that took
   that long the last time, or that looks like a whole suite (`unittest discover -s tests`, `npm run gate`), runs after the
   cheaper ones and is skipped (`CHECK_DEFERRED`) once one of them failed: the verdict is FAIL either way.
 - **Mixed evidence** (`mixed_evidence`, default on): a criterion may be backed by several checks with its exact text as
@@ -112,11 +135,20 @@ secret values are replaced with `[REDACTED]` before the outcome is returned.
 
 Deployment, publishing, release and migration commands are classified as operator review and are not launched. Offline
 checks such as `check_migrations.py` remain eligible when they inspect the snapshot without performing those actions.
+The legacy undeclared policy remains unchanged. The owner wires trusted callbacks into
+`QualityVerificationPort(verification_authority=...)`: resource names are checked against the owner process
+environment and `~/.config/flow/secrets.env` without persisting values; `sandbox` is allowed without an operator
+policy; `staging` and `production` require a matching entry in `<bitacora root>/<project>/verification-policy.json`.
+Missing, unreadable or unmatched policy denies before command launch. Authorization is never derived from PLAN.json,
+task text or an agent-supplied environment map.
 
 Artifacts are local, mode `0700` directories and mode `0600` files in a separate M6 store. The SQLite WAL ledger and
 verdict outbox are private to M6; neither M1 nor M3 stores are opened for writing by the package. A durable
-NEEDS_REVIEW item holds M1 in `VERIFYING` until an explicit operator resolution records identity and rationale.
-The identity entered by the local operator is audit metadata, not cryptographic proof of a human account.
+NEEDS_REVIEW item is handed to M5 with its content-addressed evidence reference. M5 may ask M6 to resume the same
+verification attempt once for timeout/flaky evidence, wait for a blocker to clear, or block the task. A resumed flaky
+result is never accepted from its earlier single pass. Other unresolved review items still require explicit operator
+resolution with identity and rationale; M1 never spends an implementation retry for review handling. The identity
+entered by the local operator is audit metadata, not cryptographic proof of a human account.
 
 After repairing an engine crash, an operator may explicitly call
 `QualityStore.retry_interrupted(request_key, operator, reason)` while the scheduler owner is stopped. This

@@ -60,6 +60,7 @@ class EndToEnd(unittest.TestCase):
         self.assertIn("ERROR T1.complexity", out.stdout)
         # 2. the planner classifies; the gate passes
         plan = classify(json.loads((self.work / "PLAN.json").read_text(encoding="utf-8")))
+        plan["tasks"][1]["kind"] = "docs"
         (self.work / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
         out = self.cli("check", str(self.work), "--json")
         self.assertEqual((out.returncode, json.loads(out.stdout)["ok"]), (0, True), out.stdout)

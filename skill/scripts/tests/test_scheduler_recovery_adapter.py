@@ -6,8 +6,10 @@ import tempfile
 import unittest
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import bt_scheduler_adapter as sched
+import bt_scheduler_recovery as m5
 import bt_scheduler_recovery_adapter as adapter
 
 core = sched.core
@@ -50,6 +52,122 @@ class RecoveryPortContract(unittest.TestCase):
         self.scheduler.step()
         self.assertEqual(self.scheduler.snapshot().tasks["T1"]["state"], "blocked")
         self.assertNotIn("secret-not-to-persist", json.dumps(self.port.latest()))
+
+    def _m6_manifest(self, official, *, reason="BLOCKED_EXTERNAL", snapshot="a" * 40):
+        manifest = {"schema_version": "m6.evidence-manifest/1.1", "request": {
+            key: official[key] for key in ("plan_id", "revision", "task_id", "attempt_id", "token")},
+            "input": {"snapshot_sha": snapshot, "tree_digest": "b" * 64}, "reason_code": reason,
+            "checks": [{"tree_digest": "b" * 64}]}
+        encoded = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        return f"m6://result/{hashlib.sha256(encoded).hexdigest()}", encoded
+
+    def test_persisted_m6_reason_is_used_only_after_identity_and_tree_validation(self):
+        official = self.port._official(self.context)
+        reference, encoded = self._m6_manifest(official)
+        official["evidence"] = reference
+        self.port._official = lambda _context: official
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        case = self.port._case(self.context, official, self.facts)
+        self.assertEqual(case.reason_code, "BLOCKED_EXTERNAL")
+        self.assertEqual(self.port._open().decide(case, self.port.policy).reason_code,
+                         "m6_blocked_external_owner_must_restore_dependency")
+        proposal = self.port.propose(self.context)
+        self.assertIn("restore the declared dependency", proposal.reason)
+        self.assertNotIn("secret-not-to-persist", proposal.reason)
+
+    def test_m6_tree_digest_is_compared_when_executor_facts_supply_one(self):
+        official = self.port._official(self.context)
+        reference, encoded = self._m6_manifest(official)
+        official["evidence"] = reference
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        self.facts["tree_digest"] = "c" * 64
+        with self.assertRaisesRegex(ValueError, "tree identity is stale"):
+            self.port._case(self.context, official, self.facts)
+
+    def test_wrong_candidate_m6_evidence_blocks_instead_of_reclassifying_from_prose(self):
+        official = self.port._official(self.context)
+        reference, encoded = self._m6_manifest(official, snapshot="c" * 40)
+        official["evidence"] = reference
+        self.port._official = lambda _context: official
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        proposal = self.port.propose(self.context)
+        self.assertEqual((proposal.action, proposal.reason), ("block", "m5_evidence_or_history_unavailable"))
+
+    def test_m6_wrong_token_or_revision_blocks(self):
+        for field, value in (("token", self.token + 1), ("revision", 2), ("plan_id", "other-plan")):
+            with self.subTest(field=field):
+                official = self.port._official(self.context)
+                reference, encoded = self._m6_manifest(official)
+                manifest = json.loads(encoded)
+                manifest["request"][field] = value
+                encoded = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+                official["evidence"] = f"m6://result/{hashlib.sha256(encoded).hexdigest()}"
+                self.port._official = lambda _context, official=official: official
+                self.port.m6_evidence_reader = lambda _reference, encoded=encoded: encoded
+                proposal = self.port.propose(self.context)
+                self.assertEqual(proposal.action, "block")
+
+    def test_old_m6_manifest_without_reason_remains_unclassified(self):
+        official = self.port._official(self.context)
+        reference, encoded = self._m6_manifest(official)
+        manifest = json.loads(encoded)
+        manifest["schema_version"] = "m6.evidence-manifest/1"
+        manifest.pop("reason_code")
+        encoded = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+        reference = f"m6://result/{hashlib.sha256(encoded).hexdigest()}"
+        official["evidence"] = reference
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        self.assertEqual(self.port._case(self.context, official, self.facts).reason_code, "UNCLASSIFIED")
+
+    def test_oversized_m6_manifest_is_rejected_before_parsing(self):
+        official = self.port._official(self.context)
+        encoded = b"{" + b" " * (1024 * 1024)
+        official["evidence"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        with self.assertRaisesRegex(ValueError, "size"):
+            self.port._case(self.context, official, self.facts)
+
+    def test_composition_frontier_is_passed_through_without_ancestry_expansion(self):
+        raw = {"schema_version": "m5.demonstrated-frontier/1", "change_id": "change-1",
+               "source_task_id": "T1", "composition_id": "C7", "manifest_sha256": "a" * 64,
+               "tree_digest": "b" * 40, "action": "modify", "frontier": ["T2"],
+               "evidence_refs": ["m6:" + "c" * 64]}
+        self.port.composition_propagation = lambda _change: raw
+        self.port.scheduler = SimpleNamespace(snapshot=lambda: SimpleNamespace(tasks={"T1": {}, "T2": {}}))
+        advice = self.port.demonstrated_frontier("change-1")
+        self.assertEqual((advice.action, advice.frontier), ("modify", ("T2",)))
+        raw["action"] = "none"
+        with self.assertRaises(m5.RecoveryError):
+            self.port.demonstrated_frontier("change-1")
+
+    def test_needs_review_advice_requires_digest_identity_and_never_accepts_flaky_pass(self):
+        case = {"plan_id": "P", "revision": 1, "task_id": "T1", "attempt_id": self.attempt_id,
+                "token": self.token, "evidence_ref": "m6://result/" + "0" * 64}
+        result = {"schema_version": "m6.evidence-manifest/1.1", "request": {key: case[key] for key in
+                  ("plan_id", "revision", "task_id", "attempt_id", "token")}, "reason_code": "FLAKY_SUSPECTED",
+                  "checks": [{"reason_code": "FLAKY_SUSPECTED"}], "issues": []}
+        encoded = json.dumps(result, sort_keys=True, separators=(",", ":")).encode()
+        case["evidence_ref"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        self.assertEqual(self.port.needs_review_advice(case), "resume")
+        result["request"]["token"] = self.token + 1
+        encoded = json.dumps(result, sort_keys=True, separators=(",", ":")).encode()
+        case["evidence_ref"] = "m6://result/" + hashlib.sha256(encoded).hexdigest()
+        self.port.m6_evidence_reader = lambda _reference: encoded
+        with self.assertRaises(m5.RecoveryError):
+            self.port.needs_review_advice(case)
+
+    def test_composition_frontier_must_name_current_tasks_and_exclude_source(self):
+        raw = {"schema_version": "m5.demonstrated-frontier/1", "change_id": "change-1",
+               "source_task_id": "T1", "composition_id": "C7", "manifest_sha256": "a" * 64,
+               "tree_digest": "b" * 40, "action": "modify", "frontier": ["ZZ"],
+               "evidence_refs": ["m6:" + "c" * 64]}
+        self.port.composition_propagation = lambda _change: raw
+        with self.assertRaises(m5.RecoveryError):
+            self.port.demonstrated_frontier("change-1")
+        raw["frontier"] = ["T1"]
+        with self.assertRaises(m5.RecoveryError):
+            self.port.demonstrated_frontier("change-1")
 
     def test_a_start_the_scheduler_itself_rejected_is_named_for_what_it_is_not_filed_as_an_identity_anomaly(self):
         """39 of the 44 real `identity_unverified` blocks were `start rejected: INTEGRATION_CONFLICT / PREDECESSOR_*` (no executor record, by

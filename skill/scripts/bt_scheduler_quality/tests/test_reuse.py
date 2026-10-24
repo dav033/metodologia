@@ -75,6 +75,34 @@ class PassCache(unittest.TestCase):
             QualityEngine(QualityPolicy(network=False), store, runner=runner).verify(order("att-3", "make test"), one)
             self.assertEqual(len(runner.calls), 3)
 
+    def test_contract_and_declared_environment_identities_bind_cached_passes_only_when_present(self):
+        with tempfile.TemporaryDirectory() as tmp, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(tmp))
+            runner = Runner()
+            raw = order("att-1", "make test")
+            raw["contract_identities"] = {"api@1": "a" * 64}
+            raw["environment_fingerprint"] = "b" * 64
+            QualityEngine(QualityPolicy(), store, runner=runner).verify(raw, source)
+            same = {**raw, "idempotency_key": "verify:T-001:att-2", "attempt_id": "att-2"}
+            QualityEngine(QualityPolicy(), store, runner=runner).verify(same, source)
+            changed_contract = {**raw, "idempotency_key": "verify:T-001:att-3", "attempt_id": "att-3",
+                                "contract_identities": {"api@1": "c" * 64}}
+            QualityEngine(QualityPolicy(), store, runner=runner).verify(changed_contract, source)
+        self.assertEqual(runner.calls, ["make test", "make test"])
+
+    def test_pass_after_prior_fail_on_the_same_evidence_key_is_never_clean_pass(self):
+        with tempfile.TemporaryDirectory() as tmp, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(tmp))
+            runner = Runner(failing={"make flaky"})
+            engine = QualityEngine(QualityPolicy(), store, runner=runner)
+            first = engine.verify(order("att-1", "make flaky"), source)
+            runner.failing.clear()
+            second = engine.verify(order("att-2", "make flaky"), source)
+        self.assertEqual(first["status"], "FAIL")
+        self.assertEqual(second["status"], "NEEDS_REVIEW")
+        self.assertEqual(second["reason_code"], "FLAKY_SUSPECTED")
+        self.assertEqual(second["checks"][0]["reason_code"], "FLAKY_SUSPECTED")
+
     def test_the_fingerprint_hides_environment_values(self):
         policy = QualityPolicy(environment=(("TOKEN", "super-secret-value"),), secret_values=("super-secret-value",))
         self.assertNotIn("super-secret-value", reuse.environment_fingerprint(policy))

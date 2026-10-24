@@ -66,12 +66,27 @@ class QualityEngineTests(unittest.TestCase):
             self.assertEqual(result["criteria"][0]["status"], "pass")
             self.assertEqual(result["input"]["snapshot_sha"], source.snapshot_sha)
             self.assertEqual(result["input"]["base_sha"], source.base_sha)
+            self.assertEqual(result["input"]["tree_digest"], result["checks"][0]["tree_digest"])
+            self.assertEqual(result["checks"][0]["reason_code"], "PASS")
             self.assertIn(b"unit suite evidence", stdout)
             self.assertIn(b"checks_sha256", manifest)
             validate_result_contract(result)
             self.assertEqual(_git(repo, "show-ref"), before_refs)
             self.assertEqual(_git(repo, "rev-parse", "HEAD"), before_head)
             store.close()
+
+    def test_composition_verdict_records_manifest_and_candidate_tree_identity(self):
+        with tempfile.TemporaryDirectory() as temporary, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(temporary))
+            raw = {**self.raw, "composition_id": "C7", "manifest_sha256": "a" * 64,
+                   "contract_identities": {"api@1": "b" * 64}, "environment_fingerprint": "c" * 64}
+            result = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner()).verify(raw, source)
+            manifest = json.loads(store.get_result_manifest(result["evidence_manifest"]))
+        self.assertEqual(result["input"]["composition_id"], "C7")
+        self.assertEqual(result["input"]["manifest_sha256"], "a" * 64)
+        self.assertEqual(result["input"]["tree_digest"], result["checks"][0]["tree_digest"])
+        self.assertEqual(manifest["reason_code"], "PASS")
+        self.assertEqual(manifest["input"]["snapshot_sha"], source.snapshot_sha)
 
     def test_nonzero_required_check_produces_fail_not_a_pass(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -101,7 +116,8 @@ class QualityEngineTests(unittest.TestCase):
                     result = QualityEngine(QualityPolicy(rerun_failed_checks=reruns), store, runner=runner).verify(
                         self.raw, source)
                     note = store.get_artifact(result["checks"][0]["stderr_ref"]) if reruns else b""
-            self.assertEqual((result["status"], len(runner.calls)), (status, calls))
+            self.assertEqual((result["status"], len(runner.calls)), (("NEEDS_REVIEW" if reruns else status), calls))
+            self.assertEqual(result["checks"][0]["reason_code"], "FLAKY_SUSPECTED" if reruns else "FAIL_CODE")
             if reruns:
                 self.assertIn(b"flaky under load", note)
 
@@ -149,6 +165,7 @@ class QualityEngineTests(unittest.TestCase):
                 )
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "NOT_RUN")
         self.assertEqual(result["criteria"][0]["status"], "unknown")
         self.assertEqual(runner.calls, [])
 
@@ -166,6 +183,7 @@ class QualityEngineTests(unittest.TestCase):
                 ).verify(self.raw, source)
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_ENV")
         self.assertIn("CHECK_UNMAPPED", {item["code"] for item in result["issues"]})
 
     def test_a_supplementary_command_check_does_not_need_review_when_every_criterion_has_its_own(self):
@@ -195,6 +213,7 @@ class QualityEngineTests(unittest.TestCase):
                 )
 
         self.assertEqual(result["status"], "NEEDS_REVIEW")
+        self.assertEqual(result["reason_code"], "BLOCKED_ENV")
         self.assertEqual(result["criteria"][0]["status"], "unknown")
         self.assertIn(
             "CRITERION_AMBIGUOUS", {item["code"] for item in result["issues"]}
@@ -329,6 +348,39 @@ class QualityEngineTests(unittest.TestCase):
             self.assertEqual(engine.recover_interrupted(), ())
             self.assertEqual(store.queued_requests(1)[0][0], request.idempotency_key)
             self.assertEqual(store.list_reviews(), ())
+
+    def test_completed_legacy_result_replay_migrates_without_rewriting_stored_bytes(self):
+        import hashlib
+
+        with tempfile.TemporaryDirectory() as temporary:
+            _, source, _, _ = _make_snapshot(Path(temporary))
+            request = VerifyRequest.from_mapping(self.raw)
+            with QualityStore(":memory:") as store:
+                engine = QualityEngine(QualityPolicy(), store, runner=ScriptedRunner())
+                original = engine.verify(request, source)
+                legacy = dict(original)
+                legacy["schema_version"] = "m6.verify-result/1"
+                legacy.pop("reason_code")
+                legacy["checks"] = [
+                    {key: value for key, value in row.items() if key != "reason_code"}
+                    for row in legacy["checks"]
+                ]
+                stored = json.dumps(legacy, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode()
+                result_hash = hashlib.sha256(stored).hexdigest()
+                store._connection.execute(
+                    "UPDATE requests SET result_json=?,result_hash=? WHERE idempotency_key=?",
+                    (stored.decode(), result_hash, request.idempotency_key),
+                )
+                replay = engine.verify(request, source)
+                persisted = store._connection.execute(
+                    "SELECT result_json,result_hash FROM requests WHERE idempotency_key=?",
+                    (request.idempotency_key,),
+                ).fetchone()
+
+        self.assertEqual(replay["reason_code"], "UNCLASSIFIED")
+        self.assertEqual(replay["checks"][0]["reason_code"], "UNCLASSIFIED")
+        self.assertEqual(persisted["result_json"].encode(), stored)
+        self.assertEqual(persisted["result_hash"], result_hash)
 
     def test_retry_rejects_review_for_missing_snapshot(self):
         with QualityStore(":memory:") as store:

@@ -44,6 +44,16 @@ class LedgerCLI(unittest.TestCase):
             result = self.run_check(json.dumps({"schema": "audit-findings/1", "findings": [item]}).encode())
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_audit_ledger_check_accepts_valid_fingerprint_and_rejects_bad_shape(self):
+        item = {"id": "F1", "severity": "high", "status": "open", "summary": "finding", "tasks": ["T1"],
+                "semantic_fingerprint": "a" * 64}
+        valid = self.run_check(json.dumps({"schema": "audit-findings/1", "findings": [item]}).encode())
+        self.assertEqual(valid.returncode, 0, valid.stdout + valid.stderr)
+        item["semantic_fingerprint"] = "A" * 64
+        invalid = self.run_check(json.dumps({"schema": "audit-findings/1", "findings": [item]}).encode())
+        self.assertEqual(invalid.returncode, 2, invalid.stdout + invalid.stderr)
+        self.assertIn("semantic_fingerprint", invalid.stdout)
+
     def test_tree_digest_reads_the_plan_and_excludes_explicit_evidence_without_creating_state(self):
         import bt_audit_gate
         from scheduler_executor_support import make_repo

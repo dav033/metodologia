@@ -25,13 +25,14 @@ A clean exit is the event `execution_finished` = "the agent stopped". There is n
 | File | Role |
 |---|---|
 | `model.py`, `errors.py`, `config.py` | value types and state vocabularies; the single error type with stable codes; explicit limits (`Config`) |
+| `core_port.py`, `gates.py` | dependency-injected methodology port bridge and the exact frozen-plan/base-tree start gates |
 | `ports.py` | `RouteResolver`, `BriefSource`, `AgentDriver`, `WorkspaceManager`, `EventSink` |
 | `ledger.py` | SQLite (WAL) record: attempts with unique ids/keys, checked state machine, write-ahead event outbox |
 | `executor.py` | `AgentExecutor`: `start`/`cancel`/`query`, the supervisor loop, prepare + spawn, watching, events |
 | `spawn.py` | prepare + spawn: brief, worktree, prompt, launch through the driver, the detached shim, abort of a failed spawn |
 | `settle.py`, `recovery.py` | closing an attempt (outcome → handoff → terminal event); putting unfinished attempts back under supervision after a restart |
 | `shim.py`, `procinfo.py` | the detached per-attempt supervisor; process identity and signalling |
-| `workspace.py`, `handoff.py`, `gitutil.py` | worktree allocation under a per-repository lock; the recoverable snapshot of the work; one safe way to run git |
+| `workspace.py`, `handoff.py`, `gitutil.py` | attempt, reconstructable subplan and candidate integration workspaces; the recoverable snapshot of the work; one safe way to run git |
 | `classify.py`, `prompt.py`, `artifacts.py` | outcome → cause class; the agent prompt; the artefact directory |
 | `simulators.py`, `cli.py` | provider-free doubles of the ports; `python -m bt_scheduler_executor` |
 
@@ -48,7 +49,18 @@ A clean exit is the event `execution_finished` = "the agent stopped". There is n
 `Launch.env_remove`/`env_set` build the child environment (removals first, then sets); the values may be secrets and are
 never persisted. Own types: `StartRequest` (idempotency key, plan/revision and optional approved SHA-256, task, attempt,
 fencing token, route reference, repository role, base ref, optional timeout), `Route`, `Receipt` (`accepted | duplicate | rejected` + code),
-`AttemptStatus`, `TechnicalEvent`, `Brief`, `Workspace`, `Launch`, `Classification`.
+`AttemptStatus`, `TechnicalEvent`, `Brief` (including optional frozen-plan `review_axis`), `Workspace` (kind `attempt`, `subplan` or `integration`), `Launch`, `Classification`.
+`PLAN_SCHEMA_CAPABILITIES` — plan schemas M3 consumes (1.0.0–1.3.0; 1.3.0 adds subplan integration lines, the Designer
+base-tree gate and the `composition_base` seam).
+
+The methodology adapter derives subplan line membership from the frozen plan. In schema 1.3.0 plans with subplans,
+accepted member-task deltas and accepted ancestors are folded under `refs/m3/line/<run>/<repository-role>/<SP-id>`;
+redo replaces the prior delta and conflicts stay visible. Non-subplan tasks use the candidate/current commit injected by
+the owner adapter and fail closed with `COMPOSITION_BASE_MISSING` when it is absent. UI implementer starts require the
+exact declared design contract blob in the selected base commit tree (`DESIGN_CONTRACT_MISSING` otherwise). A visual audit
+brief carries `review_axis: visual` from the frozen subplan metadata. `GitWorkspaces.reconstruct_subplan()` reconstructs a
+scope commit; `allocate_integration()` checks out a candidate, and `release()` safely cleans either candidate workspace
+repeatedly. Attempt workspaces retain their existing per-attempt lifecycle and receipt binding.
 
 The Scheduler adapter always supplies the frozen plan hash. Older direct callers may omit it; a row written before the
 field existed is accepted only as an idempotent replay and does not authorize M5 recovery evidence.
@@ -163,6 +175,10 @@ x.wait_idle(); x.describe(attempt_id); x.flush_events(); x.close()   # close() s
 `QUEUE_FULL`, `KEY_CONFLICT`, `TOKEN_MISMATCH`, `UNKNOWN_ATTEMPT`, `WORKSPACE_ERROR`, `ARTIFACT_ERROR`, `START_FAILED`,
 `LEDGER_ERROR`, `CONFIG_INVALID`, `PLATFORM_UNSUPPORTED`, `ROOT_BUSY`, `PORT_ERROR`.
 
+The methodology adapter also returns typed start blockers in its core acknowledgment detail: `COMPOSITION_BASE_MISSING`,
+`COMPOSITION_BASE_UNAVAILABLE`, and `DESIGN_CONTRACT_MISSING`. The latter is tagged `blocked-environment`; M1's current
+`Ack` has no result-classification field, so an owner/runtime contract update is needed before M1 can preserve that class.
+
 (`tests/test_resilience.py` also generates one test per crash point — accept, allocate, before/after RUNNING, before/after SETTLING,
 during/after the handoff, before/after the terminal transaction, between delivery and the delivered mark — each killing the executor with
 `os._exit` and checking one process, one terminal event, an intact handoff.)
@@ -195,6 +211,7 @@ during/after the handoff, before/after the terminal transaction, between deliver
 | R14 real CLIs opt-in | `test_scheduler_executor_real.test_every_real_case_resolves_without_launching_anything` |
 | R15 no regressions, opt-in | `test_scheduler_executor_integration.test_a_legacy_requirement_is_not_taken_over_and_its_run_json_is_untouched`; `test_scheduler_executor_integration.test_historical_runs_of_this_repository_are_byte_identical_after_a_whole_executor_session` |
 | R16 documentation | `test_readme.test_every_public_name_is_documented`; `test_readme.test_every_error_code_is_listed`; `test_readme.test_the_acceptance_table_cites_tests_that_exist` |
+| F4-5 workspace kinds | `test_workspace.test_subplan_workspace_reconstructs_from_a_frozen_line_commit`; `test_workspace.test_integration_workspace_uses_candidate_and_cleanup_is_idempotent` |
 
 ## Known limits (demonstrated or declared, not hidden)
 

@@ -83,30 +83,43 @@ def _executor_config():
 
 def _wire(project: str, rdir: Path):
     import bt_scheduler_executor_wiring as composition
+    from bt_scheduler_owner_composition import OwnerCompositionRuntime
     import bt_workspace
 
     run_id = _runtime_binding(rdir, resume=adapter.authority(rdir) == adapter.AUTHORITY)
     db_path = adapter.run_db_path(rdir)
     ledger = bt_run_stores.m2_ledger(db_path, run_id)
     stores = _required_module_stores(db_path, run_id)
+    plan = adapter.approved_plan(rdir)
+    repos = bt_workspace.repos(bt_core.ROOT, project, False)
     import bt_plan_adapter
     assignment = adapter.DecisionAssignmentPort(project, ledger, laya_root=bt_core.ROOT / ".state" / "laya")
     assignment.run_dir = rdir
     if hasattr(assignment, "classification_overlay"):      # M2 decides with the classification in force (amendments)
         assignment.classification_overlay = lambda: bt_plan_adapter.effective_overrides(rdir)
     wiring = None
+    owner_composition = None
     try:
+        if OwnerCompositionRuntime.supports(plan):
+            req_match = re.match(r"REQ-\d+", rdir.name)
+            owner_composition = OwnerCompositionRuntime.create(
+                rdir=rdir, project=project, req=req_match.group(0) if req_match else rdir.name,
+                plan=plan, repositories=repos, verifier_id="m6-quality/checker-v1")
         wiring = composition.wire(
             rdir, project=project, assignment=assignment, m2_ledger=ledger,
-            repos=bt_workspace.repos(bt_core.ROOT, project, False), autostart=True,
+            repos=repos, autostart=True,
             config=_run_config(rdir), executor_config=_executor_config(),
             integrate_predecessors=True,
             monitor_store_path=stores["m4"], recovery_store_path=stores["m5"],
             quality_store_path=stores["m6"],
+            composition_base=owner_composition.composition_base if owner_composition is not None else None,
+            composition_runtime=owner_composition,
         )
         _secure_store_file(stores["m4"])
         _secure_store_file(stores["m5"])
         _secure_store_file(stores["m6"])
+        if owner_composition is not None:
+            owner_composition.bind_m6_store(wiring.verification_store)
         if wiring.monitor is None or wiring.recovery is None or wiring.verification_runtime is None:
             raise RuntimeError("required M4/M5/M6 runtime ports were not composed")
         return wiring, assignment, run_id
@@ -116,6 +129,9 @@ def _wire(project: str, rdir: Path):
                 wiring.close()
         with contextlib.suppress(Exception):
             assignment.close()
+        if owner_composition is not None and wiring is None:
+            with contextlib.suppress(Exception):
+                owner_composition.close()
         raise
     except adapter.core.SchedulerError:
         if wiring is not None:
@@ -123,6 +139,9 @@ def _wire(project: str, rdir: Path):
                 wiring.close()
         with contextlib.suppress(Exception):
             assignment.close()
+        if owner_composition is not None and wiring is None:
+            with contextlib.suppress(Exception):
+                owner_composition.close()
         raise
     except Exception as exc:
         if wiring is not None:
@@ -130,6 +149,9 @@ def _wire(project: str, rdir: Path):
                 wiring.close()
         with contextlib.suppress(Exception):
             assignment.close()
+        if owner_composition is not None and wiring is None:
+            with contextlib.suppress(Exception):
+                owner_composition.close()
         raise RuntimeErrorCode(
             "REQUIRED_MODULE_INIT_FAILED",
             f"required M4/M5/M6 stores or ports could not be initialized: {exc}",
@@ -140,8 +162,10 @@ def _wire(project: str, rdir: Path):
                 wiring.close()
         with contextlib.suppress(Exception):
             assignment.close()
+        if owner_composition is not None and wiring is None:
+            with contextlib.suppress(Exception):
+                owner_composition.close()
         raise
-
 
 def _required_module_stores(db_path: Path, run_id: str) -> dict[str, Path]:
     if not re.fullmatch(r"[0-9a-f]{32}", run_id):
@@ -323,7 +347,19 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
             last_heartbeat = 0.0
             last_m4_pending_notice = 0.0
             while True:
+                owner_composition = getattr(wiring, "composition_runtime", None)
+                owner_progress = False
+                if owner_composition is not None:
+                    owner_progress = bool(owner_composition.reserve_candidates())
                 report = scheduler.step()
+                if owner_composition is not None:
+                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
+                    owner_progress = bool(owner_composition.reconcile_subplans()) or owner_progress
+                    owner_progress = bool(owner_composition.reserve_candidates()) or owner_progress
+                    owner_progress = bool(owner_composition.reconcile_compositions()) or owner_progress
+                    owner_composition.reconcile_propagation()
+                    for identity, reason in owner_composition.drain_attentions():
+                        print(f"OWNER_COMPOSITION_ATTENTION: {identity}: {reason}", file=sys.stderr)
                 steps += 1
                 recovery_tick = getattr(wiring.recovery, "tick_diagnostic_recovery", None)
                 if callable(recovery_tick):
@@ -357,7 +393,8 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     adapter.write_projection(rdir, scheduler)
                     return 0
                 _notify_terminal(rdir, req, snap.status, run_id, _notification_generation(scheduler))
-                terminal_run = snap.status in {"completed", "cancelled"} or adapter.is_stalled(scheduler, snap)
+                terminal_run = (snap.status in {"completed", "cancelled"} or
+                                (not owner_progress and adapter.is_stalled(scheduler, snap)))
                 if terminal_run and not m4_runtime.has_pending_streams(wiring) \
                         and not m4_runtime.has_pending_incidents(wiring):
                     _remove_autostart(project, req)

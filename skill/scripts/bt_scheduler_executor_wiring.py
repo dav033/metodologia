@@ -13,26 +13,31 @@ from bitacora_platform import conflict_publisher
 def close(wiring: api.Wiring) -> None:
     """Close required verification, recovery, stream and executor resources in dependency order."""
     try:
-        if wiring.verification_runtime is not None:
-            wiring.verification_runtime.close(wait=True)
-    finally:
         try:
-            if wiring.verification_store is not None:
-                wiring.verification_store.close()
+            if wiring.verification_runtime is not None:
+                wiring.verification_runtime.close(wait=True)
         finally:
-            if wiring.recovery is not None:
-                try:
-                    wiring.recovery.close()
-                finally:
+            try:
+                if wiring.verification_store is not None:
+                    wiring.verification_store.close()
+            finally:
+                if wiring.recovery is not None:
+                    try:
+                        wiring.recovery.close()
+                    finally:
+                        try:
+                            wiring.stream_adapter.close_all()
+                        finally:
+                            wiring.executor.close()
+                else:
                     try:
                         wiring.stream_adapter.close_all()
                     finally:
                         wiring.executor.close()
-            else:
-                try:
-                    wiring.stream_adapter.close_all()
-                finally:
-                    wiring.executor.close()
+    finally:
+        owner_composition = getattr(wiring, "composition_runtime", None)
+        if owner_composition is not None:
+            owner_composition.close()
 
 
 LINE_MARKER = "RUN.integration-line"
@@ -116,7 +121,12 @@ def _with_owner_notes(rdir, plan, base):
         try:
             task = plan.task(request.task_id)
             if task.meta.get("kind") == "audit":
-                parts.append(bt_audit_gate.ledger_help(bt_audit_gate.ledger_path(task.expected_paths)))
+                ledgers = tuple(path for path in task.expected_paths if isinstance(path, str)
+                                and path.endswith(bt_audit_gate.LEDGER_SUFFIX))
+                parts.append(bt_audit_gate.ledger_help(ledgers[0] if len(ledgers) == 1 else None))
+                if len(ledgers) > 1:
+                    parts.append("This audit has independent ledgers; write one complete audit-findings/1 record to each: "
+                                 + ", ".join(f"`{path}`" for path in ledgers) + ".")
         except api.core.SchedulerError:
             pass
         parts.append(base(request) if base else "")
@@ -135,7 +145,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
          monitor_store_path: Path | str | None = None, recovery_store_path: Path | str | None = None,
          recovery_policy: Mapping[str, object] | None = None,
          quality_store_path: Path | str | None = None,
-         quality_policy: Mapping[str, object] | None = None) -> api.Wiring:
+         quality_policy: Mapping[str, object] | None = None,
+         composition_base: Callable[..., str | None] | None = None,
+         composition_runtime=None) -> api.Wiring:
     """A Scheduler core with optional decision, monitor, recovery, and quality-verification ports.
 
     Opt-in and non-destructive: refuses a requirement already run by the legacy supervisor (the api.core's own rule). The
@@ -184,8 +196,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                                   **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
-    port = api.CoreExecutionPort(None, api.sched.approved_plan(rdir), project=project, base_ref=base_ref,
-                             default_repository=default_repository)
+    plan = api.sched.approved_plan(rdir)
+    repo_of = api.repositories(project, repos)
+    port = api.CoreExecutionPort(None, plan, project=project, base_ref=base_ref,
+                                 default_repository=default_repository, composition_base=composition_base,
+                                 repo_of=repo_of)
     routing = assignment if callable(getattr(assignment, "plan", None)) else None
     scheduler = api.sched.open_scheduler(rdir, ports=api.core.Ports(assignment=assignment, routing=routing,
                                                             execution=port, verification=verification,
@@ -193,7 +208,6 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                      config=config, clock=clock)
     port.plan = scheduler.plan                         # one plan object for the api.core, the brief and the repository roles
     root = api.executor_root(rdir, api.run_identity(scheduler))
-    repo_of = api.repositories(project, repos)
     def designer_scope_check(event):
         try:
             task = scheduler.plan.task(event.task_id)
@@ -230,8 +244,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         workspaces=api.m3.GitWorkspaces(root / "ws", repo_of), sink=sink, config=executor_config, autostart=False)
     stream_adapter = api.M3StreamAdapter(executor.attempts_dir, max_open_streams=executor.cfg.max_running)
     wiring = api.Wiring(scheduler, executor, port, sink, stream_adapter)
+    wiring.composition_runtime = composition_runtime
     port.on_accepted_attempt = wiring.stream_candidates.track
     try:
+        if composition_runtime is not None:
+            composition_runtime.bind_scheduler(scheduler)
         monitor = api.create_monitor_runtime(stream_adapter, monitor_store_path, api.sched.run_db_path(rdir), scheduler)
         wiring.monitor = monitor
     except Exception:
@@ -258,20 +275,35 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             port.base_ref = integrate.base_ref
             import bt_config
             integrate.check_files = bt_config.get("gates.integration_check_files", True) is not False
-            import bt_integration_line
-            line = bt_integration_line.Line(
-                plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
-                identity=identity, accepted=lambda: api._accepted_attempts(scheduler),
-                snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
-                start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
-                check_files=integrate.check_files,
-                base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
-            if _line_enabled(rdir, api._accepted_attempts(scheduler), _migration_probe(line)):
+            if scheduler.plan.schema_version == "1.3.0" and scheduler.plan.subplans:
+                import bt_integration_line
+                line = bt_integration_line.SubplanLineRouter(
+                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository, identity=identity,
+                    accepted=lambda: api._accepted_attempts(scheduler),
+                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                    start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                    check_files=integrate.check_files,
+                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
+            else:
+                import bt_integration_line
+                line = bt_integration_line.Line(
+                    plan=scheduler.plan, repo_of=repo_of, default_repository=default_repository,
+                    identity=identity, accepted=lambda: api._accepted_attempts(scheduler),
+                    snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
+                    start_base_of=lambda attempt: api._start_base_sha(executor, attempt), on_event=heard,
+                    check_files=integrate.check_files,
+                    base_of=lambda role: base_ref if isinstance(base_ref, str) else "HEAD")
+            subplan_plan = scheduler.plan.schema_version == "1.3.0" and bool(scheduler.plan.subplans)
+            if subplan_plan or _line_enabled(rdir, api._accepted_attempts(scheduler), _migration_probe(line)):
                 integrate.attach_line(line)
                 integrate.recompute_line()
+                if subplan_plan:
+                    (Path(rdir) / LINE_MARKER).write_text("integration line on for frozen subplan scopes\n", encoding="utf-8")
         if recovery_store_path is not None:
             import bt_recovery_pipeline
             import bt_recovery_runtime
+            m6_evidence_reader = (lambda reference: wiring.verification_store.get_result_manifest(reference)
+                                  if wiring.verification_store is not None else None)
             continuation = RetryContinuation(scheduler, executor, repo_of, port.base_ref,
                                              default_repository=default_repository,
                                              snapshot_of=lambda attempt: api._snapshot_sha(executor, attempt),
@@ -280,7 +312,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 recovery_store_path, scheduler=scheduler, run_id=api.run_identity(scheduler),
                 describe=continuation.describe, policy=recovery_policy, rdir=rdir,
                 recovery_sources=lambda: bt_recovery_runtime.sources(rdir, api.run_identity(scheduler)),
-                diagnostic_pipeline=bt_recovery_pipeline.owner_pipeline(rdir))
+                diagnostic_pipeline=bt_recovery_pipeline.owner_pipeline(rdir),
+                m6_evidence_reader=m6_evidence_reader,
+                composition_propagation=(getattr(composition_runtime, "demonstrated_frontier", None)
+                                         if composition_runtime is not None else None))
             wiring.recovery.metrics()
             scheduler.ports.recovery = wiring.recovery
             if integrate is not None:
@@ -305,10 +340,13 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             import bt_scheduler_decisions
             from bt_scheduler_quality.store import QualityStore
             from bt_scheduler_quality_adapter import QualityVerificationPort
+            from bt_scheduler_verification_authority import owner_verification_authority
 
             if quality_path is None or quality_runtime_policy is None:
                 raise RuntimeError("M6 composition was not fully validated")
             wiring.verification_store = QualityStore(quality_path)
+            if composition_runtime is not None:
+                composition_runtime.bind_quality_policy(quality_runtime_policy)
 
             def repository_for_order(order):
                 try:
@@ -320,6 +358,17 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
 
             def publish_conflict_observation(order, clash, refusal, detail):
                 return conflict_publisher.publish(wiring.recovery, scheduler.plan, order, clash, refusal, detail)
+
+            def needs_review_handoff(identity, result):
+                if wiring.recovery is None:
+                    raise RuntimeError("M5 recovery is unavailable for M6 NEEDS_REVIEW")
+                evidence_ref = result.get("evidence_manifest")
+                return scheduler.handle_needs_review(
+                    plan_id=identity.get("plan_id"), revision=identity.get("revision"),
+                    task_id=identity.get("task_id"), attempt_id=identity.get("attempt_id"),
+                    token=identity.get("token"), evidence_ref=evidence_ref,
+                    advice_port=wiring.recovery.needs_review_advice)
+
             wiring.verification_runtime = QualityVerificationPort(
                 scheduler, executor, wiring.verification_store, quality_runtime_policy, repository_for_order,
                 attempts_root=executor.attempts_dir,
@@ -340,7 +389,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                 integration_retries=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 0 else 0)(
                     bt_config.get("gates.integration_retries", 0)),
                 integration_rework_limit=(lambda v: v if isinstance(v, int) and not isinstance(v, bool) and v >= 1 else 6)(
-                    bt_config.get("gates.integration_rework_limit", 6)))
+                    bt_config.get("gates.integration_rework_limit", 6)),
+                composition_identity=(getattr(composition_runtime, "verification_identity", None)
+                                      if composition_runtime is not None else None),
+                needs_review_handoff=needs_review_handoff,
+                verification_authority=owner_verification_authority(rdir, project))
             scheduler.ports.verification = wiring.verification_runtime
             wiring.verification_runtime.start()
         sink.bind(scheduler)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,10 +12,11 @@ from .contracts import QualityError, VerifyRequest
 from .criteria import CheckResult, CriterionResult, evaluate_criteria, overall_status
 from .evidence import build_evidence, sha256_bytes, validate_result_contract
 from . import reuse
+from .authority import VerificationAuthority
+from .check_runner import CheckExecutor
 from .policy import CheckSpec, QualityPolicy, compile_verification
 from .review import ReviewerPort, validate_reviewer_evidence
 from .runner import CommandOutcome, SandboxRunner
-from .sandbox_mounts import attempt_mounts
 from .snapshot import SHA_LENGTHS, SnapshotResolver, SnapshotSource
 from .store import QualityStore
 
@@ -28,7 +28,8 @@ _ISSUE_DETAILS = {
     "CHECK_TIMEOUT": "The command exceeded its wall-clock limit.",
     "OUTPUT_LIMIT": "The command exceeded its captured output limit.",
     "SANDBOX_UNAVAILABLE": "The required operating-system sandbox could not be established.",
-    "CHECK_UNAVAILABLE": "The command could not be started inside the sandbox.",
+    "CHECK_UNAVAILABLE": "A declared external resource or trusted authorization is unavailable.",
+    "POLICY_ENTRY_MISSING_AUTHORIZATION": "The matching external policy entry is missing its authorization field.",
     "CHECK_MANUAL": "This verification requires an explicit operator review.",
     "RUNNER_BUSY": "The configured verification concurrency limit is full.",
     "ENGINE_INTERRUPTED": "M6 stopped before persisting a complete result; commands were not rerun.",
@@ -68,6 +69,7 @@ class QualityEngine:
         reviewer: ReviewerPort | None = None,
         attestations: Callable[[VerifyRequest, CheckSpec], str | None] | None = None,
         own_outputs: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
+        verification_authority: VerificationAuthority | None = None,
     ):
         """`attestations(order, spec)` -> the digest of a valid receipt the coordinator left for that manual check, or None
         (a receipt is minted and verified outside this package; M6 only learns whether one holds)."""
@@ -76,6 +78,7 @@ class QualityEngine:
         self.policy = policy
         self.store = store
         self.runner = runner or SandboxRunner(policy)
+        self.check_executor = CheckExecutor(policy, store, self.runner, verification_authority)
         self.resolver = resolver or SnapshotResolver(policy)
         self.reviewer = reviewer
 
@@ -141,6 +144,9 @@ class QualityEngine:
             criteria=criteria,
             status=status,
             issues=issues,
+            tree_digest=execution.manifest_context.get("tree_digest", execution.snapshot_sha),
+            check_tree_digests=execution.manifest_context.get("check_tree_digests"),
+            environment_fingerprint=execution.manifest_context.get("environment_fingerprint"),
             extra_manifest={
                 **execution.manifest_context,
                 "mapped_criteria": sorted(mapped),
@@ -209,11 +215,22 @@ class QualityEngine:
                     pruned[skip] = reuse.tree_id(source.repository, snapshot.snapshot_sha, skip)
                 return pruned[skip]
 
-            outcomes, issue_codes = self._run_checks(
+            check_tree_digests: dict[str, str | None] = {}
+
+            def check_tree(spec: CheckSpec) -> str | None:
+                value = tree_for(spec)
+                check_tree_digests[spec.id] = value or snapshot.snapshot_sha
+                return value
+
+            outcomes, issue_codes = self.check_executor.run(
                 specs, snapshot.directory, started, source.worktree, source.repository,
                 tree=None if ignore else reuse.tree_id(source.repository, snapshot.snapshot_sha),
-                tree_for=tree_for if ignore else None,
+                tree_for=check_tree if ignore else None,
+                order=order,
             )
+            full_tree = reuse.tree_id(source.repository, snapshot.snapshot_sha)
+            if not ignore:
+                check_tree_digests.update({spec.id: full_tree or snapshot.snapshot_sha for spec in specs})
             return _ExecutionEvidence(
                 specs,
                 outcomes,
@@ -226,101 +243,13 @@ class QualityEngine:
                     "archive_sha256": snapshot.archive_sha256,
                     "uncompressed_bytes": snapshot.uncompressed_bytes,
                     "file_count": snapshot.file_count,
+                    "tree_digest": full_tree or snapshot.snapshot_sha,
+                    "check_tree_digests": check_tree_digests,
+                    "environment_fingerprint": reuse.bound_environment_fingerprint(
+                        self.policy, order.contract_identities, order.environment_fingerprint
+                    ),
                 },
             )
-
-    def _rerun_if_flaky(self, spec, snapshot_root, outcome, remaining, mounts, started):
-        """A check that failed is run again `policy.rerun_failed_checks` times: a browser or timing test that fails
-        only while the machine is busy would otherwise spend the attempts of a task whose code is fine (REQ-027 T15c
-        and T15d, load average 16 on 8 cores). A pass on the rerun counts and says so in the check's output; a check
-        that keeps failing is judged by its last run."""
-        for _ in range(self.policy.rerun_failed_checks):
-            if outcome.status != "fail":
-                break
-            remaining = self.policy.max_total_seconds - int(time.monotonic() - started)
-            if remaining <= 0:
-                break
-            again = self.runner.run(spec, snapshot_root, timeout_seconds=min(self.policy.max_command_seconds, remaining),
-                                    mounts=mounts)
-            if again.status == "pass":
-                note = (f"[M6] this check failed once (exit {outcome.exit_code}) and passed when run again; "
-                        "flaky under load, not a defect of the code\n").encode()
-                return dataclasses.replace(again, stderr=note + again.stderr)
-            outcome = again
-        return outcome
-
-    def _run_checks(
-        self,
-        specs: tuple[CheckSpec, ...],
-        snapshot_root: Path,
-        started: float,
-        worktree: Path | None = None,
-        repository: Path | None = None,
-        tree: str | None = None,
-        tree_for: Callable[[CheckSpec], str | None] | None = None,
-    ) -> tuple[dict[str, CommandOutcome], list[str]]:
-        outcomes: dict[str, CommandOutcome] = {}
-        issue_codes: list[str] = []
-        mounts = attempt_mounts(self.policy, worktree, repository, snapshot_root)
-        done: dict[tuple[tuple[str, ...], str], CommandOutcome] = {}
-        fingerprint = reuse.environment_fingerprint(self.policy)
-        failed = False
-        for spec in self._cheap_first(specs):
-            if spec.kind == "manual":
-                outcomes[spec.id] = _unknown("CHECK_MANUAL")
-                continue
-            remaining = self.policy.max_total_seconds - int(time.monotonic() - started)
-            if remaining <= 0:
-                outcomes[spec.id] = _unknown("CHECK_NOT_RUN")
-                issue_codes.append("CHECK_NOT_RUN")
-                continue
-            # One criterion per check is the plan's shape: the same command often serves several criteria, and the
-            # snapshot cannot change between them, so it runs once.
-            same = (spec.argv, spec.cwd)
-            outcome = done.get(same)
-            if outcome is None:
-                if failed and self.policy.defer_expensive and self._is_expensive(spec):
-                    outcome = dataclasses.replace(_unknown("CHECK_DEFERRED"), stderr=(
-                        b"[M6] not run: a cheaper check of this task failed first. Fix that one and this check runs "
-                        b"again with the next attempt.\n"))
-                    issue_codes.append("CHECK_DEFERRED")
-                else:
-                    outcome = self._run_or_reuse(spec, snapshot_root, remaining, mounts, started,
-                                                 tree_for(spec) if tree_for else tree, fingerprint)
-                done[same] = outcome
-            outcomes[spec.id] = outcome
-            failed = failed or outcome.status == "fail"
-            if outcome.issue_code and outcome.issue_code != "CHECK_DEFERRED":
-                issue_codes.append(outcome.issue_code)
-        return _complete_outcomes(specs, outcomes, issue_codes)
-
-    def _is_expensive(self, spec: CheckSpec) -> bool:
-        return reuse.is_expensive(spec, self.store.last_check_ms(reuse.command_key(spec)), self.policy)
-
-    def _cheap_first(self, specs: tuple[CheckSpec, ...]) -> list[CheckSpec]:
-        """Plan order, except that expensive checks run after the cheaper ones (so a failure of a cheap one can spare them)."""
-        if not self.policy.defer_expensive:
-            return list(specs)
-        costly = {spec.id for spec in specs if spec.kind != "manual" and self._is_expensive(spec)}
-        return [spec for spec in specs if spec.id not in costly] + [spec for spec in specs if spec.id in costly]
-
-    def _run_or_reuse(self, spec, snapshot_root, remaining, mounts, started, tree, fingerprint) -> CommandOutcome:
-        key = reuse.pass_key(tree, spec, fingerprint) if tree else None
-        if key:
-            hit = self.store.cached_pass(key, self.policy.cache_seconds, time.time())
-            if hit is not None:
-                note = (f"[M6] not run again: this exact tree already passed this check {int(time.time() - hit['created_at'])} "
-                        "seconds ago (same command, same environment); its recorded output follows\n").encode()
-                return CommandOutcome("pass", hit["exit_code"], 0, hit["stdout"], note + hit["stderr"], None, True)
-        outcome = self.runner.run(spec, snapshot_root, timeout_seconds=min(self.policy.max_command_seconds, remaining),
-                                  mounts=mounts)
-        outcome = self._rerun_if_flaky(spec, snapshot_root, outcome, remaining, mounts, started)
-        if outcome.status in ("pass", "fail") and outcome.sandboxed:
-            self.store.record_check_ms(reuse.command_key(spec), outcome.duration_ms, time.time())
-        if key and outcome.status == "pass" and outcome.sandboxed and not outcome.output_truncated \
-                and not outcome.stderr.startswith(b"[M6] this check failed once"):
-            self.store.remember_pass(key, outcome.exit_code, outcome.duration_ms, outcome.stdout, outcome.stderr, time.time())
-        return outcome
 
     def _apply_review(
         self,
@@ -399,10 +328,7 @@ class QualityEngine:
         artifact_bodies: dict[str, bytes] = {}
         for spec in specs:
             outcome = _unknown(code)
-            stdout_digest, stderr_digest = (
-                sha256_bytes(outcome.stdout),
-                sha256_bytes(outcome.stderr),
-            )
+            stdout_digest, stderr_digest = sha256_bytes(outcome.stdout), sha256_bytes(outcome.stderr)
             artifact_bodies[stdout_digest] = outcome.stdout
             artifact_bodies[stderr_digest] = outcome.stderr
             checks_list.append(
@@ -432,6 +358,9 @@ class QualityEngine:
             criteria=criteria,
             status="NEEDS_REVIEW",
             issues=issues,
+            environment_fingerprint=reuse.bound_environment_fingerprint(
+                self.policy, order.contract_identities, order.environment_fingerprint
+            ),
             extra_manifest={"source": "unavailable", "checks_replayed": False},
         )
         validate_result_contract(result)
@@ -479,6 +408,9 @@ class QualityEngine:
                 criteria=criteria,
                 status="NEEDS_REVIEW",
                 issues=issues,
+                environment_fingerprint=reuse.bound_environment_fingerprint(
+                    self.policy, order.contract_identities, order.environment_fingerprint
+                ),
                 extra_manifest={
                     "source": "interrupted",
                     "request_key": key,
@@ -491,19 +423,6 @@ class QualityEngine:
             )
             recovered.append(key)
         return tuple(recovered)
-
-
-def _complete_outcomes(
-    specs: tuple[CheckSpec, ...],
-    outcomes: dict[str, CommandOutcome],
-    issue_codes: list[str],
-) -> tuple[dict[str, CommandOutcome], list[str]]:
-    if len(outcomes) != len(specs):
-        for spec in specs:
-            outcomes.setdefault(spec.id, _unknown("CHECK_NOT_RUN"))
-            if outcomes[spec.id].issue_code == "CHECK_NOT_RUN":
-                issue_codes.append("CHECK_NOT_RUN")
-    return outcomes, issue_codes
 
 
 def _build_check_results(

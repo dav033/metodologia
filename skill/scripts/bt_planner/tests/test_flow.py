@@ -25,7 +25,7 @@ status: {status}
 
 ### M1 — Auth fix
 - [ ] T1 — Reject expired sessions · repo: app · files: src/auth/** · verify: `python -m unittest`
-- [ ] T2 — Document it · repo: app · after: T1
+- [ ] T2 — Document it · repo: app · after: T1 · verify: `python -m unittest`
 """
 
 
@@ -84,7 +84,7 @@ class PlannerCycle(unittest.TestCase):
     def test_public_api_is_complete_and_importable(self):
         for name in planner.__all__:
             self.assertTrue(hasattr(planner, name), name)
-        self.assertEqual(planner.SCHEMA_VERSION, "1.2.0")
+        self.assertEqual(planner.SCHEMA_VERSION, "1.3.0")
         self.assertIn("plan_id", planner.example_text())
 
 

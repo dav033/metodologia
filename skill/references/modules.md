@@ -52,7 +52,15 @@ be simulated with `bt_scheduler_core.simulators`.
   revision (through `bt_plan_adapter`, hash from the planner's manifest — approval is the caller-supplied sha256, no hash,
   no run), opens the run database at `<bitácora root>/.state/scheduler/<project>-<REQ>.db` (local, untracked; outside that
   layout `<requirement>/SCHEDULER.db`), and can write a `RUN.json`-shaped read model marked `authority: "scheduler"` as
-  `<requirement>/RUN.projection.json`.
+  `<requirement>/RUN.projection.json`. For schema 1.3.0 plans with subplans, read-only subplan/composition specs and
+  derived statuses are exposed by M1; the adapter also exposes thin `record_subplan_version` and `record_composition`
+  wrappers for F4-9. These audited facts gate composition tasks without changing task or attempt state. Publication
+  binds to the accepted audit attempt and accepted member-task attempts, so rework or an affected revision makes the
+  fact stale. Stale versions stay in audit history, show a stale-version attention reason, and keep the gate pending.
+  An unaffected rebase can rebind the same version, commit, and manifest when the accepted identity is unchanged;
+  changed work requires version N+1. Schema-4 facts without identity still load but count as stale. M1 demotes READY
+  gates when their facts become stale and rechecks reserved starts before dispatch. Publishing requires accepted
+  audit work. Composition candidate ids are immutable across manifests, so a different candidate needs a new id.
 - **One authority per requirement**: the core's run database decides. The projection is never called `RUN.json`, so no
   legacy file can be overwritten by it. The adapter refuses to open a core over a legacy `RUN.json` (a run from before the
   marathon supervisor was removed); such files are historical, read-only and not migrated.
@@ -91,6 +99,25 @@ be simulated with `bt_scheduler_core.simulators`.
   The owner loop drains M3 output into M4 and delivers its audit-only incidents through M1; M5 and M6 use M1's
   existing recovery and verification ports. The legacy launcher stays separate, and low-level compositions retain
   their optional port seam. `NEEDS_REVIEW` remains operator-owned.
+- F4-9 adds an opt-in owner runtime for frozen `1.3.0` plans that declare subplans. `bt_scheduler_run.py` owns the
+  reconciliation loop; `bt_scheduler_owner_composition.py` handles subplan versions, durable gate reservations and
+  verified publication, while `bt_scheduler_owner_propagation.py` derives declared downstream consumers and calls
+  M5's `composition_propagation` port before applying the exact returned frontier through M1. It creates a dedicated
+  `.state/composition/<project>-<REQ>.db` and owned workspaces under `.state/composition/workspaces/`, bound to the
+  project, requirement, M1 run, plan revision/hash and repository identity. Accepted M3 line refs and M6 result
+  manifests are reconciled through public M1/M3/M6 and composition adapters; stale versions are filtered, candidates
+  are reserved once and loaded by manifest identity after restart, and per-gate errors emit owner attention records.
+  M6 PASS/FAIL proofs bind the candidate, manifest, contract identities and tree. Multi-repository plans fail closed
+  with `OWNER_COMPOSITION_MULTI_REPOSITORY_UNSUPPORTED`; there is not yet a cross-repository commit/workspace contract.
+  The planner default is `1.3.0` for subplan plans: stub-agent owner E2E and M6 review hold/resume are wired. Planner
+  checks the owner's gate chain, exact contract paths and one-repository boundary before run start. M1 exposes
+  an operation for applying an explicit M5 frontier to exactly its named tasks, bound to the current published
+  composition manifest and tree; it does not expand descendants. Owner M6 checks resource names against the process environment and
+  `~/.config/flow/secrets.env` without persisting values. Sandbox needs no authorization; staging and production
+  require a matching entry in `<bitacora root>/<project>/verification-policy.json`, and missing, unreadable or
+  unmatched policy denies before command launch. The owner propagation producer is wired for changed published
+  subplan versions included by a published composition; M5 evidence must carry stable evidence ids, and M1 applies
+  actions idempotently by change id. Schema 1.2.0 remains supported for legacy plans.
 
 ### Verification inputs, analyst stops and audit ledgers
 
@@ -138,6 +165,15 @@ Sampling is best effort and identity-checked; see the executor README for caps a
 - For schema 1.3.0 `design` tasks, M3 gates snapshots before verification: changes stay in `design/`; preview needs
   `design.preview` or `design.preview_projects`. Refusals retain snapshots (`DESIGN_SCOPE_VIOLATION`,
   `DESIGN_PREVIEW_DISABLED`).
+- For 1.3.0 plans with subplans, M3 folds accepted contributions into refs/m3/line/<run>/<repository-role>/<SP-id>;
+  each scope includes its accepted member tasks and accepted ancestors from the frozen plan. Redos replace the prior
+  delta and conflicts remain explicit. Tasks outside subplans require the injected owner `composition_base(task_id, order)`
+  identity; absent/empty identities are rejected as `COMPOSITION_BASE_MISSING` and are never rebuilt from all accepted work.
+  The start gate checks each `ui: true` task's exact `design/contracts/<contract>@v<version>.md` blob in that selected
+  base tree before launch (`DESIGN_CONTRACT_MISSING`). The current M1 `Ack` contract can carry only rejection detail and
+  cannot yet represent a blocked-environment classification; that typed result remains an owner-interface dependency.
+  Reviewer briefs derive `review_axis: visual` only for frozen `subplan.ui.visual_review_task` tasks. Workspaces explicitly
+  identify attempt, reconstructable subplan, and candidate integration kinds; integration cleanup is idempotent.
 - Predecessor hand-over (P-031): `skill/scripts/bt_scheduler_integrator.py`, used by `wire(..., integrate_predecessors=True)`. It merges
   the accepted same-repository ancestors' handoff snapshots into one commit (`git merge-tree`, no worktree touched, kept under
   `refs/m3/integration/<run>/<task>`) and passes it as the task's `base_ref`; a conflict or a missing snapshot rejects the order
@@ -154,7 +190,14 @@ Sampling is best effort and identity-checked; see the executor README for caps a
 An audit task is accepted by what it **found**, not by the existence of its report. It lists one `*.findings.json`
 ledger (`{"schema": "audit-findings/1", "findings": [{id, severity critical|high|medium|low, status
 open|fixed|accepted, summary, tasks: [plan task ids whose result is wrong], evidence (fixed), accepted_by: "owner" +
-reason (accepted)}]}`; the auditor's prompt carries this format). `bt_scheduler_quality_adapter` reads the ledger from
+reason (accepted), semantic_fingerprint?}]}`; the auditor's prompt carries this format). The optional fingerprint is
+64 lowercase hexadecimal characters: SHA-256 of canonical compact JSON `[contract_id, failure_mechanism, trigger,
+affected_frontier]`, after Unicode NFKC normalization, case-folding and whitespace collapse on each string; a frontier
+list is normalized, sorted and deduplicated. The gate merges open blocking findings only when both carry the same
+fingerprint, merging evidence references and task scope. Findings without fingerprints stay separate; different
+fingerprints stay distinct even at the same location. `audit-ledger check` validates the field while older
+`audit-findings/1` ledgers remain valid. `evaluate_many` combines independent ledgers and counts matching fingerprints
+once across auditors. `bt_scheduler_quality_adapter` reads the ledger from
 the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evaluate`:
 
 - an open critical/high finding, a missing or malformed ledger, or a risk «accepted» by anyone but the owner turns the
@@ -267,6 +310,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   and evidence of each finding even when the system did not send it back itself;
 - **proportional verification** (REQ-030, `bt_scheduler_quality/reuse.py`, `bt_attestation`): see the quality README. The pass cache key leaves out the report files a `test`/`audit` task itself writes (`reuse.own_outputs`; `verifier.cache_ignores_outputs`, on): REQ-020's T14a rewrote `docs/req-020/integration-results.json` at every attempt, so three real attempts had 3 distinct trees but ONE tree ignoring that file, and its 10-minute `npm run gate` was paid each time. A check that names the file keeps it in its key; an implementing task's paths are never ignored. The
   environment guards are configurable and name their cause: `verifier.max_workspace_mb`, `scheduler.min_free_mb`;
+- **M5 reason-aware recovery** (`bt_scheduler_recovery_adapter.py`): the optional `m6_evidence_reader` loads the persisted content-addressed M6 manifest and checks its request identity, revision, token and captured `snapshot_sha` before passing a closed reason code into `m5.recovery-case/2`; the snapshot is the binding identity, while tree digests are informational unless executor facts provide a comparable tree id, in which case M5 compares them. Absent reason codes remain `UNCLASSIFIED` with `/1` policy behavior. External/environment blocks return fixed actionable codes before retry exhaustion and never enter code-retry history; a verification `TIMEOUT` retries once, counted by reason across the task history; flaky and not-run evidence block; code failures use bounded rework; PASS never accepts. The optional `composition_propagation` port returns a validated `m5.demonstrated-frontier/1` with one preserved action identity (`reverify`, `reintegrate`, `audit`, `adapt_contract`, `modify`, `reimplement`) and only current scheduler task ids other than the source task; internal changes carry `none` and an empty frontier. M5 does not derive descendants or mutate M1. The F4-9 owner derives declared consumers in `bt_scheduler_owner_propagation.py` and applies actions through M1's idempotent demonstrated-frontier operation;
 - **a refused verification order** (`Ack.permanent`, `bt_scheduler_core/dispatch.py`, `bt_scheduler_recovery_adapter.py`): the M6 adapter marks a malformed order, one that differs from the approved plan and an idempotency conflict as permanent; the core then fails the attempt (`verify rejected: <code>`) instead of re-sending it at every lease expiry, M5 blocks it as `m5:verify_rejected_<code>` (not owner-only, the work done stays for the retry) and the self-healing sees the text. A busy store stays transient. The watcher's notice for an attempt stuck in `verifying` after 3 identical rejections remains for ports that do not set the flag;
 - **checks that map to criteria** (`bt_planner.quality.unmapped_checks`, `bt_plan_adapter.mapping_problem`): the verifier compares a check's `purpose` with the criteria of its task by exact text. Over four real runs the two most frequent stops were `CHECK_UNMAPPED` (59) and `CRITERION_MANUAL` (45), and REQ-020's plan carried 37 unmapped checks, 2 criteria without a check and 11 proven only manually. `plan-json check` now warns for each unmapped check with its closest criterion; `plan-json freeze` (the approval) refuses unmapped checks and criteria without a check (`planner.require_mapped_checks`, on by default; `--force` approves anyway); revisions the scheduler makes itself and plans already frozen are not gated. The Planner agent's instructions carry the rule;
 - **self-healing** (REQ-030, `bt_scheduler_healing`, `bt_healing_classify`): the watchdog's `heal` runs a bounded cycle over the
@@ -335,8 +379,15 @@ No agent and no operator has to reopen anything by hand: the system does it from
 
 M6 checks the exact approved M1 `VerifyOrder` against the matching, validated M3 handoff snapshot. Its standard-library-only
 package stores private durable evidence, runs commands in the required bubblewrap sandbox, and sends correlated PASS/FAIL
-verdicts through M1. `NEEDS_REVIEW` creates a durable review item and leaves M1 in `VERIFYING`; an Ack means admission,
-not acceptance. The M6 package imports no methodology module.
+verdicts through M1. Verdict values and meanings stay unchanged. Evidence is `m6.verify-result/1.1`; its additive
+per-check and aggregate `reason_code` values are `PASS`, `FAIL_CODE`, `BLOCKED_EXTERNAL`, `BLOCKED_ENV`, `TIMEOUT`,
+`FLAKY_SUSPECTED` and `NOT_RUN`. A check that fails then passes on the same evidence key is `FLAKY_SUSPECTED` and
+leaves the verdict at `NEEDS_REVIEW`, never a clean PASS. Missing taxonomy in an old record reads as `UNCLASSIFIED`.
+Evidence binds checks to snapshot/tree identity, contract identities and environment fingerprint. Pass reuse adds
+contract and declared environment identities only when supplied, preserving legacy keys. Optional `composition_id` and
+`manifest_sha256` must appear together; M6 records them with the candidate tree. M1 receives the taxonomy through its
+existing `m6://result/<sha256>` evidence reference. `NEEDS_REVIEW` creates a durable review item and leaves M1 in
+`VERIFYING`; an Ack means admission, not acceptance. The M6 package imports no methodology module.
 
 - Sandbox policy (config `verifier.*`, D-095): checks share the host network by default (`QualityPolicy.network`, so live
   services and a database are reachable; name resolution and TLS files are mounted read-only) and may run deploy/migrate-style

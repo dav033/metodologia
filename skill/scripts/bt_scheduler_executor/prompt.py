@@ -41,6 +41,8 @@ def build_prompt(brief: Brief, request: StartRequest, *, workdir: str, branch: s
     ]
     if brief.objective:
         parts.append(f"\n## Objective\n{brief.objective}")
+    if brief.review_axis == "visual":
+        parts.append("\n## Reviewer axis\nvisual")
     parts.append(f"\n## Acceptance criteria\n{bullets(brief.acceptance_criteria or request.acceptance_criteria)}")
     if brief.verification:
         parts.append(f"\n## How the work will be checked (by someone else)\n{bullets(brief.verification)}\n\n"

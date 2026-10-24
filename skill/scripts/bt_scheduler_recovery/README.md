@@ -24,14 +24,25 @@ with DecisionStore("/tmp/m5-example-private/decisions.db") as store:
 ```
 
 Exports: `RecoveryError(code)`, `RecoveryCase`, `Policy`, `RecoveryDecision`,
-`HistorySummary`, `DecisionStore`, `propose`, `inspect_store`.
-`RecoveryCase.to_dict/from_dict` uses schema `m5.recovery-case/1`;
-`RecoveryDecision.to_dict/from_dict` uses `m5.recovery-decision/1`.
+`HistorySummary`, `DemonstratedFrontier`, `DecisionStore`, `propose`, `inspect_store`.
+New `RecoveryCase.to_dict` writes `m5.recovery-case/2` with the additive M6
+`reason_code`; `from_dict` also reads `/1`, mapping an absent classification to
+`UNCLASSIFIED`. `RecoveryDecision` remains `m5.recovery-decision/1`. The closed
+M6 values are `PASS`, `FAIL_CODE`, `BLOCKED_EXTERNAL`, `BLOCKED_ENV`, `TIMEOUT`,
+`FLAKY_SUSPECTED`, `NOT_RUN` and `UNCLASSIFIED`. No prose is classified.
 Direct constructors and wire readers validate closed causes, enums, finite numbers,
 bounded identifiers and opaque evidence refs. Unknown wire fields fail. Evidence refs
 must have the form `scheme:<64 lowercase hex digits>`; hashes, never paths or raw logs.
 The adapter is responsible for hashing/redacting evidence and proving identity, exact
 plan SHA-256, revision, fencing token, current attempt, terminal state and handoff snapshot.
+The captured `snapshot_sha` is the binding identity; M6 input/check `tree_digest` values
+are informational when executor facts provide no corresponding tree id, and are compared
+against that id when one is available.
+`reason_code` is advice metadata; actual `attempt_id` identifies one M1 attempt, while
+the bounded code-retry history counts only distinct prior attempts with retryable
+evidence. `RecoveryDecision.retry_budget_remaining` is the M1 actual-attempt budget;
+it is not the count of code retries. `BLOCKED_*`, `PASS`, `FLAKY_SUSPECTED` and
+`NOT_RUN` do not enter code-retry history.
 
 `propose(case, policy=Policy(), history=HistorySummary())` is pure and deterministic.
 History counts **prior distinct attempts** of the same run/task/technical cause, not
@@ -40,10 +51,21 @@ the default policy. A timeout permits only one retry. All transient cases requir
 explicit transience evidence, a verified handoff and attempt budget. Reported or
 confirmed structured evidence is accepted; inferred/unknown evidence blocks.
 Verification rejection additionally requires a verifier reference and finished
-execution; it produces a retry recommendation and never an acceptance.
+execution; it produces a retry recommendation and never an acceptance. For a verification
+`TIMEOUT`, M5 counts earlier timeout decisions by reason across the task history, independent
+of technical cause, and blocks after the first retry.
 
-Safety and exclusivity guards precede evidence and budgets. Cancelled, live,
-uncertain, stale, mismatched and unverified attempts cannot recover automatically.
+Safety and exclusivity guards precede evidence and budgets. `BLOCKED_EXTERNAL` and
+`BLOCKED_ENV` return typed block reasons with owner/environment actions before retry
+exhaustion; the notices use fixed text and contain no credential or environment values.
+`TIMEOUT` permits one retry. `FLAKY_SUSPECTED` blocks pending M6's configured rerun
+policy, `NOT_RUN` blocks, `FAIL_CODE` follows bounded code rework, and `PASS` blocks
+because M5 cannot accept work. `UNCLASSIFIED` retains the `/1` policy behavior.
+Stable actionable block reasons are `m6_blocked_external_owner_must_restore_dependency`,
+`m6_blocked_env_operator_must_repair_environment`, `flaky_requires_m6_rerun_policy`,
+`m6_not_run` and `m6_pass_not_recovery`.
+Cancelled, live, uncertain, stale, mismatched and unverified attempts cannot recover
+automatically.
 Permanent/unknown causes block. Quota reset is never inferred: a known reset plus
 margin must fit both wait and elapsed budgets. Backoff deadlines are absolute from
 `failure_at`, so polling cannot move a cooldown forward forever. Policies do not
@@ -75,7 +97,8 @@ Metrics report stored decision/action counts, not unmeasured interventions avoid
 
 Stable input/storage errors: `INVALID_INPUT`, `SCHEMA_MISMATCH`, `UNKNOWN_FIELD`,
 `CASE_CONFLICT`, `STORE_FULL`, `STORE_BUSY`, `STORE_CLOSED`, `STORE_SCHEMA`,
-`STORE_PATH`, `STORE_PERMISSIONS`, `STORE_MISSING`, `STORE_IO`.
+`STORE_PATH`, `STORE_PERMISSIONS`, `STORE_MISSING`, `STORE_IO`,
+`PROPAGATION_UNAVAILABLE`, `PROPAGATION_STALE`.
 Error text contains only the code, never untrusted facts or filesystem paths.
 
 ## Read-only operations
@@ -89,6 +112,30 @@ Inspection exposes the last decision, reason, absolute cooldown, waits remaining
 human intervention flag. Omit `--json` for text. Inspection never creates a database,
 parent directory or schema; a missing file exits 2 with `STORE_MISSING`.
 `inspect_store(path, metrics=False)` provides the same read-only API.
+
+## M6 evidence and selective propagation ports
+
+The adapter may receive `m6_evidence_reader(reference) -> bytes | None`. It reads the
+persisted content-addressed M6 result manifest (`m6://result/<sha256>`), verifies the
+digest, request identity, revision, token, captured M3 snapshot and tree digest before
+using its reason code. Unavailable or stale supplied evidence blocks; an unwired port
+keeps legacy `UNCLASSIFIED` behavior. M6 credentials and raw environment values are
+never copied to M5 history.
+
+The optional `composition_propagation(change_id)` port returns
+`m5.demonstrated-frontier/1`: one action from `reverify`, `reintegrate`, `audit`,
+`adapt_contract`, `modify`, `reimplement`, or `none`, plus an explicit consumer
+frontier and opaque evidence refs bound to a composition manifest and tree. `none`
+requires an empty frontier. M5 validates and returns only that frontier; it never
+expands ancestry or mutates M1 tasks. Runtime wiring and any M1 application operation
+belong to F4-9.
+
+For M6 `NEEDS_REVIEW`, the owner calls M5 with the held M1 identity and a content-addressed
+M6 result reference. M5 verifies the manifest digest and request identity before advising
+`resume`, `wait`, or `block`. Timeout/flaky evidence may resume the same M6 request once;
+blocked environment/external dependencies and not-run checks wait. Unknown or stale evidence
+fails closed. M1 persists the hold before this port call and applies the advice without an
+implementation retry.
 
 ## Durable diagnostics and semantic progress
 

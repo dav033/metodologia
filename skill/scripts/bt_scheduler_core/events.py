@@ -90,13 +90,16 @@ def apply_event(ctx: Ctx, event: Event) -> IngestResult:
         return _reject(ctx, "stale" if reason == "already_past" else "invalid", reason, event.event_id, att.task_id, attempt_id)
     detail = str(event.payload.get("reason", ""))[:300]
     if kind == EventKind.EXECUTION_STARTED:
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         advance(ctx, attempt_id, A.RUNNING, source=event.source)
     elif kind == EventKind.EXECUTION_FINISHED:
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         advance(ctx, attempt_id, A.VERIFYING, source=event.source)
         request_verification(ctx, attempt_id)
     elif kind == EventKind.EXECUTION_FAILED:
+        att.budget_consumed = True
         end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", detail)
     else:
         end_attempt(ctx, attempt_id, A.CANCELLED, "execution_failed", detail or "cancelled_by_executor")
@@ -143,5 +146,9 @@ def apply_verdict(ctx: Ctx, verdict: Verdict) -> IngestResult:
         promote_ready(ctx)
     else:
         end_attempt(ctx, attempt_id, A.REJECTED, "verification_rejected", evidence or "verdict rejected the work")
+    review = ctx.state.review_holds.get(attempt_id)
+    if review is not None and review["state"] in {"held", "waiting", "resumed"}:
+        review["state"] = "resolved"
+        ctx.audit("needs_review_resolved", att.task_id, attempt_id, verdict_id=verdict.verdict_id)
     ctx.state.remember(verdict.verdict_id)
     return IngestResult("applied", "", verdict.verdict_id)

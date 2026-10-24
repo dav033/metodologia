@@ -33,7 +33,15 @@ MIN_WAIT = 1.0     # a `wait` of 0 would be re-asked at once, forever: every wai
 
 def attempts_used(state: RunState, task_id: str) -> int:
     rec = state.tasks[task_id]
-    return len(rec.attempts) - rec.budget_base
+    consumed = sum(1 for attempt_id in rec.attempts
+                   if state.attempts[attempt_id].budget_consumed)
+    return max(0, consumed - rec.budget_base)
+
+
+def budget_consumed(state: RunState, task_id: str) -> int:
+    """Total code attempts for this task; reservation ids remain monotonic and independent of this budget."""
+    return sum(1 for attempt_id in state.tasks[task_id].attempts
+               if state.attempts[attempt_id].budget_consumed)
 
 
 def pending(ctx: Ctx) -> list[FailureContext]:
@@ -68,10 +76,16 @@ def apply_recovery(ctx: Ctx, context: FailureContext, proposal: object) -> str:
         return "stale"
     remaining = ctx.config.max_attempts - attempts_used(ctx.state, context.task_id)
     source = "port" if valid_proposal(proposal) else "policy"
-    if source == "policy":
+    last = ctx.state.attempts[context.attempt_id]
+    blocked_environment = last.failure_classification == "blocked_environment"
+    if blocked_environment:
+        proposal = RecoveryProposal("block", "blocked_environment")
+        source = "policy"
+    elif source == "policy":
         if proposal is not None:
             ctx.audit("port_invalid", context.task_id, context.attempt_id, port="recovery")
-        proposal = RecoveryProposal("retry", "default_policy") if remaining > 0 else RecoveryProposal("block", "attempts_exhausted")
+        proposal = RecoveryProposal("retry", "default_policy") if remaining > 0 else RecoveryProposal(
+            "block", "attempts_exhausted")
     action = proposal.action
     if action == "retry" and remaining <= 0:
         ctx.audit("recovery_refused", context.task_id, context.attempt_id, wanted="retry", why="attempts_exhausted")
@@ -111,14 +125,17 @@ def apply_observation(ctx: Ctx, attempt_id: str, status: object, *, manual: bool
     att.lease_expires_at = ctx.now + (min(ctx.config.lease_seconds, ctx.config.reconcile_seconds)
                                       if verdict == "unknown" else ctx.config.lease_seconds)
     if verdict == "running":
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         if current != A.RUNNING:
             advance(ctx, attempt_id, A.RUNNING, via="reconcile")
     elif verdict == "finished":
+        att.budget_consumed = True
         mark_delivered(ctx, attempt_id, "start")
         advance(ctx, attempt_id, A.VERIFYING, via="reconcile")
         request_verification(ctx, attempt_id)
     elif verdict == "failed":
+        att.budget_consumed = True
         end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", getattr(status, "detail", "") or "reported_failed")
     elif verdict == "cancelled":
         end_attempt(ctx, attempt_id, A.CANCELLED, "execution_failed", "cancelled_by_executor")

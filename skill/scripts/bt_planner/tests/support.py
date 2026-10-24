@@ -32,13 +32,13 @@ def classify(skeleton: dict) -> dict:
                   "classification_evidence": evidence_for(t["id"]),
                   "expected_paths": t.get("expected_paths", [f"src/{t['id'].lower()}/**"]), "shared_resources": [],
                   "acceptance_criteria": [f"{t['title']} works as described"]})
-        if plan.get("schema_version") == "1.2.0":
+        if plan.get("schema_version") in {"1.2.0", "1.3.0"}:
             t["covers"] = list(plan["requirements"][:1])
             t["kind"] = "implement"
         if not t.get("verification"):
             t["verification"] = [{"type": "manual", "value": "read the diff", "purpose": "review",
                                   "expected": "change matches the objective"}]
-        if plan.get("schema_version") == "1.2.0":
+        if plan.get("schema_version") in {"1.2.0", "1.3.0"}:
             for verification in t["verification"]:
                 verification.setdefault("category", "functional")
     return plan
@@ -88,7 +88,9 @@ class PlanDir(unittest.TestCase):
         (self.rdir / "PLAN.json").write_text(pc.dumps(plan), encoding="utf-8")
 
     def good(self) -> dict:
-        plan = classify(self.sync.skeleton(self.rdir))
+        skeleton = self.sync.skeleton(self.rdir)
+        skeleton["schema_version"] = "1.2.0"
+        plan = classify(skeleton)
         self.write(plan)
         return plan
 

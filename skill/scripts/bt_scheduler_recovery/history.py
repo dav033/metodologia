@@ -73,7 +73,44 @@ def _json(value: object) -> str:
 def _facts(case: RecoveryCase) -> str:
     data = case.to_dict()
     data.pop("now")  # Wall clock advancement does not change the logical incident.
+    if case.reason_code == "UNCLASSIFIED":
+        data["schema_version"] = "m5.recovery-case/1"
+        data.pop("reason_code")
     return _json(data)
+
+
+def _same_cause_attempts(connection: sqlite3.Connection, case: RecoveryCase) -> int:
+    rows = connection.execute(
+        "SELECT DISTINCT attempt_id,case_json FROM decisions WHERE run_id=? AND task_id=? AND cause=? AND attempt_id<>?",
+        (case.run_id, case.task_id, case.technical_cause, case.attempt_id),
+    ).fetchall()
+    ignored = {"BLOCKED_EXTERNAL", "BLOCKED_ENV", "PASS", "FLAKY_SUSPECTED", "NOT_RUN"}
+    by_attempt: dict[str, str] = {}
+    for attempt_id, encoded in rows:
+        try:
+            previous = json.loads(encoded)
+        except (TypeError, ValueError):
+            raise RecoveryError("STORE_SCHEMA") from None
+        reason = previous.get("reason_code", "UNCLASSIFIED") if isinstance(previous, dict) else None
+        if reason not in ignored:
+            by_attempt[attempt_id] = reason
+    return len(by_attempt)
+
+
+def _timeout_decisions(connection: sqlite3.Connection, case: RecoveryCase) -> int:
+    rows = connection.execute(
+        "SELECT DISTINCT attempt_id,case_json FROM decisions WHERE run_id=? AND task_id=? AND attempt_id<>?",
+        (case.run_id, case.task_id, case.attempt_id),
+    ).fetchall()
+    attempts = set()
+    for attempt_id, encoded in rows:
+        try:
+            previous = json.loads(encoded)
+        except (TypeError, ValueError):
+            raise RecoveryError("STORE_SCHEMA") from None
+        if isinstance(previous, dict) and previous.get("reason_code") == "TIMEOUT":
+            attempts.add(attempt_id)
+    return len(attempts)
 
 
 def _private_path(path: Path) -> None:
@@ -184,10 +221,9 @@ class DecisionStore:
             else:
                 count = connection.execute("SELECT count(*) FROM decisions").fetchone()[0]
                 require(count < min(self.max_decisions, policy.max_decisions), "STORE_FULL")
-                same = connection.execute(
-                    "SELECT count(DISTINCT attempt_id) FROM decisions WHERE run_id=? AND task_id=? AND cause=? AND attempt_id<>?",
-                    (case.run_id, case.task_id, case.technical_cause, case.attempt_id)).fetchone()[0]
-                decision = propose(case, policy, HistorySummary(same, count))
+                same = _same_cause_attempts(connection, case)
+                timeouts = _timeout_decisions(connection, case)
+                decision = propose(case, policy, HistorySummary(same, count, timeouts))
                 connection.execute("INSERT INTO decisions(decision_id,run_id,task_id,attempt_id,cause,facts,case_json,"
                                    "policy_json,decision_json,action) VALUES (?,?,?,?,?,?,?,?,?,?)",
                                    (key, case.run_id, case.task_id, case.attempt_id, case.technical_cause, _facts(case),

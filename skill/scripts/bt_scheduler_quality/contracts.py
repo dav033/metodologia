@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeGuard
@@ -20,9 +21,10 @@ ORDER_KEYS = frozenset(
         "verification",
     }
 )
-PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
+OPTIONAL_ORDER_KEYS = frozenset({"composition_id", "manifest_sha256", "contract_identities", "environment_fingerprint"})
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
 VERIFICATION_CATEGORIES = frozenset({"static", "functional", "integration", "regression", "product"})
-COMMAND_KEYS = frozenset({"type", "value", "purpose", "created_by", "category"})
+COMMAND_KEYS = frozenset({"type", "value", "purpose", "created_by", "category", "environment", "requires", "authorization_needed"})
 MANUAL_KEYS = COMMAND_KEYS | {"expected"}
 MAX_TEXT_BYTES = 4096
 MAX_CRITERIA = 64
@@ -81,8 +83,11 @@ class VerificationSpec:
     created_by: str = ""
     expected: str = ""
     category: str | None = None
+    environment: str | None = None
+    requires: tuple[str, ...] | None = None
+    authorization_needed: str | None = None
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, object]:
         result = {"type": self.kind, "value": self.value, "purpose": self.purpose}
         if self.created_by:
             result["created_by"] = self.created_by
@@ -90,6 +95,12 @@ class VerificationSpec:
             result["expected"] = self.expected
         if self.category is not None:
             result["category"] = self.category
+        if self.environment is not None:
+            result["environment"] = self.environment
+        if self.requires is not None:
+            result["requires"] = list(self.requires)
+        if self.authorization_needed is not None:
+            result["authorization_needed"] = self.authorization_needed
         return result
 
 
@@ -105,10 +116,15 @@ class VerifyRequest:
     token: int
     acceptance_criteria: tuple[str, ...]
     verification: tuple[VerificationSpec, ...]
+    composition_id: str | None = None
+    manifest_sha256: str | None = None
+    contract_identities: tuple[tuple[str, str], ...] = ()
+    environment_fingerprint: str | None = None
 
     @classmethod
     def from_mapping(cls, value: object) -> VerifyRequest:
-        if not isinstance(value, Mapping) or set(value) != ORDER_KEYS:
+        if (not isinstance(value, Mapping) or not ORDER_KEYS <= set(value)
+                or set(value) - ORDER_KEYS - OPTIONAL_ORDER_KEYS):
             raise QualityError(
                 "ORDER_INVALID", "VerifyOrder has missing or unknown fields"
             )
@@ -123,6 +139,9 @@ class VerifyRequest:
             )
         criteria = _parse_criteria(value.get("acceptance_criteria"))
         checks = _parse_verification(value.get("verification"))
+        composition_id, manifest_sha256 = _parse_composition(value)
+        contract_identities = _parse_contract_identities(value.get("contract_identities", {}))
+        environment_fingerprint = _optional_sha256(value, "environment_fingerprint")
         request = cls(
             idempotency_key,
             plan_id,
@@ -132,6 +151,10 @@ class VerifyRequest:
             token,
             criteria,
             checks,
+            composition_id,
+            manifest_sha256,
+            contract_identities,
+            environment_fingerprint,
         )
         try:
             json.dumps(
@@ -144,7 +167,7 @@ class VerifyRequest:
         return request
 
     def to_dict(self) -> dict[str, object]:
-        return {
+        result = {
             "idempotency_key": self.idempotency_key,
             "plan_id": self.plan_id,
             "revision": self.revision,
@@ -154,6 +177,13 @@ class VerifyRequest:
             "acceptance_criteria": list(self.acceptance_criteria),
             "verification": [item.to_dict() for item in self.verification],
         }
+        if self.composition_id is not None:
+            result.update(composition_id=self.composition_id, manifest_sha256=self.manifest_sha256)
+        if self.contract_identities:
+            result["contract_identities"] = dict(self.contract_identities)
+        if self.environment_fingerprint is not None:
+            result["environment_fingerprint"] = self.environment_fingerprint
+        return result
 
     @property
     def input_hash(self) -> str:
@@ -186,6 +216,39 @@ def _parse_criteria(value: object) -> tuple[str, ...]:
     return criteria
 
 
+def _optional_sha256(value: Mapping[str, object], name: str) -> str | None:
+    if name not in value:
+        return None
+    digest = value[name]
+    if not isinstance(digest, str) or len(digest) != 64 or any(char not in "0123456789abcdef" for char in digest):
+        raise QualityError("ORDER_INVALID", f"{name} must be a lowercase sha256 digest")
+    return digest
+
+
+def _parse_composition(value: Mapping[str, object]) -> tuple[str | None, str | None]:
+    present = {name for name in ("composition_id", "manifest_sha256") if name in value}
+    if not present:
+        return None, None
+    if present != {"composition_id", "manifest_sha256"}:
+        raise QualityError("ORDER_INVALID", "composition_id and manifest_sha256 must be supplied together")
+    composition_id = value["composition_id"]
+    if not _is_text(composition_id, max_bytes=256):
+        raise QualityError("ORDER_INVALID", "composition_id must be bounded, non-empty text")
+    return composition_id, _optional_sha256(value, "manifest_sha256")
+
+
+def _parse_contract_identities(value: object) -> tuple[tuple[str, str], ...]:
+    if not isinstance(value, Mapping) or len(value) > 128:
+        raise QualityError("ORDER_INVALID", "contract_identities must be a bounded object")
+    result = []
+    for key, digest in value.items():
+        if not _is_text(key, max_bytes=256) or not isinstance(digest, str) or len(digest) != 64 \
+                or any(char not in "0123456789abcdef" for char in digest):
+            raise QualityError("ORDER_INVALID", "contract identities require names and lowercase sha256 digests")
+        result.append((key, digest))
+    return tuple(sorted(result))
+
+
 def _parse_verification(value: object) -> tuple[VerificationSpec, ...]:
     items = _sequence(value, maximum=MAX_CHECKS)
     if items is None or not items:
@@ -210,7 +273,7 @@ def _parse_verification_item(value: object) -> VerificationSpec:
         raise QualityError(
             "ORDER_INVALID", "verification type must be command or manual"
         )
-    if set(value) - allowed or not COMMAND_KEYS - {"created_by", "category"} <= set(value):
+    if set(value) - allowed or not {"type", "value", "purpose"} <= set(value):
         raise QualityError(
             "ORDER_INVALID", "verification entry has missing or unapproved fields"
         )
@@ -231,8 +294,53 @@ def _parse_verification_item(value: object) -> VerificationSpec:
                 "ORDER_INVALID", "category must be static, functional, integration, regression or product"
             )
         category = raw_category
+    environment = _parse_environment(value)
+    requires = _parse_requires(value["requires"]) if "requires" in value else None
+    authorization = value.get("authorization_needed")
+    if authorization is not None and (not _is_text(authorization) or _looks_like_secret(authorization)):
+        raise QualityError("ORDER_INVALID", "authorization_needed must describe permission without secret values")
+    if environment == "production" and authorization is None:
+        raise QualityError("ORDER_INVALID", "production verification requires authorization_needed")
+    if environment == "human_attestation" and (kind != "manual" or not expected):
+        raise QualityError("ORDER_INVALID", "human_attestation requires a manual check with expected text")
     if kind == "command" and "expected" in value:
         raise QualityError(
             "ORDER_INVALID", "command verification cannot include manual expected text"
         )
-    return VerificationSpec(kind, instruction, purpose, created_by, expected, category)
+    return VerificationSpec(kind, instruction, purpose, created_by, expected, category,
+                            environment, requires, authorization)
+
+
+def _parse_environment(value: Mapping[str, object]) -> str | None:
+    if "environment" not in value:
+        return None
+    environment = value["environment"]
+    allowed = {"sandbox", "external_authorized", "production", "human_attestation"}
+    if not isinstance(environment, str) or environment not in allowed:
+        raise QualityError("ORDER_INVALID", "verification environment is unsupported")
+    return environment
+
+
+def _parse_requires(value: object) -> tuple[str, ...]:
+    items = _sequence(value, maximum=64)
+    if items is None:
+        raise QualityError("ORDER_INVALID", "requires must contain resource names only")
+    result: list[str] = []
+    for item in items:
+        if not isinstance(item, str) or not re.fullmatch(r"(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})", item):
+            raise QualityError("ORDER_INVALID", "requires must contain resource names only")
+        result.append(item)
+    if len(set(result)) != len(result):
+        raise QualityError("ORDER_INVALID", "requires contains duplicate resources")
+    return tuple(result)
+
+
+_SECRET_SHAPES = re.compile(
+    r"(?i)(?:https?://|postgres(?:ql)?://|(?:token|pass\w*|pw|secret|api[_-]?key)\s*[:=]|\bbearer\s+\S"
+    r"|\bsk[-_]\w|\bAKIA[0-9A-Z]{16}\b|\bgh[opsur]_\w|\bxox[abpr]-|\beyJ\w)")
+
+
+def _looks_like_secret(value: str) -> bool:
+    """Credential shapes and long opaque tokens; a plain description of a permission never matches."""
+    return bool(_SECRET_SHAPES.search(value) or re.search(r"\b\S+@\S+", value)
+                or re.search(r"[A-Za-z0-9+/_=.-]{32,}", value))

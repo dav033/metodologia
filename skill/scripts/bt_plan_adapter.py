@@ -51,6 +51,9 @@ def validate_candidate(plan: object) -> tuple[str, ...]:
     report = planner.validate(plan)
     return tuple(report.errors)
 
+def validate_owner_composition(subplans, gates, tasks) -> tuple[str, ...]:
+    return planner.validate_owner_composition(subplans, gates, tasks)  # Planner rules over the owner's plan view
+
 def second_auditor_required(plan: object) -> bool:
     """Expose the owner cross-check gate to pure plan transformations."""
     if not isinstance(plan, dict) or not isinstance(plan.get("schema_version"), str):
@@ -110,7 +113,8 @@ def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | N
         reported = compatibility.get("required_schema_version")
         shown = reported if isinstance(reported, str) and _schema_version_value(reported) else "unknown"
         unavailable.append(f"capability report (schema {shown})")
-    for name in ("M1", "M2", "M6"):
+    required_consumers = ("M1", "M2", "M6") + (("M3",) if version[1] >= (1, 3, 0) else ())
+    for name in required_consumers:
         consumer = consumers.get(name)
         status = consumer.get("status") if isinstance(consumer, dict) else "unknown"
         versions = consumer.get("supported_schema_versions") if isinstance(consumer, dict) else None
@@ -316,14 +320,12 @@ def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False,
                      compatibility_report: dict[str, object] | None = None) -> None:
     """Standard/web launch: refuse (SystemExit with the cause) unless the run would execute exactly the approved,
     frozen revision. A dry run verifies and writes nothing."""
-    problem = launch_problem(rdir, freeze=not dry_run, forced=forced,
-                             compatibility_report=compatibility_report)
+    problem = launch_problem(rdir, freeze=not dry_run, forced=forced, compatibility_report=compatibility_report)
     if problem:
         raise SystemExit(problem)
 
 
-def resume_problem(rdir: Path, state: dict, *,
-                   compatibility_report: dict[str, object] | None = None) -> str | None:
+def resume_problem(rdir: Path, state: dict, *, compatibility_report: dict[str, object] | None = None) -> str | None:
     """A RESUMED run must not go on executing content nobody approved. When the run carries a `plan_ref` (or the plan
     has frozen revisions): PLAN.json must still exist, be valid and be the latest approved revision, the PLAN.md prose
     must be the approved one, and the run's own `plan_ref` must point at that same revision (a run started under r1

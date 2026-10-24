@@ -224,6 +224,7 @@ class StartOrder:
     executor: str
     acceptance_criteria: tuple[str, ...] = ()
     verification: tuple[Mapping[str, Any], ...] = ()
+    meta: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -251,6 +252,11 @@ class Ack:
     status: str                     # accepted | duplicate | rejected
     detail: str = ""
     permanent: bool = False         # a rejection that will not change by asking again (the order itself is refused)
+    classification: str = ""         # blocked_environment: order could not run without code work
+
+    def __post_init__(self) -> None:
+        if self.classification not in {"", "blocked_environment"}:
+            raise ValueError("ACK_CLASSIFICATION_INVALID")
 
 
 class PortNotReady(Exception):

@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from . import subplan_graph
 from . import schema_13_inputs
+from .owner_validation import validate_owner_composition
 from .subplan_graph import _BARRIERS, _dict_list
 
 _SUBPLAN = re.compile(r"SP-[1-9][0-9]*")
@@ -120,6 +121,8 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
         _validate_subplan_edges(errors, tasks, by_sp, gates)
         _validate_requirements(errors, requirements, graph_plan, tasks, subplans, gates)
         _validate_dependency_cycles(errors, warnings, by_sp, valid_gates)
+        errors.extend(_err(code.split(":", 1)[0], "owner", code.split(":", 1)[-1].strip())
+                      for code in validate_owner_composition(subplans, gates, list(tasks.values())))
     _validate_verifications(errors, tasks)
     if subplan_graph.longest_unbarriered_chain(graph_plan, tasks=tasks) > 6:
         errors.append(_err("LATE_CHECKPOINT", "tasks", "dependency exposure exceeds six before a test/audit barrier"))

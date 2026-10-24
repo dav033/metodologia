@@ -207,6 +207,9 @@ class CheckSpec:
     cwd: str
     purpose: str
     expected: str = ""
+    environment: str = "sandbox"
+    requires: tuple[str, ...] = ()
+    authorization_needed: str | None = None
 
 
 def _validate_environment(
@@ -271,10 +274,12 @@ def _compile_item(item: VerificationSpec, index: int, root: Path, production_all
     check_id = f"CHECK-{index:03d}"
     if item.kind == "manual":
         return CheckSpec(
-            check_id, "manual", item.value, (), ".", item.purpose, item.expected
+            check_id, "manual", item.value, (), ".", item.purpose, item.expected,
+            item.environment or "sandbox", item.requires or (), item.authorization_needed
         )
     argv, cwd = _parse_command(item.value, root, production_allowed)
-    return CheckSpec(check_id, "command", item.value, argv, cwd, item.purpose)
+    return CheckSpec(check_id, "command", item.value, argv, cwd, item.purpose, "",
+                     item.environment or "sandbox", item.requires or (), item.authorization_needed)
 
 
 def _parse_command(command: str, root: Path, production_allowed: bool = False) -> tuple[tuple[str, ...], str]:

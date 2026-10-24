@@ -102,6 +102,28 @@ class Workspaces(unittest.TestCase):
         with self.assertRaises(ex.ExecutorError):
             ws.check(order(1, repo="other"))
 
+    def test_subplan_workspace_reconstructs_from_a_frozen_line_commit(self):
+        line = git(self.repo, "rev-parse", "HEAD")
+        first = self.ws.reconstruct_subplan("main", line, "SP-1")
+        again = self.ws.reconstruct_subplan("main", line, "SP-1")
+        self.assertEqual(first.kind, "subplan")
+        self.assertEqual(ex.Workspace.from_dict(first.to_dict()), first)
+        self.assertEqual((again.path, again.base_sha), (first.path, first.base_sha))
+        self.assertEqual(git(first.path, "rev-parse", "HEAD"), line)
+
+    def test_integration_workspace_uses_candidate_and_cleanup_is_idempotent(self):
+        candidate = git(self.repo, "rev-parse", "HEAD")
+        workspace = self.ws.allocate_integration("main", candidate, "composition-1")
+        self.assertEqual(workspace.kind, "integration")
+        self.assertEqual(ex.Workspace.from_dict(workspace.to_dict()), workspace)
+        self.assertEqual(git(workspace.path, "rev-parse", "HEAD"), candidate)
+        self.ws.release(workspace)
+        rebuilt = self.ws.allocate_integration("main", candidate, "composition-1")
+        self.assertTrue(Path(rebuilt.path).is_dir())
+        self.ws.release(workspace)
+        self.ws.release(rebuilt)
+        self.assertFalse(Path(rebuilt.path).exists())
+
     def test_a_crash_after_the_manifest_but_before_git_leaves_a_record_and_is_recovered(self):
         # simulate: manifest written, git never ran
         a = self.ws.allocate(order(1))

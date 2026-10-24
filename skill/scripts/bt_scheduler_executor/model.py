@@ -233,6 +233,7 @@ class Brief:
     notes: str = ""
     publishes: bool = False                    # the frozen plan's own check requires HEAD to be on origin/main
     remote_actions: bool = False               # the approved task itself asks to create its repository on the host or push to it
+    review_axis: str = ""                      # frozen subplan UI metadata: visual, or empty for legacy/spec/standards
 
 
 @dataclass(frozen=True)
@@ -243,14 +244,16 @@ class Workspace:
     base_sha: str
     repo: str                                  # the repository the worktree hangs from
     journal: str = ""
+    kind: str = "attempt"                      # attempt | subplan | integration
 
     def to_dict(self) -> dict[str, Any]:
         return {"path": self.path, "branch": self.branch, "base_sha": self.base_sha, "repo": self.repo,
-                "journal": self.journal}
+                "journal": self.journal, "kind": self.kind}
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Workspace:
-        return cls(data["path"], data["branch"], data["base_sha"], data["repo"], data.get("journal", ""))
+        return cls(data["path"], data.get("branch", ""), data["base_sha"], data["repo"],
+                   data.get("journal", ""), data.get("kind", "attempt"))
 
 
 @dataclass(frozen=True)

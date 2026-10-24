@@ -12,6 +12,7 @@ from .repository import Transaction
 from .states import ATTEMPT_LIVE, ATTEMPT_TRANSITIONS, RESTORABLE, TASK_TRANSITIONS
 from .states import AttemptState as A
 from .states import TaskState as T
+from .subplans import gate_waiting, prune_composition_holds, stale_subplan_members
 
 
 @dataclass
@@ -115,13 +116,48 @@ def promote_ready(ctx: Ctx) -> int:
     """PENDING -> READY for tasks whose every prerequisite is COMPLETED (which only a verdict can cause). The test is on
     every ancestor, not only the direct ones: after a rework that sends back a task and not what depends on it, a task can
     have all its direct prerequisites completed while one further up is being redone."""
+    prune_composition_holds(ctx.plan, ctx.state)
+    enforce_gate_waiting(ctx)
     moved = 0
     for spec in ctx.plan.tasks:
         rec = ctx.state.tasks[spec.id]
         if rec.state == T.PENDING.value and all(ctx.state.tasks[d].state == T.COMPLETED.value
                                                 for d in (*spec.after, *ctx.plan.ancestors(spec.id))):
+            if gate_waiting(ctx.plan, ctx.state, spec.id):
+                continue
             set_task(ctx, spec.id, T.READY, reason="prerequisites_completed")
             moved += 1
+    return moved
+
+
+def enforce_gate_waiting(ctx: Ctx, *, confirmed_unsent_attempt: str = "") -> int:
+    """Demote blocked gates and descendants before they are reserved or dispatched."""
+    prune_composition_holds(ctx.plan, ctx.state)
+    moved = 0
+    for spec in ctx.plan.tasks:
+        rec = ctx.state.tasks[spec.id]
+        if not gate_waiting(ctx.plan, ctx.state, spec.id):
+            continue
+        held_gate = next((gate for gate in ctx.plan.composition_gates
+                          if gate.task in ({spec.id} | ctx.plan.ancestors(spec.id)) and
+                          gate.task in ctx.state.composition_holds), None)
+        reasons = (f"composition_hold:{held_gate.task}:"
+                   f"{ctx.state.composition_holds[held_gate.task]['composition_id']}"
+                   if held_gate else ",".join(f"{kind}:{member}" for member, kind in
+                                                stale_subplan_members(ctx.plan, ctx.state, spec.id)))
+        if rec.state == T.READY.value:
+            set_task(ctx, spec.id, T.PENDING, reason="composition_waiting", detail=reasons)
+            moved += 1
+        elif rec.state == T.ACTIVE.value:
+            attempt = live_attempt(ctx.state, spec.id)
+            pending_start = next((item for item in ctx.state.outbox if attempt is not None and
+                                  item.attempt_id == attempt.id and item.kind == "start" and
+                                  item.status == "pending" and
+                                  (item.deliveries == 0 or item.attempt_id == confirmed_unsent_attempt)), None)
+            if attempt is not None and A(attempt.state) == A.RESERVED and pending_start is not None:
+                end_attempt(ctx, attempt.id, A.CANCELLED, "composition_waiting", reasons)
+                set_task(ctx, spec.id, T.PENDING, reason="composition_waiting", detail=reasons)
+                moved += 1
     return moved
 
 
@@ -133,13 +169,14 @@ def live_attempt(state: RunState, task_id: str) -> AttemptRec | None:
     return None
 
 
-def end_attempt(ctx: Ctx, attempt_id: str, new: A, cause: str, detail: str = "") -> None:
+def end_attempt(ctx: Ctx, attempt_id: str, new: A, cause: str, detail: str = "", *, classification: str = "") -> None:
     """Close an attempt as failed/rejected/cancelled: free its resources and move the task on.
 
     The task goes to RECOVERING (a decision is due) or, when a cancellation was authorised, to CANCELLED."""
     att = ctx.state.attempts[attempt_id]
     set_attempt(ctx, attempt_id, new, cause=cause)
     att.failure = detail or cause
+    att.failure_classification = classification
     release(ctx, attempt_id)
     void_outbox(ctx, attempt_id)
     rec = ctx.state.tasks[att.task_id]

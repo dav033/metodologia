@@ -6,12 +6,14 @@ Errors, risk, and inferred task difficulty do not change the options.
 """
 from __future__ import annotations
 
-ROLES = ("planner", "reviewer", "explorer", "implementer", "researcher", "runner", "antagonist")
+ROLES = ("planner", "reviewer", "designer", "explorer", "implementer", "researcher", "runner", "antagonist")
 
-_KINDS = {"implement": "implementer", "test": "runner", "audit": "reviewer", "research": "researcher"}
+_KINDS = {"implement": "implementer", "test": "runner", "audit": "reviewer", "research": "researcher",
+          "design": "designer"}
 _DEFAULTS = {
     "planner": (("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")),   # planning: high, never xhigh by default
     "reviewer": (("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")),
+    "designer": (("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")),
     "explorer": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")),
     "implementer": (("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")),
     "researcher": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
@@ -22,6 +24,7 @@ _HIGH = {
     "planner": tuple(reversed(_DEFAULTS["planner"])),
     "implementer": _DEFAULTS["implementer"],
     "reviewer": (("codex", "gpt-6.1-sol", "high"), ("claude", "sonnet", "high")),
+    "designer": _DEFAULTS["designer"],
     "explorer": (("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")),
     "researcher": tuple(reversed(_DEFAULTS["researcher"])),
     "runner": tuple(reversed(_DEFAULTS["runner"])),
@@ -37,6 +40,13 @@ def high_complexity(complexity: str | None) -> bool:
 def role_for_kind(kind: str | None) -> str | None:
     """Map runtime task kinds to roles; docs retain their existing routing."""
     return _KINDS.get(kind)
+
+
+def role_for_task(kind: str | None, review_axis: object = None) -> str | None:
+    """Resolve the M2 role, including the optional visual-review task classification."""
+    if kind == "audit" and review_axis == "visual":
+        return "reviewer"
+    return role_for_kind(kind)
 
 
 # The one exception to "risk never changes the options": an audit that the plan or the run already escalated (high risk or

@@ -14,7 +14,7 @@ from .contracts import ACK, Ack, CancelOrder, ExecutionStatus, PortNotReady, Sta
 from .recovery import apply_observation
 from .states import ATTEMPT_LIVE, ATTEMPT_TERMINAL
 from .states import AttemptState as A
-from .transitions import end_attempt, mark_delivered, set_attempt
+from .transitions import end_attempt, enforce_gate_waiting, mark_delivered, set_attempt
 
 if TYPE_CHECKING:
     from .scheduler import SchedulerCore
@@ -37,6 +37,7 @@ class Dispatcher:
         core = self.core
 
         def prepare(ctx):
+            enforce_gate_waiting(ctx)
             item = next((i for i in ctx.state.outbox if i.id == item_id), None)
             if item is None or item.status != "pending":
                 return None
@@ -68,7 +69,13 @@ class Dispatcher:
         if kind == "start" and before > 0:                         # maybe delivered already: ask before re-sending
             status = self._query(attempt_id)
             seen = core.write(lambda c: apply_observation(c, attempt_id, status))
-            if seen != "not_found" or not core.read(lambda c: self._still_unsent(c, attempt_id)):
+            if seen != "not_found":
+                return 1
+        if kind == "start":
+            def dispatchable(ctx):
+                enforce_gate_waiting(ctx, confirmed_unsent_attempt=attempt_id)
+                return self._still_unsent(ctx, attempt_id)
+            if not core.write(dispatchable):
                 return 1
         ack = self._send(kind, attempt_id, key, payload, task_id)
         if ack is None:
@@ -89,7 +96,8 @@ class Dispatcher:
         state = core.read(lambda c: (c.state.plan_id, c.state.revision))
         if kind == "start":
             order = StartOrder(key, state[0], state[1], task_id, attempt_id, payload["token"], payload["executor"],
-                               tuple(payload["acceptance_criteria"]), tuple(payload["verification"]))
+                               tuple(payload["acceptance_criteria"]), tuple(payload["verification"]),
+                               dict(payload.get("meta", {})))
             call = port.start
         elif kind == "cancel":
             order, call = CancelOrder(key, attempt_id, payload["token"], payload.get("reason", "")), port.cancel
@@ -118,7 +126,11 @@ class Dispatcher:
             ctx.audit("dispatch_rejected", att.task_id, attempt_id, kind=kind, detail=ack.detail[:200])
             item.status = "void"
             if kind == "start" and A(att.state) in ATTEMPT_LIVE:
-                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {ack.detail[:200]}")
+                blocked_environment = ack.classification == "blocked_environment"
+                if not blocked_environment:
+                    att.budget_consumed = True
+                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {ack.detail[:200]}",
+                            classification=ack.classification)
             elif kind == "verify" and ack.permanent and A(att.state) == A.VERIFYING:
                 # the verifier refuses the ORDER itself: asking again at every lease expiry never changes that (REQ-020 att-0087 waited
                 # 99 minutes and 20 re-sends). The attempt ends; whatever the executor kept of its work stays there for the retry
@@ -129,6 +141,7 @@ class Dispatcher:
         if kind == "cancel" and A(att.state) in ATTEMPT_LIVE:
             att.needs_reconcile = True             # an ack is not a confirmation: the next step asks what became of it
         if kind == "start" and A(att.state) == A.RESERVED:
+            att.budget_consumed = True
             set_attempt(ctx, attempt_id, A.DISPATCHED, ack=ack.status)
         return 1
 

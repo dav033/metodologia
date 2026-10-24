@@ -1,9 +1,4 @@
-"""SchedulerCore: the deterministic coordinator. Wires plan + repository + ports; contains no AI of any kind.
-
-One `step()` is one pass of: refresh -> reconcile flagged attempts -> recovery decisions -> assignments -> delivery.
-`run()` repeats steps and otherwise sleeps on a wake-up event (set by `ingest`/`submit_verdict`), never busy-polling.
-Ports are only ever called outside transactions; all decisions are validated again inside the reservation transaction.
-"""
+"""Deterministic scheduler coordinator; all port calls stay outside transactions."""
 from __future__ import annotations
 
 import threading
@@ -39,9 +34,12 @@ from .plan import Plan
 from .repository import StateRepository
 from .resources import claims_for, first_conflict
 from .simulators import FifoAssignment
-from .states import ATTEMPT_LIVE, RunStatus
-from .states import AttemptState as A
-from .states import TaskState as T
+from .subplans import hold_gate_on_scheduler, record_composition_fact, record_stale_subplan_version_fact, record_subplan_version_fact, subplan_status as derive_subplan_status
+from .frontier import (apply_demonstrated_frontier as apply_frontier,
+                       apply_batch_to_scheduler as apply_frontier_batch_to_scheduler,
+                       apply_to_scheduler as apply_frontier_to_scheduler)
+from .review import handle_on_scheduler as handle_review_on_scheduler
+from .states import ATTEMPT_LIVE, RunStatus, AttemptState as A, TaskState as T
 from .transitions import Ctx, promote_ready, prune_outbox, set_task
 from .views import Snapshot, snapshot
 
@@ -92,8 +90,7 @@ class SchedulerCore:
             return fn(Ctx(self.plan, self.config, tx, self.clock()))
 
     def read(self, fn: Callable[[Ctx], R]) -> R:
-        """Look at the state without taking the writer lock (falls back to a normal transaction for a repository
-        that offers no read-only one). `fn` must not change anything: nothing it changes is kept."""
+        """Look at state read-only, using a writer transaction only when the repository has no read API."""
         opener = getattr(self.repository, "read_transaction", self.repository.transaction)
         with opener() as tx:
             if tx.state is None:
@@ -130,7 +127,7 @@ class SchedulerCore:
         def request(ctx: Ctx) -> PlanRoutingRequest:
             tasks = tuple(TaskView(
                 spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
-                spec.expected_paths, len(ctx.state.tasks[spec.id].attempts), dict(spec.meta),
+                spec.expected_paths, len(ctx.state.tasks[spec.id].attempts), self.plan.task_metadata(spec),
                 dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
                 verification=spec.verification,
             ) for spec in self.plan.tasks)
@@ -202,6 +199,10 @@ class SchedulerCore:
     def snapshot(self) -> Snapshot:
         return self.read(lambda c: snapshot(self.plan, c.state))
 
+    def attempts_used(self, task_id: str) -> int:
+        """Current M1 code-retry usage, distinct from monotonically allocated attempt ids."""
+        return self.read(lambda ctx: recovery.attempts_used(ctx.state, task_id))
+
     def audit_log(self, since: int = 0) -> list[AuditEntry]:
         return self.repository.audit_log(since)
 
@@ -209,6 +210,64 @@ class SchedulerCore:
         """Pull-style view of undelivered intents (for adapters that poll instead of being called)."""
         return self.read(lambda c: [{"id": i.id, "kind": i.kind, "attempt_id": i.attempt_id, "key": i.key,
                                      "payload": dict(i.payload)} for i in c.state.outbox if i.status == "pending"])
+
+    def subplan_status(self) -> dict[str, str]:
+        """Derived lifecycle of each declared subplan; acceptance remains task-verdict based."""
+        return self.read(lambda ctx: derive_subplan_status(self.plan, ctx.state))
+
+    def subplan_version_facts(self, include_stale: bool = False) -> dict[str, dict[str, Any]]:
+        return self.read(lambda ctx: {key: dict(value) for key, value in ctx.state.subplan_versions.items()
+                                      if value.get("plan_id") == ctx.state.plan_id and
+                                      (include_stale or value.get("revision") == ctx.state.revision)})
+
+    def record_subplan_version(self, subplan_id: str, version: int, commit: str, manifest_sha256: str) -> None:
+        """Record an adapter-published subplan version without changing task or attempt state."""
+        self.write(lambda ctx: record_subplan_version_fact(self.plan, ctx.state, ctx, subplan_id, version, commit,
+                                                           manifest_sha256))
+        self._wake.set()
+
+    def record_composition(self, state: str, composition_id: str, members: Mapping[str, int],
+                           manifest_sha256: str, reason: str = "", tree_digest: str = "") -> None:
+        """Record candidate/publication/rejection evidence as an immutable audited observation."""
+        if not isinstance(members, Mapping):
+            raise SchedulerError("CONTRACT_VIOLATION", "composition members must be a mapping")
+        self.write(lambda ctx: record_composition_fact(self.plan, ctx.state, ctx, state, composition_id,
+                                                       dict(members), manifest_sha256, reason, tree_digest))
+        self._wake.set()
+
+    def record_stale_subplan_version(self, subplan_id: str, version: int, commit: str, manifest_sha256: str) -> None:
+        self.write(lambda ctx: record_stale_subplan_version_fact(self.plan, ctx.state, ctx, subplan_id, version, commit, manifest_sha256)); self._wake.set()
+
+    def hold_composition_gate(self, gate_task_id: str, composition_id: str, reason: str) -> None:
+        hold_gate_on_scheduler(self, gate_task_id, composition_id, reason)
+
+    def apply_demonstrated_frontier(self, *, change_id: str, source_task_id: str, composition_id: str,
+                                    manifest_sha256: str, tree_digest: str, action: str,
+                                    task_ids: tuple[str, ...], evidence_refs: tuple[str, ...]) -> tuple[str, ...]:
+        """M1-owned, idempotent application of the exact frontier demonstrated by M5."""
+        return apply_frontier_to_scheduler(self, change_id=change_id, source_task_id=source_task_id,
+                                           composition_id=composition_id, manifest_sha256=manifest_sha256,
+                                           tree_digest=tree_digest, action=action, task_ids=task_ids,
+                                           evidence_refs=evidence_refs)
+
+    def apply_demonstrated_frontiers(self, applications: tuple[Mapping[str, Any], ...]) -> tuple[str, ...]:
+        """Atomically apply distinct M5 actions demonstrated against one published composition snapshot."""
+        return apply_frontier_batch_to_scheduler(self, applications)
+
+    def handle_needs_review(self, *, plan_id: str, revision: int, task_id: str, attempt_id: str,
+                            token: int, evidence_ref: str, advice_port: Callable[[Mapping[str, object]], str]) -> str:
+        """Durably hold an M6 review, ask M5 outside the transaction, and apply its advice without a code retry."""
+        return handle_review_on_scheduler(self, plan_id=plan_id, revision=revision, task_id=task_id,
+                                          attempt_id=attempt_id, token=token, evidence_ref=evidence_ref,
+                                          advice_port=advice_port)
+
+    def block_exhausted_needs_review_resume(self, identity: Mapping[str, object]) -> str:
+        """Block a held M6 review after the bounded same-attempt resume was exhausted."""
+        from .review import block_exhausted_resume
+
+        result = self.write(lambda ctx: block_exhausted_resume(ctx, identity))
+        self._wake.set()
+        return result
 
     # ------------------------------------------------------------------ inbound facts
     def ingest(self, event: Event | Mapping[str, Any]) -> IngestResult:
@@ -234,8 +293,7 @@ class SchedulerCore:
 
     def rework_problem(self, task_ids: tuple[str, ...], also: tuple[str, ...] = (), cascade: bool = True, *,
                        owner: bool = False, confirmed: bool = False) -> str:
-        """Why `reject_and_rework` would be refused right now ('' when it would not). `owner` asks the same of an
-        operator-style `rework`, which is not held to `max_reworks`."""
+        """Why rework is refused now (empty when allowed); owner rework is not held to `max_reworks`."""
         return self.read(lambda c: operations.rework_problem(c, tuple(task_ids), tuple(also), owner=owner, cascade=cascade,
                                                              confirmed=confirmed))
 
@@ -245,8 +303,7 @@ class SchedulerCore:
 
     def rework(self, task_ids: tuple[str, ...], by: str, reason: str = "", cascade: bool = True, *,
                confirmed: bool = False) -> tuple[str, ...]:
-        """Operator move: send accepted work back (see `operations.rework`). Past `Config.rework_confirm_over` accepted
-        tasks it is refused (`impact:`) unless `confirmed`."""
+        """Send accepted work back; above `Config.rework_confirm_over`, `confirmed` is required."""
         out = self.write(lambda c: operations.rework(c, tuple(task_ids), by, reason, owner=True, cascade=cascade,
                                                      confirmed=confirmed))
         self._wake.set()
@@ -260,13 +317,7 @@ class SchedulerCore:
 
     def reject_and_rework(self, verdict: Verdict, task_ids: tuple[str, ...], by: str, reason: str = "",
                           cascade: bool = True) -> tuple[IngestResult, tuple[str, ...]]:
-        """Apply a REJECTING verdict and, in the same transaction, send the named accepted tasks (and what depends on
-        them) back for rework together with the task just rejected. Three outcomes when the rework cannot start:
-        `busy` (live attempts in scope) defers everything — the verdict is NOT applied, status `deferred`, and the
-        caller offers it again later; `limit` applies the verdict and BLOCKS the rejected task at once with reason
-        `rework_limit` (retrying the rejected task cannot fix work that was already sent back too often: the owner
-        decides); `impact` does the same with reason `rework_impact` (it would throw away more accepted tasks than
-        `Config.rework_confirm_over`: only the owner can confirm that); `cancelled` just applies the verdict."""
+        """Apply a rejecting verdict and rework named tasks atomically; live work defers and limits block safely."""
         if verdict.accepted:
             raise SchedulerError("NOT_ALLOWED", "only a rejecting verdict can ask for rework")
 
@@ -368,7 +419,7 @@ class SchedulerCore:
                     continue
                 ready.append(TaskView(
                     spec.id, spec.milestone_id, spec.repository, spec.shared_resources,
-                    spec.expected_paths, len(rec.attempts), dict(spec.meta),
+                    spec.expected_paths, len(rec.attempts), self.plan.task_metadata(spec),
                     dependencies=spec.after, acceptance_criteria=spec.acceptance_criteria,
                     verification=spec.verification,
                 ))

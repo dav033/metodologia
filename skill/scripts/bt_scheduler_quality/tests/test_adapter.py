@@ -732,7 +732,18 @@ class M6M1AdapterTests(unittest.TestCase):
 
     def test_needs_review_keeps_m1_verifying_until_explicit_operator_resolution(self):
         task = _task("T1", "inspect visual output", manual=True)
-        root, core, _, executor, _, adapter = self._system([task])
+        root, core, _, executor, store, adapter = self._system([task])
+        from bt_scheduler_recovery_adapter import RecoveryAdapter
+
+        m5 = RecoveryAdapter(Path(root) / "m5.db", scheduler=core, run_id="run-m6-review",
+                             describe=lambda _attempt: {}, m6_evidence_reader=store.get_result_manifest)
+        self.addCleanup(m5.close)
+
+        def handoff(identity, result):
+            return core.handle_needs_review(
+                **identity, evidence_ref=result["evidence_manifest"], advice_port=m5.needs_review_advice)
+
+        adapter.needs_review_handoff = handoff
         attempts = self._start_attempts(core, executor, root, ("T1",))
 
         core.step()
@@ -740,7 +751,9 @@ class M6M1AdapterTests(unittest.TestCase):
         self.assertTrue(_wait_for(lambda: len(adapter.list_reviews()) == 1))
         review = adapter.list_reviews()[0]
         self.assertEqual(review["result"]["status"], "NEEDS_REVIEW")
+        self.assertTrue(_wait_for(lambda: core.read(lambda ctx: ctx.state.review_holds.get(attempts["T1"], {}).get("state") == "waiting")))
         self.assertEqual(core.snapshot().tasks["T1"]["state"], "active")
+        self.assertEqual(core.attempts_used("T1"), 1)
         adapter.resolve_review(
             review["request_key"],
             "david",
@@ -755,6 +768,7 @@ class M6M1AdapterTests(unittest.TestCase):
             adapter.inspect_review(review["request_key"])["state"], "resolved"
         )
         self.assertEqual(core.snapshot().tasks["T1"]["attempt"], attempts["T1"])
+        self.assertEqual(core.read(lambda ctx: ctx.state.review_holds[attempts["T1"]]["state"]), "resolved")
 
     def test_outbox_retries_the_same_verdict_id_after_m1_applied_but_ack_was_lost(self):
         task = _task("T1", "python3 verify.py")
