@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 
 from . import subplan_graph
+from . import schema_13_inputs
 from .subplan_graph import _BARRIERS, _dict_list
 
 _SUBPLAN = re.compile(r"SP-[1-9][0-9]*")
@@ -45,25 +46,14 @@ def unsupported_fields(plan: dict) -> list[str]:
 
 
 def check(plan: dict) -> tuple[list[str], list[str]]:
-    errors: list[str] = []
+    graph_plan, input_errors = schema_13_inputs.graph_inputs(plan)
+    errors: list[str] = list(input_errors)
     warnings: list[str] = []
-    tasks, ancestors = subplan_graph.graph(plan)
-    requirements = _string_set(plan.get("requirements"))
-    subplans_raw = plan.get("subplans", [])
-    gates_raw = plan.get("composition_gates", [])
-    if not isinstance(subplans_raw, list) or len(subplans_raw) > 64:
-        errors.append(_err("SUBPLAN_INVALID", "subplans", "must be a list with at most 64 entries"))
-    if not isinstance(gates_raw, list) or len(gates_raw) > 32:
-        errors.append(_err("COMPOSITION_INVALID", "composition_gates", "must be a list with at most 32 entries"))
-    milestones = {m.get("id") for m in _dict_list(plan.get("milestones")) if isinstance(m.get("id"), str)}
-    if isinstance(subplans_raw, list):
-        errors.extend(_err("SUBPLAN_INVALID", f"subplans[{i}]", "must be an object")
-                      for i, item in enumerate(subplans_raw) if not isinstance(item, dict))
-    if isinstance(gates_raw, list):
-        errors.extend(_err("COMPOSITION_INVALID", f"composition_gates[{i}]", "must be an object")
-                      for i, item in enumerate(gates_raw) if not isinstance(item, dict))
-    subplans = _dict_list(subplans_raw)
-    gates = _dict_list(gates_raw)
+    tasks, ancestors = subplan_graph.graph(graph_plan)
+    requirements = _string_set(graph_plan.get("requirements"))
+    subplans = _dict_list(graph_plan.get("subplans"))
+    gates = _dict_list(graph_plan.get("composition_gates"))
+    milestones = {m.get("id") for m in _dict_list(graph_plan.get("milestones")) if isinstance(m.get("id"), str)}
     by_sp: dict[str, dict] = {}
     for i, sp in enumerate(subplans):
         sid = sp.get("id")
@@ -102,7 +92,7 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
             errors.append(_err("SUBPLAN_CRITERION_UNCARRIED", sid, "criteria must be carried exactly by own tasks"))
         if len(members) > 8 and not sp.get("checkpoints"):
             errors.append(_err("SUBPLAN_LATE_CHECKPOINT", sid, "more than eight tasks requires a checkpoint"))
-        if subplan_graph.longest_unbarriered_chain(plan, members, tasks=tasks) > 6:
+        if subplan_graph.longest_unbarriered_chain(graph_plan, members, tasks=tasks) > 6:
             errors.append(_err("SUBPLAN_LATE_CHECKPOINT", sid, "dependency exposure exceeds six before an own test/audit barrier"))
         for ci, checkpoint in enumerate(sp.get("checkpoints", []) if isinstance(sp.get("checkpoints"), list) else []):
             check_task = _task(tasks, checkpoint.get("task")) if isinstance(checkpoint, dict) else None
@@ -110,7 +100,7 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
                     or not checkpoint["purpose"].strip() or not check_task or check_task.get("subplan_id") != sid
                     or not isinstance(check_task.get("kind"), str) or check_task.get("kind") not in _BARRIERS):
                 errors.append(_err("SUBPLAN_INVALID", f"{sid}.checkpoints[{ci}]", "must name an own test/audit task and purpose"))
-        _validate_contracts(errors, warnings, sid, sp, members, tasks, ancestors, plan)
+        _validate_contracts(errors, warnings, sid, sp, members, tasks, ancestors, graph_plan)
         _validate_ui(errors, sid, sp, members, tasks, ancestors)
         integration = _task(tasks, sp.get("integration_test_task"))
         if not integration or integration.get("subplan_id") != sid or integration.get("kind") != "test" or not _has_category(integration, "integration"):
@@ -124,14 +114,14 @@ def check(plan: dict) -> tuple[list[str], list[str]]:
         sid = task.get("subplan_id")
         if sid is not None and (not isinstance(sid, str) or sid not in by_sp):
             errors.append(_err("SUBPLAN_INVALID", tid, f"unknown subplan_id {sid}"))
+    valid_gates = _validate_gates(errors, graph_plan, gates, tasks, ancestors, by_sp)
     if subplans:
-        _validate_contract_graph(errors, warnings, by_sp, tasks, ancestors, gates)
-        _validate_gates(errors, plan, gates, tasks, ancestors, by_sp)
+        _validate_contract_graph(errors, warnings, by_sp, tasks, ancestors, valid_gates)
         _validate_subplan_edges(errors, tasks, by_sp, gates)
-        _validate_requirements(errors, requirements, plan, tasks, subplans, gates)
-        _validate_dependency_cycles(errors, warnings, by_sp, gates)
+        _validate_requirements(errors, requirements, graph_plan, tasks, subplans, gates)
+        _validate_dependency_cycles(errors, warnings, by_sp, valid_gates)
     _validate_verifications(errors, tasks)
-    if subplan_graph.longest_unbarriered_chain(plan, tasks=tasks) > 6:
+    if subplan_graph.longest_unbarriered_chain(graph_plan, tasks=tasks) > 6:
         errors.append(_err("LATE_CHECKPOINT", "tasks", "dependency exposure exceeds six before a test/audit barrier"))
     return errors, warnings
 
@@ -209,8 +199,9 @@ def _validate_ui(errors: list[str], sid: str, sp: dict, members: set[str], tasks
 
 
 def _validate_gates(errors: list[str], plan: dict, gates: list[dict], tasks: dict[str, dict],
-                    ancestors: dict[str, set[str]], subplans: dict[str, dict]) -> None:
+                    ancestors: dict[str, set[str]], subplans: dict[str, dict]) -> list[dict]:
     seen: set[str] = set()
+    valid_gates: list[dict] = []
     for i, gate in enumerate(gates):
         gid, where = gate.get("id"), f"composition_gates[{i}]"
         listed = gate.get("subplans")
@@ -229,14 +220,18 @@ def _validate_gates(errors: list[str], plan: dict, gates: list[dict], tasks: dic
         seen.add(gid)
         if any(subplans[sid].get("audit_task") not in ancestors.get(task["id"], set()) for sid in listed):
             errors.append(_err("COMPOSITION_INVALID", gid, "gate task must follow each listed subplan audit"))
+            continue
         if gate.get("audit_task") is not None and (not audit or audit.get("kind") != "audit" or audit.get("subplan_id") is not None or task["id"] not in ancestors.get(audit["id"], set())):
             errors.append(_err("COMPOSITION_INVALID", gid, "audit_task must be an unassigned audit after task"))
+            continue
+        valid_gates.append(gate)
     for sid, sp in subplans.items():
         for consume in sp.get("consumes", []) if isinstance(sp.get("consumes"), list) else []:
             source = consume.get("from") if isinstance(consume, dict) else None
             if isinstance(source, str) and source in subplans and not any(
                     {sid, source} <= _string_set(g.get("subplans")) for g in gates if isinstance(g, dict)):
                 errors.append(_err("COMPOSITION_MISSING", f"{sid}.consumes", f"no gate composes {sid} with {source}"))
+    return valid_gates
 
 
 def _validate_contract_graph(errors: list[str], warnings: list[str], subplans: dict[str, dict],
@@ -281,15 +276,14 @@ def _validate_contract_graph(errors: list[str], warnings: list[str], subplans: d
                                   if task.get("subplan_id") == sid and task.get("kind") not in ("research", "docs")
                                   and tid not in {p.get("defined_by") for p in sp.get("produces", [])
                                                   if isinstance(p, dict) and isinstance(p.get("defined_by"), str)}]
-                valid_gate_tasks = [gate.get("task") for gate in gates if isinstance(gate, dict)
-                                    and source in _string_set(gate.get("subplans"))
-                                    and sid not in _string_set(gate.get("subplans"))
-                                    and isinstance(gate.get("task"), str)
-                                    and all(gate["task"] in ancestors.get(tid, set()) for tid in consumer_tasks)]
-                required_task = valid_gate_tasks[0] if valid_gate_tasks else None
-                if required_task is None:
-                    errors.append(_err("SUBPLAN_ORDER", where, "publication requires an accepted gate containing producer and excluding consumer"))
-                    continue
+                qualifying_gates = [gate for gate in gates
+                                    if source in _string_set(gate.get("subplans"))
+                                    and sid not in _string_set(gate.get("subplans"))]
+                for tid in consumer_tasks:
+                    if not any(gate.get("task") in ancestors.get(tid, set()) for gate in qualifying_gates):
+                        errors.append(_err("SUBPLAN_ORDER", tid,
+                                           f"must follow a publication gate containing producer {source} and excluding consumer"))
+                continue
             else:
                 continue
             if not isinstance(required_task, str):
@@ -353,24 +347,47 @@ def _validate_dependency_cycles(errors: list[str], warnings: list[str], subplans
                     and sid not in _string_set(gate.get("subplans")) for gate in gates))
                 if not publication_gate:
                     edges[sid].append((source, dependency))
-    visiting: set[str] = set()
-    visited: set[str] = set()
-    def walk(node: str, path: list[tuple[str, str]]) -> None:
-        if node in visiting:
-            cycle = path[path.index(next(edge for edge in path if edge[0] == node)):]
-            if any(kind in ("implementation", "publication") for _, kind in cycle):
-                errors.append(_err("SUBPLAN_CYCLE", node, "implementation/publication dependency cycle"))
-            elif cycle:
-                warnings.append(_err("SUBPLAN_CYCLE", node, "mutually consumed frozen contracts are permitted"))
+    next_index = 0
+    indexes: dict[str, int] = {}
+    lowlinks: dict[str, int] = {}
+    stack: list[str] = []
+    active: set[str] = set()
+
+    def visit(node: str) -> None:
+        nonlocal next_index
+        indexes[node] = lowlinks[node] = next_index
+        next_index += 1
+        stack.append(node)
+        active.add(node)
+        for target, _ in edges.get(node, []):
+            if target not in indexes:
+                visit(target)
+                lowlinks[node] = min(lowlinks[node], lowlinks[target])
+            elif target in active:
+                lowlinks[node] = min(lowlinks[node], indexes[target])
+        if lowlinks[node] != indexes[node]:
             return
-        if node in visited:
+        component: set[str] = set()
+        while stack:
+            member = stack.pop()
+            active.remove(member)
+            component.add(member)
+            if member == node:
+                break
+        cycle_kinds = [kind for source in component for target, kind in edges.get(source, [])
+                       if target in component]
+        has_cycle = len(component) > 1 or any(target == node for target, _ in edges.get(node, []))
+        if not has_cycle:
             return
-        visiting.add(node)
-        for target, kind in edges.get(node, []):
-            walk(target, path + [(target, kind)])
-        visiting.remove(node); visited.add(node)
+        subject = min(component)
+        if any(kind != "contract" for kind in cycle_kinds):
+            errors.append(_err("SUBPLAN_CYCLE", subject, "implementation/publication dependency cycle"))
+        else:
+            warnings.append(_err("SUBPLAN_CYCLE", subject, "mutually consumed frozen contracts are permitted"))
+
     for sid in subplans:
-        walk(sid, [])
+        if sid not in indexes:
+            visit(sid)
 
 
 def _validate_verifications(errors: list[str], tasks: dict[str, dict]) -> None:
