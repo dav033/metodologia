@@ -4,7 +4,7 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-import shutil
+import json
 import subprocess
 import tempfile
 from pathlib import Path
@@ -27,8 +27,9 @@ class GitSubprocessPort:
     def __init__(self, repository: str | Path, workspace_root: str | Path):
         self.repository = Path(repository).resolve()
         self.workspace_root = Path(workspace_root).resolve()
-        if self.workspace_root == self.repository or self.repository in self.workspace_root.parents:
-            raise ValueError("WORKSPACE_ROOT_INSIDE_REPOSITORY")
+        if (self.workspace_root == self.repository or self.repository in self.workspace_root.parents
+                or self.workspace_root in self.repository.parents):
+            raise ValueError("WORKSPACE_ROOT_OVERLAPS_REPOSITORY")
         result = self._run("rev-parse", "--show-object-format")
         self.zero = "0" * (64 if result.stdout.strip() == "sha256" else 40)
 
@@ -63,6 +64,15 @@ class GitSubprocessPort:
             raise GitCommandError("git_commit_oid_invalid")
         return oid
 
+    def tree_oid(self, commit: str) -> str | None:
+        if not re.fullmatch(r"(?:[0-9a-f]{40}|[0-9a-f]{64})", commit):
+            return None
+        result = self._run("rev-parse", "--verify", "--end-of-options", f"{commit}^{{tree}}", check=False)
+        if result.returncode:
+            return None
+        oid = result.stdout.strip()
+        return oid if re.fullmatch(rf"[0-9a-f]{{{len(self.zero)}}}", oid) else None
+
     def merge_tree(self, base: str, ours: str, theirs: str) -> GitResult:
         result = self._run("merge-tree", "--write-tree", "--name-only", "--no-messages",
                            f"--merge-base={base}", ours, theirs, check=False)
@@ -83,7 +93,7 @@ class GitSubprocessPort:
         return self._run(*args).stdout.strip()
 
     def update_refs(self, updates: Sequence[tuple[str, str | None, str | None]]) -> None:
-        commands = ["start"]
+        commands = ["start", "option no-deref"]
         for ref, new, expected in updates:
             if (not isinstance(ref, str) or any(char.isspace() for char in ref)
                     or not (ref.startswith("refs/subplans/") or ref.startswith("refs/compositions/"))
@@ -135,6 +145,8 @@ class GitSubprocessPort:
         path = Path(tempfile.mkdtemp(prefix="composition-", dir=root))
         path.rmdir()
         self._run("worktree", "add", "--detach", str(path), commit)
+        marker = {"owner_pid": os.getpid(), "path": str(path)}
+        (root / f"{path.name}.composition-owner.json").write_text(json.dumps(marker), encoding="utf-8")
         return str(path)
 
     def remove_worktree(self, path: str | Path) -> None:
@@ -147,17 +159,33 @@ class GitSubprocessPort:
         self.workspace_root.mkdir(parents=True, exist_ok=True)
         output = self._run("worktree", "list", "--porcelain").stdout
         removed: list[str] = []
-        for line in output.splitlines():
-            if not line.startswith("worktree "):
+        records = [record.splitlines() for record in output.strip().split("\n\n") if record.strip()]
+        for record in records:
+            worktree_line = next((line for line in record if line.startswith("worktree ")), None)
+            if worktree_line is None or any(line == "locked" or line.startswith("locked ") for line in record):
                 continue
-            path = Path(line.removeprefix("worktree ")).resolve()
+            path = Path(worktree_line.removeprefix("worktree ")).resolve()
             if path == self.workspace_root or self.workspace_root not in path.parents:
                 continue
-            self._run("worktree", "remove", "--force", str(path), check=False)
-            if path.exists():
-                shutil.rmtree(path)
+            marker_path = self.workspace_root / f"{path.name}.composition-owner.json"
+            try:
+                marker = json.loads(marker_path.read_text(encoding="utf-8"))
+                owner_pid = marker["owner_pid"]
+                if marker["path"] != str(path) or type(owner_pid) is not int:
+                    continue
+                os.kill(owner_pid, 0)
+            except ProcessLookupError:
+                pass
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                continue
+            else:
+                continue
+            result = self._run("worktree", "remove", "--force", str(path), check=False)
+            if result.returncode:
+                detail = result.stderr.strip().splitlines()
+                raise GitCommandError(detail[-1] if detail else "git_worktree_remove_failed")
+            marker_path.unlink()
             removed.append(str(path))
-        self._run("worktree", "prune")
         return tuple(removed)
 
 

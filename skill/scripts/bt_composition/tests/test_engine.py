@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
 from bt_composition import (
-    CompositionEngine, EvidenceKey, GitResult, PropagationChange, Store,
+    CompositionEngine, EvidenceKey, GitResult, PropagationChange, Store, VerdictProof,
     propagate, reusable,
 )
 
@@ -23,6 +24,9 @@ class FakeGit:
 
     def rev_parse(self, revision):
         return self.refs.get(revision, revision if revision in self.parents else None)
+
+    def tree_oid(self, commit):
+        return f"{commit}-tree" if commit in self.parents else None
 
     def merge_tree(self, base, ours, theirs):
         changed = tuple(set(self.deltas.get(theirs, ())) - set(self.deltas.get(base, ())))
@@ -100,11 +104,19 @@ class CompositionTests(unittest.TestCase):
         return self.engine.publish_subplan_version("P1", "r1", sp, commit, base,
                                                     {"api@1": "declared"}, [])
 
+    def proof(self, candidate, verdict="PASS", *, candidate_id=None, commit=None, manifest=None):
+        return VerdictProof(candidate_id or candidate.id, manifest or candidate.manifest_sha256,
+                            commit or candidate.integrated_commit,
+                            self.git.tree_oid(commit or candidate.integrated_commit), verdict, "M6", "evidence-1")
+
+    def verdicts(self, candidate, verdict="PASS"):
+        return {"M6": self.proof(candidate, verdict)}
+
     def initial_composition(self):
         for sp, commit in (("S1", "s1v1"), ("S2", "s2v1"), ("S3", "s3v1")):
             self.publish_version(sp, commit, "base")
         c1 = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1})
-        self.engine.publish(c1.id, {"M6": "PASS"})
+        self.assertTrue(self.engine.publish(c1.id, self.verdicts(c1)))
         return c1
 
     def test_version_publish_is_immutable_and_idempotent(self):
@@ -121,7 +133,7 @@ class CompositionTests(unittest.TestCase):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
         c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
-        self.engine.publish(c2.id, {"M6": "PASS"})
+        self.engine.publish(c2.id, self.verdicts(c2))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c2.integrated_commit)
         self.assertEqual(c2.members, {"S1": 2, "S2": 1, "S3": 1})
         self.assertEqual(self.git.refs["refs/subplans/P1/S2/v1"], "s2v1")
@@ -132,7 +144,7 @@ class CompositionTests(unittest.TestCase):
         c1 = self.initial_composition()
         self.publish_version("S1", "s1v2", "s1v1")
         c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
-        self.assertFalse(self.engine.publish(c2.id, {"M6": "FAIL"}))
+        self.assertFalse(self.engine.publish(c2.id, self.verdicts(c2, "FAIL")))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c1.integrated_commit)
 
     def test_publish_ref_failure_leaves_current_and_candidate_retryable(self):
@@ -141,11 +153,11 @@ class CompositionTests(unittest.TestCase):
         c2 = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
         self.git.fail_updates = True
         with self.assertRaisesRegex(RuntimeError, "git_update_ref_failed"):
-            self.engine.publish(c2.id, {"M6": "PASS"})
+            self.engine.publish(c2.id, self.verdicts(c2))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c1.integrated_commit)
         self.git.fail_updates = False
         self.assertEqual(self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}).id, c2.id)
-        self.assertTrue(self.engine.publish(c2.id, {"M6": "PASS"}))
+        self.assertTrue(self.engine.publish(c2.id, self.verdicts(c2)))
 
     def test_publish_reconciles_store_failure_after_refs_move(self):
         c1 = self.initial_composition()
@@ -154,17 +166,57 @@ class CompositionTests(unittest.TestCase):
         original = self.store.update_candidate
         self.store.update_candidate = lambda candidate: (_ for _ in ()).throw(RuntimeError("store write failed"))
         with self.assertRaisesRegex(RuntimeError, "store write failed"):
-            self.engine.publish(c2.id, {"M6": "PASS"})
+            self.engine.publish(c2.id, self.verdicts(c2))
         self.store.update_candidate = original
-        self.assertTrue(self.engine.publish(c2.id, {"M6": "PASS"}))
+        with self.assertRaisesRegex(ValueError, "PUBLISHED_COMPOSITION_IMMUTABLE"):
+            self.engine.reject(c2.id, {"reason": "race"})
+        self.assertEqual(self.store.get_candidate(c2.id).state, "published")
+        self.assertTrue(self.engine.publish(c2.id, self.verdicts(c2)))
         self.assertEqual(self.git.refs["refs/compositions/P1/current"], c2.integrated_commit)
 
+    def test_reject_waits_for_publish_and_cannot_overwrite_published_state(self):
+        self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        entered, resume = threading.Event(), threading.Event()
+        original_hook = self.git.update_hook
+        def pause_after_refs():
+            entered.set()
+            self.assertTrue(resume.wait(5))
+            if original_hook:
+                original_hook()
+        self.git.update_hook = pause_after_refs
+        publish_errors = []
+        reject_errors = []
+        publisher = threading.Thread(target=lambda: self.engine.publish(candidate.id, self.verdicts(candidate)))
+        publisher.start()
+        self.assertTrue(entered.wait(5))
+        rejecter = threading.Thread(target=lambda: self._capture_error(
+            reject_errors, lambda: self.engine.reject(candidate.id, {"reason": "concurrent"})))
+        rejecter.start()
+        resume.set()
+        publisher.join(5)
+        rejecter.join(5)
+        self.assertFalse(publisher.is_alive())
+        self.assertFalse(rejecter.is_alive())
+        self.assertEqual(len(reject_errors), 1)
+        self.assertIsInstance(reject_errors[0], ValueError)
+        self.assertEqual(self.store.get_candidate(candidate.id).state, "published")
+        self.assertEqual(self.git.refs["refs/compositions/P1/current"], candidate.integrated_commit)
+
+    @staticmethod
+    def _capture_error(errors, action):
+        try:
+            action()
+        except Exception as error:
+            errors.append(error)
+
     def test_version_and_candidate_store_failure_after_ref_are_reconciled(self):
-        original_put_version = self.store.put_version
-        self.store.put_version = lambda version, request: (_ for _ in ()).throw(RuntimeError("version row failed"))
+        original_put_version = self.store.complete_version
+        self.store.complete_version = lambda version, request: (_ for _ in ()).throw(RuntimeError("version row failed"))
         with self.assertRaisesRegex(RuntimeError, "version row failed"):
             self.publish_version("S1", "s1v1", "base")
-        self.store.put_version = original_put_version
+        self.store.complete_version = original_put_version
         adopted = self.publish_version("S1", "s1v1", "base")
         self.assertEqual(adopted.version, 1)
 
@@ -177,6 +229,42 @@ class CompositionTests(unittest.TestCase):
         self.store.put_candidate = original_put_candidate
         candidate = self.engine.build_candidate("P1", {"S1": 1, "S2": 1, "S3": 1})
         self.assertEqual(candidate.id, "C1")
+
+    def test_same_oid_different_version_request_cannot_claim_reserved_number(self):
+        original_put = self.store.complete_version
+        self.store.complete_version = lambda version, request: (_ for _ in ()).throw(RuntimeError("store write failed"))
+        with self.assertRaisesRegex(RuntimeError, "store write failed"):
+            self.engine.publish_subplan_version("P1", "r1", "S1", "s1v1", "base", {"api@1": "declared"}, [])
+        self.store.complete_version = original_put
+        second = self.engine.publish_subplan_version("P1", "r2", "S1", "s1v1", "base",
+                                                     {"api@1": "f" * 64}, [])
+        first = self.engine.publish_subplan_version("P1", "r1", "S1", "s1v1", "base", {"api@1": "declared"}, [])
+        self.assertEqual((first.version, second.version), (1, 2))
+        self.assertEqual(first.plan_revision, "r1")
+
+    def test_candidate_manifest_is_stable_when_state_changes(self):
+        self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        manifest = candidate.manifest_sha256
+        self.engine.open_workspace(candidate.id)
+        verifying = self.store.get_candidate(candidate.id)
+        self.assertEqual(verifying.manifest_sha256, manifest)
+        self.assertTrue(self.engine.publish(candidate.id, self.verdicts(candidate)))
+
+    def test_run_base_is_bootstrap_only_when_current_is_published(self):
+        published = self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1}, run_base="base")
+        self.assertEqual(candidate.base_commit, published.integrated_commit)
+
+    def test_proof_for_another_candidate_or_commit_cannot_publish(self):
+        self.initial_composition()
+        self.publish_version("S1", "s1v2", "s1v1")
+        candidate = self.engine.build_candidate("P1", {"S1": 2, "S2": 1, "S3": 1})
+        with self.assertRaisesRegex(ValueError, "VERDICT_PROOF_INVALID"):
+            self.engine.publish(candidate.id, {"M6": self.proof(candidate, candidate_id="C999")})
+        self.assertEqual(self.git.refs["refs/compositions/P1/current"], self.store.get_candidate(candidate.parent).integrated_commit)
 
     def test_rejected_candidate_does_not_suppress_next_attempt(self):
         c1 = self.initial_composition()
@@ -215,12 +303,25 @@ class CompositionTests(unittest.TestCase):
                                                 member_order=("S1", "S2", "S3"))
         self.assertEqual(candidate.conflicts, {"S1": ("two",), "S2": ("three",)})
 
+    def test_conflict_diagnostics_include_interactions_with_rejected_members(self):
+        self.git.parents.update({"member-a": (), "member-b": (), "member-c": ()})
+        self.git.deltas.update({"member-a": ("x",), "member-b": ("x", "y"), "member-c": ("y",)})
+        self.publish_version("A", "member-a", "base")
+        self.publish_version("B", "member-b", "base")
+        self.publish_version("C", "member-c", "base")
+        candidate = self.engine.build_candidate("P1", {"A": 1, "B": 1, "C": 1},
+                                                member_order=("A", "B", "C"))
+        self.assertEqual(candidate.conflicts, {"A": ("x",), "B": ("x", "y"), "C": ("y",)})
+        self.assertEqual(candidate.state, "rejected")
+
     def test_evidence_reuse_requires_full_key_equality(self):
-        key = EvidenceKey("d", {"api@1": "hash"}, "env")
-        self.assertTrue(reusable(key, EvidenceKey("d", {"api@1": "hash"}, "env")))
-        self.assertFalse(reusable(key, EvidenceKey("x", {"api@1": "hash"}, "env")))
+        key = EvidenceKey("d", {"api@1": "hash"}, "env", ("src/a.py",))
+        self.assertTrue(reusable(key, EvidenceKey("d", {"api@1": "hash"}, "env", ("src/a.py",))))
+        self.assertFalse(reusable(key, EvidenceKey("x", {"api@1": "hash"}, "env", ("src/a.py",))))
         self.assertFalse(reusable(EvidenceKey("d", {"api@1": "hash"}, "env", ("a",)),
                                  EvidenceKey("d", {"api@1": "hash"}, "env", ("b",))))
+        self.assertFalse(reusable(EvidenceKey("d", {"api@1": "hash"}, "env"),
+                                  EvidenceKey("d", {"api@1": "hash"}, "env")))
 
     def test_propagation_derives_reuse_and_contract_changes_from_keys(self):
         previous = EvidenceKey("tree-a", {"api@1": "old"}, "env", ("src/a.py",))
@@ -248,6 +349,12 @@ class CompositionTests(unittest.TestCase):
         key = EvidenceKey("tree", {"api@1": "same"}, "env", ("src",))
         self.assertEqual(propagate(PropagationChange("S1", ancestry_only=True), [{"id": "S2", "old_evidence_key": key,
                                                                 "new_evidence_key": key}], []), ())
+
+    def test_empty_path_keys_force_reverification(self):
+        empty = EvidenceKey("same", {"api@1": "same"}, "env")
+        actions = propagate(PropagationChange("S1", ancestry_only=True),
+                            [{"id": "S2", "old_evidence_key": empty, "new_evidence_key": empty}], [])
+        self.assertEqual([item.operation for item in actions], ["reverify"])
 
     def test_fold_uses_requested_plan_order_and_rejects_backwards_members(self):
         self.initial_composition()

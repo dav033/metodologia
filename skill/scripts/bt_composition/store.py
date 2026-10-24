@@ -11,34 +11,54 @@ from .contracts import Candidate, SubplanVersion
 
 
 class Store:
+    SCHEMA_VERSION = 2
+
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.connection = sqlite3.connect(self.path, timeout=5.0)
+        self.connection = sqlite3.connect(self.path, timeout=5.0, check_same_thread=False)
         self.connection.row_factory = sqlite3.Row
+        schema_version = int(self.connection.execute("PRAGMA user_version").fetchone()[0])
+        if schema_version not in (0, 1, self.SCHEMA_VERSION):
+            self.connection.close()
+            raise ValueError("UNSUPPORTED_SCHEMA_VERSION")
         self.connection.execute("PRAGMA journal_mode=WAL")
         self.connection.execute("PRAGMA foreign_keys=ON")
-        self._initialize_schema()
+        self._initialize_schema(schema_version)
 
-    def _initialize_schema(self) -> None:
-        version = int(self.connection.execute("PRAGMA user_version").fetchone()[0])
-        if version >= 1:
+    def _initialize_schema(self, version: int) -> None:
+        if version == self.SCHEMA_VERSION:
             return
-        with self.connection:
+        self.connection.execute("BEGIN IMMEDIATE")
+        try:
             self.connection.execute("""CREATE TABLE IF NOT EXISTS versions(
                 plan_id TEXT NOT NULL, subplan_id TEXT NOT NULL, version INTEGER NOT NULL,
                 body TEXT NOT NULL, request_sha256 TEXT NOT NULL,
                 PRIMARY KEY(plan_id, subplan_id, version))""")
             columns = self.connection.execute("PRAGMA table_info(candidates)").fetchall()
             if columns:
-                self.connection.execute("ALTER TABLE candidates RENAME TO candidates_v0")
-            self.connection.execute("""CREATE TABLE candidates(
+                self.connection.execute("ALTER TABLE candidates RENAME TO candidates_v1")
+            self.connection.execute("""CREATE TABLE IF NOT EXISTS candidates(
                 id TEXT PRIMARY KEY, plan_id TEXT NOT NULL, request_sha256 TEXT NOT NULL,
                 body TEXT NOT NULL)""")
             if columns:
-                self.connection.execute("INSERT INTO candidates SELECT id,plan_id,request_sha256,body FROM candidates_v0")
-                self.connection.execute("DROP TABLE candidates_v0")
-            self.connection.execute("PRAGMA user_version=1")
+                self._copy_legacy_candidates()
+                self.connection.execute("DROP TABLE candidates_v1")
+            self.connection.execute("""CREATE TABLE IF NOT EXISTS version_reservations(
+                plan_id TEXT NOT NULL, subplan_id TEXT NOT NULL, version INTEGER NOT NULL,
+                body TEXT NOT NULL, request_sha256 TEXT NOT NULL UNIQUE,
+                PRIMARY KEY(plan_id, subplan_id, version))""")
+            self.connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS versions_request ON versions(request_sha256)")
+            self.connection.execute(f"PRAGMA user_version={self.SCHEMA_VERSION}")
+            self.connection.commit()
+        except BaseException:
+            if self.connection.in_transaction:
+                self.connection.rollback()
+            self.connection.close()
+            raise
+
+    def _copy_legacy_candidates(self) -> None:
+        self.connection.execute("INSERT INTO candidates SELECT id,plan_id,request_sha256,body FROM candidates_v1")
 
     @contextmanager
     def write_transaction(self) -> Iterator[None]:
@@ -75,8 +95,10 @@ class Store:
         return Candidate(**body)
 
     def next_version(self, plan_id: str, subplan_id: str) -> int:
-        row = self.connection.execute("SELECT COALESCE(MAX(version),0)+1 FROM versions WHERE plan_id=? AND subplan_id=?",
-                                       (plan_id, subplan_id)).fetchone()
+        row = self.connection.execute("""SELECT COALESCE(MAX(version),0)+1 FROM (
+            SELECT version FROM versions WHERE plan_id=? AND subplan_id=?
+            UNION ALL SELECT version FROM version_reservations WHERE plan_id=? AND subplan_id=?)""",
+                                      (plan_id, subplan_id, plan_id, subplan_id)).fetchone()
         return int(row[0])
 
     def get_version(self, plan_id: str, subplan_id: str, version: int) -> SubplanVersion | None:
@@ -87,6 +109,24 @@ class Store:
     def find_version(self, request_sha256: str) -> SubplanVersion | None:
         row = self.connection.execute("SELECT body FROM versions WHERE request_sha256=?", (request_sha256,)).fetchone()
         return self._version(row)
+
+    def find_version_reservation(self, request_sha256: str) -> SubplanVersion | None:
+        row = self.connection.execute("SELECT body FROM version_reservations WHERE request_sha256=?",
+                                      (request_sha256,)).fetchone()
+        return self._version(row)
+
+    def reserve_version(self, version: SubplanVersion, request_sha256: str) -> None:
+        body = self._dump({**version.__dict__, "evidence": list(version.evidence)})
+        self._execute_write("INSERT INTO version_reservations VALUES(?,?,?,?,?)",
+                            (version.plan_id, version.subplan_id, version.version, body, request_sha256))
+
+    def complete_version(self, version: SubplanVersion, request_sha256: str) -> None:
+        existing = self.find_version(request_sha256)
+        if existing is None:
+            body = self._dump({**version.__dict__, "evidence": list(version.evidence)})
+            self._execute_write("INSERT INTO versions VALUES(?,?,?,?,?)",
+                                (version.plan_id, version.subplan_id, version.version, body, request_sha256))
+        self._execute_write("DELETE FROM version_reservations WHERE request_sha256=?", (request_sha256,))
 
     def put_version(self, version: SubplanVersion, request_sha256: str) -> None:
         body = self._dump({**version.__dict__, "evidence": list(version.evidence)})

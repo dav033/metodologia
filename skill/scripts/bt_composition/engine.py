@@ -4,11 +4,12 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import threading
 from dataclasses import replace
 from pathlib import Path
 from collections.abc import Mapping, Sequence
 
-from .contracts import Action, Candidate, EvidenceKey, GitPort, PropagationChange, StorePort, SubplanVersion
+from .contracts import Action, Candidate, EvidenceKey, GitPort, PropagationChange, StorePort, SubplanVersion, VerdictProof
 
 _IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$")
 _CONTRACT_KEY = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}@[1-9][0-9]{0,3}$")
@@ -24,7 +25,9 @@ def _sha(value: object) -> str:
 
 
 def _candidate_manifest(candidate: Candidate) -> Candidate:
-    body = {key: value for key, value in candidate.__dict__.items() if key != "manifest_sha256"}
+    immutable_fields = ("id", "plan_id", "parent", "members", "member_order", "base_commit", "integrated_commit",
+                        "required_verdicts", "reason_code", "conflict_paths", "conflicts")
+    body = {key: getattr(candidate, key) for key in immutable_fields}
     return replace(candidate, manifest_sha256=_sha(body))
 
 
@@ -38,6 +41,7 @@ class CompositionEngine:
         self.git = git
         self.store = store
         self.workspace_root = Path(workspace_root)
+        self._transition_lock = threading.RLock()
 
     @staticmethod
     def version_ref(plan_id: str, subplan_id: str, version: int) -> str:
@@ -76,17 +80,33 @@ class CompositionEngine:
             existing = self.store.find_version(request_sha)
             if existing is not None:
                 return existing
-            version_number = self.store.next_version(plan_id, subplan_id)
-            ref = self.version_ref(plan_id, subplan_id, version_number)
-            manifest = {**request, "version": version_number}
-            version = SubplanVersion(plan_id, plan_revision, subplan_id, version_number, resolved_commit, resolved_base,
-                                     dict(contracts), tuple(dict(item) for item in evidence), _sha(manifest))
-            ref_commit = self.git.rev_parse(ref)
-            if ref_commit is None:
-                self.git.update_refs(((ref, resolved_commit, None),))
-            elif ref_commit != resolved_commit:
+            version = self.store.find_version_reservation(request_sha)
+            created_reservation = version is None
+            if version is None:
+                version_number = self.store.next_version(plan_id, subplan_id)
+                manifest = {**request, "version": version_number}
+                version = SubplanVersion(plan_id, plan_revision, subplan_id, version_number, resolved_commit, resolved_base,
+                                         dict(contracts), tuple(dict(item) for item in evidence), _sha(manifest))
+                self.store.reserve_version(version, request_sha)
+        ref = self.version_ref(plan_id, subplan_id, version.version)
+        ref_commit = self.git.rev_parse(ref)
+        if ref_commit is not None and created_reservation:
+            if ref_commit != version.commit:
                 raise ValueError("SUBPLAN_VERSION_CONFLICT")
-            self.store.put_version(version, request_sha)
+            raise ValueError("SUBPLAN_VERSION_REF_UNOWNED")
+        if ref_commit is None:
+            try:
+                self.git.update_refs(((ref, version.commit, None),))
+            except Exception:
+                if self.git.rev_parse(ref) != version.commit:
+                    raise
+        elif ref_commit != version.commit:
+            raise ValueError("SUBPLAN_VERSION_CONFLICT")
+        with self.store.write_transaction():
+            existing = self.store.find_version(request_sha)
+            if existing is not None:
+                return existing
+            self.store.complete_version(version, request_sha)
         return version
 
     def build_candidate(self, plan_id: str, members: Mapping[str, int], *, run_base: str | None = None,
@@ -135,20 +155,38 @@ class CompositionEngine:
         integrated = base
         conflicts: set[str] = set()
         member_conflicts: dict[str, tuple[str, ...]] = {}
+        rejected_deltas: list[tuple[str, set[str]]] = []
+        applied_deltas: list[tuple[str, set[str]]] = []
         for subplan in order:
             version_number = members[subplan]
             if previous_members.get(subplan) == version_number:
                 continue
             version = versions[subplan]
             result = self.git.merge_tree(version.line_base, integrated, version.commit)
+            delta_paths = set(self.git.diff_paths(version.line_base, version.commit))
+            for rejected_member, rejected_paths in rejected_deltas:
+                overlap = delta_paths & rejected_paths
+                if overlap:
+                    conflicts.update(overlap)
+                    member_conflicts[rejected_member] = tuple(sorted(
+                        set(member_conflicts.get(rejected_member, ())) | overlap))
+                    member_conflicts[subplan] = tuple(sorted(
+                        set(member_conflicts.get(subplan, ())) | overlap))
             if result.conflicts:
                 conflicts.update(result.conflicts)
                 member_conflicts[subplan] = tuple(sorted(set(result.conflicts)))
+                for applied_member, applied_paths in applied_deltas:
+                    overlap = applied_paths & set(result.conflicts)
+                    if overlap:
+                        member_conflicts[applied_member] = tuple(sorted(
+                            set(member_conflicts.get(applied_member, ())) | overlap))
+                rejected_deltas.append((subplan, delta_paths))
                 continue
             if result.tree is None:
                 raise RuntimeError("GIT_MERGE_TREE_FAILED")
             integrated = self.git.commit_tree(result.tree, (integrated, version.commit),
                                               f"compose {plan_id} {subplan}@v{version_number}")
+            applied_deltas.append((subplan, delta_paths))
         with self.store.write_transaction():
             existing = self.store.find_candidate(request_sha)
             if existing is not None:
@@ -188,7 +226,12 @@ class CompositionEngine:
     def prune_workspaces(self) -> tuple[str, ...]:
         return self.git.prune_workspaces()
 
-    def publish(self, candidate_id: str, verdicts: Mapping[str, str]) -> bool:
+    def publish(self, candidate_id: str, verdicts: Mapping[str, VerdictProof]) -> bool:
+        with self._transition_lock:
+            with self.store.write_transaction():
+                return self._publish(candidate_id, verdicts)
+
+    def _publish(self, candidate_id: str, verdicts: Mapping[str, VerdictProof]) -> bool:
         candidate = self._candidate(candidate_id)
         if candidate.state == "published":
             published_ref = f"refs/compositions/{candidate.plan_id}/{candidate.id}"
@@ -197,10 +240,19 @@ class CompositionEngine:
             raise RuntimeError("COMPOSITION_PUBLISHED_REF_MISSING")
         if candidate.state not in ("candidate", "verifying"):
             return False
-        clean_verdicts = dict(verdicts)
+        clean_verdicts: dict[str, str] = {}
+        for name in candidate.required_verdicts:
+            proof = verdicts.get(name)
+            if (not isinstance(proof, VerdictProof) or proof.candidate_id != candidate.id
+                    or proof.manifest_sha256 != candidate.manifest_sha256
+                    or proof.evaluated_commit != candidate.integrated_commit
+                    or proof.evaluated_tree != self.git.tree_oid(candidate.integrated_commit)
+                    or proof.verdict not in {"PASS", "FAIL"} or not proof.verifier_id or not proof.evidence_id):
+                raise ValueError("VERDICT_PROOF_INVALID")
+            clean_verdicts[name] = proof.verdict
         complete = all(clean_verdicts.get(name) == "PASS" for name in candidate.required_verdicts)
         if not complete:
-            self.reject(candidate_id, {"verdicts": clean_verdicts})
+            self._reject(candidate_id, {"verdicts": clean_verdicts})
             return False
         current_ref = f"refs/compositions/{candidate.plan_id}/current"
         published_ref = f"refs/compositions/{candidate.plan_id}/{candidate.id}"
@@ -227,9 +279,24 @@ class CompositionEngine:
         return True
 
     def reject(self, candidate_id: str, evidence: Mapping[str, object]) -> Candidate:
+        with self._transition_lock:
+            with self.store.write_transaction():
+                candidate = self._reject(candidate_id, evidence)
+            if candidate.state == "published":
+                raise ValueError("PUBLISHED_COMPOSITION_IMMUTABLE")
+            return candidate
+
+    def _reject(self, candidate_id: str, evidence: Mapping[str, object]) -> Candidate:
         candidate = self._candidate(candidate_id)
+        if candidate.state != "published":
+            published_ref = f"refs/compositions/{candidate.plan_id}/{candidate.id}"
+            current_ref = f"refs/compositions/{candidate.plan_id}/current"
+            if (self.git.rev_parse(published_ref) == candidate.integrated_commit
+                    and self.git.rev_parse(current_ref) == candidate.integrated_commit):
+                candidate = _candidate_manifest(replace(candidate, state="published"))
+                self.store.update_candidate(candidate)
         if candidate.state == "published":
-            raise ValueError("PUBLISHED_COMPOSITION_IMMUTABLE")
+            return candidate
         updated = _candidate_manifest(replace(
             candidate, state="rejected", verdicts={"evidence": _canonical(dict(evidence)).decode("utf-8")}))
         self.store.update_candidate(updated)
@@ -243,7 +310,7 @@ class CompositionEngine:
 
 
 def reusable(old: EvidenceKey, new: EvidenceKey) -> bool:
-    return (old.tree_digest == new.tree_digest and old.contracts == new.contracts
+    return (bool(old.paths) and bool(new.paths) and old.tree_digest == new.tree_digest and old.contracts == new.contracts
             and old.environment == new.environment and tuple(sorted(old.paths)) == tuple(sorted(new.paths)))
 
 

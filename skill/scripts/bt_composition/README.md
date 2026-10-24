@@ -11,16 +11,18 @@ compatibility.
 - `CompositionEngine(git, store, workspace_root)`:
   - `publish_subplan_version(plan_id, plan_revision, subplan_id, commit, line_base, contracts, evidence)` allocates
     `SP@vN`, creates `refs/subplans/<plan>/<SP>/v<N>` with create-only CAS, and returns a manifest-bound version.
-  - `build_candidate(plan_id, members, *, run_base=None, required_verdicts=("M6",), member_order=None)` folds changed
+  - `build_candidate(plan_id, members, *, run_base=None, required_verdicts=("M6",), member_order=None)` starts from
+    published `current`; `run_base` is used only when no composition is published (bootstrap). It folds changed
     member deltas in the supplied plan order (or mapping insertion order) and creates
     `refs/compositions/<plan>/candidates/C<N>`. A repeated identical live request reuses the same candidate; requesting
     the already-current member set returns that published composition. Text conflicts produce a `rejected` candidate
     with `reason_code="git_text_conflict"` and per-member conflict paths. A rejection permits a fresh candidate number.
   - `open_workspace(candidate_id)` and `close_workspace(path)` create and remove a temporary worktree under the
-    caller-provided workspace root; opening moves the candidate to `verifying`. `prune_workspaces()` removes registered
-    candidate worktrees left by a crash under that root.
-  - `publish(candidate_id, verdicts)` atomically creates `refs/compositions/<plan>/C<N>` and moves `current` only
-    when all candidate-required verdicts are `PASS`. It returns `False` and rejects the candidate otherwise.
+    caller-provided workspace root; opening moves the candidate to `verifying`. `prune_workspaces()` removes only
+    worktrees with an ownership marker and proven dead owner. Unknown, foreign, active, locked and failed removals stay.
+  - `publish(candidate_id, verdicts)` requires `VerdictProof` values bound to the candidate id, stable manifest hash,
+    evaluated commit and tree, verifier id and evidence id. It atomically creates `refs/compositions/<plan>/C<N>` and
+    moves `current` only when all candidate-required verdicts are `PASS`; otherwise it rejects and returns `False`.
   - `reject(candidate_id, evidence)` records a rejected candidate. Published compositions cannot be rejected.
 - `EvidenceKey(tree_digest, contracts, environment, paths=())` and `reusable(old, new)` bind evidence to equal tree
   digests, contract hashes, environments and sorted relevant-path sets. The real Git port refuses an empty path list
@@ -35,7 +37,9 @@ provide `id`, optional `contract_test_executed` / `contract_test_failed`, matchi
 and `old_evidence_key` / `new_evidence_key`. A Git conflict triggers `reintegrate` only for a consumer with conflict
 paths. Finding mappings use
 `demonstrated: true`, the matching `consumer`, and `design_cannot_meet_contract: true` to authorize `reimplement`.
-An `ancestry_only` change always yields at most `reverify`, even if contradictory evidence is supplied.
+An `ancestry_only` change always yields at most `reverify`, even if contradictory evidence is supplied. Candidate
+`manifest_sha256` covers stable identity and does not change with lifecycle state or verdicts. `run_base` never
+overrides a published current composition.
 
 ## States and refs
 
