@@ -51,6 +51,17 @@ working directories and paths escaping the snapshot are rejected. Each command's
 acceptance criterion string to cover it. A manual item or uncovered/ambiguous criterion is `unknown` and cannot
 PASS. This conservative rule avoids changing the shared M1/Planner contract.
 
+For schema 1.3.0, M6 additionally validates and preserves `environment`, name-only `requires`, and optional
+`authorization_needed`. Absent fields stay absent in the serialized order and its hash. `requires` accepts only
+environment variable names or `service:<slug>`; raw maps and values are rejected. Environment variables are checked
+against the trusted M6 operator environment by name, while services are checked through
+`VerificationAuthority.resource_available(name)`. A missing resource returns `BLOCKED_EXTERNAL` before command launch.
+`external_authorized` and `production` also require an explicit true result from
+`VerificationAuthority.authorize_environment(environment, authorization_needed)`; a plan's classification string
+never grants permission. Missing or failing ports block without running commands. `human_attestation` remains manual
+and is settled only by the existing attestation receipt port. The 1.3 capability is M6-local: the overall Planner
+gate remains closed until M1, M2, M3 and M6 all declare and prove their exact consumer support.
+
 The M3 adapter supplies trusted repository and artifact paths plus the captured handoff identity:
 
 ```json
@@ -120,6 +131,9 @@ secret values are replaced with `[REDACTED]` before the outcome is returned.
 
 Deployment, publishing, release and migration commands are classified as operator review and are not launched. Offline
 checks such as `check_migrations.py` remain eligible when they inspect the snapshot without performing those actions.
+The legacy undeclared policy remains unchanged. F4-9 must wire trusted callbacks from operator-owned configuration
+and service probes into `QualityVerificationPort(verification_authority=...)`; it must not derive authorization from
+PLAN.json, task text or an agent supplied environment map.
 
 Artifacts are local, mode `0700` directories and mode `0600` files in a separate M6 store. The SQLite WAL ledger and
 verdict outbox are private to M6; neither M1 nor M3 stores are opened for writing by the package. A durable

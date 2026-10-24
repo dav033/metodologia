@@ -8,6 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from . import reuse
+from .authority import VerificationAuthority
 from .contracts import VerifyRequest
 from .policy import CheckSpec, QualityPolicy
 from .runner import CommandOutcome, SandboxRunner
@@ -16,8 +17,10 @@ from .store import QualityStore
 
 
 class CheckExecutor:
-    def __init__(self, policy: QualityPolicy, store: QualityStore, runner: SandboxRunner):
+    def __init__(self, policy: QualityPolicy, store: QualityStore, runner: SandboxRunner,
+                 authority: VerificationAuthority | None = None):
         self.policy, self.store, self.runner = policy, store, runner
+        self.authority = authority or VerificationAuthority()
 
     def run(self, specs: tuple[CheckSpec, ...], snapshot_root: Path, started: float,
             worktree: Path | None = None, repository: Path | None = None,
@@ -26,13 +29,18 @@ class CheckExecutor:
         outcomes: dict[str, CommandOutcome] = {}
         issue_codes: list[str] = []
         mounts = attempt_mounts(self.policy, worktree, repository, snapshot_root)
-        done: dict[tuple[tuple[str, ...], str], CommandOutcome] = {}
+        done: dict[str, CommandOutcome] = {}
         fingerprint = reuse.bound_environment_fingerprint(
             self.policy, order.contract_identities if order else (),
             order.environment_fingerprint if order else None,
         )
         failed = False
         for spec in self._cheap_first(specs):
+            blocked = self._preflight(spec)
+            if blocked is not None:
+                outcomes[spec.id] = _unknown(blocked)
+                issue_codes.append(blocked)
+                continue
             if spec.kind == "manual":
                 outcomes[spec.id] = _unknown("CHECK_MANUAL")
                 continue
@@ -41,7 +49,7 @@ class CheckExecutor:
                 outcomes[spec.id] = _unknown("CHECK_NOT_RUN")
                 issue_codes.append("CHECK_NOT_RUN")
                 continue
-            same = (spec.argv, spec.cwd)
+            same = reuse.command_key(spec)
             outcome = done.get(same)
             if outcome is None:
                 if failed and self.policy.defer_expensive and self._is_expensive(spec):
@@ -59,6 +67,29 @@ class CheckExecutor:
                 issue_codes.append(outcome.issue_code)
         return _complete_outcomes(specs, outcomes, issue_codes)
 
+    def _preflight(self, spec: CheckSpec) -> str | None:
+        configured = {name for name, _ in self.policy.environment}
+        for resource in spec.requires:
+            if resource.startswith("service:"):
+                probe = self.authority.resource_available
+                try:
+                    available = probe(resource) is True if probe else False
+                except Exception:  # noqa: BLE001 - an unavailable trusted probe blocks execution
+                    available = False
+            else:
+                available = resource in configured
+            if not available:
+                return "CHECK_UNAVAILABLE"
+        if spec.environment in ("external_authorized", "production"):
+            authorize = self.authority.authorize_environment
+            try:
+                permitted = authorize(spec.environment, spec.authorization_needed) is True if authorize else False
+            except Exception:  # noqa: BLE001 - an unavailable authorization port fails closed
+                permitted = False
+            if not permitted:
+                return "CHECK_UNAVAILABLE"
+        return None
+
     def _is_expensive(self, spec: CheckSpec) -> bool:
         return reuse.is_expensive(spec, self.store.last_check_ms(reuse.command_key(spec)), self.policy)
 
@@ -69,7 +100,8 @@ class CheckExecutor:
         return [spec for spec in specs if spec.id not in costly] + [spec for spec in specs if spec.id in costly]
 
     def _run_or_reuse(self, spec, snapshot_root, remaining, mounts, started, tree, fingerprint) -> CommandOutcome:
-        key = reuse.pass_key(tree, spec, fingerprint) if tree else None
+        reusable = spec.environment == "sandbox" and not spec.requires
+        key = reuse.pass_key(tree, spec, fingerprint) if tree and reusable else None
         if key:
             hit = self.store.cached_pass(key, self.policy.cache_seconds, time.time())
             if hit is not None:

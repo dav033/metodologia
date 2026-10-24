@@ -3,6 +3,36 @@
   "$id": "m6.verify-result/1.1",
   "title": "M6 verification result",
   "type": "object",
+  "$defs": {
+    "verification": {
+      "title": "M1 VerifyOrder verification item",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "value", "purpose"],
+      "properties": {
+        "type": {"enum": ["command", "manual"]},
+        "value": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "purpose": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "expected": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "created_by": {"type": "string", "maxLength": 256},
+        "category": {"enum": ["static", "functional", "integration", "regression", "product"]},
+        "environment": {"enum": ["sandbox", "external_authorized", "production", "human_attestation"]},
+        "requires": {
+          "type": "array", "maxItems": 64, "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})$"}
+        },
+        "authorization_needed": {"type": "string", "minLength": 1, "maxLength": 4096}
+      },
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "manual"}}, "required": ["type"]},
+         "then": {"required": ["expected"]}},
+        {"if": {"properties": {"environment": {"const": "production"}}, "required": ["environment"]},
+         "then": {"required": ["authorization_needed"]}},
+        {"if": {"properties": {"environment": {"const": "human_attestation"}}, "required": ["environment"]},
+         "then": {"properties": {"type": {"const": "manual"}}, "required": ["type", "expected"]}}
+      ]
+    }
+  },
   "additionalProperties": false,
   "required": ["schema_version", "identity", "input", "verifier", "criteria", "checks", "status", "reason_code", "evidence_manifest", "finished_at"],
   "properties": {

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import TypeGuard
@@ -21,9 +22,9 @@ ORDER_KEYS = frozenset(
     }
 )
 OPTIONAL_ORDER_KEYS = frozenset({"composition_id", "manifest_sha256", "contract_identities", "environment_fingerprint"})
-PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0"})
+PLAN_SCHEMA_CAPABILITIES = frozenset({"1.0.0", "1.1.0", "1.2.0", "1.3.0"})
 VERIFICATION_CATEGORIES = frozenset({"static", "functional", "integration", "regression", "product"})
-COMMAND_KEYS = frozenset({"type", "value", "purpose", "created_by", "category"})
+COMMAND_KEYS = frozenset({"type", "value", "purpose", "created_by", "category", "environment", "requires", "authorization_needed"})
 MANUAL_KEYS = COMMAND_KEYS | {"expected"}
 MAX_TEXT_BYTES = 4096
 MAX_CRITERIA = 64
@@ -82,8 +83,11 @@ class VerificationSpec:
     created_by: str = ""
     expected: str = ""
     category: str | None = None
+    environment: str | None = None
+    requires: tuple[str, ...] | None = None
+    authorization_needed: str | None = None
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, object]:
         result = {"type": self.kind, "value": self.value, "purpose": self.purpose}
         if self.created_by:
             result["created_by"] = self.created_by
@@ -91,6 +95,12 @@ class VerificationSpec:
             result["expected"] = self.expected
         if self.category is not None:
             result["category"] = self.category
+        if self.environment is not None:
+            result["environment"] = self.environment
+        if self.requires is not None:
+            result["requires"] = list(self.requires)
+        if self.authorization_needed is not None:
+            result["authorization_needed"] = self.authorization_needed
         return result
 
 
@@ -263,7 +273,7 @@ def _parse_verification_item(value: object) -> VerificationSpec:
         raise QualityError(
             "ORDER_INVALID", "verification type must be command or manual"
         )
-    if set(value) - allowed or not COMMAND_KEYS - {"created_by", "category"} <= set(value):
+    if set(value) - allowed or not {"type", "value", "purpose"} <= set(value):
         raise QualityError(
             "ORDER_INVALID", "verification entry has missing or unapproved fields"
         )
@@ -284,8 +294,47 @@ def _parse_verification_item(value: object) -> VerificationSpec:
                 "ORDER_INVALID", "category must be static, functional, integration, regression or product"
             )
         category = raw_category
+    environment = _parse_environment(value)
+    requires = _parse_requires(value["requires"]) if "requires" in value else None
+    authorization = value.get("authorization_needed")
+    if authorization is not None and (not _is_text(authorization) or _looks_like_secret(authorization)):
+        raise QualityError("ORDER_INVALID", "authorization_needed must describe permission without secret values")
+    if environment == "production" and authorization is None:
+        raise QualityError("ORDER_INVALID", "production verification requires authorization_needed")
+    if environment == "human_attestation" and (kind != "manual" or not expected):
+        raise QualityError("ORDER_INVALID", "human_attestation requires a manual check with expected text")
     if kind == "command" and "expected" in value:
         raise QualityError(
             "ORDER_INVALID", "command verification cannot include manual expected text"
         )
-    return VerificationSpec(kind, instruction, purpose, created_by, expected, category)
+    return VerificationSpec(kind, instruction, purpose, created_by, expected, category,
+                            environment, requires, authorization)
+
+
+def _parse_environment(value: Mapping[str, object]) -> str | None:
+    if "environment" not in value:
+        return None
+    environment = value["environment"]
+    allowed = {"sandbox", "external_authorized", "production", "human_attestation"}
+    if not isinstance(environment, str) or environment not in allowed:
+        raise QualityError("ORDER_INVALID", "verification environment is unsupported")
+    return environment
+
+
+def _parse_requires(value: object) -> tuple[str, ...]:
+    items = _sequence(value, maximum=64)
+    if items is None:
+        raise QualityError("ORDER_INVALID", "requires must contain resource names only")
+    result: list[str] = []
+    for item in items:
+        if not isinstance(item, str) or not re.fullmatch(r"(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})", item):
+            raise QualityError("ORDER_INVALID", "requires must contain resource names only")
+        result.append(item)
+    if len(set(result)) != len(result):
+        raise QualityError("ORDER_INVALID", "requires contains duplicate resources")
+    return tuple(result)
+
+
+def _looks_like_secret(value: str) -> bool:
+    return bool(re.search(r"(?i)(?:https?://|postgres(?:ql)?://|token\s*[:=]|password\s*[:=]|secret\s*[:=]|api[_-]?key\s*[:=])", value)
+                or re.search(r"\b\S+@\S+", value))

@@ -26,6 +26,7 @@ from bt_recovery_evidence import (
     recovery_coverage_problems,
 )
 from bt_scheduler_quality.contracts import QualityError, VerifyRequest
+from bt_scheduler_quality.authority import VerificationAuthority
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.review import ReviewerPort
@@ -86,6 +87,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
         revert_check: Callable[..., tuple[str, ...]] | None = None,
         remediate: Callable[[str, str, list[dict]], bool] | None = None,
         attestations: Callable[..., str | None] | None = None,
+        verification_authority: VerificationAuthority | None = None,
         publish_audit_observation: Callable[[str, str, dict], None] | None = None,
         publish_conflict_observation: Callable[[VerifyRequest, str, str, str], str] | None = None,
     ):
@@ -120,6 +122,7 @@ class QualityVerificationPort(QualityDeliveryMethods):
             lambda: CommandOutcome("pass", 0, 0, b"[M6] engine ledger contract and content provenance passed\n", b"", None, True))
         self.engine = QualityEngine(
             policy, store, reviewer=reviewer, runner=self._audit_runner, resolver=snapshot_resolver, attestations=attestations,
+            verification_authority=verification_authority,
             own_outputs=self._own_outputs
         )
         self._pool = ThreadPoolExecutor(

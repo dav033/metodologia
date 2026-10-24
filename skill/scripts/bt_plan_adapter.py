@@ -110,7 +110,8 @@ def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | N
         reported = compatibility.get("required_schema_version")
         shown = reported if isinstance(reported, str) and _schema_version_value(reported) else "unknown"
         unavailable.append(f"capability report (schema {shown})")
-    for name in ("M1", "M2", "M6"):
+    required_consumers = ("M1", "M2", "M6") + (("M3",) if version[1] >= (1, 3, 0) else ())
+    for name in required_consumers:
         consumer = consumers.get(name)
         status = consumer.get("status") if isinstance(consumer, dict) else "unknown"
         versions = consumer.get("supported_schema_versions") if isinstance(consumer, dict) else None

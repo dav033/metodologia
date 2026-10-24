@@ -14,6 +14,7 @@ sys.path.insert(0, str(SCRIPTS))
 import bt_agents
 import bt_plan_adapter as adapter
 import bt_scheduler_adapter as scheduler_adapter
+import bt_scheduler_plan_compat as plan_compat
 import bt_scheduler_decision_adapter as m2
 import bt_scheduler_quality.contracts as m6_contracts
 from bt_scheduler_core.errors import SchedulerError
@@ -119,6 +120,31 @@ class PlanContractCompatibility(Isolated):
             with self.subTest(schema_version=version):
                 self.assertTrue(scheduler_adapter.downstream_compatibility(version)["supported"])
         self.assertFalse(scheduler_adapter.downstream_compatibility("1.2.1")["supported"])
+
+    def test_schema_1_3_requires_m3_readiness_while_legacy_capabilities_stay_unchanged(self):
+        self.assertEqual(plan_compat.DEFAULT_PLAN_SCHEMA_VERSION, "1.2.0")
+        self.assertEqual(adapter.planner.SCHEMA_VERSION, "1.2.0")
+        report_12 = scheduler_adapter.downstream_compatibility("1.2.0")
+        report_13 = scheduler_adapter.downstream_compatibility("1.3.0")
+        self.assertEqual(set(report_12["consumers"]), {"M1", "M2", "M6"})
+        self.assertTrue(report_12["supported"])
+        self.assertEqual(report_13["consumers"]["M3"]["status"], "unknown")
+        self.assertFalse(report_13["supported"])
+
+        plan = self.good_plan()
+        plan["schema_version"] = "1.3.0"
+        self._write(plan)
+        self.set_status("approved")
+        problem = adapter.launch_problem(self.rdir, compatibility_report=report_13)
+        self.assertTrue(problem.startswith("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE:"), problem)
+        self.assertEqual(planner.list_revisions(self.rdir), [])
+
+    def test_malformed_m3_capabilities_remain_unknown_and_block_schema_1_3(self):
+        executor_adapter = __import__("bt_scheduler_executor_adapter")
+        with patch.object(executor_adapter, "PLAN_SCHEMA_CAPABILITIES", frozenset({"1.3.0", "bad"}), create=True):
+            report = scheduler_adapter.downstream_compatibility("1.3.0")
+        self.assertFalse(report["supported"])
+        self.assertEqual(report["consumers"]["M3"], {"status": "unknown", "supported_schema_versions": []})
 
     def test_malformed_consumer_capability_marker_fails_closed(self):
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", frozenset({"1.2.0", "invalid"})):

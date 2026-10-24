@@ -12,6 +12,7 @@ from .contracts import QualityError, VerifyRequest
 from .criteria import CheckResult, CriterionResult, evaluate_criteria, overall_status
 from .evidence import build_evidence, sha256_bytes, validate_result_contract
 from . import reuse
+from .authority import VerificationAuthority
 from .check_runner import CheckExecutor
 from .policy import CheckSpec, QualityPolicy, compile_verification
 from .review import ReviewerPort, validate_reviewer_evidence
@@ -27,7 +28,7 @@ _ISSUE_DETAILS = {
     "CHECK_TIMEOUT": "The command exceeded its wall-clock limit.",
     "OUTPUT_LIMIT": "The command exceeded its captured output limit.",
     "SANDBOX_UNAVAILABLE": "The required operating-system sandbox could not be established.",
-    "CHECK_UNAVAILABLE": "The command could not be started inside the sandbox.",
+    "CHECK_UNAVAILABLE": "A declared external resource or trusted authorization is unavailable.",
     "CHECK_MANUAL": "This verification requires an explicit operator review.",
     "RUNNER_BUSY": "The configured verification concurrency limit is full.",
     "ENGINE_INTERRUPTED": "M6 stopped before persisting a complete result; commands were not rerun.",
@@ -67,6 +68,7 @@ class QualityEngine:
         reviewer: ReviewerPort | None = None,
         attestations: Callable[[VerifyRequest, CheckSpec], str | None] | None = None,
         own_outputs: Callable[[VerifyRequest], tuple[str, ...]] | None = None,
+        verification_authority: VerificationAuthority | None = None,
     ):
         """`attestations(order, spec)` -> the digest of a valid receipt the coordinator left for that manual check, or None
         (a receipt is minted and verified outside this package; M6 only learns whether one holds)."""
@@ -75,7 +77,7 @@ class QualityEngine:
         self.policy = policy
         self.store = store
         self.runner = runner or SandboxRunner(policy)
-        self.check_executor = CheckExecutor(policy, store, self.runner)
+        self.check_executor = CheckExecutor(policy, store, self.runner, verification_authority)
         self.resolver = resolver or SnapshotResolver(policy)
         self.reviewer = reviewer
 

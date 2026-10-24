@@ -11,6 +11,11 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 
 class VerifyRequestTests(unittest.TestCase):
+    def test_m6_declares_schema_13_after_consuming_verification_metadata(self):
+        from bt_scheduler_quality import PLAN_SCHEMA_CAPABILITIES
+
+        self.assertIn("1.3.0", PLAN_SCHEMA_CAPABILITIES)
+
     def test_parses_the_frozen_m1_order_and_hashes_canonical_input(self):
         raw = json.loads(
             (FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8")
@@ -57,6 +62,45 @@ class VerifyRequestTests(unittest.TestCase):
         self.assertEqual(order.manifest_sha256, "a" * 64)
         self.assertEqual(order.contract_identities, (("api@1", "b" * 64),))
 
+    def test_verification_environment_metadata_round_trips_without_changing_legacy_hashes(self):
+        raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+        legacy = VerifyRequest.from_mapping(raw)
+        self.assertNotIn("environment", legacy.to_dict()["verification"][0])
+        self.assertNotIn("requires", legacy.to_dict()["verification"][0])
+        self.assertEqual(legacy.input_hash, "0a1fbb8a208701a0029f073187bc16229111db8ce252281ff46557e6e9eaef3f")
+        cases = (
+            ("sandbox", ["DB_URL", "service:postgres"], None),
+            ("external_authorized", [], "Owner authorizes the staging smoke"),
+            ("production", [], "Owner authorizes the release verification"),
+        )
+        for environment, requires, authorization in cases:
+            with self.subTest(environment=environment):
+                item = {**raw["verification"][0], "environment": environment, "requires": requires}
+                if authorization:
+                    item["authorization_needed"] = authorization
+                raw_case = {**raw, "verification": [item]}
+                parsed = VerifyRequest.from_mapping(raw_case)
+                self.assertEqual(parsed.to_dict()["verification"][0], item)
+        manual = {"type": "manual", "value": "inspect", "purpose": "unit tests pass",
+                  "expected": "owner confirms expected result", "environment": "human_attestation"}
+        self.assertEqual(VerifyRequest.from_mapping({**raw, "verification": [manual]}).to_dict()["verification"][0], manual)
+
+    def test_verification_metadata_rejects_values_raw_maps_and_secret_authorization(self):
+        raw = json.loads((FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8"))
+        invalid_items = (
+            {"environment": "staging"},
+            {"requires": ["DB_URL=postgres://user:password@host/db"]},
+            {"requires": [{"DB_URL": "secret"}]},
+            {"authorization_needed": "Owner supplies token: abc123"},
+            {"environment": "production"},
+            {"environment": "human_attestation"},
+        )
+        for fields in invalid_items:
+            with self.subTest(fields=fields):
+                raw["verification"] = [{**raw["verification"][0], **fields}]
+                with self.assertRaises(QualityError):
+                    VerifyRequest.from_mapping(raw)
+
     def test_rejects_duplicate_acceptance_criteria_that_make_coverage_ambiguous(self):
         raw = json.loads(
             (FIXTURES / "verify-order-pass.json").read_text(encoding="utf-8")
@@ -80,6 +124,9 @@ class ResultContractTests(unittest.TestCase):
             (FIXTURES.parents[1] / "api-contract.json").read_text(encoding="utf-8")
         )
         self.assertEqual(schema["$id"], "m6.verify-result/1.1")
+        verification = schema["$defs"]["verification"]
+        self.assertEqual(set(verification["properties"]) - {"type", "value", "purpose", "expected", "created_by", "category"},
+                         {"environment", "requires", "authorization_needed"})
         self.assertEqual(schema["properties"]["input"]["dependentRequired"], {
             "composition_id": ["manifest_sha256"],
             "manifest_sha256": ["composition_id"],

@@ -84,7 +84,11 @@ def environment_fingerprint(policy: QualityPolicy) -> str:
 
 
 def command_key(spec: CheckSpec) -> str:
-    return hashlib.sha256(json.dumps([list(spec.argv), spec.cwd]).encode()).hexdigest()
+    identity: list[object] = [list(spec.argv), spec.cwd]
+    if spec.environment != "sandbox" or spec.requires or spec.authorization_needed is not None:
+        identity.append({"environment": spec.environment, "requires": list(spec.requires),
+                         "authorization_needed": spec.authorization_needed})
+    return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
 def pass_key(tree: str, spec: CheckSpec, fingerprint: str, contract_identities=(), environment_identity=None) -> str:

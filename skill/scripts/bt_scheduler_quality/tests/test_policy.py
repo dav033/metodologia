@@ -98,6 +98,16 @@ class VerificationPolicyTests(unittest.TestCase):
         self.assertEqual(check.argv, ())
         self.assertEqual(check.expected, "the render matches the approved photo")
 
+    def test_verified_metadata_reaches_compiled_check_without_values(self):
+        with tempfile.TemporaryDirectory() as directory:
+            self.raw["verification"][0].update(environment="external_authorized",
+                                                requires=["DB_URL", "service:postgres"],
+                                                authorization_needed="Owner authorizes staging smoke")
+            check = compile_verification(VerifyRequest.from_mapping(self.raw), Path(directory), QualityPolicy())[0]
+        self.assertEqual(check.environment, "external_authorized")
+        self.assertEqual(check.requires, ("DB_URL", "service:postgres"))
+        self.assertEqual(check.authorization_needed, "Owner authorizes staging smoke")
+
     def test_secret_cannot_be_embedded_in_a_plan_command(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
