@@ -69,6 +69,34 @@ class PlansBase(unittest.TestCase):
         r = c.getresponse()
         return r.status, r.read().decode(), r
 
+    def test_dashboard_pages_send_script_restrictive_csp(self):
+        self.req()
+        status, _, response = self.get("/plans")
+        self.assertEqual(status, 200)
+        policy = response.getheader("Content-Security-Policy")
+        self.assertIn("script-src 'self'", policy)
+        self.assertNotIn("unsafe-inline", policy.split("script-src", 1)[1].split(";", 1)[0])
+
+    def test_markdown_rendering_escapes_raw_html_tokens(self):
+        assets = SCRIPTS.parent / "assets"
+        self.assertIn("renderer.html =", (assets / "app.js").read_text())
+        self.assertIn("&lt;", (assets / "app.js").read_text())
+
+    def test_design_approval_error_returns_a_400_page(self):
+        import bt_design_web
+        self.req()
+        token = self.tok()
+        with patch.object(bt_design_web, "decide", side_effect=bt_design_web.approval.DesignApprovalError("stale SHA")):
+            conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+            conn.request("POST", "/p/demo/req/REQ-001/design",
+                         urlencode({"token": token, "contract": "shop@v1", "decision": "approve"}),
+                         {"Content-Type": "application/x-www-form-urlencoded",
+                          "Origin": f"http://127.0.0.1:{self.port}"})
+            response = conn.getresponse()
+            body = response.read().decode()
+        self.assertEqual(response.status, 400)
+        self.assertIn("stale SHA", body)
+
     def post(self, path, form, origin=True):
         c = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
         h = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -101,7 +129,8 @@ class PageTests(PlansBase):
         self.req(run=run_json())
         status, html, _ = self.get("/plans/demo/REQ-001")
         self.assertEqual(status, 200)
-        for needle in ("lvl-extreme", "lvl-low", "sonnet", "work", "tras T1", "Do &lt;b&gt;one&lt;/b&gt;", "EventSource"):
+        for needle in ("lvl-extreme", "lvl-low", "sonnet", "work", "tras T1", "Do &lt;b&gt;one&lt;/b&gt;",
+                       "/static/plans-live.js"):
             self.assertIn(needle, html)
         self.assertNotIn("<textarea", html)
         self.assertEqual(html.count("<form"), 2)  # cancel + delete only

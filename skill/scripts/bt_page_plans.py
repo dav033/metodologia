@@ -1,6 +1,6 @@
 """Plans view: list of every plan and a live, read-only detail page (milestones, tasks, attempts, models, accounts).
 
-Pure functions: data in, HTML out. The live regions are `[data-k]` leaves inside `#live`; the inline script patches
+Pure functions: data in, HTML out. The live regions are `[data-k]` leaves inside `#live`; the external script patches
 only the leaves whose HTML changed and flashes them, so open attempt histories stay open.
 """
 from __future__ import annotations
@@ -18,163 +18,28 @@ LEVEL_ES = {"low": "baja", "medium": "media", "high": "alta", "extreme": "extrem
 STATE_ES = {"pending": "pendiente", "ready": "lista", "running": "en curso", "verifying": "verificando",
             "completed": "completada", "rejected": "rechazada", "blocked": "bloqueada", "cancelled": "cancelada"}
 
-CSS = """<style>
-.pl{--lvl-low:#a6e3a1;--lvl-medium:#f9e2af;--lvl-high:#fab387;--lvl-extreme:#f38ba8;--mauve:#cba6f7;--lav:#b4befe}
-@media (prefers-color-scheme: light){:root:not([data-theme="dark"]) .pl{--lvl-low:#2f7d32;--lvl-medium:#8a6a00;--lvl-high:#b4540a;--lvl-extreme:#b3193e;--mauve:#8839ef;--lav:#5b5fc7}}
-:root[data-theme="light"] .pl{--lvl-low:#2f7d32;--lvl-medium:#8a6a00;--lvl-high:#b4540a;--lvl-extreme:#b3193e;--mauve:#8839ef;--lav:#5b5fc7}
-.pl .pill{display:inline-block;font-size:12px;padding:1px 9px;border-radius:99px;border:1px solid var(--border);background:none;white-space:nowrap;cursor:default;transform:none}.pl .pill:hover{transform:none;border-color:var(--border)}
-.pl .lvl-low{color:var(--lvl-low);border-color:var(--lvl-low)}.pl .lvl-medium{color:var(--lvl-medium);border-color:var(--lvl-medium)}
-.pl .lvl-high{color:var(--lvl-high);border-color:var(--lvl-high)}.pl .lvl-extreme{color:var(--lvl-extreme);border-color:var(--lvl-extreme);font-weight:600}
-.pl .top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 32px;margin:0 0 30px}
-.pl .eyebrow{font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
-.pl .top h1{margin:0}.pl .seg{margin-left:auto;display:flex;gap:6px}
-.pl .seg a{padding:7px 16px;border-radius:99px;border:1px solid var(--border);color:var(--muted);font-size:13.5px}
-.pl .seg a:hover{text-decoration:none;color:var(--text);border-color:var(--accent)}
-.pl .seg a.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
-.pl .mosaic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:stretch}
-.pl .mosaic>p{grid-column:1/-1}
-.pl .card{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:18px;min-width:0}
-.pl .card.wide{grid-column:span 2}
-.pl .card .hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
-.pl .card h2{margin:0;font-size:21px;font-weight:700;letter-spacing:-.01em}.pl .card h2 a{color:var(--text)}.pl .card h2 a:hover{color:var(--accent);text-decoration:none}
-.pl .card .meta{margin:0 0 0 auto;font:400 12px var(--mono);color:var(--muted);text-align:right;white-space:nowrap}
-.pl .card .meta .live{color:var(--info)}
-.pl .tk{display:flex;justify-content:space-between;font:400 12px var(--mono);color:var(--muted);margin-bottom:8px}.pl .tk b{font-weight:500;color:var(--text)}
-.pl .bar{height:8px;border-radius:4px;background:var(--code);overflow:hidden}
-.pl .bar>i{display:block;height:100%;background:var(--accent);border-radius:4px}
-.pl .chips{display:flex;flex-wrap:wrap;gap:8px}
-.pl .chip{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:99px;background:var(--code);color:var(--text);font-size:12.5px;font-weight:600}
-.pl .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:block;flex:none}
-.pl .st{display:inline-flex;align-items:center;gap:8px;font:400 12px var(--mono);color:var(--muted);white-space:nowrap}
-.pl .dot.bad{background:var(--bad)}.pl .st.bad{color:var(--bad)}.pl .st.off .dot{background:var(--muted)}
-.pl .dot.info{background:var(--info)}.pl .dot.warn{background:var(--warn)}.pl .dot.ok{background:var(--ok)}
-.pl .dot.live{box-shadow:0 0 0 3px color-mix(in srgb,var(--info) 30%,transparent)}
-.pl .rows{display:flex;flex-direction:column}
-.pl .prow{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
-.pl .prow .id{font:400 12px var(--mono);color:var(--muted)}
-.pl .prow a.t{color:var(--text);font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.pl .prow a.t:hover{color:var(--accent);text-decoration:none}
-.pl .prow.done a.t{color:var(--muted);font-weight:400}
-.pl .prow .st{display:flex;align-items:center;gap:8px;font:400 12px var(--mono);color:var(--muted);white-space:nowrap}
-.pl .st.info{color:var(--info)}.pl .st.warn{color:var(--warn)}.pl .st.ok{color:var(--ok)}
-.pl .card details>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:10px 0 0;list-style:none;border-top:1px solid var(--border)}
-.pl .card details>summary::before{content:"▸ "}.pl .card details[open]>summary::before{content:"▾ "}
-.pl .card details>summary:hover{color:var(--text)}.pl .card details[open]{margin-top:-6px}
-.pl .card details .rows{margin-top:6px}
-.pl .sub{font:500 11px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:20px 0 4px}.pl .sub:first-child{padding-top:0}
-.pl details.fin>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:12px 0;list-style:none;border-top:1px solid var(--border)}
-.pl details.fin>summary::before{content:"▸ "}.pl details.fin[open]>summary::before{content:"▾ "}.pl details.fin>summary:hover{color:var(--text)}
-.pl .card .go{margin-top:auto;font-size:13.5px;font-weight:600}
-@media (max-width:1000px){.pl .mosaic{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.pl .mosaic{grid-template-columns:1fr}.pl .card.wide{grid-column:auto}.pl .seg{margin-left:0}}
-@media (max-width:640px){.pl .task{grid-template-columns:40px minmax(0,1fr)}.pl .task>*:not(.tid){grid-column:2;min-width:0}.pl .task .meta{white-space:normal;text-align:left;margin:0;overflow-wrap:anywhere}.pl .task .meta span{overflow-wrap:anywhere}}
-.pl .ms{border:1px solid var(--border);border-radius:18px;background:var(--surface);margin:0 0 20px;padding:8px 24px 14px}
-.pl .mh{display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid var(--border)}
-.pl .mh b{font:500 12px var(--mono);color:var(--accent)}.pl .mh .mt{font-weight:700;font-size:17px;letter-spacing:-.01em}
-.pl .mh .cnt{margin-left:auto;font:400 12px var(--mono);color:var(--muted)}.pl .mh .mbar{width:120px}
-.pl .task{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:6px 14px;align-items:start;padding:12px 0;border-bottom:1px solid var(--border)}
-.pl .task:last-child{border-bottom:0}.pl .task .tid{font:500 12px var(--mono);color:var(--muted);padding-top:2px}
-.pl .task .tt{font-weight:500}.pl .task .sub2{grid-column:2/-1}
-.pl .tl{display:flex;gap:8px 10px;align-items:center;flex-wrap:wrap}
-.pl .chip{display:inline-flex;align-items:center;gap:7px;padding:2px 10px;border-radius:99px;background:var(--code);color:var(--muted);font:400 11.5px var(--mono)}
-.pl .meta{font-size:13px;color:var(--muted);margin:2px 0 0 0}.pl .meta b{color:var(--text);font-weight:600}
-.pl details{margin-top:4px;font-size:13px}.pl details summary{cursor:pointer;color:var(--accent)}
-.pl table.att{margin-top:6px;white-space:nowrap}.pl table.att td,.pl table.att th{padding:3px 12px 3px 0;font-size:12px}.pl .tscroll{overflow-x:auto}
-.pl .amends{display:flex;gap:6px 14px;flex-wrap:wrap}.pl .amend{font:400 12px var(--mono);color:var(--warn)}.pl .amend s{color:var(--muted)}.pl details.evo{margin:0 0 18px}.pl details.evo ol{margin:8px 0 0 18px;padding:0;font:400 12.5px var(--mono);color:var(--muted)}
-.pl .mchip{font:500 12px var(--mono);color:var(--lav)}.pl .muted{color:var(--muted)}.pl .blocked{color:var(--bad);margin-top:6px}.pl .blocked a{color:var(--bad);text-decoration:underline}.pl .working{color:var(--info)}.pl .working .dot{display:inline-block;margin-right:6px;vertical-align:middle}
-.pl .phead{margin:0 0 28px}.pl .phead h1{margin:0 0 14px}.pl .phead .bar{margin-top:16px}
-.pl .back{display:inline-block;margin:0 0 16px;font-size:13.5px}
-.pl .flash-new{animation:plflash 1.6s ease-out}
-@keyframes plflash{from{background:color-mix(in srgb,var(--mauve) 35%,transparent)}to{background:transparent}}
-.pl .asks{display:grid;gap:12px}.pl .ask-pill{border-color:var(--warn);color:var(--warn);margin-left:6px;cursor:pointer}.pl .ask{border:1px solid var(--accent);border-radius:var(--radius);padding:12px 16px}.pl .ask .opt{margin:10px 0}.pl .ask textarea{width:100%;min-height:64px;box-sizing:border-box}.pl .ask button{min-height:44px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--surface);color:var(--text);cursor:pointer}.pl .ask button.primary{background:var(--accent);color:var(--on-accent)}
-.pl .run-plan{margin:18px 0}.pl .run-plan button{min-height:44px;padding:10px 22px;font-size:1.05em;background:var(--accent);color:var(--on-accent);border:0;border-radius:var(--radius);cursor:pointer;font-weight:600}
-.pl .danger{border:1px solid var(--bad);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
-.pl .msg{padding:12px 16px;border-radius:var(--radius);background:var(--accent-soft);color:var(--text);margin:0 0 20px}
-.pl .task:target,.pl tr:target{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
-.pl .task .obj{margin:4px 0 0;color:var(--text);font-size:14px;line-height:1.5;max-width:90ch}
-.pl .task .tmiss{margin:6px 0 0;padding:6px 10px;border-radius:8px;background:var(--bad-soft);color:var(--bad);font-size:13px}
-.pl .tdet{margin:8px 0 0}.pl .tdet summary{cursor:pointer;font-size:13px;color:var(--accent)}
-.pl .tdet h4{margin:12px 0 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.pl .tdet ol,.pl .tdet ul{margin:0;padding-left:20px;font-size:13.5px;line-height:1.5}
-.pl .tdet ul.checks>li{margin:4px 0}.pl .tdet code{font:500 12.5px var(--mono);overflow-wrap:anywhere}
-.pl h2.grp{color:var(--mauve)}.pl .live-dot{font-size:12px;color:var(--muted)}
-</style>"""
+CSS = '<link rel="stylesheet" href="/static/plans.css">'
 
-JS = """<script>
-(function(){
-var live=document.getElementById('live'); if(!live) return;
-var sel='[data-k]';
-function leaves(n){return Array.prototype.slice.call(n.querySelectorAll(sel));}
-// [data-v] holds values that tick while something runs (duration, tokens): they are patched in place, never a reason
-// to replace a block and flash it (that blinked every few seconds and closed what the reader had open)
-function sigOf(n){var c=n.cloneNode(true); Array.prototype.forEach.call(c.querySelectorAll('[data-v]'),function(x){x.textContent='';}); return c.outerHTML;}
-function mark(n){n._full=n.outerHTML; n._sig=sigOf(n);}
-leaves(live).forEach(mark);
-function openIdx(n){return Array.prototype.map.call(n.querySelectorAll('details'),function(d){return d.open;});}
-function apply(html){
-  var t=document.createElement('template'); t.innerHTML=html;
-  var nw=leaves(t.content), old=leaves(live);
-  var same=nw.length===old.length&&nw.every(function(n,i){return n.dataset.k===old[i].dataset.k;});
-  if(!same){live.replaceChildren(t.content); leaves(live).forEach(mark); return;}
-  nw.forEach(function(n,i){
-    var o=old[i], full=n.outerHTML, sig=sigOf(n); if(o._full===full) return;
-    if(o._sig===sig){
-      var ov=o.querySelectorAll('[data-v]'), nv=n.querySelectorAll('[data-v]');
-      for(var j=0;j<ov.length&&j<nv.length;j++){if(ov[j].innerHTML!==nv[j].innerHTML) ov[j].innerHTML=nv[j].innerHTML;}
-      o._full=full; return;
-    }
-    var opened=openIdx(o);
-    o.replaceWith(n); mark(n);
-    Array.prototype.forEach.call(n.querySelectorAll('details'),function(d,j){if(opened[j]) d.open=true;});
-    n.classList.add('flash-new'); setTimeout(function(){n.classList.remove('flash-new');},1700);
-  });
-}
-// a link to a task (#t-T4) or an attempt (#a-att-0007): open what hides it, bring it into view, mark it
-function reveal(){var id=decodeURIComponent(location.hash.slice(1)); var n=id&&document.getElementById(id); if(!n) return;
-  for(var p=n.parentElement;p;p=p.parentElement){if(p.tagName==='DETAILS') p.open=true;}
-  if(n.classList.contains('task')) Array.prototype.forEach.call(n.querySelectorAll('details.tdet'),function(d){d.open=true;});
-  n.scrollIntoView({block:'center'}); n.classList.add('flash-new'); setTimeout(function(){n.classList.remove('flash-new');},1700);}
-reveal(); window.addEventListener('hashchange',reveal);
-var dot=document.getElementById('live-dot');
-function state(t){if(dot) dot.textContent=t;}
-function refresh(){fetch(live.dataset.api,{cache:'no-store'}).then(function(r){return r.json();}).then(function(d){if(d.html) apply(d.html);}).catch(function(){});}
-var poll=null;
-function startPoll(){if(!poll){poll=setInterval(refresh,3000); state('● sondeo cada 3 s');}}
-function stopPoll(){if(poll){clearInterval(poll); poll=null;}}
-if(/[?&]live=0(&|$)/.test(location.search)){ /* static page: screenshots and tests */ }
-else if(window.EventSource){
-  var es=new EventSource(live.dataset.events);
-  es.onopen=function(){stopPoll(); state('● en vivo'); refresh();};
-  es.onerror=function(){startPoll();};
-  es.addEventListener(live.dataset.event,function(ev){try{apply(JSON.parse(ev.data).html);}catch(x){}});
-} else {startPoll();}
-})();
-</script>"""
-
+JS = '<script src="/static/plans-live.js"></script>'
 
 def _pill(cls: str, text: str) -> str:
     return f'<span class="pill {e(cls)}">{e(text)}</span>'
 
-
 def level_badge(level: str | None) -> str:
     return _pill(f"lvl-{level}", LEVEL_ES.get(level, level)) if level in LEVELS else ""
 
-
 STATE_TONE = {"completed": "ok", "running": "info", "verifying": "info", "ready": "warn", "blocked": "bad", "rejected": "bad"}
-
 
 def state_badge(state: str | None) -> str:
     tone = STATE_TONE.get(state or "", "off")
     return f'<span class="st {tone}"><i class="dot {tone}"></i>{e(STATE_ES.get(state or "", state or "—"))}</span>'
 
-
 def bar(done: int, total: int) -> str:
     pct = round(100 * done / total) if total else 0
     return f'<div class="bar" title="{done}/{total}"><i style="width:{pct}%"></i></div>'
 
-
 def _purl(project: str, req: str) -> str:
     return f"/plans/{quote(project)}/{quote(req)}"
-
 
 FINISHED = ("done", "superseded", "cancelled", "archived")
 STATUS_ES = {"approved": "aprobado", "in-progress": "en curso", "in progress": "en curso", "review": "en revisión",
@@ -185,31 +50,25 @@ TONE = (("info", ("approved", "in-progress", "in progress", "launched", "running
         ("ok", ("done", "completed")))
 FEATURED_ROWS, CARD_ROWS = 5, 3
 
-
 def _short(status: str | None) -> str:
     """Plan statuses are free text in some repos; keep the leading word(s). The full text stays as tooltip."""
     text = (status or "").strip()
     head = re.split(r"\s+(?:[(—-]|\d{4}-\d{2})", text, maxsplit=1)[0].strip()
     return head if len(head) <= 16 else head[:15] + "…"
 
-
 def _finished(r: dict) -> bool:
     return not r["active"] and (r["plan_status"] or "").lower().startswith(FINISHED)
 
-
 def _plain_title(title: str | None, req_id: str) -> str:
     return re.sub(r"^REQ-\d+\s*[—–:-]\s*", "", title or "") or req_id
-
 
 def _tone(status: str | None) -> str:
     low = (status or "").lower()
     return next((t for t, words in TONE if low.startswith(words)), "off")
 
-
 def _label(r: dict) -> str:
     word = _short(r["run_status"] if r["active"] else r["plan_status"]).lower()
     return STATUS_ES.get(word, word) or "sin estado"
-
 
 def index_fragment(rows: list[dict], filt: str = "all") -> str:
     by_project: dict[str, list[dict]] = {}
@@ -221,7 +80,6 @@ def index_fragment(rows: list[dict], filt: str = "all") -> str:
     if not ordered:
         return '<p class="muted" data-k="none">No hay planes que mostrar.</p>'
     return "".join(_card(name, rs, wide=i == 0 and len(ordered) > 2) for i, (name, rs) in enumerate(ordered))
-
 
 def _card(name: str, rows: list[dict], wide: bool) -> str:
     live = [r for r in rows if r["active"]]
@@ -252,7 +110,6 @@ def _card(name: str, rows: list[dict], wide: bool) -> str:
             f'<div class="rows">{"".join(_row(r) for r in work[:shown])}</div>{more}'
             f'<a class="go" href="/p/{quote(name)}">Abrir proyecto →</a></article>')
 
-
 def _row(r: dict) -> str:
     done, total = r["progress"]["done"], r["progress"]["total"]
     title = _plain_title(r["title"], r["req_id"])
@@ -265,14 +122,12 @@ def _row(r: dict) -> str:
             f'<span class="st {tone}" title="{e(r["plan_status"] or "")}"><i class="dot {tone}{" live" if r["active"] else ""}">'
             f'</i>{trail}</span>{design}{_asks_pill(r)}</div>')
 
-
 def _asks_pill(r: dict) -> str:
     n = r.get("asks") or 0
     if not n:
         return ""
     return (f'<a class="pill ask-pill" href="{_purl(r["project"], r["req_id"])}#asks" '
             f'title="Esperando tu decisión">⚠ {n}</a>')
-
 
 def index_page(rows: list[dict], filt: str, trash: dict[str, list[dict]], token: str, msg: str = "") -> str:
     shown = [r for r in rows if r["active"]] if filt == "active" else rows
@@ -285,7 +140,6 @@ def index_page(rows: list[dict], filt: str, trash: dict[str, list[dict]], token:
             f'<div id="live" class="mosaic" data-api="/api/plans?filter={e(filt)}&html=1" data-events="/events?filter={e(filt)}" '
             f'data-event="plans">{index_fragment(shown, filt)}</div>{_trash(trash, token)}</div>{CSS}{JS}')
     return layout("Planes", body, [("Planes", "/plans")])
-
 
 def project_plans(rows: list[dict], limit: int | None = None) -> str:
     """Plans of one project for the project page: live and open first, finished folded. `limit` keeps only open ones."""
@@ -305,10 +159,8 @@ def project_plans(rows: list[dict], limit: int | None = None) -> str:
                      f'<div class="rows">{"".join(_row(r) for r in fin)}</div></details>')
     return f'<div class="pl">{"".join(parts) or "<p class=muted>Sin planes abiertos.</p>"}</div>{CSS}'
 
-
 def _flash(msg: str) -> str:
     return f'<div class="msg">{e(msg)}</div>' if msg else ""
-
 
 def _trash(trash: dict[str, list[dict]], token: str) -> str:
     items = []
@@ -322,7 +174,6 @@ def _trash(trash: dict[str, list[dict]], token: str) -> str:
     if not items:
         return ""
     return f'<h2 class="grp">Papelera</h2><ul class="plain">{"".join(items)}</ul>'
-
 
 def detail_fragment(s: dict) -> str:
     plan, run, summ = s["plan"], s["run"], s["summary"]
@@ -343,21 +194,17 @@ def detail_fragment(s: dict) -> str:
     parts.append(bt_page_design.plan_panel(s.get("design_subplans", [])))
     return "".join(parts)
 
-
 def _milestone_head(m: dict) -> str:
     return (f'<div class="mh" data-k="mh-{e(str(m["id"]))}"><b>{e(str(m["id"]))}</b><span class="mt">{e(m["title"] or "")}</span>'
             f'{level_badge(m["difficulty"])}{state_badge(m["state"])}'
             f'<span class="cnt">{m["progress"]["done"]}/{m["progress"]["total"]}</span>'
             f'<div class="mbar">{bar(m["progress"]["done"], m["progress"]["total"])}</div></div>')
 
-
 FIELD_ES = {"complexity": "complejidad", "scope": "alcance", "risk": "riesgo", "coupling": "acoplamiento",
             "confidence": "confianza", "estimated_minutes": "estimación (min)"}
 
-
 def _value_es(field: str, value) -> str:
     return LEVEL_ES.get(value, str(value)) if field == "complexity" else str(value)
-
 
 def _amended(t: dict) -> str:
     """`complejidad ~~media~~ → alta · 22:40 · por el agente` for each amendment of the task, evidence on hover."""
@@ -369,7 +216,6 @@ def _amended(t: dict) -> str:
                     f'<s>{e(_value_es(a["field"], a["from"]))}</s> → <b>{e(_value_es(a["field"], a["to"]))}</b> · '
                     f'{e(a["at"][11:16])} · por {who}</span></sl-tooltip>')
     return f'<div class="meta amends">{"".join(rows)}</div>' if rows else ""
-
 
 def _timeline(s: dict) -> str:
     items = (s.get("evolution") or {}).get("timeline") or []
@@ -386,11 +232,9 @@ def _timeline(s: dict) -> str:
                         f'{" · r" + str(it["revision"]) if it.get("revision") else ""}</li>')
     return f'<details class="evo"><summary>Evolución del plan ({len(items)})</summary><ol>{"".join(rows)}</ol></details>'
 
-
 def _unclassified(t: dict) -> str:
     """A task with no difficulty must say so: a plan that "comes without difficulties" is a broken contract."""
     return _pill("bad", "sin clasificar") if t.get("complexity") is None and t.get("state") == "pending" else ""
-
 
 def unclassified_banner(s: dict) -> str:
     plan, summ = s["plan"], s["summary"]
@@ -402,7 +246,6 @@ def unclassified_banner(s: dict) -> str:
             f'tareas no tienen dificultad ({why}). No se puede aprobar ni lanzar así. Para clasificarlo y ejecutarlo: '
             f'<code>bitacora --project {e(s["project"])} go {e(s["req_id"])}</code></div>')
 
-
 def _missing_detail(t: dict) -> list[str]:
     """What a task must say and does not: a task nobody can read is a defect of the plan, shown as one."""
     d = t.get("detail")
@@ -410,7 +253,6 @@ def _missing_detail(t: dict) -> list[str]:
         return ["el plan no tiene PLAN.json: no hay objetivo, criterios ni verificación"]
     return [text for key, text in (("objective", "objetivo"), ("acceptance_criteria", "criterios de aceptación"),
                                    ("verification", "verificación")) if not d.get(key)]
-
 
 def _detail(t: dict) -> str:
     d = t.get("detail") or {}
@@ -440,7 +282,6 @@ def _detail(t: dict) -> str:
     body = f'<details class="tdet"><summary>Detalle de la tarea</summary>{"".join(parts)}</details>' if parts else ""
     return objective + warn + body
 
-
 def _blocked_note(t: dict, asks: dict) -> str:
     """On a blocked task row: that it waits for the owner, the first line of the error and where to answer."""
     r = asks.get(t["id"])
@@ -452,7 +293,6 @@ def _blocked_note(t: dict, asks: dict) -> str:
     return (f'<div class="meta blocked"><b>Espera por ti:</b> {e(dx.headline(r) or r.get("needs") or r["what"])}'
             f'{f" <br>Error: <code>{e(first[:240])}</code>" if first else ""}'
             f' <a href="#d-{e(r["id"])}">Ver el origen y cómo solucionarlo</a></div>')
-
 
 def _task(t: dict, asks: dict | None = None) -> str:
     chips = "".join(f'<span class="chip">tras {e(a)}</span>' for a in t["after"])
@@ -467,7 +307,6 @@ def _task(t: dict, asks: dict | None = None) -> str:
             f'<span class="chip">{t["attempts"]} intentos</span>{chips}</div>{_amended(t)}{current}{working}{_blocked_note(t, asks or {})}'
             f'{attempts_.attempts_table(t["history"])}</div>{state_badge(t["state"])}</div>')
 
-
 def _working(t: dict) -> str:
     cur = t["attempt"]
     if not cur or not cur.get("live"):
@@ -476,7 +315,6 @@ def _working(t: dict) -> str:
             f'{attempts_.model_chip(cur.get("provider"), cur.get("model_requested"), cur.get("effort"))} · '
             f'{e(cur.get("account") or "—")} · <span data-v>{attempts_.fmt_duration(cur.get("duration_s"))}</span> · '
             f'<span data-v>{attempts_.tokens_html(cur.get("tokens"))}</span></div>')
-
 
 def detail_page(s: dict, token: str, msg: str = "") -> str:
     project, req = s["project"], s["req_id"]
@@ -487,11 +325,9 @@ def detail_page(s: dict, token: str, msg: str = "") -> str:
             f'{_decisions(s, base, token)}{_recovery(s, base, token)}{_healing(s, base, token)}{_run_form(s, base, token)}{_actions(s, base, token)}</div>{CSS}{JS}')
     return layout(f"{req} · Plan", body, [("Planes", "/plans"), (project, f"/p/{quote(project)}")])
 
-
 RECOVERY_STATE_ES = {"diagnosing": "diagnosticando", "applying": "preparando correcciones", "executing": "ejecutando",
                      "auditing": "reauditando", "succeeded": "resuelto", "blocked": "bloqueado", "escalated": "te necesita",
                      "stopped": "detenido"}
-
 
 def _recovery(s: dict, base: str, token: str) -> str:
     """Diagnostic recovery (REQ-029 R7): the durable cycles with their exact blocker, and the owner's stop / opt-in controls,
@@ -522,12 +358,10 @@ def _recovery(s: dict, base: str, token: str) -> str:
             f'{enable}{stop}</p>{note}{blocker}'
             f'{"<ul>" + "".join(cycles) + "</ul>" if cycles else "<p class=muted>Ningún ciclo todavía: se abre solo cuando los reintentos y remediaciones ordinarios se agotan.</p>"}</div>')
 
-
 def _evidence(lines) -> str:
     """What the diagnosis was based on, one short quoted line per piece of evidence (escaped: it comes from run files)."""
     shown = [str(line).strip()[:200] for line in (lines if isinstance(lines, list) else []) if str(line).strip()][:3]
     return f'<details><summary>Evidencia</summary><ul>{"".join(f"<li>{e(line)}</li>" for line in shown)}</ul></details>' if shown else ""
-
 
 def _healing(s: dict, base: str, token: str) -> str:
     """Autocuración: what the scheduler fixed by itself, what it gave up on, and the owner's stop / revert (REQ-029 R7).
@@ -561,13 +395,11 @@ def _healing(s: dict, base: str, token: str) -> str:
             f'{"<ul>" + "".join(cases) + "</ul>" if cases else "<p class=muted>Sin casos todavía.</p>"}'
             f'{"<details><summary>Últimas intervenciones</summary><ul>" + "".join(recent) + "</ul></details>" if recent else ""}</div>')
 
-
 def _confirm_form(base: str, action: str, token: str, req: str, label: str, warning: str) -> str:
     return (f'<form method="post" action="{base}/{action}" class="danger"><p>{warning}</p>'
             f'<input type="hidden" name="token" value="{e(token)}">'
             f'<input type="text" name="confirm" placeholder="Escribe {e(req)} para confirmar" autocomplete="off" required>'
             f'<p><button type="submit">{label}</button></p></form>')
-
 
 def _decisions(s: dict, base: str, token: str) -> str:
     """Everything the plan waits on from its owner, answerable here: decision requests and open question rounds."""
@@ -606,10 +438,8 @@ def _decisions(s: dict, base: str, token: str) -> str:
     if not out:
         return ""
     waiting = any((r.get("agent") or {}).get("state") == "running" for r in s.get("decisions") or [])
-    reload = ('<script>setTimeout(function(){var a=document.activeElement;'
-              'if(!a||a.tagName!=="TEXTAREA")location.reload();},8000)</script>') if waiting else ""
+    reload = '<script src="/static/plans-reload.js" data-enabled="1"></script>' if waiting else ""
     return f'<h2 id="asks">Esperando tu decisión</h2><div class="asks">{"".join(out)}</div>{reload}'
-
 
 def _run_form(s: dict, base: str, token: str) -> str:
     act = s.get("run_action")
@@ -619,7 +449,6 @@ def _run_form(s: dict, base: str, token: str) -> str:
             f'<input type="hidden" name="token" value="{e(token)}">'
             f'<input type="hidden" name="expected" value="{e(act["action"])}">'
             f'<button type="submit" class="primary">▶ {e(act["label"])}</button></form>')
-
 
 def _actions(s: dict, base: str, token: str) -> str:
     req = s["req_id"]

@@ -4,6 +4,9 @@ document.querySelectorAll('script.md-src').forEach((block) => {
   const target = document.getElementById(block.dataset.target);
   if (!target || !window.marked) return;
   const src = JSON.parse(block.textContent).replace(/^---\n[\s\S]*?\n---\n/, ''); // drop front matter
+  const renderer = new window.marked.Renderer();
+  renderer.html = (html) => html.replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  window.marked.setOptions({ renderer });
   target.innerHTML = window.marked.parse(src);
 });
 

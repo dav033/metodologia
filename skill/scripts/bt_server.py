@@ -30,16 +30,13 @@ REMOTE_PORT = int(os.environ.get("BITACORA_REMOTE_PORT", "8766"))
 SIMULATE_MAX_BYTES = 256 * 1024     # a demonstration, not a way to make the server grind on any plan
 SIMULATE_MAX_TASKS = 60
 
-
 MAX_FORM_BYTES = 64 * 1024
-
 
 def _local_host(host: str) -> bool:
     """The server answers only to its own loopback names: a page served under an attacker's DNS name (rebinding) can neither
     read the token nor post with it."""
     name = host.rsplit(":", 1)[0].strip("[]").lower() if not host.startswith("[") else host.split("]")[0].strip("[").lower()
     return name in {"127.0.0.1", "localhost", "::1"}
-
 
 def token() -> str:
     f = STATE / "server-token"
@@ -48,7 +45,6 @@ def token() -> str:
         f.write_text(secrets.token_urlsafe(24), encoding="utf-8")
     return f.read_text(encoding="utf-8").strip()
 
-
 def safe_path(base: Path, rel: str) -> Path | None:
     p = (base / unquote(rel)).resolve()
     try:
@@ -56,7 +52,6 @@ def safe_path(base: Path, rel: str) -> Path | None:
     except ValueError:
         return None
     return p if p.is_file() else None
-
 
 class Handler(BaseHTTPRequestHandler):
     strict_host = True          # the local panel answers only to its own loopback names (the remote handler has its own login)
@@ -73,6 +68,10 @@ class Handler(BaseHTTPRequestHandler):
         if sandbox:  # generated or agent-written HTML must not reach the dashboard origin or its token
             self.send_header("Content-Security-Policy", "sandbox allow-scripts; default-src 'none'; "
                              "script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:")
+        else:
+            self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; "
+                             "style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; "
+                             "base-uri 'self'; frame-ancestors 'self'")
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
@@ -98,9 +97,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             self.route_get()
         except SystemExit as exc:
-            self.send(pages.layout("Error", f"<p>{exc}</p>"), 404)
+            self.send(pages.layout("Error", f"<p>{pages.e(str(exc))}</p>"), 404)
         except Exception as exc:  # never kill the server on one bad page
-            self.send(pages.layout("Error", f"<pre>{type(exc).__name__}: {exc}</pre>"), 500)
+            self.send(pages.layout("Error", f"<pre>{pages.e(type(exc).__name__ + ': ' + str(exc))}</pre>"), 500)
 
     def route_get(self):
         u = urlparse(self.path)
@@ -244,8 +243,8 @@ class Handler(BaseHTTPRequestHandler):
                 msg = bt_design_web.decide(ROOT, project, rid, rdir, form,
                                            lambda path, text: commit(path, text, push=False))
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
-        except SystemExit as exc:
-            return self.send(pages.layout("Error", f"<p>{exc}</p>"), 400)
+        except (SystemExit, ValueError) as exc:
+            return self.send(pages.layout("Error", f"<p>{pages.e(str(exc))}</p>"), 400)
         self.send("Not found", 404, "text/plain")
 
     def simulate(self, q: dict) -> None:
@@ -373,7 +372,6 @@ class Handler(BaseHTTPRequestHandler):
         from bt_page_run import apply_control
         return apply_control(rdir, form.get("action", ""))
 
-
     def review(self, project: str, rid: str, rdir: Path, form: dict) -> str:
         import bt_review as rv
         decision, comments = form.get("decision", ""), form.get("comments", "").strip()
@@ -396,7 +394,6 @@ class Handler(BaseHTTPRequestHandler):
             set_front(rdir / "SPEC.md", "status", "done")
         commit(ROOT, f"{project}: {rid} review — {decision} (web)")
         return " · ".join(lines)
-
 
 # ---------------------------------------------------------------- lifecycle
 
@@ -428,22 +425,18 @@ class RemoteHandler(Handler):
         import bt_remote_api
         return bt_remote_api.route_post(self)
 
-
 def url(port: int = DEFAULT_PORT) -> str:
     return f"http://127.0.0.1:{port}"
-
 
 def is_running(port: int = DEFAULT_PORT) -> bool:
     with socket.socket() as s:
         s.settimeout(0.3)
         return s.connect_ex(("127.0.0.1", port)) == 0
 
-
 def code_version() -> str:
     """Changes whenever the server's code or assets change (newest mtime), so a stale server can be replaced."""
     files = list(Path(__file__).parent.glob("*.py")) + list(ASSETS.glob("*"))
     return str(int(max(f.stat().st_mtime for f in files)))
-
 
 def serve(port: int = DEFAULT_PORT) -> None:
     token()
@@ -455,7 +448,6 @@ def serve(port: int = DEFAULT_PORT) -> None:
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
     httpd.serve_forever()
 
-
 def create_http_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
     """Build the panel server around systemd's listener when socket activation is configured."""
     listener = systemd_listener(port)
@@ -466,7 +458,6 @@ def create_http_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
         httpd.server_address = listener.getsockname()
     return httpd
 
-
 def serve_remote(port: int = REMOTE_PORT) -> None:
     """Serve the gateway-only API on loopback, without exposing the browser panel routes."""
     httpd = ThreadingHTTPServer(("127.0.0.1", port), RemoteHandler)
@@ -474,7 +465,6 @@ def serve_remote(port: int = REMOTE_PORT) -> None:
     bt_live_api.warm(ROOT)
     print(f"Bitácora remote API at http://127.0.0.1:{port}  (Ctrl+C to stop)")
     httpd.serve_forever()
-
 
 def _server_stale(port: int) -> bool:
     """Check server metadata without stopping the process that owns the listener."""
@@ -484,7 +474,6 @@ def _server_stale(port: int) -> bool:
         return True
     return (info.get("port") == port and (info.get("version") != code_version()
                                            or info.get("root") != str(ROOT)))
-
 
 def _stale(port: int) -> bool:
     """A running server on our port that runs old code or serves another bitácora."""
@@ -511,10 +500,8 @@ def _stale(port: int) -> bool:
         time.sleep(0.2)
     return True
 
-
 WEB_UNIT = "bitacora-web.service"            # the user's systemd unit for the panel on the default port, if installed
 WEB_SOCKET_UNIT = "bitacora-web.socket"      # optional socket-activation unit that owns the listening port
-
 
 def _unit_enabled() -> bool:
     if platform() != "linux":
@@ -530,7 +517,6 @@ def _unit_enabled() -> bool:
         if out.stdout.strip() in {"enabled", "enabled-runtime", "linked", "linked-runtime"}:
             return True
     return False
-
 
 def ensure_server(port: int = DEFAULT_PORT) -> str:
     """Start the server detached in the background if it isn't running (or restart it if its code is stale)."""

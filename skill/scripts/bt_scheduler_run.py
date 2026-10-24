@@ -318,6 +318,19 @@ def _notify_terminal(rdir: Path, req: str, status: str, run_id: str, generation:
         print(f"Scheduler notification delivery failed: {exc}", file=sys.stderr)
 
 
+def _notify_design_completions(project: str, req: str, rdir: Path, snapshot) -> None:
+    """Observe completed design-task state changes and claim one owner notice per contract version."""
+    try:
+        from bt_design_approval import ui_contracts
+        states = {task: item.get("state") for task, item in snapshot.tasks.items()}
+        for row in ui_contracts(Path(rdir), project, states):
+            task = row.get("design_task")
+            if states.get(task) == "completed" and not (row.get("approval") or {}).get("status") == "approved":
+                bt_notify.notify_design_waiting(bt_core.ROOT, project, req, row["contract"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return
+
+
 def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool = False,
         max_steps: int | None = None) -> int:
     rdir = Path(rdir)
@@ -384,6 +397,7 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                           file=sys.stderr)
                     last_m4_pending_notice = now
                 snap = scheduler.snapshot()
+                _notify_design_completions(project, req, rdir, snap)
                 if now - last_heartbeat >= HEARTBEAT_SECONDS or steps == 1:
                     adapter.write_projection(rdir, scheduler)
                     bt_attempt_log.sync(project, req, rdir)

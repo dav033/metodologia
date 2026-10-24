@@ -130,25 +130,27 @@ def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         state = record.get("status", "pending")
         state_label = bt_page_design.approval_label(state)
         repo = approval.repository_for_contract(ROOT, project, rdir, ref)
-        contract = repo / row["path"] if repo else None
         try:
-            text = contract.read_text(encoding="utf-8") if contract and contract.is_file() else ""
+            snapshot = approval.contract_snapshot(repo, row["path"]) if repo else None
+            text, digest = snapshot if snapshot else ("", "")
         except (OSError, UnicodeError):
-            text = ""
-        body = md("doc", text) if text else \
+            text, digest = "", ""
+        md_id = "contract-" + re.sub(r"[^a-z0-9-]", "-", ref.lower())
+        body = md(md_id, text) if text else \
             '<p class="muted">El archivo del contrato todavía no está disponible en el repositorio asignado.</p>'
         approved = record.get("status") == "approved"
         waiting = row["design_state"] == "completed" and not approved
-        if waiting:
-            import bt_notify
-            bt_notify.notify_design_waiting(ROOT, project, rid, ref)
         actions = ""
         if waiting:
+            approve_button = (f'<button type="submit" name="decision" value="approve">Aprobar</button>' if digest else
+                              '<span class="muted">Aprobar estará disponible cuando el contrato esté en HEAD.</span>')
             actions = (f'<form class="q" method="post" action="{purl(project, "req", rid, "design")}" style="margin-top:16px">'
                        f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="contract" value="{e(ref)}">'
+                       f'<input type="hidden" name="sha256" value="{e(digest)}">'
                        '<div class="question"><strong>Comentarios</strong> <span class="muted">(obligatorios si pides cambios)</span>'
                        '<textarea name="comments"></textarea></div><div class="actions">'
-                       '<button type="submit" name="decision" value="approve">Aprobar</button>'
+                       f'<span class="muted">SHA256 <code>{e(digest)}</code></span>'
+                       f'{approve_button}'
                        '<button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>')
         preview = ""
         if enabled and repo:
@@ -158,7 +160,9 @@ def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
                            'target="_blank" rel="noopener">Abrir preview →</a></p>')
         detail = (f'<details class="card"><summary><strong>{e(row.get("title") or row["subplan_id"])}</strong> · '
                   f'<code>{e(ref)}</code> · aprobación {e(state_label)} · diseño {e(row["design_state"])}</summary>'
-                  f'<p class="muted">Contrato: <code>{e(row["path"])}</code> · tarea de diseño {e(str(row["design_task"]))}</p>'
+                  f'<p class="muted">Contrato: <code>{e(row["path"])}</code> · SHA256 de <code>HEAD</code> '
+                  f'<code>{e(digest or "no disponible")}</code> · gate: commit base seleccionado para la tarea UI · '
+                  f'tarea de diseño {e(str(row["design_task"]))}</p>'
                   f'{preview}{body}{actions}</details>')
         parts.append(detail)
     parts.append('</section>')

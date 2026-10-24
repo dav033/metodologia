@@ -129,7 +129,8 @@ class Dispatcher:
                 blocked_environment = ack.classification == "blocked_environment"
                 if not blocked_environment:
                     att.budget_consumed = True
-                end_attempt(ctx, attempt_id, A.FAILED, "execution_failed", f"start rejected: {ack.detail[:200]}",
+                cause = "blocked_environment" if blocked_environment else "execution_failed"
+                end_attempt(ctx, attempt_id, A.FAILED, cause, f"start rejected: {ack.detail[:200]}",
                             classification=ack.classification)
             elif kind == "verify" and ack.permanent and A(att.state) == A.VERIFYING:
                 # the verifier refuses the ORDER itself: asking again at every lease expiry never changes that (REQ-020 att-0087 waited

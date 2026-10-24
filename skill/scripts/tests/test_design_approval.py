@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import tempfile
+import concurrent.futures
 import unittest
 from pathlib import Path
 
@@ -60,6 +61,32 @@ class DesignApprovalTests(unittest.TestCase):
         next_head = self._git("rev-parse", "HEAD")
         self.assertEqual(approval.check_tree(self.rdir, self.repo, next_head, "design/contracts/checkout@v1.md")["state"],
                          "hash-mismatch")
+
+    def test_web_digest_must_match_clean_regular_head_blob(self):
+        with self.assertRaises(approval.DesignApprovalError):
+            approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "owner", "web",
+                            submitted_sha256="0" * 64)
+        (self.repo / "design/contracts/checkout@v1.md").write_text("dirty\n")
+        with self.assertRaisesRegex(approval.DesignApprovalError, "working tree"):
+            approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "owner", "web")
+
+    def test_contract_symlink_is_refused(self):
+        path = self.repo / "design/contracts/checkout@v1.md"
+        path.unlink()
+        (self.repo / "elsewhere.md").write_text("contract\n")
+        path.symlink_to("../../elsewhere.md")
+        with self.assertRaisesRegex(approval.DesignApprovalError, "symlink"):
+            approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "owner", "web")
+
+    def test_concurrent_decisions_serialize_immutable_transition(self):
+        def decide():
+            try:
+                return approval.decide(self.rdir, self.repo, "checkout@v1", True, "", "owner", "cli")["status"]
+            except approval.DesignApprovalError:
+                return "rejected"
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda _: decide(), range(2)))
+        self.assertEqual(sorted(results), ["approved", "rejected"])
 
 
 if __name__ == "__main__":

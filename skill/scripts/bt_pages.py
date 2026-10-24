@@ -14,10 +14,6 @@ OPEN_STATUSES = ("clarifying", "ready", "planned", "review", "approved", "launch
 
 
 # `?theme=light|dark` forces a theme, so screenshots of both are reproducible (headless browsers always render dark)
-THEME_JS = ("var t=new URLSearchParams(location.search).get('theme');"
-            "if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;"
-            "var d=t==='dark'||(t!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);"
-            "document.documentElement.classList.toggle('sl-theme-dark',d);")
 SHOELACE = "/static/vendor/shoelace-2.20.1"       # vendored web components (MIT, see its LICENSE.md): no CDN at runtime
 
 
@@ -25,7 +21,7 @@ def layout(title: str, body: str, crumbs: list[tuple[str, str]] | None = None) -
     nav = '<span class="sep">/</span>'.join(f'<a href="{e(href)}">{e(label)}</a>' for label, href in (crumbs or []))
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{e(title)} · Bitácora</title>
-<script>{THEME_JS}</script>
+<script src="/static/theme.js"></script>
 <link rel="stylesheet" href="{SHOELACE}/themes/light.css"><link rel="stylesheet" href="{SHOELACE}/themes/dark.css">
 <link rel="stylesheet" href="/static/style.css">
 <script type="module" src="{SHOELACE}/shoelace-autoloader.js"></script></head><body>

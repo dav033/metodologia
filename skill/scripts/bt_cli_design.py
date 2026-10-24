@@ -41,7 +41,7 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     message = bt_design_web.decide(root, project, approval_req_id(rdir), rdir,
                                   {"contract": args.contract, "decision": args.action,
                                    "comments": args.comments},
-                                  lambda path, text: bt_vcs.commit(path, text, push=False))
+                                  lambda path, text: bt_vcs.commit(path, text, push=False), via="cli")
     print(message)
     return 0
 

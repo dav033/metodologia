@@ -5,6 +5,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import bt_notify
+from types import SimpleNamespace
+from unittest.mock import patch
 
 
 def ev(kind, state, task="T1"):
@@ -38,6 +40,22 @@ class TaskAlerts(unittest.TestCase):
             self.assertTrue(bt_notify.notify_design_waiting(Path(d), "proj", "REQ-1", "checkout@v2"))
             self.assertEqual(send.call_count, 2)
             self.assertIn("Contrato de diseño esperando aprobación", send.call_args_list[0].args[1])
+
+    def test_scheduler_completion_observer_claims_design_notice_outside_page_render(self):
+        import bt_core
+        import bt_scheduler_run
+        with tempfile.TemporaryDirectory() as d, patch.object(bt_core, "ROOT", Path(d)), \
+                patch.object(bt_notify, "notify") as send:
+            rdir = Path(d) / "proj/requirements/REQ-1"
+            rdir.mkdir(parents=True)
+            (rdir / "PLAN.json").write_text(json.dumps({
+                "subplans": [{"id": "SP-1", "ui": {"contract": "checkout", "version": 1,
+                                                     "design_task": "T1"}}],
+                "tasks": [{"id": "T1"}]}))
+            snap = SimpleNamespace(tasks={"T1": {"state": "completed"}})
+            bt_scheduler_run._notify_design_completions("proj", "REQ-1", rdir, snap)
+            bt_scheduler_run._notify_design_completions("proj", "REQ-1", rdir, snap)
+            send.assert_called_once()
 
 
 if __name__ == "__main__":

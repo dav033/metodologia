@@ -1,7 +1,8 @@
 """Durable owner approvals for versioned UI contracts.
 
 The approved digest is SHA256 of `git show HEAD:<contract path>` in the repository assigned to the design task.
-The M3 gate compares that digest with the contract blob in the selected base commit.
+UI tasks must use that same repository and start from its current integration-line tip (HEAD); M3 compares the
+approval with the blob at the exact selected base commit.
 """
 from __future__ import annotations
 
@@ -11,6 +12,8 @@ import os
 import re
 import subprocess
 import tempfile
+import threading
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -18,6 +21,7 @@ from typing import Any
 FILE = "design-approvals.json"
 _REF = re.compile(r"(?P<contract>[a-z0-9][a-z0-9-]{0,63})@v(?P<version>[1-9][0-9]{0,5})\Z")
 _PATH = re.compile(r"design/contracts/[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}\.md\Z")
+_FALLBACK_LOCK = threading.RLock()
 
 
 class DesignApprovalError(ValueError):
@@ -90,22 +94,82 @@ def approvals(rdir: Path) -> dict[str, dict[str, Any]]:
 
 
 def decide(rdir: Path, repo: Path, ref: str, approve: bool, comments: str, who: str, via: str,
-           *, revision: str = "HEAD") -> dict[str, Any]:
+           *, revision: str = "HEAD", submitted_sha256: str | None = None) -> dict[str, Any]:
+    with _decision_lock(Path(rdir)):
+        return _decide_locked(rdir, repo, ref, approve, comments, who, via, revision, submitted_sha256)
+
+
+@contextmanager
+def _decision_lock(rdir: Path):
+    """Serialize read-check-write transitions across threaded dashboard requests (POSIX)."""
+    lock = None
+    fallback = False
+    try:
+        import fcntl
+        target = Path(rdir) / f".{FILE}.lock"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        lock = target.open("a+b")
+        fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+    except (ImportError, OSError):  # non-POSIX or unavailable lock storage: preserve existing behavior
+        if lock:
+            lock.close()
+        lock = None
+        _FALLBACK_LOCK.acquire()
+        fallback = True
+    try:
+        yield
+    finally:
+        if lock:
+            try:
+                import fcntl
+                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+            finally:
+                lock.close()
+        elif fallback:
+            _FALLBACK_LOCK.release()
+
+
+def _decide_locked(rdir: Path, repo: Path, ref: str, approve: bool, comments: str, who: str, via: str,
+                   revision: str, submitted_sha256: str | None) -> dict[str, Any]:
     path = contract_path(ref)
     data = _load(rdir)
     prior = data["approvals"].get(ref)
     if isinstance(prior, dict) and prior.get("status") == "approved":
         raise DesignApprovalError(f"{ref} is already approved; approvals are immutable")
+    file = Path(repo) / path
+    if approve and file.is_symlink():
+        raise DesignApprovalError(f"Cannot approve {ref}: contract working tree path is a symlink")
     blob = _read_blob(Path(repo), revision, path)
     if approve and blob is None:
         raise DesignApprovalError(f"Cannot approve {ref}: {path} is absent from {revision} in {repo}")
+    if approve:
+        try:
+            status = subprocess.run(["git", "status", "--porcelain", "--", path], cwd=repo,
+                                    capture_output=True, check=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError) as exc:
+            raise DesignApprovalError(f"Cannot check contract working tree: {exc}") from None
+        if status:
+            raise DesignApprovalError(f"Cannot approve {ref}: contract working tree is dirty")
+    digest = hashlib.sha256(blob).hexdigest() if blob is not None else None
+    if approve and via == "web" and not submitted_sha256:
+        raise DesignApprovalError(f"Cannot approve {ref}: reload the contract page to submit its SHA256")
+    if approve and submitted_sha256 is not None and submitted_sha256 != digest:
+        raise DesignApprovalError(f"Cannot approve {ref}: contract changed since this page was rendered; reload")
     record = {"contract": ref, "path": path, "status": "approved" if approve else "changes-requested",
-              "sha256": hashlib.sha256(blob).hexdigest() if blob is not None else None,
+              "sha256": digest,
               "who": who, "via": via, "when": datetime.now(UTC).isoformat(timespec="seconds"),
               "comments": comments.strip()}
     data["approvals"][ref] = record
     _write(rdir, data)
     return record
+
+
+def contract_snapshot(repo: Path, path: str, revision: str = "HEAD") -> tuple[str, str] | None:
+    """Text and digest of the regular-file blob that the approval gate will inspect."""
+    blob = _read_blob(Path(repo), revision, path)
+    if blob is None:
+        return None
+    return blob.decode("utf-8"), hashlib.sha256(blob).hexdigest()
 
 
 def check_tree(rdir: Path, repo: Path, base: str, path: str) -> dict[str, Any]:

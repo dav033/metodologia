@@ -51,17 +51,37 @@ class DesignWebTests(unittest.TestCase):
 
     def test_matching_approval_reopens_ui_task_held_by_the_environment_gate(self):
         plan = json.loads((self.rdir / "PLAN.json").read_text(encoding="utf-8"))
-        plan["tasks"].append({"id": "T2", "ui": True})
+        plan["tasks"].append({"id": "T2", "ui": True, "subplan_id": "SP-1"})
         (self.rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
         status = {"milestones": [{"tasks": [{"id": "T2", "state": "blocked",
-                                                 "reason": "blocked_environment"}]}]}
-        with patch("bt_planstatus.plan_status", return_value=status), \
+                                                 "reason": "blocked_environment",
+                                                 "failure": "DESIGN_CONTRACT_UNAPPROVED: design/contracts/shop@v1.md"}]}]}
+        with patch.object(approval, "ui_contracts", return_value=[{"contract": "shop@v1", "design_task": "T1",
+                                                                       "design_state": "completed"}]), \
+                patch("bt_planstatus.plan_status", return_value=status), \
                 patch("bt_scheduler_ops.apply", return_value=["T2: reopened"]) as reopen:
             bt_design_web.decide(self.root, "demo", "REQ-001", self.rdir,
-                                 {"contract": "shop@v1", "decision": "approve", "comments": ""},
+                                 {"contract": "shop@v1", "decision": "approve", "comments": "",
+                                  "sha256": approval.contract_snapshot(self.repo, "design/contracts/shop@v1.md")[1]},
                                  lambda *_: True)
         self.assertEqual(reopen.call_args.args[3:5], ("reopen", "T2"))
         self.assertIn("approved", approval.approvals(self.rdir)["shop@v1"]["status"])
+
+    def test_approval_releases_only_tasks_blocked_by_this_design_gate(self):
+        plan = json.loads((self.rdir / "PLAN.json").read_text(encoding="utf-8"))
+        plan["tasks"].extend([{"id": "T2", "ui": True, "subplan_id": "SP-1"},
+                              {"id": "T3", "ui": True, "subplan_id": "SP-1"}])
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+        status = {"milestones": [{"tasks": [
+            {"id": "T2", "state": "blocked", "reason": "blocked_environment",
+             "failure": "DESIGN_CONTRACT_UNAPPROVED: design/contracts/shop@v1.md"},
+            {"id": "T3", "state": "blocked", "reason": "blocked_environment",
+             "failure": "DESIGN_CONTRACT_HASH_MISMATCH: design/contracts/elsewhere@v1.md"}]}]}
+        with patch("bt_planstatus.plan_status", return_value=status), \
+                patch("bt_scheduler_ops.apply", return_value=[]) as reopen:
+            released = bt_design_web._release_ui_holds("demo", "REQ-001", self.rdir, "shop@v1")
+        self.assertEqual(released, ["T2"])
+        self.assertEqual(reopen.call_count, 1)
 
     def test_requirement_panel_renders_contract_state_forms_and_enabled_preview(self):
         (self.repo / "design/preview").mkdir(parents=True)
@@ -71,13 +91,53 @@ class DesignWebTests(unittest.TestCase):
                "approval": None}
         with patch.object(approval, "ui_contracts", return_value=[row]), \
                 patch.object(approval, "repository_for_contract", return_value=self.repo), \
-                patch("bt_config.get", return_value=True), patch("bt_notify.notify_design_waiting"):
+                patch("bt_config.get", side_effect=[True, []]), patch("bt_notify.notify_design_waiting"):
             panel = bt_page_req.design_panel("demo", "REQ-001", self.rdir, "csrf-token")
         self.assertIn("Shop contract", panel)
         self.assertIn("Aprobar", panel)
         self.assertIn("Pedir cambios", panel)
         self.assertIn("aprobación", panel)
         self.assertIn("Abrir preview", panel)
+
+    def test_contract_panel_shows_head_blob_and_unique_markdown_ids_without_consuming_notice(self):
+        (self.repo / "design/contracts/shop@v1.md").write_text("# Dirty working copy\n", encoding="utf-8")
+        row = {"subplan_id": "SP-1", "title": "Shop", "contract": "shop@v1",
+               "path": "design/contracts/shop@v1.md", "design_task": "T1", "design_state": "completed",
+               "approval": None}
+        with patch.object(approval, "ui_contracts", return_value=[row]), \
+                patch.object(approval, "repository_for_contract", return_value=self.repo), \
+                patch("bt_config.get", side_effect=[False, []]), patch("bt_notify.notify_design_waiting") as notice:
+            panel = bt_page_req.design_panel("demo", "REQ-001", self.rdir, "csrf-token")
+        self.assertIn("# Shop contract", panel)
+        self.assertNotIn("Dirty working copy", panel)
+        self.assertIn("sha256", panel.lower())
+        self.assertIn('id="contract-shop-v1"', panel)
+        notice.assert_not_called()
+
+    def test_approval_requires_completed_design_and_matching_form_digest(self):
+        row = {"contract": "shop@v1", "design_task": "T1", "design_state": "running"}
+        with patch.object(approval, "ui_contracts", return_value=[row]):
+            with self.assertRaisesRegex(approval.DesignApprovalError, "completed"):
+                bt_design_web.decide(self.root, "demo", "REQ-001", self.rdir,
+                                     {"contract": "shop@v1", "decision": "approve", "sha256": "0" * 64},
+                                     lambda *_: True)
+
+    def test_approval_refuses_when_design_and_ui_tasks_use_different_repositories(self):
+        other = Path(self.tmp.name) / "other"
+        other.mkdir()
+        plan = json.loads((self.rdir / "PLAN.json").read_text())
+        plan["tasks"].append({"id": "T2", "ui": True, "subplan_id": "SP-1", "repository": "other"})
+        (self.rdir / "PLAN.json").write_text(json.dumps(plan))
+        (self.root / "demo" / "project.json").write_text(json.dumps({"repos": {
+            "app": {"hint": str(self.repo), "remote": ""}, "other": {"hint": str(other), "remote": ""}}}))
+        with patch.object(approval, "ui_contracts", return_value=[{"contract": "shop@v1", "design_task": "T1",
+                                                                      "design_state": "completed"}]), \
+                patch("bt_workspace.repos", return_value={"app": self.repo, "other": other}):
+            with self.assertRaisesRegex(approval.DesignApprovalError, "repository differs"):
+                bt_design_web.decide(self.root, "demo", "REQ-001", self.rdir,
+                                     {"contract": "shop@v1", "decision": "approve",
+                                      "sha256": approval.contract_snapshot(self.repo,
+                                          "design/contracts/shop@v1.md")[1]}, lambda *_: True)
 
 
 if __name__ == "__main__":

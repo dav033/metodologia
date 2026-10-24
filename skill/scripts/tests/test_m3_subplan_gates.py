@@ -4,6 +4,8 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -13,6 +15,7 @@ from bt_scheduler_executor import gates
 from bt_scheduler_executor.prompt import build_prompt
 import scheduler_executor_support as support
 from scheduler_executor_support import adapter, core, git
+from bt_scheduler_core.recovery import attempts_used
 
 
 class M3SubplanGates(unittest.TestCase):
@@ -169,6 +172,51 @@ class M3SubplanGates(unittest.TestCase):
         self.assertEqual(ack.classification, "blocked_environment")
         self.assertIn("DESIGN_CONTRACT_HASH_MISMATCH", ack.detail)
         self.assertFalse(executor.called)
+
+    def test_scheduler_holds_unapproved_ui_attempt_without_budget_then_owner_approval_releases_it(self):
+        raw = {"schema_version": "1.3.0", "plan_id": "REQ-1", "revision": 1,
+               "tasks": [{"id": tid, "milestone_id": "M1", "repository": "app", "after": [],
+                          "acceptance_criteria": ["works"], "verification": [{"type": "command", "value": "true",
+                                                                                "category": "functional"}],
+                          "expected_paths": ["src/**"], **extra}
+                         for tid, extra in (("T1", {"kind": "design"}),
+                                            ("T2", {"kind": "implement", "subplan_id": "SP-1", "ui": True}),
+                                            ("T3", {"kind": "test"}), ("T4", {"kind": "audit"}))],
+               "subplans": [{"id": "SP-1", "milestone_id": "M1", "title": "Shop", "outcome": "Shop UI",
+                             "covers": ["shop"], "acceptance_criteria": ["shop works"],
+                             "integration_test_task": "T3", "audit_task": "T4",
+                             "ui": {"contract": "checkout", "version": 1, "design_task": "T1",
+                                    "visual_review_task": "T4"}}], "composition_gates": []}
+        text = json.dumps(raw)
+        plan = core.load_plan(text, approved_sha256=hashlib.sha256(text.encode()).hexdigest())
+        class Executor:
+            starts = 0
+            def start(self, request):
+                self.starts += 1
+                return adapter.m3.Receipt("accepted", attempt_id=request.attempt_id)
+        executor = Executor()
+        approved = {"state": "unapproved"}
+        port = adapter.CoreExecutionPort(executor, plan, project="proj", base_ref=self.base,
+                                         repo_of=lambda _role: self.repo)
+        port.design_approval = lambda *_: approved
+        scheduler = core.SchedulerCore(plan, core.InMemoryRepository(),
+                                       ports=core.Ports(execution=port), config=core.Config(max_attempts=3))
+        scheduler.start()
+        scheduler.claim(core.Assignment("T2", "direct:claude/sonnet#high"))
+        scheduler.step()
+        scheduler.step()  # the subsequent recovery pass stores the environment hold
+        snapshot = scheduler.snapshot()
+        self.assertEqual(snapshot.tasks["T2"]["state"], "blocked")
+        attempt = scheduler.read(lambda ctx: ctx.state.attempts[ctx.state.tasks["T2"].attempts[-1]])
+        self.assertFalse(attempt.budget_consumed)
+        self.assertEqual(attempts_used(scheduler.read(lambda ctx: ctx.state), "T2"), 0)
+        approved["state"] = "approved"
+        scheduler.reopen("T2", "owner", "contract approved")
+        self.assertEqual(scheduler.snapshot().tasks["T2"]["state"], "ready")
+        scheduler.claim(core.Assignment("T2", "direct:claude/sonnet#high"))
+        scheduler.step()
+        self.assertEqual(scheduler.snapshot().tasks["T2"]["state"], "active")
+        self.assertEqual(executor.starts, 1)
 
     def test_visual_axis_is_derived_only_for_the_frozen_visual_review_task(self):
         review = SimpleNamespace(id="T3", repository="app", meta={"kind": "audit"}, verification=(),
