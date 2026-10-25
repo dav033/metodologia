@@ -2,18 +2,18 @@
  "attention": [
   {
    "kind": "blocked_task",
-   "reason": "m5:attempts_exhausted",
+   "reason": "analyst_not_the_task:ce9e210720e60bb6bdd89c6b8f864cbe28de1b949793c709cf59390042696f65",
    "task_id": "T15.10"
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-24T20:10:55+00:00",
+ "heartbeat_at": "2026-10-24T20:11:23+00:00",
  "plan_ref": {
   "plan_id": "REQ-020",
   "revision": 20,
   "sha256": "b5284785898fcaa3fd32cf48a820b7c72c1a935ca55d5d2abecb6c1f3ae1f4e8"
  },
- "projected_at": "2026-10-24T20:10:55+00:00",
+ "projected_at": "2026-10-24T20:11:23+00:00",
  "projection": true,
  "req": "REQ-020",
  "scheduler_status": "blocked",
@@ -1111,7 +1111,7 @@
     "T15.8"
    ],
    "attempts": 3,
-   "attempts_used": 3,
+   "attempts_used": 0,
    "complexity": "high",
    "effort": "medium",
    "evidence": "m6://result/479cdfbf33f4431649a59cda67ce7dfee38cf728ff15cedbca38fda100395103",
@@ -1127,9 +1127,9 @@
    "quota_state": "fresh",
    "quota_used_percent": "98.0",
    "quota_valid_until": "1792879212.726758",
-   "reason": "m5:attempts_exhausted",
+   "reason": "analyst_not_the_task:ce9e210720e60bb6bdd89c6b8f864cbe28de1b949793c709cf59390042696f65",
    "repo": "pictures",
-   "retries_remaining": 0,
+   "retries_remaining": 3,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",

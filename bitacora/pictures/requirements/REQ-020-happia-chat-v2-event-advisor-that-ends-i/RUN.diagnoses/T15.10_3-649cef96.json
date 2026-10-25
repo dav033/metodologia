@@ -1,7 +1,23 @@
 {
  "request": "T15.10:3",
- "state": "running",
- "started": 1792872660.447387,
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15.10 agotó sus intentos: falta docs/req-020/phone-observations.md, que solo David puede aportar",
+ "origin": "La verificación `test -s docs/req-020/phone-observations.md` sale con exit code 1 en los tres intentos (att-0137 a att-0139), y el build de agent-core y happie-package-ia pasa. El archivo depende de observaciones en un teléfono físico que solo David puede hacer; no existe en el source y el agente no puede crearlo sin inventar datos. El análisis independiente dice que la segunda verificación de T15.9 es prosa, pero el plan la lista como `[command]` idéntico a la primera, así que hay que confirmarlo en PLAN.json.",
+ "steps": [
+  "Aporta las observaciones del teléfono físico sobre el release r19 (login/avisos, teclado, cámara/galería/micrófono, visualización de medios, recarga, resumen aprobar/imprimir/admin) o copia el archivo a /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md.",
+  "Copia ese archivo sin cambios a docs/req-020/phone-observations.md y comprueba con `test -s docs/req-020/phone-observations.md`.",
+  "Revisa en PLAN.json de T15.9 la segunda verificación: si no es un comando real, reclasifícala como manual con su criterio de cobertura, sube \"revision\" en 1 y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`, luego elige `revise`.",
+  "Relanza T15.9 solo después de los pasos 1 y 2; no marques el paso como pasado antes."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
  "model": "haiku",
- "profile": "claude"
+ "profile": "claude",
+ "at": "2026-10-24T15:11:17",
+ "seconds": 16.6
 }

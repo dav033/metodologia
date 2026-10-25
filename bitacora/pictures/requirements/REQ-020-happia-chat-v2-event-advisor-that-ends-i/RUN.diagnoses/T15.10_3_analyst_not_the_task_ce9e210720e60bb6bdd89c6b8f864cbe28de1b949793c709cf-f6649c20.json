@@ -1,0 +1,23 @@
+{
+ "request": "T15.10:3:analyst_not_the_task:ce9e210720e60bb6bdd89c6b8f864cbe28de1b949793c709cf59390042696f65",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15.10 bloqueada: falta phone-observations.md, que solo David puede producir con un teléfono físico",
+ "origin": "El check `test -s docs/req-020/phone-observations.md` devuelve exit code 1 en los 3 intentos. Según el análisis independiente, el archivo no existe en el repo ni en la fuente `/home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md`. Las observaciones del teléfono físico son del owner (`live-acceptance.md:43`, `integration-results.json:280`), así que el agente no puede crear el archivo, y por eso elegí stop en vez de retry_with_note: cualquier reintento repetiría el mismo fallo. El análisis también afirma que la segunda verificación es una frase en prosa, pero la evidencia muestra el mismo `test -s` dos veces; eso hay que revisarlo en PLAN.json.",
+ "steps": [
+  "Pide a David las observaciones del teléfono físico del release r19 (login/avisos, teclado, cámara/galería/micrófono permitir/denegar/recuperar, visualización de medios, recarga en el mismo dispositivo, resumen aprobar/imprimir/admin), o que copie el archivo en `/home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md`.",
+  "Cuando exista, copia el archivo sin cambios a `docs/req-020/phone-observations.md` y comprueba con `test -s docs/req-020/phone-observations.md`.",
+  "Pide al planner que reclasifique la verificación de T15.9 que depende de ese teléfono como `manual` (no `command`), con su criterio de cobertura por áreas; sube revision en PLAN.json y ejecuta `bitacora.py --project pictures plan-json freeze REQ-020`, luego elige la opción revise.",
+  "Repite T15.9 solo después de los pasos 1 a 3; no registres el paso como pasado antes."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-24T15:11:36",
+ "seconds": 14.9
+}

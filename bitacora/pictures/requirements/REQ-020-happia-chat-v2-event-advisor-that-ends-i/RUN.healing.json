@@ -1,5 +1,5 @@
 {
- "actions": 12,
+ "actions": 13,
  "analyst_stops": {
   "T14a:8b3c65b6b94f135da9df9da251ad1c15d40ebf49bdb30fc941c6e14e295c6e67": {
    "attempt": "att-0121",
@@ -8,6 +8,10 @@
   "T14a:cc86879d6c7d1bbb0fc00e26273132eb844ad06577af0424f46d1479a59c1583": {
    "attempt": "",
    "task": "T14a"
+  },
+  "T15.10:ce9e210720e60bb6bdd89c6b8f864cbe28de1b949793c709cf59390042696f65": {
+   "attempt": "",
+   "task": "T15.10"
   },
   "T15:0c9855683845c8b413ef4b1df631418ebcc5ac2af50d792fc6f7b4152eae33e5": {
    "attempt": "att-0130",
@@ -626,6 +630,27 @@
    "id": "f7d7aeb440f5a411",
    "status": "unrepairable",
    "task": "T14a"
+  },
+  "f98eed8762461e7a": {
+   "applied": 1,
+   "at": 1792872680.476,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: El check falla porque `docs/req-020/phone-observations.md` no existe en el source (`Glob **/phone-observations.md` sin resultados) y tampoco existe el archivo fuente en `/home/david/bitacora/pictures/"
+   ],
+   "first_at": 1792872680.259,
+   "history": [
+    {
+     "at": 1792872680.476,
+     "repair": "retry the repair task T15.10 with the new evidence",
+     "result": "fixed"
+    }
+   ],
+   "id": "f98eed8762461e7a",
+   "repair": "retry the repair task T15.10 with the new evidence",
+   "status": "exhausted",
+   "task": "T15.10",
+   "why": "the same failure came back after its repair"
   },
   "fb6658a974310d34": {
    "applied": 0,

@@ -1,6 +1,17 @@
 {
+ "at": "2026-10-24T15:11:14",
+ "cause": "El check falla porque `docs/req-020/phone-observations.md` no existe en el source (`Glob **/phone-observations.md` sin resultados) y tampoco existe el archivo fuente en `/home/david/bitacora/pictures/artifacts/req020-r19-release/`. Las observaciones de teléfono físico (login, teclado, cámara/galería/micrófono, medios, recarga, resumen) son trabajo manual de David y así lo declaran `live-acceptance.md:43` e `integration-results.json:280`. Los tres intentos fallaron al ejecutar `test -s` sobre un archivo que nadie ha producido, así que el problema es de datos de un owner, no de código de producción. La segunda verificación de T15.9 (frase en prosa ejecutada como comando) solo aparece en el análisis independiente; en la tarea JSON que recibí no está, así que no lo pude confirmar.",
+ "confidence": "alta",
  "failures": 3,
- "started": 1792872655.180092,
- "state": "running",
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 19.0,
+ "solution": "1. No crear ni inferir `docs/req-020/phone-observations.md` con contenido; el agente no puede cumplir la verificación.\n2. Pedir a David las observaciones del teléfono físico sobre el release r19, o que copie el archivo a `docs/req-020/phone-observations.md` (o a la ruta fuente de artifacts).\n3. Cuando exista, copiarlo sin cambios a `docs/req-020/phone-observations.md` y ejecutar `test -s docs/req-020/phone-observations.md`.\n4. Pedir al planner que reclasifique la segunda verificación de T15.9 de `command` a `manual` con su criterio de cobertura por áreas, si la frase en prosa está realmente en el plan.\n5. Repetir T15.9 solo después de 2 y 3.",
+ "source_attempt": "att-0139",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-0p4wxljb/source",
+ "source_snapshot": "fe7821b059ed36ea9007855fc542f4a29d7d93dc",
+ "state": "done",
  "task": "T15.10"
 }
