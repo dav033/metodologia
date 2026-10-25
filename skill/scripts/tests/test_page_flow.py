@@ -108,7 +108,7 @@ class FlowPage(unittest.TestCase):
         self.assertNotIn("<script>alert", pf.flow_page('"><script>alert(1)</script>'))
 
     def test_every_category_the_core_emits_has_a_colour_and_matches_the_page(self):
-        css = (ASSETS / "style.css").read_text(encoding="utf-8")
+        css = (ASSETS / "flowmap.css").read_text(encoding="utf-8")
         core = CORE.read_text(encoding="utf-8")
         for cls, text in pf.CATEGORIES:
             self.assertIn(f".{cls} {{ --kc:", css)

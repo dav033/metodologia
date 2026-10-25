@@ -23,20 +23,34 @@ def layout(title: str, body: str, crumbs: list[tuple[str, str]] | None = None) -
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{e(title)} · Bitácora</title>
 <script src="/static/theme.js"></script>
 <link rel="stylesheet" href="{SHOELACE}/themes/light.css"><link rel="stylesheet" href="{SHOELACE}/themes/dark.css">
-<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/markdown.css">
+<link rel="stylesheet" href="/static/style.css">
 <script type="module" src="{SHOELACE}/shoelace-autoloader.js"></script></head><body>
+<a class="skip" href="#main">Saltar al contenido</a>
 <header class="top"><a class="brand" href="/">Bitácora</a><nav>{nav}</nav>
 <nav class="mainnav" aria-label="Secciones"><a href="/plans">Planes</a><a href="/now">Ahora</a><a href="/flow">Flujo</a><a href="/metrics">Métricas</a></nav></header>
 <div class="nowbar" id="nowbar" hidden></div>
-<main>{body}</main>
-<script src="/static/marked.min.js"></script><script src="/static/app.js"></script>
+<main id="main" tabindex="-1">{body}</main>
+<script src="/static/marked.min.js"></script><script src="/static/app.js"></script><script src="/static/enhance.js"></script>
 <script src="/static/live.js"></script></body></html>"""
+
+
+_CODE_SPAN = re.compile(r"`([^`\n]+)`")
+
+
+def inline(text: str) -> str:
+    """Escape plain text and render its `code spans` (task titles and criteria quote paths and commands)."""
+    return _CODE_SPAN.sub(lambda m: f"<code>{m.group(1)}</code>", e(text or ""))
 
 
 def md(block_id: str, text: str) -> str:
     payload = json.dumps(text).replace("</", "<\\/")
     return (f'<div class="md" id="{block_id}"></div>'
             f'<script type="application/json" class="md-src" data-target="{block_id}">{payload}</script>')
+
+
+def kpi(n: int, one: str, many: str) -> str:
+    """A count chip with the right singular/plural; a zero recedes so the counts that matter stand out."""
+    return f'<span class="kpi{" zero" if n == 0 else ""}">{n} {one if n == 1 else many}</span>'
 
 
 def badge(status: str) -> str:
@@ -118,8 +132,8 @@ def dashboard() -> str:
         more = f'<a class="muted" href="{purl(pdir.name)}?tab=requirements">y {len(active) - 5} más →</a>' if len(active) > 5 else ""
         cards.append(f"""<article class="card pcard"><h3><a href="{purl(pdir.name)}">{e(pdir.name)}</a></h3>
 <div class="repo" title="{e(", ".join(repos))}">{e(repo)}</div>
-<div class="kpis"><span class="kpi">{len(active)} activos</span><span class="kpi">{len(open_pending(pdir))} pendientes</span>
-<span class="kpi">{len(artifacts(pdir))} artifacts</span></div>
+<div class="kpis">{kpi(len(active), "activo", "activos")}{kpi(len(open_pending(pdir)), "pendiente", "pendientes")}
+{kpi(len(artifacts(pdir)), "artifact", "artifacts")}</div>
 <div class="dots">{runs}{rows or '<p class="muted" style="margin:0">Sin requerimientos activos</p>'}</div>{more}
 <div class="foot">último log: {e(days[0].stem) if days else "—"}</div></article>""")
     head = (f'<div class="head"><div><p class="eyebrow">{len(cards)} proyectos · {total_active} requerimientos activos</p>'
@@ -189,8 +203,8 @@ def _overview(project: str, pdir: Path) -> str:
     days = last_day_logs(pdir, 1)
     reqs = requirements(pdir)
     active = [r for r in reqs if r["status"] in OPEN_STATUSES or (r["plan"] or "") in OPEN_STATUSES]
-    stats = (f'<span class="kpi">{len(active)} {"requerimiento activo" if len(active) == 1 else "requerimientos activos"}</span><span class="kpi">{len(pending)} pendientes</span>'
-             f'<span class="kpi">{len(artifacts(pdir))} artifacts</span>')
+    stats = (kpi(len(active), "requerimiento activo", "requerimientos activos") + kpi(len(pending), "pendiente", "pendientes")
+             + kpi(len(artifacts(pdir)), "artifact", "artifacts"))
     return (f'<div class="grid ov"><article class="card wide"><h3>Planes abiertos</h3>{plans}{link("plans", "Ver todos los planes")}</article>'
             f'<article class="card"><h3>Pendientes</h3><div class="dots">{items or "<p class=muted>Nada pendiente.</p>"}</div>'
             f'{link("pending", "Ver pendientes")}</article>'

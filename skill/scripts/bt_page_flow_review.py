@@ -124,7 +124,7 @@ def review_page(root: Path, query: dict[str, str]) -> str:
     try:
         report, checks = _read_review(root, query)
     except (ReviewError, bt_plans_api.PlanError) as exc:
-        body = f'<main class="fl-review"><p role="alert">{html.escape(str(exc))}</p><p><a href="/flow">Volver a Flujo</a></p></main>'
+        body = f'<div class="fl-review"><p role="alert">{html.escape(str(exc))}</p><p><a href="/flow">Volver a Flujo</a></p></div>'
         return layout("Log de fallo", body, [("Flujo", "/flow")])
     criteria = "".join('<li><b>' + html.escape(str(item.get("status", "—"))) + '</b> · ' +
                        html.escape(str(item.get("criterion", "Criterio"))) + '</li>' for item in report["criteria"])
@@ -141,12 +141,12 @@ def review_page(root: Path, query: dict[str, str]) -> str:
                           html.escape(check["command"]) + '</code>' +
                           (('<p>' + html.escape(check["issue_code"]) + '</p>') if check["issue_code"] else "") + output_html + '</article>')
     run_scope = quote(f'run:{report["project"]}/{report["req"]}', safe="")
-    body = ('<main class="fl-review"><p class="eyebrow">M6 · evidencia de verificación</p><h1>Log del fallo · ' +
+    body = ('<div class="fl-review"><p class="eyebrow">M6 · evidencia de verificación</p><h1>Log del fallo · ' +
             html.escape(report["task"]) + '</h1><p>Intento <code>' + html.escape(report["attempt"]) +
             '</code> · ' + html.escape(report["state"]) + '</p><p class="fl-review-ref">Evidencia <code>' +
             html.escape(report["reference"]) + '</code></p>' +
             ('<section><h2>Criterios</h2><ul>' + criteria + '</ul></section>' if criteria else "") +
             ('<section><h2>Problemas reportados</h2><ul>' + issues + '</ul></section>' if issues else "") +
             '<section><h2>Comandos y salida</h2>' + ''.join(check_html) + '</section>' +
-            '<p><a href="/flow?scope=' + html.escape(run_scope) + '">Volver a la ejecución</a></p></main>')
+            '<p><a href="/flow?scope=' + html.escape(run_scope) + '">Volver a la ejecución</a></p></div>')
     return layout(f'Log de fallo · {report["task"]}', body, [("Flujo", "/flow")])

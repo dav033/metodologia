@@ -1,0 +1,7 @@
+/* ---- Shoelace (vendored web components) wearing the Mosaico tokens ---- */
+html:root { --sl-font-sans: var(--sans); --sl-font-mono: var(--mono); --sl-color-primary-500: var(--accent); --sl-color-primary-600: var(--accent);
+  --sl-color-primary-700: var(--accent); --sl-panel-background-color: var(--surface); --sl-panel-border-color: var(--border);
+  --sl-color-neutral-0: var(--surface); --sl-input-border-color: var(--border); --sl-tooltip-background-color: var(--text);
+  --sl-tooltip-color: var(--bg); --sl-tooltip-font-size: 12px; --sl-tooltip-border-radius: 10px; }
+sl-progress-bar { --height: 8px; --track-color: var(--code); --indicator-color: var(--accent); --label-color: var(--on-accent); }
+sl-badge::part(base) { font: 700 11px var(--mono); }

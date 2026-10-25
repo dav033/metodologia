@@ -11,7 +11,7 @@ from urllib.parse import quote
 
 import bt_page_attempts as attempts_
 import bt_page_diagnosis as dx
-from bt_pages import layout
+from bt_pages import inline, layout
 
 LEVELS = ("low", "medium", "high", "extreme")
 LEVEL_ES = {"low": "baja", "medium": "media", "high": "alta", "extreme": "extrema"}
@@ -45,6 +45,14 @@ FINISHED = ("done", "superseded", "cancelled", "archived")
 STATUS_ES = {"approved": "aprobado", "in-progress": "en curso", "in progress": "en curso", "review": "en revisión",
              "paused": "pausado", "draft": "borrador", "clarifying": "aclarando", "blocked": "bloqueado",
              "stopped": "detenido", "launched": "lanzado", "planned": "planificado"}
+RUN_ES = {"running": "en curso", "blocked": "bloqueada", "paused": "pausada", "completed": "terminada", "done": "terminada",
+          "cancelled": "cancelada", "failed": "fallida", "waiting": "en espera"}
+
+
+def _run_status_es(status: str | None) -> str:
+    return RUN_ES.get(str(status), str(status)) if status else "sin ejecución"
+
+
 TONE = (("info", ("approved", "in-progress", "in progress", "launched", "running", "verifying")),
         ("warn", ("review", "paused", "draft", "clarifying", "blocked", "stopped")),
         ("ok", ("done", "completed")))
@@ -180,8 +188,8 @@ def detail_fragment(s: dict) -> str:
     rev = plan["revision"] if plan["revision"] is not None else "—"
     head = (f'<div class="phead" data-k="head"><p class="eyebrow">{e(s["project"])} · {e(s["req_id"])}</p>'
             f'<h1>{e(_plain_title(s["title"], s["req_id"]))}</h1>'
-            f'<div class="tl">{_pill("", "plan · " + str(plan["status"] or "—"))}'
-            f'{_pill("", "ejecución · " + str(run["status"] or "sin ejecución"))}{_pill("", run["authority"])}'
+            f'<div class="tl">{_pill("", "plan · " + STATUS_ES.get(str(plan["status"]), str(plan["status"] or "—")))}'
+            f'{_pill("", "ejecución · " + _run_status_es(run["status"]))}{_pill("", run["authority"])}'
             f'<span class="chip">rev {e(str(rev))}</span><span class="chip">sha {e((plan["sha256"] or "—")[:10])}</span>'
             f'{level_badge(summ["difficulty"])}</div>{unclassified_banner(s)}{bar(summ["tasks_done"], summ["tasks_total"])}'
             f'<div class="meta">{summ["tasks_done"]}/{summ["tasks_total"]} tareas · '
@@ -195,7 +203,7 @@ def detail_fragment(s: dict) -> str:
     return "".join(parts)
 
 def _milestone_head(m: dict) -> str:
-    return (f'<div class="mh" data-k="mh-{e(str(m["id"]))}"><b>{e(str(m["id"]))}</b><span class="mt">{e(m["title"] or "")}</span>'
+    return (f'<div class="mh" data-k="mh-{e(str(m["id"]))}"><b>{e(str(m["id"]))}</b><span class="mt">{inline(m["title"])}</span>'
             f'{level_badge(m["difficulty"])}{state_badge(m["state"])}'
             f'<span class="cnt">{m["progress"]["done"]}/{m["progress"]["total"]}</span>'
             f'<div class="mbar">{bar(m["progress"]["done"], m["progress"]["total"])}</div></div>')
@@ -258,10 +266,10 @@ def _detail(t: dict) -> str:
     d = t.get("detail") or {}
     missing = _missing_detail(t)
     warn = (f'<div class="tmiss">Falta en el plan: {e(", ".join(missing))}.</div>' if missing else "")
-    objective = f'<div class="obj">{e(d["objective"])}</div>' if d.get("objective") else ""
+    objective = f'<div class="obj">{inline(d["objective"])}</div>' if d.get("objective") else ""
     parts = []
     if d.get("acceptance_criteria"):
-        parts.append("<h4>Criterios de aceptación</h4><ol>" + "".join(f"<li>{e(c)}</li>" for c in d["acceptance_criteria"]) + "</ol>")
+        parts.append("<h4>Criterios de aceptación</h4><ol>" + "".join(f"<li>{inline(c)}</li>" for c in d["acceptance_criteria"]) + "</ol>")
     if d.get("verification"):
         by_command: dict[str, list[dict]] = {}
         for check in d["verification"]:
@@ -301,7 +309,7 @@ def _task(t: dict, asks: dict | None = None) -> str:
     working = _working(t)
     return (f'<div class="task" id="t-{e(str(t["id"]))}" data-k="t-{e(str(t["id"]))}">'
             f'<span class="tid">{e(str(t["id"]))}</span>'
-            f'<div><div class="tt">{e(t["title"] or "")}</div>{_detail(t)}'
+            f'<div><div class="tt">{inline(t["title"])}</div>{_detail(t)}'
             f'<div class="tl" style="margin-top:6px">{level_badge(t["complexity"]) or _unclassified(t)}'
             f'{_pill("bad", "sin detalle") if _missing_detail(t) else ""}'
             f'<span class="chip">{t["attempts"]} intentos</span>{chips}</div>{_amended(t)}{current}{working}{_blocked_note(t, asks or {})}'
@@ -398,7 +406,7 @@ def _healing(s: dict, base: str, token: str) -> str:
 def _confirm_form(base: str, action: str, token: str, req: str, label: str, warning: str) -> str:
     return (f'<form method="post" action="{base}/{action}" class="danger"><p>{warning}</p>'
             f'<input type="hidden" name="token" value="{e(token)}">'
-            f'<input type="text" name="confirm" placeholder="Escribe {e(req)} para confirmar" autocomplete="off" required>'
+            f'<input type="text" name="confirm" placeholder="Escribe {e(req)} para confirmar" aria-label="Escribe {e(req)} para confirmar" autocomplete="off" required>'
             f'<p><button type="submit">{label}</button></p></form>')
 
 def _decisions(s: dict, base: str, token: str) -> str:
@@ -416,7 +424,7 @@ def _decisions(s: dict, base: str, token: str) -> str:
             star = " (recomendada)" if o["id"] == r.get("recommended") else ""
             needs = o["id"] in ("retry_with_note", "review_pass", "review_fail", "rework_findings")
             text = prefill if o["id"] == "retry_with_note" else ""
-            note = (f'<textarea name="reason" required placeholder="Escribe tu indicación o razón">{e(text)}</textarea>'
+            note = (f'<textarea name="reason" required placeholder="Escribe tu indicación o razón" aria-label="Indicación o razón">{e(text)}</textarea>'
                     if needs else "")
             cls = "primary" if o["id"] == r.get("recommended") else ""
             opts.append(f'<form method="post" action="{base}/decide" class="opt">'

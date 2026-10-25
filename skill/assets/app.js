@@ -1,26 +1,25 @@
 // Render every <script type="application/json" class="md-src" data-target="id"> block (a JSON string of
 // markdown) into its target element. JSON keeps "</script>" inside documents from breaking the page.
+// Wrapping tables in scroll regions is done page-wide by enhance.js.
+const NOT_AN_EMAIL = /@(v?\d|[^@]*\.(md|json|ya?ml|tsx?|jsx?|py|css|html)$)/i; // `contract@v1.md`, `jest@30.5.2`
+
 document.querySelectorAll('script.md-src').forEach((block) => {
   const target = document.getElementById(block.dataset.target);
   if (!target || !window.marked) return;
-  const src = JSON.parse(block.textContent).replace(/^---\n[\s\S]*?\n---\n/, ''); // drop front matter
+  const src = JSON.parse(block.textContent)
+    .replace(/^---\n[\s\S]*?\n---\n/, '') // drop front matter
+    .replace(/<!--[\s\S]*?-->/g, ''); // author notes in HTML comments are not content (raw HTML is shown escaped)
   const renderer = new window.marked.Renderer();
   renderer.html = (html) => html.replace(/[&<>"']/g, (ch) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   window.marked.setOptions({ renderer });
   target.innerHTML = window.marked.parse(src);
-  // Tables scroll inside a focusable region instead of squeezing cells letter by letter; short cells stay on one line.
-  target.querySelectorAll('table').forEach((table) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'table-scroll' + (table.rows[0] && table.rows[0].cells.length >= 5 ? ' wide' : '');
-    wrap.tabIndex = 0;
-    wrap.setAttribute('role', 'region');
-    const prev = table.previousElementSibling;
-    wrap.setAttribute('aria-label', prev && /^H[1-6]$/.test(prev.tagName) ? prev.textContent.trim() : 'Tabla');
-    table.parentNode.insertBefore(wrap, table);
-    wrap.appendChild(table);
-    table.querySelectorAll('td').forEach((cell) => {
-      if (cell.textContent.trim().length <= 14) cell.classList.add('nw');
-    });
+  // GFM autolinks versioned names and package pins as e-mail addresses: show them as plain text.
+  target.querySelectorAll('a[href^="mailto:"]').forEach((a) => {
+    if (NOT_AN_EMAIL.test(a.textContent.trim())) a.replaceWith(document.createTextNode(a.textContent));
+  });
+  // Task-list checkboxes are read-only marks: give them a name instead of an unlabelled control.
+  target.querySelectorAll('input[type="checkbox"][disabled]').forEach((box) => {
+    box.setAttribute('aria-label', box.checked ? 'Hecho' : 'Pendiente');
   });
 });
 

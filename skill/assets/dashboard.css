@@ -1,0 +1,49 @@
+/* Dashboard and project overview: marathon badges, project cards, pending list. */
+/* marathon */
+.badge.running, .badge.waiting { background: var(--info-soft); color: var(--info); }
+.badge.paused, .badge.blocked, .badge.todo, .badge.failed, .badge.timeout, .badge.usage_limit, .badge.limit_streak,.badge.verify_failed { background: var(--warn-soft); color: var(--warn); }
+.badge.stopped { background: var(--accent-soft); color: var(--accent); }
+tr.current td { background: var(--info-soft); }
+progress { height: 10px; accent-color: var(--info); }
+form.q .actions label { margin-right: 14px; }
+.badge.in_progress { background: var(--info-soft); color: var(--info); }
+
+/* tarjetas de proyecto del dashboard */
+.pcard { display: flex; flex-direction: column; gap: 14px; }
+.pcard .repo { font: 400 12px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: -8px; }
+.pcard .kpis { margin: 0; }
+.pcard .foot { margin-top: auto; font: 400 12px var(--mono); color: var(--muted); padding-top: 4px; }
+.pcard code { font-size: 12px; background: var(--code); padding: 2px 8px; border-radius: 6px; }
+header.top nav.mainnav { margin-left: auto; }
+header.top nav.mainnav a { color: var(--text); font-weight: 600; }
+@media (max-width: 640px) { header.top { flex-wrap: wrap; padding: 12px 16px; } header.top nav.mainnav { margin-left: 0; width: 100%; } }
+header.top nav .sep { color: var(--border); align-self: center; font-size: 13px; }
+.panel .md > h1:first-child { display: none; }
+.head .kpis { margin: 14px 0 0; }
+.card.wide { grid-column: span 2; }
+.card .go { display: inline-block; margin-top: 14px; font-size: 13.5px; font-weight: 600; }
+.ov { align-items: start; }
+@media (max-width: 900px) { .card.wide { grid-column: auto; } }
+.dots .it span.t { color: var(--text); font-weight: 500; font-size: 13.5px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.ov .dots .it { grid-template-columns: 52px minmax(0, 1fr) auto; }
+/* pendientes */
+.pend .pi { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); align-items: start; }
+.pend .pi .id { font: 500 12px var(--mono); color: var(--accent); padding-top: 3px; }
+.pend .pt { font-weight: 600; line-height: 1.4; max-width: 72ch; }
+.pend .pi.closed .pt { color: var(--muted); font-weight: 500; }
+.pend .pm { font: 400 12px var(--mono); color: var(--muted); margin-top: 4px; }
+.pend details { margin-top: 8px; font-size: 13.5px; }
+.pend details summary { color: var(--accent); font-size: 13px; }
+.pend details p { margin: 8px 0 0; color: var(--muted); max-width: 78ch; overflow-wrap: anywhere; line-height: 1.55; }
+.chs { display: flex; gap: 6px; padding-top: 2px; }
+.ch { font: 500 11.5px var(--mono); padding: 2px 10px; border-radius: 99px; background: var(--code); color: var(--muted); white-space: nowrap; }
+.ch.u-high { background: var(--bad-soft); color: var(--bad); }
+.ch.u-med { background: var(--warn-soft); color: var(--warn); }
+.ch.u-low { background: var(--ok-soft); color: var(--ok); }
+/* project overview: plans and activity stacked on the left, pending spanning both rows on the right */
+@media (min-width: 901px) {
+  .grid.ov { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid.ov > .card:nth-child(1) { grid-column: 1 / span 2; }
+  .grid.ov > .card:nth-child(2) { grid-column: 3; grid-row: 1 / span 2; }
+  .grid.ov > .card:nth-child(3) { grid-column: 1 / span 2; }
+}

@@ -89,10 +89,10 @@ def round_form(project: str, rid: str, f: Path, data: dict, token: str) -> str:
                 f'{" checked" if o["key"] == q.get("recommended") else ""}> <span><strong>{e(o["key"])})</strong> '
                 f'{e(o["label"])}{"<span class=rec>recomendada</span>" if o["key"] == q.get("recommended") else ""}'
                 f'</span></label>' for o in q["options"])
-            field = (f'{opts}<input type="text" name="{qid}__note" placeholder="Comentario (opcional)" '
+            field = (f'{opts}<input type="text" name="{qid}__note" placeholder="Comentario (opcional)" aria-label="Comentario (opcional) a la pregunta {i}" '
                      f'style="margin-top:6px">')
         else:
-            field = f'<textarea name="{qid}">{e(q.get("suggested", ""))}</textarea>'
+            field = f'<textarea name="{qid}" aria-label="Respuesta a la pregunta {i}">{e(q.get("suggested", ""))}</textarea>'
         qs.append(f'<div class="question"><strong>{i}. {e(q["text"])}</strong>{why}<div style="margin-top:8px">'
                   f'{field}</div></div>')
     return (f'{intro}{cov}<form class="q" method="post" action="{purl(project, "req", rid, "answer")}">'
@@ -107,7 +107,7 @@ def plan_panel(project: str, rid: str, plan: Path, status: str | None, token: st
         form = f"""<form class="q" method="post" action="{purl(project, 'req', rid, 'plan')}" style="margin-top:20px">
 <input type="hidden" name="token" value="{e(token)}">
 <div class="question"><strong>Comentarios</strong> <span class="muted">(opcional; obligatorio si pides cambios)</span>
-<textarea name="comments"></textarea>
+<textarea name="comments" aria-label="Comentarios"></textarea>
 </div>
 <div class="actions"><button type="submit" name="decision" value="approve">Aprobar y lanzar Scheduler</button>
 <button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>"""
@@ -148,7 +148,7 @@ def design_panel(project: str, rid: str, rdir: Path, token: str) -> str:
                        f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="contract" value="{e(ref)}">'
                        f'<input type="hidden" name="sha256" value="{e(digest)}">'
                        '<div class="question"><strong>Comentarios</strong> <span class="muted">(obligatorios si pides cambios)</span>'
-                       '<textarea name="comments"></textarea></div><div class="actions">'
+                       '<textarea name="comments" aria-label="Comentarios"></textarea></div><div class="actions">'
                        f'<span class="muted">SHA256 <code>{e(digest)}</code></span>'
                        f'{approve_button}'
                        '<button class="secondary" type="submit" name="decision" value="changes">Pedir cambios</button></div></form>')

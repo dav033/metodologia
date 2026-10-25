@@ -1,0 +1,37 @@
+/* ---- Ahora: barra global y /now ---- */
+.nowbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 40px; background: var(--accent-soft);
+  border-bottom: 1px solid var(--border); font: 500 12px var(--mono); }
+.nowbar[hidden] { display: none; }
+.nowbar .nlabel { color: var(--text); }
+.nowbar .nchip { display: inline-flex; align-items: center; gap: 8px; padding: 3px 11px; border-radius: 99px; background: var(--surface);
+  color: var(--text); border: 1px solid var(--border); white-space: nowrap; }
+.nowbar .nchip:hover { text-decoration: none; border-color: var(--accent); }
+.nowbar .nall { margin-left: auto; color: var(--accent); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; flex: none; }
+.dot.info { background: var(--info); } .dot.live { box-shadow: 0 0 0 3px color-mix(in srgb, var(--info) 30%, transparent); animation: nowpulse 1.8s ease-in-out infinite; }
+@keyframes nowpulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--info) 8%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } }
+.ngrid { margin-top: 24px; display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.ncard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ncard.quiet { opacity: .8; }
+.ncard .nstate { display: flex; align-items: center; gap: 8px; font: 500 12px var(--mono); color: var(--info); }
+.ncard.quiet .nstate { color: var(--muted); }
+.ncard .nwhere { font: 500 12px var(--mono); color: var(--muted); }
+.ncard .ntitle { display: block; font-size: 18px; font-weight: 700; margin-top: 4px; color: var(--text); }
+.ncard .ntitle:hover { color: var(--accent); text-decoration: none; }
+.ncard .nchips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.ncard .ntok { display: flex; justify-content: space-between; gap: 8px; font: 400 12px var(--mono); color: var(--muted); margin-bottom: 6px; }
+.ncard .bar { height: 8px; border-radius: 4px; background: var(--code); overflow: hidden; } .ncard .bar > i { display: block; height: 100%; background: var(--accent); }
+.ncard .nplan { font: 400 12px var(--mono); color: var(--muted); }
+.ncard .chip, .ncard .mchip { display: inline-flex; padding: 3px 11px; border-radius: 99px; background: var(--code); font: 500 12px var(--mono); color: var(--text); }
+.ncard .mchip { color: var(--accent); }
+.nempty { padding: 40px 0; }
+@media (max-width: 640px) { .nowbar { padding: 8px 16px; } }
+
+/* ---- estadísticas de un modelo ---- */
+.mstats { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); margin: 16px 0 8px; }
+.mstat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px 20px; min-width: 0; }
+.mstat .muted { font: 400 12px var(--mono); } .mstat .kv { font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 6px 0 2px; }
+.tscroll { overflow-x: auto; }
+.mchip { font: 500 12px var(--mono); color: var(--accent); }
+.nowbar .nlabel { display: inline-flex; align-items: center; gap: 8px; }

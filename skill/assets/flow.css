@@ -23,6 +23,7 @@
 .fl-task .fl-bar { height: 3px; }
 .fl-task.s-retry .fl-bar { background: repeating-linear-gradient(90deg, var(--kc) 0 6px, transparent 6px 10px); }
 .fl-task.s-blocked { background: color-mix(in srgb, var(--k-bad) 12%, var(--mantle)); border-color: var(--k-bad); animation: fl-nudge 3.2s ease-in-out infinite; }
+.fl-task.s-blocked .fl-tr { color: var(--text); }
 @keyframes fl-nudge { 0%, 88%, 100% { transform: none; } 91% { transform: translateX(-3px); } 94% { transform: translateX(3px); } 97% { transform: translateX(-2px); } }
 
 /* decision card: reads as «this needs you» */

@@ -46,7 +46,7 @@ def review_panel(project: str, rid: str, rdir: Path, token: str) -> str:
         parts.append(f"""<form class="q" method="post" action="{purl(project, 'req', rid, 'review')}">
 <input type="hidden" name="token" value="{e(token)}">
 <div class="question"><strong>Comentarios</strong> <span class="muted">(obligatorio si pides cambios)</span>
-<textarea name="comments"></textarea></div>
+<textarea name="comments" aria-label="Comentarios"></textarea></div>
 <div class="actions">
 <button type="submit" name="decision" value="merge">Fusionar (local)</button>
 <button type="submit" name="decision" value="merge_push">Fusionar y publicar (push)</button>

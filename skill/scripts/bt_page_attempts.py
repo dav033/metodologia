@@ -91,4 +91,4 @@ def assigned_line(route: dict | None) -> str:
     why = route.get("selection_reason") or route.get("reason")
     return (f'<span><b>asignado</b> {model_chip(route.get("provider"), route["model_requested"], route.get("effort"))}'
             f' · {e(route.get("account") or "—")}{" · " + status if status else ""}'
-            f'{" — " + e(why) if why else ""}</span>')
+            f'{" — <span class=why>" + e(why.replace(";", ", ").replace("_", " ")) + "</span>" if why else ""}</span>')

@@ -168,8 +168,8 @@ class Handler(BaseHTTPRequestHandler):
         kind, sub = rest[0], "/".join(rest[1:])
         if kind == "doc" and sub.endswith(".md") and safe_path(ROOT / project, sub):
             return self.send(pages.doc_page(project, sub))
-        if kind == "artifacts":
-            return self.file(safe_path(ROOT / project / "artifacts", sub))
+        if kind == "artifacts":                                   # the bare folder is the project's artifacts tab
+            return self.file(safe_path(ROOT / project / "artifacts", sub)) if sub else self.redirect(f"/p/{quote(project)}?tab=artifacts")
         if kind == "view" and safe_path(ROOT / project / "artifacts", sub):
             return self.send(pages.artifact_view(project, sub))
         if kind == "graph":

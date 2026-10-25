@@ -1,0 +1,23 @@
+/* Mosaico tokens: Catppuccin Latte (light) and Mocha (dark), mauve accent. One system for the whole service.
+   Light text colours are Latte shades deepened just enough for WCAG 2.2 AA (4.5:1) on bg, mantle and their soft fills. */
+:root {
+  --bg: #eff1f5; --mantle: #e6e9ef; --surface: #ffffff; --text: #4c4f69; --muted: #5c5f77; --border: #ccd0da;
+  --accent: #7a2ee0; --accent-soft: #ece3fb; --on-accent: #ffffff; --ok: #26691a; --ok-soft: #e3f3df; --warn: #8a5608;
+  --warn-soft: #fbf0d8; --info: #1858d8; --info-soft: #e1eafe; --bad: #c0173b; --bad-soft: #fbe1e7; --code: #e6e9ef;
+  --radius: 14px; --radius-lg: 18px; --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  --sans: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1e1e2e; --mantle: #181825; --surface: #262637; --text: #cdd6f4; --muted: #a6adc8; --border: #313244;
+    --accent: #cba6f7; --accent-soft: #3a3250; --on-accent: #1e1e2e; --ok: #a6e3a1; --ok-soft: #2a3a31; --warn: #f9e2af;
+    --warn-soft: #3b3528; --info: #89b4fa; --info-soft: #2a3550; --bad: #f38ba8; --bad-soft: #432a3a; --code: #313244;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+    --bg: #1e1e2e; --mantle: #181825; --surface: #262637; --text: #cdd6f4; --muted: #a6adc8; --border: #313244;
+    --accent: #cba6f7; --accent-soft: #3a3250; --on-accent: #1e1e2e; --ok: #a6e3a1; --ok-soft: #2a3a31; --warn: #f9e2af;
+    --warn-soft: #3b3528; --info: #89b4fa; --info-soft: #2a3550; --bad: #f38ba8; --bad-soft: #432a3a; --code: #313244;
+    color-scheme: dark;
+}

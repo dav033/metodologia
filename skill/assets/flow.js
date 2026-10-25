@@ -217,7 +217,7 @@
     return edgeEls[key];
   }
   function drawMap() {
-    svg = el('svg', { viewBox: '0 0 880 540', role: 'img', 'aria-label': 'Mapa de módulos y mensajes entre ellos' }, $('flow-map'));
+    svg = el('svg', { viewBox: '0 0 880 540', role: 'group', 'aria-label': 'Mapa de módulos y mensajes entre ellos' }, $('flow-map'));
     var gZ = el('g', { class: 'fl-zones', 'aria-hidden': 'true' }, svg);
     ZONES.forEach(function (z) {
       el('rect', { class: 'fl-zone', x: z.x, y: z.y, width: z.w, height: z.h, rx: 22 }, gZ);

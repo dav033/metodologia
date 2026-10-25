@@ -4,7 +4,7 @@ from pathlib import Path
 
 import bt_pages
 
-CSS = (Path(__file__).resolve().parents[2] / "assets" / "style.css").read_text(encoding="utf-8")
+CSS = (Path(__file__).resolve().parents[2] / "assets" / "tokens.css").read_text(encoding="utf-8")
 
 
 class ThemeForcing(unittest.TestCase):
@@ -56,8 +56,8 @@ class LocalFonts(unittest.TestCase):
     ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
     def test_stylesheet_makes_no_third_party_request_and_every_font_file_exists(self):
-        css = (self.ASSETS / "style.css").read_text(encoding="utf-8")
-        self.assertIsNone(re.search(r"https?://", css))
+        for sheet in self.ASSETS.glob("*.css"):                  # style.css and every module it imports
+            self.assertIsNone(re.search(r"https?://", sheet.read_text(encoding="utf-8")), sheet.name)
         fonts = (self.ASSETS / "vendor" / "fonts" / "fonts.css").read_text(encoding="utf-8")
         files = re.findall(r"url\(([^)]+\.woff2)\)", fonts)
         self.assertGreaterEqual(len(files), 12)
