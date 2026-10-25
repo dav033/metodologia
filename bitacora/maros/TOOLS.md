@@ -25,7 +25,11 @@ an `~/.ssh/config` host alias, an env var name, a password-manager entry, or "CL
 
 ## Environments
 
-_None registered yet._
+### maros-app (Netlify)
+- **Site:** `maros-app`, id `63ef3d08-bcdc-4fd8-8d32-e180a5d97e05`; production `https://app.marosconstruction.com`.
+- **Deploy:** automatic from `dav033/maros-next` branch `main`, build `npm run build`, builds enabled (verified 2026-10-25).
+- **Access/status:** authenticated `netlify` CLI; `netlify api listSiteDeploys --data '{"site_id":"63ef3d08-bcdc-4fd8-8d32-e180a5d97e05","per_page":1}'`. Inspect only necessary deployment metadata; never print env values.
+- **Local development:** `dev-maros` starts Postgres (5433), `maros-api.service` (4000), `maros-web.service` (3000). `dev-maros logs api|web` and `systemctl --user status maros-api.service maros-web.service`.
 
 ## CLIs & services
 

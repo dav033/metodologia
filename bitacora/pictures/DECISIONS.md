@@ -420,3 +420,10 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** keep waiting for the physical test — rejected by the owner; agent-written "physical" observations — never (fabrication).
 - **Consequences:** + the run can close unattended; − real-device behavior (virtual keyboard, real camera/mic, Safari/WebKit) is not proven: a physical check stays an owner follow-up.
 - **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `1fbc12c7` · REQ-020
+
+## D-067 · 2026-10-25 · REQ-020 absorbs Diana's brief findings in three phases
+- **Context:** Diana's 2026-10-20 email (with Copilot analysis of real chats) shows events change mid-conversation, customers think in images and expect a co-creator; the advisor never asks budget, organiser priority or brand requests.
+- **Decision:** Owner approved ("dale"): before Halloween — open first question, "why is it special" (story), co-creator suggestions limited to Happia vendors, organiser priority + brand requests + budget (chips, "prefiero no decir"), server-owned change history in the brief (key field old → new, impact), proposal labelled as reference price, not a quote. M2 — per-photo "what to keep" (non-negotiables) and a structured first look (style, colours, elements) confirmed by the customer. M3 — conversation modes (explorer / visual reference / quick quote / evolving), service scope and already-solved items, setup/teardown, indoor/outdoor. Complexity estimation stays in the deep photo-reading block (mid-Nov decision). Designed first on the canvas (7 artboards), code after approval.
+- **Alternatives:** everything now — rejected (Halloween Thu 29 Oct); model-written change history — rejected (server diff is deterministic).
+- **Consequences:** + brief closer to what decorators need; − new fields/tools and prompt changes in REQ-020 outside the frozen plan (manual finish).
+- **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `85917a89` · REQ-020

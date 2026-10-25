@@ -6,9 +6,12 @@ _Rewritten (not appended) whenever the state changes. Keep it under ~60 lines._
 _What this project is and who it is for._
 
 ## Current state
+2026-10-25: Existing frontend UI work is preserved locally on `cambios-ui` (`8355d03`, 214 files). Both working repositories are on `main`; invoice search/filter work committed and pushed as `eb9af4b` following the owner's explicit request. Frontend tree clean; 384 tests, lint, typecheck and build pass; Netlify production deploy `6ade751d7756825b9419967c` is ready at the exact SHA. Local services running on 3000/4000. The saved UI snapshot has test failures (37/370); see the day log before resuming it.
+
 REQ-005 (friendlier roles and permissions UX/func + full-power admin MCP) is complete across all milestones (M1–M5). Both backend (`feat/req-005-friendlier-roles-and-permissions-ux-func` at `4a80e90`) and frontend (`feat/req-005-friendlier-roles-and-permissions-ux-func` at `8ccc2fa`) branches are fully verified with 100% passing tests (backend jest 499 tests, frontend vitest 422 tests, tsc clean, eslint clean). Final REPORT.md is generated; awaiting owner review and deployment migrations.
 
 ## Active focus
+- Invoice list search/filter controls on frontend main; preserve `cambios-ui` independently.
 - REQ-005 closing and owner review.
 - Supabase manual SQL migrations P-010 (`db/add-role-audit-events.sql`) and P-012 (`db/add-access-requests.sql`).
 
@@ -27,4 +30,4 @@ REQ-005 (friendlier roles and permissions UX/func + full-power admin MCP) is com
 ## Known issues
 - Backend full lint baseline: quickbooks-auth.service.spec.ts:218 unbound method; invoice-scans.service.ts:685 useless escape.
 
-_Last updated: 2026-10-15_
+_Last updated: 2026-10-25_
