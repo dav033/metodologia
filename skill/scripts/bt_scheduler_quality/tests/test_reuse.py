@@ -103,6 +103,21 @@ class PassCache(unittest.TestCase):
         self.assertEqual(second["reason_code"], "FLAKY_SUSPECTED")
         self.assertEqual(second["checks"][0]["reason_code"], "FLAKY_SUSPECTED")
 
+    def test_a_pass_confirmed_after_the_flaky_pass_is_clean_again(self):
+        # One environment failure (a database not up yet) must not mark the key flaky forever: the bounded
+        # same-attempt resume re-runs the check, and a second consecutive pass is clean evidence.
+        with tempfile.TemporaryDirectory() as tmp, QualityStore(":memory:") as store:
+            _, source, _, _ = _make_snapshot(Path(tmp))
+            runner = Runner(failing={"make flaky"})
+            engine = QualityEngine(QualityPolicy(), store, runner=runner)
+            engine.verify(order("att-1", "make flaky"), source)
+            runner.failing.clear()
+            flaky = engine.verify(order("att-2", "make flaky"), source)
+            confirmed = engine.verify(order("att-3", "make flaky"), source)
+        self.assertEqual(flaky["reason_code"], "FLAKY_SUSPECTED")
+        self.assertEqual(confirmed["status"], "PASS")
+        self.assertIsNone(confirmed["checks"][0].get("issue_code"))
+
     def test_the_fingerprint_hides_environment_values(self):
         policy = QualityPolicy(environment=(("TOKEN", "super-secret-value"),), secret_values=("super-secret-value",))
         self.assertNotIn("super-secret-value", reuse.environment_fingerprint(policy))

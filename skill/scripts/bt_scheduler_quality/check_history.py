@@ -80,9 +80,12 @@ class CheckHistory:
             row = connection.execute(
                 "SELECT status FROM check_pass_cache WHERE key=?", (key,)
             ).fetchone()
-            flaky = status == "pass" and row is not None and row["status"] in {"fail", "flaky"}
+            # Only the first pass after a failure is flaky; a second consecutive pass confirms the key clean,
+            # otherwise one environment failure would hold every later verification of this tree for review.
+            flaky = status == "pass" and row is not None and row["status"] == "fail"
+            confirmed = status == "pass" and row is not None and row["status"] == "flaky"
             recorded = "flaky" if flaky else status
-            if status == "fail" or flaky or row is None:
+            if status == "fail" or flaky or confirmed or row is None:
                 connection.execute(
                     "INSERT OR REPLACE INTO check_pass_cache "
                     "(key,exit_code,duration_ms,stdout,stderr,created_at,status) "
