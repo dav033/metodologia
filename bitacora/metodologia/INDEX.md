@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-23 16:43 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-25 12:45 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-23
+**Last activity:** 2026-10-25
 
 ## Workspace
 
@@ -56,11 +56,11 @@ _Generated 2026-10-23 16:43 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
-- D-121 — The coordinator, the failure analyst and the mapped-checks gate are on
-- D-120 — Self-healing and evolution are capabilities of the scheduler
-- D-119 — Proportional verification, mixed evidence and attestation receipts
-- D-118 — Minimal rework: a ceiling, content-based rebase, real finding text
-- D-117 — Tasks are kept apart by declared surface, not by size (only on the line)
+- D-127 — The owner approves every design contract before UI work starts
+- D-126 — External verification authority comes from operator files, never the plan
+- D-125 — Engine v2 phases close in order; independent work starts early
+- D-124 — PLAN.json schema 1.3.0: optional subplans and composition gates inside PLAN.json
+- D-123 — Engine v2 P0: backup by bundle + dirty snapshots, not full tarballs
 
 ## Artifacts
 
@@ -77,6 +77,6 @@ _Generated 2026-10-23 16:43 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
+  - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md), [24](2026-10/W4/2026-10-24.md), [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 20,
+  "revision": 21,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -138,7 +138,7 @@
       ],
       "owner": "T11 catalogue adapter",
       "producer_task": "T11",
-      "title": "Daily catalogue snapshot"
+      "title": "Daily catalogue snapshot (superseded by IF-10 in r21)"
     },
     {
       "consumer_tasks": [
@@ -204,6 +204,29 @@
       "owner": "T7 real-entry-point CLI and ledger checker",
       "producer_task": "T7",
       "title": "Runnable acceptance and audit gate"
+    },
+    {
+      "consumer_tasks": [
+        "T15.9",
+        "T15",
+        "T15b"
+      ],
+      "id": "IF-10",
+      "inputs": [
+        "HAPPIA_API_BASE_URL and HAPPIA_API_KEY in the runtime environment; validated HappiaClient package and service lists"
+      ],
+      "integration_criteria": [
+        "Deployed M3 on both production origins offers a live-catalogue package card for a birthday; the release bundle checker rejects missing or failed evidence."
+      ],
+      "invariants": [
+        "One provider read per call, bounded at 10 s; no database snapshot, refresh marker, migration or fallback file; unavailable with a reason instead of invented data; stored legacy estimate sources stay readable"
+      ],
+      "outputs": [
+        "HappiaCatalogueResult: available {data, source happia_api, fetchedAt, snapshotAgeSeconds 0} or unavailable {reason not_configured | request_failed | invalid_response}"
+      ],
+      "owner": "T15.11 catalogue adapter and release",
+      "producer_task": "T15.11",
+      "title": "Live Happia catalogue read"
     }
   ],
   "milestones": [
@@ -2331,7 +2354,7 @@
       "id": "T15",
       "milestone_id": "M4",
       "title": "Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated",
-      "objective": "Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation.",
+      "objective": "Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/.",
       "repository": "pictures",
       "after": [
         "T14a",
@@ -2468,7 +2491,7 @@
       "id": "T15b",
       "milestone_id": "M4",
       "title": "Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated",
-      "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
+      "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/.",
       "repository": "pictures",
       "after": [
         "T14a",
@@ -4600,14 +4623,261 @@
       "kind": "test"
     },
     {
+      "id": "T15.11",
+      "milestone_id": "M4",
+      "title": "Read the Happia catalogue live from the API, release it and re-run deployed acceptance",
+      "objective": "Owner decision 2026-10-25 (pictures P-187): no Postgres cache; the advisor reads the Happia catalogue straight from its API. Production Supabase lacks the snapshot tables (T11's 002_catalogue.sql was lost), so getHappiaCatalogue always fell back to an empty JSON and no package or priced direction item was ever offered. Released base: fa101a4759feb3f435c2500b3b2bc9684ff2f482.\n1. src/lib/asesor/catalogue.ts: getHappiaCatalogue(options?: {readFromHappia?, now?}) calls HappiaClient listarPackages()/listarServicios() with cargarConfigDesdeEnv() (HAPPIA_API_BASE_URL, HAPPIA_API_KEY) per call, concurrently, under one 10 s AbortSignal, validated by the existing payload schema. Load @sempertex/happie-package-ia through a string-literal import the Next build traces, like the /happie routes; createRequire never ran in production. Returns {status:'available', data, source:'happia_api', fetchedAt: ISO read time, snapshotAgeSeconds: 0} or {status:'unavailable', reason} where reason is not_configured (missing env), request_failed (network, HTTP status, timeout) or invalid_response (schema), checked in that order. A valid empty catalogue is available with empty arrays. Never serve cached, seeded or invented data, nor log keys or response bodies. Delete readSnapshot, claimDailyRefresh, storeSnapshot, the db option, getAsesorPool import, MAX_AGE_MS, fallbackSchema and catalogue-fallback.json (no other importer). No migration, no asesor:migrate, no table created or dropped. If live data breaks the schema, widen it only where packages/happie-package-ia/src/esquemas.ts or tipos.ts allows that value; never default missing fields.\n2. tools.ts: replace no_valid_snapshot with request_failed; a throwing loader stays an explicit no-match or unavailable themed items. Estimate source in contracts.ts and src/components/asesor/conversation-contract.ts becomes z.enum(['happia_api','postgres','seeded_last_good']): new proposals write happia_api, legacy values stay readable for stored conversations. Matching and pricing rules stay.\n3. Tests: rewrite catalogue.test.ts (two calls make two provider reads; each unavailable reason; timeout gives request_failed; source has no happia_catalogue_ SQL; fallback file absent). Update directions, packages and evaluation-remediation fixtures; keep their no-package/no-price assertions.\n4. Live tooling. scripts/test/asesor/catalogue-live.ts: default mode calls real getHappiaCatalogue(), exiting 1 unless available with at least one package; --report <path> writes {schema:'happia-catalogue-live/1', checkedAt, status, source, packages, services} as counts only; --check-results <path> validates such a file offline. scripts/e2e/asesor/scenarios/package.ts plus --milestone M3 and an optional recorded --task in deployed.ts/deployed-report.ts: pick an active live package with an active item (a birthday/cumpleanos one if its metadata says so), log in as user, send one complete birthday request in its city for its base_guests, ask explicitly for a standard package (two more asks at most), then assert a propose_standard_package tool event plus final standardPackage whose packageId exists in the live catalogue, with estimate status available, numeric subtotalCop, source happia_api and fetchedAt. scripts/e2e/asesor/check-release.ts <dir> --task <id>, tested by scripts/test/asesor/release-bundle.test.ts (add it to scripts/test/asesor/run.ts), exits 1 unless release.json (schema asesor-release/1: revision, task, six gate commands with exit code 0, vercel {origin, deploymentId, previousDeploymentId}, vps {origin, releaseDir, image, rollbackImage, previousRevision}, each previous value differing from the new one), catalogue-live.json and deployed-{vercel,vps}-{M1,M2,M3}.json all exist, pass, share revision and task, and match the recorded origins. Its tests reject: missing M3 report, revision mismatch, failed outcome, missing rollback target.\n5. Release, authorized. In docs/req-020/deployment.md add HAPPIA_API_BASE_URL/HAPPIA_API_KEY as required runtime variables and say the catalogue has no tables. Commit source changes as one commit X on this attempt's branch; never amend or rebase it. Run the six gates on X. Fast-forward origin/main from fa101a47 to X; stop blocked if origin/main moved. Vercel project demo-decoracion: exactly one READY production deployment of X; record its id and the previous one, which stays. VPS via ssh advin: /opt/deployments/pictures/releases/<X>, image demo-decoracion:<X>, retag rollback to the image now tagged current, then current to X, and recreate only web (docker compose -p demo-decoracion -f <release>/compose.vps.yml up -d --no-deps --no-build web). Never touch ai-api or print env files. GET /api/asesor/login on both origins must report X before live runs.\n6. Evidence in docs/req-020/catalogue-release/, never committed, copied to /home/david/bitacora/pictures/artifacts/req020-catalogue-release/. Prefix runs with node --env-file=/home/david/dev/pictures/.env.local --env-file=/home/david/.config/pictures/asesor-live.env --conditions=react-server --import tsx (HAPPIA_* live only in .env.local). Produce catalogue-live.json; for https://demo-decoracion.vercel.app and https://185-147-157-25.sslip.io run scripts/e2e/asesor/run.ts --live --deployed --origin <origin> --revision <X> --milestone M1|M2|M3 --task T15.11 --report deployed-<vercel|vps>-<M>.json; release.json last. Any failed run means fix, commit, release, rerun everything. Rollback = promote that previous Vercel deployment, retag current to rollback. Leave /happie, src/lib/happie, packages/happie-package-ia and contracts/domain/v1 untouched.",
+      "repository": "pictures",
+      "after": [
+        "T15.8"
+      ],
+      "complexity": "high",
+      "scope": "full_feature",
+      "estimated_minutes": 240,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional 240 minutes: about 90 for the catalogue rewrite, contract and tests, 30 for the gates, 60 for the two releases and 60 for live and deployed runs with evidence. plan-json history for implement/high returned unknown, so no measured comparison is claimed.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/lib/asesor/catalogue.ts",
+            "file:src/lib/asesor/tools.ts",
+            "file:src/lib/asesor/contracts.ts",
+            "task:T11"
+          ],
+          "justification": "High: replaces the catalogue source used by package and direction tools, changes the stored estimate contract and adds the first production use of the Happia client in the advisor bundle."
+        },
+        "scope": {
+          "evidence": [
+            "file:docs/req-020/deployment.md",
+            "file:scripts/e2e/asesor/deployed.ts",
+            "spec:SPEC.md#scope-in"
+          ],
+          "justification": "Full feature: code, tests, a deployed M3 scenario, two production releases and deployed acceptance are verifiable end to end."
+        },
+        "duration": {
+          "evidence": [
+            "file:scripts/test/asesor/catalogue.test.ts",
+            "file:docs/req-020/deployment.md",
+            "task:T15.8"
+          ],
+          "justification": "Provisional 240 minutes including gates, two releases and live runs; no comparable measured duration exists."
+        },
+        "risk": {
+          "evidence": [
+            "file:src/lib/asesor/catalogue.ts",
+            "file:docs/req-020/deployment.md",
+            "task:T15.8"
+          ],
+          "justification": "High: a production release on both origins and a wrong catalogue result would show customers invented or missing prices; rollback targets are recorded first."
+        },
+        "coupling": {
+          "evidence": [
+            "file:src/lib/asesor/tools.ts",
+            "file:src/components/asesor/conversation-contract.ts",
+            "file:src/lib/asesor/packages.ts"
+          ],
+          "justification": "High: consumed by package and direction tools, the stored brief contract, the chat card renderer and both final audits."
+        },
+        "confidence": {
+          "evidence": [
+            "file:packages/happie-package-ia/src/cliente.ts",
+            "assumption:owner reports 18 packages and 57 services from the live API"
+          ],
+          "justification": "Medium: the client and env exist on both hosts, but the live payload has not been validated against the advisor schema in this plan."
+        }
+      },
+      "expected_paths": [
+        "src/lib/asesor/catalogue.ts",
+        "src/lib/asesor/catalogue-fallback.json",
+        "src/lib/asesor/tools.ts",
+        "src/lib/asesor/contracts.ts",
+        "src/components/asesor/conversation-contract.ts",
+        "scripts/test/asesor/catalogue.test.ts",
+        "scripts/test/asesor/catalogue-live.ts",
+        "scripts/test/asesor/directions.test.ts",
+        "scripts/test/asesor/packages.test.ts",
+        "scripts/test/asesor/evaluation-remediation.test.ts",
+        "scripts/test/asesor/release-bundle.test.ts",
+        "scripts/test/asesor/run.ts",
+        "scripts/e2e/asesor/scenarios/package.ts",
+        "scripts/e2e/asesor/deployed.ts",
+        "scripts/e2e/asesor/deployed-report.ts",
+        "scripts/e2e/asesor/check-release.ts",
+        "docs/req-020/deployment.md",
+        "docs/req-020/catalogue-release"
+      ],
+      "shared_resources": [
+        "advisor-command-contract",
+        "pictures-production-deployment"
+      ],
+      "acceptance_criteria": [
+        "getHappiaCatalogue reads packages and services from the Happia API on every call, with no database snapshot, refresh marker, migration or fallback file, and returns status available with source happia_api and the read time.",
+        "When the Happia API is not configured, fails, times out or returns data outside the validated schema, getHappiaCatalogue returns status unavailable with reason not_configured, request_failed or invalid_response, and the package and direction tools then offer no package and no catalogue price instead of invented data.",
+        "New standard package proposals record source happia_api, proposals stored earlier with source postgres or seeded_last_good still parse and render, and the full advisor suite passes.",
+        "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+        "A live read against the real Happia API returns status available with at least one package, and a live advisor conversation for a birthday that matches a live package receives a standard package card with an available estimate sourced from happia_api on both production origins.",
+        "The verified commit is the production release on Vercel and on the VPS: each origin reports its full SHA, the previous Vercel production deployment and VPS image remain available for rollback, and docs/req-020/catalogue-release/release.json records them without secret values.",
+        "Deployed M1 and M2 acceptance passes on both production origins against the released SHA."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/catalogue.test.ts",
+          "purpose": "getHappiaCatalogue reads packages and services from the Happia API on every call, with no database snapshot, refresh marker, migration or fallback file, and returns status available with source happia_api and the read time.",
+          "created_by": "T15.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/catalogue.test.ts",
+          "purpose": "When the Happia API is not configured, fails, times out or returns data outside the validated schema, getHappiaCatalogue returns status unavailable with reason not_configured, request_failed or invalid_response, and the package and direction tools then offer no package and no catalogue price instead of invented data.",
+          "created_by": "T15.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/packages.test.ts scripts/test/asesor/directions.test.ts",
+          "purpose": "When the Happia API is not configured, fails, times out or returns data outside the validated schema, getHappiaCatalogue returns status unavailable with reason not_configured, request_failed or invalid_response, and the package and direction tools then offer no package and no catalogue price instead of invented data.",
+          "created_by": "T15.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run asesor:test",
+          "purpose": "New standard package proposals record source happia_api, proposals stored earlier with source postgres or seeded_last_good still parse and render, and the full advisor suite passes.",
+          "created_by": "T1",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/evaluation-remediation.test.ts scripts/test/asesor/package-facts.test.ts scripts/test/asesor/ui-remediation.test.ts",
+          "purpose": "New standard package proposals record source happia_api, proposals stored earlier with source postgres or seeded_last_good still parse and render, and the full advisor suite passes.",
+          "created_by": "T15.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gate",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run happie:test-webhook",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run lint",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build --workspaces --if-present",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsc --noEmit",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npm run build",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T1",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T14",
+          "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T7",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2",
+          "purpose": "The release commit passes npm run gate, npm run happie:test-webhook, npm run lint, npm run build --workspaces --if-present, npx tsc --noEmit, npm run build, the offline fake-model evaluation and the offline M1/M2 entry-point runs.",
+          "created_by": "T10a",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-release.ts docs/req-020/catalogue-release --task T15.11",
+          "purpose": "A live read against the real Happia API returns status available with at least one package, and a live advisor conversation for a birthday that matches a live package receives a standard package card with an available estimate sourced from happia_api on both production origins.",
+          "created_by": "T15.11",
+          "category": "integration"
+        },
+        {
+          "type": "manual",
+          "value": "Coordinator confirms that scripts/test/asesor/catalogue-live.ts and scripts/e2e/asesor/run.ts --live --deployed --milestone M3 ran against the real Happia API and both production origins with the private env files, and that the recorded outcomes match the run output.",
+          "purpose": "A live read against the real Happia API returns status available with at least one package, and a live advisor conversation for a birthday that matches a live package receives a standard package card with an available estimate sourced from happia_api on both production origins.",
+          "expected": "catalogue-live.json shows status available with at least one package and the deployed M3 reports passed on both origins for the released SHA; a failed, missing or hand-written run must not pass.",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server --test scripts/test/asesor/release-bundle.test.ts",
+          "purpose": "The verified commit is the production release on Vercel and on the VPS: each origin reports its full SHA, the previous Vercel production deployment and VPS image remain available for rollback, and docs/req-020/catalogue-release/release.json records them without secret values.",
+          "created_by": "T15.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-release.ts docs/req-020/catalogue-release --task T15.11",
+          "purpose": "The verified commit is the production release on Vercel and on the VPS: each origin reports its full SHA, the previous Vercel production deployment and VPS image remain available for rollback, and docs/req-020/catalogue-release/release.json records them without secret values.",
+          "created_by": "T15.11",
+          "category": "static"
+        },
+        {
+          "type": "manual",
+          "value": "Coordinator confirms in Vercel (project demo-decoracion) and on the VPS (ssh advin) that production serves the released SHA and that the previous Vercel production deployment and the VPS rollback image recorded in release.json still exist.",
+          "purpose": "The verified commit is the production release on Vercel and on the VPS: each origin reports its full SHA, the previous Vercel production deployment and VPS image remain available for rollback, and docs/req-020/catalogue-release/release.json records them without secret values.",
+          "expected": "Both origins serve the released SHA and both rollback targets exist; a missing rollback target or a different served SHA must not pass.",
+          "category": "product"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-release.ts docs/req-020/catalogue-release --task T15.11",
+          "purpose": "Deployed M1 and M2 acceptance passes on both production origins against the released SHA.",
+          "created_by": "T15.11",
+          "category": "integration"
+        }
+      ],
+      "covers": [
+        "R9",
+        "R10",
+        "R14"
+      ],
+      "kind": "implement"
+    },
+    {
       "id": "T15.9",
       "milestone_id": "M4",
       "title": "Install the owner physical-phone observations",
-      "objective": "Copy, unchanged, the owner-supplied physical-phone observations for the released revision from /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md into docs/req-020/phone-observations.md. If the file does not exist, stop with status blocked and say that only David can supply it; never write or infer observations. Required observations: login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, summary approval/print/admin. No commits or pushes.",
+      "objective": "Copy, unchanged, the owner-supplied physical-phone observations for the revision released by T15.11 (the SHA in docs/req-020/catalogue-release/release.json) from /home/david/bitacora/pictures/artifacts/req020-catalogue-release/phone-observations.md into docs/req-020/phone-observations.md. If the file does not exist or names another revision, stop with status blocked and say that only David can supply it; never write or infer observations. Required observations: login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, a standard package card with its estimated price for a birthday, summary approval/print/admin. No commits or pushes.",
       "repository": "pictures",
       "after": [
-        "T15.8",
-        "T15.10"
+        "T15.11"
       ],
       "complexity": "high",
       "scope": "full_feature",
@@ -4700,108 +4970,6 @@
         "R14"
       ],
       "kind": "test"
-    },
-    {
-      "id": "T15.10",
-      "milestone_id": "M4",
-      "title": "Repair what blocks T15.9",
-      "objective": "T15.9 cannot pass its checks: the cause lies outside it (independent analysis below). Fix the PRODUCTION code so the failing checks pass; do not edit or delete the failing tests unless the test itself is the defect, and say which one was. Evidence from the last verification:\n$ test -s docs/req-020/phone-observations.md\nexit code 1\n\nIndependent failure analysis (after 3 failed attempts; confidence alta; the cause lies in OUTSIDE what this task may change). It is an opinion of a reader who ran nothing: check it against the code and the failures above before you follow it.\nCause: El archivo fuente no existe: /home/david/bitacora/pictures/artifacts/req020-r19-release/phone-observations.md no está (Glob y Grep no lo encuentran en ninguna parte de la bitácora). `docs/req-020/` del source tampoco tiene `phone-observations.md`, así que `test -s` falla con exit 1. Las observaciones solo las puede hacer David con un teléfono físico; `live-acceptance.md:43` y `integration-results.json:280` confirman que siguen siendo del owner. Además, la segunda verificación del plan es una frase en prosa ('David performed the physical-phone checks…') que se ejecuta como comando (`exit code None`), así que no puede pasar nunca.\nWhat to do differently: 1. No crear ni inferir `phone-observations.md`; el agente no puede cumplir esta tarea.\n2. Pedir a David que aporte las observaciones del teléfono físico sobre el release r19 (login/avisos, teclado, cámara/galería/micrófono permitir/denegar/recuperar, visualización de medios, recarga en el mismo dispositivo, resumen aprobar/imprimir/admin), o que copie el archivo en la ruta fuente indicada.\n3. Una vez existe, copiarlo sin cambios a `docs/req-020/phone-observations.md` y comprobar `test -s`.\n4. Pedir al planner que reclasifique la segunda verificación de T15.9 como `manual` (no `command`) con su criterio de cobertura por áreas, para que no falle como comando.\n5. Repetir T15.9 solo después de los pasos 2 y 3; no registrar el paso como pasado antes.\n- H1 (high; owned by T15.9): T15.9 cannot pass its checks: the cause lies outside it (independent analysis below) Evidence from the audit: the failing command and its output, quoted once in the objective above\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
-      "repository": "pictures",
-      "after": [
-        "T15.8"
-      ],
-      "complexity": "high",
-      "scope": "small_change",
-      "estimated_minutes": 40,
-      "risk": "high",
-      "coupling": "high",
-      "confidence": "medium",
-      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "Defects in T15.9, found by an independent audit"
-        },
-        "scope": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "1 finding(s) with known symptoms and owners"
-        },
-        "duration": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "40 minutes per finding, regression tests included"
-        },
-        "risk": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "Changes code that other accepted tasks were built on"
-        },
-        "coupling": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "Touches what several accepted tasks share"
-        },
-        "confidence": {
-          "evidence": [
-            "task:T15.9",
-            "spec:SPEC.md"
-          ],
-          "justification": "The audit states the symptom; the cause is found while fixing"
-        }
-      },
-      "expected_paths": [
-        "docs/req-020/phone-observations.md"
-      ],
-      "shared_resources": [],
-      "acceptance_criteria": [
-        "H1 (high) is fixed: T15.9 cannot pass its checks: the cause lies outside it (independent analysis below)",
-        "T15.9's own check 1 passes: test -s docs/req-020/phone-observations.md"
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "test -s docs/req-020/phone-observations.md",
-          "purpose": "H1 (high) is fixed: T15.9 cannot pass its checks: the cause lies outside it (independent analysis below)",
-          "created_by": "T15.10",
-          "category": "functional"
-        },
-        {
-          "type": "command",
-          "value": "test -s docs/req-020/phone-observations.md",
-          "purpose": "T15.9's own check 1 passes: test -s docs/req-020/phone-observations.md",
-          "created_by": "T15.9",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R1",
-        "R10",
-        "R11",
-        "R12",
-        "R13",
-        "R14",
-        "R2",
-        "R3",
-        "R4",
-        "R5",
-        "R6",
-        "R7",
-        "R8",
-        "R9"
-      ],
-      "kind": "implement"
     }
   ]
 }

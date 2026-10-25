@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/4 · tareas 28/32 · generado: 2026-10-24T15:11:20-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/4 · tareas 28/32 · generado: 2026-10-25T11:21:46-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -57,8 +57,8 @@ created: 2026-10-20
 | T15.6 | Await owner-authorized release and physical-phone acceptance evidence | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T15.7 | Repair package commercial facts, card disclosures and photo-only send | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T15.8 | Install revision-bound release, deployed M1/M2 and live-matrix evidence | alta | completada | sonnet | claude-work | 1 |
+| T15.11 | Read the Happia catalogue live from the API, release it and re-run deployed acceptance | alta | bloqueada | sonnet | claude-work | 2 |
 | T15.9 | Install the owner physical-phone observations | alta | pendiente | sonnet | claude-work | 3 |
-| T15.10 | Repair what blocks T15.9 | alta | bloqueada | sonnet | claude-work | 3 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -106,6 +106,7 @@ Paths below are planned outputs relative to the pictures implementation checkout
 | T14 | `src/lib/asesor/prompts/catalogue.ts`, `scripts/eval/asesor/run.ts`, `scripts/eval/asesor/scenarios.json`, `scripts/test/asesor/prompt.test.ts`, `scripts/e2e/asesor/scenarios/m3.ts` | Integrate the optional direction/package tool adapters and tune advisor prompts using versioned real-model conversations and deterministic invariants. |
 | T14a | `docs/req-020/integration-results.json` | Run the established full advisor entry-point flow and regression checks, reporting actual failures without changing code or judging product acceptance. |
 | T15 | `docs/req-020/T15.md`, `docs/req-020/T15.findings.json` | Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation. |
+| T15.11 | `src/lib/asesor/catalogue.ts` (live read; `catalogue-fallback.json` deleted), `scripts/test/asesor/catalogue-live.ts`, `scripts/test/asesor/release-bundle.test.ts`, `scripts/e2e/asesor/scenarios/package.ts`, `scripts/e2e/asesor/check-release.ts`, `docs/req-020/catalogue-release/` | Read the Happia catalogue live on each call, prove it live and on both production origins, and release it (r21). Also edits files first owned by T1/T3/T4/T7/T12/T13/T14.2a/T15.4: `tools.ts`, `contracts.ts`, `conversation-contract.ts`, the catalogue/directions/packages/evaluation tests, `scripts/test/asesor/run.ts`, `deployed.ts`, `deployed-report.ts`, `deployment.md`. |
 
 ## Tasks
 
@@ -242,6 +243,14 @@ Acceptance: Undecided customers receive twelve editable photo directions and ver
 - [ ] T14.4a — Repair what blocks T14a · repo: pictures · after: T10, T14, T14.1a, T14.2a, T14.3a · verify: `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server --test scripts/integration/asesor-db.test.ts`; `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/db.test.ts`; `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server --test scripts/test/asesor/harness.test.ts`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2`; `npx tsx --conditions=react-server --test scripts/test/asesor/prompt.test.ts`; `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json`; `node --conditions=react-server --import tsx --test scripts/test/asesor/deployed.test.ts scripts/test/asesor/deployment-version.test.ts scripts/test/asesor/harness.test.ts`; `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2` · files: package.json, scripts/test/gate.mjs, .env.example, src/lib/asesor/db.ts, src/lib/asesor/repository.ts, scripts/migrate-asesor.ts, scripts/migrations-asesor/001_initial.sql, scripts/test/asesor/run.ts, scripts/test/asesor/db.test.ts, scripts/integration/asesor-db.test.ts, scripts/e2e/asesor/run.ts, scripts/e2e/asesor/check-findings.ts, scripts/e2e/asesor/scenarios/m1.ts, docs/req-020/deployment.md, scripts/test/asesor/harness.test.ts, scripts/e2e/asesor/scenarios/photos.ts, scripts/e2e/asesor/scenarios/voice.ts, scripts/e2e/asesor/scenarios/m2.ts, src/lib/asesor/prompts/catalogue.ts, scripts/eval/asesor/run.ts, scripts/eval/asesor/scenarios.json, scripts/test/asesor/prompt.test.ts, scripts/e2e/asesor/scenarios/m3.ts, scripts/e2e/asesor/deployed-report.ts, scripts/e2e/asesor/deployed.ts, scripts/test/asesor/deployed.test.ts, scripts/test/asesor/deployment-version.test.ts, scripts/test/asesor/summary-flow.test.ts, src/app/api/asesor/login/route.ts, src/lib/asesor/agent.ts, src/lib/asesor/prompts/base.ts, src/lib/asesor/tools.ts · resources: advisor-command-contract, advisor-direction-contract, advisor-package-contract, advisor-persistence-contract, pictures-production-deployment · covers: R1, R10, R11, R12, R13, R14, R2, R3, R4, R5, R6, R7, R8, R9 · kind: implement
 - [ ] T15.1 — Repair what blocks T15 · repo: pictures · after: T14a · verify: `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server --test scripts/test/asesor/harness.test.ts`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1` · files: scripts/e2e/asesor/run.ts, scripts/e2e/asesor/check-findings.ts, scripts/e2e/asesor/scenarios/m1.ts, docs/req-020/deployment.md, scripts/test/asesor/harness.test.ts · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R11, R12, R13, R14, R2, R3, R4, R5, R6 · kind: implement
 - [ ] T15.2 — Repair what blocks T15 · repo: pictures · after: T14a, T15.1 · verify: `npm run gate`; `npm run happie:test-webhook` · files: docs/req-020/T15.md, docs/req-020/T15.findings.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R10, R11, R12, R13, R14, R2, R3, R4, R5, R6, R7, R8, R9 · kind: implement
+- [ ] T15.3 — Repair customer photo, offer-card and authoritative summary flows · repo: pictures · after: T14a, T15.1, T15.2 · verify: `npm run asesor:test`; `npx tsx --test scripts/test/asesor/ui-remediation.test.ts`; `npx tsx scripts/e2e/asesor/ui-remediation.ts`; `npx tsc --noEmit`; `npm run build` · files: src/components/asesor, scripts/test/asesor/chat-ui.test.ts, scripts/test/asesor/ui-remediation.test.ts, scripts/e2e/asesor/ui-remediation.ts, scripts/e2e/asesor/scenarios/text.ts · covers: R4, R5, R7, R9, R10, R11 · kind: implement
+- [ ] T15.4 — Repair nine-scenario evaluation and negative/privacy acceptance coverage · repo: pictures · after: T15.3 · verify: `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/evaluation-remediation.test.ts`; `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`; `npx tsc --noEmit`; `npm run build` · files: scripts/eval/asesor, scripts/e2e/asesor/scenarios/m1.ts, scripts/e2e/asesor/scenarios/m2.ts, scripts/test/asesor/evaluation-remediation.test.ts, src/lib/asesor/prompts, docs/req-020/remediation-evaluation.md · covers: R3, R7, R9, R10, R11, R13 · kind: implement
+- [ ] T15.5 — Prepare repaired-tree evidence and exact owner release checklist · repo: pictures · after: T15.4 · verify: `test -s docs/req-020/remediation-readiness.md`; `npx tsx scripts/e2e/asesor/ui-remediation.ts`; `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`; `npm run happie:test-webhook` · files: docs/req-020/remediation-readiness.md · covers: R3, R7, R9, R10, R11, R13, R14 · kind: test
+- [ ] T15.6 — Await owner-authorized release and physical-phone acceptance evidence · repo: pictures · after: T15.5 · verify: `test -s docs/req-020/remediation-release-evidence.md` · files: docs/req-020/remediation-release-evidence.md · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
+- [ ] T15.7 — Repair package commercial facts, card disclosures and photo-only send · repo: pictures · after: T15.6 · verify: `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/package-facts.test.ts`; `npx tsx scripts/e2e/asesor/ui-remediation.ts`; `npx tsc --noEmit`; `npm run build`; `npm run happie:test-webhook` · files: src/lib/asesor, src/components/asesor, scripts/test/asesor/package-facts.test.ts, scripts/test/asesor/ui-remediation.test.ts, scripts/e2e/asesor/ui-remediation.ts · covers: R4, R5, R7, R9, R10, R11 · kind: implement
+- [ ] T15.8 — Install revision-bound release, deployed M1/M2 and live-matrix evidence · repo: pictures · after: T15.7 · verify: `test -s docs/req-020/live-acceptance.md`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` · files: docs/req-020/integration-results.json, docs/req-020/live-acceptance.md · covers: R1, R2, R3, R7, R9, R10, R11, R13, R14 · kind: test
+- [ ] T15.11 — Read the Happia catalogue live from the API, release it and re-run deployed acceptance · repo: pictures · after: T15.8 · verify: `npx tsx --conditions=react-server --test scripts/test/asesor/catalogue.test.ts`; `npx tsx --conditions=react-server --test scripts/test/asesor/packages.test.ts scripts/test/asesor/directions.test.ts`; `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/evaluation-remediation.test.ts scripts/test/asesor/package-facts.test.ts scripts/test/asesor/ui-remediation.test.ts`; `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2`; `npx tsx --conditions=react-server scripts/e2e/asesor/check-release.ts docs/req-020/catalogue-release --task T15.11`; `npx tsx --conditions=react-server --test scripts/test/asesor/release-bundle.test.ts` · files: src/lib/asesor/catalogue.ts, src/lib/asesor/catalogue-fallback.json, src/lib/asesor/tools.ts, src/lib/asesor/contracts.ts, src/components/asesor/conversation-contract.ts, scripts/test/asesor/catalogue.test.ts, scripts/test/asesor/catalogue-live.ts, scripts/test/asesor/directions.test.ts, scripts/test/asesor/packages.test.ts, scripts/test/asesor/evaluation-remediation.test.ts, scripts/test/asesor/release-bundle.test.ts, scripts/test/asesor/run.ts, scripts/e2e/asesor/scenarios/package.ts, scripts/e2e/asesor/deployed.ts, scripts/e2e/asesor/deployed-report.ts, scripts/e2e/asesor/check-release.ts, docs/req-020/deployment.md, docs/req-020/catalogue-release · resources: advisor-command-contract, pictures-production-deployment · covers: R9, R10, R14 · kind: implement
+- [ ] T15.9 — Install the owner physical-phone observations · repo: pictures · after: T15.11 · verify: `test -s docs/req-020/phone-observations.md` · files: docs/req-020/phone-observations.md · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
 Acceptance: The full shipped-entry-point flow and protected regressions run with actual outcomes recorded. Read-only final production review traces all R1-R14 and its valid findings ledger contains no open critical/high finding.
 
 - [ ] T14a — Run full advisor entry-point integration and protected happie regression; record outcomes without fixes · repo: pictures · after: T10, T14, T14.1a, T14.2a, T14.3a, T14.4a · verify: `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2` · files: docs/req-020/integration-results.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
@@ -252,8 +261,8 @@ Acceptance: The full shipped-entry-point flow and protected regressions run with
 
   Focused verification: `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build` [regression]; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --live --deployed --milestone all` [integration, created by T7]; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` [functional, created by T7].
 
-- [ ] T15 — Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated · repo: pictures · after: T14a, T15.1, T15.2 · verify: `npm run gate`; `npm run happie:test-webhook`; `bitacora.py audit-ledger check docs/req-020/T15.findings.json`; `test -s docs/req-020/T15.md` · files: docs/req-020/T15.md, docs/req-020/T15.findings.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: audit
-- [ ] T15b — Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated · repo: pictures · after: T14a, T15.1, T15.2 · verify: `npm run gate`; `npm run happie:test-webhook`; `bitacora.py audit-ledger check docs/req-020/T15-crosscheck.findings.json`; `test -s docs/req-020/T15-crosscheck.md` · files: docs/req-020/T15-crosscheck.md, docs/req-020/T15-crosscheck.findings.json · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: audit
+- [ ] T15 — Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated · repo: pictures · after: T14a, T15.1, T15.2, T15.6, T15.9 · verify: `npm run gate`; `npm run happie:test-webhook`; `bitacora.py audit-ledger check docs/req-020/T15.findings.json`; `test -s docs/req-020/T15.md` · files: docs/req-020/T15.md, docs/req-020/T15.findings.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: audit
+- [ ] T15b — Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated · repo: pictures · after: T14a, T15.1, T15.2, T15.6, T15.9 · verify: `npm run gate`; `npm run happie:test-webhook`; `bitacora.py audit-ledger check docs/req-020/T15-crosscheck.findings.json`; `test -s docs/req-020/T15-crosscheck.md` · files: docs/req-020/T15-crosscheck.md, docs/req-020/T15-crosscheck.findings.json · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: audit
 
   Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 150 min (provisional). Advisor acceptance must correlate production behavior, permission boundaries, model outputs and protected contracts; high instead of medium because green scripts cannot establish the complete user/privacy acceptance.
 
@@ -273,10 +282,11 @@ PLAN.json contains the precise inputs, outputs, invariants and integration crite
 | IF-3 EventBrief and stream | T3 | T4, T5, T8, T13 | Reload, correction, timeout and repeated message IDs preserve the same committed state and approval version. |
 | IF-4 Vendor brief projection | T5 | T6, T8, T13 | Server JSON and print view are checked with synthetic PII in structured and free-text fields. |
 | IF-5 Media capability and UI slots | T4 | T8, T9 | T10 and T14a drive combined camera/gallery, first look, voice, reload and approval on a phone viewport. |
-| IF-6 Daily catalogue snapshot | T11 | T12, T13 | Clock-boundary, concurrent refresh, API outage and missing-data tests produce honest cards and brief metadata. |
+| IF-6 Daily catalogue snapshot (superseded by IF-10 in r21) | T11 | T12, T13 | Clock-boundary, concurrent refresh, API outage and missing-data tests produce honest cards and brief metadata. |
 | IF-7 Directions and model integration | T12 | T14 | Undecided real-model scenario shows known directions/items without inventing IDs. |
 | IF-8 Package suggestions and model integration | T13 | T14 | M3 model scenario and T14a full flow produce identical package provenance in card and approved brief. |
 | IF-9 Runnable acceptance and audit gate | T7 | T10, T14a, T15 | T14a starts the app and drives real persistence/provider/voice; T15 rejects open critical/high task-linked findings. |
+| IF-10 Live Happia catalogue read | T15.11 | T15.9, T15, T15b | Deployed M3 on both production origins offers a live-catalogue package card for a birthday; the release bundle checker rejects missing or failed evidence. |
 
 ## Verification
 All commands execute from the future pictures implementation checkout. `npm run gate`, `npm run lint`, `npm run build --workspaces --if-present`, `npx tsc --noEmit`, `npm run build` and `npm run happie:test-webhook` exist in the inspected package.json. The current gate does not contain advisor checks; T1 adds them. `asesor:migrate`, `asesor:test`, every `scripts/test/asesor/*` check, the new advisor e2e/eval runners and the findings checker are planned implementation work, explicitly marked `created_by` in PLAN.json. Their passing is not claimed here.
@@ -318,6 +328,68 @@ Responsibility check: T7 creates the missing harness and deployment material, T1
 Publication notes: `created_by` diagnostics are intentional because advisor checks do not yet exist. T7 deployment inspection, T10 device/deployment review and the T15 product verdict retain manual verification and therefore NEEDS_REVIEW for those criteria; they are not an automatic PASS. The single final audit is retained from the approved scope; a second independent audit is not silently added to classification.
 
 Deterministic validation: the project plan-json check was run after enrichment and returned exit 0, no errors, and `OK: PLAN.json is publishable`. Planned-verification and manual-acceptance warnings are intentional and are reported in the final classification result. Whitespace validation also passed. These checks validate the planning contract, not application behavior.
+
+## Revision r21 (working draft, 2026-10-25; not approved or frozen)
+
+Owner-requested change for pictures P-187. The advisor's catalogue cache tables were never created in production
+Supabase (T11's `002_catalogue.sql` was lost at integration), so `getHappiaCatalogue` always returned the empty
+`catalogue-fallback.json` and no package or catalogue-backed direction item was ever offered. Owner decision
+2026-10-25: no Postgres cache; the advisor reads the Happia API on each call. This supersedes the SPEC R10 clause
+"read at most once a day, with a fallback list when the API fails" and IF-6; SPEC.md is not edited by this revision.
+The previous file was frozen revision 20 (healing, adds T15.10), so this working revision is 21.
+
+Changes:
+- **T15.11 added** (implement, high), after T15.8. Live catalogue read with explicit `unavailable` reasons, dead
+  snapshot code and the empty fallback removed, tests updated, live catalogue check, deployed M3 package scenario,
+  release bundle checker, the six existing gates, release of one commit to Vercel production and the VPS with rollback
+  targets kept, and deployed M1/M2/M3 on both origins against that SHA.
+- **T15.9** now runs after T15.11 (and so after T15.8) against the T15.11 release; its source is
+  `/home/david/bitacora/pictures/artifacts/req020-catalogue-release/phone-observations.md` and the required
+  observations add the birthday package card. Criterion and checks unchanged.
+- **T15 and T15b** wait for T15.11 through T15.9 (edges unchanged) and judge R10 against the live read (objective note). Criteria and checks unchanged.
+- **T15.10 removed.** It is a self-healing repair of T15.9 whose only possible fix is David's phone file: the
+  independent analysis recorded that the agent cannot fulfil it, its healing case is exhausted, it declares T15.9's own
+  deliverable (two owners of one file) and asks for a production-code fix that does not exist. The release it waited
+  on (fa101a47) is superseded by T15.11. Its step 4 (make T15.9's second check manual) is already true. A scope change
+  may remove a task in a new owner-approved revision (plan-contract "A plan that evolves while it runs"; `heal revert`
+  likewise freezes the next revision without the added task); a rebase drops it. Keeping it would hold T15.9 behind a
+  blocked task that can only pass through the same owner gate T15.9 already has.
+- IF-10 "Live Happia catalogue read" added; IF-6 marked superseded. PLAN.md now lists T15.3 to T15.9 and T15.11,
+  which the scheduler revisions had added only to PLAN.json.
+
+Decisions fixed for the implementer: result `available {data, source: happia_api, fetchedAt, snapshotAgeSeconds: 0}`
+or `unavailable {reason: not_configured | request_failed | invalid_response}`; one 10 s bound for both lists; the
+Happia package loaded through a build-traced import (the old `createRequire` path never ran in production); estimate
+`source` enum keeps `postgres`/`seeded_last_good` readable for stored states while new proposals write `happia_api`;
+no migration, no table created or dropped; evidence under `docs/req-020/catalogue-release/`, not committed, copied to
+the bitácora artifacts folder.
+
+Verification note: the sandbox has no env, so live and deployed runs happen in the implementer's session with the
+private env files and are verified twice: automatically by `check-release.ts` over the recorded bundle, and by two
+manual checks the coordinator attests (`scheduler-op REQ-020 attest`). Every T15.11 criterion has at least one
+automatic check.
+
+### Inputs (r21)
+
+| # | Item | Where it lives | Supplied by | Status |
+|---|---|---|---|---|
+| 1 | `HAPPIA_API_BASE_URL`, `HAPPIA_API_KEY` (runtime) | Vercel Production env of `demo-decoracion`; VPS `/etc/demo-decoracion/demo.env` (names confirmed 2026-10-25 over `ssh advin`) | already set | available |
+| 2 | `HAPPIA_*` for local live runs | `/home/david/dev/pictures/.env.local` (names confirmed; absent from `asesor-live.env`) | already set | available |
+| 3 | Gemini, Supabase, E2E user/admin passwords, `ASESOR_E2E_AUDIO_FILE`, voice | `/home/david/.config/pictures/asesor-live.env` (names confirmed) | already set | available |
+| 4 | Vercel access | `vercel` CLI logged in as `dav033`; project `demo-decoracion` | already set | available |
+| 5 | VPS access and release layout | `ssh advin`; `/opt/deployments/pictures/releases/<sha>`; image tags `current`, `rollback` (bitácora `TOOLS.md`) | already set | available |
+| 6 | Authorization to push `main` and deploy both origins | `~/.claude/CLAUDE.md` standing authorization 2026-10-19 + owner request for T15.11 | David | available |
+| 7 | Database change | none: no migration, no table | — | not needed |
+| 8 | Physical-phone observations on the T15.11 release | `/home/david/bitacora/pictures/artifacts/req020-catalogue-release/phone-observations.md` | David, after T15.11 | deferred by design: T15.9 blocks until supplied, never inferred |
+
+No secret value is written in this plan.
+
+### Review focus (T15.11)
+1. API down, timeout, 401 or missing env: `catalogue.test.ts` asserts each `unavailable` reason and no cached data.
+2. Malformed or partial live payload: `catalogue.test.ts` `invalid_response`; `packages.test.ts`/`directions.test.ts` show no price.
+3. Stored conversations with `postgres`/`seeded_last_good` estimates: `ui-remediation.test.ts` and `package-facts.test.ts` still parse and render.
+4. Bundle not tracing the Happia package on Vercel or standalone VPS: deployed M3 on both origins.
+5. Evidence from the wrong revision, a failed run or a missing rollback target: `release-bundle.test.ts` and `check-release.ts`.
 
 ## Rulings
 <!-- Judgment calls made during execution without asking. -->

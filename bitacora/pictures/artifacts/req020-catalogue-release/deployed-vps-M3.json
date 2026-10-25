@@ -1,0 +1,30 @@
+{
+  "schema": "deployed-integration-results/1",
+  "mode": "live",
+  "target": "deployed",
+  "revision": "112ebdc6fcdbab8111b7893dd4501891e35da18a",
+  "verifiedRevision": "112ebdc6fcdbab8111b7893dd4501891e35da18a",
+  "origin": "https://185-147-157-25.sslip.io",
+  "milestone": "M3",
+  "startedAt": "2026-10-25T15:40:50.468Z",
+  "outcome": "passed",
+  "checks": [
+    "live catalogue read with 18 packages",
+    "complete birthday request for a live package's city and base guests",
+    "propose_standard_package returned a live package card with an available estimate sourced from happia_api"
+  ],
+  "task": "T15.11",
+  "completedAt": "2026-10-25T15:41:06.732Z",
+  "invocation": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision 112ebdc6fcdbab8111b7893dd4501891e35da18a --milestone M3 --task T15.11",
+  "commands": [
+    "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision 112ebdc6fcdbab8111b7893dd4501891e35da18a --milestone M3 --task T15.11"
+  ],
+  "runs": [
+    {
+      "revision": "112ebdc6fcdbab8111b7893dd4501891e35da18a",
+      "task": "T15.11",
+      "command": "scripts/e2e/asesor/run.ts --live --deployed --origin https://185-147-157-25.sslip.io --revision 112ebdc6fcdbab8111b7893dd4501891e35da18a --milestone M3 --task T15.11",
+      "outcome": "passed"
+    }
+  ]
+}

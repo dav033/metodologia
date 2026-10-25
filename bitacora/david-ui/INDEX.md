@@ -1,6 +1,6 @@
 # Index — david-ui
 
-_Generated 2026-10-24 14:38 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-25 09:11 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/david-ui) · [graph](http://127.0.0.1:8765/p/david-ui/graph)  
@@ -10,15 +10,18 @@ _Generated 2026-10-24 14:38 by `bitacora.py index`. Do not edit by hand._
 
 - **app** → `/home/david/dev/david-ui` (not cloned here)
 
+## Needs attention
+
+- REQ-001: plan waiting for approval
+
 ## Requirements
 
 | ID | Title | Spec | Plan | |
 |---|---|---|---|---|
-| [REQ-001](requirements/REQ-001-private-ui-kit-library-with-catalog-and/SPEC.md) | Private UI kit library with catalog and registry | `planned` | [launched](requirements/REQ-001-private-ui-kit-library-with-catalog-and/PLAN.md) |  |
+| [REQ-001](requirements/REQ-001-private-ui-kit-library-with-catalog-and/SPEC.md) | Private UI kit library with catalog and registry | `planned` | [review](requirements/REQ-001-private-ui-kit-library-with-catalog-and/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
-- P-183 · Delete GitHub repo `dav033/david-ui` (gh token lacks `delete_repo`; owner runs `gh auth re · med/S
 - P-184 · Owner approval of REQ-001 revision 10 (schema 1.3.0 subplans) before any launch · low/S
 
 ## Recent decisions

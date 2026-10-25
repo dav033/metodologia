@@ -1,0 +1,43 @@
+{
+  "schema": "asesor-release/1",
+  "revision": "112ebdc6fcdbab8111b7893dd4501891e35da18a",
+  "task": "T15.11",
+  "gates": [
+    {
+      "command": "npm run gate",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run happie:test-webhook",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build --workspaces --if-present",
+      "exitCode": 0
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0
+    }
+  ],
+  "vercel": {
+    "origin": "https://demo-decoracion.vercel.app",
+    "deploymentId": "dpl_32yQJrhN27xisQGJUrGSgrco8CPr",
+    "previousDeploymentId": "dpl_4H6wkfEfU2zvJUhyiLwNkfCHK8g5"
+  },
+  "vps": {
+    "origin": "https://185-147-157-25.sslip.io",
+    "releaseDir": "/opt/deployments/pictures/releases/112ebdc6fcdbab8111b7893dd4501891e35da18a",
+    "image": "demo-decoracion:112ebdc6fcdbab8111b7893dd4501891e35da18a",
+    "rollbackImage": "demo-decoracion:rollback",
+    "previousRevision": "fa101a4759feb3f435c2500b3b2bc9684ff2f482"
+  }
+}

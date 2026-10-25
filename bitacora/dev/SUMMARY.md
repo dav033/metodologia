@@ -7,6 +7,8 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
+2026-10-25: Pictures REQ-020 r21 running T15.11 (live Happia API, D-065; then phone test T15.9); advisor passwords changed to owner-chosen values on Vercel + VPS (verified). david-ui fully wiped incl. GitHub repo; REQ-001 r10 (1.3.0) awaits owner inputs 2–5 and approval.
+
 2026-10-24 14:45: Pictures REQ-020 resumed on v2 (only active run, 28/31). david-ui wiped by owner order (david-ui D-002); GitHub repo pending `delete_repo` scope; REQ-001 being replanned on schema 1.3.0.
 
 2026-10-24 14:30: Designer integrated across the whole flow (metodologia D-127; owner approves each contract via CLI/web; gate holds UI tasks until approved). origin/main `330a09dad`. Disk /home 3.5 GiB free.

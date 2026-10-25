@@ -125,6 +125,13 @@
    "sha256": "b5284785898fcaa3fd32cf48a820b7c72c1a935ca55d5d2abecb6c1f3ae1f4e8",
    "frozen_at": "2026-10-24T15:08:51",
    "source": "healing"
+  },
+  {
+   "revision": 21,
+   "sha256": "97a4d87683e4a1b287e6213a2bf6963e290fc099b9a1080c64212943621f74d7",
+   "frozen_at": "2026-10-25T10:06:55",
+   "source": "approval",
+   "plan_md_sha256": "748676c63bd263d2006e9a1559423df8010df84ce28406aaf72e9bd574f6b6d3"
   }
  ]
 }

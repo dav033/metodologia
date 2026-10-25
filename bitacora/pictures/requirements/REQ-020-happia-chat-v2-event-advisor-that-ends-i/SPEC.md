@@ -87,7 +87,8 @@ Candidate capabilities (from the client doc, minus the removed blocks):
 - R9. If the customer does not know what they want, the system shall offer directions from a curated group of 10–15
   decorations (with photo) and themed items Happia sells.
 - R10. When a standard Happia package or service fits, the system shall offer it first, with its estimated price from
-  the Happia catalogue (read at most once a day, with a fallback list when the API fails), and only offer what Happia
+  the Happia catalogue (read live from the Happia API on each use; when the API fails, no package or catalogue price is
+  offered — owner decision D-065, 2026-10-25, replaces the daily cache and fallback list), and only offer what Happia
   vendors can do.
 - R11. When the required fields are complete, the system shall show the customer a summary to approve or correct; on
   approval it shall store a one-page brief (photos, likes/dislikes, venue, priorities, budget, requests, proposed

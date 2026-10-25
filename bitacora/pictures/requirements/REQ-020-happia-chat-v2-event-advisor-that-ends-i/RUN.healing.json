@@ -300,6 +300,25 @@
    "task": "T14a",
    "why": "T14a already had 3 automatic plan repairs"
   },
+  "6a19a997f22c00a6": {
+   "applied": 0,
+   "class": "environment",
+   "evidence": [
+    "environment signature: ECONNREFUSED",
+    "reason code: needs_review_retry_exhausted"
+   ],
+   "first_at": 1792945304.854,
+   "history": [
+    {
+     "at": 1792945304.855,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "6a19a997f22c00a6",
+   "status": "unrepairable",
+   "task": "T15.11"
+  },
   "6f18906b7e10dffd": {
    "applied": 0,
    "class": "criterion_unmapped",

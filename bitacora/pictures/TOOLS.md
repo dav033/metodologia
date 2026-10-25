@@ -43,4 +43,4 @@ _None registered yet._
 - **Releases:** /opt/deployments/pictures/releases/<sha> (compose.vps.yml); recreate web only:
   `docker compose -p demo-decoracion -f <release>/compose.vps.yml up -d --no-deps --no-build web`.
 - **Model trials:** /opt/modelos-prueba (compose project `modelos-prueba`, Whisper :8610 / Laya :8611 on 127.0.0.1, stopped).
-- **Notes:** never restart the ai-api without owner notice; never print env files.
+- **Notes:** never restart the ai-api without owner notice; never print env files. Values containing `$` (scrypt hashes) must be single-quoted in demo.env: Compose interpolates `$` and silently truncates them.

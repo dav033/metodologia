@@ -406,3 +406,10 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Decision:** Preserve local report contract; add deployed-integration-results/1 with strict shared validation and GET /api/asesor/login asesor-deployment/1 backed by existing release metadata. Verify exact full SHA before credentials and after the scenario; unknown/local identity fails closed.
 - **Consumers/rollback:** Remote runner and shared CLI checker; POST authentication unchanged. Revert 915a75af via normal release controls; remote acceptance then remains unavailable.
 - **ADR:** ~/dev/cerebro/pictures/decisiones/20261022-deployed-evidence.md.
+
+## D-065 · 2026-10-25 · Advisor reads the Happia catalogue directly from the API
+- **Context:** P-187: the Postgres catalogue cache's migration was lost, so production served an empty fallback and never offered packages.
+- **Decision:** Owner order: drop the Postgres snapshot/refresh cache; `getHappiaCatalogue` calls the Happia API (packages + services) on each use and reports unavailable on failure. Delivered as REQ-020 revision 20 task T15.11 (release to Vercel + VPS) before the phone observations T15.9.
+- **Alternatives:** create the two missing tables in production (no code change) — rejected by the owner; single merged cache table — needs code change anyway.
+- **Consequences:** + no schema to keep in sync, always-current catalogue; − every catalogue use costs Happia API calls (paginated packages/services) and adds latency; Happia downtime means no packages until it recovers.
+- **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `1fbc12c7` · REQ-020 · P-187

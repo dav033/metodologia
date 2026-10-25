@@ -1,0 +1,23 @@
+{
+ "request": "T15.11:2",
+ "state": "done",
+ "kind": "unknown",
+ "label": "Sin identificar",
+ "tone": "muted",
+ "headline": "T15.11 bloqueada: la revisión agotó sus reintentos y la causa no está en la evidencia",
+ "origin": "El sistema bloqueó T15.11:2 con needs_review_retry_exhausted: los intentos de revisión de la tarea se agotaron sin que la revisión aprobara el trabajo. La evidencia no incluye los hallazgos del revisor ni los registros de los intentos, así que no puedo señalar el defecto concreto. Hay una señal relacionada en el registro de vigilancia de la sesión anterior, «M1 NEEDS_REVIEW restart handoff remains held (SchedulerError)», pero no lo confirma. El código de razón tampoco lo reconoce el sistema.",
+ "steps": [
+  "Ejecuta `bitacora.py --project pictures scheduler-op REQ-020 status` y `scheduler-op REQ-020 decisions` para leer los hallazgos del revisor de cada intento de T15.11.",
+  "Comprueba si el error SchedulerError de M1 sigue activo; si es así, resuélvelo antes de reintentar.",
+  "Si los hallazgos apuntan a un fallo de código o de la lista de verificación, corrígelo en un intento nuevo; si apuntan al plan, usa la vía de revisión de PLAN.json antes de reintentar.",
+  "Reintenta T15.11 con la nota de abajo, ejecutando los seis gates localmente en el commit final antes de tocar origin/main o producción."
+ ],
+ "option": "retry_with_note",
+ "note": "Before finishing, read the reviewer findings from the previous review attempts of T15.11 and fix each one. Run the local gates on the final commit before any push, merge to main or deploy. Do not push, merge or deploy if origin/main has moved from fa101a47.",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-25T11:22:03",
+ "seconds": 17.8
+}
