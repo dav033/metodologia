@@ -64,15 +64,6 @@ th { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercas
 td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
 td:first-child, th:first-child { padding-left: 0; }
-.md { overflow-wrap: anywhere; max-width: 84ch; }
-.md h1 { font-size: 30px; letter-spacing: -.02em; }
-.md h2 { font-size: 20px; margin-top: 30px; }
-.md pre { background: var(--code); padding: 14px 16px; border-radius: var(--radius); overflow-x: auto; }
-.md code { background: var(--code); padding: 1px 6px; border-radius: 6px; font-family: var(--mono); font-size: 13px; }
-.md pre code { padding: 0; background: none; }
-.md table { margin: 10px 0; display: block; overflow-x: auto; }
-.md blockquote { border-left: 3px solid var(--border); margin: 0; padding-left: 14px; color: var(--muted); }
-.md img { max-width: 100%; }
 .tabs { display: flex; gap: 6px; margin: 4px 0 20px; flex-wrap: wrap; }
 .tabs a { padding: 7px 16px; border-radius: 99px; border: 1px solid var(--border); color: var(--muted); font-size: 13.5px; }
 .tabs a:hover { color: var(--text); text-decoration: none; border-color: var(--accent); }

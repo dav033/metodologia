@@ -1,0 +1,31 @@
+/* Rendered markdown documents (.md blocks from bt_pages.md): prose width, code and scrollable tables. */
+.md { overflow-wrap: anywhere; }
+.md > :not(.table-scroll):not(pre) { max-width: 84ch; }
+.md > pre { max-width: 100ch; }
+.md h1 { font-size: 30px; letter-spacing: -.02em; }
+.md h2 { font-size: 20px; margin-top: 30px; }
+.md pre { background: var(--code); padding: 14px 16px; border-radius: var(--radius); overflow-x: auto; }
+.md code { background: var(--code); padding: 1px 6px; border-radius: 6px; font-family: var(--mono); font-size: 13px; }
+.md pre code { padding: 0; background: none; }
+.md .table-scroll { margin: 14px 0 22px; max-width: 84ch; overflow-x: auto; border: 1px solid var(--border);
+  border-radius: var(--radius); background: var(--surface); overscroll-behavior-x: contain; }
+.md .table-scroll.wide { max-width: 100%; }
+.md table { overflow-wrap: normal; word-break: normal; font-size: 13.5px; line-height: 1.5; width: 100%; }
+.md th { white-space: nowrap; padding: 10px 14px; background: var(--mantle); }
+.md td { padding: 10px 14px; min-width: 16ch; max-width: 40ch; }
+.md td.nw { white-space: nowrap; min-width: 0; font-variant-numeric: tabular-nums; }
+.md td:first-child, .md th:first-child { padding-left: 14px; }
+.md .wide td:first-child { min-width: 24ch; font-weight: 600; position: sticky; left: 0; background: inherit;
+  box-shadow: 1px 0 0 var(--border); }
+.md .wide th:first-child { position: sticky; left: 0; z-index: 1; box-shadow: 1px 0 0 var(--border); }
+.md tbody tr { background: var(--surface); }
+.md tbody tr:nth-child(even) { background: color-mix(in srgb, var(--mantle) 45%, var(--surface)); }
+.md tbody tr:hover { background: var(--accent-soft); }
+.md td code { white-space: nowrap; }
+.md blockquote { border-left: 3px solid var(--border); margin: 0; padding-left: 14px; color: var(--muted); }
+.md img { max-width: 100%; }
+@media (max-width: 640px) {
+  .md table { font-size: 13px; }
+  .md td { min-width: 14ch; max-width: 30ch; padding: 9px 12px; }
+  .md .wide td:first-child { min-width: 15ch; max-width: 22ch; }
+}

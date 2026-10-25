@@ -23,7 +23,7 @@ def layout(title: str, body: str, crumbs: list[tuple[str, str]] | None = None) -
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>{e(title)} · Bitácora</title>
 <script src="/static/theme.js"></script>
 <link rel="stylesheet" href="{SHOELACE}/themes/light.css"><link rel="stylesheet" href="{SHOELACE}/themes/dark.css">
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/markdown.css">
 <script type="module" src="{SHOELACE}/shoelace-autoloader.js"></script></head><body>
 <header class="top"><a class="brand" href="/">Bitácora</a><nav>{nav}</nav>
 <nav class="mainnav" aria-label="Secciones"><a href="/plans">Planes</a><a href="/now">Ahora</a><a href="/flow">Flujo</a><a href="/metrics">Métricas</a></nav></header>
