@@ -1,0 +1,23 @@
+{
+ "request": "T15.11:3",
+ "state": "done",
+ "kind": "unknown",
+ "label": "Sin identificar",
+ "tone": "muted",
+ "headline": "T15.11 bloqueada: la revisión pidió cambios y se agotaron los reintentos",
+ "origin": "El motivo `needs_review_retry_exhausted` no es uno que el sistema reconozca. Por la evidencia, T15.11 (catálogo Happia en vivo, release y aceptación desplegada) terminó en NEEDS_REVIEW en cada intento y el revisor no aprobó el trabajo hasta agotar los reintentos. La evidencia no incluye los hallazgos del revisor, así que el defecto concreto no está confirmado. Por el registro del watch (`M1 NEEDS_REVIEW restart handoff remains held (SchedulerError)`), puede haber un problema previo de reinicio del handoff, pero no está verificado que sea la causa.",
+ "steps": [
+  "Leer los hallazgos del revisor de T15.11 en la decisión abierta: `python ~/dev/metodologia/skill/scripts/bitacora.py --project pictures scheduler-op REQ-020 decisions`, y después `scheduler-op REQ-020 status` para ver el intento att-0140.",
+  "Corregir cada hallazgo en el código de `src/lib/asesor/catalogue.ts`, `tools.ts`, `contracts.ts` o `conversation-contract.ts` sin tocar PLAN.json; si el hallazgo exige cambiar un check o un criterio, primero hay que hacer una revisión nueva (raise revision, `plan-json freeze`, `revise`).",
+  "Confirmar en local antes de reintentar: `npx tsx --conditions=react-server --test scripts/test/asesor/catalogue.test.ts` y `npm run asesor:test`.",
+  "En la decisión, elegir `retry_with_note` con la nota de la campo `note` y, si el registro muestra que el reintento vuelve a fallar con el mismo hallazgo, revisar el motivo antes de elegir `stop`."
+ ],
+ "option": "retry_with_note",
+ "note": "Previous attempts ended in NEEDS_REVIEW and exhausted the review retries (needs_review_retry_exhausted). First read the reviewer findings for T15.11 and fix each one in the source files named in the task (catalogue.ts, tools.ts, contracts.ts, conversation-contract.ts). Do not change PLAN.json, checks or criteria. Keep the rules: no cached, seeded or fallback data; no migration or table; Estimate source limited to happia_api, postgres, seeded_last_good; leave /happie, src/lib/happie, packages/happie-package-ia and contracts/domain/v1 untouched. Run the catalogue, packages, directions and asesor:test commands locally before the release steps, and do not print env files or touch ai-api.",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-25T13:09:52",
+ "seconds": 17.2
+}

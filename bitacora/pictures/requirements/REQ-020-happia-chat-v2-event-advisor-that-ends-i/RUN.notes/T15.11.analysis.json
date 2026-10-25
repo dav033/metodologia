@@ -1,0 +1,17 @@
+{
+ "at": "2026-10-25T12:59:32",
+ "cause": "No es un fallo de código del task: las dos verificaciones M1 y M2 (`scripts/e2e/asesor/run.ts --start --fake-model`) ejecutan `scripts/migrate-asesor.ts --test-target` contra `ASESOR_TEST_DATABASE_URL=postgresql://rag:…@127.0.0.1:5432/rag`, y en ambos intentos la conexión fue rechazada (`ECONNREFUSED 127.0.0.1:5432`), así que el run se detiene antes de `npm run start`. El código de la parte 1–2 ya existe (`src/lib/asesor/catalogue.ts` lee `@sempertex/happie-package-ia` y devuelve `happia_api`; `tools.ts` y `contracts.ts` ya usan `seeded_last_good`). `npm run gate` nunca llegó a ejecutarse («M6 not run»), así que sus fallos reales siguen sin verse. La suposición errónea es que el verificador tiene un Postgres disponible en 127.0.0.1:5432; la sandbox de verificación no lo tiene.",
+ "confidence": "media",
+ "failures": 3,
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 31.6,
+ "solution": "1. Antes de tocar código, confirmar en el host donde corre la verificación (solo lectura) si el Postgres `rag` existe y escucha en 5432 (por ejemplo `ss -ltnp | grep 5432` y `docker ps`).\n2. Si no existe, dejar de reintentar: levantar una base desechable (contenedor Postgres con el usuario/base `rag`) en el entorno de verificación, o pedir a quien administra la infraestructura que la provea; no cambiar `run.ts` ni `migrate-asesor.ts` para saltar la migración.\n3. Ejecutar `npm run gate` por separado, con la base disponible, para destapar los fallos ocultos detrás de M6 y corregirlos en código.\n4. Reejecutar M1 y M2 offline con `ASESOR_TEST_DATABASE_URL` apuntando a esa base y registrar la salida completa en el reporte.\n5. Si la base no puede proveerse, marcar M1/M2 offline como bloqueados por entorno en el plan, no como fallo del task.",
+ "source_attempt": "att-0142",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-lwq0086c/source",
+ "source_snapshot": "8e854fdff8e92dc52c1a46fefb224d0bd7f0dd9f",
+ "state": "done",
+ "task": "T15.11"
+}
