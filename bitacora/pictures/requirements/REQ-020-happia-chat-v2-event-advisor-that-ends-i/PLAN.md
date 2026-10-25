@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 29/32 · generado: 2026-10-25T14:46:37-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 29/32 · generado: 2026-10-25T14:46:59-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -58,7 +58,7 @@ created: 2026-10-20
 | T15.7 | Repair package commercial facts, card disclosures and photo-only send | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T15.8 | Install revision-bound release, deployed M1/M2 and live-matrix evidence | alta | completada | sonnet | claude-work | 1 |
 | T15.11 | Read the Happia catalogue live from the API, release it and re-run deployed acceptance | alta | completada | sonnet | claude-work | 4 |
-| T15.9 | Emulated mobile acceptance on both production origins (replaces the physical-phone observations, D-066) | alta | lista | sonnet | claude-work | 3 |
+| T15.9 | Emulated mobile acceptance on both production origins (replaces the physical-phone observations, D-066) | alta | en curso | sonnet | claude-work | 4 |
 <!-- bitacora:status:end -->
 
 ## Approach
