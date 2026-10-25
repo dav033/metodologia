@@ -413,3 +413,10 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** create the two missing tables in production (no code change) — rejected by the owner; single merged cache table — needs code change anyway.
 - **Consequences:** + no schema to keep in sync, always-current catalogue; − every catalogue use costs Happia API calls (paginated packages/services) and adds latency; Happia downtime means no packages until it recovers.
 - **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `1fbc12c7` · REQ-020 · P-187
+
+## D-066 · 2026-10-25 · Emulated mobile acceptance replaces the physical-phone observations in REQ-020
+- **Context:** REQ-020 T15.9 required David's physical-phone observations; the run was 29/32 and stopped only on that input.
+- **Decision:** Owner order ("encárgate de que REQ-020 funcione sin importar qué"): revision 22 turns T15.9 into an emulated mobile acceptance (Playwright, two phone profiles in Chromium, fake media, permission allow/deny/recovery) on both production origins for the T15.11 release; `phone-observations.md` is labelled "Emulated, not physical.". T15/T15b judge phone behavior against it.
+- **Alternatives:** keep waiting for the physical test — rejected by the owner; agent-written "physical" observations — never (fabrication).
+- **Consequences:** + the run can close unattended; − real-device behavior (virtual keyboard, real camera/mic, Safari/WebKit) is not proven: a physical check stays an owner follow-up.
+- **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `1fbc12c7` · REQ-020

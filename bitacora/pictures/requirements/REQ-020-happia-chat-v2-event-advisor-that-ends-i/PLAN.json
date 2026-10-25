@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2.0",
   "plan_id": "REQ-020",
-  "revision": 21,
+  "revision": 22,
   "spec_ref": "SPEC.md",
   "interfaces": [
     {
@@ -2354,7 +2354,7 @@
       "id": "T15",
       "milestone_id": "M4",
       "title": "Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated",
-      "objective": "Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/.",
+      "objective": "Review R1 through R14 against the delivered production behavior and record a task-linked findings ledger and evidence report without changing the implementation. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/. Phone scope note (r22, D-066): 'phone behavior' is judged against the emulated mobile evidence of T15.9 (docs/req-020/mobile-emulated/ and phone-observations.md, labelled emulated); do not report the missing physical-phone check as a defect.",
       "repository": "pictures",
       "after": [
         "T14a",
@@ -2491,7 +2491,7 @@
       "id": "T15b",
       "milestone_id": "M4",
       "title": "Cross-check audit of T15: Full acceptance on production: every R1–R14 check, `/happie` unchanged, report with evidence, bitácora updated",
-      "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/.",
+      "objective": "An independent second audit of the scope of T15. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger. Catalogue scope note (r21): by owner decision 2026-10-25 the advisor reads the Happia catalogue live on each call and returns unavailable on API failure; the SPEC R10 clause 'read at most once a day, with a fallback list' is superseded, so judge R10 against the live read and the T15.11 release evidence in docs/req-020/catalogue-release/. Phone scope note (r22, D-066): 'phone behavior' is judged against the emulated mobile evidence of T15.9 (docs/req-020/mobile-emulated/ and phone-observations.md, labelled emulated); do not report the missing physical-phone check as a defect.",
       "repository": "pictures",
       "after": [
         "T14a",
@@ -4873,8 +4873,8 @@
     {
       "id": "T15.9",
       "milestone_id": "M4",
-      "title": "Install the owner physical-phone observations",
-      "objective": "Copy, unchanged, the owner-supplied physical-phone observations for the revision released by T15.11 (the SHA in docs/req-020/catalogue-release/release.json) from /home/david/bitacora/pictures/artifacts/req020-catalogue-release/phone-observations.md into docs/req-020/phone-observations.md. If the file does not exist or names another revision, stop with status blocked and say that only David can supply it; never write or infer observations. Required observations: login/notices, keyboard, camera/gallery/microphone allow/deny/recovery, media display, same-device reload, a standard package card with its estimated price for a birthday, summary approval/print/admin. No commits or pushes.",
+      "title": "Emulated mobile acceptance on both production origins (replaces the physical-phone observations, D-066)",
+      "objective": "Owner decision D-066 (2026-10-25): the physical-phone check is replaced by an emulated mobile acceptance so the run can close; a physical check stays an owner follow-up outside this run. Write scripts/e2e/asesor/mobile-emulated.ts (Playwright, Chromium already installed; device profiles Pixel 7 and iPhone 14 emulated in Chromium; fake camera/microphone media; grant and deny permissions per context) and scripts/e2e/asesor/check-mobile-emulated.ts (validates the report offline). Run it live against https://demo-decoracion.vercel.app and https://185-147-157-25.sslip.io for the revision in docs/req-020/catalogue-release/release.json, with the E2E passwords from the private env files (never print or store them). Write docs/req-020/mobile-emulated/report.json (schema asesor-mobile-emulated/1: revision, origins, profiles, per-area result and screenshot paths) with screenshots beside it, and docs/req-020/phone-observations.md as a human summary that starts with the line 'Emulated, not physical.' Copy both to /home/david/bitacora/pictures/artifacts/req020-catalogue-release/. Conversations created are test data: name them as such. Do not change product code, deploy, commit or push.",
       "repository": "pictures",
       "after": [
         "T15.11"
@@ -4931,26 +4931,32 @@
         }
       },
       "expected_paths": [
+        "scripts/e2e/asesor/mobile-emulated.ts",
+        "scripts/e2e/asesor/check-mobile-emulated.ts",
+        "docs/req-020/mobile-emulated",
         "docs/req-020/phone-observations.md"
       ],
-      "shared_resources": [],
+      "shared_resources": [
+        "pictures-production-deployment"
+      ],
       "acceptance_criteria": [
-        "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified."
+        "docs/req-020/mobile-emulated/report.json records a passed emulated mobile run with two phone profiles against both production origins for the released revision, covering login and notices, layout with the message input focused, camera, gallery and microphone permission allow, deny and recovery, media display, same-device reload, a birthday standard package card with its estimated price, and summary approval, print view and admin visibility.",
+        "docs/req-020/phone-observations.md states that its observations are emulated and not from a physical phone, names the released revision, and lists every covered area with its result per origin and profile."
       ],
       "verification": [
         {
           "type": "command",
-          "value": "test -s docs/req-020/phone-observations.md",
-          "purpose": "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified.",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-mobile-emulated.ts docs/req-020/mobile-emulated/report.json",
+          "purpose": "docs/req-020/mobile-emulated/report.json records a passed emulated mobile run with two phone profiles against both production origins for the released revision, covering login and notices, layout with the message input focused, camera, gallery and microphone permission allow, deny and recovery, media display, same-device reload, a birthday standard package card with its estimated price, and summary approval, print view and admin visibility.",
           "created_by": "T15.9",
-          "category": "static"
+          "category": "product"
         },
         {
-          "type": "manual",
-          "value": "David performed the physical-phone checks on the released revision and supplied the observations.",
-          "purpose": "docs/req-020/phone-observations.md holds David's revision-bound physical-phone observations, unmodified.",
-          "expected": "Actual owner observations tied to the released revision, covering every listed area; absent or partial evidence must not pass.",
-          "category": "product"
+          "type": "command",
+          "value": "npx tsx --conditions=react-server scripts/e2e/asesor/check-mobile-emulated.ts --observations docs/req-020/phone-observations.md docs/req-020/mobile-emulated/report.json",
+          "purpose": "docs/req-020/phone-observations.md states that its observations are emulated and not from a physical phone, names the released revision, and lists every covered area with its result per origin and profile.",
+          "created_by": "T15.9",
+          "category": "static"
         }
       ],
       "covers": [
@@ -4969,7 +4975,7 @@
         "R13",
         "R14"
       ],
-      "kind": "test"
+      "kind": "implement"
     }
   ]
 }

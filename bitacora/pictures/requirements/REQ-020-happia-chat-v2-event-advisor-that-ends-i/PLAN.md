@@ -6,7 +6,7 @@ created: 2026-10-20
 # Plan — Happia chat v2 event advisor that ends in a brief
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: launched · ejecución: blocked · hitos 3/4 · tareas 29/32 · generado: 2026-10-25T14:44:34-05:00
+> Bloque generado, no editar a mano. Plan: launched · ejecución: running · hitos 3/4 · tareas 29/32 · generado: 2026-10-25T14:46:37-05:00
 
 **M1 — Text conversation to an approved brief, admin watching (Halloween, Thu 29 Oct)** · dificultad alta · 7/7
 
@@ -58,7 +58,7 @@ created: 2026-10-20
 | T15.7 | Repair package commercial facts, card disclosures and photo-only send | alta | completada | gpt-6-luna | codex-luis | 1 |
 | T15.8 | Install revision-bound release, deployed M1/M2 and live-matrix evidence | alta | completada | sonnet | claude-work | 1 |
 | T15.11 | Read the Happia catalogue live from the API, release it and re-run deployed acceptance | alta | completada | sonnet | claude-work | 4 |
-| T15.9 | Install the owner physical-phone observations | alta | bloqueada | sonnet | claude-work | 3 |
+| T15.9 | Emulated mobile acceptance on both production origins (replaces the physical-phone observations, D-066) | alta | lista | sonnet | claude-work | 3 |
 <!-- bitacora:status:end -->
 
 ## Approach
@@ -250,7 +250,7 @@ Acceptance: Undecided customers receive twelve editable photo directions and ver
 - [ ] T15.7 — Repair package commercial facts, card disclosures and photo-only send · repo: pictures · after: T15.6 · verify: `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/package-facts.test.ts`; `npx tsx scripts/e2e/asesor/ui-remediation.ts`; `npx tsc --noEmit`; `npm run build`; `npm run happie:test-webhook` · files: src/lib/asesor, src/components/asesor, scripts/test/asesor/package-facts.test.ts, scripts/test/asesor/ui-remediation.test.ts, scripts/e2e/asesor/ui-remediation.ts · covers: R4, R5, R7, R9, R10, R11 · kind: implement
 - [ ] T15.8 — Install revision-bound release, deployed M1/M2 and live-matrix evidence · repo: pictures · after: T15.7 · verify: `test -s docs/req-020/live-acceptance.md`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json` · files: docs/req-020/integration-results.json, docs/req-020/live-acceptance.md · covers: R1, R2, R3, R7, R9, R10, R11, R13, R14 · kind: test
 - [ ] T15.11 — Read the Happia catalogue live from the API, release it and re-run deployed acceptance · repo: pictures · after: T15.8 · verify: `npx tsx --conditions=react-server --test scripts/test/asesor/catalogue.test.ts`; `npx tsx --conditions=react-server --test scripts/test/asesor/packages.test.ts scripts/test/asesor/directions.test.ts`; `npm run asesor:test`; `npx tsx --conditions=react-server --test scripts/test/asesor/evaluation-remediation.test.ts scripts/test/asesor/package-facts.test.ts scripts/test/asesor/ui-remediation.test.ts`; `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server scripts/eval/asesor/run.ts --fake-model`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2`; `npx tsx --conditions=react-server scripts/e2e/asesor/check-release.ts docs/req-020/catalogue-release --task T15.11`; `npx tsx --conditions=react-server --test scripts/test/asesor/release-bundle.test.ts` · files: src/lib/asesor/catalogue.ts, src/lib/asesor/catalogue-fallback.json, src/lib/asesor/tools.ts, src/lib/asesor/contracts.ts, src/components/asesor/conversation-contract.ts, scripts/test/asesor/catalogue.test.ts, scripts/test/asesor/catalogue-live.ts, scripts/test/asesor/directions.test.ts, scripts/test/asesor/packages.test.ts, scripts/test/asesor/evaluation-remediation.test.ts, scripts/test/asesor/release-bundle.test.ts, scripts/test/asesor/run.ts, scripts/e2e/asesor/scenarios/package.ts, scripts/e2e/asesor/deployed.ts, scripts/e2e/asesor/deployed-report.ts, scripts/e2e/asesor/check-release.ts, docs/req-020/deployment.md, docs/req-020/catalogue-release · resources: advisor-command-contract, pictures-production-deployment · covers: R9, R10, R14 · kind: implement
-- [ ] T15.9 — Install the owner physical-phone observations · repo: pictures · after: T15.11 · verify: `test -s docs/req-020/phone-observations.md` · files: docs/req-020/phone-observations.md · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
+- [ ] T15.9 — Emulated mobile acceptance on both production origins (replaces the physical-phone observations, D-066) · repo: pictures · after: T15.11 · verify: `npx tsx --conditions=react-server scripts/e2e/asesor/check-mobile-emulated.ts docs/req-020/mobile-emulated/report.json`; `npx tsx --conditions=react-server scripts/e2e/asesor/check-mobile-emulated.ts --observations docs/req-020/phone-observations.md docs/req-020/mobile-emulated/report.json` · files: scripts/e2e/asesor/mobile-emulated.ts, scripts/e2e/asesor/check-mobile-emulated.ts, docs/req-020/mobile-emulated, docs/req-020/phone-observations.md · resources: pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: implement
 Acceptance: The full shipped-entry-point flow and protected regressions run with actual outcomes recorded. Read-only final production review traces all R1-R14 and its valid findings ledger contains no open critical/high finding.
 
 - [ ] T14a — Run full advisor entry-point integration and protected happie regression; record outcomes without fixes · repo: pictures · after: T10, T14, T14.1a, T14.2a, T14.3a, T14.4a · verify: `npm run gate`; `npm run happie:test-webhook`; `npm run lint`; `npm run build --workspaces --if-present`; `npx tsc --noEmit`; `npm run build`; `npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --check-results docs/req-020/integration-results.json`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M1`; `ASESOR_TEST_DATABASE_URL=postgresql://rag:rag_local_only_change_me@127.0.0.1:5432/rag npx tsx --conditions=react-server scripts/e2e/asesor/run.ts --start --fake-model --milestone M2` · files: docs/req-020/integration-results.json · resources: advisor-command-contract, pictures-production-deployment · covers: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13, R14 · kind: test
@@ -329,7 +329,14 @@ Publication notes: `created_by` diagnostics are intentional because advisor chec
 
 Deterministic validation: the project plan-json check was run after enrichment and returned exit 0, no errors, and `OK: PLAN.json is publishable`. Planned-verification and manual-acceptance warnings are intentional and are reported in the final classification result. Whitespace validation also passed. These checks validate the planning contract, not application behavior.
 
-## Revision r21 (working draft, 2026-10-25; not approved or frozen)
+## Revision r22 (2026-10-25, owner order D-066)
+
+- **T15.9** no longer waits for David's physical-phone observations: it runs an emulated mobile acceptance (two phone
+  profiles in Chromium, fake camera/microphone, permission allow/deny/recovery) on both production origins for the
+  T15.11 release and writes `phone-observations.md` labelled "Emulated, not physical.". A physical check stays an owner
+  follow-up outside the run. **T15 / T15b** judge phone behavior against that emulated evidence (objective note).
+
+## Revision r21 (2026-10-25)
 
 Owner-requested change for pictures P-187. The advisor's catalogue cache tables were never created in production
 Supabase (T11's `002_catalogue.sql` was lost at integration), so `getHappiaCatalogue` always returned the empty
