@@ -1,0 +1,22 @@
+{
+ "request": "T15.9:3:analyst_not_the_task:1bd795ee1be952ae3b9bf796bd816311c75ac3404853df654d05388478af14ad",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T15.9 bloqueada: falta docs/req-020/phone-observations.md; solo David puede aportarlo",
+ "origin": "La comprobación `test -s docs/req-020/phone-observations.md` sale con exit code 1, así que el archivo no existe o está vacío en la copia limpia. Las observaciones del teléfono físico solo puede hacerlas David, y la verificación manual lo exige; el agente no puede escribirlas ni inferirlas. Los intentos att-0134, att-0135 y att-0136 fallaron igual, y el build de `tsc` no es la causa. Reintentar sin que David aporte el archivo repetirá el mismo fallo.",
+ "steps": [
+  "Comprueba si existe /home/david/bitacora/pictures/artifacts/req020-catalogue-release/phone-observations.md y si nombra el SHA de docs/req-020/catalogue-release/release.json.",
+  "Si no existe o nombra otra revisión, pide a David que haga las comprobaciones físicas en la revisión liberada y entregue sus observaciones.",
+  "Cuando el archivo correcto esté disponible, cópialo sin cambios a docs/req-020/phone-observations.md y reintenta T15.9."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-25T14:44:53",
+ "seconds": 12.7
+}

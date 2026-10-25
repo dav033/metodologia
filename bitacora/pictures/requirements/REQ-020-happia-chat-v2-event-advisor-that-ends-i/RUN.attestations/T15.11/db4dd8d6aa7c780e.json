@@ -1,0 +1,14 @@
+{
+ "at": 1792957438.845,
+ "attempt": "att-0143",
+ "binding": "db4dd8d6aa7c780e5fa14d6aedad1e9d2d3fdc5f618b1e7860043fa7357c5a23",
+ "by": "coordinator",
+ "evidence": "Coordinator checked on 2026-10-25 14:35: GET /api/asesor/login on https://demo-decoracion.vercel.app and https://185-147-157-25.sslip.io both report revision 112ebdc6fcdbab8111b7893dd4501891e35da18a (= origin/main). vercel inspect: dpl_32yQJrhN27xisQGJUrGSgrco8CPr production Ready (current) and previous dpl_4H6wkfEfU2zvJUhyiLwNkfCHK8g5 production Ready (rollback available). On the VPS (ssh advin): /opt/deployments/pictures/current -> releases/112ebdc6..., demo-decoracion:current = demo-decoracion:112ebdc6... and demo-decoracion:rollback image exists (sha256:f789dbd0...), matching release.json.",
+ "evidence_sha256": "5ab22a9f681cff54bb64cfec480fcb1416924a9c06f00c0dc1ee5be4d2bab188",
+ "expected": "Both origins serve the released SHA and both rollback targets exist; a missing rollback target or a different served SHA must not pass.",
+ "purpose": "The verified commit is the production release on Vercel and on the VPS: each origin reports its full SHA, the previous Vercel production deployment and VPS image remain available for rollback, and docs/req-020/catalogue-release/release.json records them without secret values.",
+ "schema": "attestation/1",
+ "seal": "aafc9643deb400b0bca649fc231f16ad63d5006b927cee754995dfcc4498e473",
+ "task": "T15.11",
+ "value": "Coordinator confirms in Vercel (project demo-decoracion) and on the VPS (ssh advin) that production serves the released SHA and that the previous Vercel production deployment and the VPS rollback image recorded in release.json still exist."
+}

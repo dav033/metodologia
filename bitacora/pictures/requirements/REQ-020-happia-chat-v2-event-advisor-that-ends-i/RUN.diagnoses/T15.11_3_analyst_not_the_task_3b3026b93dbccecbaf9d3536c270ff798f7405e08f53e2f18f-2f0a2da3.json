@@ -1,0 +1,23 @@
+{
+ "request": "T15.11:3:analyst_not_the_task:3b3026b93dbccecbaf9d3536c270ff798f7405e08f53e2f18f7f43703c4e257e",
+ "state": "done",
+ "kind": "unknown",
+ "label": "Sin identificar",
+ "tone": "muted",
+ "headline": "T15.11 quedó bloqueada por un motivo que el sistema no reconoce",
+ "origin": "El sistema registró «analyst_not_the_task:3b3026b93dbccecbaf9d3536c270ff798f7405e08f53e2f18f7f43703c4e257e»: el analista concluyó que el bloqueo no es un fallo de la tarea, pero no lo describe. La evidencia no trae el texto de error ni la salida del verificador, y está recortada, así que no puedo identificar la causa concreta. Según la bitácora de metodologia (2026-10-25), T15.11 ya había sido bloqueada 3 veces; la primera fue un ECONNREFUSED 39 s antes de que arrancara Postgres, y el arreglo M6 `9cd574ade` solo corrige la clave de evidencia `flaky`.",
+ "steps": [
+  "Revisar la decisión del analista: `python /home/david/dev/metodologia/skill/scripts/bitacora.py --project pictures scheduler-op REQ-020 status` y luego `... scheduler-op REQ-020 decisions`, y guardar la salida completa.",
+  "Comprobar que el scheduler usa el código con el arreglo: `git -C /home/david/dev/metodologia log --oneline | grep 9cd574ade`. Si no aparece, actualizar metodologia antes de reintentar.",
+  "Reintentar T15.11 con `scheduler-op REQ-020 decide <id> retry --reason \"reintento tras bloqueo analyst_not_the_task; sin cambios en el código\"`, usando el id de la decisión pendiente.",
+  "Si vuelve a bloquearse con el mismo código, parar y revisar el JSON completo del verificador en busca de un comando rechazado (un solo comando con |, ;, $, backticks o && omite todas las comprobaciones de la tarea)."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-25T14:21:24",
+ "seconds": 19.8
+}

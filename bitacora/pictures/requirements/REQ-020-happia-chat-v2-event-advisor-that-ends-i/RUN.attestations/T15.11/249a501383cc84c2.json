@@ -1,0 +1,14 @@
+{
+ "at": 1792957438.275,
+ "attempt": "att-0143",
+ "binding": "249a501383cc84c2de29c66efc47a9e431d4b9e284a8fbd661b70de8117cf14c",
+ "by": "coordinator",
+ "evidence": "Coordinator re-ran both from the release tree (112ebdc6; att-0142 worktree, scripts/src identical) with the private env files on 2026-10-25 14:30-14:40: catalogue-live.ts printed 'Happia catalogue available: 18 packages, 57 services'; run.ts --live --deployed --milestone M3 --revision 112ebdc6 against https://demo-decoracion.vercel.app and https://185-147-157-25.sslip.io printed 'Deployed M3 passed' on both (birthday request received a live package card with an estimate sourced from happia_api). The recorded outcomes in docs/req-020/catalogue-release (bitacora artifacts req020-catalogue-release) match.",
+ "evidence_sha256": "0c63fcdcd14ef97813fdd0479c860b699665f318634f32953079e98673d3afd5",
+ "expected": "catalogue-live.json shows status available with at least one package and the deployed M3 reports passed on both origins for the released SHA; a failed, missing or hand-written run must not pass.",
+ "purpose": "A live read against the real Happia API returns status available with at least one package, and a live advisor conversation for a birthday that matches a live package receives a standard package card with an available estimate sourced from happia_api on both production origins.",
+ "schema": "attestation/1",
+ "seal": "73903333cdedd1ed29b69145e7fc24f951351b134fca25e99e290795a72b299a",
+ "task": "T15.11",
+ "value": "Coordinator confirms that scripts/test/asesor/catalogue-live.ts and scripts/e2e/asesor/run.ts --live --deployed --milestone M3 ran against the real Happia API and both production origins with the private env files, and that the recorded outcomes match the run output."
+}

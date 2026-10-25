@@ -13,6 +13,14 @@
    "attempt": "",
    "task": "T15.10"
   },
+  "T15.11:3b3026b93dbccecbaf9d3536c270ff798f7405e08f53e2f18f7f43703c4e257e": {
+   "attempt": "",
+   "task": "T15.11"
+  },
+  "T15.9:1bd795ee1be952ae3b9bf796bd816311c75ac3404853df654d05388478af14ad": {
+   "attempt": "",
+   "task": "T15.9"
+  },
   "T15:0c9855683845c8b413ef4b1df631418ebcc5ac2af50d792fc6f7b4152eae33e5": {
    "attempt": "att-0130",
    "task": "T15"
@@ -265,6 +273,25 @@
    "task_added": "T14.5a",
    "why": "the same failure came back after its repair"
   },
+  "516c1bcd0b42bbb5": {
+   "applied": 0,
+   "class": "environment",
+   "evidence": [
+    "environment signature: ECONNREFUSED",
+    "reason code: needs_review"
+   ],
+   "first_at": 1792957430.146,
+   "history": [
+    {
+     "at": 1792957430.147,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "516c1bcd0b42bbb5",
+   "status": "unrepairable",
+   "task": "T15.11"
+  },
   "54a8b9dd7c8277a6": {
    "applied": 1,
    "at": 1792725977.527,
@@ -370,6 +397,24 @@
    "status": "exhausted",
    "task": "T15",
    "why": "T15 already had 3 automatic plan repairs"
+  },
+  "7cb76b146f2532fb": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: No es un fallo de código del task: las dos verificaciones M1 y M2 (`scripts/e2e/asesor/run.ts --start --fake-model`) ejecutan `scripts/migrate-asesor.ts --test-target` contra `ASESOR_TEST_DATABASE_URL"
+   ],
+   "first_at": 1792956064.478,
+   "history": [
+    {
+     "at": 1792956064.483,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "7cb76b146f2532fb",
+   "status": "unrepairable",
+   "task": "T15.11"
   },
   "7d4157a8dee10d43": {
    "after_restored": [
@@ -515,10 +560,11 @@
    ],
    "repair": "plan r20: repair task T15.10 before T15.9",
    "revision": 20,
-   "status": "applied",
+   "status": "exhausted",
    "target": "T15.9",
    "task": "T15.9",
-   "task_added": "T15.10"
+   "task_added": "T15.10",
+   "why": "the same failure came back after its repair"
   },
   "df992683abe3b355": {
    "applied": 0,
