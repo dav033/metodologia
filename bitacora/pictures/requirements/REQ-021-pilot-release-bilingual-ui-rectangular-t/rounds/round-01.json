@@ -78,7 +78,28 @@
    "why": "Casi todos los textos están escritos en español en el código (unos 300 archivos de interfaz); traducirlo todo no cabe en tres semanas junto al resto."
   }
  ],
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T17:11:07Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "c",
+   "note": "Real EXTERNAL users (role usuario) plus internal employees and administrators. Three initial roles: usuario, empleado interno, administrador."
+  },
+  "q2": {
+   "text": "Accepted as proposed (owner: «me parece»): Must = accounts with administrators and roles, AI spend per user with cap, save projects and decorations, rectangular tables, export to Blender. Should = English, editable modules/quartets, backing. Later = 3D space from photo, vector export for Illustrator."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Roles empleado interno and administrador see the token/spend dashboard: total tokens spent in the session, spend on image generation, etc. Mainly for the 3D balloons (Taller). The assisted chat is either another requirement or not useful right now."
+  },
+  "q4": {
+   "text": "Backing is a catalogue category for party props: utilería, metal hoops, pedestals, round panel, half moon, chiara arches. Everything of that kind goes under one category called Backing."
+  },
+  "q5": {
+   "choice": "b",
+   "note": "Owner: the language can be switched (ideally auto-detected) between English and Spanish, and EVERYTHING changes: how the AI talks, the products, the interface."
+  }
+ },
+ "created_at": "2026-10-26T17:11:07Z",
+ "answered_at": "2026-10-26T17:21:15Z",
+ "answered_via": "terminal"
 }
