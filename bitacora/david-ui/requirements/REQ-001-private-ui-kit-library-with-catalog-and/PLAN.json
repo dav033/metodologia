@@ -1,0 +1,1061 @@
+{
+ "schema_version": "1.3.0",
+ "plan_id": "REQ-001",
+ "revision": 1,
+ "spec_ref": "SPEC.md",
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Package foundation: monorepo, identity and publishing",
+   "acceptance_criteria": [
+    "The public monorepo passes npm run verify, the package publishes to GitHub Packages from a merged changeset, and a fresh Next 16 + Tailwind 4 app installs it and builds with the kit theme."
+   ]
+  },
+  {
+   "id": "M2",
+   "title": "30 P1 shadcn components with their Animate UI enhancements",
+   "acceptance_criteria": [
+    "All 30 P1 entries and 15 related enhancements have a final recorded result and the validated ones pass their unit and browser checks."
+   ]
+  },
+  {
+   "id": "M3",
+   "title": "Public catalog on Vercel built with the package",
+   "acceptance_criteria": [
+    "The catalog, built only from the package, is publicly reachable on Vercel with every R9 capability for the entries delivered so far."
+   ]
+  },
+  {
+   "id": "M4",
+   "title": "P2 components, remaining enhancements and Animate UI capabilities",
+   "acceptance_criteria": [
+    "The 12 P2 entries, 7 capabilities and remaining enhancements have a final result and appear in the package and the catalog."
+   ]
+  },
+  {
+   "id": "M5",
+   "title": "Bencho UI (12)",
+   "acceptance_criteria": [
+    "The 12 Bencho entries have a final result and origin, satisfy R12, and appear in the package and the catalog."
+   ]
+  },
+  {
+   "id": "M6",
+   "title": "React Bits Free (32)",
+   "acceptance_criteria": [
+    "The 32 React Bits entries have a final result through the chosen route, with no copied React Bits code in the repository."
+   ]
+  },
+  {
+   "id": "M7",
+   "title": "Agent index and final acceptance",
+   "acceptance_criteria": [
+    "The package and catalog expose the complete agent index and every validated entry installs and builds in a fresh app."
+   ]
+  }
+ ],
+ "requirements": [
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "R5",
+  "R6",
+  "R7",
+  "R8",
+  "R9",
+  "R10",
+  "R11",
+  "R12",
+  "R13",
+  "R14",
+  "R15",
+  "R16",
+  "R17",
+  "R18"
+ ],
+ "tasks": [
+  {
+   "id": "T1",
+   "milestone_id": "M1",
+   "title": "Create the public repository dav033/david-ui with a root commit and scaffold the npm-workspaces monorepo toolchain",
+   "objective": "A public GitHub repository and local checkout hold an npm-workspaces monorepo whose package builds with tsc, whose Next 16 catalog renders an export of the workspace package, and whose toolchain, scripts, CI and compatibility validator every later task relies on.",
+   "repository": "app",
+   "after": [],
+   "complexity": "high",
+   "scope": "large_change",
+   "estimated_minutes": 270,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional engineering estimate in minutes: 40 repository and remote creation + 130 workspace scaffold, tool configuration, CI and README + 50 compatibility validator with fixtures + 50 boot smoke, e2e spec and own checks = 270. History for kind implement returned status unknown with no comparable samples; no empirical calibration is claimed.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Wiring npm workspaces so a Next 16 catalog consumes the tsc-compiled package, while lint, typecheck, Vitest and Playwright all work inside the read-only verifier sandbox, needs cross-tool reasoning; high because every later task inherits these choices.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SPEC.md#constraints",
+      "command:npm view next version -> 16.4.3 (React 19.3.1, @base-ui/react 1.9.0 on the registry)"
+     ]
+    },
+    "scope": {
+     "justification": "T1 declares about 26 expected paths across the root, packages/ui, apps/catalog, CI and scripts, a large transversal change rather than one feature.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "duration": {
+     "justification": "T1 allocates 40 remote creation + 130 scaffold and configuration + 50 validator + 50 smoke and checks, totaling 270 minutes; history has no comparable implement samples, so this breakdown is provisional.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind implement -> status unknown, no comparable samples",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "risk": {
+     "justification": "The repository is public from its first push, so a leaked secret or a wrongly licensed file is exposed for good, and a broken toolchain blocks every later verification.",
+     "evidence": [
+      "command:gh repo view dav033/david-ui -> could not resolve to a repository (absent, checked 2026-10-26)",
+      "spec:SPEC.md#constraints",
+      "precedent:D-003"
+     ]
+    },
+    "coupling": {
+     "justification": "Every later task runs the root scripts, workspace layout and test configuration this scaffold defines; the named coordination boundary is contract:toolchain.",
+     "evidence": [
+      "spec:SPEC.md#priorities-phases",
+      "precedent:D-003"
+     ]
+    },
+    "confidence": {
+     "justification": "The toolchain versions and the authenticated GitHub CLI were confirmed by commands and a Next 16 flat-config precedent exists, but no monorepo of this shape was built yet, hence medium.",
+     "evidence": [
+      "command:gh auth status -> logged in as dav033 with repo and workflow token scopes",
+      "command:node -p process.version -> v24.21.0 (npm 11.19.0)",
+      "command:ls /home/david/dev/dav033-demos -> eslint.config.mjs, next.config.ts and package-lock.json present (Next 16 flat-config precedent)",
+      "precedent:REQ-001"
+     ]
+    }
+   },
+   "expected_paths": [
+    "package.json",
+    "package-lock.json",
+    ".gitignore",
+    ".node-version",
+    "tsconfig.base.json",
+    "eslint.config.mjs",
+    "vitest.config.mts",
+    "playwright.config.ts",
+    "README.md",
+    ".github/workflows/ci.yml",
+    "packages/ui/package.json",
+    "packages/ui/tsconfig.json",
+    "packages/ui/tsconfig.build.json",
+    "packages/ui/src/kit-info.ts",
+    "packages/ui/src/kit-info.test.ts",
+    "apps/catalog/package.json",
+    "apps/catalog/tsconfig.json",
+    "apps/catalog/next.config.ts",
+    "apps/catalog/src/app/layout.tsx",
+    "apps/catalog/src/app/page.tsx",
+    "apps/catalog/src/app/api/health/route.ts",
+    "apps/catalog/src/app/api/health/route.test.ts",
+    "e2e/health.spec.ts",
+    "scripts/boot-smoke.mjs",
+    "scripts/check-compat.mjs",
+    "scripts/check-compat.test.mjs"
+   ],
+   "shared_resources": [
+    "contract:toolchain",
+    "remote:github:dav033/david-ui"
+   ],
+   "acceptance_criteria": [
+    "ESLint flat config lints the package, the catalog and the scripts with zero errors.",
+    "TypeScript strict type-checks the package and the catalog, including the Next route types.",
+    "Vitest runs the package and catalog unit tests with its cache directory outside node_modules.",
+    "The compatibility validator rejects a matrix with a missing source, a wrong enhancement or capability count, a ranged version, a non-HTTPS license URL, a copy route on a source whose redistribution verdict is not allowed, or a missing or duplicated notification engine, and accepts a complete fixture.",
+    "The root build compiles the package with tsc to per-file ESM with declarations and then builds the catalog with next build against it.",
+    "The catalog production server starts on a free loopback port and its health route answers 200 with the kit name exported by the workspace package.",
+    "The Playwright health spec passes in Chromium against the catalog production server."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run lint",
+     "purpose": "ESLint flat config lints the package, the catalog and the scripts with zero errors.",
+     "category": "static",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "npm run typecheck",
+     "purpose": "TypeScript strict type-checks the package and the catalog, including the Next route types.",
+     "category": "static",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "npm run test",
+     "purpose": "Vitest runs the package and catalog unit tests with its cache directory outside node_modules.",
+     "category": "functional",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "node --test scripts/check-compat.test.mjs",
+     "purpose": "The compatibility validator rejects a matrix with a missing source, a wrong enhancement or capability count, a ranged version, a non-HTTPS license URL, a copy route on a source whose redistribution verdict is not allowed, or a missing or duplicated notification engine, and accepts a complete fixture.",
+     "category": "functional",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "npm run build",
+     "purpose": "The root build compiles the package with tsc to per-file ESM with declarations and then builds the catalog with next build against it.",
+     "category": "static",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "node scripts/boot-smoke.mjs",
+     "purpose": "The catalog production server starts on a free loopback port and its health route answers 200 with the kit name exported by the workspace package.",
+     "category": "integration",
+     "created_by": "T1"
+    },
+    {
+     "type": "command",
+     "value": "npm run test:e2e",
+     "purpose": "The Playwright health spec passes in Chromium against the catalog production server.",
+     "category": "functional",
+     "created_by": "T1"
+    }
+   ],
+   "covers": [
+    "R1"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T2",
+   "milestone_id": "M1",
+   "title": "License and compatibility spike: per-source redistribution verdicts, 22 enhancement and 7 capability routes on Base UI, notification engine and pinned versions",
+   "objective": "A tracked matrix gives every source a primary-source license and a public-redistribution verdict, every Animate UI enhancement and capability a Base UI route, the kit one notification engine and every dependency an exact version, before any code is adopted.",
+   "repository": "app",
+   "after": [
+    "T1"
+   ],
+   "complexity": "high",
+   "scope": "small_change",
+   "estimated_minutes": 240,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "low",
+   "estimate_rationale": "Provisional research estimate in minutes: 90 primary-source license reading for four sources and the Bencho blocks + 100 Animate UI Base UI variant and install probes for 22 enhancements and 7 capabilities + 20 notification-engine comparison + 30 version matrix and validation = 240. History for kind research returned status unknown; confidence is low because upstream availability of Base UI variants is unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Judging redistribution rights for a public package and finding a Base UI route for 29 Animate UI pieces needs reading licenses and probing installs with relevant uncertainty.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "spec:SOURCE-INVENTORY.md#4-las-22-mejoras-identificadas-con-animate-ui"
+     ]
+    },
+    "scope": {
+     "justification": "The spike writes one tracked matrix and one narrative report and changes no product code, a small change in size.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T1"
+     ]
+    },
+    "duration": {
+     "justification": "The spike budgets 90 license reading + 100 variant probes + 20 engine comparison + 30 matrix assembly, totaling 240 minutes; research history has no comparable samples.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind research -> status unknown, no comparable samples",
+      "spec:SOURCE-INVENTORY.md#5-siete-capacidades-adicionales-de-animate-ui"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong redistribution verdict would let copied code with a forbidding license land in a repository that stays public, which cannot be undone once pushed.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "precedent:D-003"
+     ]
+    },
+    "coupling": {
+     "justification": "Pinned versions, the T3 dependency check, the T4 license register and every later component route read this matrix through contract:upstream-compat.",
+     "evidence": [
+      "task:T3",
+      "task:T4"
+     ]
+    },
+    "confidence": {
+     "justification": "Whether Animate UI ships Base UI variants for each piece and what each Bencho block license says are still unknown, so the estimate rests on preliminary evidence only.",
+     "evidence": [
+      "assumption:Bencho block licenses are unknown until read",
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind research -> status unknown, no comparable samples"
+     ]
+    }
+   },
+   "expected_paths": [
+    "packages/ui/compat.json",
+    ".evidence/T2-spike.md"
+   ],
+   "shared_resources": [
+    "contract:upstream-compat"
+   ],
+   "acceptance_criteria": [
+    "The tracked compatibility matrix records the four source licenses with primary-source URLs and public-redistribution verdicts, the 22 enhancement routes, the 7 capability routes, exact pinned versions and one notification-engine ruling."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run check:compat",
+     "purpose": "The tracked compatibility matrix records the four source licenses with primary-source URLs and public-redistribution verdicts, the 22 enhancement routes, the 7 capability routes, exact pinned versions and one notification-engine ruling.",
+     "category": "static",
+     "created_by": "T1"
+    }
+   ],
+   "covers": [
+    "R2",
+    "R10",
+    "R11"
+   ],
+   "kind": "research",
+   "subplan_id": "SP-1"
+  },
+  {
+   "id": "T3",
+   "milestone_id": "M1",
+   "title": "Install the pinned dependency set ruled by the spike and add the dependency drift check",
+   "objective": "The root, packages/ui and apps/catalog manifests and the lockfile carry exactly the dependencies and versions the matrix pins, and a check fails on any drift, so later component tasks never edit dependency files.",
+   "repository": "app",
+   "after": [
+    "T2"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 90,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional engineering estimate in minutes: 35 installing the pinned set across three workspace manifests + 35 drift checker with fixtures + 20 build confirmation = 90. History for kind implement returned status unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Placing each pinned dependency in the right workspace manifest and comparing declared, locked and installed versions needs some decisions but follows the matrix.",
+     "evidence": [
+      "task:T2",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "scope": {
+     "justification": "Three package manifests, the lockfile and one checker with its test is a small change around dependency files.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "task:T1"
+     ]
+    },
+    "duration": {
+     "justification": "The install budgets 35 pinned installation + 35 drift checker with fixtures + 20 build confirmation, totaling 90 minutes without comparable history.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind implement -> status unknown, no comparable samples",
+      "task:T2"
+     ]
+    },
+    "risk": {
+     "justification": "A version conflict between React 19, Next 16, Base UI and Motion surfaces as a functional regression in every later component task.",
+     "evidence": [
+      "command:npm view next version -> 16.4.3 (React 19.3.1, @base-ui/react 1.9.0 on the registry)",
+      "spec:SPEC.md#edge-cases-errors"
+     ]
+    },
+    "coupling": {
+     "justification": "Every later task imports from the installed set, so contract:dependency-set is tightly shared and edited only here.",
+     "evidence": [
+      "task:T4",
+      "task:T5"
+     ]
+    },
+    "confidence": {
+     "justification": "Registry versions were confirmed by npm view and the matrix will name exact pins, but the final package list depends on the spike, hence medium.",
+     "evidence": [
+      "command:npm view next version -> 16.4.3 (React 19.3.1, @base-ui/react 1.9.0 on the registry)",
+      "task:T2"
+     ]
+    }
+   },
+   "expected_paths": [
+    "package.json",
+    "packages/ui/package.json",
+    "apps/catalog/package.json",
+    "package-lock.json",
+    "scripts/check-deps.mjs",
+    "scripts/check-deps.test.mjs"
+   ],
+   "shared_resources": [
+    "contract:dependency-set"
+   ],
+   "acceptance_criteria": [
+    "The dependency check fails on a missing, unlisted or ranged package and on an installed version that differs from the matrix, and passes on a matching fixture.",
+    "Every dependency declared by the root, package and catalog manifests is installed at the exact version the compatibility matrix pins.",
+    "The root build still succeeds with the full pinned dependency set installed."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "node --test scripts/check-deps.test.mjs",
+     "purpose": "The dependency check fails on a missing, unlisted or ranged package and on an installed version that differs from the matrix, and passes on a matching fixture.",
+     "category": "functional",
+     "created_by": "T3"
+    },
+    {
+     "type": "command",
+     "value": "npm run check:deps",
+     "purpose": "Every dependency declared by the root, package and catalog manifests is installed at the exact version the compatibility matrix pins.",
+     "category": "static",
+     "created_by": "T3"
+    },
+    {
+     "type": "command",
+     "value": "npm run build",
+     "purpose": "The root build still succeeds with the full pinned dependency set installed.",
+     "category": "regression",
+     "created_by": "T1"
+    }
+   ],
+   "covers": [
+    "R2",
+    "R10",
+    "R11"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T4",
+   "milestone_id": "M1",
+   "title": "Catalog manifest with one file per entry, license register and catalog:check with exact inventory counts",
+   "objective": "The package carries one validated manifest of the 93 inventory entries and 22 linked enhancements, one file per entry, plus a license register consistent with the matrix, and catalog:check enforces counts, status, metadata and license rules.",
+   "repository": "app",
+   "after": [
+    "T3"
+   ],
+   "complexity": "high",
+   "scope": "full_feature",
+   "estimated_minutes": 240,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional engineering estimate in minutes: 60 zod schema and loader + 70 seeding 93 entry files and 22 enhancement files from the inventory + 30 license register + 80 check rules with tests = 240. History for kind implement returned status unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Encoding every R5 field, the status semantics, clean-room provenance and exact per-category counts as fail-closed rules needs cross-checking the inventory and the SPEC.",
+     "evidence": [
+      "spec:SPEC.md#status-semantics",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "The manifest, its loader export, the register and the check form a feature verifiable end to end through catalog:check.",
+     "evidence": [
+      "spec:SPEC.md#scope-in",
+      "task:T3"
+     ]
+    },
+    "duration": {
+     "justification": "The manifest budgets 60 schema and loader + 70 seeding + 30 register + 80 rule tests, totaling 240 minutes without comparable history.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind implement -> status unknown, no comparable samples",
+      "spec:SOURCE-INVENTORY.md#2-resumen-numérico"
+     ]
+    },
+    "risk": {
+     "justification": "A miscounted or loosely validated manifest lets entries be double-counted or silently dropped, a functional regression for every family milestone.",
+     "evidence": [
+      "spec:SPEC.md#scope-in",
+      "spec:SPEC.md#status-semantics"
+     ]
+    },
+    "coupling": {
+     "justification": "Every component, catalog and agent-index task reads or updates manifest entry files through contract:catalog-manifest.",
+     "evidence": [
+      "task:T2",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "confidence": {
+     "justification": "The inventory counts and naming rules are written down, but the loader export and per-entry layout are new for this monorepo, hence medium.",
+     "evidence": [
+      "precedent:REQ-001",
+      "spec:SOURCE-INVENTORY.md#2-resumen-numérico"
+     ]
+    }
+   },
+   "expected_paths": [
+    "packages/ui/package.json",
+    "packages/ui/src/manifest/schema.ts",
+    "packages/ui/src/manifest/load.ts",
+    "packages/ui/src/manifest/index.ts",
+    "packages/ui/src/manifest/check.ts",
+    "packages/ui/src/manifest/check.test.ts",
+    "packages/ui/src/manifest/export.test.ts",
+    "packages/ui/scripts/catalog-check.ts",
+    "packages/ui/manifest/licenses.json"
+   ],
+   "shared_resources": [
+    "contract:catalog-manifest"
+   ],
+   "acceptance_criteria": [
+    "The catalog check accepts the seeded manifest with exactly 42 shadcn (30 P1, 12 P2), 7 capability, 12 Bencho (6 new-capability, 6 variant) and 32 React Bits (9 text, 12 ui, 6 effects, 5 backgrounds) inventory entries plus 22 linked enhancements, counting catalog-driven and own additions separately.",
+    "Manifest tests reject a wrong count, a duplicate id, an enhancement without its base entry, an implemented or validated entry missing required metadata or demo, a clean-room entry without consulted URL, date and license note, a blocked or discarded entry without a reason, a copied file without its upstream license header, a register source that disagrees with the compatibility matrix, and a pending entry in final mode.",
+    "The built package exports the manifest loader at @dav033/david-ui/manifest and it returns the 93 inventory entries and 22 enhancements to a Node consumer."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run catalog:check",
+     "purpose": "The catalog check accepts the seeded manifest with exactly 42 shadcn (30 P1, 12 P2), 7 capability, 12 Bencho (6 new-capability, 6 variant) and 32 React Bits (9 text, 12 ui, 6 effects, 5 backgrounds) inventory entries plus 22 linked enhancements, counting catalog-driven and own additions separately.",
+     "category": "static",
+     "created_by": "T4"
+    },
+    {
+     "type": "command",
+     "value": "npx vitest run packages/ui/src/manifest/check.test.ts",
+     "purpose": "Manifest tests reject a wrong count, a duplicate id, an enhancement without its base entry, an implemented or validated entry missing required metadata or demo, a clean-room entry without consulted URL, date and license note, a blocked or discarded entry without a reason, a copied file without its upstream license header, a register source that disagrees with the compatibility matrix, and a pending entry in final mode.",
+     "category": "functional",
+     "created_by": "T4"
+    },
+    {
+     "type": "command",
+     "value": "npx vitest run packages/ui/src/manifest/export.test.ts",
+     "purpose": "The built package exports the manifest loader at @dav033/david-ui/manifest and it returns the 93 inventory entries and 22 enhancements to a Node consumer.",
+     "category": "integration",
+     "created_by": "T4"
+    }
+   ],
+   "covers": [
+    "R5",
+    "R10"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T5",
+   "milestone_id": "M1",
+   "title": "Kit-only guard check:kit-only over apps/catalog",
+   "objective": "check:kit-only fails when catalog source imports primitive or animation libraries directly, reaches into the package source or renders raw interactive elements, and passes on catalog code built from package components.",
+   "repository": "app",
+   "after": [
+    "T3"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 150,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional engineering estimate in minutes: 70 TypeScript AST scanner for imports, re-exports and JSX + 50 planted-violation and allowed fixtures + 30 clean-tree run and wiring = 150. History for kind implement returned status unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Detecting forbidden imports, re-exports through local modules and raw interactive JSX with the TypeScript AST needs investigation of edge forms, not only text matching.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "precedent:REQ-001"
+     ]
+    },
+    "scope": {
+     "justification": "One scanner script with its fixtures and test is a small change limited to the guard.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T1"
+     ]
+    },
+    "duration": {
+     "justification": "The guard budgets 70 AST scanner + 50 fixtures + 30 clean-tree run, totaling 150 minutes without comparable history.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind implement -> status unknown, no comparable samples",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "risk": {
+     "justification": "A guard with gaps lets the catalog bypass the package unnoticed, a functional regression of R4 rather than a security or data loss.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "precedent:D-003"
+     ]
+    },
+    "coupling": {
+     "justification": "Every catalog task must pass this guard, so contract:kit-only-guard needs coordination, and the forbidden list reads the package dependencies that T3 installs.",
+     "evidence": [
+      "task:T3",
+      "task:T6"
+     ]
+    },
+    "confidence": {
+     "justification": "A previous REQ-001 revision built a guard that missed motion and @animate-ui imports, a known failure mode, but the new monorepo layout is untested, hence medium.",
+     "evidence": [
+      "precedent:REQ-001",
+      "precedent:D-002"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/check-kit-only.ts",
+    "scripts/check-kit-only.test.ts",
+    "scripts/fixtures/kit-only/violations/imports.tsx",
+    "scripts/fixtures/kit-only/violations/deep-import.tsx",
+    "scripts/fixtures/kit-only/violations/reexport-module.ts",
+    "scripts/fixtures/kit-only/violations/reexport-consumer.tsx",
+    "scripts/fixtures/kit-only/violations/raw-elements.tsx",
+    "scripts/fixtures/kit-only/allowed/kit-usage.tsx"
+   ],
+   "shared_resources": [
+    "contract:kit-only-guard"
+   ],
+   "acceptance_criteria": [
+    "The kit-only check passes on the current apps/catalog source tree and skips generated output.",
+    "Guard fixtures reject direct imports of the package's runtime dependencies and of framer-motion, @radix-ui, radix-ui and @animate-ui, deep imports into packages/ui/src, a local module that re-exports a forbidden library, and raw button, input, select, textarea, dialog and button-styled anchor elements, while accepting kit component usage."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run check:kit-only",
+     "purpose": "The kit-only check passes on the current apps/catalog source tree and skips generated output.",
+     "category": "static",
+     "created_by": "T5"
+    },
+    {
+     "type": "command",
+     "value": "npx vitest run scripts/check-kit-only.test.ts",
+     "purpose": "Guard fixtures reject direct imports of the package's runtime dependencies and of framer-motion, @radix-ui, radix-ui and @animate-ui, deep imports into packages/ui/src, a local module that re-exports a forbidden library, and raw button, input, select, textarea, dialog and button-styled anchor elements, while accepting kit component usage.",
+     "category": "functional",
+     "created_by": "T5"
+    }
+   ],
+   "covers": [
+    "R4"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T6",
+   "milestone_id": "M1",
+   "title": "SP-1 integration: clean-copy npm ci, npm run verify and the catalog server on the integrated tree",
+   "objective": "The integrated SP-1 tree installs from its lockfile on a clean copy, passes the whole verify pipeline and serves the catalog health route from the workspace package, and the public remote shows the same commit green in CI.",
+   "repository": "app",
+   "after": [
+    "T4",
+    "T5"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional test estimate in minutes: 25 clean-copy harness + 20 running verify and the e2e spec + 15 remote attestation and evidence = 60. History for kind test returned status unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "The test copies the tree, installs and runs established scripts and one server start, a known localized procedure.",
+     "evidence": [
+      "task:T1",
+      "task:T4"
+     ]
+    },
+    "scope": {
+     "justification": "One harness script and one evidence file make the integration test a small change.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "task:T5"
+     ]
+    },
+    "duration": {
+     "justification": "The integration test budgets 25 harness + 20 verify and e2e + 15 remote attestation, totaling 60 minutes without comparable history.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T1"
+     ]
+    },
+    "risk": {
+     "justification": "A false pass here would let SP-2 and SP-3 build on a monorepo that does not install from a clean clone, a shared-contract regression.",
+     "evidence": [
+      "spec:SPEC.md#scope-in",
+      "task:T3"
+     ]
+    },
+    "coupling": {
+     "justification": "The test exercises contract:toolchain together with the dependency, manifest and guard contracts on one tree.",
+     "evidence": [
+      "task:T3",
+      "task:T4"
+     ]
+    },
+    "confidence": {
+     "justification": "The commands are defined by earlier tasks, but npm ci over the network inside the verifier sandbox is unproven for this workspace layout, hence medium.",
+     "evidence": [
+      "command:node -p process.version -> v24.21.0 (npm 11.19.0)",
+      "assumption:the verifier sandbox reaches the npm registry over the shared host network"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/clean-clone-smoke.mjs",
+    ".evidence/SP-1.integration.json"
+   ],
+   "shared_resources": [
+    "contract:toolchain",
+    "remote:github:dav033/david-ui"
+   ],
+   "acceptance_criteria": [
+    "On a clean copy of the integrated SP-1 tree, npm ci and npm run verify pass and the catalog production server answers its health route with the kit name exported by the workspace package.",
+    "The Playwright health spec passes on the integrated SP-1 tree.",
+    "The public repository dav033/david-ui holds the integrated SP-1 main commit and the CI run of npm run verify on that commit succeeded."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "node scripts/clean-clone-smoke.mjs",
+     "purpose": "On a clean copy of the integrated SP-1 tree, npm ci and npm run verify pass and the catalog production server answers its health route with the kit name exported by the workspace package.",
+     "category": "integration",
+     "created_by": "T6"
+    },
+    {
+     "type": "command",
+     "value": "npm run test:e2e",
+     "purpose": "The Playwright health spec passes on the integrated SP-1 tree.",
+     "category": "regression",
+     "created_by": "T1"
+    },
+    {
+     "type": "manual",
+     "value": "Run gh repo view dav033/david-ui --json visibility, git -C /home/david/dev/david-ui rev-parse main, git -C /home/david/dev/david-ui ls-remote origin main and gh run list -R dav033/david-ui --workflow ci.yml --branch main --limit 1 --json headSha,conclusion.",
+     "purpose": "The public repository dav033/david-ui holds the integrated SP-1 main commit and the CI run of npm run verify on that commit succeeded.",
+     "category": "product",
+     "expected": "Visibility is PUBLIC, the remote main SHA equals the local main SHA, and the latest ci.yml run on main has that headSha and conclusion success.",
+     "environment": "human_attestation"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R4",
+    "R5",
+    "R10",
+    "R11"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-1"
+  },
+  {
+   "id": "T7",
+   "milestone_id": "M1",
+   "title": "SP-1 audit: public repository, toolchain, license verdicts, dependency pins, manifest and kit-only guard",
+   "objective": "An independent read-only review confirms SP-1 against R1, R2, R4, R5, R10 and R11 and records every confirmed defect, with the task that must redo it, in a blocking findings ledger.",
+   "repository": "app",
+   "after": [
+    "T6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 120,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Provisional audit estimate in minutes: 40 license verdicts and matrix against primary sources + 30 manifest counts and rules against the inventory + 25 guard and toolchain review + 25 ledger and report = 120. History for kind audit returned status unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "The audit re-reads license texts and compares manifest rules with the inventory, which needs judgement but no new design.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T2"
+     ]
+    },
+    "scope": {
+     "justification": "The audit writes one report and one findings ledger and changes nothing else in the repository.",
+     "evidence": [
+      "task:T6",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "duration": {
+     "justification": "The audit budgets 40 licenses + 30 manifest + 25 guard and toolchain + 25 ledger, totaling 120 minutes without comparable history.",
+     "evidence": [
+      "command:python3 /home/david/dev/metodologia/skill/scripts/bitacora.py --project david-ui plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T4"
+     ]
+    },
+    "risk": {
+     "justification": "A missed wrong license verdict propagates to every family subplan that copies upstream code into the public repository.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "precedent:D-003"
+     ]
+    },
+    "coupling": {
+     "justification": "The audit reads every SP-1 contract and writes ledger:SP-1, which can send T1 to T5 back for rework.",
+     "evidence": [
+      "task:T5",
+      "task:T6"
+     ]
+    },
+    "confidence": {
+     "justification": "The review surface is bounded by five produced contracts with explicit checks, so the estimate rests on partial but concrete evidence.",
+     "evidence": [
+      "task:T6",
+      "precedent:REQ-001"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/SP-1.audit.md",
+    ".evidence/SP-1.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-1"
+   ],
+   "acceptance_criteria": [
+    "The SP-1 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/SP-1.findings.json",
+     "purpose": "The SP-1 findings ledger conforms to audit-findings/1, names only plan tasks and has no open critical or high finding.",
+     "category": "product"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R4",
+    "R5",
+    "R10",
+    "R11"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-1"
+  }
+ ],
+ "interfaces": [],
+ "subplans": [
+  {
+   "id": "SP-1",
+   "milestone_id": "M1",
+   "title": "Public monorepo, toolchain, license and compatibility ruling, manifest and kit-only guard",
+   "outcome": "A fresh clone of the public repo installs, builds and passes verify; every source has a license and compatibility route; the 93-entry manifest validates; the kit-only guard rejects violations.",
+   "covers": [
+    "R1",
+    "R2",
+    "R4",
+    "R5",
+    "R10",
+    "R11"
+   ],
+   "acceptance_criteria": [
+    "On a clean copy of the integrated SP-1 tree, npm ci and npm run verify pass and the catalog production server answers its health route with the kit name exported by the workspace package.",
+    "The tracked compatibility matrix records the four source licenses with primary-source URLs and public-redistribution verdicts, the 22 enhancement routes, the 7 capability routes, exact pinned versions and one notification-engine ruling.",
+    "Every dependency declared by the root, package and catalog manifests is installed at the exact version the compatibility matrix pins.",
+    "The catalog check accepts the seeded manifest with exactly 42 shadcn (30 P1, 12 P2), 7 capability, 12 Bencho (6 new-capability, 6 variant) and 32 React Bits (9 text, 12 ui, 6 effects, 5 backgrounds) inventory entries plus 22 linked enhancements, counting catalog-driven and own additions separately.",
+    "Guard fixtures reject direct imports of the package's runtime dependencies and of framer-motion, @radix-ui, radix-ui and @animate-ui, deep imports into packages/ui/src, a local module that re-exports a forbidden library, and raw button, input, select, textarea, dialog and button-styled anchor elements, while accepting kit component usage."
+   ],
+   "produces": [
+    {
+     "contract": "toolchain",
+     "version": 1,
+     "defined_by": "T1"
+    },
+    {
+     "contract": "upstream-compat",
+     "version": 1,
+     "defined_by": "T2"
+    },
+    {
+     "contract": "dependency-set",
+     "version": 1,
+     "defined_by": "T3"
+    },
+    {
+     "contract": "catalog-manifest",
+     "version": 1,
+     "defined_by": "T4"
+    },
+    {
+     "contract": "kit-only-guard",
+     "version": 1,
+     "defined_by": "T5"
+    }
+   ],
+   "integration_test_task": "T6",
+   "audit_task": "T7"
+  },
+  {
+   "id": "SP-2",
+   "milestone_id": "M1",
+   "title": "Visual identity: tokens, Catppuccin theme and motion profiles",
+   "outcome": "The package exports theme.css with Catppuccin Latte/Mocha tokens and providers for theme and the three motion profiles, with reduced motion overriding any profile.",
+   "covers": [
+    "R3",
+    "R8",
+    "R18"
+   ],
+   "acceptance_criteria": [
+    "The package exports theme.css with Catppuccin Latte/Mocha tokens and providers for theme and the three motion profiles, with reduced motion overriding any profile."
+   ],
+   "ui": {
+    "contract": "kit-identity",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-3",
+   "milestone_id": "M1",
+   "title": "Package build, release to GitHub Packages and consumption from a fresh app",
+   "outcome": "Changesets plus a GitHub Actions workflow publish @dav033/david-ui to GitHub Packages, and a fresh Next 16 + Tailwind 4 app installs it with a read token and builds styled.",
+   "covers": [
+    "R15",
+    "R17",
+    "R18"
+   ],
+   "acceptance_criteria": [
+    "Changesets plus a GitHub Actions workflow publish @dav033/david-ui to GitHub Packages, and a fresh Next 16 + Tailwind 4 app installs it with a read token and builds styled."
+   ]
+  },
+  {
+   "id": "SP-4",
+   "milestone_id": "M2",
+   "title": "30 P1 components with their 15 Animate UI enhancements",
+   "outcome": "The essential shadcn components work on Base UI with kit tokens and motion, each with a final status and tests.",
+   "covers": [
+    "R2",
+    "R3",
+    "R6",
+    "R7",
+    "R8",
+    "R11"
+   ],
+   "acceptance_criteria": [
+    "The essential shadcn components work on Base UI with kit tokens and motion, each with a final status and tests."
+   ],
+   "ui": {
+    "contract": "p1-components",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-5",
+   "milestone_id": "M3",
+   "title": "Public catalog built with the package",
+   "outcome": "A public, read-only catalog with filters, search, entry pages, states, theme, viewport and motion switches, gaps page, /llms.txt and /index.json, built only from the package.",
+   "covers": [
+    "R4",
+    "R9",
+    "R14",
+    "R15"
+   ],
+   "acceptance_criteria": [
+    "A public, read-only catalog with filters, search, entry pages, states, theme, viewport and motion switches, gaps page, /llms.txt and /index.json, built only from the package."
+   ],
+   "ui": {
+    "contract": "catalog-app",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-6",
+   "milestone_id": "M3",
+   "title": "Catalog deployment on Vercel",
+   "outcome": "The catalog deploys to Vercel from the GitHub repository (root apps/catalog) and a read-only smoke passes on the production URL.",
+   "covers": [
+    "R14",
+    "R16"
+   ],
+   "acceptance_criteria": [
+    "The catalog deploys to Vercel from the GitHub repository (root apps/catalog) and a read-only smoke passes on the production URL."
+   ]
+  },
+  {
+   "id": "SP-7",
+   "milestone_id": "M4",
+   "title": "12 P2 components, remaining enhancements and 7 Animate UI capabilities",
+   "outcome": "P2 entries, capabilities and remaining enhancements delivered in the package and shown in the catalog.",
+   "covers": [
+    "R2",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+   ],
+   "acceptance_criteria": [
+    "P2 entries, capabilities and remaining enhancements delivered in the package and shown in the catalog."
+   ],
+   "ui": {
+    "contract": "p2-capabilities",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-8",
+   "milestone_id": "M5",
+   "title": "12 Bencho entries, clean-room where the license is unclear",
+   "outcome": "Bencho entries delivered in the package and the catalog with one value model per overlap (R12).",
+   "covers": [
+    "R6",
+    "R7",
+    "R9",
+    "R10",
+    "R11",
+    "R12"
+   ],
+   "acceptance_criteria": [
+    "Bencho entries delivered in the package and the catalog with one value model per overlap (R12)."
+   ],
+   "ui": {
+    "contract": "bencho-components",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-9",
+   "milestone_id": "M6",
+   "title": "32 React Bits Free entries: clean-room or exclusion",
+   "outcome": "React Bits entries reach a final result through the route chosen with the owner; effects meet R13; no copied code in the public repo.",
+   "covers": [
+    "R3",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10",
+    "R12",
+    "R13"
+   ],
+   "acceptance_criteria": [
+    "React Bits entries reach a final result through the route chosen with the owner; effects meet R13; no copied code in the public repo."
+   ],
+   "ui": {
+    "contract": "reactbits-components",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-10",
+   "milestone_id": "M7",
+   "title": "Complete agent index and final acceptance",
+   "outcome": "AGENTS.md, llms.txt and /index.json list every entry; the acceptance script installs the latest version and builds every validated entry in a fresh app.",
+   "covers": [
+    "R6",
+    "R15",
+    "R16"
+   ],
+   "acceptance_criteria": [
+    "AGENTS.md, llms.txt and /index.json list every entry; the acceptance script installs the latest version and builds every validated entry in a fresh app."
+   ]
+  }
+ ],
+ "composition_gates": []
+}

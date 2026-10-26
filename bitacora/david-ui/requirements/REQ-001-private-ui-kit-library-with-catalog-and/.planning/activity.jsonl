@@ -9,3 +9,21 @@
 {"at": "2026-10-26T06:49:33-05:00", "who": "Planner", "kind": "plan", "sp": "SP-9", "text": "Quitó el subplan SP-9", "diff": ""}
 {"at": "2026-10-26T07:03:29-05:00", "who": "Planner", "kind": "flow", "sp": "", "text": "Planificación conjunta: primero las preguntas iniciales", "diff": ""}
 {"at": "2026-10-26T08:57:56-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 25 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Nuevo subplan SP-1: Public monorepo, toolchain, license and compatibility ruling, manifest and kit-only guard", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Nuevo subplan SP-2: Visual identity: tokens, Catppuccin theme and motion profiles", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Nuevo subplan SP-3: Package build, release to GitHub Packages and consumption from a fresh app", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-4", "text": "Nuevo subplan SP-4: 30 P1 components with their 15 Animate UI enhancements", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-5", "text": "Nuevo subplan SP-5: Public catalog built with the package", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-6", "text": "Nuevo subplan SP-6: Catalog deployment on Vercel", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-7", "text": "Nuevo subplan SP-7: 12 P2 components, remaining enhancements and 7 Animate UI capabilities", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-8", "text": "Nuevo subplan SP-8: 12 Bencho entries, clean-room where the license is unclear", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-9", "text": "Nuevo subplan SP-9: 32 React Bits Free entries: clean-room or exclusion", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "plan", "sp": "SP-10", "text": "Nuevo subplan SP-10: Complete agent index and final acceptance", "diff": ""}
+{"at": "2026-10-26T09:14:16-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M1 — Package foundation: monorepo, identity and publishing», «M2 — 30 P1 shadcn components with their Animate UI enhancements» y 5 más cambió", "diff": ""}
+{"at": "2026-10-26T09:16:15-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 61 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T09:17:51-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Confirmaste el esqueleto (10 subplanes); empezamos por SP-1", "diff": ""}
+{"at": "2026-10-26T09:28:34-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (criterios, tareas)", "diff": "+ On a clean copy of the integrated SP-1 tree, npm ci and npm run verify pass and the catalog production server answers its health route with the kit name exported by the workspace package."}
+{"at": "2026-10-26T09:28:34-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Package foundation: monorepo, identity and publishing» cambió", "diff": ""}
+{"at": "2026-10-26T09:28:58-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Package foundation: monorepo, identity and publishing» cambió", "diff": ""}
+{"at": "2026-10-26T09:30:49-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 19 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T11:51:06-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}

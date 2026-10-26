@@ -1,0 +1,151 @@
+{
+  "req_id": "REQ-020",
+  "project": "pictures",
+  "req_dir": "pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i",
+  "deleted_at": "2026-10-26T16:54:46+00:00",
+  "by": "owner via session d05f524b",
+  "reason": "owner: already done, plan shown as blocked",
+  "artifacts": [
+    "PLAN.md",
+    "PLAN.json",
+    "plan-revisions",
+    "RUN.projection.json"
+  ],
+  "files": [
+    {
+      "path": "PLAN.md",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/PLAN.md",
+      "sha256": "2ab0d3d517f497d3d3134c00964cede606e6d71effb15d0f0119f72ab8ea345d"
+    },
+    {
+      "path": "PLAN.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/PLAN.json",
+      "sha256": "54228aa2d39bc503045b489426114d0caf39b07beb285e1e5707104d68737be6"
+    },
+    {
+      "path": "plan-revisions/MANIFEST.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/MANIFEST.json",
+      "sha256": "a7c06682358ceab857dc04e2f31da3f33d23bd932c4a747b9fab97334da02a46"
+    },
+    {
+      "path": "plan-revisions/PLAN.r1.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r1.json",
+      "sha256": "97a52654cd3142311ef694d4fd9feed80cdcacd896a4d5f639e15e63da15ded3"
+    },
+    {
+      "path": "plan-revisions/PLAN.r10.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r10.json",
+      "sha256": "6207beb57922b1d2fe41f321ad73940b16f3742695269df9edb045960cfacb7e"
+    },
+    {
+      "path": "plan-revisions/PLAN.r11.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r11.json",
+      "sha256": "c0d6871b30ef4b8e55db8fc5fcd994267c35ead9a8d31c48b935c712b2fac359"
+    },
+    {
+      "path": "plan-revisions/PLAN.r12.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r12.json",
+      "sha256": "49ee2f58409530ad886550af90c7b3bba0ba8c8bf5d6695aa086d4f9bafaa7f2"
+    },
+    {
+      "path": "plan-revisions/PLAN.r13.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r13.json",
+      "sha256": "0f4dfdd2516d705f3d08808ed602f805e036f3a9d4afd9db97b0a9a7b6b50821"
+    },
+    {
+      "path": "plan-revisions/PLAN.r14.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r14.json",
+      "sha256": "e207dcf55c5e06de32bd925f2fd9dafac125c1089918f42dd08d02ee2680b14c"
+    },
+    {
+      "path": "plan-revisions/PLAN.r15.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r15.json",
+      "sha256": "e03a0d58fb1190932d0868ab7adad1cc626a1c05478beb177e01c55933498b2b"
+    },
+    {
+      "path": "plan-revisions/PLAN.r16.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r16.json",
+      "sha256": "b865538f53223bd49d2b48c39f2f77d1d4ff6794fcaa298c330841c5d7c90bdc"
+    },
+    {
+      "path": "plan-revisions/PLAN.r17.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r17.json",
+      "sha256": "4ec16c0962cf586a831e5459bb45891635d11431148dbd84c10fa2ee87b2c67c"
+    },
+    {
+      "path": "plan-revisions/PLAN.r18.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r18.json",
+      "sha256": "7db6a18d875da6a91460441d577c9dac3d4b706409f1dcc2d24297eec88258f9"
+    },
+    {
+      "path": "plan-revisions/PLAN.r19.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r19.json",
+      "sha256": "ded4da1a4471503151601dd8698008848020a631841f471baeb1e986e1e126dd"
+    },
+    {
+      "path": "plan-revisions/PLAN.r2.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r2.json",
+      "sha256": "486350319755c1d4628a7db00ea872d3bf83d3cf3627fb90acbd02adaac48c72"
+    },
+    {
+      "path": "plan-revisions/PLAN.r20.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r20.json",
+      "sha256": "b5284785898fcaa3fd32cf48a820b7c72c1a935ca55d5d2abecb6c1f3ae1f4e8"
+    },
+    {
+      "path": "plan-revisions/PLAN.r21.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r21.json",
+      "sha256": "97a4d87683e4a1b287e6213a2bf6963e290fc099b9a1080c64212943621f74d7"
+    },
+    {
+      "path": "plan-revisions/PLAN.r22.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r22.json",
+      "sha256": "54228aa2d39bc503045b489426114d0caf39b07beb285e1e5707104d68737be6"
+    },
+    {
+      "path": "plan-revisions/PLAN.r3.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r3.json",
+      "sha256": "9ebf9bb2d4e574786a65aeccfd351cde164d2b3e0ffe0e8868c0628d7d8163f7"
+    },
+    {
+      "path": "plan-revisions/PLAN.r4.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r4.json",
+      "sha256": "cef044665d553dc3f570b6895f3c3d82be6988edec3bab15d246e68d459428bd"
+    },
+    {
+      "path": "plan-revisions/PLAN.r5.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r5.json",
+      "sha256": "2b7a4a3327bf9b8e0cc2f2fc83a9ce7ad504a2a1daac293eb00fb7649972b083"
+    },
+    {
+      "path": "plan-revisions/PLAN.r6.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r6.json",
+      "sha256": "a03b8f36d75b203059281a4f8cf80bc6ba309c9464b803ff558b74a3bd1e165f"
+    },
+    {
+      "path": "plan-revisions/PLAN.r7.integration-candidate.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r7.integration-candidate.json",
+      "sha256": "0dcb367360f0721463da01b6af9dfe8ae1bfc588ad7ce7396327a92bdcd29bb8"
+    },
+    {
+      "path": "plan-revisions/PLAN.r7.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r7.json",
+      "sha256": "41392f2206e4b478bf10f84728b5998697c2e18370a2f883423f6827bb7e6e96"
+    },
+    {
+      "path": "plan-revisions/PLAN.r8.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r8.json",
+      "sha256": "157ea8b81f794bdf62758eaac364813b5766a6e04cb4bceab09316c9e9122331"
+    },
+    {
+      "path": "plan-revisions/PLAN.r9.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/plan-revisions/PLAN.r9.json",
+      "sha256": "33fd6c3158b0ce7bf3a1a535cd69ecccc2ce4fa5476e646e1fef549fe0672853"
+    },
+    {
+      "path": "RUN.projection.json",
+      "original": "/home/david/dev/metodologia/bitacora/pictures/requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/RUN.projection.json",
+      "sha256": "3e9574b0bca920415d1c20de20347cfc3f8b4399db69932d6e9a04287e80618f"
+    }
+  ]
+}

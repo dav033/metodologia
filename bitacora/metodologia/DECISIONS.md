@@ -1183,3 +1183,16 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - \+ Fewer wasted Designer runs (one subplan at a time); the owner closes each slice with its design and credentials before moving on; execution cannot stop for an input that was never asked.
   - − More owner interactions (one confirmation per subplan); a plan edit after confirmation reopens that subplan.
 - **Source:** owner, 2026-10-26 (session 0976796f): questions answered «Tablero de esqueleto», «Confirmar cada subplan», «Credenciales en cada subplan», «Designer en el subplan en foco»
+
+## D-131 — Each finished subplan is tried and approved by the owner; the plan is not done until all are
+
+- **Date:** 2026-10-26 · **Status:** Accepted · **Refines:** D-130
+- **Decision:** The run does not pause at the end of a subplan, but a plan with subplans cannot be closed until the owner has tried and approved each one on its own. The Planner writes SPEC `## Pruebas` per subplan (where: local, production, external; how; what to see) and a subplan cannot be confirmed without it. The engine's published subplan version (immutable commit) is exposed in `RUN.projection.json` (`subplans`); the owner is notified and sees it in the Plan tab → Probar, the run card and the «Ahora» strip, opens exactly that commit in a worktree outside the repos (`bitacora.py verify open`), and approves or rejects it. Decisions live in `<req>/.verification/decisions.json`, pinned to the version and commit; a newer version makes them outdated. The review merge refuses while any subplan is not approved. Revert is shown as a command plus the subplans that depend on it; nothing reverts by itself.
+- **Consequences:**
+  - \+ The owner verifies slices independently and can still test each one after the plan is finished; nothing ships unseen.
+  - \+ Built on the engine's existing subplan versions: no change to the Scheduler state machine.
+  - − More owner interactions (one approval per subplan); a rejection keeps the requirement open, records the note and files a PENDING item (no automatic corrective task yet).
+  - − Only runs enrolled for it are gated (collaborative flow or SPEC `## Pruebas`, and a projection that reports `subplans`); runs planned earlier are never gated, even if resumed. Once seen the gate is persisted in the ledger (`gated`) so a projection written without subplans or a PLAN.json caught mid-edit cannot open it.
+  - − `verify approve|reject --by owner` is honor-system like `planning confirm`: an agent must pass it only when the owner said so; the web is the real owner channel.
+- **Source:** owner, 2026-10-26 (session d05f524b); implemented manually, not as a bitácora requirement.
+
