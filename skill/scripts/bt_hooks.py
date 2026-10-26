@@ -148,6 +148,11 @@ def hook_stop(harness: str = "claude") -> None:
         return
     from bt_continuation import save_checkpoint
     save_checkpoint(ROOT, project, sid)
+    try:  # planning-time Designer and translation follow the conversation even with no web page open
+        import bt_design_drafts
+        bt_design_drafts.follow_project(ROOT, project)
+    except Exception:  # noqa: BLE001, S110 - the hook must never trap a session on its own error
+        pass
     try:
         import bt_plan_gate
         held = bt_plan_gate.hold_reason(ROOT, project, sid)
@@ -186,6 +191,11 @@ def hook_end() -> None:
         return
     from bt_continuation import save_checkpoint
     save_checkpoint(ROOT, project, sid)
+    try:  # planning-time Designer and translation follow the conversation even with no web page open
+        import bt_design_drafts
+        bt_design_drafts.follow_project(ROOT, project)
+    except Exception:  # noqa: BLE001, S110 - the hook must never trap a session on its own error
+        pass
     pdir = ROOT / project
     day = day_paths(pdir, today())["day"]
     if day.exists() and sid and not _restricted_execution():

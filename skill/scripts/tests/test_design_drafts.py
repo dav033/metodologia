@@ -25,6 +25,9 @@ PLAN = {"subplans": [
               {"id": "T3", "title": "Build checkout", "subplan_id": "SP-2", "kind": "implement", "ui": True}]}
 
 
+CONTRACT = "# Checkout contract\n" + "".join(f"## {i}. Section\nText {i}.\n" for i in range(1, 13))
+
+
 class DraftTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -58,7 +61,7 @@ class DraftTests(unittest.TestCase):
         self.orders.append(order)
         return order
 
-    def finish(self, did: str, contract: str = "# Checkout contract\n") -> None:
+    def finish(self, did: str, contract: str = CONTRACT) -> None:
         md, html = drafts.paths(self.rdir, "checkout@v1")
         md.write_text(contract, encoding="utf-8")
         html.write_text("<!doctype html><p>Mockup</p>", encoding="utf-8")
@@ -81,7 +84,7 @@ class DraftTests(unittest.TestCase):
         self.assertEqual(row["status"], "ready")
         self.assertEqual(row["questions"], ["Which payment providers?"])
         self.assertTrue(row["mockup"])
-        self.assertEqual(row["sha256"], hashlib.sha256(b"# Checkout contract\n").hexdigest())
+        self.assertEqual(row["sha256"], hashlib.sha256(CONTRACT.encode()).hexdigest())
 
     def test_session_without_contract_fails_visibly(self):
         drafts.request("demo", self.rdir)
@@ -117,7 +120,7 @@ class DraftTests(unittest.TestCase):
         self.assertEqual(drafts.pin_for_plan(self.rdir), ["checkout@v1"])
         record = approval.approvals(self.rdir)["checkout@v1"]
         self.assertEqual((record["status"], record["via"]), ("approved", "plan"))
-        self.assertEqual(record["sha256"], hashlib.sha256(b"# Checkout contract\n").hexdigest())
+        self.assertEqual(record["sha256"], hashlib.sha256(CONTRACT.encode()).hexdigest())
         self.assertIn("Planning draft:", drafts.execution_notes(self.rdir, "checkout@v1"))
         self.assertIn("ya fue aprobado", drafts.add_feedback("demo", self.rdir, "checkout@v1", "more", "web"))
 
@@ -145,6 +148,72 @@ class DraftTests(unittest.TestCase):
         self.assertEqual(drafts.sync("demo", self.rdir), [])  # backoff: no relaunch on every poll
         with self.assertRaises(SystemExit):
             drafts.pin_for_plan(self.rdir)
+
+    def test_stop_hook_follows_only_requirements_still_being_planned(self):
+        root = self.rdir.parent.parent.parent
+        self.assertEqual(drafts.follow_project(root, "demo"), [])  # planning-time design never started: no-op
+        drafts.request("demo", self.rdir)
+        self.finish("D-1")
+        drafts.add_feedback("demo", self.rdir, "checkout@v1", "Bigger pay button", "web")  # starts D-2 itself
+        self.outcomes["D-2"] = {"id": "D-2", "status": "running_or_pending"}
+        plan = self.rdir / "PLAN.md"
+        plan.write_text(plan.read_text(encoding="utf-8").replace("status: review", "status: approved"), encoding="utf-8")
+        self.assertEqual(drafts.follow_project(root, "demo"), [])  # approved plans are left alone
+
+    def test_incomplete_contract_is_not_ready(self):
+        drafts.request("demo", self.rdir)
+        self.finish("D-1", contract="# Checkout\n## Only one section\n")
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual(row["status"], "failed")
+        self.assertIn("fewer than", row["error"])
+
+    def test_repeated_failures_stop_automatic_relaunches_until_the_owner_asks(self):
+        drafts.request("demo", self.rdir)
+        drafts.add_feedback("demo", self.rdir, "checkout@v1", "Add Apple Pay", "web")
+        for did in ("D-1",):
+            self.outcomes[did] = {"id": did, "status": "failed", "summary": "boom"}
+        drafts.rows(self.rdir)
+        with drafts._locked(self.rdir) as data:  # two more failures already happened, long ago
+            data["drafts"]["checkout@v1"].update({"failures": drafts.MAX_FAILURES, "finished": "2000-01-01T00:00:00+00:00"})
+        self.assertEqual(drafts.sync("demo", self.rdir), [])
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], force=True, reason="web"), ["checkout@v1"])
+
+    def test_nothing_starts_once_the_plan_left_planning(self):
+        plan = self.rdir / "PLAN.md"
+        plan.write_text(plan.read_text(encoding="utf-8").replace("status: review", "status: launched"), encoding="utf-8")
+        self.assertEqual(drafts.request("demo", self.rdir), [])
+        self.assertIn("ya no está en planificación", drafts.add_feedback("demo", self.rdir, "checkout@v1", "x", "web"))
+        self.assertFalse(drafts.active(self.rdir))
+
+    def test_pinned_copy_is_what_the_run_uses_and_drift_after_approval_shows(self):
+        drafts.request("demo", self.rdir)
+        self.finish("D-1")
+        drafts.pin_for_plan(self.rdir)
+        drafts.paths(self.rdir, "checkout@v1")[0].write_text("tampered", encoding="utf-8")
+        notes = drafts.execution_notes(self.rdir, "checkout@v1")
+        self.assertIn("history/checkout@v1/approved.md", notes)
+        changed = json.loads(json.dumps(PLAN))
+        changed["subplans"][1]["outcome"] = "Pays twice."
+        self.write_plan(changed)
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["stale"]), ("approved", True))
+
+    def test_unparsable_plan_json_logs_no_phantom_changes(self):
+        import bt_planning_activity as activity
+        activity.observe(self.rdir)
+        (self.rdir / "PLAN.json").write_text("{ broken", encoding="utf-8")
+        self.assertEqual(activity.observe(self.rdir), 0)
+        self.write_plan(PLAN)
+        self.assertEqual(activity.observe(self.rdir), 0)
+        self.assertEqual(activity.events(self.rdir), [])
+
+    def test_view_options_reject_odd_input_and_markdown_cannot_break_out(self):
+        import bt_pages
+        opts = bt_page_planning.options(self.rdir, {"rev": "²", "sp": "<x>", "filter": "evil", "mode": "x"})
+        self.assertEqual((opts["rev"], opts["sp"], opts["filter"], opts["mode"]), (0, "", "", "subplans"))
+        block = bt_pages.md("b", "<!--<script>x</script>")
+        self.assertNotIn("<!--", block)
+        self.assertEqual(block.count("</script>"), 1)
 
     def test_unknown_contract_is_refused_and_does_not_enable_planning_design(self):
         self.assertIn("no es un subplan", drafts.add_feedback("demo", self.rdir, "../x@v1", "hi", "web"))

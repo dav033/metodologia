@@ -43,7 +43,7 @@ def inline(text: str) -> str:
 
 
 def md(block_id: str, text: str) -> str:
-    payload = json.dumps(text).replace("</", "<\\/")
+    payload = json.dumps(text).replace("</", "<\\/").replace("<!--", "<\\u0021--")  # nothing ends or hides the block
     return (f'<div class="md" id="{block_id}"></div>'
             f'<script type="application/json" class="md-src" data-target="{block_id}">{payload}</script>')
 

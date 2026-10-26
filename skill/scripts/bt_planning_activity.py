@@ -128,6 +128,9 @@ def observe(rdir: Path) -> int:
         old = snapshot(rdir)
         if old.get("stamp") == stamp:
             return 0
+        import bt_design_drafts
+        if (Path(rdir) / "PLAN.json").is_file() and not bt_design_drafts._plan(rdir):
+            return 0  # PLAN.json mid-edit (unparsable): wait, or every subplan would look removed and re-added
         plan = Path(rdir) / "PLAN.md"
         text = plan.read_text(encoding="utf-8") if plan.is_file() else ""
         subplans, sections = _subplan_view(rdir), dict(headings(text))

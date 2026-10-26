@@ -86,6 +86,8 @@
     var nav = ev.target.closest('a[data-nav]');
     if (nav && root.contains(nav) && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && ev.button === 0) {
       ev.preventDefault();
+      var inDialog = nav.closest('dialog');
+      if (inDialog) inDialog.close();
       go(nav.href, true);
       return;
     }

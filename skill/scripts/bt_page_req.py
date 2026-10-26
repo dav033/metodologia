@@ -39,8 +39,9 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", q: 
     elif tab == "plan":
         import bt_design_drafts
         import bt_page_planning
+        legacy = not bt_design_drafts.active(rdir) or not bt_design_drafts.planning(rdir)  # the run's contract panel
         content = (bt_page_planning.plan_tab(project, rid, rdir, plan_status, token, q or {}) +
-                   ("" if bt_design_drafts.active(rdir) else design_panel(project, rid, rdir, token))) \
+                   (design_panel(project, rid, rdir, token) if legacy else "")) \
             if plan.exists() else '<p class="muted">Todavía no hay plan.</p>'
     elif tab == "review":
         from bt_page_review import review_panel

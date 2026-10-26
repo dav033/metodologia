@@ -26,6 +26,9 @@ STALE_GRACE_SEC = 15 * 60  # a delegation that never wrote its outcome is declar
 QUEUED_TTL_SEC = 10 * 60  # a draft queued by a process that died before starting the Designer
 FAIL_BACKOFF_SEC = 10 * 60  # a failed draft is not retried by `sync` sooner (no account, usage limits)
 MAX_AUTO_RUNS = 8         # redesigns `sync` may start per contract on its own; explicit requests are not capped
+MAX_FAILURES = 3          # consecutive failures after which only an explicit request starts the Designer again
+MIN_SECTIONS = 10         # a contract has twelve `##` sections; fewer means the Designer did not finish it
+PLANNING = ("draft", "clarifying", "ready", "planned", "review", "changes-requested", "?")
 ACTIVE = ("queued", "drafting")
 _REF = re.compile(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}\Z")
 
@@ -147,6 +150,8 @@ def _settle(rdir: Path, ref: str, entry: dict) -> None:
         outcome = bt_delegate.summary(did)
     except SystemExit:
         outcome = {"status": "failed", "summary": "delegation record is missing"}
+    except (OSError, ValueError):  # OUTCOME.json being written right now: settle on the next read
+        return
     if outcome.get("status") == "running_or_pending":
         started = dt.datetime.fromisoformat(entry.get("started") or _now()).timestamp()
         if time.time() - started < TIMEOUT_MIN * 60 + STALE_GRACE_SEC:
@@ -161,6 +166,10 @@ def _settle(rdir: Path, ref: str, entry: dict) -> None:
     md, html = paths(rdir, ref)
     # a redesign must rewrite the contract: an untouched previous draft is not this session's result
     written = md.is_file() and md.stat().st_size > 0 and _sha(md) != entry.get("before")
+    if written and sum(1 for line in md.read_text(encoding="utf-8", errors="replace").splitlines()
+                       if line.startswith("## ")) < MIN_SECTIONS:
+        written, outcome = False, {**outcome, "status": "incomplete",
+                                   "summary": f"the contract has fewer than {MIN_SECTIONS} sections"}
     entry["finished"] = _now()
     entry["summary"] = str(outcome.get("summary") or "")[:600]
     entry["questions"] = [line.strip()[2:].strip() for line in str(report.get("notes") or "").splitlines()
@@ -172,12 +181,14 @@ def _settle(rdir: Path, ref: str, entry: dict) -> None:
         entry["error"] = ""  # `partial` here usually means "draft, not approved yet": that is the planning state
         entry["report"] = outcome.get("status")
         entry["revision"] = int(entry.get("revision") or 0) + 1
+        entry["failures"] = 0
         _archive(rdir, ref, entry["revision"])
         entry.setdefault("history", []).append({"rev": entry["revision"], "at": entry["finished"],
                                                 "summary": entry["summary"]})
         _event(rdir, "Designer", f"{ref} · borrador {entry['revision']} listo", entry)
     else:
         entry["status"] = "failed"
+        entry["failures"] = int(entry.get("failures") or 0) + 1
         entry["error"] = f"{outcome.get('status')}: {entry['summary'] or 'the contract was not written'}"[:600]
         for item in entry.get("feedback", []):  # the owner's comments were not applied: they stay pending
             if item.get("consumed") == did:
@@ -230,7 +241,7 @@ def _rows(rdir: Path, data: dict) -> list[dict]:
         out.append({**s, **{k: v for k, v in entry.items() if k not in ("feedback", "digest")},
                     "status": entry.get("status", "none"), "feedback": feedback,
                     "pending_feedback": sum(1 for f in feedback if not f.get("consumed")),
-                    "stale": entry.get("status") == "ready" and entry.get("digest") != s["digest"]})
+                    "stale": entry.get("status") in ("ready", "approved") and entry.get("digest") != s["digest"]})
     return out
 
 
@@ -312,6 +323,8 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
             reason: str = "requested") -> list[str]:
     """Draft the named UI subplans (all of them by default) that need it; returns the refs started."""
     started = []
+    if not planning(rdir):
+        return started
     for row in rows(rdir) if active(rdir) else [{**s, "status": "none", "stale": False, "pending_feedback": 0}
                                                     for s in subplans(rdir) if s["ref"]]:
         if refs and row["ref"] not in refs:
@@ -319,6 +332,9 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
         if row["status"] in ACTIVE or row["status"] == "approved":
             continue
         due = force or row["status"] == "none" or row["stale"] or row["pending_feedback"]
+        if due and reason != "plan changed" and row.get("failures"):
+            with _locked(rdir) as data:  # an explicit request is the owner's retry: the failure count starts over
+                data["drafts"].get(row["ref"], {})["failures"] = 0
         if due and launch(project, rdir, row["ref"], reason).get("status") == "drafting":
             started.append(row["ref"])
     known = {s["ref"] for s in subplans(rdir) if s["ref"]}
@@ -332,6 +348,8 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str) -> str
     text = " ".join(text.split())
     if not text:
         return "Escribe qué debe cambiar en el diseño."
+    if not planning(rdir):
+        return "El plan ya no está en planificación: los cambios de diseño van en una versión nueva del contrato."
     if ref not in {s["ref"] for s in subplans(rdir) if s["ref"]}:
         return f"{ref or 'Ese contrato'} no es un subplan con interfaz de este plan."
     with _locked(rdir) as data:
@@ -351,7 +369,7 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str) -> str
 
 def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
     """Follow the conversation: draft new UI subplans, pending feedback, and subplans that changed and settled."""
-    if not active(rdir):
+    if not active(rdir) or not planning(rdir):
         return []
     now = time.time() if now is None else now
     try:
@@ -362,12 +380,19 @@ def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
     for r in rows(rdir):
         if r["status"] in ACTIVE or r["status"] == "approved":
             continue
-        if r["status"] == "failed" and _age(r.get("finished")) < FAIL_BACKOFF_SEC:
-            continue  # do not relaunch a failing Designer on every page poll
+        if r["status"] == "failed" and (_age(r.get("finished")) < FAIL_BACKOFF_SEC or
+                                        int(r.get("failures") or 0) >= MAX_FAILURES):
+            continue  # do not relaunch a failing Designer on every page poll; after N failures only on request
         changed = settled and (r["status"] == "none" or r["stale"]) and int(r.get("auto_runs") or 0) < MAX_AUTO_RUNS
         if r["pending_feedback"] or changed:
             due.append(r["ref"])
     return request(project, rdir, due, reason="plan changed") if due else []
+
+
+def planning(rdir: Path) -> bool:
+    """The plan is still being discussed (not approved, launched or finished): drafts may change."""
+    from bt_core import _front
+    return _front(Path(rdir) / "PLAN.md", "status") in PLANNING
 
 
 def readiness(rdir: Path) -> list[str]:
@@ -416,7 +441,12 @@ def pin_for_plan(rdir: Path) -> list[str]:
         if problems:
             raise SystemExit("Los diseños de planificación no están listos: " + "; ".join(problems))
         for ref, blob in blobs.items():
-            approval.approve_planning_draft(rdir, ref, blob, paths(rdir, ref)[0].as_posix())
+            frozen = Path(rdir) / DIR / "history" / ref / "approved.md"  # the run copies this, never the live draft
+            frozen.parent.mkdir(parents=True, exist_ok=True)
+            frozen.write_bytes(blob)
+            if paths(rdir, ref)[1].is_file():
+                frozen.with_suffix(".html").write_bytes(paths(rdir, ref)[1].read_bytes())
+            approval.approve_planning_draft(rdir, ref, blob, frozen.as_posix())
             data["drafts"][ref].update({"status": "approved", "approved": _now()})
         return list(blobs)
 
@@ -425,7 +455,29 @@ def execution_notes(rdir: Path, ref: str) -> str:
     """Brief lines for the run: where the plan-approved draft and its mockup are (empty when there is none)."""
     import bt_design_approval as approval
     record = approval.approvals(rdir).get(ref) if (Path(rdir) / approval.FILE).exists() else None
-    md, html = paths(rdir, ref)
-    if not isinstance(record, dict) or record.get("via") != "plan" or not md.is_file():
+    frozen = Path(rdir) / DIR / "history" / ref / "approved.md"
+    html = frozen.with_suffix(".html")
+    if not isinstance(record, dict) or record.get("via") != "plan" or not frozen.is_file() or \
+            hashlib.sha256(frozen.read_bytes()).hexdigest() != record.get("sha256"):
         return ""
-    return f"Planning draft: {md.as_posix()}" + (f"\nPlanning mockup: {html.as_posix()}" if html.is_file() else "")
+    return f"Planning draft: {frozen.as_posix()}" + (f"\nPlanning mockup: {html.as_posix()}" if html.is_file() else "")
+
+
+def follow_project(root: Path, project: str) -> list[str]:
+    """Stop-hook nudge: for every requirement still being planned with planning-time design on, log what the
+    conversation changed, redesign settled subplans and keep the translation current (also with no web page open)."""
+    import bt_planning_activity
+    import bt_translate
+    from bt_core import _front
+    touched = []
+    for rdir in sorted((Path(root) / project / "requirements").glob("REQ-*")):
+        if not active(rdir) or _front(rdir / "PLAN.md", "status") in ("approved", "launched", "in-progress", "done",
+                                                                       "merged"):
+            continue
+        try:
+            bt_planning_activity.observe(rdir)
+            touched += sync(project, rdir)
+            bt_translate.ensure(project, rdir)
+        except (SystemExit, Exception):  # noqa: BLE001, S112 - a hook never fails the session on background work
+            continue
+    return touched

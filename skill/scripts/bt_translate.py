@@ -24,6 +24,7 @@ BATCH_MAX = 14000       # characters per model call
 DEBOUNCE_SEC = 10       # wait for the conversation to stop typing into a file before translating it
 RUN_TTL_SEC = 30 * 60
 RETRY_SEC = 5 * 60
+MAX_STREAK = 3
 PROMPT = """Translate every string of the JSON array below from English to Spanish (neutral Latin American,
 technical register). Keep the Markdown structure exactly: headings, lists, tables, emphasis and line breaks. Do not
 translate code spans, code blocks, file paths, commands, URLs, identifiers (REQ-001, SP-2, T14, R3, D-127, UI-AC-01,
@@ -227,7 +228,12 @@ def translate(project: str, rdir: Path, *, ask=None) -> dict:
             _save_cache(rdir, pairs)
             _write_outputs(rdir)
     _write_outputs(rdir)
-    result = {"translated": done, "failed": failed, "pending": len(pending(rdir)), "at": time.time()}
+    try:
+        streak = json.loads((Path(rdir) / CACHE_DIR / "last.json").read_text(encoding="utf-8")).get("streak", 0)
+    except (OSError, ValueError, AttributeError):
+        streak = 0
+    result = {"translated": done, "failed": failed, "pending": len(pending(rdir)), "at": time.time(),
+              "streak": 0 if done or not failed else int(streak) + 1}
     (Path(rdir) / CACHE_DIR).mkdir(parents=True, exist_ok=True)
     (Path(rdir) / CACHE_DIR / "last.json").write_text(json.dumps(result), encoding="utf-8")
     if done:
@@ -274,8 +280,8 @@ def ensure(project: str, rdir: Path, *, now: float | None = None) -> bool:
         return False
     try:  # a run that just failed (no account, usage limit) is not retried on every page refresh
         last = json.loads((Path(rdir) / CACHE_DIR / "last.json").read_text(encoding="utf-8"))
-        if last.get("failed") and now - float(last["at"]) < RETRY_SEC:
-            return False
+        if last.get("failed") and (now - float(last["at"]) < RETRY_SEC or int(last.get("streak", 0)) >= MAX_STREAK):
+            return False  # after MAX_STREAK runs that translated nothing, only `bitacora.py translate` retries
     except (OSError, ValueError, KeyError, TypeError):
         pass
     return start_background(project, rdir) is not None

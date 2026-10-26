@@ -12,7 +12,7 @@ import bt_design_drafts as drafts
 import bt_planning_activity as activity
 import bt_translate as tr
 from bt_page_planning import REASONS, SEND, link, state_of, text
-from bt_pages import md, purl, read
+from bt_pages import inline, md, purl, read
 
 WIDTHS = (("390", "Móvil"), ("768", "Tableta"), ("", "Escritorio"))
 
@@ -81,7 +81,8 @@ def design_panel(ctx: dict, s: dict, row: dict) -> str:
             f"<ul>{history}</ul></details>" if history else "")
     review = link(p, r, opts, mode="review", sp=s["id"], rev=0)
     composer = _composer(ctx, row, "Ej.: cuadrícula a 4 columnas y filtros en una sola barra") \
-        if row["status"] != "approved" else '<p class="pp-meta">Aprobado con el plan: los cambios van en una versión nueva.</p>'
+        if row["status"] != "approved" and drafts.planning(ctx["rdir"]) else \
+        '<p class="pp-meta">El plan ya no está en planificación: los cambios van en una versión nueva del contrato.</p>'
     return (f'<div class="pp-design"><section class="pp-mock"><div class="pp-mock-bar"><code>{e(row["ref"])}</code>'
             f'<span class="pp-meta">{f"· borrador {rev}" if rev else "· sin borrador"}</span>{_widths()}</div>'
             f'{_frame(ctx, row)}<div class="pp-mock-foot"><span class="pp-meta">El mockup trae sus propios selectores '
@@ -109,7 +110,7 @@ def _criteria(markdown: str) -> list[list[str]]:
     rows = []
     for line in markdown.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) >= 4 and re.fullmatch(r"UI-AC-\d+", cells[0]):
+        if len(cells) >= 4 and re.fullmatch(r"(?:UI-)?AC-\d+", cells[0]):
             rows.append(cells[:4])
     return rows
 
@@ -143,7 +144,8 @@ def review(ctx: dict) -> str:
     messages = "".join(f'<div class="pp-msg{" mine" if mine else ""}"><span class="pp-meta">{e(who)} · '
                        f'{e(when[11:16])}</span>{e(body)}</div>' for when, who, body, mine in sorted(thread))
     cls, label = state_of(row)
-    composer = _composer(ctx, row, "Pedir un cambio sobre este ancho o estado…") if row["status"] != "approved" else ""
+    composer = (_composer(ctx, row, "Pedir un cambio sobre este ancho o estado…")
+                if row["status"] != "approved" and drafts.planning(ctx["rdir"]) else "")
     return (f'<section class="pp-review" data-k="review-{e(s["id"])}-{rev}"><header class="pp-rhead">'
             f'<a href="{e(back)}" data-nav class="pp-back" aria-label="Volver a los subplanes">←</a>'
             f'<code>{e(s["id"])} · {e(row["ref"])}</code><h2>{text(ctx, s["title"])}</h2>'
@@ -179,7 +181,8 @@ def document(ctx: dict) -> str:
         head = (f'<header>{title}' + (f'<span>· cambió a las {e(moved["changed"][11:16])} desde la conversación</span>'
                                        if moved else "") + "</header>")
         diff = _diff(ctx, moved) if moved and moved.get("prev") else ""
-        columns = _columns(ctx, section, f"pp-d{i}")
+        columns = _columns(ctx, section.split("\n", 1)[1] if section.startswith("#") and "\n" in section else section,
+                           f"pp-d{i}")
         full = f"<details><summary>Sección completa</summary>{columns}</details>" if diff else columns
         body.append(f'<section class="pp-sec{" changed" if moved else ""}" id="pp-sec-{i}">{head}{diff}{full}</section>')
     labels = ('<div class="pp-cols-head"><span>Original · EN</span><span>Traducción · ES</span></div>'
@@ -205,16 +208,21 @@ def _columns(ctx: dict, section: str, block: str) -> str:
 
 
 def _diff(ctx: dict, moved: dict) -> str:
-    def lines(prev: str, new: str) -> str:
-        return "".join(f'<p class="{"add" if sign == "+" else "del" if sign == "-" else "ctx"}">'
-                       f'{"+ " if sign == "+" else "− " if sign == "-" else ""}{e(body)}</p>'
-                       for sign, body in activity.line_diff(prev, new))
-    en = lines(moved["prev"], moved["text"])
+    """The EN lines that changed (+/−). Two translations of a section differ in wording everywhere, so the Spanish
+    side shows the current translation of the changed section instead of a line diff."""
+    def clean(body: str) -> str:
+        return inline(re.sub(r"^(#{1,6}\s+|[-*]\s+|\d+\.\s+)", "", body.strip()))
+    en = "".join(f'<p class="{"add" if sign == "+" else "del" if sign == "-" else "ctx"}">'
+                 f'{"+ " if sign == "+" else "− " if sign == "-" else ""}{clean(body)}</p>'
+                 for sign, body in activity.line_diff(moved["prev"], moved["text"]) if clean(body))
     if ctx["opts"]["lang"] == "en":
         return f'<div class="pp-diffbox">{en}</div>'
-    (old_es, old_missing), (new_es, new_missing) = tr.render(ctx["rdir"], moved["prev"]), tr.render(ctx["rdir"], moved["text"])
-    es = (lines(old_es, new_es) if not old_missing and not new_missing else
-          '<p class="ctx"><span class="pp-chip info">traduciendo…</span> la diferencia en español aparece al terminar.</p>')
+    es, missing = tr.render(ctx["rdir"], moved["text"])
+    added = [clean(line) for sign, line in activity.line_diff(moved["prev"], moved["text"]) if sign == "+"]
+    current = ('<p class="ctx"><span class="pp-chip info">traduciendo…</span> la versión en español aparece al terminar.</p>'
+               if missing else f'<p class="ctx">{len(added)} línea{"s" if len(added) != 1 else ""} nueva'
+               f'{"s" if len(added) != 1 else ""} en el original; así queda la sección:</p>' + "".join(
+                   f'<p class="now">{clean(line)}</p>' for line in es.splitlines()[1:] if clean(line)))
     if ctx["opts"]["lang"] == "es":
-        return f'<div class="pp-diffbox">{es}</div>'
-    return f'<div class="pp-cols pp-diffbox"><div lang="en">{en}</div><div lang="es">{es}</div></div>'
+        return f'<div class="pp-diffbox">{current}</div>'
+    return f'<div class="pp-cols pp-diffbox"><div lang="en">{en}</div><div lang="es">{current}</div></div>'

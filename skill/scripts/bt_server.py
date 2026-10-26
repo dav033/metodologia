@@ -261,12 +261,13 @@ class Handler(BaseHTTPRequestHandler):
             ref = q.get("contract", "")
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}", ref):
                 return self.send("Not found", 404, "text/plain")
-            rev = int(q["rev"]) if q.get("rev", "").isdigit() else None
+            rev = int(q["rev"]) if planning._number(q.get("rev", "")) else None
             mockup = drafts.revision_file(rdir, ref, rev, ".html")
             return self.file(mockup if mockup.is_file() else None)
-        planning.follow(project, rdir)
+        opts = planning.options(rdir, q)
+        planning.follow(project, rdir, opts["lang"])
         html = planning.fragment(project, req_id(rdir), rdir, planning.plan_status(rdir), token(),
-                                 planning.options(rdir, q))
+                                 opts)
         return self.send(json.dumps({"html": html}, ensure_ascii=False), 200, "application/json; charset=utf-8")
 
     def planning_post(self, project: str, rdir: Path, action: str, form: dict, base: str) -> str:

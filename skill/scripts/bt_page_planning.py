@@ -51,20 +51,29 @@ def options(rdir: Path, q: dict) -> dict:
             "mode": q.get("mode") if q.get("mode") in ("subplans", "doc", "review") else "subplans",
             "view": q.get("view") if q.get("view") in VIEWS else "design",
             "sp": sp if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sp) else "",
-            "rev": int(q["rev"]) if str(q.get("rev", "")).isdigit() else 0,
-            "only": q.get("only") == "1"}
+            "rev": int(q["rev"]) if _number(q.get("rev", "")) else 0,
+            "only": q.get("only") == "1",
+            "filter": q.get("filter") if q.get("filter") in ("ui", "changed") else ""}
+
+
+def _number(value: object) -> bool:
+    return isinstance(value, str) and value.isascii() and value.isdecimal() and len(value) <= 6
 
 
 def link(project: str, rid: str, opts: dict, **change) -> str:
     """Page URL of the Plan tab with `opts` changed; JS turns it into the fragment URL for live navigation."""
     merged = {**opts, **change}
     query = {"tab": "plan", "lang": merged["lang"], "mode": merged["mode"], "view": merged["view"],
-             "sp": merged["sp"], "rev": merged["rev"] or "", "only": "1" if merged["only"] else ""}
+             "sp": merged["sp"], "rev": merged["rev"] or "", "only": "1" if merged["only"] else "",
+             "filter": merged.get("filter") or ""}
     return purl(project, "req", rid) + "?" + urlencode({k: v for k, v in query.items() if v != ""})
 
 
-def follow(project: str, rdir: Path) -> None:
-    """Let the Designer and the translator catch up with the conversation, at most every few seconds per requirement."""
+def follow(project: str, rdir: Path, lang: str = "en") -> None:
+    """Let the Designer and the translator catch up with the conversation, at most every few seconds per requirement.
+    Only requirements with planning-time design, or a Spanish view being read, start any background work."""
+    if not drafts.active(rdir) and lang == "en":
+        return
     key = str(rdir)
     with _follow_lock:
         if time.time() - _followed.get(key, 0) < _FOLLOW_SEC:
@@ -108,6 +117,10 @@ def _stamp(block: str) -> str:
     """Give a live block the digest of its HTML (`data-h`): the page swaps only blocks whose digest changed."""
     digest = hashlib.sha256(block.encode("utf-8")).hexdigest()[:12]
     return re.sub(r'data-k="([^"]*)"', lambda m: f'{m.group(0)} data-h="{digest}"', block, count=1)
+
+
+def plural(count: int, one: str, many: str) -> str:
+    return f"{count} {one if count == 1 else many}"
 
 
 def _default_subplan(rdir: Path, subplans: list[dict]) -> str:
@@ -161,8 +174,14 @@ def _bar(ctx: dict) -> str:
     when = (dt.datetime.fromtimestamp(max(f.stat().st_mtime for f in sources), dt.UTC).astimezone()
             if sources else None)
     live = f'<span class="pp-live" id="pl-live">en vivo{" · " + format(when, "%H:%M:%S") if when else ""}</span>'
+    start = ""
+    if rows and not drafts.active(ctx["rdir"]) and drafts.planning(ctx["rdir"]):
+        start = (f'<form method="post" action="{purl(p, "req", r, "design-draft")}" class="pp-start"><input type="hidden" '
+                 f'name="token" value="{e(ctx["token"])}"><input type="hidden" name="lang" value="{e(opts["lang"])}">'
+                 f'<button type="submit" class="outline">Diseñar {plural(len(rows), "subplan", "subplanes")} con UI'
+                 "</button></form>")
     return (f'<div class="pp-bar" data-k="bar">{modes}{langs}<div class="pp-chips">{"".join(chips)}</div>{live}'
-            f'{_approve_button(ctx)}</div>')
+            f'{start}{_approve_button(ctx)}</div>')
 
 
 def _approve_button(ctx: dict) -> str:
@@ -170,7 +189,7 @@ def _approve_button(ctx: dict) -> str:
     if status in ("approved", "launched", "in-progress", "done"):
         return f'<span class="pp-chip ok">plan {e(status)}</span>'
     waiting = drafts.readiness(ctx["rdir"])
-    label = f"Aprobar · faltan {len(waiting)}" if waiting else "Aprobar plan"
+    label = f"Aprobar · {'falta' if len(waiting) == 1 else 'faltan'} {len(waiting)}" if waiting else "Aprobar plan"
     return f'<button type="button" class="pp-approve" data-open="pp-approve-dlg">{e(label)}</button>'
 
 
@@ -181,21 +200,36 @@ def _list(ctx: dict) -> str:
     owner = {item.get("id"): item.get("milestone_id") for item in plan.get("subplans") or [] if isinstance(item, dict)}
     items, last = [], None
     ui = sum(1 for s in ctx["subplans"] if s["ref"])
-    for s in ctx["subplans"]:
+    moved = {ev.get("sp") for ev in activity.events(ctx["rdir"], 60)
+             if ev.get("who") == "Planner" and _recent(ev.get("at"))}
+    shown = [s for s in ctx["subplans"] if not opts["filter"] or (opts["filter"] == "ui" and s["ref"]) or
+             (opts["filter"] == "changed" and (s["id"] in moved or (ctx["rows"].get(s["ref"]) or {}).get("stale")))]
+    filters = "".join(f'<a href="{e(link(p, r, opts, filter=k))}" data-nav{" class=on aria-current=true" if opts["filter"] == k else ""}>'
+                      f"{name}</a>" for k, name in (("", "Todos"), ("ui", "Con UI"), ("changed", "Cambiaron")))
+    for s in shown:
         milestone = owner.get(s["id"])
         if milestone and milestone != last:
             items.append(f'<p class="pp-group">{e(str(milestone))} · {text(ctx, str(milestones.get(milestone, "")))}</p>')
             last = milestone
         cls, label = state_of(ctx["rows"].get(s["ref"]) if s["ref"] else None)
         on = s["id"] == opts["sp"]
-        meta = f'{len(s["tasks"])} tareas' + (f" · {label}" if s["ref"] else "")
+        meta = plural(len(s["tasks"]), "tarea", "tareas") + (f" · {label}" if s["ref"] else "")
         items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans"))}"'
                      f' data-nav{" aria-current=true" if on else ""}><span class="pp-id">{e(s["id"])}</span>'
-                     f'<span class="pp-item-main"><span class="pp-item-title">{text(ctx, s["title"])}</span>'
+                     f'<span class="pp-item-main"><span class="pp-item-title" title="{e(s["title"])}">{text(ctx, s["title"])}</span>'
                      f'<span class="pp-meta">{e(meta)}</span></span>'
                      f'<span class="pp-dot {e(cls)}" title="{e(label)}"></span></a>')
     return (f'<nav class="pp-list" aria-label="Subplanes" data-k="list"><div class="pp-list-head"><strong>Subplanes'
-            f'</strong><span class="pp-meta">{len(ctx["subplans"])} · {ui} con UI</span></div>{"".join(items)}</nav>')
+            f'</strong><span class="pp-meta">{len(ctx["subplans"])} · {ui} con UI</span></div><nav class="pp-filters" '
+            f'aria-label="Filtrar subplanes">{filters}</nav>{"".join(items) or "<p class=pp-meta>Ningún subplan en este filtro.</p>"}'
+            "</nav>")
+
+
+def _recent(stamp: str | None) -> bool:
+    try:
+        return time.time() - dt.datetime.fromisoformat(stamp or "").timestamp() <= activity.RECENT_SEC
+    except ValueError:
+        return False
 
 
 def _detail(ctx: dict) -> str:
@@ -255,9 +289,11 @@ def _dialog(ctx: dict) -> str:
         cls, label = state_of(row)
         mark = {"ready": "✓", "approved": "✓", "none": "–", "failed": "!"}.get(cls, "…")
         detail = "sin interfaz · no lleva diseño" if row is None else f'{s["ref"]} · {label}'
+        see = (f'<a href="{e(link(p, r, ctx["opts"], mode="review", sp=s["id"], rev=0))}" data-nav data-close>Ver diseño</a>'
+               if row else "")
         rows.append(f'<div class="pp-check"><span class="pp-mark {e(cls)}" aria-hidden="true">{mark}</span>'
                     f'<span class="pp-id">{e(s["id"])}</span><span class="grow">{text(ctx, s["title"])}<span '
-                    f'class="pp-meta block">{e(detail)}</span></span></div>')
+                    f'class="pp-meta block">{e(detail)}</span></span>{see}</div>')
     waiting = drafts.readiness(ctx["rdir"])
     review = status == "review"
     note = (f'<p class="pp-warn">{e("; ".join(waiting))}. El botón se activa cuando terminen.</p>' if waiting else

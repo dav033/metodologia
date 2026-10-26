@@ -448,5 +448,7 @@ def contract_notes(plan, request, repository_for, check_approval, planning=None)
         gate = check_approval(repository, request.base_ref, path)
         state, digest = gate.get("state", "unapproved"), gate.get("sha256") or ""
     drafted = planning(f"{ui.contract}@v{ui.version}") if planning else ""
+    if drafted and task.meta.get("kind") == "design" and state != "approved":  # the file is not copied yet
+        state = "approved with the plan (copy pending)"
     return (f"Design contract: {path}\nTask kind: {task.meta.get('kind', '')}\n"
             f"UI task: {str(ui_task).lower()}\nApproval: {state}\nSHA-256: {digest}" + (f"\n{drafted}" if drafted else ""))
