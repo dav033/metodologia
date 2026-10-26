@@ -60,7 +60,22 @@
   }
  ],
  "round": 8,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T20:50:05Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": ""
+  },
+  "q3": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-26T20:50:05Z",
+ "answered_at": "2026-10-26T20:51:52Z",
+ "answered_via": "web"
 }
