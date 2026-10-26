@@ -120,7 +120,36 @@
   }
  ],
  "round": 4,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T17:35:19Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "c",
+   "note": "Owner: only an invitation link for now, no automated sending (copyable single-use link; the admin sends it himself)."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Owner: everything, but scoped. There will be three access PLANS (tiers) for now. Plan 1: only the assisted chat and the balloon counter. Plan 2: chat, balloon counter, costs, and exploring the already-assembled decorations. Plan 3: all of the above plus the 3D model (Taller 3D). Interpretation to confirm in the subplan: a plan is a set of permissions assigned to an account, alongside the staff roles (empleado interno, administrador). /asesor and /happie: not stated, assumed to stay outside the pilot with their own login."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Owner: NO feature flags; the environment we are in is not production, so there is no problem. Open point for the Planner: confirm which environment each approved subplan is integrated and published to (merging to main may deploy the live site)."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Accepted."
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Accepted: cuts by date; the owner tests and approves each subplan in under 24 h."
+  },
+  "q6": {
+   "text": "No Gemini key and no USD cap: use the owner's Claude accounts with Haiku 5.5 for the one-time translation of products and decorations."
+  },
+  "q7": {
+   "text": "For now there is a single administrator: the owner, working locally. Locally there must be NO credential or role restrictions: configure that with a flag in .env. From this point on, admins and the other roles will be created (in the app). Open points for the Planner: that flag must be impossible to enable in production; how the first production administrator is created; the data-protection text and what is stored were not answered (suggestion stands)."
+  }
+ },
+ "created_at": "2026-10-26T17:35:19Z",
+ "answered_at": "2026-10-26T18:03:12Z",
+ "answered_via": "terminal"
 }
