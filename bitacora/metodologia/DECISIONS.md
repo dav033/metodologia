@@ -1206,7 +1206,8 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - \+ No change to the Scheduler or the integration lines; nothing reaches `main`.
   - − The session's branch is not yet adopted by the engine as the subplan's published version (P-205): until then the Planner plans review/tests/integration tasks around it.
   - − The agent runs with permissions bypassed (as every agent here does) and the web only starts it from loopback; one running session per subplan.
-- **Source:** owner, 2026-10-26 (session d05f524b), REQ-021 SP-3.
+- **Autonomous mode (same day, owner: «quiero lanzar la ejecución del subplan desde aquí»):** the engine cannot run one subplan of a draft plan: approval freezes the WHOLE PLAN.json, the draft is full of subplans without tasks (`plan-json check` refuses it), and while the Planner keeps editing, a launch is refused with PLAN_DRIFT. So «Ejecutar subplan» (button next to «Confirmar subplan» and in the Sesión tab; `sessions start --mode auto`) starts a session in the same worktree/branch model whose prompt carries the subplan's tasks in dependency order with their objective, expected paths, criteria and verify commands, and orders it to run them alone, commit per task, use an INDEPENDENT subagent for audit tasks and ask only one batched question when blocked. It is NOT the Scheduler (no frozen run, no guaranteed independent auditor, no durable state machine); the full plan will rebuild the subplan unless P-205 adopts the branch.
+- **Source:** owner, 2026-10-26 (session d05f524b), REQ-021 SP-3 and SP-1.
 
 ## D-133 — Agents the owner needs to talk to run in tmux, so the web can read and type into them
 

@@ -194,9 +194,18 @@ Locations only, never values. Empty Subplan = plan-wide.
 | Local no-restrictions flag: name and rule | SP-1 | round 5 q3 (accepted): `AUTH_LOCAL_SIN_RESTRICCIONES=1` in `.env.local`, valid only under `next dev` and loopback requests; anywhere else the app refuses to start | Owner | available |
 | First production administrator: mechanism and email | SP-1, SP-13 | round 6 q4: the owner runs the one-time command `npm run cuentas:primer-admin` for `davidt@sempertex.com` in his own terminal at release (activation link shown only to him); he may also run the app locally in no-restrictions mode against the production database and create administrators from the admin screens | Owner | available |
 | Data-protection text (Ley 1581, ES/EN) | SP-2 | round 5 q6: drafted by the agent, approved by the owner in SP-2 | Owner | available |
-| Sempertex privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | deferred: marked placeholders in the text, flagged for Sempertex legal review before real users activate |
+| Sempertex legal name, privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | deferred: marked placeholders in the text, flagged for Sempertex legal review before real users activate |
 | Authorization for automated smoke on the deployed environment | SP-13 | round 5 q7 (granted: account `piloto-e2e`, Usuario plan 3, no paid AI, deleted after each smoke); needs a matching entry in `~/bitacora/pictures/verification-policy.json` (operator-owned, not yet created) | Owner | location given |
 | One-time English translation with Haiku 5.5 | SP-9 | owner's Claude accounts through the Claude Code CLI (round 4 q6); no Gemini key, no USD cap | Owner | available |
+
+## Data-processing notice (draft v1, SP-2)
+Drafted by the Planner (round 5 q6); the owner approves it in SP-2; Sempertex legal must review it before real external users activate. Bracketed fields are placeholders the owner supplies; nothing else is claimed.
+
+**ES** — Aviso de tratamiento de datos personales (versión 1)
+[RAZÓN SOCIAL DE SEMPERTEX] tratará tus datos personales —nombre, correo, empresa (si la indicas), el rol y el plan que te asignen, y las fechas de invitación, activación y último acceso— para darte acceso a Pictures durante el piloto, administrar tu cuenta y medir el uso de las herramientas, incluido el consumo de inteligencia artificial. Los proyectos y decoraciones que guardes quedan asociados a tu cuenta. Puedes conocer, actualizar, rectificar o pedir la supresión de tus datos, y revocar esta autorización, escribiendo a [CORREO PARA DERECHOS]. La política de tratamiento de datos está en [URL DE LA POLÍTICA]. Al activar tu cuenta declaras que leíste este aviso y autorizas el tratamiento descrito, conforme a la Ley 1581 de 2012.
+
+**EN** — Personal data notice (version 1)
+[SEMPERTEX LEGAL NAME] will process your personal data —name, email, company (if you provide it), the role and plan assigned to you, and the dates of invitation, activation and last access— to give you access to Pictures during the pilot, manage your account and measure the use of the tools, including artificial-intelligence usage. The projects and decorations you save are linked to your account. You can access, update, correct or request deletion of your data, and withdraw this authorization, by writing to [RIGHTS CONTACT EMAIL]. The data-processing policy is at [POLICY URL]. By activating your account you confirm that you have read this notice and authorize the processing described, under Colombian Law 1581 of 2012.
 
 ## Pruebas
 Where the owner tries each subplan once built (D-131). «Probar» opens that exact version locally; the tunnel `pictures-req021-db-tunnel.service` must be active and `.env.local` must point `DATABASE_URL` at the REQ-021 test database (never production).

@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-26 09:59 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 15:19 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -56,11 +56,11 @@ _Generated 2026-10-26 09:59 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-133 — Agents the owner needs to talk to run in tmux, so the web can read and type into them
+- D-132 — A subplan can be built WITH the owner in a hands-on agent session before the plan goes on
+- D-131 — Each finished subplan is tried and approved by the owner; the plan is not done until all are
 - D-130 — Collaborative planning: requirements, skeleton, subplan by subplan, approval
 - D-129 — Retire captured executor worktrees after three days
-- D-128 — Planner, Designer and owner work together during planning; plan approval approves the designs
-- D-127 — The owner approves every design contract before UI work starts
-- D-126 — External verification authority comes from operator files, never the plan
 
 ## Artifacts
 
