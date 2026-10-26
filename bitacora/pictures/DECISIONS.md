@@ -468,3 +468,9 @@ Source: owner, REQ-021 rounds 1–3.
 - Session 30 days; password ≥ 8 characters; 5 failures/15 min lock that email 15 min; invitation link 7 days, reset 24 h, both copied by the administrator; a new link invalidates older unused ones; activation signs in directly.
 - Only accounts without saved work can be deleted (others are deactivated); AI spend is kept without personal data as «Cuenta eliminada». Data notice v1 (ES/EN, Ley 1581) approved with placeholders; a new version must be re-accepted.
 - Pilot production = demo-decoracion.vercel.app from pilot day (no new domain); the owner creates the first administrator with a one-time command, or locally with AUTH_LOCAL_SIN_RESTRICCIONES against the production database.
+
+## D-074 · REQ-021 SP-2 sign-in refusal, password-session continuity and safe fallback · 2026-10-26
+- Complements D-073; source: Planner rulings Q6–Q8 at 2026-10-26T16:02, reflected in PLAN.md/PLAN.json and cuentas-admin@v1 draft.
+- Wrong password, unknown email, deactivated and locked accounts receive one generic refusal, always including a neutral hint to wait 15 minutes after several failures. No distinct locked-message fixture or account-state disclosure.
+- Own-password change ends all sessions at the service and opens a new session for the requesting browser; other browsers sign in again. Admin-generated resets end all sessions.
+- Login uses a safe permitted requested destination, otherwise Taller 3D, chat, catalogue, then /cuenta when none is permitted. Activation opens a session directly and uses the permitted-tool or /cuenta fallback.

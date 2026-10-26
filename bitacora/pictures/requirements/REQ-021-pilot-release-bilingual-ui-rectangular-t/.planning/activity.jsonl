@@ -52,3 +52,4 @@
 {"at": "2026-10-26T16:03:10-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (criterios)", "diff": "+ On /login a person signs in with email and password; a wrong password, an unknown email, a deactivated account and a locked email all show the same message, which always adds that after several failures one must wait fifteen minutes, and success returns to the requested page or the first area the "}
 {"at": "2026-10-26T16:03:10-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
 {"at": "2026-10-26T16:04:14-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 5 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T16:09:23-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 8 secciones traducidas", "diff": ""}

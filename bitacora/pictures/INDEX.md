@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-26 15:49 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 16:11 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -55,15 +55,15 @@ _Generated 2026-10-26 15:49 by `bitacora.py index`. Do not edit by hand._
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
 - P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
-- P-205 · REQ-021 SP-2 cuentas-admin@v1 draft complete: obtain owner/Planner decisions on legal noti · high/M
+- P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
 
 ## Recent decisions
 
+- D-074 — REQ-021 SP-2 sign-in refusal, password-session continuity and safe fallback · 2026-10-26
+- D-073 — REQ-021 accounts model and account rules (SP-1/SP-2, rounds 6–8) · 2026-10-26
 - D-072 — REQ-021 pilot: one plan with everything, written by a dedicated Planner; cut order if time is short · 2026-10-26
 - D-071 — 2026-10-26 · REQ-020 advisor never adds assembly/transport by default; desserts come before logistics
 - D-070 — 2026-10-26 · REQ-020 advisor: summary and proposal hide when the customer replies; voice recording is inline
-- D-069 — 2026-10-26 · REQ-020 advisor chat shows no privacy or test-version banners
-- D-068 — 2026-10-25 · REQ-020 advisor: no inspiration gallery, no closed packages, custom proposals from services, photo reading and keep list
 
 ## Timeline
 

@@ -1,6 +1,6 @@
 # pictures — Summary
 
-- 2026-10-26 REQ-021 SP-2 design: `cuentas-admin@v1` contract and standalone mockup are drafted (9 views, 34 criteria); 984 rendered-state and 84 dialog checks PASS. Owner plan approval, five design questions and exact SP-2 task/route consumers remain pending in P-205; no product code or deployment changed.
+- 2026-10-26 REQ-021 SP-2 design: revised cuentas-admin@v1 contract and standalone mockup remain draft (11 views, 54 criteria). Owner feedback and Planner Q6–Q8 are incorporated (D-074); no open design questions. Chromium 1260 view/state renders, 12 interaction groups, 288 dialog cases, 96 menu layouts and 18 contrast pairs PASS. Exact consumers T2.1–T2.8 are documented. Plan approval, legal fields/review (P-206), implementation and product acceptance remain pending; no product code or deployment changed.
 
 - PAUSED by owner request, 2026-10-23: REQ-020 r17 22/24, operator hold active, owner stopped, no live attempt. T14a is accepted. T15/T15b confirmed UI photo/card/summary gaps and missing physical-phone/full-evaluation evidence. An unchanged T15b retry was cancelled; no product remediation revision applied. Supervisor is paused with P-186 engine fix uncommitted; do not resume without a new owner instruction. No new production deployment authorized.
 

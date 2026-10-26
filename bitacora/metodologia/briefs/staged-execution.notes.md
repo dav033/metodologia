@@ -98,3 +98,15 @@ delete them), test_scheduler_launch_boundaries (existing scheduler authority now
 Then: rerun full suite (each module alone if run_case_support complains), docs (plan-contract.md, modules.md,
 requirements.md §8, execution.md §1c, agents/planner.md), rewrite D-134 for compat dropped, antagonist review,
 day log `### Delegation`, PENDING items, final report.
+
+## Relay continuation — Codex
+- Verified git status on main; preserved shared local changes. No commits, service restarts, real runs or Pictures writes.
+- Fresh scheduler integration: 29 tests OK. Reproduced obsolete watchdog expectations (2 failures) and launch authority
+  expectations (2 failures). Replaced removed watchdog healing-rebase assertions with refusal/no-outside-rebase coverage;
+  launch dry-run now checks join preview and AUTHORITY_CONFLICT for historical authority.
+- PLAN block prose test originally appended free prose (no longer protected); changing text after a parsed `verify`
+  field was also ignored by the parser. Corrected fixture to edit the approved task TITLE, the actual protected scope.
+- Combined named modules abort with run_case_support root-order protection; isolated modules / discovery are used.
+- Full methodology, Planner, M1 core and M3 executor suites running; logs /tmp/staged-*-tests.log.
+- Updated contract/runtime/planning documentation and corrected D-134 to the owner's no-compatibility decision.
+- Independent read-only antagonist review started; fixes and final verification pending.
