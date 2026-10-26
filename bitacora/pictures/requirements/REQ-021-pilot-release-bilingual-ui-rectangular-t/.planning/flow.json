@@ -1,5 +1,5 @@
 {
- "focus": "SP-1",
+ "focus": "SP-2",
  "outline": {
   "at": "2026-10-26T14:13:28-05:00",
   "by": "owner",
@@ -21,5 +21,12 @@
   "via": "web"
  },
  "schema_version": 1,
- "subplans": {}
+ "subplans": {
+  "SP-1": {
+   "at": "2026-10-26T15:03:40-05:00",
+   "by": "owner",
+   "digest": "0d6f6499fbc7cba0",
+   "via": "web"
+  }
+ }
 }

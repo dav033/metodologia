@@ -19,3 +19,9 @@
 {"at": "2026-10-26T14:01:38-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
 {"at": "2026-10-26T14:13:28-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Confirmaste el esqueleto (13 subplanes); empezamos por SP-1", "diff": ""}
 {"at": "2026-10-26T14:35:56-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T14:54:57-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T14:59:13-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (criterios, tareas)", "diff": "+ Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the five system roles."}
+{"at": "2026-10-26T14:59:13-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:01:10-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 31 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:03:40-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Confirmaste SP-1 en la web; sigue SP-2", "diff": ""}
+{"at": "2026-10-26T15:03:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 (subplan en foco)", "diff": ""}

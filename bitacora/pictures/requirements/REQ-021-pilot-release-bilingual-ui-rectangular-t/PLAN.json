@@ -1,276 +1,1271 @@
 {
-  "schema_version": "1.3.0",
-  "plan_id": "REQ-021",
-  "revision": 1,
-  "spec_ref": "SPEC.md",
-  "milestones": [
-    {
-      "id": "M1",
-      "title": "Accounts, access plans and Taller essentials",
-      "acceptance_criteria": [
-        "Real people sign in with their own invited account and each one reaches exactly what their role or access plan allows; the shared APP_PASSWORD no longer opens the app; tables, Backing and the Blender file work in the Taller."
-      ]
+ "schema_version": "1.3.0",
+ "plan_id": "REQ-021",
+ "revision": 1,
+ "spec_ref": "SPEC.md",
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Accounts, access plans and Taller essentials",
+   "acceptance_criteria": [
+    "Real people sign in with their own invited account and each one reaches exactly what their role or access plan allows; the shared APP_PASSWORD no longer opens the app; tables, Backing and the Blender file work in the Taller."
+   ]
+  },
+  {
+   "id": "M2",
+   "title": "Saved work, spend per user and the chat tools",
+   "acceptance_criteria": [
+    "Each signed-in user saves and reopens projects and decorations from any browser, every paid AI call is attributed to a user and a session, and the assisted chat is three separate tools gated by access plan."
+   ]
+  },
+  {
+   "id": "M3",
+   "title": "English / Spanish",
+   "acceptance_criteria": [
+    "The interface follows the browser language on the first visit and the account's choice afterwards; the Taller 3D and navigation are fully in English first, then product texts, the remaining screens and the AI replies."
+   ]
+  },
+  {
+   "id": "M4",
+   "title": "Editable modules and chat → 3D",
+   "acceptance_criteria": [
+    "Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop."
+   ]
+  },
+  {
+   "id": "M5",
+   "title": "Pilot release",
+   "acceptance_criteria": [
+    "The pilot runs in production with real accounts: the first administrator exists, every shipped subplan is published, a production smoke passes and anything cut is listed."
+   ]
+  }
+ ],
+ "requirements": [
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "R5",
+  "R6",
+  "R7",
+  "R8",
+  "R9",
+  "R10",
+  "R11",
+  "R12",
+  "R13",
+  "R14",
+  "R15",
+  "R16"
+ ],
+ "tasks": [
+  {
+   "id": "T1.1",
+   "milestone_id": "M1",
+   "title": "Accounts schema: migration 037 and the isolated test-schema helper",
+   "objective": "Postgres holds accounts, roles, role permissions, sessions, single-use links and sign-in attempts, and every database test runs in its own throwaway schema of the REQ-021 test database.",
+   "repository": "pictures",
+   "after": [],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 20 additive migration + 25 schema helper + 15 tests = 60. No comparable history for implement tasks.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Additive tables follow the existing numbered migration style; the isolated-schema helper needs search_path care with public extensions.",
+     "evidence": [
+      "file:scripts/migrations/036_shared_taller_quotes.sql",
+      "file:scripts/migrate.ts"
+     ]
     },
-    {
-      "id": "M2",
-      "title": "Saved work, spend per user and the chat tools",
-      "acceptance_criteria": [
-        "Each signed-in user saves and reopens projects and decorations from any browser, every paid AI call is attributed to a user and a session, and the assisted chat is three separate tools gated by access plan."
-      ]
+    "scope": {
+     "justification": "One new migration, one test helper and one test file, without touching existing tables.",
+     "evidence": [
+      "file:scripts/migrations/035_topes_gasto.sql",
+      "spec:SPEC.md#requirements"
+     ]
     },
-    {
-      "id": "M3",
-      "title": "English / Spanish",
-      "acceptance_criteria": [
-        "The interface follows the browser language on the first visit and the account's choice afterwards; the Taller 3D and navigation are fully in English first, then product texts, the remaining screens and the AI replies."
-      ]
+    "duration": {
+     "justification": "Twenty minutes for the migration, twenty-five for the helper and fifteen for its tests, totaling sixty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:scripts/migrate.ts"
+     ]
     },
-    {
-      "id": "M4",
-      "title": "Editable modules and chat → 3D",
-      "acceptance_criteria": [
-        "Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop."
-      ]
+    "risk": {
+     "justification": "The schema stores personal data and password hashes of real external users, so a wrong constraint leaks or loses accounts.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "spec:SPEC.md#requirements"
+     ]
     },
-    {
-      "id": "M5",
-      "title": "Pilot release",
-      "acceptance_criteria": [
-        "The pilot runs in production with real accounts: the first administrator exists, every shipped subplan is published, a production smoke passes and anything cut is listed."
-      ]
+    "coupling": {
+     "justification": "The account service, session guard and every later subplan that stores an owner read these tables.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.4"
+     ]
+    },
+    "confidence": {
+     "justification": "The migration runner and an existing migration were read, so table and runner conventions are known.",
+     "evidence": [
+      "file:scripts/migrate.ts",
+      "file:scripts/migrations/036_shared_taller_quotes.sql"
+     ]
     }
-  ],
-  "requirements": [
+   },
+   "expected_paths": [
+    "scripts/migrations/037_cuentas.sql",
+    "scripts/test/lib/base-prueba.ts",
+    "scripts/test/test-cuentas-esquema.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the five system roles.",
+    "The database rejects a second account whose email differs only in letter case and removes an account's sessions and links when the account is deleted.",
+    "Each test run works in its own throwaway schema of the REQ-021 test database, drops it at the end, and refuses to run against any database other than PICTURES_REQ021_DATABASE_URL or a CI database marked APP_ENV=test."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-esquema -- --test-name-pattern=migracion",
+     "purpose": "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the five system roles.",
+     "category": "integration",
+     "created_by": "T1.1",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-esquema -- --test-name-pattern=restricciones",
+     "purpose": "The database rejects a second account whose email differs only in letter case and removes an account's sessions and links when the account is deleted.",
+     "category": "functional",
+     "created_by": "T1.1",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-esquema -- --test-name-pattern=aislamiento",
+     "purpose": "Each test run works in its own throwaway schema of the REQ-021 test database, drops it at the end, and refuses to run against any database other than PICTURES_REQ021_DATABASE_URL or a CI database marked APP_ENV=test.",
+     "category": "functional",
+     "created_by": "T1.1",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R3"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.2",
+   "milestone_id": "M1",
+   "title": "Permission catalogue, the five system roles and the route permission map",
+   "objective": "One code module names every permission and the permissions of each system role, and one map assigns every page and API path its permission, public access or own authentication, with a test that fails on any unmapped file.",
+   "repository": "pictures",
+   "after": [
+    "T1.1"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 90,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 catalogue and roles + 45 classifying 115 page and route files + 30 filesystem-walking test = 90. Confidence medium because a few routes may belong to more than one tool.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Assigning 95 API routes and 20 pages to the owner's tools needs judgement for routes shared by the chat and the Taller.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "spec:SPEC.md#clarifications"
+     ]
+    },
+    "scope": {
+     "justification": "Two small modules and one test, with no behavior change until the guard consumes them.",
+     "evidence": [
+      "file:src/lib/auth/shared-quote-public-path.ts",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen minutes catalogue, forty-five classifying every file and thirty for the walking test, ninety in total.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/proxy.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A route placed under the wrong permission exposes paid AI or internal tools to external users.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/proxy.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "The guard, the admin screens of SP-2 and every tool subplan read contract:permission-map.",
+     "evidence": [
+      "task:T1.4",
+      "task:T1.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The route tree and the proxy exceptions were listed, but the tool each shared route belongs to is partly assumed.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "assumption:shared chat and Taller routes go to the plan that first includes the tool"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/cuentas/permisos.ts",
+    "src/lib/cuentas/mapa-rutas.ts",
+    "scripts/test/test-mapa-rutas.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+    "The five system roles hold exactly the permissions of the owner's table: Plan 1 chat, balloon counter and catalogue; Plan 2 adds costs and the decorations explorer; Plan 3 adds the Taller 3D; Empleado interno adds everyone's projects, AI spend and internal tools; Administrador adds users, roles and text corrections.",
+    "A path the map does not list is reachable only with the users-administration permission, and the public and own-auth exceptions of today's proxy matcher stay public or own-auth."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-permisos -- --test-name-pattern=cobertura",
+     "purpose": "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+     "category": "static",
+     "created_by": "T1.2"
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-permisos -- --test-name-pattern=roles-sistema",
+     "purpose": "The five system roles hold exactly the permissions of the owner's table: Plan 1 chat, balloon counter and catalogue; Plan 2 adds costs and the decorations explorer; Plan 3 adds the Taller 3D; Empleado interno adds everyone's projects, AI spend and internal tools; Administrador adds users, roles and text corrections.",
+     "category": "functional",
+     "created_by": "T1.2"
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-permisos -- --test-name-pattern=excepciones",
+     "purpose": "A path the map does not list is reachable only with the users-administration permission, and the public and own-auth exceptions of today's proxy matcher stay public or own-auth.",
+     "category": "functional",
+     "created_by": "T1.2"
+    }
+   ],
+   "covers": [
+    "R2",
+    "R3",
+    "R16"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.3",
+   "milestone_id": "M1",
+   "title": "Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands",
+   "objective": "A server-only service invites, activates, signs in, locks out, resets, deactivates and deletes accounts and manages custom roles under the owner's rules, and two commands create the first administrator and the local test accounts.",
+   "repository": "pictures",
+   "after": [
+    "T1.2"
+   ],
+   "complexity": "high",
+   "scope": "large_change",
+   "estimated_minutes": 150,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 moving scrypt + 60 service rules + 25 links and lockout + 20 commands + 30 database tests = 150. No comparable history.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Lockout windows, single-use links, last-administrator protection and generic refusals interact and must hold under concurrent requests.",
+     "evidence": [
+      "spec:SPEC.md#clarifications",
+      "file:src/lib/asesor/auth.ts"
+     ]
+    },
+    "scope": {
+     "justification": "A new service, two link and lockout helpers, two commands and a shared hashing module reused by the advisor login.",
+     "evidence": [
+      "file:src/lib/asesor/auth.ts",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen hashing, sixty service, twenty-five links and lockout, twenty commands and thirty tests, one hundred fifty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/asesor/auth.ts"
+     ]
+    },
+    "risk": {
+     "justification": "Authentication code: an error lets someone in without a password or locks real users out of the pilot.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "file:src/lib/asesor/auth.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "The session guard, the SP-2 screens and the release subplan call contract:account-service.",
+     "evidence": [
+      "task:T1.4",
+      "task:T1.7"
+     ]
+    },
+    "confidence": {
+     "justification": "The existing scrypt code was read and the rules are fixed by the owner, though concurrency details remain partly assumed.",
+     "evidence": [
+      "file:src/lib/asesor/auth.ts",
+      "assumption:row locks on the account serialise concurrent activations"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/seguridad/scrypt.ts",
+    "src/lib/asesor/auth.ts",
+    "src/lib/cuentas/servicio.ts",
+    "src/lib/cuentas/enlaces.ts",
+    "src/lib/cuentas/limite-intentos.ts",
+    "scripts/cuentas/primer-admin.ts",
+    "scripts/cuentas/sembrar-prueba.ts",
+    "scripts/test/test-cuentas-servicio.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:account-service",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+    "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+    "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+    "An administrator-generated reset link is single-use, expires after 24 hours, sets a new password and revokes every open session of that account.",
+    "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+    "An administrator creates a role from permissions of the catalogue only; the five system roles cannot be edited or deleted; a role still assigned to accounts cannot be deleted.",
+    "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+    "npm run cuentas:sembrar-prueba creates one active account per system role with a password read from the terminal without echo, and refuses when the target database is not the REQ-021 test database."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=invitacion",
+     "purpose": "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=ingreso",
+     "purpose": "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=bloqueo",
+     "purpose": "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=restablecer",
+     "purpose": "An administrator-generated reset link is single-use, expires after 24 hours, sets a new password and revokes every open session of that account.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=ultimo-admin",
+     "purpose": "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=roles",
+     "purpose": "An administrator creates a role from permissions of the catalogue only; the five system roles cannot be edited or deleted; a role still assigned to accounts cannot be deleted.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=primer-admin",
+     "purpose": "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+     "category": "integration",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-servicio -- --test-name-pattern=sembrar",
+     "purpose": "npm run cuentas:sembrar-prueba creates one active account per system role with a password read from the terminal without echo, and refuses when the target database is not the REQ-021 test database.",
+     "category": "functional",
+     "created_by": "T1.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R1",
+    "R3",
+    "R16"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.4",
+   "milestone_id": "M1",
+   "title": "Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD",
+   "objective": "Every request is resolved to an account and its permissions from a revocable server session, the proxy enforces the route map for pages and APIs, and the shared APP_PASSWORD no longer opens anything.",
+   "repository": "pictures",
+   "after": [
+    "T1.3"
+   ],
+   "complexity": "high",
+   "scope": "large_change",
+   "estimated_minutes": 150,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 35 sessions + 40 proxy and guard + 20 sign-in and sign-out APIs + 15 probe command + 40 tests = 150. No comparable history.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "The proxy must keep today's exceptions while adding a database lookup per request and distinguishing page redirects from API errors.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "file:src/lib/auth/request.ts"
+     ]
+    },
+    "scope": {
+     "justification": "Replaces the shared-password session across proxy, login API and helpers, adding sessions, guard, probe command and tests.",
+     "evidence": [
+      "file:src/app/api/login/route.ts",
+      "file:src/lib/auth/session.ts"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty-five sessions, forty guard, twenty APIs, fifteen probe and forty tests make one hundred fifty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/proxy.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A gap in the guard exposes every tool and real users' data; a wrong redirect locks everyone out of the pilot.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/proxy.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Every API handler of T1.6 and every later subplan call contract:session-guard.",
+     "evidence": [
+      "task:T1.6",
+      "task:T1.5"
+     ]
+    },
+    "confidence": {
+     "justification": "The proxy, the request helpers and the login route were read; the Node runtime of the Next 16 proxy is assumed to allow a pg query.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "assumption:Next 16.3 proxy runs on the Node.js runtime"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/cuentas/sesion.ts",
+    "src/lib/cuentas/guardia.ts",
+    "src/proxy.ts",
+    "src/lib/auth/session.ts",
+    "src/lib/auth/request.ts",
+    "src/app/api/login/route.ts",
+    "src/app/api/cuentas/ingresar/route.ts",
+    "src/app/api/cuentas/salir/route.ts",
+    "src/app/sin-acceso/page.tsx",
+    "scripts/cuentas/probar-acceso.ts",
+    "scripts/test/test-sesion-guardia.ts",
+    "scripts/test/test-proxy-matcher.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:session-guard",
+    "contract:account-service",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "A session cookie is httpOnly, SameSite=Lax, Secure outside localhost, lasts 30 days, and only the SHA-256 of its random token is stored.",
+    "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+    "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+    "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+    "npm run cuentas:probar-acceso signs in against a running server with an email and a password read without echo and prints, for every mapped area, whether that account is allowed or denied."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-sesion -- --test-name-pattern=cookie",
+     "purpose": "A session cookie is httpOnly, SameSite=Lax, Secure outside localhost, lasts 30 days, and only the SHA-256 of its random token is stored.",
+     "category": "functional",
+     "created_by": "T1.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-sesion -- --test-name-pattern=revocacion",
+     "purpose": "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+     "category": "functional",
+     "created_by": "T1.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-sesion -- --test-name-pattern=proxy",
+     "purpose": "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+     "category": "functional",
+     "created_by": "T1.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-sesion -- --test-name-pattern=sin-clave-compartida",
+     "purpose": "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+     "category": "regression",
+     "created_by": "T1.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-sesion -- --test-name-pattern=probar-acceso",
+     "purpose": "npm run cuentas:probar-acceso signs in against a running server with an email and a password read without echo and prints, for every mapped area, whether that account is allowed or denied.",
+     "category": "integration",
+     "created_by": "T1.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.5",
+   "milestone_id": "M1",
+   "title": "Local no-restrictions mode that refuses to start outside next dev on loopback",
+   "objective": "AUTH_LOCAL_SIN_RESTRICCIONES=1 lets the owner work locally as the Administrador local account without signing in, and any build, start or deployment with the variable set refuses to run.",
+   "repository": "pictures",
+   "after": [
+    "T1.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 20 mode and start guards + 10 ai-api refusal + 30 tests = 60. No comparable history.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "The refusal must fire in three places, next.config at build, instrumentation at start and the ai-api, with loopback detection per request.",
+     "evidence": [
+      "file:src/instrumentation.ts",
+      "file:next.config.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One mode module, start guards in two existing files, an ai-api refusal and their tests.",
+     "evidence": [
+      "file:src/instrumentation.ts",
+      "spec:SPEC.md#inputs"
+     ]
+    },
+    "duration": {
+     "justification": "Twenty for the guards, ten for the ai-api and thirty for the tests make sixty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/instrumentation.ts"
+     ]
+    },
+    "risk": {
+     "justification": "If the variable ever works in a deployment, anyone on the internet is an administrator of the pilot.",
+     "evidence": [
+      "spec:SPEC.md#clarifications",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "coupling": {
+     "justification": "It plugs into contract:session-guard from T1.4 as an alternative session source.",
+     "evidence": [
+      "task:T1.4",
+      "task:T1.7"
+     ]
+    },
+    "confidence": {
+     "justification": "Instrumentation and the Next config were read and the owner fixed the rule in round 5.",
+     "evidence": [
+      "file:src/instrumentation.ts",
+      "file:next.config.ts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/cuentas/modo-local.ts",
+    "src/instrumentation.ts",
+    "next.config.ts",
+    "services/ai-api/app/main.py",
+    "scripts/test/test-modo-local.ts",
+    "services/ai-api/tests/test_modo_local.py"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+    "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+    "Without the variable next dev asks to sign in like production, and DEV_REQUIRE_LOGIN no longer changes anything."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+     "purpose": "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+     "category": "functional",
+     "created_by": "T1.5",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque",
+     "purpose": "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+     "category": "functional",
+     "created_by": "T1.5"
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable",
+     "purpose": "Without the variable next dev asks to sign in like production, and DEV_REQUIRE_LOGIN no longer changes anything.",
+     "category": "regression",
+     "created_by": "T1.5"
+    }
+   ],
+   "covers": [
+    "R2"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.6",
+   "milestone_id": "M1",
+   "title": "Apply the permission guard to every API handler and move the existing suites to a shared test session",
+   "objective": "Each API handler checks its mapped permission on the server before doing work, and the suites that used APP_PASSWORD sign in through a shared test-session helper.",
+   "repository": "pictures",
+   "after": [
+    "T1.4"
+   ],
+   "complexity": "low",
+   "scope": "large_change",
+   "estimated_minutes": 180,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 70 guards on about 80 handlers + 70 moving 40 suites and the smoke to the helper + 40 guard-coverage test and fixes = 180. Mechanical but wide.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Mostly mechanical: replace isAuthenticatedRequest with the guard and the permission the map gives each path.",
+     "evidence": [
+      "file:src/lib/auth/request.ts",
+      "file:src/lib/feedback-ia/acceso.ts"
+     ]
+    },
+    "scope": {
+     "justification": "About eighty handlers and forty test files change, a transversal edit across the repository.",
+     "evidence": [
+      "file:scripts/test/datos-vista-motor3d.ts",
+      "file:scripts/e2e/humo/configuracion.ts"
+     ]
+    },
+    "duration": {
+     "justification": "Seventy handlers, seventy suites and forty for the coverage test and fixes make one hundred eighty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:scripts/test/datos-vista-motor3d.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A handler left unguarded exposes a paid AI endpoint to anyone with any session.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/lib/auth/request.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "It touches route files that later subplans also edit, so it consumes contract:session-guard and must land before them.",
+     "evidence": [
+      "task:T1.4",
+      "task:T1.7"
+     ]
+    },
+    "confidence": {
+     "justification": "Every handler and test using the shared password was listed by search, so the size is measured.",
+     "evidence": [
+      "command:grep -rln APP_PASSWORD src scripts services -> 59 files",
+      "file:src/lib/auth/request.ts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/app/api/**/route.ts",
+    "src/lib/feedback-ia/acceso.ts",
+    "src/lib/guiada-motor/manejadores.ts",
+    "src/lib/happie/panel-prueba.ts",
+    "src/lib/shared-quotes/dependencies.server.ts",
+    "src/lib/taller/cotizacion-taller.ts",
+    "src/lib/asesor/voice.ts",
+    "scripts/test/lib/sesion-prueba.ts",
+    "scripts/test/test-guardias-rutas.ts",
+    "scripts/test/*.ts",
+    "scripts/e2e/humo/configuracion.ts",
+    "scripts/e2e/humo/pasos-asistente.ts",
+    "scripts/e2e/humo/navegacion.ts",
+    "scripts/eval/eval-chat-jerga.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:session-guard",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+    "The existing suites that signed in with APP_PASSWORD pass using the shared test-session helper and none of them sets APP_PASSWORD.",
+    "Lint and the TypeScript check pass on the whole repository after the guards are applied."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-rutas",
+     "purpose": "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+     "category": "functional",
+     "created_by": "T1.6",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run test-cotizacion-unica",
+     "purpose": "The existing suites that signed in with APP_PASSWORD pass using the shared test-session helper and none of them sets APP_PASSWORD.",
+     "category": "regression",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run taller:test-estatico",
+     "purpose": "Lint and the TypeScript check pass on the whole repository after the guards are applied.",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R2"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.7",
+   "milestone_id": "M1",
+   "title": "End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI",
+   "objective": "A production build started with next start against the REQ-021 test database proves each system role reaches exactly its areas, revocation is immediate and the shared password is dead, and CI runs the SP-1 suites.",
+   "repository": "pictures",
+   "after": [
+    "T1.5",
+    "T1.6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 120,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build + 60 driving four accounts through pages and APIs + 25 CI steps + 20 evidence = 120. Build time on the sandbox is the main unknown.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Starting the real server against a throwaway schema and driving four roles needs careful setup and teardown.",
+     "evidence": [
+      "file:.github/workflows/checks.yml",
+      "task:T1.6"
+     ]
+    },
+    "scope": {
+     "justification": "One integration script, CI steps and an evidence file, without product code changes.",
+     "evidence": [
+      "file:.github/workflows/checks.yml",
+      "task:T1.5"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen build, sixty driving the accounts, twenty-five CI and twenty evidence add to one hundred twenty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "file:package.json"
+     ]
+    },
+    "risk": {
+     "justification": "It is the last barrier before the audit for authentication of real users.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "task:T1.8"
+     ]
+    },
+    "coupling": {
+     "justification": "It exercises contract:session-guard and every SP-1 task's output together.",
+     "evidence": [
+      "task:T1.4",
+      "task:T1.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The CI workflow and its Postgres service were read; next build duration in the sandbox is not measured.",
+     "evidence": [
+      "file:.github/workflows/checks.yml",
+      "assumption:next build finishes within the sandbox time limit"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/test/test-integracion-cuentas.ts",
+    ".github/workflows/checks.yml",
+    ".evidence/REQ-021/SP-1.integration.json"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:session-guard"
+   ],
+   "acceptance_criteria": [
+    "Against a production build started with next start on the REQ-021 test database, one Plan 1, one Plan 3, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+    "The CI checks workflow runs the SP-1 suites against its Postgres service and fails when a build is started with AUTH_LOCAL_SIN_RESTRICCIONES set."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-integracion",
+     "purpose": "Against a production build started with next start on the REQ-021 test database, one Plan 1, one Plan 3, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+     "category": "integration",
+     "created_by": "T1.7",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-integracion -- --solo-ci",
+     "purpose": "The CI checks workflow runs the SP-1 suites against its Postgres service and fails when a build is started with AUTH_LOCAL_SIN_RESTRICCIONES set.",
+     "category": "static",
+     "created_by": "T1.7"
+    }
+   ],
+   "covers": [
     "R1",
     "R2",
     "R3",
-    "R4",
-    "R5",
-    "R6",
-    "R7",
-    "R8",
+    "R16"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-1"
+  },
+  {
+   "id": "T1.8",
+   "milestone_id": "M1",
+   "title": "SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands",
+   "objective": "An independent read-only security review confirms SP-1 against R1, R2, R3 and R16 and records each confirmed defect with the task to redo in a blocking findings ledger.",
+   "repository": "pictures",
+   "after": [
+    "T1.7"
+   ],
+   "complexity": "high",
+   "scope": "small_change",
+   "estimated_minutes": 90,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 session and token handling + 25 route map and handler coverage + 15 local mode and commands + 20 ledger and report = 90.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reviewing token storage, lockout, revocation and route coverage needs security judgement across modules.",
+     "evidence": [
+      "task:T1.4",
+      "spec:SPEC.md#constraints"
+     ]
+    },
+    "scope": {
+     "justification": "The audit writes only its report and ledger and changes no code.",
+     "evidence": [
+      "task:T1.7",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty sessions, twenty-five coverage, fifteen local mode and twenty ledger make ninety minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T1.6"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect here reaches real external users on the first milestone deployment.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "task:T1.7"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-1 can send T1.1 to T1.6 back for targeted rework.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The review surface is bounded by three produced contracts with tests, so the estimate rests on concrete tasks.",
+     "evidence": [
+      "task:T1.7",
+      "task:T1.2"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-1.audit.md",
+    ".evidence/REQ-021/SP-1.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-1"
+   ],
+   "acceptance_criteria": [
+    "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json",
+     "purpose": "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding.",
+     "category": "static",
+     "created_by": "T1.8"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R3",
+    "R16"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-1"
+  }
+ ],
+ "interfaces": [],
+ "subplans": [
+  {
+   "id": "SP-1",
+   "milestone_id": "M1",
+   "title": "Accounts, sessions and server-side permissions",
+   "outcome": "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the three access plans are sets of permissions; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command.",
+   "covers": [
+    "R1",
+    "R2",
+    "R3",
+    "R16"
+   ],
+   "acceptance_criteria": [
+    "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the five system roles.",
+    "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+    "The five system roles hold exactly the permissions of the owner's table: Plan 1 chat, balloon counter and catalogue; Plan 2 adds costs and the decorations explorer; Plan 3 adds the Taller 3D; Empleado interno adds everyone's projects, AI spend and internal tools; Administrador adds users, roles and text corrections.",
+    "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+    "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+    "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+    "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+    "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+    "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+    "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+    "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+    "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+    "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+    "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+    "Against a production build started with next start on the REQ-021 test database, one Plan 1, one Plan 3, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+    "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "integration_test_task": "T1.7",
+   "audit_task": "T1.8",
+   "produces": [
+    {
+     "contract": "permission-map",
+     "version": 1,
+     "defined_by": "T1.2"
+    },
+    {
+     "contract": "account-service",
+     "version": 1,
+     "defined_by": "T1.3"
+    },
+    {
+     "contract": "session-guard",
+     "version": 1,
+     "defined_by": "T1.4"
+    }
+   ]
+  },
+  {
+   "id": "SP-2",
+   "milestone_id": "M1",
+   "title": "Sign-in, invitation and administration screens",
+   "outcome": "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts.",
+   "covers": [
+    "R1",
+    "R3",
+    "R16"
+   ],
+   "acceptance_criteria": [
+    "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts."
+   ],
+   "ui": {
+    "contract": "cuentas-admin",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-3",
+   "milestone_id": "M1",
+   "title": "Taller essentials: rectangular tables, Backing and Blender export",
+   "outcome": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+   "covers": [
     "R9",
     "R10",
-    "R11",
-    "R12",
+    "R11"
+   ],
+   "acceptance_criteria": [
+    "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours."
+   ],
+   "ui": {
+    "contract": "taller-esenciales",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-4",
+   "milestone_id": "M2",
+   "title": "Saved projects",
+   "outcome": "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss.",
+   "covers": [
+    "R6",
+    "R7"
+   ],
+   "acceptance_criteria": [
+    "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss."
+   ],
+   "ui": {
+    "contract": "proyectos",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-5",
+   "milestone_id": "M2",
+   "title": "Saved decorations",
+   "outcome": "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported.",
+   "covers": [
+    "R8"
+   ],
+   "acceptance_criteria": [
+    "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported."
+   ],
+   "ui": {
+    "contract": "decoraciones",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-6",
+   "milestone_id": "M2",
+   "title": "AI spend per user and session",
+   "outcome": "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view.",
+   "covers": [
+    "R4",
+    "R5"
+   ],
+   "acceptance_criteria": [
+    "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view."
+   ],
+   "ui": {
+    "contract": "gasto-ia",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-7",
+   "milestone_id": "M2",
+   "title": "Assisted chat as three tools and the decorations explorer",
+   "outcome": "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan.",
+   "covers": [
     "R13",
-    "R14",
-    "R15",
     "R16"
-  ],
-  "tasks": [],
-  "interfaces": [],
-  "subplans": [
-    {
-      "id": "SP-1",
-      "milestone_id": "M1",
-      "title": "Accounts, sessions and server-side permissions",
-      "outcome": "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the three access plans are sets of permissions; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command.",
-      "covers": [
-        "R1",
-        "R2",
-        "R3",
-        "R16"
-      ],
-      "acceptance_criteria": [
-        "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the three access plans are sets of permissions; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command."
-      ]
-    },
-    {
-      "id": "SP-2",
-      "milestone_id": "M1",
-      "title": "Sign-in, invitation and administration screens",
-      "outcome": "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts.",
-      "covers": [
-        "R1",
-        "R3",
-        "R16"
-      ],
-      "acceptance_criteria": [
-        "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts."
-      ],
-      "ui": {
-        "contract": "cuentas-admin",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-3",
-      "milestone_id": "M1",
-      "title": "Taller essentials: rectangular tables, Backing and Blender export",
-      "outcome": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
-      "covers": [
-        "R9",
-        "R10",
-        "R11"
-      ],
-      "acceptance_criteria": [
-        "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours."
-      ],
-      "ui": {
-        "contract": "taller-esenciales",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-4",
-      "milestone_id": "M2",
-      "title": "Saved projects",
-      "outcome": "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss.",
-      "covers": [
-        "R6",
-        "R7"
-      ],
-      "acceptance_criteria": [
-        "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss."
-      ],
-      "ui": {
-        "contract": "proyectos",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-5",
-      "milestone_id": "M2",
-      "title": "Saved decorations",
-      "outcome": "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported.",
-      "covers": [
-        "R8"
-      ],
-      "acceptance_criteria": [
-        "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported."
-      ],
-      "ui": {
-        "contract": "decoraciones",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-6",
-      "milestone_id": "M2",
-      "title": "AI spend per user and session",
-      "outcome": "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view.",
-      "covers": [
-        "R4",
-        "R5"
-      ],
-      "acceptance_criteria": [
-        "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view."
-      ],
-      "ui": {
-        "contract": "gasto-ia",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-7",
-      "milestone_id": "M2",
-      "title": "Assisted chat as three tools and the decorations explorer",
-      "outcome": "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan.",
-      "covers": [
-        "R13",
-        "R16"
-      ],
-      "acceptance_criteria": [
-        "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan."
-      ],
-      "ui": {
-        "contract": "herramientas-chat",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-8",
-      "milestone_id": "M3",
-      "title": "Language switch, Taller 3D and navigation in English",
-      "outcome": "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages.",
-      "covers": [
-        "R12"
-      ],
-      "acceptance_criteria": [
-        "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages."
-      ],
-      "ui": {
-        "contract": "idioma-taller",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-9",
-      "milestone_id": "M3",
-      "title": "Product and decoration texts in English",
-      "outcome": "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator.",
-      "covers": [
-        "R12"
-      ],
-      "acceptance_criteria": [
-        "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator."
-      ],
-      "ui": {
-        "contract": "textos-producto",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-10",
-      "milestone_id": "M3",
-      "title": "Remaining screens and AI replies in English",
-      "outcome": "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language.",
-      "covers": [
-        "R12"
-      ],
-      "acceptance_criteria": [
-        "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language."
-      ],
-      "ui": {
-        "contract": "idioma-resto",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-11",
-      "milestone_id": "M4",
-      "title": "Editable modules and quartets",
-      "outcome": "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update.",
-      "covers": [
-        "R15"
-      ],
-      "acceptance_criteria": [
-        "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update."
-      ],
-      "ui": {
-        "contract": "modulos-editables",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-12",
-      "milestone_id": "M4",
-      "title": "Normal chat recommends ready-made 3D decorations",
-      "outcome": "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine.",
-      "covers": [
-        "R13"
-      ],
-      "acceptance_criteria": [
-        "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine."
-      ],
-      "ui": {
-        "contract": "chat-a-3d",
-        "version": 1
-      }
-    },
-    {
-      "id": "SP-13",
-      "milestone_id": "M5",
-      "title": "Pilot release in production",
-      "outcome": "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded.",
-      "covers": [
-        "R14"
-      ],
-      "acceptance_criteria": [
-        "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded."
-      ]
-    }
-  ],
-  "composition_gates": []
+   ],
+   "acceptance_criteria": [
+    "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan."
+   ],
+   "ui": {
+    "contract": "herramientas-chat",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-8",
+   "milestone_id": "M3",
+   "title": "Language switch, Taller 3D and navigation in English",
+   "outcome": "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages.",
+   "covers": [
+    "R12"
+   ],
+   "acceptance_criteria": [
+    "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages."
+   ],
+   "ui": {
+    "contract": "idioma-taller",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-9",
+   "milestone_id": "M3",
+   "title": "Product and decoration texts in English",
+   "outcome": "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator.",
+   "covers": [
+    "R12"
+   ],
+   "acceptance_criteria": [
+    "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator."
+   ],
+   "ui": {
+    "contract": "textos-producto",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-10",
+   "milestone_id": "M3",
+   "title": "Remaining screens and AI replies in English",
+   "outcome": "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language.",
+   "covers": [
+    "R12"
+   ],
+   "acceptance_criteria": [
+    "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language."
+   ],
+   "ui": {
+    "contract": "idioma-resto",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-11",
+   "milestone_id": "M4",
+   "title": "Editable modules and quartets",
+   "outcome": "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update.",
+   "covers": [
+    "R15"
+   ],
+   "acceptance_criteria": [
+    "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update."
+   ],
+   "ui": {
+    "contract": "modulos-editables",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-12",
+   "milestone_id": "M4",
+   "title": "Normal chat recommends ready-made 3D decorations",
+   "outcome": "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine.",
+   "covers": [
+    "R13"
+   ],
+   "acceptance_criteria": [
+    "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine."
+   ],
+   "ui": {
+    "contract": "chat-a-3d",
+    "version": 1
+   }
+  },
+  {
+   "id": "SP-13",
+   "milestone_id": "M5",
+   "title": "Pilot release in production",
+   "outcome": "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded.",
+   "covers": [
+    "R14"
+   ],
+   "acceptance_criteria": [
+    "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded."
+   ]
+  }
+ ],
+ "composition_gates": []
 }

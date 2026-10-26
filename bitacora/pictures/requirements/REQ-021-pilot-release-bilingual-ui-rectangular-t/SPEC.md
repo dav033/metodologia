@@ -141,8 +141,8 @@ there is no UI subplan._
 
 ## Assumptions
 - Invitations are single-use links the administrator copies and sends himself (round 4); no email service in this plan.
-- No feature flags (owner: the working environment is not production). To confirm: which environment each approved subplan is published to, since merging to main may deploy the live site.
-- Local development has no credential or role restrictions, controlled by a flag in `.env`; that flag must be refused in production. The first production administrator is created by a one-off command.
+- No feature flags. Each milestone, once all its subplans are approved, is merged to `main` and deploys `demo-decoracion.vercel.app`, which is the testing environment until pilot day and production from then on (round 6).
+- Local development has no credential or role restrictions only with `AUTH_LOCAL_SIN_RESTRICCIONES=1` under `next dev` on loopback; anywhere else the app refuses to start. The first production administrator is created by a one-off command the owner runs.
 - One-time translation of products and decorations to English uses the owner's Claude accounts with Haiku 5.5 (no Gemini key, no USD cap).
 - `/asesor` and `/happie` keep their own login and stay outside the pilot's new accounts.
 - Login is email plus password with invitation by email (owner chose «invited», not the mechanism). Revisit if an identity provider is preferred.
@@ -167,6 +167,7 @@ there is no UI subplan._
 
 ## Clarifications
 - Round 1 (2026-10-26): pilot users = real external users + internal employees + administrators; priorities accepted as proposed; «tokens» = AI spend per user, visible to employee and admin (session total, image-generation spend); Backing = one catalogue category grouping party props (metal hoops, pedestals, round panel, half moon, chiara arches); language: EN/ES switch, auto-detected, covering AI replies, products and interface.
+- Round 6 (2026-10-26, Planner, SP-1): access plans are roles (Usuario · Plan 1/2/3, Empleado interno, Administrador; one role per account; administrators create more roles by choosing permissions); initial permissions as proposed (Plan 1: assisted chat, balloon counter, catalogue; Plan 2: + cost calculator, ready-made decorations explorer; Plan 3: + Taller 3D incl. scene AI, assembly plans, assembly sheet, export, own projects and decorations; Empleado interno: + everyone's projects, AI spend, internal tools; Administrador: + users, roles, English text corrections); session 30 days, ends on sign-out, deactivation or password change; password minimum **8** characters; 5 failed attempts per email in 15 min lock that email 15 min; password reset = single-use admin-generated link (24 h), invitation link 7 days; first production administrator: the owner runs the one-time command himself, and may also use local no-restrictions mode against the production database to create administrators; pilot production = `demo-decoracion.vercel.app` from pilot day (no new domain), tests stay local and on Vercel previews.
 - Round 5 (2026-10-26, Planner): demo-decoracion.vercel.app is the testing environment, not production; each hito integrates into main after the owner approves its subplans (production = to confirm in SP-13); test database = Postgres on the advin VPS prepared by the HQ session (`PICTURES_REQ021_DATABASE_URL`, tunnel on local port 55433), no Neon branch; local no-restrictions mode via `.env` flag, refused outside `next dev` on loopback; first production administrator davidt@sempertex.com by a one-time command (to confirm); the data-processing text (Ley 1581, ES/EN) is drafted by the agent, approved by the owner, Sempertex legal to review, policy link and contact email pending; automated smoke on the deployed environment with account piloto-e2e, no paid AI.
 - Round 4 (2026-10-26, Planner): invitation = copyable single-use link; three access plans (see Priorities); no flags; AI spend stored for both login session and project/conversation; cuts by date (9 Nov language, 11 Nov modules, 12 Nov chat) with the owner approving each subplan in under 24 h; translation with Claude accounts on Haiku 5.5; local admin without restrictions via an `.env` flag.
 - Round 2 (2026-10-26): assisted chat is in scope (to be broken apart, split and improved); external accounts are invited by an administrator, no open registration; admin can create roles and choose permissions from the pilot; no spend caps now (measure and show only); English product names/descriptions are AI-generated once from the Spanish source, stored in the database and editable by an administrator.
@@ -180,19 +181,26 @@ there is no UI subplan._
 - Q: What moves if time is short → A: cut order above.
 
 ## Inputs
-Locations only, never values. Empty Subplan = plan-wide. Rows marked `pending` wait on round 6.
+Locations only, never values. Empty Subplan = plan-wide. 
 
 | Item | Subplan | Where it lives | Supplier | Status |
 |---|---|---|---|---|
 | Where each approved subplan is tried and when it is integrated | all | round 5 q1: each subplan is tried locally (Probar); when every subplan of a milestone is approved it is merged to `main`, migrations applied and Vercel (`demo-decoracion.vercel.app`, the testing environment) deploys; the VPS ai-api is deployed if it changed | Owner | available |
-| Pilot production environment (host, domain, database) | SP-13 | round 5 q1 note: `demo-decoracion.vercel.app` is NOT production; asked in round 6 | Owner | pending |
+| Pilot production environment (host, domain, database) | SP-13 | round 6 q5: `demo-decoracion.vercel.app` (Vercel project `dav033s-projects/demo-decoracion`, Neon `DATABASE_URL` of its Production env) becomes production on pilot day; no new domain; until then it is the testing environment and tests run locally and on Vercel previews | Owner | available |
 | Database for automated checks and local tests | all | `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env`; Postgres 16 `req021-db` on advin, tunnel `pictures-req021-db-tunnel.service` on local port 55433 (TOOLS.md); migrations not applied yet | Owner (HQ) | available |
 | Testing-environment Neon database | SP-13 | `DATABASE_URL` in Vercel Production env of `demo-decoracion` and `.env.local` (name only) | Owner | available |
 | Vercel deploy of `main` (testing environment) | SP-13 | Vercel project `dav033s-projects/demo-decoracion`, Git integration; `vercel` CLI logged in as dav033 | Owner | available |
 | VPS deploy of ai-api | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, environment `production`) via `gh` | Owner | available |
 | Local no-restrictions flag: name and rule | SP-1 | round 5 q3 (accepted): `AUTH_LOCAL_SIN_RESTRICCIONES=1` in `.env.local`, valid only under `next dev` and loopback requests; anywhere else the app refuses to start | Owner | available |
-| First production administrator: mechanism and email | SP-1, SP-13 | round 5 q5: `davidt@sempertex.com`; mechanism asked again in round 6 (q4 answer described local mode) | Owner | pending |
+| First production administrator: mechanism and email | SP-1, SP-13 | round 6 q4: the owner runs the one-time command `npm run cuentas:primer-admin` for `davidt@sempertex.com` in his own terminal at release (activation link shown only to him); he may also run the app locally in no-restrictions mode against the production database and create administrators from the admin screens | Owner | available |
 | Data-protection text (Ley 1581, ES/EN) | SP-2 | round 5 q6: drafted by the agent, approved by the owner in SP-2 | Owner | available |
 | Sempertex privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | deferred: marked placeholders in the text, flagged for Sempertex legal review before real users activate |
 | Authorization for automated smoke on the deployed environment | SP-13 | round 5 q7 (granted: account `piloto-e2e`, Usuario plan 3, no paid AI, deleted after each smoke); needs a matching entry in `~/bitacora/pictures/verification-policy.json` (operator-owned, not yet created) | Owner | location given |
 | One-time English translation with Haiku 5.5 | SP-9 | owner's Claude accounts through the Claude Code CLI (round 4 q6); no Gemini key, no USD cap | Owner | available |
+
+## Pruebas
+Where the owner tries each subplan once built (D-131). «Probar» opens that exact version locally; the tunnel `pictures-req021-db-tunnel.service` must be active and `.env.local` must point `DATABASE_URL` at the REQ-021 test database (never production).
+
+| Subplan | Where | How | Expect |
+|---|---|---|---|
+| SP-1 | Local | 1) `npm run rag:migrate` then `npm run cuentas:sembrar-prueba` (type one password; creates plan1@, plan2@, plan3@, empleado@ and admin@prueba.local). 2) `npm run dev`, then in another terminal `npm run cuentas:probar-acceso -- --base http://localhost:3000 --correo plan1@prueba.local` and the same for plan3@, empleado@ and admin@. 3) Open http://localhost:3000/3d in the browser without the flag; then add `AUTH_LOCAL_SIN_RESTRICCIONES=1` to `.env.local`, restart `npm run dev` and open it again. 4) With the flag still set run `npm run build`. | 2) Plan 1: chat, catalogue allowed; costs, Taller 3D, admin denied. Plan 3: Taller 3D allowed; admin denied. Empleado: internal tools and spend allowed; users and roles denied. Admin: everything allowed. 3) Without the flag: sent to /login (it cannot sign in until SP-2 lands); with the flag: the Taller opens as «Administrador local». 4) The build stops with an error naming `AUTH_LOCAL_SIN_RESTRICCIONES`. |
