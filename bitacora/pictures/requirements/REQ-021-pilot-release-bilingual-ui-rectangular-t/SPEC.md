@@ -180,17 +180,19 @@ there is no UI subplan._
 - Q: What moves if time is short → A: cut order above.
 
 ## Inputs
-Locations only, never values. Empty Subplan = plan-wide. Rows marked `pending` wait on round 5.
+Locations only, never values. Empty Subplan = plan-wide. Rows marked `pending` wait on round 6.
 
 | Item | Subplan | Where it lives | Supplier | Status |
 |---|---|---|---|---|
-| Where each approved subplan is tried and when it reaches production | all | round 5 q1 | Owner | pending |
-| Database for automated checks and local tests | all | round 5 q2; proposed `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env` (Neon branch) | Owner | pending |
-| Production Neon database | SP-13 | `DATABASE_URL` in Vercel Production env and `.env.local` (name only) | Owner | available |
-| Vercel production deploy of `main` | SP-13 | Vercel project `dav033s-projects/demo-decoracion`, Git integration; `vercel` CLI logged in as dav033 | Owner | available |
+| Where each approved subplan is tried and when it is integrated | all | round 5 q1: each subplan is tried locally (Probar); when every subplan of a milestone is approved it is merged to `main`, migrations applied and Vercel (`demo-decoracion.vercel.app`, the testing environment) deploys; the VPS ai-api is deployed if it changed | Owner | available |
+| Pilot production environment (host, domain, database) | SP-13 | round 5 q1 note: `demo-decoracion.vercel.app` is NOT production; asked in round 6 | Owner | pending |
+| Database for automated checks and local tests | all | `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env`; Postgres 16 `req021-db` on advin, tunnel `pictures-req021-db-tunnel.service` on local port 55433 (TOOLS.md); migrations not applied yet | Owner (HQ) | available |
+| Testing-environment Neon database | SP-13 | `DATABASE_URL` in Vercel Production env of `demo-decoracion` and `.env.local` (name only) | Owner | available |
+| Vercel deploy of `main` (testing environment) | SP-13 | Vercel project `dav033s-projects/demo-decoracion`, Git integration; `vercel` CLI logged in as dav033 | Owner | available |
 | VPS deploy of ai-api | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, environment `production`) via `gh` | Owner | available |
-| Local no-restrictions flag: name and rule | SP-1 | round 5 q3; proposed `AUTH_LOCAL_SIN_RESTRICCIONES` in `.env.local` | Owner | pending |
-| First production administrator: mechanism and email | SP-1, SP-13 | round 5 q4, q5 | Owner | pending |
-| Data-protection text, Sempertex privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | pending |
-| Authorization for automated production smoke | SP-13 | round 5 q7; `~/bitacora/pictures/verification-policy.json` entry | Owner | pending |
+| Local no-restrictions flag: name and rule | SP-1 | round 5 q3 (accepted): `AUTH_LOCAL_SIN_RESTRICCIONES=1` in `.env.local`, valid only under `next dev` and loopback requests; anywhere else the app refuses to start | Owner | available |
+| First production administrator: mechanism and email | SP-1, SP-13 | round 5 q5: `davidt@sempertex.com`; mechanism asked again in round 6 (q4 answer described local mode) | Owner | pending |
+| Data-protection text (Ley 1581, ES/EN) | SP-2 | round 5 q6: drafted by the agent, approved by the owner in SP-2 | Owner | available |
+| Sempertex privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | deferred: marked placeholders in the text, flagged for Sempertex legal review before real users activate |
+| Authorization for automated smoke on the deployed environment | SP-13 | round 5 q7 (granted: account `piloto-e2e`, Usuario plan 3, no paid AI, deleted after each smoke); needs a matching entry in `~/bitacora/pictures/verification-policy.json` (operator-owned, not yet created) | Owner | location given |
 | One-time English translation with Haiku 5.5 | SP-9 | owner's Claude accounts through the Claude Code CLI (round 4 q6); no Gemini key, no USD cap | Owner | available |

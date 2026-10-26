@@ -1,0 +1,120 @@
+{
+ "title": "SP-1 — Cuentas, sesiones y permisos (y la producción del piloto)",
+ "coverage": "SP-1",
+ "intro": "Releí origin/main (a9f3d6e5). Hoy: una contraseña compartida (APP_PASSWORD) da acceso a todo; en «next dev» no se pide nada; 95 rutas de API y 20 páginas, y solo una parte comprueba la sesión dentro del handler (el resto confía en proxy.ts). /asesor y /happie tienen su propio login y siguen fuera; /cotizacion-compartida sigue pública. Reutilizo el hash scrypt que ya usa el asesor. Diseño de SP-1: cada permiso es un nombre fijo en código; un rol es un conjunto de permisos; toda página y API declara su permiso en una tabla única que se comprueba en proxy.ts y otra vez en el handler, y una prueba falla si aparece una ruta sin permiso (lo no declarado solo lo abre el Administrador). Las sesiones viven en la base (token aleatorio, guardado con hash), así que desactivar a alguien o cambiarle el rol aplica en la siguiente petición. Solo pregunto lo que cambia el plan.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Planes de acceso y roles: ¿cómo se relacionan?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Los planes son roles: «Usuario · Plan 1», «Usuario · Plan 2», «Usuario · Plan 3», «Empleado interno» y «Administrador». Cada cuenta tiene un solo rol; el administrador puede crear más roles eligiendo permisos"
+    },
+    {
+     "key": "b",
+     "label": "Rol y plan por separado: la cuenta tiene un rol (Usuario, Empleado, Administrador o uno creado) y, si es Usuario, además un plan 1–3; sus permisos = los del rol + los del plan"
+    },
+    {
+     "key": "c",
+     "label": "Como b, pero los planes son fijos en el código (el administrador no puede cambiar qué incluye cada plan)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Un solo concepto (rol = conjunto de permisos) da una sola comprobación en el servidor y una sola pantalla de administración; asignar el plan es elegir el rol. b añade una segunda dimensión que hay que combinar y probar en cada ruta."
+  },
+  {
+   "id": "q2",
+   "text": "Permisos iniciales y quién los tiene. Propuesta — Plan 1: chat asistido, contador de globos, catálogo. Plan 2: + calculadora de costos, explorador de decoraciones hechas. Plan 3: + Taller 3D (escena, IA de escena, planes de armado, hoja de armado, exportar, mis proyectos y decoraciones). Empleado interno: todo lo anterior + ver proyectos de todos, ver gasto de IA, herramientas internas (admin de productos y decoraciones, órdenes, estadísticas, feedback de IA, laboratorios, Happie prueba, proveedor de IA). Administrador: todo + usuarios, roles y corregir textos en inglés. ¿Así?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Así"
+    },
+    {
+     "key": "b",
+     "label": "Así, pero las herramientas internas solo para Administrador (el Empleado ve proyectos y gasto, no el admin de productos ni órdenes)"
+    },
+    {
+     "key": "c",
+     "label": "Otro reparto (lo escribo en la nota)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Hoy cualquiera con la contraseña compartida usa esas herramientas, y quienes la tienen son empleados; a mantiene lo que ya hacen y deja a usuarios externos solo con su plan."
+  },
+  {
+   "id": "q3",
+   "text": "Sesión y contraseña. Propuesta: la sesión dura 30 días (como hoy) y termina al salir, al desactivar la cuenta o al cambiar la contraseña; contraseña de 10 caracteres mínimo; tras 5 intentos fallidos con el mismo correo en 15 minutos, ese correo queda bloqueado 15 minutos. Sin servicio de correo, «olvidé mi contraseña» = el administrador genera un enlace de un solo uso (24 h) y se lo manda él, igual que la invitación (7 días). ¿Así?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Así"
+    },
+    {
+     "key": "b",
+     "label": "Así, pero la sesión dura 12 horas (como el asesor)"
+    },
+    {
+     "key": "c",
+     "label": "Otros valores (en la nota)"
+    }
+   ],
+   "recommended": "a",
+   "why": "30 días evita que usuarios del piloto tengan que entrar cada día; la revocación en la siguiente petición limita el riesgo de una sesión larga."
+  },
+  {
+   "id": "q4",
+   "text": "Primer administrador en producción (davidt@sempertex.com). En la ronda 5 la respuesta habló del modo local; falta cómo se crea en producción. Propuesta: un comando de un solo uso, que se niega si ya existe un administrador, crea la cuenta y genera un enlace de activación de 24 h para que pongas tu contraseña en la pantalla de activación (la contraseña nunca pasa por la terminal). ¿Quién lo ejecuta?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Tú, en tu terminal, cuando el plan llegue al lanzamiento (te dejo el comando exacto: un minuto). El enlace solo lo ves tú"
+    },
+    {
+     "key": "b",
+     "label": "El ejecutor, que guarda el enlace en un archivo privado (modo 600) fuera del repo y te avisa; nunca lo escribe en registros"
+    },
+    {
+     "key": "c",
+     "label": "Otro (en la nota)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es el paso que da control total de producción: hacerlo tú evita que el enlace pase por registros de un agente. b es más autónomo y también seguro si el archivo se borra tras usarlo."
+  },
+  {
+   "id": "q5",
+   "text": "¿Qué es la producción del piloto? demo-decoracion.vercel.app es el entorno de pruebas (main se despliega ahí). La producción real necesita sitio, dominio y base de datos propios para que los datos de usuarios reales no se mezclen con pruebas.",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Un proyecto de Vercel nuevo («pictures-piloto») que despliega una rama release, con su propia base Neon nueva y un dominio (en la nota); la IA usa el mismo ai-api del VPS"
+    },
+    {
+     "key": "b",
+     "label": "El sitio del VPS (hoy https://185-147-157-25.sslip.io, o un dominio que pongo en la nota) con una base Postgres propia en el VPS"
+    },
+    {
+     "key": "c",
+     "label": "demo-decoracion.vercel.app pasa a ser producción el día del piloto; las pruebas siguen en local y en previews de Vercel"
+    },
+    {
+     "key": "d",
+     "label": "Aún no lo sé: decídelo tú en SP-13 y me lo propones"
+    }
+   ],
+   "recommended": "a",
+   "why": "Separa datos de usuarios reales de las pruebas, mantiene el despliegue que ya funciona (Vercel) y main sigue siendo el entorno de pruebas sin banderas. Crear el proyecto y la base es tuyo (cuentas y dominio): con a te dejo los pasos exactos para SP-13."
+  }
+ ],
+ "round": 6,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T19:33:43Z"
+}
