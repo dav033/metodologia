@@ -1,0 +1,136 @@
+{
+ "title": "Últimas preguntas generales: entornos, base de pruebas, acceso local, primer administrador y datos personales (Planner)",
+ "coverage": "plan-wide",
+ "intro": "Releí origin/main (a9f3d6e5). Hechos que cambian el plan: el motor publica cada subplan terminado como un commit en su propia línea de integración y nada llega a main hasta el final (el cierre se niega mientras falte aprobar un subplan). Integrar en main publica solo el sitio de Vercel (demo-decoracion.vercel.app, producción automática); el VPS (ai-api) se despliega a mano con el workflow «deploy». Las pruebas automáticas del ejecutor corren sin tu .env. El esqueleto (5 hitos, 13 subplanes) ya está en la pestaña Plan para que lo revises a la vez. Estas son las últimas preguntas que afectan a todo el plan; lo propio de cada subplan lo pregunto cuando le toque.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Dónde pruebas cada subplan y cuándo llega a producción (el sitio en vivo)?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Cada subplan lo pruebas en local (el botón Probar abre esa versión en tu máquina). Cuando apruebas todos los subplanes de un hito, se integra en main, se aplican las migraciones (solo añaden) y se despliega Vercel y, si cambió, el VPS: producción recibe 4–5 entregas, no una sola el 16. Al publicarse el hito 1 la contraseña compartida deja de funcionar y cada persona entra con su cuenta"
+    },
+    {
+     "key": "b",
+     "label": "Local por subplan y además una vista previa de Vercel (rama del piloto con su propia base Neon) que se actualiza por hito; main y el sitio en vivo no cambian hasta el 16 de noviembre, cuando se integra todo de una vez"
+    },
+    {
+     "key": "c",
+     "label": "Solo local hasta el final; una sola publicación a producción al terminar el plan"
+    }
+   ],
+   "recommended": "a",
+   "why": "(a) reparte el riesgo y te deja probar en el teléfono sobre el sitio real, sin banderas; (b) protege el sitio actual pero exige variables de entorno de preview y una base aparte, y concentra el riesgo el día 16; (c) es lo más simple, pero todo el riesgo cae el día del piloto."
+  },
+  {
+   "id": "q2",
+   "text": "¿Contra qué base de datos corren las pruebas automáticas y tus pruebas locales de cuentas, proyectos y gasto?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Una rama de Neon solo para este plan (copia aislada de producción, p. ej. «req-021-dev»). La creas tú en la consola de Neon y guardas su URL como PICTURES_REQ021_DATABASE_URL en ~/.config/flow/secrets.env; producción solo recibe migraciones al publicar cada hito"
+    },
+    {
+     "key": "b",
+     "label": "La misma DATABASE_URL de tu .env.local (si es la de producción, migraciones y datos de prueba caen en producción)"
+    },
+    {
+     "key": "c",
+     "label": "Un Postgres local en Docker para las pruebas automáticas; tus pruebas locales siguen con .env.local"
+    }
+   ],
+   "recommended": "a",
+   "why": "Cuentas, proyectos y gasto necesitan Postgres real con migraciones. Una rama Neon aísla los datos de prueba de los usuarios reales y se parece a producción; no encontré neonctl instalado, por eso te pido crearla (un minuto en la consola)."
+  },
+  {
+   "id": "q3",
+   "text": "Acceso local sin restricciones: propongo la variable AUTH_LOCAL_SIN_RESTRICCIONES=1 en .env.local. Solo vale con «next dev» y peticiones desde 127.0.0.1/localhost; entonces entras como una cuenta fija «Administrador local» (así el gasto y los proyectos siguen teniendo dueño). Si la variable aparece en cualquier otro caso (build, Vercel, VPS) la app se niega a arrancar con un error claro, y una prueba en CI lo comprueba. Sin la variable, también en local se pide entrar. ¿Así?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Así: fuera de next dev en loopback, la app no arranca si la variable está puesta"
+    },
+    {
+     "key": "b",
+     "label": "Igual, pero en producción solo se ignora y se registra un aviso (la app arranca)"
+    },
+    {
+     "key": "c",
+     "label": "Como hoy: en next dev nunca se pide entrar, sin variable"
+    }
+   ],
+   "recommended": "a",
+   "why": "Negarse a arrancar hace imposible activarla por accidente en producción; ignorarla en silencio esconde un error de configuración. Hoy next dev ya omite el login salvo DEV_REQUIRE_LOGIN=1, sin dueño para el gasto."
+  },
+  {
+   "id": "q4",
+   "text": "¿Cómo se crea el primer administrador en producción?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Un comando de una sola vez (npm run cuentas:primer-admin -- --email <correo>) contra la base de producción al publicar el hito 1. Solo funciona si no existe ningún administrador e imprime un enlace de activación de un solo uso (24 h) en la terminal, nunca en la bitácora. Lo ejecutas tú con «! …» o el ejecutor y te lo deja solo en la terminal"
+    },
+    {
+     "key": "b",
+     "label": "Variable ADMIN_INICIAL_EMAIL en Vercel: si no hay administradores, ese correo puede crear su contraseña en /activar"
+    }
+   ],
+   "recommended": "a",
+   "why": "(b) es más cómodo, pero cualquiera que conozca el correo podría adelantarse y quedarse con la cuenta de administrador."
+  },
+  {
+   "id": "q5",
+   "text": "¿Con qué correo se crea esa primera cuenta de administrador en producción?",
+   "type": "open",
+   "suggested": "Mi correo de Sempertex.",
+   "why": "Es una entrada del subplan de cuentas; sin ella el hito 1 no se puede publicar."
+  },
+  {
+   "id": "q6",
+   "text": "Datos personales de usuarios externos: propongo guardar solo nombre, correo, empresa (opcional), rol y plan, fechas (invitación, activación, último acceso) y la aceptación del texto de datos (fecha y versión). Al activar la cuenta la persona acepta un texto corto de tratamiento de datos (Ley 1581 de 2012) con enlace a la política de Sempertex y un correo para pedir consulta, corrección o borrado; el administrador puede desactivar y borrar una cuenta. ¿Quién pone el texto?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Lo redactas tú (español e inglés) y lo apruebo en el subplan de pantallas de cuenta. Pego en la nota el enlace a la política de datos de Sempertex y el correo de contacto para derechos"
+    },
+    {
+     "key": "b",
+     "label": "Lo da Sempertex (legal o marketing); hasta tenerlo el piloto no abre a usuarios externos"
+    },
+    {
+     "key": "c",
+     "label": "Sin texto de datos para el piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "Son usuarios externos reales en Colombia: la Ley 1581 pide autorización previa, expresa e informada. (c) no lo recomiendo; (b) puede dejar el piloto sin externos si el texto no llega a tiempo."
+  },
+  {
+   "id": "q7",
+   "text": "¿Autorizas pruebas automáticas en producción después de publicar cada hito?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: el ejecutor usa una cuenta de prueba «piloto-e2e» (rol Usuario, plan 3) en producción y corre un humo sin IA de pago (entrar, guardar y reabrir un proyecto, guardar una decoración, exportar GLB, ver Backing). La cuenta y sus datos se borran al terminar cada humo"
+    },
+    {
+     "key": "b",
+     "label": "No: en producción solo pruebo yo a mano"
+    }
+   ],
+   "recommended": "a",
+   "why": "Detecta en minutos un fallo de despliegue o de migración sin esperar a tu prueba; sin gasto de IA. Requiere una entrada en verification-policy.json que el plan dejará escrita."
+  }
+ ],
+ "round": 5,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T18:26:10Z"
+}

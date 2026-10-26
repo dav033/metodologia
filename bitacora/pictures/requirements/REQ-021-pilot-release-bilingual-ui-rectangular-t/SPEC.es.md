@@ -122,23 +122,29 @@ implementar la interfaz. -->
 _Si el alcance incluye un subplan de interfaz: identifica a sus usuarios y su tarea principal, la dirección visual, el sistema de diseño existente o las restricciones de marca, los estados y puntos de interrupción compatibles, y los requisitos de accesibilidad. Planner asigna a Designer un contrato versionado; el propietario aprueba cada versión antes de implementar la interfaz. Omitir o marcar como no aplicable si no hay un subplan de interfaz._
 
 ## Prioridades y fases
-- **Orden de recorte si falta tiempo (acordado por el propietario, ronda 3):** 1) idioma: primero el Taller 3D y la navegación, el resto después del piloto; 2) cuartetos y módulos editables más allá de los colores; 3) mejoras del chat más allá de la separación y la confiabilidad. **Nunca recortar:** cuentas, roles y permisos, proyectos y decoraciones guardados, gasto por usuario, mesas rectangulares, exportación a Blender, Backing. Un plan cubre todo; lo redacta una sesión dedicada de Planner Opus 5.5 high, no la sesión de HQ.
-- **Chat asistido (ronda 3):** se divide en tres herramientas —calculadora de costos, contador de globos y chat «normal»—, además de una integración básica chat↔3D: en 2–3 mensajes, el chat define lo que se necesita y recomienda decoraciones 3D ya creadas.
-- **Añadido al alcance en la ronda 2:** el chat asistido (asesor / chat guiado) está incluido: se desglosará, dividirá y mejorará (detalles pendientes). Los límites de gasto de IA quedan fuera por ahora: solo se mide y muestra el gasto.
-- **Must:** cuentas con tres roles iniciales (usuario, empleado interno, administrador) y un editor de administración para crear roles y elegir permisos (propietario, ronda 2); gasto en IA por usuario con límite y panel para empleados y administradores (principalmente en el Taller 3D); guardar proyectos; guardar decoraciones; mesas rectangulares; exportar a Blender.
-- **Should:** cambio entre inglés y español en toda la aplicación (interfaz, respuestas de la IA, productos), con detección automática; módulos y cuartetos editables; categoría Backing.
-- **Para más adelante:** espacio 3D a partir de una foto; exportación vectorial para Illustrator.
-- Tensión por resolver: el propietario quiere que el selector de idioma abarque TODO (no solo los flujos principales), aunque tiene prioridad Should.
+- **Planes de acceso (propietario, ronda 4):** tres planes para usuarios externos. Plan 1: chat asistido + contador de globos. Plan 2: plan 1 + costos (calculadora) + exploración de decoraciones prediseñadas. Plan 3: plan 2 + el modelo 3D (Taller 3D). Se mantienen los roles del personal (empleado interno, administrador); la relación entre planes, roles y permisos se define en el subplan de cuentas.
+- **Orden de recorte si falta tiempo (acordado por el propietario, ronda 3):** 1) idioma: primero Taller 3D y navegación, el resto después del piloto; 2) cuartetos/módulos editables más allá de los colores; 3) mejoras del chat más allá de la división y la confiabilidad. **Nunca recortar:** cuentas, roles y permisos, proyectos y decoraciones guardados, gasto por usuario, mesas rectangulares, exportación a Blender, Backing. Un plan cubre todo; lo redactará una sesión dedicada de Planner Opus 5.5 de alto nivel, no la sesión de HQ.
+- **Chat asistido (ronda 3):** dividir en tres herramientas: calculadora de costos, contador de globos y el chat «normal»; además, una integración básica entre chat y 3D: en 2–3 mensajes, el chat define qué se necesita y recomienda decoraciones 3D ya creadas.
+- **Añadido al alcance en la ronda 2:** el chat asistido (asesor / chat guiado) está IN: se desglosará, dividirá y mejorará (detalles pendientes). Los límites de gasto en IA están OUT por ahora: solo medir y mostrar el gasto.
+- **Debe incluir:** cuentas con tres roles iniciales (usuario, empleado interno, administrador) y un editor para que el administrador cree roles y elija permisos (propietario, ronda 2); gasto en IA por usuario con límite y panel para empleado/administrador (principalmente en Taller 3D); guardar proyectos; guardar decoraciones; mesas rectangulares; exportación a Blender.
+- **Debería incluir:** cambio entre inglés y español para toda la aplicación (interfaz, respuestas de IA, productos), con detección automática; módulos y cuartetos editables; categoría Backing.
+- **Más adelante:** espacio 3D a partir de una foto; exportación vectorial para Illustrator.
+- Tensión por resolver: el propietario quiere que el cambio de idioma abarque TODO (no solo los flujos principales), aunque está clasificado como Debería incluir.
 
 ## Cronograma y dependencias
 - Fecha límite del propietario: producción piloto en tres semanas desde 2026-10-26 (aproximadamente 2026-11-16). No es una corrección de emergencia: es trabajo planificado.
 - Se solapa con REQ-004 cancelado (usuarios y gastos), REQ-005 cancelado (decoraciones desde cero), REQ-006 cancelado (foto del lugar a 3D) y REQ-011 terminado (estudio de módulos), REQ-012 terminado (mesas y sillas).
 
 ## Supuestos
-- El inicio de sesión usa correo electrónico y contraseña, con invitación por correo electrónico (el propietario eligió «con invitación», no el mecanismo). Revisar si se prefiere un proveedor de identidad.
-- «Exportar a Blender» significa usar el GLB existente, verificarlo y corregirlo; no crear un formato nuevo.
-- «Modificar cuartetos y módulos» significa editar más que los colores; las modificaciones específicas aún no se han definido.
-- Se conservan las cotizaciones compartidas existentes y la tabla de cuentas del asesor; solo se migran los datos necesarios.
+- Las invitaciones son enlaces de un solo uso que el administrador copia y envía por su cuenta (ronda 4); este plan no incluye un servicio de correo electrónico.
+- No habrá indicadores de funcionalidad (el propietario indica que el entorno de trabajo no es producción). Falta confirmar a qué entorno se publica cada subplan aprobado, ya que combinar cambios en main podría desplegar el sitio activo.
+- El desarrollo local no tiene restricciones de credenciales ni de roles; se controla mediante un indicador en `.env`, que debe rechazarse en producción. El primer administrador de producción se crea mediante un comando de una sola ejecución.
+- La traducción puntual de productos y decoraciones al inglés usa las cuentas Claude del propietario con Haiku 5.5 (sin clave de Gemini ni límite en USD).
+- `/asesor` y `/happie` conservan su propio inicio de sesión y quedan fuera de las nuevas cuentas del piloto.
+- El inicio de sesión usa correo electrónico y contraseña, con invitación por correo electrónico (el propietario eligió «invitado», no el mecanismo). Revisar si se prefiere un proveedor de identidad.
+- «Exportación a Blender» se refiere al GLB existente, verificado y corregido, no a un formato nuevo.
+- «Modificar cuartetos y módulos» significa editar más que los colores; todavía no se especifican las ediciones exactas.
+- Se conservan las cotizaciones compartidas existentes y la tabla de cuentas del asesor; solo se migran los datos que necesitan.
 
 ## Cobertura
 | Tema | Estado |
@@ -156,8 +162,9 @@ _Si el alcance incluye un subplan de interfaz: identifica a sus usuarios y su ta
 | Cronograma | Claro |
 
 ## Aclaraciones
-- Ronda 1 (2026-10-26): usuarios piloto = usuarios externos reales + empleados internos + administradores; se aceptaron las prioridades propuestas; «tokens» = gasto en IA por usuario, visible para empleados y administradores (total de la sesión, gasto en generación de imágenes); Backing = una categoría del catálogo que agrupa accesorios para fiestas (aros metálicos, pedestales, panel redondo, media luna, arcos chiara); idioma: selector EN/ES, detección automática, que abarca respuestas de IA, productos e interfaz.
-- Ronda 2 (2026-10-26): el chat asistido está incluido en el alcance (se dividirá, separará y mejorará); un administrador invita a las cuentas externas, no hay registro abierto; el administrador puede crear roles y elegir permisos desde el piloto; por ahora no hay límites de gasto (solo se mide y muestra); los nombres y las descripciones de productos en inglés se generan una vez con IA a partir de la fuente en español, se almacenan en la base de datos y un administrador puede editarlos.
+- Ronda 1 (2026-10-26): los usuarios del piloto son usuarios externos reales + empleados internos + administradores; se aceptan las prioridades propuestas; «tokens» = gasto en IA por usuario, visible para empleados y administradores (total de la sesión, gasto en generación de imágenes); Backing = una categoría del catálogo que agrupa accesorios para fiestas (aros metálicos, pedestales, panel redondo, media luna, arcos chiara); idioma: cambio EN/ES con detección automática, que abarca respuestas de IA, productos e interfaz.
+- Ronda 4 (2026-10-26, Planner): invitación = enlace de un solo uso que se puede copiar; tres planes de acceso (ver Prioridades); sin indicadores; el gasto en IA se almacena tanto para la sesión de inicio de sesión como para el proyecto/conversación; recortes por fecha (9 nov: idioma, 11 nov: módulos, 12 nov: chat), con aprobación del propietario para cada subplan en menos de 24 h; traducción con las cuentas Claude en Haiku 5.5; administrador local sin restricciones mediante un indicador de `.env`.
+- Ronda 2 (2026-10-26): el chat asistido está dentro del alcance (se desglosará, dividirá y mejorará); un administrador invita a las cuentas externas, sin registro abierto; el administrador puede crear roles y elegir permisos desde el piloto; por ahora, no hay límites de gasto (solo medir y mostrar); los nombres y las descripciones de productos en inglés se generan una sola vez con IA a partir del original en español, se almacenan en la base de datos y un administrador puede editarlos.
 
 
 ### Ronda 3 (2026-10-26)

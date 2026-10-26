@@ -14,3 +14,7 @@ Hard constraints from the owner:
 - Do not touch Cloudflare challenges or the owner's personal Firefox; do not run pacman -Syu.
 
 When the plan is complete, validate it (plan-json check) and tell the owner it is ready to approve in the web UI. Do not launch it yourself.
+
+CONTINUATION: a previous Planner session ran the first rounds and was closed. The state is in files. Before anything else run
+python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures planning resume REQ-021
+and follow its NEXT line. Rounds 1-4 are already answered by the owner (never re-ask them). Open points from round 4 that you must settle with the owner: which environment each approved subplan is published to (merging to main deploys the live Pictures site, and the owner said no feature flags); the local .env flag that disables auth must be impossible to enable in production; how the first production administrator is created; the data-protection text. Access plans: three tiers (Plan 1 chat + balloon counter; Plan 2 adds costs and exploring ready-made decorations; Plan 3 adds Taller 3D).
