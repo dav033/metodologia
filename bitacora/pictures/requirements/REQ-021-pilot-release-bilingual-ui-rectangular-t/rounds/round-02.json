@@ -98,7 +98,30 @@
    "why": "El catálogo tiene miles de productos (3.217 solo de Sempertex); a mano no cabe en tres semanas."
   }
  ],
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T17:21:37Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "c",
+   "note": "Owner: the assisted chat WILL BE BROKEN APART, SPLIT AND IMPROVED, and it is IN scope. Details of the split/improvement still to ask."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "«me parece por el momento»"
+  },
+  "q3": {
+   "choice": "b",
+   "note": "Owner: roles and permissions are important because nobody knows which roles will be wanted; the admin creates roles and chooses permissions from the pilot."
+  },
+  "q4": {
+   "choice": "b",
+   "note": "Owner: no caps for now. Only measure and show spend; no blocking."
+  },
+  "q5": {
+   "choice": "a",
+   "note": "Accepted."
+  }
+ },
+ "created_at": "2026-10-26T17:21:37Z",
+ "answered_at": "2026-10-26T17:26:02Z",
+ "answered_via": "terminal"
 }
