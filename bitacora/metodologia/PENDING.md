@@ -7,6 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-200 · Rebuild the web Plan tab to the owner-approved Material layout (canvas https://claude.ai/artifact/VUaSMmBLJkAW26agM9xX91: subplan list, subplan detail with Diseño/Tareas/Criterios, conversation activity feed backed by a new event log, changed-only EN/ES view, approval dialog); waiting for the owner's verdict on the canvas · urgency: high · complexity: M · added 2026-10-25 · D-128
 - P-199 · Review Snapper home backup retention and exclusion of disposable executor workspaces · urgency: high · complexity: M · added 2026-10-25 · D-129
   Removed 93 captured expired executor worktrees; 80 remain (11 nonterminal, 37 younger than 72h, 32 with unknown ignored data such as reports). Remaining executor checkout footprint is 73 GiB by du. Physical Linux free space stays around 2.3 GiB because existing home snapshots retain old blocks. No backup deletion or subvolume migration was performed. Determine which recovery points David wants to keep before deleting backups; avoid promising du-sized reclamation on Btrfs.
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
