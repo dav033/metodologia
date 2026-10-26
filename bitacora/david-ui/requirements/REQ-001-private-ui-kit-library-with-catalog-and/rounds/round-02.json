@@ -1,0 +1,77 @@
+{
+ "title": "Plan-wide: distribution, licenses, styling",
+ "intro": "Round 1: public repo for now, monorepo packages/ui + apps/catalog, package+P1 first then catalog, all 93 entries + 22 enhancements in milestones, rest of SPEC kept. React Bits LICENSE (checked 2026-10-26): use allowed inside an application/website, but 'you may not ... redistribute the components themselves, whether alone, in a bundle, or as a ported version'. A public repo or public package containing them is redistribution; the public catalog website is allowed.",
+ "coverage": "8/10",
+ "questions": [
+  {
+   "text": "npm registry for the package?",
+   "options": [
+    {
+     "key": "a",
+     "label": "GitHub Packages @dav033/david-ui, published by GitHub Actions; installing needs a read:packages token in .npmrc (and as a Vercel env var in consuming projects); visibility follows the repo"
+    },
+    {
+     "key": "b",
+     "label": "Public npm (no token, but React Bits can never enter the package)"
+    },
+    {
+     "key": "c",
+     "label": "Git tags (github:dav033/david-ui#vX), no registry"
+    }
+   ],
+   "recommended": "a",
+   "why": "Real semver installs, and if the repo later becomes private the package follows it without changing registry or consumers.",
+   "id": "q1",
+   "type": "choice"
+  },
+  {
+   "text": "React Bits vs public repo?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Public now; before the React Bits milestone the repo and the package become private (the Vercel catalog stays public)"
+    },
+    {
+     "key": "b",
+     "label": "Repo stays public; all 32 React Bits entries are reimplemented clean-room (no copied code)"
+    },
+    {
+     "key": "c",
+     "label": "Repo stays public; React Bits entries are dropped from the package"
+    }
+   ],
+   "recommended": "a",
+   "why": "React Bits is the last milestone, so you keep the public repo for most of the work; clean-room for 32 effects (WebGL backgrounds included) is a lot of extra work.",
+   "id": "q2",
+   "type": "choice"
+  },
+  {
+   "text": "How do consuming projects get the styles?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Consumers use Tailwind 4: the package exports theme.css (tokens as @theme, Catppuccin default) and an @source for its compiled files"
+    },
+    {
+     "key": "b",
+     "label": "The package ships precompiled CSS; consumers need no Tailwind"
+    }
+   ],
+   "recommended": "a",
+   "why": "maros, pictures, dav033-demos, proposal-studio, lotm and trainingapp all use Tailwind 4 + React 19; one Tailwind build avoids duplicated utilities and lets each project override tokens.",
+   "id": "q3",
+   "type": "choice"
+  },
+  {
+   "text": "Agent integration (was the token-protected registry index)?",
+   "type": "open",
+   "suggested": "The package ships AGENTS.md + llms.txt (components, props, install and theming guide), and the public catalog serves the same index at /llms.txt and /index.json.",
+   "why": "Agents discover components without auth; the index is generated from the same manifest as the catalog.",
+   "id": "q4"
+  }
+ ],
+ "round": 2,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T14:09:23Z"
+}
