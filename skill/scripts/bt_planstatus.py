@@ -329,6 +329,12 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
     import bt_design_approval
     design_states = {task["id"]: task.get("state", "pending") for task in task_list}
     design_subplans = bt_design_approval.ui_contracts(rdir, project, design_states)
+    import bt_design_drafts
+    owner = {s.get("id"): s.get("milestone_id") for s in (contract or {}).get("subplans") or [] if isinstance(s, dict)}
+    drafted = bt_design_drafts.states(rdir) if owner else {}
+    subplans = [{"id": s["id"], "title": s["title"], "milestone_id": owner.get(s["id"]), "tasks": len(s["tasks"]),
+                 "ref": s["ref"], "draft": drafted.get(s["ref"], "none") if s["ref"] else None}
+                for s in bt_design_drafts.subplans(rdir)] if owner else []
     plan_md = rdir / "PLAN.md"
     ref = (run or {}).get("plan_ref") if authority == "scheduler" else None
     ref = ref if isinstance(ref, dict) else {}
@@ -347,7 +353,8 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
                     "milestones_total": len(milestones),
                     "milestones_done": sum(m["state"] == "completed" for m in milestones),
                     "difficulty": _highest([t["complexity"] for t in task_list])},
-        "milestones": milestones, "evolution": evolution, "design_subplans": design_subplans}
+        "milestones": milestones, "evolution": evolution, "design_subplans": design_subplans,
+        "subplans": subplans}
 
 
 def _evolution(rdir: Path, tasks: list[dict], revision: Any) -> dict[str, Any]:

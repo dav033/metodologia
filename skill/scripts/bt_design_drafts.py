@@ -91,6 +91,12 @@ def _load(rdir: Path) -> dict:
     return data
 
 
+def states(rdir: Path) -> dict[str, str]:
+    """ref → draft status as last recorded; read-only (no settling, no lock), for status pages."""
+    return {ref: str(entry.get("status") or "none") for ref, entry in _load(rdir)["drafts"].items()
+            if isinstance(entry, dict)}
+
+
 def _save(rdir: Path, data: dict) -> None:
     target = Path(rdir) / DIR / FILE
     target.parent.mkdir(parents=True, exist_ok=True)

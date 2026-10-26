@@ -193,14 +193,37 @@ def detail_fragment(s: dict) -> str:
             f'<span class="chip">rev {e(str(rev))}</span><span class="chip">sha {e((plan["sha256"] or "—")[:10])}</span>'
             f'{level_badge(summ["difficulty"])}</div>{unclassified_banner(s)}{bar(summ["tasks_done"], summ["tasks_total"])}'
             f'<div class="meta">{summ["tasks_done"]}/{summ["tasks_total"]} tareas · '
-            f'{summ["milestones_done"]}/{summ["milestones_total"]} hitos</div></div>')
+            f'{summ["milestones_done"]}/{summ["milestones_total"]} hitos</div>{_plan_tab_link(s)}</div>')
     parts = [head, _timeline(s)]
     asks = {r["task"]: r for r in s.get("decisions") or [] if r.get("task")}
     for m in s["milestones"]:
-        parts.append(f'<div class="ms">{_milestone_head(m)}{"".join(_task(t, asks) for t in m["tasks"])}</div>')
+        parts.append(f'<div class="ms">{_milestone_head(m)}{_subplans(s, m)}{"".join(_task(t, asks) for t in m["tasks"])}</div>')
     import bt_page_design
     parts.append(bt_page_design.plan_panel(s.get("design_subplans", [])))
     return "".join(parts)
+
+def _plan_tab(s: dict) -> str:
+    return f'/p/{quote(s["project"])}/req/{quote(s["req_id"])}?tab=plan'
+
+def _plan_tab_link(s: dict) -> str:
+    if not s.get("subplans"):
+        return ""
+    n, ui = len(s["subplans"]), sum(1 for sp in s["subplans"] if sp["ref"])
+    return (f'<a class="go sp-go" href="{_plan_tab(s)}">Subplanes y diseños · {n} subplanes'
+            f'{f" · {ui} con interfaz" if ui else ""} →</a>')
+
+def _subplans(s: dict, m: dict) -> str:
+    """The milestone's subplans; each opens the requirement's Plan tab (EN/ES, designs) on it."""
+    mine = [sp for sp in s.get("subplans") or [] if sp["milestone_id"] == m["id"]]
+    if not mine:
+        return ""
+    from bt_page_planning import STATES
+    rows = "".join(
+        f'<a class="sp" href="{_plan_tab(s)}&amp;sp={quote(str(sp["id"]))}"><b>{e(str(sp["id"]))}</b>'
+        f'<span class="spt">{e(sp["title"])}</span><span class="spm">{sp["tasks"]} {"tarea" if sp["tasks"] == 1 else "tareas"}'
+        + (f' · {e(sp["ref"])} · {e(STATES.get(sp["draft"], sp["draft"]))}' if sp["ref"] else " · sin interfaz")
+        + '</span><span class="arr" aria-hidden="true">→</span></a>' for sp in mine)
+    return f'<div class="sps" data-k="sp-{e(str(m["id"]))}"><p class="sub">Subplanes</p>{rows}</div>'
 
 def _milestone_head(m: dict) -> str:
     return (f'<div class="mh" data-k="mh-{e(str(m["id"]))}"><b>{e(str(m["id"]))}</b><span class="mt">{inline(m["title"])}</span>'
