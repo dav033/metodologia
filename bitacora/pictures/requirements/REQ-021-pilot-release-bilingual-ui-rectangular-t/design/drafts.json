@@ -3,16 +3,20 @@
   "cuentas-admin@v1": {
    "agent": "codex",
    "before": null,
-   "delegation": "D-20261026-150340-0a47",
+   "delegation": "D-20261026-153625-d4f6",
    "digest": "01a4edae2c620dd0",
    "error": "",
+   "failures": 0,
    "feedback": [],
+   "finished": "2026-10-26T15:36:07-05:00",
    "model": "gpt-6.1-sol",
-   "queued": "2026-10-26T15:03:40-05:00",
-   "reason": "focus",
-   "started": "2026-10-26T15:03:40-05:00",
+   "questions": [],
+   "queued": "2026-10-26T15:36:21-05:00",
+   "reason": "restart: the first Designer process died",
+   "started": "2026-10-26T15:36:25-05:00",
    "status": "drafting",
-   "subplan_id": "SP-2"
+   "subplan_id": "SP-2",
+   "summary": "the delegation's process died before writing an outcome (killed, for instance by restarting the service that started it)"
   }
  },
  "schema_version": 1

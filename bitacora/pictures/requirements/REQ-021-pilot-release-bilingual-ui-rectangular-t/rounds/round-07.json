@@ -1,0 +1,70 @@
+{
+ "title": "SP-2 — Pantallas de cuenta y administración",
+ "coverage": "SP-2",
+ "intro": "SP-2 ya tiene 8 tareas en el plan: las APIs de cuenta, las pantallas de entrar, activar, restablecer y re-aceptar el aviso, el menú de cuenta con Mi cuenta, las pantallas de Cuentas y Roles, una prueba en navegador, la revisión visual y la auditoría. El Designer está dibujando cuentas-admin@v1; sus preguntas te llegan en la pestaña Plan → SP-2 → Diseño. Aquí solo van las decisiones que cambian tareas.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Cuando el administrador borra una cuenta, ¿qué pasa con lo que esa persona hizo?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Se borran sus proyectos y decoraciones guardadas; su gasto de IA se conserva sin datos personales y aparece como «Cuenta eliminada» en los totales"
+    },
+    {
+     "key": "b",
+     "label": "No se puede borrar una cuenta que tenga proyectos: primero se desactiva; borrar solo vale para cuentas vacías"
+    },
+    {
+     "key": "c",
+     "label": "Sus proyectos y decoraciones pasan al administrador que la borra; el gasto se conserva como en a"
+    }
+   ],
+   "recommended": "a",
+   "why": "Cumple la petición de supresión de la Ley 1581 sin descuadrar los totales de gasto. Desactivar sigue existiendo para quitar acceso sin borrar nada. Afecta a SP-4, SP-5 y SP-6, que guardan proyectos, decoraciones y gasto."
+  },
+  {
+   "id": "q2",
+   "text": "Aviso de tratamiento de datos (borrador v1, español e inglés) en SPEC § «Data-processing notice». Los campos entre corchetes (razón social, correo para derechos, URL de la política) quedan como marcadores hasta que los tengas; legal de Sempertex debe revisarlo antes de invitar usuarios reales. ¿Lo apruebas como v1?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Apruebo el borrador v1 tal cual (con los marcadores)"
+    },
+    {
+     "key": "b",
+     "label": "Apruebo con cambios (los escribo en la nota)"
+    },
+    {
+     "key": "c",
+     "label": "Ya tengo los datos de los marcadores (los pego en la nota)"
+    }
+   ],
+   "recommended": "a",
+   "why": "El texto solo dice qué datos se guardan, para qué y cómo pedir cambios; no inventa compromisos legales. Los marcadores bloquean solo la invitación de usuarios reales, no el desarrollo."
+  },
+  {
+   "id": "q3",
+   "text": "Si más adelante cambia el aviso (v2), ¿las cuentas activas deben aceptarlo de nuevo?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: al siguiente ingreso ven el aviso nuevo y no pueden seguir sin aceptarlo"
+    },
+    {
+     "key": "b",
+     "label": "No: solo lo aceptan las cuentas nuevas"
+    }
+   ],
+   "recommended": "a",
+   "why": "La autorización debe corresponder a lo que realmente se hace con los datos; si el uso cambia, hace falta autorización nueva. Es una redirección pequeña en el proxy."
+  }
+ ],
+ "round": 7,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T20:39:47Z"
+}

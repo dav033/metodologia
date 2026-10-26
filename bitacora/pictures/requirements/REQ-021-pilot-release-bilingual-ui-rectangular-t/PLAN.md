@@ -143,7 +143,94 @@ Real people sign in with their own invited account and each one reaches exactly 
 <!-- /SP-1 tasks -->
 
 - **SP-2 — Sign-in, invitation and administration screens** (UI: `cuentas-admin@v1`): A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts. Covers R1, R3, R16.
+
+<!-- SP-2 tasks -->
+
+  SP-2 tasks (draft for owner confirmation). Screens follow the Designer's `cuentas-admin@v1` contract once the owner approves it. Only the Administrador manages users and roles (round 6 q2). Screens are written in Spanish now with every string in one module per screen so SP-8/SP-10 translate them; the data notice ships in Spanish and English from the start (round 5 q6).
+  DAG: T2.1 (design) ∥ T2.2 (APIs, after SP-1's session-guard T1.4) → {T2.3, T2.4, T2.5} (UI) → T2.6 (integration) → T2.7 (visual review) → T2.8 (audit). Consumes account-service@1, session-guard@1 and permission-map@1 from SP-1; composition gate CG-1 proves SP-1 and SP-2 together on the integrated M1 tree.
+
+- [ ] T2.1 — Copy the owner-approved cuentas-admin@v1 contract into the repository · repo: pictures · after: T1.4 · verify: `test -s design/contracts/cuentas-admin@v1.md` · files: design/contracts/cuentas-admin@v1.md · resources: design:cuentas-admin@v1 · covers: R1, R3, R16 · kind: design · subplan: SP-2 · ui: no
+
+  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
+  The scheduler supplies the plan-approved draft; the task copies it unchanged.
+
+  - Acceptance / static: The owner-approved cuentas-admin@v1 contract is copied byte for byte into design/contracts/cuentas-admin@v1.md. Check: `test -s design/contracts/cuentas-admin@v1.md`
+
+- [ ] T2.2 — Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles · repo: pictures · after: T1.4 · verify: `npm run cuentas:test-api -- --test-name-pattern=enlaces` · files: src/lib/cuentas/aviso-datos.ts, src/app/api/cuentas/activar/route.ts, src/app/api/cuentas/restablecer/route.ts, src/app/api/cuentas/aviso/route.ts, src/app/api/cuentas/mi-cuenta/route.ts, src/app/api/admin/cuentas/route.ts, src/app/api/admin/cuentas/[id]/route.ts, src/app/api/admin/roles/route.ts, src/app/api/admin/roles/[id]/route.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-cuentas-api.ts · resources: package.json scripts, contract:account-service, contract:session-guard · covers: R1, R3, R16 · kind: implement · subplan: SP-2 · ui: no
+
+  Classification: complexity medium; scope large_change; risk high; coupling high; confidence medium; estimate 120 minutes.
+  `aviso-datos.ts` exports `AVISO_DATOS = { version: 1, es, en }` with the SPEC «Data-processing notice» text verbatim, placeholders included. Routes: `POST /api/cuentas/activar` {token, contrasena, versionAviso}; `POST /api/cuentas/restablecer` {token, contrasena}; `GET /api/cuentas/activar?token=` returns name and email for a valid invitation only; `POST /api/cuentas/aviso` accepts the current version for the session's account; `PATCH /api/cuentas/mi-cuenta` {actual, nueva}. Admin (`cuentas.administrar`): `GET/POST /api/admin/cuentas` (list with search and filters; invite), `PATCH/DELETE /api/admin/cuentas/[id]` (role, state, reset link; delete requires `confirmarCorreo` equal to the email). Roles (`roles.administrar`): `GET/POST /api/admin/roles`, `PATCH/DELETE /api/admin/roles/[id]`. All mutations keep `isSameOriginRequest`; errors are stable codes (`LINK_INVALIDO`, `CORREO_REGISTRADO`, `ULTIMO_ADMIN`, `ROL_EN_USO`, `ROL_SISTEMA`).
+  The map from T1.2 gets the new paths (public: activar, restablecer; sesion: aviso, mi-cuenta). npm script `cuentas:test-api` = `tsx --conditions=react-server --test scripts/test/test-cuentas-api.ts`.
+
+  - Acceptance / functional: The activation, reset and notice-acceptance APIs accept only a valid unused token or a signed-in session, validate every body, and answer a used or expired link with LINK_INVALIDO without saying which. Check: `npm run cuentas:test-api -- --test-name-pattern=enlaces`
+  - Acceptance / functional: The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies. Check: `npm run cuentas:test-api -- --test-name-pattern=admin`
+  - Acceptance / functional: Changing one's own password requires the current password and ends every other session of that account. Check: `npm run cuentas:test-api -- --test-name-pattern=mi-cuenta`
+  - Acceptance / functional: The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account. Check: `npm run cuentas:test-api -- --test-name-pattern=aviso`
+
+- [ ] T2.3 — Sign-in, invitation activation, password reset and notice re-acceptance screens · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-acceso -- --solo ingreso` · files: src/app/login/page.tsx, src/app/login/LoginForm.tsx, src/app/activar/[token]/page.tsx, src/app/restablecer/[token]/page.tsx, src/app/aviso-datos/page.tsx, src/components/cuentas/FormularioContrasena.tsx, src/components/cuentas/AvisoDatos.tsx, src/components/cuentas/textos-acceso.ts, src/proxy.ts, scripts/test/test-ui-acceso.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk high; coupling medium; confidence medium; estimate 150 minutes.
+  Strings live in `textos-acceso.ts` (Spanish now, keys ready for SP-8). The notice is shown in the browser language (`Accept-Language`: en → English, else Spanish). The proxy redirects a session whose account accepted an older notice version to `/aviso-datos?from=` before any page except sign-out. After sign-in the destination is `from` when allowed, else the first allowed of Taller 3D, chat, catalogue. npm script `cuentas:test-ui-acceso` = `tsx scripts/test/test-ui-acceso.ts` (server render of every state plus a Playwright pass on a dev server against the isolated schema).
+
+  - Acceptance / functional: On /login a person signs in with email and password; a wrong password, an unknown email or a deactivated account shows the same message, a locked email says to wait fifteen minutes, and success returns to the requested page or the first area the role allows. Check: `npm run cuentas:test-ui-acceso -- --solo ingreso`
+  - Acceptance / functional: Opening an invitation link shows the invited name and email, asks for a password of at least eight characters twice and shows the data notice in the browser language with an accept checkbox, and activation is impossible without accepting; a used or expired link shows a message to ask the administrator for a new one. Check: `npm run cuentas:test-ui-acceso -- --solo activacion`
+  - Acceptance / functional: Opening a reset link lets the person set a new password and then sign in; a used or expired link shows the same message as an invalid invitation. Check: `npm run cuentas:test-ui-acceso -- --solo restablecer`
+  - Acceptance / functional: When the notice version changes, a signed-in person must accept the new version before any other page opens. Check: `npm run cuentas:test-ui-acceso -- --solo aviso`
+
+- [ ] T2.4 — Account menu on every signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: yes
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  The root layout reads the session on the server and renders `MenuCuenta` only for signed-in pages, at the place the contract defines. npm script `cuentas:test-ui-mi-cuenta` = `tsx scripts/test/test-ui-mi-cuenta.ts`.
+
+  - Acceptance / functional: Every signed-in page shows an account menu with the person's name and role, Mi cuenta and sign out, and Mi cuenta changes the password by asking for the current one. Check: `npm run cuentas:test-ui-mi-cuenta`
+
+- [ ] T2.5 — Administration screens: accounts list, invitations, account actions and the role editor · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-admin -- --solo lista` · files: src/app/admin/cuentas/page.tsx, src/app/admin/roles/page.tsx, src/components/admin/cuentas/ListaCuentas.tsx, src/components/admin/cuentas/DialogoInvitar.tsx, src/components/admin/cuentas/AccionesCuenta.tsx, src/components/admin/cuentas/EditorRol.tsx, src/components/admin/cuentas/textos-admin-cuentas.ts, src/components/admin/AdminTabs.tsx, scripts/test/test-ui-admin-cuentas.ts · resources: package.json scripts, contract:permission-map · covers: R1, R3, R16 · kind: implement · subplan: SP-2 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk high; coupling medium; confidence medium; estimate 180 minutes.
+  The invitation and reset links are shown once with a copy button and a note that they are not shown again. Permission checkboxes come from `permisos.ts` with their labels, grouped by tool. Links to both screens appear only for accounts holding the permission. npm script `cuentas:test-ui-admin` = `tsx scripts/test/test-ui-admin-cuentas.ts`.
+
+  - Acceptance / functional: An administrator sees all accounts with name, email, company, role, state and last access, searches by name or email and filters by role and state. Check: `npm run cuentas:test-ui-admin -- --solo lista`
+  - Acceptance / functional: An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message. Check: `npm run cuentas:test-ui-admin -- --solo invitar`
+  - Acceptance / functional: An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes it after typing its email, and the screen explains why the last administrator cannot be changed. Check: `npm run cuentas:test-ui-admin -- --solo acciones`
+  - Acceptance / functional: An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the five system roles read-only with their permissions, and cannot delete a role that still has accounts. Check: `npm run cuentas:test-ui-admin -- --solo roles`
+
+- [ ] T2.6 — Browser end-to-end: invite, activate, sign in and change plan on a production build · repo: pictures · after: T2.3, T2.4, T2.5 · verify: `npm run cuentas:test-integracion-ui` · files: scripts/test/test-integracion-cuentas-ui.ts, .evidence/REQ-021/SP-2.integration.json · resources: package.json scripts · covers: R1, R3, R16 · kind: test · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
+  Seeds one Administrador in the isolated schema, builds and starts the app, drives the administrator browser to invite a Plan 2 person and read the link, opens it in a second context, activates with the notice, signs in, checks chat and costs open and /3d does not, changes the role to Plan 3 in the first browser and reloads /3d in the second. npm script `cuentas:test-integracion-ui` = `tsx scripts/test/test-integracion-cuentas-ui.ts`.
+
+  - Acceptance / integration: On a production build against the REQ-021 test database, an administrator invites a Plan 2 person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Plan 3 their next request opens the Taller. Check: `npm run cuentas:test-integracion-ui`
+
+- [ ] T2.7 — SP-2 visual review against the cuentas-admin@v1 contract · repo: pictures · after: T2.6 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json` · files: .evidence/REQ-021/SP-2.visual.md, .evidence/REQ-021/SP-2.visual.findings.json · resources: ledger:SP-2-visual · covers: R1, R3 · kind: audit · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
+
+  - Acceptance / static: The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json`
+
+- [ ] T2.8 — SP-2 audit: account screens, administration APIs and the data notice · repo: pictures · after: T2.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json` · files: .evidence/REQ-021/SP-2.audit.md, .evidence/REQ-021/SP-2.findings.json · resources: ledger:SP-2 · covers: R1, R3, R16 · kind: audit · subplan: SP-2
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 75 minutes.
+  Checks at least: admin APIs refuse without the permission and cross-origin; links shown once and never logged; generic sign-in errors; notice version stored; delete requires typing the email.
+
+  - Acceptance / static: An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json`
+
+<!-- /SP-2 tasks -->
+
 - **SP-3 — Taller essentials: rectangular tables, Backing and Blender export** (UI: `taller-esenciales@v1`): A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours. Covers R9, R10, R11.
+
+<!-- CG-1 tasks -->
+
+  Composition gate CG-1: SP-1, SP-2.
+
+- [ ] T91 — M1 composition check: first administrator to a Plan 1 user on the integrated tree · repo: pictures · after: T1.8, T2.8 · verify: `npm run m1:test-composicion` · files: scripts/test/test-composicion-m1.ts, .evidence/REQ-021/CG-1.integration.json · resources: package.json scripts · covers: R1, R2, R16 · kind: test
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 60 minutes.
+  Reuses the helpers of T1.7 and T2.6; npm script `m1:test-composicion` = `tsx scripts/test/test-composicion-m1.ts`.
+
+  - Acceptance / integration: On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites a Plan 1 person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs. Check: `npm run m1:test-composicion`
+
+<!-- /CG-1 tasks -->
 
 ### M2 — Saved work, spend per user and the chat tools
 Each signed-in user saves and reopens projects and decorations from any browser, every paid AI call is attributed to a user and a session, and the assisted chat is three separate tools gated by access plan.

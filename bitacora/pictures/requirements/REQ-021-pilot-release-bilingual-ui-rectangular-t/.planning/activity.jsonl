@@ -26,3 +26,10 @@
 {"at": "2026-10-26T15:03:40-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Confirmaste SP-1 en la web; sigue SP-2", "diff": ""}
 {"at": "2026-10-26T15:03:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 (subplan en foco)", "diff": ""}
 {"at": "2026-10-26T15:05:16-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 2 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:36:07-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
+{"at": "2026-10-26T15:36:25-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1", "diff": ""}
+{"at": "2026-10-26T15:39:00-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (criterios, tareas)", "diff": "+ On /login a person signs in with email and password; a wrong password, an unknown email or a deactivated account shows the same message, a locked email says to wait fifteen minutes, and success returns to the requested page or the first area the role allows."}
+{"at": "2026-10-26T15:39:00-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:39:12-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2", "diff": ""}
+{"at": "2026-10-26T15:39:12-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:39:16-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
