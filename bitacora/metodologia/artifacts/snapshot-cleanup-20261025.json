@@ -425,5 +425,71 @@
     417,
     418,
     485
-  ]
+  ],
+  "home_deleted": true,
+  "root_deleted": true,
+  "after": {
+    "home": [
+      {
+        "number": 0,
+        "type": "single",
+        "date": "",
+        "cleanup": "",
+        "description": "current"
+      },
+      {
+        "number": 422,
+        "type": "single",
+        "date": "2026-10-25 22:07:03",
+        "cleanup": "timeline",
+        "description": "baseline-after-workspace-retention"
+      }
+    ],
+    "root": [
+      {
+        "number": 0,
+        "type": "single",
+        "date": "",
+        "cleanup": "",
+        "description": "current"
+      },
+      {
+        "number": 1,
+        "type": "single",
+        "date": "2026-09-14 02:05:43",
+        "cleanup": "",
+        "description": "antes-mejoras-claude-noche"
+      },
+      {
+        "number": 13,
+        "type": "single",
+        "date": "2026-09-14 02:48:17",
+        "cleanup": "",
+        "description": "antes-login-anime"
+      },
+      {
+        "number": 417,
+        "type": "pre",
+        "date": "2026-10-22 16:47:30",
+        "cleanup": "number",
+        "description": "pacman -S --noconfirm --needed espeak-ng"
+      },
+      {
+        "number": 418,
+        "type": "post",
+        "date": "2026-10-22 16:47:30",
+        "cleanup": "number",
+        "description": "espeak-ng libsonic pcaudiolib"
+      },
+      {
+        "number": 485,
+        "type": "single",
+        "date": "2026-10-25 22:07:04",
+        "cleanup": "number",
+        "description": "baseline-after-workspace-retention"
+      }
+    ]
+  },
+  "free_bytes_after": 178118963200,
+  "increase_free_bytes": 175744425984
 }

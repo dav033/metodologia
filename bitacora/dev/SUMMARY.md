@@ -1,3 +1,4 @@
+2026-10-25 22:20: Pictures REQ-020 advisor released to main (f8f8b9e8): Vercel + VPS serve it, one login (original Demo Decoración), VPS acceptance 25/25. Vercel/local AI blocked by the shared Gemini key's monthly spending cap (P-203, owner action). REQ-020 stays open until Vercel acceptance reruns.
 2026-10-25 18:25: Pictures REQ-020 advisor reworked by hand in worktree `login-redirect` (commits not pushed): voice notes (migration 003 applied), inspiration gallery and closed packages switched off, custom proposals from Happia services, theme-first ranking. Waiting for David to test localhost:3020, then gate/push/VPS release.
 # dev — Summary
 
