@@ -261,9 +261,12 @@ bitacora.py --project P design drafts REQ-NNN     # state, Designer questions, p
 ```
 
 Drafts live in the requirement folder (`design/<contract>@vN.md` contract + `.html` mockup), never in a repository.
-Send the owner to the web Plan tab (`/p/P/req/REQ-NNN?tab=plan`): it shows the plan in English, Spanish or both, every
-subplan with its tasks, and under each UI subplan the live mockup, the contract, the Designer's questions and a form
-to ask the Designer for changes. The tab updates itself while you edit SPEC/PLAN in the conversation; when the page
+Send the owner to the web Plan tab (`/p/P/req/REQ-NNN?tab=plan`): a compact live view with the subplans by milestone,
+the selected subplan (Diseño: mockup at phone/tablet/desktop width, Designer questions with Responder, feedback;
+Tareas; Criterios) and "lo que cambió en la conversación" (plan edits, Designer drafts, owner comments, translation,
+from `.planning/activity.jsonl`); a design review per subplan (draft versions, contract sections changed since the
+previous draft, visual criteria, comment thread); the whole plan in English, Spanish or both with changed sections
+and their diff; and an approval dialog listing what is still missing. The tab updates itself while you edit SPEC/PLAN in the conversation; when the page
 is open it also redesigns a subplan once its PLAN.json part stops changing, and keeps the Spanish translation
 current (`bitacora.py translate REQ-NNN`). Relay the Designer's questions in the conversation and fold the answers
 into the plan; owner comments from the chat go to the Designer with `design feedback REQ-NNN <c>@vN --comments "…"`.

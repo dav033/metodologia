@@ -172,12 +172,40 @@ def _settle(rdir: Path, ref: str, entry: dict) -> None:
         entry["error"] = ""  # `partial` here usually means "draft, not approved yet": that is the planning state
         entry["report"] = outcome.get("status")
         entry["revision"] = int(entry.get("revision") or 0) + 1
+        _archive(rdir, ref, entry["revision"])
+        entry.setdefault("history", []).append({"rev": entry["revision"], "at": entry["finished"],
+                                                "summary": entry["summary"]})
+        _event(rdir, "Designer", f"{ref} · borrador {entry['revision']} listo", entry)
     else:
         entry["status"] = "failed"
         entry["error"] = f"{outcome.get('status')}: {entry['summary'] or 'the contract was not written'}"[:600]
         for item in entry.get("feedback", []):  # the owner's comments were not applied: they stay pending
             if item.get("consumed") == did:
                 item.pop("consumed")
+        _event(rdir, "Designer", f"{ref} · el diseño falló: {entry['error'][:120]}", entry)
+
+
+def _event(rdir: Path, who: str, text: str, entry: dict, kind: str = "design") -> None:
+    import bt_planning_activity
+    bt_planning_activity.record(rdir, who, text, kind=kind, sp=entry.get("subplan_id") or "")
+
+
+def _archive(rdir: Path, ref: str, rev: int) -> None:
+    """Keep each finished revision (`design/history/<ref>/r<N>.md|.html`) so the owner can compare versions."""
+    target = Path(rdir) / DIR / "history" / ref
+    target.mkdir(parents=True, exist_ok=True)
+    for source, suffix in zip(paths(rdir, ref), (".md", ".html"), strict=True):
+        if source.is_file():
+            (target / f"r{rev}{suffix}").write_bytes(source.read_bytes())
+
+
+def revision_file(rdir: Path, ref: str, rev: int | None, suffix: str) -> Path:
+    """The draft file of revision `rev` (the current one when `rev` is None or the latest)."""
+    if rev:
+        archived = Path(rdir) / DIR / "history" / ref / f"r{int(rev)}{suffix}"
+        if archived.is_file():
+            return archived
+    return paths(rdir, ref)[0 if suffix == ".md" else 1]
 
 
 def rows(rdir: Path) -> list[dict]:
@@ -275,6 +303,8 @@ def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
                       "agent": order.get("agent"), "model": order.get("model")})
         if reason == "plan changed":
             entry["auto_runs"] = int(entry.get("auto_runs") or 0) + 1
+        _event(rdir, "Designer", f"Empezó {ref}" + {"feedback": " con tus comentarios",
+                                                    "plan changed": " porque el subplan cambió"}.get(reason, ""), entry)
         return entry
 
 
@@ -310,6 +340,7 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str) -> str
         if entry.get("status") == "approved":
             return f"{ref} ya fue aprobado con el plan; los cambios van en una versión nueva del contrato."
         entry.setdefault("feedback", []).append({"when": _now(), "text": text[:4000], "via": via})
+        _event(rdir, "Tú → Designer", f"{ref}: {text[:200]}", entry, kind="feedback")
         busy = entry.get("status") in ACTIVE
     if busy:
         return f"Comentario guardado. El Designer lo tomará al terminar la versión en curso de {ref}."

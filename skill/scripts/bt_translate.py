@@ -95,7 +95,8 @@ def documents(rdir: Path) -> list[tuple[Path, Path]]:
 def plan_strings(rdir: Path) -> list[str]:
     """Short texts of PLAN.json the web shows per subplan: titles, outcomes, criteria and task titles."""
     import bt_design_drafts
-    out: list[str] = []
+    out: list[str] = [m.get("title") or "" for m in bt_design_drafts._plan(rdir).get("milestones") or []
+                      if isinstance(m, dict)]
     for item in bt_design_drafts.subplans(rdir):
         out += [item["title"], item["outcome"], *[c for c in item["criteria"] if isinstance(c, str)]]
         out += [t.get("title") or "" for t in item["tasks"]]
@@ -229,6 +230,10 @@ def translate(project: str, rdir: Path, *, ask=None) -> dict:
     result = {"translated": done, "failed": failed, "pending": len(pending(rdir)), "at": time.time()}
     (Path(rdir) / CACHE_DIR).mkdir(parents=True, exist_ok=True)
     (Path(rdir) / CACHE_DIR / "last.json").write_text(json.dumps(result), encoding="utf-8")
+    if done:
+        import bt_planning_activity
+        bt_planning_activity.record(rdir, "Traducción", f"Español al día · {done} secciones traducidas"
+                                    + (f", {failed} pendientes" if failed else ""), kind="translate")
     return result
 
 

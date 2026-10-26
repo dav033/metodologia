@@ -177,7 +177,7 @@ class Handler(BaseHTTPRequestHandler):
             from bt_page_graph import graph_page
             return self.send(graph_page(project))
         if kind == "req" and len(rest) == 2:
-            return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", ""), q.get("lang", "")))
+            return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", ""), q))
         if kind == "req" and len(rest) == 3 and rest[2] in ("planning", "mockup"):
             return self.planning_get(project, rest[1], rest[2], q)
         if kind == "req" and len(rest) == 3 and rest[2] == "preview":
@@ -261,10 +261,12 @@ class Handler(BaseHTTPRequestHandler):
             ref = q.get("contract", "")
             if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}", ref):
                 return self.send("Not found", 404, "text/plain")
-            return self.file(drafts.paths(rdir, ref)[1] if drafts.paths(rdir, ref)[1].is_file() else None)
+            rev = int(q["rev"]) if q.get("rev", "").isdigit() else None
+            mockup = drafts.revision_file(rdir, ref, rev, ".html")
+            return self.file(mockup if mockup.is_file() else None)
         planning.follow(project, rdir)
         html = planning.fragment(project, req_id(rdir), rdir, planning.plan_status(rdir), token(),
-                                 q.get("lang") or planning.default_lang(rdir))
+                                 planning.options(rdir, q))
         return self.send(json.dumps({"html": html}, ensure_ascii=False), 200, "application/json; charset=utf-8")
 
     def planning_post(self, project: str, rdir: Path, action: str, form: dict, base: str) -> str:
@@ -276,8 +278,8 @@ class Handler(BaseHTTPRequestHandler):
             started = drafts.request(project, rdir, [ref] if ref else None, force=bool(ref), reason="web")
             msg = f"Designer iniciado para {', '.join(started)}." if started else "No había diseños que iniciar."
         commit(ROOT, f"{project}: {req_id(rdir)} design drafts ({action}, web)", push=False)
-        anchor = f"#{form.get('anchor')}" if re.fullmatch(r"SP-[\w-]+", form.get("anchor", "")) else ""
-        return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&msg={quote(msg)}{anchor}"
+        sp = form.get("anchor", "") if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", form.get("anchor", "")) else ""
+        return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sp)}&msg={quote(msg)}"
 
     def simulate(self, q: dict) -> None:
         """A demonstration run of one plan on the core's doubles (read-only: nothing is created or executed)."""

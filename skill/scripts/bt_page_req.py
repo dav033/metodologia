@@ -14,7 +14,7 @@ from bt_pages import badge, layout, md, purl, read
 REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
 
 
-def req_page(project: str, req: str, tab: str, token: str, notice: str = "", lang: str = "") -> str:
+def req_page(project: str, req: str, tab: str, token: str, notice: str = "", q: dict | None = None) -> str:
     rdir = find_req(ROOT / project, req)
     rid = req_id(rdir)
     spec, plan = rdir / "SPEC.md", rdir / "PLAN.md"
@@ -39,7 +39,7 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", lan
     elif tab == "plan":
         import bt_design_drafts
         import bt_page_planning
-        content = (bt_page_planning.plan_tab(project, rid, rdir, plan_status, token, lang) +
+        content = (bt_page_planning.plan_tab(project, rid, rdir, plan_status, token, q or {}) +
                    ("" if bt_design_drafts.active(rdir) else design_panel(project, rid, rdir, token))) \
             if plan.exists() else '<p class="muted">Todavía no hay plan.</p>'
     elif tab == "review":
@@ -58,7 +58,8 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", lan
     head = (f'<div class="head"><div><p class="eyebrow">{e(project)} · {e(rid)}</p><h1>{e(title)}</h1>'
             f'<div class="kpis"><span class="kpi">spec {badge(_front(spec, "status"))}</span>'
             f'{"<span class=kpi>plan " + badge(plan_status) + "</span>" if plan_status else ""}</div></div></div>')
-    body = f'{head}{note}<div class="tabs">{tabs}</div><div class="panel">{content}</div>'
+    flush = " panel-flush" if tab == "plan" and plan.exists() else ""
+    body = f'{head}{note}<div class="tabs">{tabs}</div><div class="panel{flush}">{content}</div>'
     return layout(rid, body, [(project, purl(project)), (rid, purl(project, "req", rid))])
 
 

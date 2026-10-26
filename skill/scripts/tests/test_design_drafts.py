@@ -154,12 +154,34 @@ class DraftTests(unittest.TestCase):
     def test_plan_tab_shows_subplans_designs_and_stamps_live_blocks(self):
         drafts.request("demo", self.rdir)
         self.finish("D-1")
-        html = bt_page_planning.fragment("demo", "REQ-001", self.rdir, "review", "tok", "en")
-        self.assertIn('data-k="sp-SP-2" data-h=', html)
+        opts = bt_page_planning.options(self.rdir, {"lang": "en", "sp": "SP-2"})
+        html = bt_page_planning.fragment("demo", "REQ-001", self.rdir, "review", "tok", opts)
+        self.assertIn('data-k="detail-SP-2-design" data-h=', html)
         self.assertIn("/mockup?contract=checkout@v1", html)
         self.assertIn("Which payment providers?", html)
-        self.assertIn("Enviar al Designer", html)
-        self.assertNotIn(" disabled", html)
+        self.assertIn('aria-label="Enviar al Designer"', html)
+        self.assertIn('value="approve">Aprobar y lanzar', html)
+        self.assertNotIn('value="approve" disabled', html)
+        review = bt_page_planning.fragment("demo", "REQ-001", self.rdir, "review", "tok",
+                                           bt_page_planning.options(self.rdir, {"mode": "review", "sp": "SP-2"}))
+        self.assertIn('data-k="review-SP-2-1"', review)
+        doc = bt_page_planning.fragment("demo", "REQ-001", self.rdir, "review", "tok",
+                                        bt_page_planning.options(self.rdir, {"mode": "doc", "lang": "both"}))
+        self.assertIn("Traducción · ES", doc)
+
+    def test_activity_logs_plan_changes_after_the_baseline(self):
+        import bt_planning_activity as activity
+        self.assertEqual(activity.observe(self.rdir), 0)  # first look is the baseline
+        changed = json.loads(json.dumps(PLAN))
+        changed["subplans"][1]["acceptance_criteria"].append("Apple Pay is offered.")
+        self.write_plan(changed)
+        plan = self.rdir / "PLAN.md"
+        plan.write_text(plan.read_text(encoding="utf-8") + "\n## Risks\nNone.\n", encoding="utf-8")
+        self.assertEqual(activity.observe(self.rdir), 2)
+        first, second = activity.events(self.rdir)[:2]
+        self.assertIn("«Risks»", first["text"])
+        self.assertEqual((second["sp"], second["diff"]), ("SP-2", "+ Apple Pay is offered."))
+        self.assertIn("Risks", activity.changed_sections(self.rdir))
 
 
 class TranslateTests(unittest.TestCase):
