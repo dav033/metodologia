@@ -177,18 +177,20 @@ _Si el alcance incluye un subplan de interfaz: identifica a sus usuarios y su ta
 - P: Decoración guardada → R: una composición creada en la escena y guardada en la biblioteca personal del usuario para otros proyectos (su publicación en la biblioteca global se hará más adelante).
 - P: Qué se recorta si falta tiempo → R: el orden de recortes indicado arriba.
 
-## Insumos
-Solo ubicaciones, nunca valores. Subplan vacío = todo el plan. Las filas marcadas como `pending` esperan a la ronda 5.
+## Entradas
+Solo ubicaciones, nunca valores. Subplan vacío = todo el plan. Las filas marcadas como `pending` esperan a la ronda 6.
 
-| Elemento | Subplan | Dónde se encuentra | Proveedor | Estado |
+| Elemento | Subplan | Ubicación | Proveedor | Estado |
 |---|---|---|---|---|
-| Dónde se prueba cada subplan aprobado y cuándo llega a producción | all | ronda 5 q1 | Owner | pending |
-| Base de datos para comprobaciones automatizadas y pruebas locales | all | ronda 5 q2; se propone `PICTURES_REQ021_DATABASE_URL` en `~/.config/flow/secrets.env` (rama de Neon) | Owner | pending |
-| Base de datos Neon de producción | SP-13 | `DATABASE_URL` en el entorno de producción de Vercel y `.env.local` (solo el nombre) | Owner | available |
-| Implementación en producción de `main` en Vercel | SP-13 | Proyecto de Vercel `dav033s-projects/demo-decoracion`, integración con Git; CLI `vercel` con sesión iniciada como dav033 | Owner | available |
-| Implementación de ai-api en VPS | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, entorno `production`) mediante `gh` | Owner | available |
-| Indicador local de acceso sin restricciones: nombre y regla | SP-1 | ronda 5 q3; se propone `AUTH_LOCAL_SIN_RESTRICCIONES` en `.env.local` | Owner | pending |
-| Primer administrador de producción: mecanismo y correo electrónico | SP-1, SP-13 | ronda 5 q4, q5 | Owner | pending |
-| Texto de protección de datos, URL de la política de privacidad de Sempertex y correo electrónico de contacto para ejercer derechos | SP-2 | ronda 5 q6 | Owner | pending |
-| Autorización para la prueba de humo automatizada en producción | SP-13 | ronda 5 q7; entrada en `~/bitacora/pictures/verification-policy.json` | Owner | pending |
-| Traducción única al inglés con Haiku 5.5 | SP-9 | Cuentas Claude del propietario mediante la CLI de Claude Code (ronda 4 q6); sin clave de Gemini, sin límite en USD | Owner | available |
+| Dónde se prueba cada subplan aprobado y cuándo se integra | all | ronda 5 q1: cada subplan se prueba localmente (Probar); cuando se aprueban todos los subplanes de un hito, se integra en `main`, se aplican las migraciones y Vercel (`demo-decoracion.vercel.app`, el entorno de pruebas) realiza el despliegue; se despliega el VPS ai-api si tuvo cambios | Propietario | disponible |
+| Entorno de producción del piloto (host, dominio, base de datos) | SP-13 | nota de la ronda 5 q1: `demo-decoracion.vercel.app` NO es producción; se consultó en la ronda 6 | Propietario | pendiente |
+| Base de datos para las verificaciones automatizadas y las pruebas locales | all | `PICTURES_REQ021_DATABASE_URL` en `~/.config/flow/secrets.env`; Postgres 16 `req021-db` en advin, túnel `pictures-req021-db-tunnel.service` en el puerto local 55433 (TOOLS.md); las migraciones aún no se han aplicado | Propietario (HQ) | disponible |
+| Base de datos Neon del entorno de pruebas | SP-13 | `DATABASE_URL` en el entorno Production de Vercel para `demo-decoracion` y `.env.local` (solo el nombre) | Propietario | disponible |
+| Despliegue de `main` en Vercel (entorno de pruebas) | SP-13 | Proyecto de Vercel `dav033s-projects/demo-decoracion`, integración con Git; sesión iniciada en la CLI `vercel` como dav033 | Propietario | disponible |
+| Despliegue de ai-api en el VPS | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, entorno `production`) mediante `gh` | Propietario | disponible |
+| Nombre y regla del indicador local para omitir las restricciones | SP-1 | ronda 5 q3 (aceptado): `AUTH_LOCAL_SIN_RESTRICCIONES=1` en `.env.local`, válido solo con `next dev` y solicitudes de loopback; en cualquier otro caso la aplicación se niega a iniciar | Propietario | disponible |
+| Primer administrador de producción: mecanismo y correo electrónico | SP-1, SP-13 | ronda 5 q5: `davidt@sempertex.com`; se volvió a consultar el mecanismo en la ronda 6 (la respuesta a q4 describió el modo local) | Propietario | pendiente |
+| Texto sobre protección de datos (Ley 1581, ES/EN) | SP-2 | ronda 5 q6: redactado por el agente y aprobado por el propietario en SP-2 | Propietario | disponible |
+| URL de la política de privacidad de Sempertex y correo electrónico de contacto para ejercer derechos | SP-2 | ronda 5 q6 | Propietario | aplazado: marcado con campos provisionales en el texto y señalado para revisión legal de Sempertex antes de habilitarlo para usuarios reales |
+| Autorización para ejecutar pruebas de humo automatizadas en el entorno desplegado | SP-13 | ronda 5 q7 (concedida: cuenta `piloto-e2e`, plan Usuario 3, sin IA de pago, eliminada después de cada prueba de humo); necesita una entrada correspondiente en `~/bitacora/pictures/verification-policy.json` (propiedad del operador, aún no creada) | Propietario | ubicación indicada |
+| Traducción única al inglés con Haiku 5.5 | SP-9 | Cuentas de Claude del propietario mediante la CLI de Claude Code (ronda 4 q6); sin clave de Gemini ni límite de USD | Propietario | disponible |
