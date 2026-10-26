@@ -1,0 +1,126 @@
+{
+ "title": "Preguntas generales del plan (Planner)",
+ "coverage": "plan-wide",
+ "intro": "Leí el código de origin/main (a9f3d6e5). Hoy no existe ningún usuario: el acceso es una contraseña compartida cuya cookie es el hash de esa contraseña; hay 95 rutas API y 20 páginas que proteger. El gasto de IA ya se registra en ai_call_log (tokens y coste), pero sin usuario ni sesión. No hay servicio de correo ni sistema de idiomas (unas 500–800 frases solo en el Taller y 1.615 productos en español). Estas preguntas afectan a todo el plan; lo propio de cada subplan lo pregunto cuando le toque.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Invitaciones: no hay servicio de correo en el proyecto. ¿Cómo le llega la invitación a cada persona?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "El administrador crea la invitación y la app le da un enlace de un solo uso (vence en 7 días) que él envía por WhatsApp o correo propio"
+    },
+    {
+     "key": "b",
+     "label": "La app envía el correo sola con un proveedor (Resend u otro): hace falta cuenta, dominio remitente con DNS y llave"
+    },
+    {
+     "key": "c",
+     "label": "Empezar con (a) y añadir el correo automático después del piloto"
+    }
+   ],
+   "recommended": "c",
+   "why": "El correo automático añade un proveedor externo, DNS y un subplan más; el enlace copiable cubre el piloto y no bloquea nada."
+  },
+  {
+   "id": "q2",
+   "text": "¿Qué cubre el nuevo inicio de sesión y qué ve cada rol inicial?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Toda la app principal (/, /asistente, /3d, /catalogo, /admin, /estadisticas, laboratorios y sus APIs). Usuario: Taller 3D, las tres herramientas de chat y catálogo. Empleado: además gasto de IA, estadísticas, laboratorios y admin de productos. Administrador: además usuarios y roles. /asesor y /happie (Happia) siguen con su login propio y fuera del piloto; cotizaciones compartidas públicas y webhooks siguen públicos"
+    },
+    {
+     "key": "b",
+     "label": "Lo mismo, pero /asesor y /happie también pasan a las cuentas nuevas"
+    }
+   ],
+   "recommended": "a",
+   "why": "El asesor vive en otra base (Supabase) con su propio login y su propio requerimiento (REQ-020); meterlo aquí suma una migración de cuentas que el piloto no necesita."
+  },
+  {
+   "id": "q3",
+   "text": "¿Cómo llega el trabajo a producción durante estas tres semanas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Cada subplan aprobado se integra en main y se publica, con lo nuevo apagado por bandera. Las cuentas conviven con APP_PASSWORD hasta el día del piloto, cuando se apaga la contraseña compartida. Puedes probar cada subplan en producción"
+    },
+    {
+     "key": "b",
+     "label": "Todo queda en una rama y se publica junto al final"
+    },
+    {
+     "key": "c",
+     "label": "Vista previa de Vercel con una rama de base de datos Neon por subplan, y producción solo al final"
+    }
+   ],
+   "recommended": "a",
+   "why": "Publicar al final concentra todo el riesgo en el último día. Con banderas, cada parte se prueba en producción con días de margen y el corte de APP_PASSWORD es un solo cambio reversible."
+  },
+  {
+   "id": "q4",
+   "text": "Gasto de IA «por sesión»: ¿qué es una sesión?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Se guardan las dos cosas: la sesión de inicio de sesión (entrar y salir) y el trabajo concreto (proyecto del Taller o conversación de chat). La vista agrupa por proyecto o conversación y filtra por usuario y por tipo (texto o imagen)"
+    },
+    {
+     "key": "b",
+     "label": "Solo la sesión de inicio de sesión"
+    },
+    {
+     "key": "c",
+     "label": "Solo el proyecto o la conversación"
+    }
+   ],
+   "recommended": "a",
+   "why": "Guardar ambas cuesta lo mismo ahora y evita migrar datos después; lo útil para entender el gasto suele ser el proyecto o la conversación."
+  },
+  {
+   "id": "q5",
+   "text": "Ritmo y cortes. Mi estimación honesta: lo «nunca se corta» son unas 45 tareas y todo el SPEC unas 70–75. El riesgo real no son las horas de agente, sino las esperas: reintentos, cuota y tus pruebas por subplan (D-131). ¿Aceptas que los cortes se apliquen por fecha?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: si el 9 de noviembre el idioma va atrasado, el piloto lleva solo Taller 3D y navegación en inglés. Si el 11 lo van los módulos, salen del piloto. Si el 12 lo va el chat, sale solo lo que pase de la división y la fiabilidad. Pruebo y apruebo cada subplan en menos de 24 h"
+    },
+    {
+     "key": "b",
+     "label": "Sí, pero con otras fechas (dímelas)"
+    },
+    {
+     "key": "c",
+     "label": "No: decido yo cada corte cuando llegue el momento"
+    }
+   ],
+   "recommended": "a",
+   "why": "Con fechas fijas, la ejecución no se detiene a preguntarte y lo que nunca se corta tiene prioridad en el orden de los milestones."
+  },
+  {
+   "id": "q6",
+   "text": "Gasto de IA de pago durante el desarrollo: traducir una vez los 1.615 productos y 46 decoraciones al inglés, y las pruebas en vivo. ¿Qué tope total ponemos y con qué llave?",
+   "type": "open",
+   "suggested": "Tope total de 20 USD para todo el plan, con la llave Gemini actual (GEMINI_API_KEY en Vercel, el VPS y .env.local; huella 0770980b, P-195). La traducción de productos se hace con Gemini Flash por lotes; mi estimación es de menos de 5 USD.",
+   "why": "Cada corrida de pago del plan declara su tope; sin tope las tareas en vivo se quedan esperando tu permiso."
+  },
+  {
+   "id": "q7",
+   "text": "Datos personales de usuarios externos reales y primera cuenta de administrador: ¿qué pedimos al crear la cuenta y quién es el primer administrador?",
+   "type": "open",
+   "suggested": "Al crear la contraseña, la persona acepta un texto corto de tratamiento de datos (Ley 1581). Solo se guardan nombre, correo, rol y fechas. El administrador puede desactivar y borrar una cuenta. La primera cuenta de administrador es tu correo (dime cuál), creada con un comando que se ejecuta una vez sobre la base de producción.",
+   "why": "Son datos de personas reales fuera de la empresa: el plan necesita saber qué se guarda, cómo se borra y con qué cuenta arranca el administrador."
+  }
+ ],
+ "round": 4,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T17:35:19Z"
+}

@@ -456,3 +456,9 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** prompt-only rule — rejected (the model already ignored the implicit expectation; the server default is deterministic).
 - **Consequences:** + no surprise logistics lines; − the match is by service name, so a differently named logistics service would still pass. Uncommitted in worktree `login-redirect`.
 - **Source:** [pictures day log](2026-10/W5/2026-10-26.md) session `ccaface8` · REQ-020
+
+## D-072 · REQ-021 pilot: one plan with everything, written by a dedicated Planner; cut order if time is short · 2026-10-26
+Context: three weeks to pilot production (about 2026-11-16) for real external users; nine capabilities (accounts/roles, AI spend, saved projects and decorations, rectangular tables, Blender export, Backing, EN/ES for everything, editable modules, assisted-chat split with chat↔3D integration). The owner chose one plan with everything and asked that it be written by a dedicated Opus 5.5 high Planner session, not by the HQ session.
+Decision: one plan covers all. If time is short the work moves out of the pilot in this order: (1) language — Taller 3D and navigation first, the rest after; (2) editable quartets/modules beyond colours; (3) chat improvements beyond the split and reliability. Never cut: accounts, roles and permissions, saved projects and decorations, spend per user, rectangular tables, Blender export, Backing. Out of this plan: 3D space, vector export for Illustrator, AI spend caps. Roles are created by the administrator from the pilot (owner: nobody knows which roles will be wanted).
+Alternatives: split into several plans — rejected by the owner for now.
+Source: owner, REQ-021 rounds 1–3.
