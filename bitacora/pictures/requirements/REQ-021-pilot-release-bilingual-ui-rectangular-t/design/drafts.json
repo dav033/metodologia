@@ -2,21 +2,39 @@
  "drafts": {
   "cuentas-admin@v1": {
    "agent": "codex",
-   "before": null,
-   "delegation": "D-20261026-153625-d4f6",
-   "digest": "01a4edae2c620dd0",
+   "auto_runs": 1,
+   "before": "72ae2e216da7437cdcbb6fc2478fcfc31fc167e72d7b54d3e14cf596c572a6a9",
+   "delegation": "D-20261026-154952-1a84",
+   "digest": "3df91a8044ceee61",
    "error": "",
    "failures": 0,
    "feedback": [],
-   "finished": "2026-10-26T15:36:07-05:00",
+   "finished": "2026-10-26T15:49:44-05:00",
+   "history": [
+    {
+     "at": "2026-10-26T15:49:44-05:00",
+     "rev": 1,
+     "summary": "Created cuentas-admin@v1 as a planning draft with all twelve sections, nine views, 34 visual acceptance criteria and five explicit owner questions. Created its self-contained responsive HTML mockup using Pictures tokens, light/dark themes and visible view/state/dialog controls. Approval remains with the owner and plan; no production code was changed."
+    }
+   ],
+   "mockup": true,
    "model": "gpt-6.1-sol",
-   "questions": [],
-   "queued": "2026-10-26T15:36:21-05:00",
-   "reason": "restart: the first Designer process died",
-   "started": "2026-10-26T15:36:25-05:00",
+   "questions": [
+    "What legal entity name, privacy-policy URL and rights-contact email should replace the notice placeholders, and can David approve notice v1 after Sempertex legal review?",
+    "Should administrators regenerate expired/lost invitations, and should replacement invitation/reset links invalidate every older unused link of the same kind?",
+    "When an account is deleted, what happens to its projects, personal decorations and attributable AI-spend records, and what irreversible-loss copy should be shown?",
+    "May custom roles have zero permissions, or should the proposed minimum of one permission apply?",
+    "After invitation activation, should the person explicitly sign in as proposed, or receive a session immediately?"
+   ],
+   "queued": "2026-10-26T15:49:52-05:00",
+   "reason": "plan changed",
+   "report": "claimed",
+   "revision": 1,
+   "sha256": "72ae2e216da7437cdcbb6fc2478fcfc31fc167e72d7b54d3e14cf596c572a6a9",
+   "started": "2026-10-26T15:49:52-05:00",
    "status": "drafting",
    "subplan_id": "SP-2",
-   "summary": "the delegation's process died before writing an outcome (killed, for instance by restarting the service that started it)"
+   "summary": "Created cuentas-admin@v1 as a planning draft with all twelve sections, nine views, 34 visual acceptance criteria and five explicit owner questions. Created its self-contained responsive HTML mockup using Pictures tokens, light/dark themes and visible view/state/dialog controls. Approval remains with the owner and plan; no production code was changed."
   }
  },
  "schema_version": 1

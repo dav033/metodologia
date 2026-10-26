@@ -38,3 +38,5 @@
 {"at": "2026-10-26T15:41:34-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
 {"at": "2026-10-26T15:43:10-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 13 secciones traducidas", "diff": ""}
 {"at": "2026-10-26T15:44:35-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 8 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:49:44-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 1 listo", "diff": ""}
+{"at": "2026-10-26T15:49:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 porque el subplan cambió", "diff": ""}
