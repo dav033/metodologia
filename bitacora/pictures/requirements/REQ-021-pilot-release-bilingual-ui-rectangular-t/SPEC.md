@@ -31,7 +31,6 @@ As a <actor>, I want <capability> so that <benefit>.
 -->
 
 ## Out of scope
-- The assisted chat (advisor / guided chat): owner says it is another requirement or not useful for now (to confirm in round 2).
 - Later (owner agreed 2026-10-26): 3D space from a venue photo; vector export for Illustrator.
 
 ## Requirements
@@ -62,7 +61,8 @@ contract to Designer; the owner approves each version before UI implementation. 
 there is no UI subplan._
 
 ## Priorities & phases
-- **Must:** accounts with three roles (usuario, empleado interno, administrador); AI spend per user with cap and dashboard for employee/admin (mainly Taller 3D); save projects; save decorations; rectangular tables; export to Blender.
+- **Added to scope in round 2:** the assisted chat (advisor / guided chat) is IN: it will be broken apart, split and improved (details pending). AI spend caps are OUT for now: measure and show spend only.
+- **Must:** accounts with three initial roles (usuario, empleado interno, administrador) and an admin editor to create roles and choose permissions (owner, round 2); AI spend per user with cap and dashboard for employee/admin (mainly Taller 3D); save projects; save decorations; rectangular tables; export to Blender.
 - **Should:** switchable English/Spanish for the whole app (interface, AI replies, products), auto-detected; editable modules and quartets; Backing category.
 - **Later:** 3D space from photo; vector export for Illustrator.
 - Tension to resolve: the owner wants the language switch to cover EVERYTHING (not just main flows) although it is ranked Should.
@@ -91,4 +91,5 @@ _Best guesses taken instead of asking, with why. Revisit if they turn out wrong.
 
 ## Clarifications
 - Round 1 (2026-10-26): pilot users = real external users + internal employees + administrators; priorities accepted as proposed; «tokens» = AI spend per user, visible to employee and admin (session total, image-generation spend); Backing = one catalogue category grouping party props (metal hoops, pedestals, round panel, half moon, chiara arches); language: EN/ES switch, auto-detected, covering AI replies, products and interface.
+- Round 2 (2026-10-26): assisted chat is in scope (to be broken apart, split and improved); external accounts are invited by an administrator, no open registration; admin can create roles and choose permissions from the pilot; no spend caps now (measure and show only); English product names/descriptions are AI-generated once from the Spanish source, stored in the database and editable by an administrator.
 

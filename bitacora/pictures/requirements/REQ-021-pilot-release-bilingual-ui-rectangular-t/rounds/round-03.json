@@ -1,0 +1,84 @@
+{
+ "round": 3,
+ "title": "Chat, espacios, proyectos y qué se sacrifica",
+ "coverage": "5/10",
+ "intro": "Con el chat dentro, el editor de roles desde el piloto y el idioma completo, el alcance creció bastante para tres semanas. Por eso la última pregunta fija qué se mueve si el tiempo aprieta. Los topes de gasto quedan fuera: solo se mide y se muestra.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Del chat asistido: ¿qué significa «romperlo y dividirlo» y qué hay que mejorar primero?",
+   "type": "open",
+   "suggested": "Separarlo por audiencia y tarea: (1) el chat del Taller 3D para usuarios y empleados que arman y editan la escena, (2) el asesor para clientes que termina en un brief para el equipo, cada uno con sus propios prompts, herramientas y gasto medido por separado. Mejorar primero: fiabilidad de lo que dice (no inventar conteos ni precios) y que responda en el idioma elegido.",
+   "why": "Hoy hay varios chats con prompts y herramientas mezclados; necesito saber qué trozos quieres y qué mejora pesa más para planificarlo."
+  },
+  {
+   "id": "q2",
+   "text": "«Agregar espacio en 3D»: ¿qué debe poder hacer el usuario en el piloto?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Definir el espacio de la escena: medidas, paredes, piso y ambiente, con plantillas (salón, terraza, etc.)"
+    },
+    {
+     "key": "b",
+     "label": "Lo anterior y además varios espacios o escenas dentro de un mismo proyecto"
+    },
+    {
+     "key": "c",
+     "label": "Importar un modelo 3D del lugar"
+    }
+   ],
+   "recommended": "a",
+   "why": "Ya existe una sala paramétrica; con plantillas y guardado es lo que cabe. El lugar desde foto ya quedó para después."
+  },
+  {
+   "id": "q3",
+   "text": "Guardar proyectos: ¿quién los ve?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Cada usuario ve solo los suyos; empleados y administradores pueden verlos todos; las escenas que hoy están en el navegador se importan al entrar"
+    },
+    {
+     "key": "b",
+     "label": "Cada usuario ve solo los suyos y nadie más"
+    },
+    {
+     "key": "c",
+     "label": "Se pueden compartir con otros usuarios"
+    }
+   ],
+   "recommended": "a",
+   "why": "Los empleados necesitan ver lo que hacen los clientes para ayudarlos, y no perder lo que ya guardaron en el navegador."
+  },
+  {
+   "id": "q4",
+   "text": "Guardar decoraciones: ¿qué es una decoración guardada?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Una composición que el usuario arma en la escena y guarda en su biblioteca personal para reutilizarla en otros proyectos"
+    },
+    {
+     "key": "b",
+     "label": "Lo anterior, y un administrador puede publicarla en la biblioteca global"
+    }
+   ],
+   "recommended": "a",
+   "why": "Publicar en la global es un paso aparte; con permisos de rol se puede añadir después."
+  },
+  {
+   "id": "q5",
+   "text": "Si el tiempo aprieta, ¿en qué orden se mueve trabajo fuera del piloto?",
+   "type": "open",
+   "suggested": "1) Idioma: primero Taller 3D y navegación en inglés, y el resto del catálogo y textos largos tras el piloto. 2) Cuartetos y módulos editables más allá de colores. 3) Mejoras del chat más allá de la separación y la fiabilidad. No se mueven: cuentas, roles y permisos, proyectos y decoraciones guardados, gasto por usuario, mesas rectangulares, exportar a Blender y Backing.",
+   "why": "Con este alcance es probable que algo no entre el 16 de noviembre; decidirlo ahora evita sacrificar sin criterio."
+  }
+ ],
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T17:26:03Z"
+}
