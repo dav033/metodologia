@@ -8,10 +8,10 @@ Note: ~/bitacora is a symlink into ~/dev/metodologia/bitacora. Never touch ~/bit
 ## Status
 - [x] 1 Read
 - [x] 2 Design D-134 (written at end of DECISIONS.md)
-- [ ] 3 Implement
-- [ ] 4 Tests
-- [ ] 5 Antagonist review
-- [ ] 6 Report + day log + PENDING
+- [x] 3 Implement
+- [x] 4 Tests (baseline failures documented)
+- [x] 5 Antagonist review (two independent passes; nine findings corrected)
+- [x] 6 Report + day log + PENDING
 
 ## Findings (file:line refs, skill/scripts/)
 - Freeze: `bt_planner/revisions.py::freeze` validates strict_publication, writes PLAN.r<N>.json + MANIFEST entry
@@ -110,3 +110,55 @@ day log `### Delegation`, PENDING items, final report.
 - Full methodology, Planner, M1 core and M3 executor suites running; logs /tmp/staged-*-tests.log.
 - Updated contract/runtime/planning documentation and corrected D-134 to the owner's no-compatibility decision.
 - Independent read-only antagonist review started; fixes and final verification pending.
+
+### Independent antagonist review — six verified findings, all corrected
+- A1: concurrent edits could enter after eligibility. Approval now carries one captured PLAN.json object through
+  validation/freeze, with a document guard (PLAN.md/SPEC/flow/design content) immediately before publication;
+  mutation regression returns STAGE_APPROVAL_CHANGED without a revision.
+- A2: full approval restricted SPEC ids like a partial stage. Complete stages now validate ALL SPEC requirements;
+  R5-without-coverage regression reproduced red and passes after correction.
+- A3: merge checked historical complete/subplan ids only. It now checks current binding; adding T99 or removing the
+  draft cannot bypass final closure. Drift regression reproduced red and passes after correction.
+- A4/A5: joining a newer target lost pause ownership; crash after M1 rebase left stale runtime binding. Durable marker
+  now preserves ownership and reconciles even when DB already reached target. Both regressions reproduced red,
+  then passed. Marker is written before pausing or rebasing so interruption cannot orphan the pause.
+- A6: identical JSON skipped repinning SPEC. Approval idempotence now includes pins and remaining-scope metadata;
+  reapproval produces a new revision and binds correctly. Regression reproduced red, then green.
+- Split responsibilities: bt_plan_consumers.py owns capability/auditor policy; bt_scheduler_stage_join.py owns
+  durable quiet-point join. Facades stay below 500 lines; pyproject includes both modules. Planner importer boundary
+  remains unchanged. No outstanding antagonist finding.
+- Fresh checks: Planner 375 OK; core 333 OK; executor 324 OK; staged owner E2E 1 OK (8.9s); stage rules 18 OK;
+  watchdog 23, launch boundaries 5, PLAN block 17, collaborative flow 16, subplan sessions 9 OK.
+- New-module scoped Ruff, Python compilation and git diff --check pass. Installed-wheel suite builds/installs but
+  has 2 proven pre-existing assertion failures (21 tests): recorded as P-206. No configured type checker was found.
+- General-suite runs still in progress; final counts will be appended here and in today's Delegation section.
+
+### Final independent pass and latest evidence
+- Second bounded antagonist pass found three additional proven cases: closed Markdown Requirements headings bypassed
+  pins; complete reapproval skipped a newly added SPEC requirement; crash after journal write but before pause did not
+  restore dispatch pause. All three reproduced red and corrected. Shared traceability parser now owns SPEC grammar;
+  complete approvals pin every current SPEC item and always revalidate, even when idempotent; journal reconciliation
+  restores the pause when the marker already exists. No independent finding left unresolved.
+- Coordinator regressions also prevent auto-join after approved-scope drift and closing against an older/uncompleted
+  run revision. Final closure checks current draft binding, latest approved run identity and completed task states.
+- Latest Planner suite: 377 tests OK (33.525s). Latest stage rules: 21 OK. Latest actual Scheduler owner E2E: 1 OK
+  (8.481s), with fake agents and isolated repositories. Shared SPEC parser remains covered by the complete Planner suite.
+- First general sweep: 2548 tests / 802.833s, 6 failures, 6 existing skips: 4 baseline schema-compat subtests reading
+  real drafts (P-195), plus two obsolete PLAN-block/session assertions corrected afterwards and green in isolation.
+- General second sweep was started before the final audit corrections; latest targeted suites above cover those
+  corrections. Its aggregate count will be recorded separately; do not mistake an older imported test snapshot for
+  current source.
+
+### Final aggregate result
+- Second general sweep: `cd skill/scripts/tests && PYTHONPATH=..:. python3 -m unittest discover -s . -p 'test_*.py'`:
+  2551 tests in804.735s, FAILED (5 failures,6 existing skips). Four failures are existing non-hermetic
+  `test_plan_schema_13_compat` subtests (P-195); the fifth used the pre-edit imported hands-on-session assertion.
+  Current `test_subplan_sessions` has9 passing tests; `test_planblock` has17 passing tests. Final audit fixes are
+  covered by current Planner377 / stage21 / E2E1 green reruns. This is not an all-green aggregate claim.
+- General logs: /tmp/staged-full-tests.log, /tmp/staged-full-final.log. Latest module logs:
+  /tmp/staged-planner-latest.log, /tmp/staged-stages-final.log, /tmp/staged-e2e-complete.log,
+  /tmp/staged-sessions-latest.log. All evidence in this note is summarized from actual command output.
+- Git status rechecked; shared Pictures edits belong to the other session and were preserved. No commits/pushes,
+  deployments, real Scheduler launches or service restarts. No owner decision remains open. Live UI/real-agent
+  validation remains unexecuted under the brief's constraints. Package baseline repair is P-206; schema fixture debt
+  is P-195. The implementation is ready for owner review in the working tree.

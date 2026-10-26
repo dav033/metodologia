@@ -22,7 +22,7 @@
      "when": "2026-10-26T16:02:48-05:00"
     }
    ],
-   "finished": "2026-10-26T16:11:16-05:00",
+   "finished": "2026-10-26T16:15:25-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
@@ -38,6 +38,11 @@
      "at": "2026-10-26T16:11:16-05:00",
      "rev": 3,
      "summary": "Revised the existing cuentas-admin@v1 contract and self-contained mockup for all owner feedback and Planner rulings Q6–Q8, preserving unaffected views and tokens. The contract remains draft pending owner approval with the plan; no owner questions remain open."
+    },
+    {
+     "at": "2026-10-26T16:15:25-05:00",
+     "rev": 4,
+     "summary": "Revalidated and revised cuentas-admin@v1 and its standalone mockup against the unchanged SP-2 planning snapshot, preserving the previous design. Corrected unchanged-role saving and empty current-password feedback, and added acceptance criteria and verification evidence. Both planning artifacts remain draft pending owner approval of the plan."
     }
    ],
    "mockup": true,
@@ -46,12 +51,40 @@
    "queued": "2026-10-26T16:11:24-05:00",
    "reason": "requested",
    "report": "claimed",
-   "revision": 3,
-   "sha256": "00042b2b56a09728d30e4244562a9bcb5025ebc1313dc9aafe78fe04c79128b3",
+   "revision": 4,
+   "sha256": "bfb34009a7cf5cbebd11ac6609f745706a714ea8abdd17f0415c6094d166ec66",
    "started": "2026-10-26T16:11:24-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-2",
-   "summary": "Revised the existing cuentas-admin@v1 contract and self-contained mockup for all owner feedback and Planner rulings Q6–Q8, preserving unaffected views and tokens. The contract remains draft pending owner approval with the plan; no owner questions remain open."
+   "summary": "Revalidated and revised cuentas-admin@v1 and its standalone mockup against the unchanged SP-2 planning snapshot, preserving the previous design. Corrected unchanged-role saving and empty current-password feedback, and added acceptance criteria and verification evidence. Both planning artifacts remain draft pending owner approval of the plan."
+  },
+  "proyectos@v1": {
+   "agent": "codex",
+   "before": null,
+   "delegation": "D-20261026-172009-c1b5",
+   "digest": "5c3c52b8ffe60e09",
+   "error": "",
+   "feedback": [],
+   "model": "gpt-6.1-sol",
+   "queued": "2026-10-26T17:20:09-05:00",
+   "reason": "requested",
+   "started": "2026-10-26T17:20:09-05:00",
+   "status": "drafting",
+   "subplan_id": "SP-4"
+  },
+  "taller-esenciales@v1": {
+   "agent": "codex",
+   "before": null,
+   "delegation": "D-20261026-172009-dac9",
+   "digest": "e71205cb4819a312",
+   "error": "",
+   "feedback": [],
+   "model": "gpt-6.1-sol",
+   "queued": "2026-10-26T17:20:06-05:00",
+   "reason": "requested",
+   "started": "2026-10-26T17:20:09-05:00",
+   "status": "drafting",
+   "subplan_id": "SP-3"
   }
  },
  "schema_version": 1

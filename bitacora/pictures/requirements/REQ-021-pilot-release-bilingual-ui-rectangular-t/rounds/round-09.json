@@ -1,0 +1,134 @@
+{
+ "title": "SP-3 y SP-4 — Taller esencial y proyectos guardados",
+ "coverage": "SP-3, SP-4",
+ "intro": "Releí el código. Mesas: el motor ya hace mesas rectangulares (largo 100–600 cm, fondo 40–150, hasta 40 sillas, 5 disposiciones), el inspector las edita, la IA ya tiene agregar_mesas y la lista de compra las incluye como «Mobiliario» sin precio; lo que falta es elegirla al añadir: la tarjeta «Mesa con sillas a medida» siempre pone una redonda con 8 sillas. Backing: no existe; las 7 piezas están repartidas entre «Fondos y tapetes» (panel redondo, media luna, arcos chiara) y «Decorado de pie» (pedestales, aro metálico, aro hexagonal, arco metálico) del panel Fondos y muebles del Taller; la página /catalogo es solo Shopify y no las tiene. Blender: el GLB ya sale en metros con instancias; solo hay un test de estructura, ninguno de colores ni de que Blender lo abra, y Blender no está instalado en esta máquina. Para proyectos, hoy solo se conserva una escena local; la conversación y las fotos IA se guardan aparte. Las recomendaciones siguientes son propuestas pendientes de tu respuesta.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Cómo se añade una mesa rectangular?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Una tarjeta por tipo de mesa (Redonda, Rectangular, Imperial…) en Fondos y muebles; al tocarla aparece en la escena con su medida típica y se abre el editor para cambiar medida y sillas"
+    },
+    {
+     "key": "b",
+     "label": "La tarjeta actual abre un formulario corto (tipo, largo × fondo, sillas, disposición) y la mesa se crea con esos valores"
+    }
+   ],
+   "recommended": "a",
+   "why": "Reutiliza el editor que ya existe y deja ver el resultado mientras ajustas; b añade un formulario nuevo que repite lo que hace el editor."
+  },
+  {
+   "id": "q2",
+   "text": "En la lista de compra, mesas y sillas salen hoy como «Mobiliario (no es producto de la tienda)», con cantidad y medida y sin precio. ¿Así para el piloto?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Así: cantidad y medida, sin precio"
+    },
+    {
+     "key": "b",
+     "label": "Con un precio de alquiler (necesito darte la tabla de precios)"
+    }
+   ],
+   "recommended": "a",
+   "why": "No hay fuente de precios de alquiler; inventarlos rompería la regla de no inventar precios."
+  },
+  {
+   "id": "q3",
+   "text": "Backing: ¿estas 7 piezas forman la categoría — panel redondo, media luna, arcos chiara, pedestales, aro metálico, aro hexagonal, arco metálico — y dónde se ven?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Esas 7 pasan a un grupo nuevo «Backing» en Fondos y muebles del Taller (salen de «Fondos y tapetes» y «Decorado de pie»); la IA y la lectura de fotos las siguen encontrando igual"
+    },
+    {
+     "key": "b",
+     "label": "Grupo «Backing» nuevo, pero las piezas siguen apareciendo también en su grupo de hoy"
+    },
+    {
+     "key": "c",
+     "label": "Otra lista o lugar (en la nota)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Un solo lugar evita duplicados; el cambio es solo de agrupación visual, sin tocar los nombres que usan la IA y la lectura de fotos."
+  },
+  {
+   "id": "q4",
+   "text": "Para comprobar que Blender abre el GLB con la misma disposición, medidas y colores: ¿instalo Blender en tu máquina para una prueba automática?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: Blender portable (versión LTS, ~350 MB) en ~/.local/opt/blender, sin tocar pacman; la prueba importa el GLB sin ventana y compara medidas y colores; además tú lo abres a mano una vez"
+    },
+    {
+     "key": "b",
+     "label": "No: pruebas del archivo GLB (medidas, colores, jerarquía) y la comprobación a mano la haces tú en tu Blender"
+    }
+   ],
+   "recommended": "a",
+   "why": "Solo importar en Blender de verdad muestra qué materiales sobreviven (transmisión, iridiscencia); la versión portable no toca el sistema."
+  },
+  {
+   "id": "q5",
+   "text": "SP-4: ¿cómo guardas un proyecto?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Guardar con nombre la primera vez; después guardado automático, con estado visible y conflicto entre pestañas sin sobrescribir"
+    },
+    {
+     "key": "b",
+     "label": "Solo botón Guardar: ningún cambio sube al servidor hasta pulsarlo"
+    }
+   ],
+   "recommended": "a",
+   "why": "Conserva el guardado automático actual y lo hace visible; ante conflicto se conserva tu borrador y puedes guardarlo como copia."
+  },
+  {
+   "id": "q6",
+   "text": "SP-4: ¿qué debe viajar contigo al abrir el proyecto en otro navegador?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "La escena completa y su nombre (piezas, medidas, colores, sala y ambiente); la conversación y las imágenes IA siguen solo en el navegador"
+    },
+    {
+     "key": "b",
+     "label": "También la conversación y las imágenes IA asociadas al proyecto"
+    }
+   ],
+   "recommended": "a",
+   "why": "La escena se puede persistir como documento validado en Postgres; conversación e imágenes necesitan almacenamiento y reglas adicionales. No se borra ningún dato local."
+  },
+  {
+   "id": "q7",
+   "text": "SP-4: empleados y administradores pueden abrir proyectos de otros; ¿también editarlos?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Abrir en solo lectura y crear una copia propia para editar; el original solo lo cambia su dueño"
+    },
+    {
+     "key": "b",
+     "label": "También editar el original de otra persona (con aviso de autor y protección de conflictos)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Cumple poder abrir cualquier proyecto sin que una revisión cambie el trabajo ajeno por accidente."
+  }
+ ],
+ "round": 9,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T22:21:09Z"
+}
