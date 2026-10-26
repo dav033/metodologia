@@ -1155,3 +1155,22 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - \+ The owner sees and signs off every design before code is written against it.
   - − UI subplans pause at each contract version until the owner answers.
 - **Source:** owner, 2026-10-24 (lead session 1fbc12c7)
+
+## D-128 — Planner, Designer and owner work together during planning; plan approval approves the designs
+
+- **Date:** 2026-10-25 · **Status:** Accepted · **Refines:** D-127
+- **Decision:** The Designer drafts each UI subplan in the background while the owner and the Planner talk (`bitacora.py design draft|sync|drafts|feedback REQ-NNN`). Drafts live in the requirement folder (`design/<c>@vN.md` contract + `.html` static mockup, state in `design/drafts.json`), never in a repo. The web Plan tab is a live region (poll + per-block digest swap) showing the plan in EN, ES or both, every subplan with its tasks, and under each UI subplan its mockup, contract, Designer questions and an owner feedback form; changes made in the conversation appear without reload. A subplan is redesigned when its PLAN.json part changes and settles (45 s), when feedback arrives, or on request. Spanish translation is incremental per section, cached by SHA-256 (`.translations/cache.json`, `PLAN.es.md`, `SPEC.es.md`), with a tool-less runner-role model. Plan approval is refused while any draft is missing, running, failed, outdated or has unapplied feedback; approval pins each ready draft (`via: plan`, SHA-256) and the run's `design` task copies it byte for byte, so the M3 gate passes and UI tasks do not pause. Requirements that never started a planning draft keep the D-127 flow.
+- **Consequences:**
+  - \+ The owner sees and corrects designs before approving the plan; one approval instead of one per contract.
+  - − Designer sessions (opus/sol high) and translation spend quota during planning, including redesigns after plan edits.
+- **Source:** owner, 2026-10-25 (session 0976796f), built outside the flow like D-122
+
+## D-129 — Retire captured executor worktrees after three days
+
+- **Date:** 2026-10-25 · **Status:** Accepted
+- **Context:** 173 retained Pictures executor worktrees accumulated dependency/build trees. Standard du reports roughly 150 GiB under the methodology bitácora; Btrfs reflinks/snapshots mean that is not the reclaimable-space figure. David explicitly requested deleting redundant copies and a three-day automatic retention process.
+- **Decision:** Opt-in schema-1 M3 retention CLI and an hourly systemd user timer on this machine. Retire only terminal attempts ended at least 72h ago, while holding the executor's exclusive nonblocking lock, after proving exact current content and HEAD match the durable captured snapshot, managed Git/path ownership and no observable process use. Preserve unknown ignored data, post-capture edits, busy roots, nonterminal attempts and recent work. Keep branches, refs, manifests, ledger and audit/handoff records.
+- **Alternatives:** Age-based recursive deletion — rejected because active/unsaved work could be lost. Keep every worktree forever — rejected because dependency/build duplication grows without bound. Delete only caches — insufficient to implement the owner's copy-retention request and leaves thousands of checkout files.
+- **Consequences:** + bounded retention of reconstructable old copies, explicit reasons for skips, durable action audit; − paused or modified copies remain until reconciled, physical recovery depends on Btrfs snapshots. No Btrfs snapshot deletion authorized by this decision.
+- **Rollback:** Disable the user timer; reconstruct a retired checkout from the retained snapshot ref using `git worktree add --detach`. No commit/ref/branch history is deleted by retention.
+- **Source:** David's explicit cleanup request; [day log](2026-10/W4/2026-10-25.md).

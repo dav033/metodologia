@@ -1,0 +1,429 @@
+{
+  "before": {
+    "home": [
+      {
+        "number": 0,
+        "type": "single",
+        "date": "",
+        "cleanup": "",
+        "description": "current"
+      },
+      {
+        "number": 280,
+        "type": "single",
+        "date": "2026-10-19 13:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 291,
+        "type": "single",
+        "date": "2026-10-20 00:00:02",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 315,
+        "type": "single",
+        "date": "2026-10-21 00:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 339,
+        "type": "single",
+        "date": "2026-10-22 00:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 363,
+        "type": "single",
+        "date": "2026-10-23 00:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 387,
+        "type": "single",
+        "date": "2026-10-24 00:00:16",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 409,
+        "type": "single",
+        "date": "2026-10-25 10:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 416,
+        "type": "single",
+        "date": "2026-10-25 17:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 417,
+        "type": "single",
+        "date": "2026-10-25 18:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 418,
+        "type": "single",
+        "date": "2026-10-25 19:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 419,
+        "type": "single",
+        "date": "2026-10-25 20:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 420,
+        "type": "single",
+        "date": "2026-10-25 21:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 421,
+        "type": "single",
+        "date": "2026-10-25 22:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      }
+    ],
+    "root": [
+      {
+        "number": 0,
+        "type": "single",
+        "date": "",
+        "cleanup": "",
+        "description": "current"
+      },
+      {
+        "number": 1,
+        "type": "single",
+        "date": "2026-09-14 02:05:43",
+        "cleanup": "",
+        "description": "antes-mejoras-claude-noche"
+      },
+      {
+        "number": 13,
+        "type": "single",
+        "date": "2026-09-14 02:48:17",
+        "cleanup": "",
+        "description": "antes-login-anime"
+      },
+      {
+        "number": 96,
+        "type": "pre",
+        "date": "2026-09-19 18:06:30",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm xorg-server-xephyr xfwm4 xorg-xdpyinfo"
+      },
+      {
+        "number": 97,
+        "type": "post",
+        "date": "2026-09-19 18:06:31",
+        "cleanup": "number",
+        "description": "libgtop libwnck3 libxfce4ui libxfce4util libxpresent xfconf xfwm4 xorg-s"
+      },
+      {
+        "number": 99,
+        "type": "pre",
+        "date": "2026-09-19 19:21:00",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm blueman"
+      },
+      {
+        "number": 100,
+        "type": "post",
+        "date": "2026-09-19 19:21:02",
+        "cleanup": "number",
+        "description": "blueman python-cairo"
+      },
+      {
+        "number": 101,
+        "type": "pre",
+        "date": "2026-09-19 19:35:56",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm mission-center"
+      },
+      {
+        "number": 102,
+        "type": "post",
+        "date": "2026-09-19 19:35:57",
+        "cleanup": "number",
+        "description": "dmidecode mission-center nvtop"
+      },
+      {
+        "number": 103,
+        "type": "pre",
+        "date": "2026-09-19 19:40:39",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm resources"
+      },
+      {
+        "number": 104,
+        "type": "post",
+        "date": "2026-09-19 19:40:39",
+        "cleanup": "number",
+        "description": "resources"
+      },
+      {
+        "number": 173,
+        "type": "single",
+        "date": "2026-10-12 00:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 194,
+        "type": "pre",
+        "date": "2026-10-13 03:27:07",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm gitleaks"
+      },
+      {
+        "number": 195,
+        "type": "post",
+        "date": "2026-10-13 03:27:07",
+        "cleanup": "number",
+        "description": "gitleaks"
+      },
+      {
+        "number": 291,
+        "type": "pre",
+        "date": "2026-10-17 11:34:17",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm chntpw"
+      },
+      {
+        "number": 292,
+        "type": "post",
+        "date": "2026-10-17 11:34:18",
+        "cleanup": "number",
+        "description": "chntpw"
+      },
+      {
+        "number": 295,
+        "type": "pre",
+        "date": "2026-10-17 13:05:33",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm ark"
+      },
+      {
+        "number": 296,
+        "type": "post",
+        "date": "2026-10-17 13:05:33",
+        "cleanup": "number",
+        "description": "ark kpty libutempter"
+      },
+      {
+        "number": 297,
+        "type": "pre",
+        "date": "2026-10-17 13:05:42",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm unrar"
+      },
+      {
+        "number": 298,
+        "type": "post",
+        "date": "2026-10-17 13:05:43",
+        "cleanup": "number",
+        "description": "unrar"
+      },
+      {
+        "number": 300,
+        "type": "pre",
+        "date": "2026-10-17 14:22:02",
+        "cleanup": "number",
+        "description": "pacman -S --needed --noconfirm dolphin-plugins"
+      },
+      {
+        "number": 301,
+        "type": "post",
+        "date": "2026-10-17 14:22:03",
+        "cleanup": "number",
+        "description": "dolphin-plugins editorconfig-core-c kauth ktexteditor"
+      },
+      {
+        "number": 328,
+        "type": "single",
+        "date": "2026-10-19 00:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 352,
+        "type": "single",
+        "date": "2026-10-20 00:00:02",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 376,
+        "type": "single",
+        "date": "2026-10-21 00:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 400,
+        "type": "single",
+        "date": "2026-10-22 00:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 417,
+        "type": "pre",
+        "date": "2026-10-22 16:47:30",
+        "cleanup": "number",
+        "description": "pacman -S --noconfirm --needed espeak-ng"
+      },
+      {
+        "number": 418,
+        "type": "post",
+        "date": "2026-10-22 16:47:30",
+        "cleanup": "number",
+        "description": "espeak-ng libsonic pcaudiolib"
+      },
+      {
+        "number": 426,
+        "type": "single",
+        "date": "2026-10-23 00:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 450,
+        "type": "single",
+        "date": "2026-10-24 00:00:16",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 472,
+        "type": "single",
+        "date": "2026-10-25 10:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 479,
+        "type": "single",
+        "date": "2026-10-25 17:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 480,
+        "type": "single",
+        "date": "2026-10-25 18:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 481,
+        "type": "single",
+        "date": "2026-10-25 19:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 482,
+        "type": "single",
+        "date": "2026-10-25 20:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 483,
+        "type": "single",
+        "date": "2026-10-25 21:00:00",
+        "cleanup": "timeline",
+        "description": "timeline"
+      },
+      {
+        "number": 484,
+        "type": "single",
+        "date": "2026-10-25 22:00:01",
+        "cleanup": "timeline",
+        "description": "timeline"
+      }
+    ]
+  },
+  "free_bytes_before": 2374537216,
+  "new_baseline": {
+    "home": 422,
+    "root": 485
+  },
+  "delete": {
+    "home": [
+      280,
+      291,
+      315,
+      339,
+      363,
+      387,
+      409,
+      416,
+      417,
+      418,
+      419,
+      420,
+      421
+    ],
+    "root": [
+      96,
+      97,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      173,
+      194,
+      195,
+      291,
+      292,
+      295,
+      296,
+      297,
+      298,
+      300,
+      301,
+      328,
+      352,
+      376,
+      400,
+      426,
+      450,
+      472,
+      479,
+      480,
+      481,
+      482,
+      483,
+      484
+    ]
+  },
+  "preserve_root": [
+    0,
+    1,
+    13,
+    417,
+    418,
+    485
+  ]
+}

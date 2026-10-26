@@ -1,3 +1,4 @@
+2026-10-25 18:25: Pictures REQ-020 advisor reworked by hand in worktree `login-redirect` (commits not pushed): voice notes (migration 003 applied), inspiration gallery and closed packages switched off, custom proposals from Happia services, theme-first ranking. Waiting for David to test localhost:3020, then gate/push/VPS release.
 # dev — Summary
 
 _Rewritten (not appended) whenever the state changes. Keep it under ~60 lines._

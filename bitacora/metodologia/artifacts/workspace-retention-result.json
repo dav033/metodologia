@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "removed": 93,
+  "remaining": 80,
+  "verified_snapshot_refs_and_manifests": 93,
+  "policy_hours": 72,
+  "timer": "bt-workspace-retention.timer",
+  "logs": "Each executor run retains retention.jsonl"
+}

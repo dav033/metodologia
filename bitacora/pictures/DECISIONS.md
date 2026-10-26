@@ -427,3 +427,11 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Alternatives:** everything now — rejected (Halloween Thu 29 Oct); model-written change history — rejected (server diff is deterministic).
 - **Consequences:** + brief closer to what decorators need; − new fields/tools and prompt changes in REQ-020 outside the frozen plan (manual finish).
 - **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `85917a89` · REQ-020
+
+## D-068 · 2026-10-25 · REQ-020 advisor: no inspiration gallery, no closed packages, custom proposals from services, photo reading and keep list
+- **Context:** owner testing of the advisor: the inspiration gallery photos and prices do not come from Happia ("no mezclemos negocio"); closed packages hid cheaper/themed combinations; Happia exposes 57 individual services (no venues).
+- **Decision:** (1) R9 gallery switched off (`ADVISOR_DIRECTIONS_ENABLED=false`); (2) closed packages switched off (`ADVISOR_STANDARD_PACKAGES_ENABLED=false`) and the advisor builds a custom proposal with `propose_custom_package` from the event city's live services, priced by the server, never offering what the catalogue lacks (R10 now means services, not packages); (3) M2 photo items done early: structured first look (`record_photo_reading`), per-photo "keep" list, feedback stored only when the customer's own last message supports it, all carried to chat, approved brief and admin.
+- **Alternatives:** keep the gallery with disclaimers — rejected by owner; model-supplied prices — rejected (server computes).
+- **Consequences:** + honest offers, richer brief; − R9/R10 text in SPEC.md is out of date (owner decision overrides); closed packages and gallery remain in code behind flags.
+- **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `54d875b5` · REQ-020
+

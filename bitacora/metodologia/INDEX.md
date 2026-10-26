@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-25 12:45 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-25 22:04 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -56,11 +56,11 @@ _Generated 2026-10-25 12:45 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-129 — Retire captured executor worktrees after three days
+- D-128 — Planner, Designer and owner work together during planning; plan approval approves the designs
 - D-127 — The owner approves every design contract before UI work starts
 - D-126 — External verification authority comes from operator files, never the plan
 - D-125 — Engine v2 phases close in order; independent work starts early
-- D-124 — PLAN.json schema 1.3.0: optional subplans and composition gates inside PLAN.json
-- D-123 — Engine v2 P0: backup by bundle + dirty snapshots, not full tarballs
 
 ## Artifacts
 
