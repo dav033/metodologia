@@ -128,7 +128,38 @@
   }
  ],
  "round": 9,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T22:21:09Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": ""
+  },
+  "q3": {
+   "choice": "a",
+   "note": ""
+  },
+  "q4": {
+   "choice": "a",
+   "note": ""
+  },
+  "q5": {
+   "choice": "a",
+   "note": ""
+  },
+  "q6": {
+   "choice": "a",
+   "note": ""
+  },
+  "q7": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-26T22:21:09Z",
+ "answered_at": "2026-10-26T23:50:35Z",
+ "answered_via": "web"
 }

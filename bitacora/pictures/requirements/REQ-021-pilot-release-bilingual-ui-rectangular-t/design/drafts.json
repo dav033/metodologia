@@ -60,23 +60,50 @@
   },
   "proyectos@v1": {
    "agent": "codex",
-   "before": null,
-   "delegation": "D-20261026-172009-c1b5",
-   "digest": "5c3c52b8ffe60e09",
+   "auto_runs": 1,
+   "before": "f1e0a98b3a8094161825745784a0890e3abcc7f6356c91aaed1ad00ca012c905",
+   "delegation": "D-20261026-183544-981e",
+   "digest": "a42c1e2e6b088dc6",
    "error": "",
+   "failures": 0,
    "feedback": [
     {
+     "consumed": "D-20261026-183544-981e",
      "text": "Planner drafted T4.1–T4.9 plus T4.31 early storage/API checkpoint, and SP-4 Pruebas. Round 9 q5–q7 remains OPEN: proposed first named save then autosave; scene/name only excluding local conversation/images; foreign staff/admin read-only + Save copy. Do not treat recommendations as owner answers. Cover conflict (stop autosave, preserve draft, reload or owned copy), pending/offline save, stale response/project switch, account-scoped drafts and consent-based legacy import preserving raw original. Custom staff role with proyectos.ver_todos but without taller.usar needs a read-only project view. Read SPEC Draft behavior/current PLAN; report material questions, no focus/confirmation changes.",
      "via": "cli",
      "when": "2026-10-26T17:26:41-05:00"
     }
    ],
+   "finished": "2026-10-26T18:48:32-05:00",
+   "history": [
+    {
+     "at": "2026-10-26T18:35:35-05:00",
+     "rev": 1,
+     "summary": "Created the draft proyectos@v1 contract and self-contained responsive mockup for SP-4, reconciled with the live T4.1–T4.9/T4.31 planning breakdown. Owner approval and four product/API decisions remain pending; no production code was changed."
+    },
+    {
+     "at": "2026-10-26T18:48:32-05:00",
+     "rev": 2,
+     "summary": "Revised proyectos@v1 in place as a planning draft and updated its self-contained mockup. Preserved the established design while clarifying conflict, pending/offline, late-response, account-scoped recovery/import and custom read-only-role behavior. Approval remains with the owner and the plan."
+    }
+   ],
+   "mockup": true,
    "model": "gpt-6.1-sol",
-   "queued": "2026-10-26T17:20:09-05:00",
-   "reason": "requested",
-   "started": "2026-10-26T17:20:09-05:00",
-   "status": "drafting",
-   "subplan_id": "SP-4"
+   "questions": [
+    "Round 9 q5 — Confirm first explicit named save followed by autosave plus Save now, or manual saving throughout? The 500 ms debounce is a technical proposal, not an owner answer.",
+    "Round 9 q7 — May staff/admin edit another owner’s original, or only read it and save a personally owned copy when taller.usar is granted?",
+    "Round 9 q6 — Persist/import only the name and complete scene (including room, environment, salon and attachments), excluding separately stored AI conversation/generated images, or include those too?",
+    "Should project-name search and owner filtering cover the entire authorized server library? The draft proposes server-wide filtering; T4.3 currently defines cursor pagination without those query parameters."
+   ],
+   "queued": "2026-10-26T18:35:40-05:00",
+   "reason": "plan changed",
+   "report": "claimed",
+   "revision": 2,
+   "sha256": "67f5d0bd484b06aa3578c4932f554ed9fd9a67b9f13f097d0e13f1f4b9ff9f2d",
+   "started": "2026-10-26T18:35:44-05:00",
+   "status": "ready",
+   "subplan_id": "SP-4",
+   "summary": "Revised proyectos@v1 in place as a planning draft and updated its self-contained mockup. Preserved the established design while clarifying conflict, pending/offline, late-response, account-scoped recovery/import and custom read-only-role behavior. Approval remains with the owner and the plan."
   },
   "taller-esenciales@v1": {
    "agent": "codex",
@@ -94,31 +121,36 @@
      "when": "2026-10-26T17:26:41-05:00"
     }
    ],
-   "finished": "2026-10-26T17:37:32-05:00",
+   "finished": "2026-10-26T18:35:35-05:00",
    "history": [
     {
      "at": "2026-10-26T17:37:32-05:00",
      "rev": 1,
      "summary": "Created the draft taller-esenciales@v1 contract and self-contained responsive mockup for SP-3. Updated both to the concurrent T3.1–T3.8 plan and round 9 proposals; owner approval remains pending."
+    },
+    {
+     "at": "2026-10-26T18:35:35-05:00",
+     "rev": 2,
+     "summary": "Revised taller-esenciales@v1 and its self-contained mockup, retaining draft status and the existing views, states, tokens and breakpoints. Distinguished all four pending round 9 choices, preserved canonical Backing identity/group/repository invariants, and marked the Shopify catalogue view as conditional. Approval remains with the owner and plan."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [
-    "Ronda 9 q1: ¿una tarjeta por tipo de mesa con edición inmediata, o un formulario antes de crearla? El borrador muestra la primera opción.",
-    "Ronda 9 q2: ¿mobiliario con cantidad y medidas sin precio, o precios de alquiler aportados por David? El borrador muestra cantidades sin precio.",
-    "Ronda 9 q3: ¿las siete piezas de Backing se trasladan o conservan sus grupos actuales, y la categoría pertenece solo al Taller o también a /catalogo? Debe reconciliarse con SPEC/PLAN y la conservación de los puntos de acceso actuales.",
-    "Ronda 9 q4: ¿Blender portable para importación automatizada más revisión manual, o comprobación manual del propietario? Este trabajo no instala Blender."
+    "Q1 (ronda 9 q1): ¿Tarjeta por tipo y edición posterior (propuesta ilustrada), o formulario antes de crear?",
+    "Q2 (ronda 9 q2): ¿Cantidades y medidas sin precio (propuesta ilustrada), o precios de alquiler aportados por el propietario?",
+    "Q3 (ronda 9 q3): ¿Se confirman los siete IDs en Backing del Taller, moviendo sus tarjetas o conservando alias; o se elige otro lugar, incluido /catalogo, que requiere ajustar T3.3 y el texto de R11?",
+    "Q4 (ronda 9 q4): ¿Blender portable con importación automática más apertura manual, o pruebas del GLB más apertura manual del propietario, ajustando la aceptación de T3.5/T3.6?"
    ],
    "queued": "2026-10-26T17:37:32-05:00",
    "reason": "plan changed",
    "report": "claimed",
-   "revision": 1,
-   "sha256": "d499807f006cb09a506c429a7997db6e46836e6dc991909b352f9fdfdc9513b5",
+   "revision": 2,
+   "sha256": "e6a4762f735ccc2b28144f8aab4130d81a5ce1e9d48fe103a2093eed623d982d",
    "started": "2026-10-26T17:37:32-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-3",
-   "summary": "Created the draft taller-esenciales@v1 contract and self-contained responsive mockup for SP-3. Updated both to the concurrent T3.1–T3.8 plan and round 9 proposals; owner approval remains pending."
+   "summary": "Revised taller-esenciales@v1 and its self-contained mockup, retaining draft status and the existing views, states, tokens and breakpoints. Distinguished all four pending round 9 choices, preserved canonical Backing identity/group/repository invariants, and marked the Shopify catalogue view as conditional. Approval remains with the owner and plan."
   }
  },
  "schema_version": 1
