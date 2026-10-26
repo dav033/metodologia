@@ -3,9 +3,9 @@
   "cuentas-admin@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "c860d5e12e40135464a1cc36128b4a9089351058713ef5a3540a0f5affb8021a",
-   "delegation": "D-20261026-160248-b311",
-   "digest": "5790073f7a23515e",
+   "before": "00042b2b56a09728d30e4244562a9bcb5025ebc1313dc9aafe78fe04c79128b3",
+   "delegation": "D-20261026-161124-264b",
+   "digest": "abde9480c2f8d545",
    "error": "",
    "failures": 0,
    "feedback": [
@@ -22,7 +22,7 @@
      "when": "2026-10-26T16:02:48-05:00"
     }
    ],
-   "finished": "2026-10-26T16:02:17-05:00",
+   "finished": "2026-10-26T16:11:16-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
@@ -33,25 +33,25 @@
      "at": "2026-10-26T16:02:17-05:00",
      "rev": 2,
      "summary": "Revised the draft cuentas-admin@v1 contract and self-contained offline mockup for SP-2, incorporating owner rounds 7–8 while preserving existing tokens and breakpoints. The artifacts cover 11 views, the shared account menu and 52 visual criteria; plan approval remains pending."
+    },
+    {
+     "at": "2026-10-26T16:11:16-05:00",
+     "rev": 3,
+     "summary": "Revised the existing cuentas-admin@v1 contract and self-contained mockup for all owner feedback and Planner rulings Q6–Q8, preserving unaffected views and tokens. The contract remains draft pending owner approval with the plan; no owner questions remain open."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
-   "questions": [
-    "Q1 — David / Sempertex legal: What legal entity name, privacy-policy URL and rights-contact email replace the bracketed fields, and when will Sempertex complete its review before real activation? The owner already approved v1 text; do not request that approval again.",
-    "Q6 — David / Planner: SP-1 T1.3 returns the same generic refusal for locked emails, but SP-2 T2.3 requests a fifteen-minute lock message. Which must both layers implement? Recommendation: keep the generic refusal and append neutral wait guidance to all failed attempts; remove the distinct locked response. The mock retains both inspectable fixtures until the plan resolves it.",
-    "Q7 — David / Planner: T2.2 says own-password change ends every other session, while SP-1/SPEC says password change ends sessions. Should the requesting session remain active? Recommendation: preserve it as T2.2 specifies; resets still end all sessions. V10 success follows T2.2 and requires this reconciliation before implementation.",
-    "Q8 — David / Planner: What is the post-login fallback for a custom role with none of Taller 3D, chat or catalogue (for example only Administrar roles)? Recommendation: `/cuenta`, which every active account can open after accepting the notice; do not loop between a forbidden home and V9. The mock login success stops at a handoff instead of inventing that destination."
-   ],
-   "queued": "2026-10-26T16:02:48-05:00",
-   "reason": "feedback",
+   "questions": [],
+   "queued": "2026-10-26T16:11:24-05:00",
+   "reason": "requested",
    "report": "claimed",
-   "revision": 2,
-   "sha256": "c860d5e12e40135464a1cc36128b4a9089351058713ef5a3540a0f5affb8021a",
-   "started": "2026-10-26T16:02:48-05:00",
+   "revision": 3,
+   "sha256": "00042b2b56a09728d30e4244562a9bcb5025ebc1313dc9aafe78fe04c79128b3",
+   "started": "2026-10-26T16:11:24-05:00",
    "status": "drafting",
    "subplan_id": "SP-2",
-   "summary": "Revised the draft cuentas-admin@v1 contract and self-contained offline mockup for SP-2, incorporating owner rounds 7–8 while preserving existing tokens and breakpoints. The artifacts cover 11 views, the shared account menu and 52 visual criteria; plan approval remains pending."
+   "summary": "Revised the existing cuentas-admin@v1 contract and self-contained mockup for all owner feedback and Planner rulings Q6–Q8, preserving unaffected views and tokens. The contract remains draft pending owner approval with the plan; no owner questions remain open."
   }
  },
  "schema_version": 1
