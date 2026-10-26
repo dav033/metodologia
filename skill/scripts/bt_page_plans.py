@@ -124,11 +124,11 @@ def _row(r: dict) -> str:
     tone = "info" if r["active"] else _tone(r["plan_status"])
     trail = f"{done}/{total}" if total else e(_label(r))
     import bt_page_design
-    design = bt_page_design.index_chips(r)
+    design = bt_page_design.index_chips(r, f"/p/{quote(r['project'])}/req/{quote(r['req_id'])}?tab=plan")
     return (f'<div class="prow{" done" if _finished(r) else ""}"><span class="id">{e(r["req_id"])}</span>'
             f'<a class="t" href="{_purl(r["project"], r["req_id"])}" title="{e(title)}">{e(title)}</a>'
-            f'<span class="st {tone}" title="{e(r["plan_status"] or "")}"><i class="dot {tone}{" live" if r["active"] else ""}">'
-            f'</i>{trail}</span>{design}{_asks_pill(r)}</div>')
+            f'<span class="end"><span class="st {tone}" title="{e(r["plan_status"] or "")}"><i class="dot {tone}{" live" if r["active"] else ""}">'
+            f'</i>{trail}</span>{design}{_asks_pill(r)}</span></div>')
 
 def _asks_pill(r: dict) -> str:
     n = r.get("asks") or 0

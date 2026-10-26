@@ -30,6 +30,7 @@
 .pl .dot.live{box-shadow:0 0 0 3px color-mix(in srgb,var(--info) 30%,transparent)}
 .pl .rows{display:flex;flex-direction:column}
 .pl .prow{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--border)}
+.pl .prow .end{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.pl .design-pill{font:400 12px var(--mono);color:var(--muted)}.pl a.design-pill{cursor:pointer}.pl a.design-pill:hover{border-color:var(--accent);color:var(--accent);text-decoration:none}.pl .design-pill.ok{border-color:var(--ok);color:var(--ok)}
 .pl .prow .id{font:400 12px var(--mono);color:var(--muted)}
 .pl .prow a.t{color:var(--text);font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.pl .prow a.t:hover{color:var(--accent);text-decoration:none}
 .pl .prow.done a.t{color:var(--muted);font-weight:400}
@@ -64,7 +65,7 @@
 .pl .back{display:inline-block;margin:0 0 16px;font-size:13.5px}
 .pl .flash-new{animation:plflash 1.6s ease-out}
 @keyframes plflash{from{background:color-mix(in srgb,var(--mauve) 35%,transparent)}to{background:transparent}}
-.pl .asks{display:grid;gap:12px}.pl .ask-pill{border-color:var(--warn);color:var(--warn);margin-left:6px;cursor:pointer}.pl .ask{border:1px solid var(--accent);border-radius:var(--radius);padding:12px 16px}.pl .ask .opt{margin:10px 0}.pl .ask textarea{width:100%;min-height:64px;box-sizing:border-box}.pl .ask button{min-height:44px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--surface);color:var(--text);cursor:pointer}.pl .ask button.primary{background:var(--accent);color:var(--on-accent)}
+.pl .asks{display:grid;gap:12px}.pl .ask-pill{border-color:var(--warn);color:var(--warn);cursor:pointer}.pl .ask{border:1px solid var(--accent);border-radius:var(--radius);padding:12px 16px}.pl .ask .opt{margin:10px 0}.pl .ask textarea{width:100%;min-height:64px;box-sizing:border-box}.pl .ask button{min-height:44px;padding:8px 16px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--surface);color:var(--text);cursor:pointer}.pl .ask button.primary{background:var(--accent);color:var(--on-accent)}
 .pl .run-plan{margin:18px 0}.pl .run-plan button{min-height:44px;padding:10px 22px;font-size:1.05em;background:var(--accent);color:var(--on-accent);border:0;border-radius:var(--radius);cursor:pointer;font-weight:600}
 .pl .danger{border:1px solid var(--bad);border-radius:var(--radius);padding:14px 18px;margin:18px 0}
 .pl .msg{padding:12px 16px;border-radius:var(--radius);background:var(--accent-soft);color:var(--text);margin:0 0 20px}
