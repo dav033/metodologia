@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-26 14:37 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 15:49 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -20,7 +20,6 @@ _Generated 2026-10-26 14:37 by `bitacora.py index`. Do not edit by hand._
 - REQ-016: executor finished — review & merge
 - REQ-017: question round waiting for answers
 - REQ-017: executor finished — review & merge
-- REQ-021: question round waiting for answers
 
 ## Requirements
 
@@ -46,7 +45,7 @@ _Generated 2026-10-26 14:37 by `bitacora.py index`. Do not edit by hand._
 | [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `cancelled (2026-10-18, owner)` | — |  |
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
 | [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | — |  |
-| [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | [draft](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/PLAN.md) | round open |
+| [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | [draft](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -56,7 +55,7 @@ _Generated 2026-10-26 14:37 by `bitacora.py index`. Do not edit by hand._
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
 - P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
-- P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
+- P-205 · REQ-021 SP-2 cuentas-admin@v1 draft complete: obtain owner/Planner decisions on legal noti · high/M
 
 ## Recent decisions
 

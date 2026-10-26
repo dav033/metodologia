@@ -65,3 +65,17 @@ Design change (D-134 to be rewritten accordingly):
   no live attempts, rebase, resume) unless it would redo more accepted tasks than gates.rework_confirm_over.
 - Scheduler-made revisions splice into the draft (never overwrite PLAN.json).
 - Requirements gate: PLAN.md/SPEC.md fingerprints waived for scheduler-run (approved scope protected by bind pins).
+
+## Progress log
+- Planner: `bt_planner/stages.py` (project/bind/freeze/splice/summary), `sync.check_stage/freeze_stage`, approve_freeze
+  = complete stage, bind_approved = stages.bind; check() no longer compares draft revision; `revisions.freeze(extra=)`;
+  contract validates `stage`; schema doc + README updated; tests updated (test_sync/test_evidence/test_scenarios/
+  test_e2e_cli) + new `bt_planner/tests/test_stages.py` (12). Planner suite: 373 OK.
+- Adapter: launch_problem(forced) via bind; resume_problem = plan_ref names an approved revision; stage_problem/
+  freeze_stage/stage_summary/stage_subplans/draft_subplans; freeze_revision splices into draft.
+- Scheduler adapter: run_identity/run_plan/join_target/join_cost; open_scheduler + executor wiring use run_plan.
+- scheduler_run: _join_ready (pause, marker `<db>.join.json`), join(), dispatch loop, notify stage note,
+  require_ready(waive=PLANNING_FILES). Watchdog `_apply_frozen` removed (superseded by joins).
+- requirements gate: waive param.
+NEXT: bt_stages.py (eligibility + run), pin_for_plan(refs), bt_launch join, review merge gate, CLI `stage`, web
+button/action, sessions auto refused, projection stage info, docs, pyproject, tests (unit + E2E), full suite.

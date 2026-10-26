@@ -1,5 +1,7 @@
 # pictures — Summary
 
+- 2026-10-26 REQ-021 SP-2 design: `cuentas-admin@v1` contract and standalone mockup are drafted (9 views, 34 criteria); 984 rendered-state and 84 dialog checks PASS. Owner plan approval, five design questions and exact SP-2 task/route consumers remain pending in P-205; no product code or deployment changed.
+
 - PAUSED by owner request, 2026-10-23: REQ-020 r17 22/24, operator hold active, owner stopped, no live attempt. T14a is accepted. T15/T15b confirmed UI photo/card/summary gaps and missing physical-phone/full-evaluation evidence. An unchanged T15b retry was cancelled; no product remediation revision applied. Supervisor is paused with P-186 engine fix uncommitted; do not resume without a new owner instruction. No new production deployment authorized.
 
 - 2026-10-23 13:15 REQ-020 r17: T14a ACCEPTED on att-0122, 22/24 completed; T15/T15b run independently in parallel. Fresh deployed M1/M2 PASS at published c25a5f42; source-content provenance, reconstructed integration report and exact criterion mapping verified before reopening. Engine receipt/source/owner-race defects repaired; no new deployment, no repeated live calls on recovery, no review_pass. Physical-phone observations and independent UI acceptance remain pending. Supervisor evidence: artifacts/req020-supervisor-root-cause; current daily supervisor session records commits and delays.

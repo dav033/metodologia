@@ -9,232 +9,232 @@ author: Designer
 date: 2026-10-26
 ---
 
-# cuentas-admin@v1 — Sign-in, invitation and administration
+# cuentas-admin@v1 — Inicio de sesión, invitación y administración
 
-## 1. Identity and traceability
+## 1. Identidad y trazabilidad
 
-This is the first planning draft, **not approved for implementation**. Approval belongs to the owner with the plan; the planning workflow copies this snapshot unchanged to `design/contracts/` after approval. No previous contract exists. This task deliberately writes only this contract and its adjacent HTML mockup, plus the required delegation result; it does not create a changelog or repository preview.
+Este es el primer borrador de planificación, **no está aprobado para implementación**. La aprobación corresponde al responsable junto con el plan; el flujo de planificación copia esta instantánea sin cambios a `design/contracts/` después de la aprobación. No existe un contrato anterior. Esta tarea escribe deliberadamente solo este contrato y su maqueta HTML adyacente, además del resultado de delegación requerido; no crea un registro de cambios ni una vista previa del repositorio.
 
-Source snapshot: REQ-021 `SPEC.md`, including Clarifications rounds 4–6 and the bilingual data-processing notice; `PLAN.md` status draft; `PLAN.json` schema 1.3.0, revision 1. SHA-256 at inspection:
+Instantánea de origen: REQ-021 `SPEC.md`, incluidas las rondas de aclaraciones 4–6 y el aviso bilingüe sobre el tratamiento de datos; estado de `PLAN.md`: borrador; esquema 1.3.0 de `PLAN.json`, revisión 1. SHA-256 en la inspección:
 
 - SPEC: `10731db2ac74bc60ed91cb666974c0ee0d739bd0a52d2cc0078c444edb36fa92`.
 - PLAN.md: `39c9327614da8587af25662a459d10d8c68cbc8713f92a60e2d014e3b6e1d4ac`.
 - PLAN.json: `d39a1fb950015ad8d101d56acc82e77457d4d35ca8aaa672c170c97c3206eb30`.
 
-Exact consumer search: only SP-2 names `ui.contract: cuentas-admin`, `version: 1`. `design_task`, `visual_review_task` and SP-2 implementation task IDs are **not yet assigned**; no SP-2 tasks exist in this revision. The Planner must add those consumers, integration checks and a visual review before execution. Do not invent task IDs. Upstream: SP-1 T1.2 `permission-map@1`, T1.3 `account-service@1`, T1.4 `session-guard@1`. T1.4 already owns the plain `/sin-acceso` response; V9 styles and actions require coordination with that task, without duplicating server authorization.
+Búsqueda exacta de consumidores: solo SP-2 nombra `ui.contract: cuentas-admin`, `version: 1`. `design_task`, `visual_review_task` y los ID de tareas de implementación de SP-2 **aún no están asignados**; no hay tareas de SP-2 en esta revisión. El Planner debe agregar esos consumidores, las comprobaciones de integración y una revisión visual antes de la ejecución. No invente ID de tareas. Dependencias previas: SP-1 T1.2 `permission-map@1`, T1.3 `account-service@1`, T1.4 `session-guard@1`. T1.4 ya se encarga de la respuesta simple `/sin-acceso`; los estilos y las acciones de V9 requieren coordinación con esa tarea, sin duplicar la autorización del servidor.
 
-| Requirement | Views / flows | Acceptance |
+| Requisito | Vistas / flujos | Criterios de aceptación |
 |---|---|---|
-| R1 invited accounts, no open registration | V1–V6; F1–F4 | UI-AC-01–09, 13, 18 |
-| R3 choose permissions and manage roles | V7–V8; F6 | UI-AC-14–17, 23 |
-| R16 assign exactly one role/access plan | V5–V6, V8; F3, F5 | UI-AC-10–12, 15 |
+| R1 cuentas invitadas, sin registro abierto | V1–V6; F1–F4 | UI-AC-01–09, 13, 18 |
+| R3 elegir permisos y administrar roles | V7–V8; F6 | UI-AC-14–17, 23 |
+| R16 asignar exactamente un rol/plan de acceso | V5–V6, V8; F3, F5 | UI-AC-10–12, 15 |
 
-Compatibility: **undetermined** (initial contract; no predecessor or implementation to compare). Direct impact: all SP-2 views and future UI tasks. SP-1 permission-map must explicitly include the proposed routes below, especially the public reset route and separately protected account/role screens. SP-8/SP-10 will reuse layout/copy for language support; this draft does not change their contract references or claim their work complete. No impact is asserted for unrelated Taller or spend screens.
+Compatibilidad: **sin determinar** (contrato inicial; no hay una versión anterior ni una implementación con la que compararlo). Impacto directo: todas las vistas de SP-2 y las futuras tareas de interfaz. El mapa de permisos de SP-1 debe incluir explícitamente las rutas propuestas a continuación, especialmente la ruta pública de restablecimiento y las pantallas de cuentas/roles con protección independiente. SP-8/SP-10 reutilizarán la disposición y los textos para el soporte de idiomas; este borrador no cambia sus referencias de contrato ni afirma que su trabajo esté completo. No se afirma ningún impacto en pantallas no relacionadas de Taller o gastos.
 
-## 2. Purpose and users
+## 2. Propósito y usuarios
 
-- Invited person: identify the invitation, create a password, read and accept the data notice, then sign in. Observable success: an active account, consent version/date recorded by the service and a permitted destination after login.
-- Returning person: email/password login, recovery guidance, password reset via a link supplied by an administrator, sign out. No open signup, self-service email sender, payment, upgrade or plan prices.
-- Account administrator (`cuentas.administrar`): find an account, invite it, copy its activation/reset link, review its access, change its single role, deactivate/reactivate or explicitly delete it when the deletion policy permits.
-- Role administrator (`roles.administrar`): inspect five system roles, create/edit a custom role using named permissions, and delete only an unassigned custom role. A custom role may grant either administration permission independently; do not rely on a role name or `internas.usar` to grant these screens.
-- A person who lacks a permission gets an explanation and a safe return destination, without seeing restricted account data.
+- Persona invitada: identificar la invitación, crear una contraseña, leer y aceptar el aviso sobre datos y, luego, iniciar sesión. Éxito observable: una cuenta activa, la versión y la fecha del consentimiento registradas por el servicio y un destino permitido después del inicio de sesión.
+- Persona que regresa: iniciar sesión con correo electrónico y contraseña, recibir instrucciones de recuperación, restablecer la contraseña mediante un enlace proporcionado por un administrador y cerrar sesión. Sin registro abierto, envío de correo de autoservicio, pagos, mejoras de plan ni precios de planes.
+- Administrador de cuentas (`cuentas.administrar`): buscar una cuenta, invitarla, copiar su enlace de activación/restablecimiento, revisar su acceso, cambiar su único rol, desactivarla/reactivarla o eliminarla explícitamente cuando la política de eliminación lo permita.
+- Administrador de roles (`roles.administrar`): consultar cinco roles del sistema, crear/editar un rol personalizado con permisos identificados por nombre y eliminar solo un rol personalizado que no esté asignado. Un rol personalizado puede conceder cada permiso de administración de manera independiente; no dependa del nombre del rol ni de `internas.usar` para conceder acceso a estas pantallas.
+- Una persona que no tenga un permiso recibe una explicación y un destino seguro para volver, sin ver datos restringidos de cuentas.
 
-## 3. Information architecture and hierarchy
+## 3. Arquitectura de información y jerarquía
 
-Public shell: Pictures mark → page title → identifying context → fields → one primary action → recovery/invitation guidance. Password forms remain narrow; the data notice is full-length inline disclosure, never hidden behind an acceptance checkbox.
+Marco público: logotipo de Pictures → título de la página → contexto identificativo → campos → una acción principal → instrucciones de recuperación/invitación. Los formularios de contraseña deben ser compactos; el aviso sobre datos se muestra completo en línea y nunca se oculta detrás de una casilla de aceptación.
 
-Management shell: Pictures header with current account, theme and sign-out → “Administración” heading → permission-filtered “Cuentas” / “Roles” navigation → page title and primary action → search/filters → list → detail page. The existing catalogue/internal administration is a separate destination, not a new miscellaneous tab in this flow.
+Marco de administración: encabezado de Pictures con cuenta actual, tema y opción para cerrar sesión → título «Administración» → navegación «Cuentas» / «Roles» filtrada por permisos → título de la página y acción principal → búsqueda/filtros → lista → página de detalles. La administración existente de catálogos/internos es un destino independiente, no una nueva pestaña miscelánea de este flujo.
 
-Account detail: identity and status → role with exact permission summary → account dates and notice acceptance → recovery link → separated danger section. Invitations emphasize recipient and access **before** link creation. The resulting link is the main content, accompanied by expiry and manual-sharing instructions.
+Detalles de la cuenta: identidad y estado → rol con resumen exacto de permisos → fechas de la cuenta y aceptación del aviso → enlace de recuperación → sección de acciones peligrosas separada. Las invitaciones destacan al destinatario y el acceso **antes** de crear el enlace. El enlace resultante es el contenido principal, acompañado por la fecha de vencimiento e instrucciones para compartirlo manualmente.
 
-Role editor: name → grouped permission checkboxes → live exact access summary → save/cancel → delete section for custom roles. Never display an unexplained permission key as the only label. Counts are secondary; no decorative analytics cards or fabricated adoption metrics.
+Editor de roles: nombre → casillas de permisos agrupadas → resumen de acceso exacto y actualizado en tiempo real → guardar/cancelar → sección de eliminación para roles personalizados. Nunca muestre una clave de permiso sin explicación como única etiqueta. Los recuentos son secundarios; no incluya tarjetas decorativas de análisis ni métricas de adopción inventadas.
 
-## 4. Design system and visual language
+## 4. Sistema de diseño y lenguaje visual
 
-Read-only evidence: `t12` HEAD `fb872bce` and `pictures`/asesor HEAD `fa101a47`, both `src/app/globals.css`; `src/app/layout.tsx`; `src/app/login/{page.tsx,LoginForm.tsx}`; `src/components/ui/shell/{CabeceraApp.tsx,MenuApp.tsx}`; existing admin entry. These worktrees are references, not the execution base. Semantic palette is shared; asesor additionally extracts icon-button CSS. Reuse the product palette rather than replacing the app with desktop-theme colors.
+Evidencia de solo lectura: `t12` HEAD `fb872bce` y `pictures`/asesor HEAD `fa101a47`, ambos `src/app/globals.css`; `src/app/layout.tsx`; `src/app/login/{page.tsx,LoginForm.tsx}`; `src/components/ui/shell/{CabeceraApp.tsx,MenuApp.tsx}`; entrada de administración existente. Estos árboles de trabajo son referencias, no la base de ejecución. La paleta semántica es compartida; asesor también extrae el CSS de los botones con iconos. Reutilice la paleta del producto en lugar de reemplazar la aplicación con colores del tema del escritorio.
 
-| Existing tokens | Light | Dark | Use |
+| Tokens existentes | Claro | Oscuro | Uso |
 |---|---|---|---|
-| `--fondo`, `--superficie` | #faf9fc, #ffffff | #0b0c10, #16181f | canvas / panels |
-| `--superficie-suave`, `--superficie-2` | #faf8fd, #efe9f8 | #1c1e26, #242733 | sections / secondary fills |
-| `--borde`, `--borde-suave` | #e3daef, #efe9f8 | #383c48, #2a2d38 | decorative borders / separators |
-| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425, #6b6178, #766c85 | #f4f5f7, #9aa1ad, #8a91a0 | headings, body, metadata |
-| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0, #5530b8, #ece3fb | #9479ff, #a58dff, #241f3d | primary, hover, selected |
-| `--sobre-acento` | #ffffff | #120b24 | primary text (dark theme must not use white) |
-| `--exito`, `--exito-suave` | #1f7a55, #dcf5e9 | #78d6a8, #173b31 | completed / active |
-| `--error`, `--error-suave` | #b23a45, #ffeaec | #ff979f, #43252a | failure / danger |
-| `--aviso`, `--aviso-suave` | #8f5f12, #fff3d8 | #f7c46b, #3f311c | stale, pending legal input |
+| `--fondo`, `--superficie` | #faf9fc, #ffffff | #0b0c10, #16181f | lienzo / paneles |
+| `--superficie-suave`, `--superficie-2` | #faf8fd, #efe9f8 | #1c1e26, #242733 | secciones / rellenos secundarios |
+| `--borde`, `--borde-suave` | #e3daef, #efe9f8 | #383c48, #2a2d38 | bordes decorativos / separadores |
+| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425, #6b6178, #766c85 | #f4f5f7, #9aa1ad, #8a91a0 | encabezados, texto principal, metadatos |
+| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0, #5530b8, #ece3fb | #9479ff, #a58dff, #241f3d | principal, al pasar el cursor, seleccionado |
+| `--sobre-acento` | #ffffff | #120b24 | texto principal (el tema oscuro no debe usar blanco) |
+| `--exito`, `--exito-suave` | #1f7a55, #dcf5e9 | #78d6a8, #173b31 | completado / activo |
+| `--error`, `--error-suave` | #b23a45, #ffeaec | #ff979f, #43252a | error / peligro |
+| `--aviso`, `--aviso-suave` | #8f5f12, #fff3d8 | #f7c46b, #3f311c | desactualizado, pendiente de revisión legal |
 
-Reuse `.ui-button-primary`, `.ui-button-secondary`, `.ui-button-ghost`, `.ui-card`, `.ui-input`, `.ui-alert`, `.ui-chip`, existing checkbox/select/menu patterns and focus-return behavior. Card radius 1.25rem, control radius 0.7–0.8rem; `--radius` remains 0.8rem. Spacing uses 4/8/12/16/24/32/48px steps. Shell max-width 1200px, auth form max-width 440px, notice/activation max-width 640px, management form max-width 760px. These are layout rules, not new global tokens.
+Reutilice `.ui-button-primary`, `.ui-button-secondary`, `.ui-button-ghost`, `.ui-card`, `.ui-input`, `.ui-alert`, `.ui-chip`, los patrones existentes de casillas, selectores y menús, y el comportamiento de retorno del foco. Radio de tarjeta: 1.25rem; radio de controles: 0.7–0.8rem; `--radius` permanece en 0.8rem. El espaciado usa incrementos de 4/8/12/16/24/32/48px. Ancho máximo del marco: 1200px; formulario de autenticación: 440px; aviso/activación: 640px; formulario de administración: 760px. Estas son reglas de disposición, no nuevos tokens globales.
 
-Typography: existing Geist sans through `--font-sans`/`--font-geist-sans`; mono only links/IDs. Standalone mockup uses local `system-ui` and `ui-monospace` fallbacks because no font/network asset is permitted. Body 14–16px/1.5, labels 14px/600, page title 28–32px/1.2, section title 18px/1.35, supporting copy minimum 13px. Do not introduce a new brand font.
+Tipografía: Geist sans existente mediante `--font-sans`/`--font-geist-sans`; fuente monoespaciada solo para enlaces/ID. La maqueta independiente usa alternativas locales `system-ui` y `ui-monospace`, porque no se permiten recursos de fuentes ni de red. Texto principal: 14–16px/1.5; etiquetas: 14px/600; título de página: 28–32px/1.2; título de sección: 18px/1.35; texto complementario: mínimo 13px. No introduzca una nueva fuente de marca.
 
-New proposed semantic token `--control-borde`: `--texto-tenue` in both themes, for input and checkbox boundaries when the existing low-contrast decorative `--borde` cannot supply 3:1 contrast. Keep `--borde` on panels. Focus is existing 2px `--acento` outline with 2px offset. Use text-labelled status chips; icons optional, decorative icons hidden from AT. Use the existing ring-and-dot mark. Hover/focus transitions ≤160ms; no decorative looping animation; reduced motion removes transitions.
+Nuevo token semántico propuesto `--control-borde`: `--texto-tenue` en ambos temas, para los bordes de campos y casillas cuando el contraste de 3:1 no se alcance con el `--borde` decorativo existente, de bajo contraste. Mantenga `--borde` en los paneles. El foco usa el contorno existente de 2px con `--acento` y un desplazamiento de 2px. Use chips de estado con texto; los iconos son opcionales y los decorativos se ocultan a las tecnologías de asistencia (AT). Use la marca existente de anillo y punto. Las transiciones al pasar el cursor o enfocar deben durar ≤160ms; no use animaciones decorativas en bucle; el movimiento reducido elimina las transiciones.
 
-## 5. Navigation and interaction model
+## 5. Navegación y modelo de interacción
 
-Proposed route contract (Planner must reconcile and add to SP-1 map before implementation):
+Contrato de rutas propuesto (el Planner debe conciliarlas y agregarlas al mapa de SP-1 antes de la implementación):
 
-| View | Proposed path | Access / exit |
+| Vista | Ruta propuesta | Acceso / salida |
 |---|---|---|
-| V1 sign in | `/login?from=<relative-path>` | public; success returns to safe same-origin relative `from`, otherwise session home `/` |
-| V2 activate | `/activar?token=…` | public; consumes invitation only on explicit submit; success → V1 |
-| V3 reset password | `/restablecer?token=…` | public; consumes reset only on submit; success → V1 |
-| V4 accounts | `/administracion/cuentas` | `cuentas.administrar`; exits to permitted home |
-| V5 invite / created link | `/administracion/cuentas/invitar` | `cuentas.administrar`; back → V4 |
-| V6 account detail | `/administracion/cuentas/<id>` | `cuentas.administrar`; back → V4 |
-| V7 roles | `/administracion/roles` | `roles.administrar`; back → permitted home |
-| V8 create / edit / inspect role | `/administracion/roles/nuevo`, `/administracion/roles/<id>` | `roles.administrar`; back → V7 |
-| V9 access denied | `/sin-acceso` response | existing SP-1 denied response; “Volver al inicio”, “Cerrar sesión” |
+| V1 inicio de sesión | `/login?from=<relative-path>` | pública; al completarse, vuelve a la ruta relativa segura del mismo origen indicada en `from`; de lo contrario, va al inicio de la sesión `/` |
+| V2 activar | `/activar?token=…` | pública; consume la invitación solo al enviarla explícitamente; al completarse → V1 |
+| V3 restablecer contraseña | `/restablecer?token=…` | pública; consume el enlace de restablecimiento solo al enviar el formulario; al completarse → V1 |
+| V4 cuentas | `/administracion/cuentas` | `cuentas.administrar`; sale a una página de inicio permitida |
+| V5 invitar / enlace creado | `/administracion/cuentas/invitar` | `cuentas.administrar`; volver → V4 |
+| V6 detalles de la cuenta | `/administracion/cuentas/<id>` | `cuentas.administrar`; volver → V4 |
+| V7 roles | `/administracion/roles` | `roles.administrar`; volver → una página de inicio permitida |
+| V8 crear / editar / consultar rol | `/administracion/roles/nuevo`, `/administracion/roles/<id>` | `roles.administrar`; volver → V7 |
+| V9 acceso denegado | respuesta `/sin-acceso` | respuesta de denegación existente de SP-1; «Volver al inicio», «Cerrar sesión» |
 
-No administration links in unauthorized navigation. Direct requests still rely on server guards. Do not place all account routes under the existing `/admin/*` rule (`internas.usar`) without explicit permission overrides. A role-only administrator must reach V7/V8 even without account permissions. Auth endpoints remain owned by SP-1; exact additional screen endpoints are Planner work, not invented APIs here.
+No incluya enlaces de administración en la navegación de personas no autorizadas. Las solicitudes directas siguen dependiendo de las protecciones del servidor. No agrupe todas las rutas de cuentas bajo la regla existente `/admin/*` (`internas.usar`) sin excepciones explícitas de permisos. Un administrador solo de roles debe poder acceder a V7/V8 incluso sin permisos de cuenta. Los endpoints de autenticación siguen a cargo de SP-1; los endpoints adicionales de las pantallas son trabajo del Planner, no API inventadas aquí.
 
-Navigation moves focus to the new H1 (`tabindex=-1`); form validation focuses the first invalid field after announcing the summary. Search does not steal focus. Native select keyboard behavior; labelled controls. Confirmation uses a modal dialog, traps focus, starts on Cancel, closes on Escape except while a committed request is pending, and returns focus to the trigger. No modal for ordinary forms. Browser back preserves non-secret filters; never persist passwords, tokens or full forms to storage. The mockup has its own labelled view/state bar outside the product shell and no external destinations.
+Al navegar, mueva el foco al H1 nuevo (`tabindex=-1`); tras anunciar el resumen de validación del formulario, enfoque el primer campo no válido. La búsqueda no debe quitar el foco. Comportamiento del teclado nativo en los selectores; controles etiquetados. La confirmación usa un cuadro de diálogo modal, mantiene el foco dentro, inicia con Cancelar, se cierra con Escape excepto mientras haya una solicitud confirmada pendiente y devuelve el foco al control que lo activó. No use modales para formularios habituales. El botón «Atrás» del navegador conserva los filtros no confidenciales; nunca guarde contraseñas, tokens ni formularios completos en el almacenamiento. La maqueta tiene una barra propia, etiquetada, para seleccionar la vista/el estado fuera del marco del producto y no contiene destinos externos.
 
-## 6. Flows
+## 6. Flujos
 
-**F1 sign in.** 1) Enter email and password with password-manager support. 2) Submit once; label becomes “Ingresando…”. 3) On success resolve safe destination; if the requested area is no longer permitted show V9 rather than an upsell. 4) Wrong password, unknown email, deactivated account and lockout all show exactly “No pudimos iniciar sesión. Revisa el correo y la contraseña o consulta con tu administrador.” No account-existence or attempt-counter disclosure. 5) Recovery disclosure: “Pide a tu administrador un enlace para restablecer tu contraseña.” Session expiry uses V1 with “Tu sesión terminó. Inicia sesión para continuar.” The 30-day session has no “remember me” toggle.
+**F1 iniciar sesión.** 1) Ingresa el correo y la contraseña con compatibilidad con gestores de contraseñas. 2) Envía una sola vez; la etiqueta cambia a “Ingresando…”. 3) Si la operación tiene éxito, resuelve el destino seguro; si el área solicitada ya no está permitida, muestra V9 en lugar de una oferta de mejora. 4) La contraseña incorrecta, el correo desconocido, la cuenta desactivada y el bloqueo muestran exactamente “No pudimos iniciar sesión. Revisa el correo y la contraseña o consulta con tu administrador.” No reveles si existe la cuenta ni el contador de intentos. 5) Aviso de recuperación: “Pide a tu administrador un enlace para restablecer tu contraseña.” El vencimiento de la sesión usa V1 con “Tu sesión terminó. Inicia sesión para continuar.” La sesión de 30 días no tiene un control “recordarme”.
 
-**F2 activate.** 1) Validate link without consuming it; show read-only recipient and assigned role from server. 2) Set password (8–200 characters), confirmation and show/hide control; paste allowed. 3) Read full supplied notice, explicit unchecked acceptance checkbox “He leído el aviso y autorizo el tratamiento descrito.” 4) “Activar cuenta” validates and submits password plus notice version. 5) Only confirmed service success shows “Tu cuenta está activa” and “Ir a iniciar sesión”. Proposal: no implicit login (Q5). Expired/used/invalid links cannot set a password; guidance says ask the inviting administrator. Expired may return to sign in, used specifically offers sign in. Never consume on page load.
+**F2 activar.** 1) Valida el enlace sin consumirlo; muestra el destinatario de solo lectura y el rol asignado, obtenidos del servidor. 2) Define la contraseña (8–200 caracteres), confírmala y muestra el control para mostrar u ocultar; se permite pegar. 3) Lee el aviso completo proporcionado y muestra una casilla de aceptación explícita, desmarcada: “He leído el aviso y autorizo el tratamiento descrito.” 4) “Activar cuenta” valida y envía la contraseña y la versión del aviso. 5) Solo la confirmación de éxito del servicio muestra “Tu cuenta está activa” e “Ir a iniciar sesión”. Propuesta: no iniciar sesión de forma implícita (Q5). Los enlaces vencidos, usados o no válidos no permiten definir una contraseña; la indicación dice que se consulte con el administrador que envió la invitación. Un enlace vencido puede volver al inicio de sesión; uno usado ofrece específicamente iniciar sesión. Nunca consumas el enlace al cargar la página.
 
-**F3 invite.** 1) V4 “Invitar persona”. 2) Required name/email, optional company, required single-role select initially unselected. 3) Preview exact permissions before creation; five system choices plus custom roles, no separate additive plan control. 4) “Crear invitación” → service → same V5 result showing recipient, role, server expiry and selectable link. 5) “Copiar enlace” performs a user-initiated copy; if unavailable, select/copy manually. Announce “Enlace copiado” only after copy succeeds. Explain “Compártelo directamente con esta persona. No se envió ningún correo.” No mail-sent fiction. 6) Return to V4; link is not redisplayed from a hash. Lost/expired invitation recovery remains Q2, not a working regeneration action.
+**F3 invitar.** 1) V4 “Invitar persona”. 2) Nombre y correo obligatorios, empresa opcional, selector obligatorio de un solo rol, inicialmente sin selección. 3) Muestra una vista previa de los permisos exactos antes de crear; cinco opciones del sistema más roles personalizados, sin un control de plan adicional independiente. 4) “Crear invitación” → servicio → mismo resultado V5 con destinatario, vencimiento del servidor y enlace seleccionable. 5) “Copiar enlace” realiza una copia iniciada por el usuario; si no está disponible, permite seleccionar y copiar manualmente. Anuncia “Enlace copiado” solo después de que la copia tenga éxito. Explica: “Compártelo directamente con esta persona. No se envió ningún correo.” No afirmes falsamente que se envió un correo. 6) Vuelve a V4; el enlace no se vuelve a mostrar a partir de un hash. La recuperación de invitaciones perdidas o vencidas sigue pendiente en Q2; no es una acción de regeneración disponible.
 
-**F4 reset.** 1) V6 active account “Crear enlace de restablecimiento”. 2) Confirm recipient and explain “Válido por 24 horas. Al cambiar la contraseña se cerrarán sus sesiones.” 3) Generate → copyable result in V6 with expiry/manual sharing. 4) Recipient V3 enters and confirms new password; no repeated legal acceptance. 5) Server success revokes sessions and shows “Contraseña actualizada. Inicia sesión con tu nueva contraseña.” Existing-password edit and self-service email reset are out of scope. Expired/used/invalid handling matches F2. Replacing an existing unused reset link is Q2.
+**F4 restablecer.** 1) En V6, cuenta activa: “Crear enlace de restablecimiento”. 2) Confirma el destinatario y explica: “Válido por 24 horas. Al cambiar la contraseña se cerrarán sus sesiones.” 3) Genera el enlace → resultado copiable en V6 con vencimiento y uso compartido manual. 4) El destinatario ingresa y confirma la contraseña nueva en V3; no vuelve a aceptar el aviso legal. 5) El éxito del servidor revoca las sesiones y muestra “Contraseña actualizada. Inicia sesión con tu nueva contraseña.” La edición de la contraseña actual y el restablecimiento de correo de autoservicio están fuera del alcance. El manejo de enlaces vencidos, usados o no válidos coincide con F2. Reemplazar un enlace de restablecimiento existente que no se haya usado está pendiente en Q2.
 
-**F5 manage account.** 1) Search name/email; filter by status and role. 2) Open V6; identity is read-only (profile editing not scoped). 3) Change single role: show new exact permissions, “Guardar rol”; confirm if administrative permissions are added or this removes one's own access; explain applies on next request. 4) “Desactivar cuenta” confirmation states sessions end on next request, data is retained; on success status becomes Desactivada and reactivation replaces deactivation. 5) “Reactivar cuenta” uses service confirmation and returns active; no invitation creation implied. 6) Delete uses separate danger dialog with recipient email and typed-email confirmation. Last active Administrador cannot be deactivated, deleted or demoted; display reason next to disabled controls; stale server rejection refreshes authoritative status. Account deletion without associated saved work is illustrated; destructive scope for saved projects/decorations/spend is **unresolved Q3**. For an account with associated/unknown work, block final deletion and show the unresolved policy; do not fabricate a cascade or retention promise.
+**F5 administrar cuenta.** 1) Busca por nombre o correo; filtra por estado y rol. 2) Abre V6; la identidad es de solo lectura (la edición del perfil no está dentro del alcance). 3) Cambia el rol único: muestra los permisos exactos nuevos y “Guardar rol”; pide confirmación si se agregan permisos administrativos o si esto elimina el acceso propio; explica que se aplica en la siguiente solicitud. 4) La confirmación de “Desactivar cuenta” indica que las sesiones finalizarán en la siguiente solicitud y que los datos se conservan; si tiene éxito, el estado pasa a Desactivada y la reactivación reemplaza la desactivación. 5) “Reactivar cuenta” usa la confirmación del servicio y devuelve la cuenta al estado activo; no implica crear una invitación. 6) La eliminación usa un diálogo de peligro separado con el correo del destinatario y una confirmación que requiere escribir el correo. Se prohíbe desactivar, eliminar o degradar al último Administrador activo; muestra el motivo junto a los controles deshabilitados; si el servidor rechaza por datos obsoletos, actualiza el estado autoritativo. Se ilustra la eliminación de una cuenta sin trabajo guardado asociado; el alcance destructivo para proyectos, decoraciones o gastos guardados sigue **sin resolverse en Q3**. Si una cuenta tiene trabajo asociado o desconocido, bloquea la eliminación final y muestra que la política está pendiente de resolución; no inventes una eliminación en cascada ni una promesa de conservación.
 
-**F6 manage roles.** 1) V7 separates five “Del sistema · Solo lectura” rows and custom roles. 2) V8 “Crear rol” requires name, explicit permission choices; none is preselected. Proposed minimum one permission is Q4. 3) Checkboxes are independent capabilities, not an enforced inheritance tree: selecting a capability never silently adds another. `taller.usar` is intentionally coarse and its helper lists scene AI, export, own projects/decorations, assembly plans/sheet. 4) Summary lists precisely selected names and count; “Guardar rol” shows service success. 5) Edit custom role keeps assigned-account count visible and confirms that affected accounts change on next request. 6) System role renders the same matrix read-only with no save/delete. 7) Delete custom role only when assigned count is zero; otherwise “Este rol está asignado a N cuentas. Asígnales otro rol antes de eliminarlo.” No bulk reassignment tool is implied.
+**F6 administrar roles.** 1) V7 separa cinco filas “Del sistema · Solo lectura” de los roles personalizados. 2) V8 “Crear rol” requiere un nombre y selecciones explícitas de permisos; ninguno está preseleccionado. La propuesta de exigir al menos un permiso está pendiente en Q4. 3) Las casillas son capacidades independientes, no un árbol de herencia obligatorio: seleccionar una capacidad nunca agrega otra silenciosamente. `taller.usar` es intencionalmente general y su texto de ayuda enumera IA de escena, exportación, proyectos y decoraciones propios, planes y hoja de armado. 4) El resumen enumera con precisión los nombres seleccionados y la cantidad; “Guardar rol” muestra el éxito del servicio. 5) Al editar un rol personalizado, la cantidad de cuentas asignadas permanece visible y se confirma que los cambios para las cuentas afectadas se aplican en la siguiente solicitud. 6) El rol del sistema muestra la misma matriz en modo de solo lectura, sin guardar ni eliminar. 7) Elimina un rol personalizado solo cuando la cantidad de asignaciones sea cero; en caso contrario, muestra “Este rol está asignado a N cuentas. Asígnales otro rol antes de eliminarlo.” No se implica que exista una herramienta de reasignación masiva.
 
-## 7. View specifications
+## 7. Especificaciones de vistas
 
-| View | Structure, data and visible copy | Primary / secondary actions | Responsive treatment |
+| Vista | Estructura, datos y texto visible | Acciones principales / secundarias | Adaptación responsiva |
 |---|---|---|---|
-| V1 | Pictures; “Iniciar sesión”; “Usa el correo con el que te invitaron”; visible Correo/Contraseña labels; helper “El acceso es por invitación.” | “Entrar”; show/hide; recovery disclosure | 440px column, full-width primary; page scroll with keyboard/zoom |
-| V2 | “Activa tu cuenta”; recipient/role; new password + confirmation; “Aviso de tratamiento de datos · versión 1”; full notice and acceptance; legal-input warning in mock | “Activar cuenta”; show/hide; success → V1 | 640px column; notice full width; no nested legal scrollbox |
-| V3 | “Restablecer contraseña”; identified link recipient; 8–200 helper and two password fields; link expiry | “Guardar contraseña”; V1 after success | 440px column |
-| V4 | “Cuentas”; invitation CTA; search, status and role filters; list shows name/email, role, status, last access; total/filtered result text | “Invitar persona”; per-row “Ver cuenta” | ≥640px semantic table; <640px equivalent labelled cards, no hidden identity/access/status |
-| V5 | Back; “Invitar persona”; name/email/company/role; exact-access preview; result recipient, expiry, full link | “Crear invitación”; Cancel; result “Copiar enlace”, “Volver a cuentas” | ≥1024px form + 300px access sidebar; below stack preview before submit |
-| V6 | Back; name/email/company/status; invitation/activation/last-access dates; notice version/date or “Aún no ha aceptado”; single-role select and preview; reset section; danger section | “Guardar rol”; reset; deactivate/reactivate; delete | ≥1024px identity rail + main; below stack; destructive controls never icon-only |
-| V7 | “Roles y permisos”; “Crear rol”; system-role rows with permission counts; custom-role rows with assigned counts | “Ver rol” or “Editar rol” | One readable list at all widths; counts wrap rather than clip |
-| V8 | Back; “Crear rol” / role name; custom name field; grouped permission matrix, independent checks with explanations; summary; assigned count | “Guardar rol”; Cancel; delete unassigned custom role | ≥1024px matrix + 300px summary; smaller one column, full checkbox label hit target |
-| V9 | “No tienes acceso a esta sección”; “Tu rol actual no incluye este permiso. Consulta con tu administrador si necesitas acceso.” No restricted resource details | “Volver al inicio”; “Cerrar sesión” | 440px column, buttons wrap |
+| V1 | Pictures; “Iniciar sesión”; “Usa el correo con el que te invitaron”; etiquetas visibles Correo/Contraseña; texto de ayuda “El acceso es por invitación.” | “Entrar”; mostrar/ocultar; aviso de recuperación | Columna de 440 px, acción principal de ancho completo; desplazamiento de página con teclado/zoom |
+| V2 | “Activa tu cuenta”; destinatario/rol; contraseña nueva + confirmación; “Aviso de tratamiento de datos · versión 1”; aviso completo y aceptación; advertencia de entrada legal en la maqueta | “Activar cuenta”; mostrar/ocultar; éxito → V1 | Columna de 640 px; aviso de ancho completo; sin área de desplazamiento legal anidada |
+| V3 | “Restablecer contraseña”; destinatario identificado del enlace; ayuda de 8–200 y dos campos de contraseña; vencimiento del enlace | “Guardar contraseña”; V1 después del éxito | Columna de 440 px |
+| V4 | “Cuentas”; llamada a la acción para invitar; búsqueda, filtros de estado y rol; la lista muestra nombre/correo, rol, estado y último acceso; texto con el total y los resultados filtrados | “Invitar persona”; “Ver cuenta” en cada fila | ≥640 px: tabla semántica; <640 px: tarjetas equivalentes con etiquetas, sin ocultar identidad/acceso/estado |
+| V5 | Volver; “Invitar persona”; nombre/correo/empresa/rol; vista previa de acceso exacto; destinatario del resultado, vencimiento, enlace completo | “Crear invitación”; Cancelar; en el resultado, “Copiar enlace” y “Volver a cuentas” | ≥1024 px: formulario + panel lateral de acceso de 300 px; en tamaños menores, apila la vista previa antes del envío |
+| V6 | Volver; nombre/correo/empresa/estado; fechas de invitación/activación/último acceso; versión/fecha del aviso o “Aún no ha aceptado”; selector de un solo rol y vista previa; sección de restablecimiento; sección de peligro | “Guardar rol”; restablecer; desactivar/reactivar; eliminar | ≥1024 px: columna de identidad + área principal; en tamaños menores, apila; los controles destructivos nunca aparecen solo como iconos |
+| V7 | “Roles y permisos”; “Crear rol”; filas de roles del sistema con cantidad de permisos; filas de roles personalizados con cantidad de asignaciones | “Ver rol” o “Editar rol” | Una lista legible en todos los tamaños; las cantidades se ajustan a varias líneas en lugar de recortarse |
+| V8 | Volver; “Crear rol” / nombre del rol; campo de nombre personalizado; matriz de permisos agrupados, casillas independientes con explicaciones; resumen; cantidad de asignaciones | “Guardar rol”; Cancelar; eliminar rol personalizado sin asignaciones | ≥1024 px: matriz + resumen de 300 px; en tamaños menores, una columna y área de activación completa para la etiqueta de cada casilla |
+| V9 | “No tienes acceso a esta sección”; “Tu rol actual no incluye este permiso. Consulta con tu administrador si necesitas acceso.” Sin detalles del recurso restringido | “Volver al inicio”; “Cerrar sesión” | Columna de 440 px, botones que se ajustan a varias líneas |
 
-Permission labels from SP-1 catalogue (one source at implementation):
+Etiquetas de permisos del catálogo SP-1 (una sola fuente en la implementación):
 
-| Group | Key → visible ES label / helper |
+| Grupo | Clave → etiqueta visible ES / texto de ayuda |
 |---|---|
 | Herramientas | `chat.usar` → Chat asistido; `contador.usar` → Contador de globos; `catalogo.ver` → Catálogo; `costos.usar` → Calculadora de costos; `decoraciones.explorar` → Explorador de decoraciones |
 | Taller y proyectos | `taller.usar` → Taller 3D / Incluye IA de escena, planes y hoja de armado, exportación, proyectos y decoraciones propios; `proyectos.ver_todos` → Proyectos de todas las cuentas |
 | Equipo interno | `gasto.ver` → Gasto de IA; `internas.usar` → Herramientas internas |
 | Administración | `cuentas.administrar` → Administrar cuentas; `roles.administrar` → Administrar roles; `textos.corregir` → Corregir textos en inglés |
 
-System role summary: Usuario · Plan 1 = first three; Usuario · Plan 2 adds costs/explorer; Usuario · Plan 3 adds Taller; Empleado interno adds all-projects, spend, internal; Administrador adds all three administration permissions. These have 3/5/6/9/12 permissions respectively, exactly the service catalogue. No sixth generic Usuario role. Product copy is Spanish in SP-2; bilingual UI is SP-10. The mockup separately offers the **already supplied** ES/EN legal notice as a content inspection control, not an account language preference or a claim that the whole UI is translated.
+Resumen de roles del sistema: Usuario · Plan 1 = los tres primeros; Usuario · Plan 2 agrega costos/explorador; Usuario · Plan 3 agrega Taller; Empleado interno agrega todos los proyectos, gastos y herramientas internas; Administrador agrega los tres permisos de administración. Tienen 3/5/6/9/12 permisos, respectivamente, exactamente los del catálogo del servicio. No hay un sexto rol genérico de Usuario. El texto del producto está en español en SP-2; la interfaz bilingüe está en SP-10. La maqueta ofrece por separado el aviso legal ES/EN **ya proporcionado** como control para inspeccionar su contenido, no como preferencia de idioma de la cuenta ni como afirmación de que toda la interfaz esté traducida.
 
-Legal content: reproduce SPEC “Data-processing notice (draft v1, SP-2)” ES/EN **verbatim**, retaining bracketed fields for the legal name, rights email and policy URL. Show “Texto pendiente de aprobación y datos legales” beside the mock notice. Never turn a placeholder into a fake policy link or invent legal advice. `notice_pending` disables activation until owner/legal confirmation and completed fields; the normal valid-notice scenario is explicitly simulated for design review only. Implementers must use approved content/version and actual URL before allowing real external activation. This is the existing SPEC gate, not a new approval flow.
+Contenido legal: reproduce el texto ES/EN de SPEC “Aviso de tratamiento de datos (borrador v1, SP-2)” **verbatim**, conservando los campos entre corchetes para el nombre legal, el correo para ejercer derechos y la URL de la política. Muestra “Texto pendiente de aprobación y datos legales” junto a la maqueta del aviso. Nunca conviertas un marcador de posición en un enlace falso a una política ni inventes asesoría legal. `notice_pending` deshabilita la activación hasta que el propietario o el equipo legal confirmen el contenido y se completen los campos; el escenario normal de aviso válido se simula explícitamente solo para la revisión de diseño. Los implementadores deben usar el contenido y la versión aprobados, y la URL real, antes de permitir la activación externa real. Este es el control existente de SPEC, no un flujo de aprobación nuevo.
 
-## 8. States
+## 8. Estados
 
-State names below are exact mockup selector values. Every applicable pair is reachable with the visible “Vista” and “Estado” selectors; dialog variations have a separate “Diálogo” selector. Selector changes are design controls, not product features. Mockup data uses fictional people and `example.com`/`.invalid`; nothing is stored or sent.
+Los nombres de estado siguientes son valores exactos del selector de la maqueta. Cada combinación aplicable se puede alcanzar con los selectores visibles “Vista” y “Estado”; las variaciones de diálogo tienen un selector “Diálogo” independiente. Los cambios de selector son controles de diseño, no funciones del producto. Los datos de la maqueta usan personas ficticias y `example.com`/`.invalid`; no se almacena ni envía nada.
 
-| State | Applicable views | Appearance, available action, transition / recovery |
+| Estado | Vistas aplicables | Apariencia, acción disponible, transición / recuperación |
 |---|---|---|
-| `ready` | V1–V9 | Normal view; V9 is already a denial response. Blank forms count as ready, not an empty data state. |
-| `loading` | V1–V8 | Labelled static skeleton / “Cargando…”; no data flashes or enabled mutation. V1 loading represents session/destination check, not remote form data. |
-| `error` | V1–V8 | Alert; auth uses generic refusal, others “No pudimos cargar/guardar…” with safe retry and preserved non-secret inputs. A mutation error never shows success. |
-| `offline` | V1–V8 | “Sin conexión. Vuelve a conectarte y reintenta.” Form drafts remain in memory; mutation disabled; no queued saves or automatic replay. |
-| `pending` | V1–V3, V5–V6, V8 | In-flight submit; changing fields/repeating submit disabled; verb-specific label. Enter cannot duplicate the request. Outcome comes only from confirmed service response. |
-| `validation` | V1–V3, V5–V6, V8 | Summary and inline labelled errors, first invalid field focused; email syntax, required name/role, 8–200 password, matching confirmation, required consent. Role minimum see Q4. |
-| `success` | V1–V3, V5–V6, V8 | Explicit completed action; V5 retains copy result until navigation; V6/V8 refreshed authoritative data. Auth success CTA goes to the scoped handoff; mockup does not pretend to render the home product. |
-| `empty` | V4, V7 | V4 no accounts: “Aún no hay cuentas” + Invite. This fixture represents a permitted empty listing, not deletion of the current admin. V7 no custom roles: five system roles remain + Create. |
-| `no_results` | V4 | Search/filter matching zero: “No hay cuentas con estos filtros” + “Limpiar filtros”; distinct from no accounts. |
-| `stale` | V4, V6–V8 | Timestamp and “No pudimos actualizar. Estos datos pueden haber cambiado.” Read-only cached data, mutation disabled; “Actualizar” fetches fresh state. Partial responses use the same warning, identify unavailable fields as “No disponible”; never show false zero. |
-| `denied` | V4–V8 | Replace view with V9; discard restricted data, no form underneath. 401 instead returns V1/session-ended. |
-| `expired`, `used`, `invalid` | V2–V3 | Replace password form, readable reason, “Ir a iniciar sesión”, ask administrator for a valid link; no token value or account information from an invalid link. |
-| `notice_pending` | V2 | Legal placeholders/warning visible; checkbox and activation disabled with adjacent reason. |
-| `conflict` | V5–V6, V8 | Duplicate invite email: identify existing account only to authorized admin and offer list; concurrent role/status change: refresh authoritative record before resubmitting. Preserve proposed input separately; never overwrite silently. |
-| `last_admin` | V6 | Last active Administrator; role-change, deactivation and delete disabled with the same explanation; reset stays available. Server refusal remains authoritative. |
-| `fixed` | V8 | System role name/permissions read-only, “Rol del sistema · Solo lectura”; no save or delete. |
-| `role_in_use` | V8 | Custom role editable; delete disabled with assigned-account count and required next step. |
-| `disabled` | V1–V3, V5–V6, V8 | Primary action disabled with visible reason (incomplete input, unchanged role, or pending legal/policy requirement). No unexplained disabled icon. |
+| `ready` | V1–V9 | Vista normal; V9 ya es una respuesta de denegación. Los formularios vacíos cuentan como listos, no como un estado de datos vacío. |
+| `loading` | V1–V8 | Esqueleto estático con etiqueta / “Cargando…”; no se muestran datos momentáneamente ni se habilitan acciones de modificación. La carga de V1 representa la comprobación de sesión/destino, no datos remotos del formulario. |
+| `error` | V1–V8 | Alerta; autenticación usa un rechazo genérico; los demás muestran “No pudimos cargar/guardar…” con reintento seguro y conservan las entradas no secretas. Un error de modificación nunca muestra éxito. |
+| `offline` | V1–V8 | “Sin conexión. Vuelve a conectarte y reintenta.” Los borradores del formulario permanecen en memoria; las modificaciones están deshabilitadas; no se encolan guardados ni se repiten automáticamente. |
+| `pending` | V1–V3, V5–V6, V8 | Envío en curso; cambiar campos o repetir el envío está deshabilitado; etiqueta específica para la acción. La tecla Enter no puede duplicar la solicitud. El resultado proviene únicamente de una respuesta confirmada del servicio. |
+| `validation` | V1–V3, V5–V6, V8 | Resumen y errores en línea con etiquetas; se enfoca el primer campo no válido; sintaxis de correo, nombre/rol obligatorios, contraseña de 8–200 caracteres, confirmación coincidente y consentimiento obligatorio. Para el mínimo de permisos del rol, consulta Q4. |
+| `success` | V1–V3, V5–V6, V8 | Acción completada explícitamente; V5 conserva el resultado para copiar hasta la navegación; V6/V8 muestran datos autoritativos actualizados. La acción de autenticación exitosa lleva al traspaso definido para el alcance; la maqueta no pretende mostrar el producto de inicio. |
+| `empty` | V4, V7 | V4 sin cuentas: “Aún no hay cuentas” + Invitar. Este ejemplo representa una lista vacía permitida, no la eliminación del administrador actual. V7 sin roles personalizados: permanecen los cinco roles del sistema + Crear. |
+| `no_results` | V4 | La búsqueda o los filtros no coinciden con ningún resultado: “No hay cuentas con estos filtros” + “Limpiar filtros”; distinto de no tener cuentas. |
+| `stale` | V4, V6–V8 | Marca de tiempo y “No pudimos actualizar. Estos datos pueden haber cambiado.” Datos en caché de solo lectura, modificaciones deshabilitadas; “Actualizar” obtiene el estado más reciente. Las respuestas parciales usan la misma advertencia e identifican los campos no disponibles como “No disponible”; nunca muestran un cero falso. |
+| `denied` | V4–V8 | Reemplaza la vista con V9; descarta los datos restringidos y no deja un formulario debajo. 401 vuelve a V1 con el aviso de sesión finalizada. |
+| `expired`, `used`, `invalid` | V2–V3 | Reemplaza el formulario de contraseña, muestra un motivo legible y “Ir a iniciar sesión”, y pide al administrador un enlace válido; no muestra el valor del token ni información de la cuenta obtenida de un enlace no válido. |
+| `notice_pending` | V2 | Marcadores de posición/advertencia legal visibles; casilla y activación deshabilitadas con el motivo junto a los controles. |
+| `conflict` | V5–V6, V8 | Correo de invitación duplicado: identifica la cuenta existente solo ante un administrador autorizado y ofrece ir a la lista; cambio simultáneo de rol/estado: actualiza el registro autoritativo antes de volver a enviar. Conserva por separado la entrada propuesta; nunca la sobrescribe silenciosamente. |
+| `last_admin` | V6 | Último Administrador activo; cambio de rol, desactivación y eliminación deshabilitados con la misma explicación; el restablecimiento sigue disponible. El rechazo del servidor sigue siendo autoritativo. |
+| `fixed` | V8 | Nombre/permisos del rol del sistema de solo lectura, “Rol del sistema · Solo lectura”; sin guardar ni eliminar. |
+| `role_in_use` | V8 | Rol personalizado editable; eliminación deshabilitada con la cantidad de cuentas asignadas y el siguiente paso requerido. |
+| `disabled` | V1–V3, V5–V6, V8 | Acción principal deshabilitada con un motivo visible (entrada incompleta, rol sin cambios o requisito legal/de política pendiente). No se muestran iconos deshabilitados sin explicación. |
 
-Dialogs selectable in the mockup: `change_role`, `deactivate`, `reactivate`, `delete_account`, `reset_link` in V6; `edit_role`, `delete_role` in V8. Each has `confirm`, `pending`, `error` phases. Final deletion/reset/role changes never execute on opening the dialog. Password and token secrets are never echoed into alerts. Clipboard failure remains a local error with selectable link, not a recreated invitation.
+Diálogos que se pueden seleccionar en la maqueta: `change_role`, `deactivate`, `reactivate`, `delete_account`, `reset_link` en V6; `edit_role`, `delete_role` en V8. Cada uno tiene las fases `confirm`, `pending`, `error`. La eliminación final, el restablecimiento y los cambios de rol nunca se ejecutan al abrir el diálogo. Los secretos de contraseñas y tokens nunca se repiten en las alertas. Si falla el portapapeles, se muestra un error local con el enlace seleccionable; no se vuelve a crear la invitación.
 
-Genuinely inapplicable: V9 has no list, mutation, loading, empty, success or offline state; it is a server denial explanation. No infinite scroll/pagination required by the current plan: data-volume/pagination must be specified if the implementation API is paginated; never silently truncate accounts. No optimistic destructive operations or background offline queue. No email delivery/loading/delivery error because no sender exists. No spending caps or billing state.
+No aplicable: V9 no tiene lista, modificación, carga, estado vacío, éxito ni estado sin conexión; es una explicación de denegación del servidor. El plan actual no requiere desplazamiento infinito ni paginación: si la API de implementación está paginada, se deben especificar el volumen de datos y la paginación; nunca se deben truncar cuentas silenciosamente. No hay operaciones destructivas optimistas ni cola de operaciones sin conexión en segundo plano. No hay envío/carga de correo ni error de entrega porque no existe un servicio de envío. No hay límites de gasto ni estado de facturación.
 
-## 9. Responsive behavior
+## 9. Comportamiento adaptable
 
-Breakpoints are explicit proposed layout rules for this subplan, grounded in existing `body { min-width: 320px }` and Tailwind `sm`/`lg` conventions, not inferred support for only certain devices:
+Los puntos de quiebre son reglas de diseño explícitas propuestas para este subplan, basadas en `body { min-width: 320px }` y las convenciones `sm`/`lg` de Tailwind; no implican compatibilidad inferida únicamente con ciertos dispositivos:
 
-- **Compact 320–639px:** 16px page gutter; single column; mock controls wrap; account list becomes cards with labelled fields; search/status/role filters stack. Header brand and actions wrap. Cuentas/Roles links remain visible and wrap (no hidden hamburger navigation required). All form/action groups can wrap, main actions fill width. Dialog width `calc(100% - 32px)`, max-height `calc(100dvh - 32px)`, internal scroll; Cancel precedes destructive confirm. Page remains scrollable with virtual keyboard and at 200% text size.
-- **Medium 640–1023px:** 24px gutter; semantic account table with wrapping email/role (no truncation-only identity); controls wrap in rows; forms and access previews stack; dialogs max-width 520px.
-- **Wide ≥1024px:** 32px gutter, max-width 1200px; invitation/account/role form and summary can use 1fr/300px columns; account table stays full width; auth remains narrow rather than stretching. No sticky summary that can cover actions on short viewports.
+- **Compacto 320–639px:** margen interno de página de 16px; una columna; los controles de la maqueta se ajustan a varias líneas; la lista de cuentas se convierte en tarjetas con campos etiquetados; los filtros de búsqueda/estado/rol se apilan. La marca y las acciones del encabezado se ajustan a varias líneas. Los enlaces Cuentas/Roles permanecen visibles y se ajustan (no se requiere navegación oculta tipo menú hamburguesa). Todos los grupos de formularios/acciones pueden ajustarse; las acciones principales ocupan todo el ancho. Ancho del diálogo `calc(100% - 32px)`, altura máxima `calc(100dvh - 32px)` y desplazamiento interno; Cancelar precede a la confirmación destructiva. La página sigue siendo desplazable con el teclado virtual y con el tamaño del texto al 200%.
+- **Medio 640–1023px:** margen interno de 24px; tabla semántica de cuentas con ajuste de línea para correo/rol (la identidad no se comunica únicamente mediante texto truncado); los controles se ajustan en filas; los formularios y las vistas previas de acceso se apilan; ancho máximo de los diálogos de 520px.
+- **Amplio ≥1024px:** margen interno de 32px, ancho máximo de 1200px; el formulario y el resumen de invitación/cuenta/rol pueden usar columnas 1fr/300px; la tabla de cuentas mantiene el ancho completo; la autenticación permanece estrecha en lugar de expandirse. El resumen no queda fijo si puede cubrir acciones en ventanas gráficas de poca altura.
 
-Full URLs/emails use `overflow-wrap:anywhere`; no page-level horizontal scroll at any declared width including 320px. 639/640 and 1023/1024 boundaries must be tested. At 400% desktop zoom (equivalent 320px CSS viewport), compact reflow applies. No element depends on hover alone; mobile has the same operations. No full-screen navigation takeover.
+Las URL/correos electrónicos completos usan `overflow-wrap:anywhere`; no hay desplazamiento horizontal a nivel de página en ninguno de los anchos declarados, incluido 320px. Se deben probar los límites 639/640 y 1023/1024. Con un zoom de escritorio del 400% (equivalente a una ventana gráfica CSS de 320px), se aplica el diseño compacto. Ningún elemento depende únicamente del cursor sobre el elemento; en móviles están disponibles las mismas operaciones. No hay una navegación que ocupe toda la pantalla.
 
-## 10. Accessibility targets
+## 10. Objetivos de accesibilidad
 
-Target **WCAG 2.2 AA**, awaiting rendered product verification; a draft/mockup is not a conformance claim.
+Objetivo **WCAG 2.2 AA**, pendiente de verificación del producto renderizado; un borrador/maqueta no constituye una afirmación de conformidad.
 
-- One H1; header/nav/main landmarks, skip link, table captions and scoped headers; compact cards preserve labels and equivalent operation. Use anchors for real navigation, buttons for actions. Mockup scene controls are labelled selects outside the product.
-- Visible form labels, required indicators in text, correct autocomplete (`username`/email, `current-password`, `new-password`, name/organization); no password composition puzzle, paste blocking or timer challenge. Show/hide buttons expose current state and field association.
-- Native controls or existing accessible Radix patterns. Group permission checkboxes in fieldsets/legends; helper describes coarse permission implications. Tab/Shift+Tab reach every action; Space toggles a checkbox; Enter submits once. Focus ring 2px, offset 2px, never clipped.
-- Error summary/live alert plus field `aria-invalid` and `aria-describedby`; generic auth rejection does not reveal account existence. Announce loading/completion/copy status politely; no announcement of complete rerendered tables per keystroke. `aria-busy` during pending/loading.
-- Dialog labelled title/description, inert background, focus trap, Cancel-first initial focus, Escape close and trigger focus return; visible close/cancel. During pending, explain why closing is temporarily disabled. Destructive action requires email confirmation; it is never prefilled with the target email.
-- Text contrast ≥4.5:1 (large text ≥3:1), meaningful controls/focus ≥3:1. Use `--control-borde` on control boundaries and existing semantic pairs; decorative panel borders are not interactive boundaries. Disabled controls additionally have a readable adjacent reason. Do not communicate status only by hue.
-- Target 44×44px touch controls in this subplan (at least WCAG 24×24px including spacing exceptions); label hit areas ≥44px. Text resize 200%, reflow at 320px CSS width, no forced viewport zoom restriction. Reduced motion disables nonessential transitions/animations.
-- Rendered verification still required: keyboard and focus sequence, native dialog behavior, screen-reader announcements, measured color combinations in both themes, high zoom and legal-policy link once supplied. English notice uses `lang=en`; interface remains `lang=es` until SP-10 translation.
+- Un H1; puntos de referencia de encabezado/navegación/contenido principal, enlace para saltar al contenido, títulos de tabla y encabezados con ámbito; las tarjetas compactas conservan las etiquetas y permiten las mismas operaciones. Usar enlaces para navegación real y botones para acciones. Los controles de escena de la maqueta son listas de selección etiquetadas fuera del producto.
+- Etiquetas de formulario visibles, indicadores de campos obligatorios en texto, autocompletado correcto (`username`/correo electrónico, `current-password`, `new-password`, nombre/organización); sin acertijos de composición de contraseñas, bloqueo de pegado ni retos con temporizador. Los botones para mostrar/ocultar indican el estado actual y el campo asociado.
+- Controles nativos o patrones accesibles existentes de Radix. Agrupar las casillas de permisos en conjuntos de campos con leyendas; el texto de ayuda describe las implicaciones generales de los permisos. Tab/Shift+Tab permiten acceder a todas las acciones; Espacio marca o desmarca una casilla; Enter envía una sola vez. Indicador de foco de 2px, con desplazamiento de 2px, que nunca quede recortado.
+- Resumen de errores/alerta dinámica, además de `aria-invalid` y `aria-describedby` en el campo; el rechazo genérico de autenticación no revela si existe la cuenta. Anunciar de forma cortés la carga/finalización/confirmación de copia; no anunciar tablas completas que se vuelven a renderizar por cada pulsación. Usar `aria-busy` durante las operaciones pendientes o la carga.
+- Diálogo con título/descripción etiquetados, fondo inerte, trampa de foco, foco inicial en Cancelar, cierre con Escape y retorno del foco al control que lo abrió; botón visible para cerrar/cancelar. Mientras haya una operación pendiente, explicar por qué el cierre está temporalmente deshabilitado. La acción destructiva requiere confirmación mediante correo electrónico; el correo de destino nunca aparece rellenado de antemano.
+- Contraste de texto ≥4.5:1 (texto grande ≥3:1); controles significativos/foco ≥3:1. Usar `--control-borde` en los límites de los controles y los pares semánticos existentes; los bordes decorativos de paneles no son límites interactivos. Los controles deshabilitados también tienen un motivo adyacente legible. No comunicar el estado únicamente mediante el tono de color.
+- Objetivo para este subplan: controles táctiles de 44×44px (mínimo WCAG de 24×24px, incluidas las excepciones de espaciado); áreas de activación de etiquetas ≥44px. Redimensionamiento del texto al 200%, adaptación a un ancho CSS de 320px y sin restricción forzada del zoom de la ventana gráfica. El movimiento reducido deshabilita las transiciones/animaciones no esenciales.
+- Aún se requiere verificación del producto renderizado: secuencia de teclado y foco, comportamiento nativo del diálogo, anuncios del lector de pantalla, combinaciones de color medidas en ambos temas, zoom alto y enlace a la política legal una vez disponible. El aviso en inglés usa `lang=en`; la interfaz permanece en `lang=es` hasta la traducción de SP-10.
 
-## 11. Visual acceptance criteria
+## 11. Criterios de aceptación visual
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| UI-AC-01 | 320–639px | V1 ready | Correo and Contraseña labels and Entrar fit without horizontal scroll. |
-| UI-AC-02 | ≥320px | V1 error | Unknown email, wrong password, inactive and locked account display the same generic refusal. |
-| UI-AC-03 | ≥320px | V1 pending | Entrar becomes Ingresando… and repeat submission is disabled. |
-| UI-AC-04 | ≥320px | V1 ready | The invitation-only guidance is visible and there is no signup action. |
-| UI-AC-05 | ≥320px | V2 ready | Recipient, assigned role and full data notice precede the activation action. |
-| UI-AC-06 | ≥320px | V2 validation | Unaccepted notice is identified beside the unchecked checkbox. |
-| UI-AC-07 | ≥320px | V2 notice_pending | Legal placeholders carry a pending-content warning and activation is disabled. |
-| UI-AC-08 | ≥320px | V2/V3 expired/used/invalid | The password form is replaced by recovery guidance and a sign-in action. |
-| UI-AC-09 | ≥320px | V3 success | The page confirms the password change and offers sign-in rather than showing another password form. |
-| UI-AC-10 | ≥1024px | V5 ready | A single role choice and its exact permission preview are simultaneously visible in two columns. |
-| UI-AC-11 | 320–1023px | V5 ready | The same access preview stacks before submit without removing permissions. |
-| UI-AC-12 | ≥320px | V5 ready | Plan 1/2/3 previews show respectively 3/5/6 named permissions and no price or payment control. |
-| UI-AC-13 | ≥320px | V5 success | Recipient, seven-day/server expiry, selectable link and manual-sharing instructions appear together. |
-| UI-AC-14 | ≥320px | V7 empty | Five read-only system roles remain visible when there are no custom roles. |
-| UI-AC-15 | ≥320px | V8 ready | Checking one permission updates the exact summary without selecting other permissions. |
-| UI-AC-16 | ≥320px | V8 fixed | A system role has a read-only label and no save/delete control. |
-| UI-AC-17 | ≥320px | V8 role_in_use | Delete is disabled beside the assigned-account count and reassignment guidance. |
-| UI-AC-18 | ≥320px | V6 ready/reset_link | The reset dialog states 24-hour validity and session closure only after password change. |
-| UI-AC-19 | ≥320px | V6 last_admin | Role change, deactivate and delete are disabled beside the last-admin explanation. |
-| UI-AC-20 | 320–639px | V4 ready | Each account card retains name, email, role, status and Ver cuenta. |
-| UI-AC-21 | 640–1023px / ≥1024px | V4 ready | Table headers identify person, role, status, last access and action; long email wraps. |
-| UI-AC-22 | ≥320px | V4 no_results | Limpiar filtros restores the unfiltered list without creating an account. |
-| UI-AC-23 | ≥320px | V8 ready/edit_role | The custom-role save confirmation states that assigned accounts change on next request. |
-| UI-AC-24 | ≥320px | V4/V6–V8 stale | A stale-data warning includes a last-update time and mutations are disabled. |
-| UI-AC-25 | ≥320px | V1–V8 offline | No mutation is offered as queued or successful; retry requires a deliberate action. |
-| UI-AC-26 | ≥320px | V6 ready/delete_account | Delete confirmation requires typing the shown email and retains a visible Cancel action. |
-| UI-AC-27 | ≥320px | V6 disabled | Account deletion with associated/unknown saved work explains the unresolved policy and cannot be confirmed. |
-| UI-AC-28 | ≥320px | V4–V8 denied | Only the access-denied explanation and safe exits remain; restricted data is absent. |
-| UI-AC-29 | 320 / 639 / 640 / 1023 / 1024 / 1440px | all reachable states | The document has no horizontal overflow. |
-| UI-AC-30 | ≥320px | all interactive states | Keyboard focus remains visible on every actionable control in both themes. |
-| UI-AC-31 | ≥320px | dialogs confirm/error | Escape closes the dialog and restores focus to its trigger. |
-| UI-AC-32 | ≥320px | dialogs pending | Dialog confirmation is disabled and no duplicate action is possible. |
-| UI-AC-33 | ≥320px | ready/error/success | Status messages use text labels and measured foreground/background pairs meet AA contrast. |
-| UI-AC-34 | ≥320px | all mockup states | The Mockup/draft label and view/state selectors remain visible and usable. |
+| UI-AC-01 | 320–639px | V1 ready | Las etiquetas Correo y Contraseña, y Entrar, caben sin desplazamiento horizontal. |
+| UI-AC-02 | ≥320px | V1 error | El correo desconocido, la contraseña incorrecta y las cuentas inactivas y bloqueadas muestran el mismo rechazo genérico. |
+| UI-AC-03 | ≥320px | V1 pending | Entrar cambia a Ingresando… y se deshabilita el envío repetido. |
+| UI-AC-04 | ≥320px | V1 ready | Las instrucciones de acceso solo por invitación están visibles y no hay ninguna acción para registrarse. |
+| UI-AC-05 | ≥320px | V2 ready | El destinatario, el rol asignado y el aviso completo sobre datos aparecen antes de la acción de activación. |
+| UI-AC-06 | ≥320px | V2 validation | La falta de aceptación del aviso se indica junto a la casilla sin marcar. |
+| UI-AC-07 | ≥320px | V2 notice_pending | Los marcadores legales muestran una advertencia de contenido pendiente y la activación está deshabilitada. |
+| UI-AC-08 | ≥320px | V2/V3 expired/used/invalid | El formulario de contraseña se reemplaza por instrucciones de recuperación y una acción para iniciar sesión. |
+| UI-AC-09 | ≥320px | V3 success | La página confirma el cambio de contraseña y ofrece iniciar sesión, en lugar de mostrar otro formulario de contraseña. |
+| UI-AC-10 | ≥1024px | V5 ready | Una sola opción de rol y su vista previa exacta de permisos están visibles simultáneamente en dos columnas. |
+| UI-AC-11 | 320–1023px | V5 ready | La misma vista previa de acceso se apila antes del envío sin eliminar permisos. |
+| UI-AC-12 | ≥320px | V5 ready | Las vistas previas de Plan 1/2/3 muestran 3/5/6 permisos con nombre, respectivamente, y no incluyen precio ni controles de pago. |
+| UI-AC-13 | ≥320px | V5 success | El destinatario, el vencimiento a siete días determinado por el servidor, el enlace seleccionable y las instrucciones para compartirlo manualmente aparecen juntos. |
+| UI-AC-14 | ≥320px | V7 empty | Los cinco roles del sistema, de solo lectura, siguen visibles cuando no hay roles personalizados. |
+| UI-AC-15 | ≥320px | V8 ready | Marcar un permiso actualiza el resumen exacto sin seleccionar otros permisos. |
+| UI-AC-16 | ≥320px | V8 fixed | Un rol del sistema tiene una etiqueta de solo lectura y no ofrece controles para guardar/eliminar. |
+| UI-AC-17 | ≥320px | V8 role_in_use | Eliminar está deshabilitado junto al conteo de cuentas asignadas y las instrucciones para reasignarlas. |
+| UI-AC-18 | ≥320px | V6 ready/reset_link | El diálogo de restablecimiento indica una validez de 24 horas y que la sesión se cerrará solo después del cambio de contraseña. |
+| UI-AC-19 | ≥320px | V6 last_admin | Cambiar el rol, desactivar y eliminar están deshabilitados junto a la explicación de que es el último administrador. |
+| UI-AC-20 | 320–639px | V4 ready | Cada tarjeta de cuenta conserva el nombre, correo electrónico, rol, estado y Ver cuenta. |
+| UI-AC-21 | 640–1023px / ≥1024px | V4 ready | Los encabezados de la tabla identifican a la persona, el rol, el estado, el último acceso y la acción; los correos largos se ajustan a varias líneas. |
+| UI-AC-22 | ≥320px | V4 no_results | Limpiar filtros restaura la lista sin filtrar sin crear una cuenta. |
+| UI-AC-23 | ≥320px | V8 ready/edit_role | La confirmación para guardar el rol personalizado indica que las cuentas asignadas cambiarán en la próxima solicitud. |
+| UI-AC-24 | ≥320px | V4/V6–V8 stale | Una advertencia de datos desactualizados incluye la hora de la última actualización y las modificaciones están deshabilitadas. |
+| UI-AC-25 | ≥320px | V1–V8 offline | No se ofrece ninguna modificación como en cola o exitosa; el reintento requiere una acción deliberada. |
+| UI-AC-26 | ≥320px | V6 ready/delete_account | La confirmación de eliminación requiere escribir el correo mostrado y conserva una acción Cancelar visible. |
+| UI-AC-27 | ≥320px | V6 disabled | La eliminación de cuentas con trabajo guardado asociado o desconocido explica que la política está pendiente y no se puede confirmar. |
+| UI-AC-28 | ≥320px | V4–V8 denied | Solo permanecen la explicación de acceso denegado y las opciones seguras para salir; no se muestran datos restringidos. |
+| UI-AC-29 | 320 / 639 / 640 / 1023 / 1024 / 1440px | todos los estados accesibles | El documento no presenta desbordamiento horizontal. |
+| UI-AC-30 | ≥320px | todos los estados interactivos | El foco del teclado permanece visible en cada control accionable en ambos temas. |
+| UI-AC-31 | ≥320px | diálogos confirm/error | Escape cierra el diálogo y devuelve el foco al control que lo abrió. |
+| UI-AC-32 | ≥320px | diálogos pending | La confirmación del diálogo está deshabilitada y no es posible duplicar la acción. |
+| UI-AC-33 | ≥320px | ready/error/success | Los mensajes de estado usan etiquetas de texto y los pares medidos de primer plano/fondo cumplen AA. |
+| UI-AC-34 | ≥320px | todos los estados de la maqueta | La etiqueta Mockup/draft y los selectores de vista/estado permanecen visibles y se pueden usar. |
 
-## 12. Open questions and assumptions
+## 12. Preguntas abiertas y supuestos
 
-**Questions for the owner (unresolved, not implementation decisions):**
+**Preguntas para el propietario (sin resolver; no son decisiones de implementación):**
 
-- Q1 — David / Sempertex legal: What are the legal entity name, actual privacy-policy URL and rights-contact email, and can the supplied ES/EN notice version 1 be approved after legal review? Keep placeholders and block real activation while pending.
-- Q2 — David, with SP-1 Planner: Should an administrator regenerate an expired/lost invitation, and should generating a new invitation/reset link invalidate every older unused link? Recommendation: an explicit replacement operation invalidates earlier links of the same kind; it is not currently in the invitation service contract. No regeneration control is enabled in this draft.
-- Q3 — David, with SP-4/SP-5/SP-6 Planner: What happens to saved projects, personal decorations and attributable AI-spend records when an account is deleted, and what exact irreversible-loss text should be shown? Until decided, block deletion when associated work exists or cannot be verified; permit the no-associated-work case already covered by SP-1 without claiming a cascade.
-- Q4 — David: May a custom role contain zero permissions? Recommendation: require at least one to prevent inviting a person into an unusable account; the mockup marks this as proposed validation and must follow the eventual service ruling.
-- Q5 — David: After activation, should the person explicitly sign in, as shown, or immediately receive a session? Recommendation: explicit sign-in, matching SP-1's separate `activar` and `ingresar` operations.
+- Q1 — David / área legal de Sempertex: ¿Cuáles son el nombre legal de la entidad, la URL real de la política de privacidad y el correo electrónico de contacto para ejercer derechos? ¿Se puede aprobar el aviso ES/EN versión 1 después de la revisión legal? Mantener los marcadores y bloquear la activación real mientras esté pendiente.
+- Q2 — David, con SP-1 Planner: ¿Debería un administrador volver a generar una invitación vencida/perdida? ¿Generar una nueva invitación/enlace de restablecimiento debería invalidar todos los enlaces anteriores sin usar? Recomendación: una operación explícita de reemplazo invalida los enlaces anteriores del mismo tipo; esto no está contemplado actualmente en el contrato del servicio de invitaciones. En este borrador no se habilita ningún control para volver a generar enlaces.
+- Q3 — David, con SP-4/SP-5/SP-6 Planner: ¿Qué ocurre con los proyectos guardados, las decoraciones personales y los registros de gasto de IA atribuibles cuando se elimina una cuenta, y qué texto exacto sobre la pérdida irreversible se debe mostrar? Hasta que se decida, bloquear la eliminación si hay trabajo asociado o no se puede verificar; permitir el caso sin trabajo asociado ya contemplado por SP-1, sin afirmar que se ejecuta una eliminación en cascada.
+- Q4 — David: ¿Puede un rol personalizado no tener permisos? Recomendación: exigir al menos uno para evitar invitar a una persona a una cuenta inutilizable; la maqueta marca esto como una validación propuesta, que deberá ajustarse a la decisión futura del servicio.
+- Q5 — David: Después de la activación, ¿la persona debería iniciar sesión explícitamente, como se muestra, o recibir una sesión de inmediato? Recomendación: inicio de sesión explícito, acorde con las operaciones separadas `activar` e `ingresar` de SP-1.
 
-**Confirmed:** single-role accounts; five system roles; fixed system roles/custom roles editable per current Planner ruling; invitation copied manually (7 days), admin-generated reset (24 hours), password 8–200, 30-day server session; generic login failure including lockout; no public registration; `/asesor` and `/happie` remain separate; account/role mutation enforced by the server; first administrator is created outside these screens by the owner-run command. Do not reopen those as questions.
+**Confirmado:** cuentas con un solo rol; cinco roles del sistema; roles del sistema fijos y roles personalizados editables conforme a la decisión actual de Planner; invitación copiada manualmente (7 días), restablecimiento generado por el administrador (24 horas), contraseña de 8 a 200 caracteres, sesión del servidor de 30 días; error genérico de inicio de sesión, incluidos los bloqueos; sin registro público; `/asesor` y `/happie` permanecen separados; el servidor aplica las modificaciones de cuentas/roles; el primer administrador se crea fuera de estas pantallas mediante el comando ejecutado por el propietario. No volver a plantear estos puntos como preguntas.
 
-**Proposals awaiting plan approval:** paths and breakpoints in sections 5/9, explicit sign-in after activation, minimum one custom permission, typed-email deletion confirmation, and the presentation/interaction choices in this draft. Chosen mock data is illustrative, not a discovered customer list. Dates/expiry in the product come from the server, formatted in the user's locale with timezone available; the mockup fixes 26 Oct 2026 15:40 America/Bogota for reproducibility.
+**Propuestas pendientes de aprobación del plan:** rutas y puntos de quiebre de las secciones 5/9, inicio de sesión explícito tras la activación, mínimo de un permiso personalizado, confirmación de eliminación mediante correo escrito y las decisiones de presentación/interacción de este borrador. Los datos de ejemplo seleccionados son ilustrativos; no son una lista de clientes identificada. Las fechas y los vencimientos del producto provienen del servidor y se muestran según la configuración regional del usuario, con la zona horaria disponible; la maqueta fija el 26 de oct. de 2026 a las 15:40 America/Bogota para que el resultado sea reproducible.
 
-**Planner handoff:** add exact SP-2 task consumers and visual review IDs; reconcile proposed route permissions/public reset with SP-1, assign the legal-notice publication gate and deletion-policy ownership, and decide list API pagination if needed. A mockup's normal/success scenarios simulate valid approved inputs; they do not authorize real activation while Q1 is open. This task finishes the requested planning artifacts, not plan approval, product implementation or production legal validation.
+**Entrega a Planner:** agregar las tareas consumidoras exactas de SP-2 y los IDs de revisión visual; conciliar los permisos propuestos para las rutas/el restablecimiento público con SP-1, asignar la aprobación de publicación del aviso legal y la responsabilidad sobre la política de eliminación, y decidir si se necesita paginación en la API de la lista. Los escenarios normales/de éxito de la maqueta simulan entradas aprobadas válidas; no autorizan la activación real mientras Q1 siga abierta. Esta tarea completa los artefactos de planificación solicitados, no la aprobación del plan, la implementación del producto ni la validación legal en producción.

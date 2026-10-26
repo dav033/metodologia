@@ -33,3 +33,8 @@
 {"at": "2026-10-26T15:39:12-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2", "diff": ""}
 {"at": "2026-10-26T15:39:12-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
 {"at": "2026-10-26T15:39:16-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:41:18-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 25 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:41:34-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (criterios)", "diff": "+ Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data."}
+{"at": "2026-10-26T15:41:34-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:43:10-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 13 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:44:35-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 8 secciones traducidas", "diff": ""}

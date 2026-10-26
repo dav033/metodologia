@@ -1175,6 +1175,7 @@
     "src/app/api/admin/cuentas/[id]/route.ts",
     "src/app/api/admin/roles/route.ts",
     "src/app/api/admin/roles/[id]/route.ts",
+    "src/lib/cuentas/dependientes.ts",
     "src/lib/cuentas/mapa-rutas.ts",
     "scripts/test/test-cuentas-api.ts"
    ],
@@ -1187,7 +1188,8 @@
     "The activation, reset and notice-acceptance APIs accept only a valid unused token or a signed-in session, validate every body, and answer a used or expired link with LINK_INVALIDO without saying which.",
     "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
     "Changing one's own password requires the current password and ends every other session of that account.",
-    "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account."
+    "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
+    "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data."
    ],
    "verification": [
     {
@@ -1224,6 +1226,16 @@
      "type": "command",
      "value": "npm run cuentas:test-api -- --test-name-pattern=aviso",
      "purpose": "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
+     "category": "functional",
+     "created_by": "T2.2",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run cuentas:test-api -- --test-name-pattern=borrar",
+     "purpose": "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data.",
      "category": "functional",
      "created_by": "T2.2",
      "requires": [
@@ -1545,7 +1557,7 @@
    "acceptance_criteria": [
     "An administrator sees all accounts with name, email, company, role, state and last access, searches by name or email and filters by role and state.",
     "An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message.",
-    "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes it after typing its email, and the screen explains why the last administrator cannot be changed.",
+    "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
     "An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the five system roles read-only with their permissions, and cannot delete a role that still has accounts."
    ],
    "verification": [
@@ -1572,7 +1584,7 @@
     {
      "type": "command",
      "value": "npm run cuentas:test-ui-admin -- --solo acciones",
-     "purpose": "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes it after typing its email, and the screen explains why the last administrator cannot be changed.",
+     "purpose": "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
      "category": "functional",
      "created_by": "T2.5",
      "requires": [
@@ -2017,12 +2029,13 @@
     "R16"
    ],
    "acceptance_criteria": [
+    "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data.",
     "On /login a person signs in with email and password; a wrong password, an unknown email or a deactivated account shows the same message, a locked email says to wait fifteen minutes, and success returns to the requested page or the first area the role allows.",
     "Opening an invitation link shows the invited name and email, asks for a password of at least eight characters twice and shows the data notice in the browser language with an accept checkbox, and activation is impossible without accepting; a used or expired link shows a message to ask the administrator for a new one.",
     "When the notice version changes, a signed-in person must accept the new version before any other page opens.",
     "Every signed-in page shows an account menu with the person's name and role, Mi cuenta and sign out, and Mi cuenta changes the password by asking for the current one.",
     "An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message.",
-    "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes it after typing its email, and the screen explains why the last administrator cannot be changed.",
+    "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
     "An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the five system roles read-only with their permissions, and cannot delete a role that still has accounts.",
     "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
     "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
