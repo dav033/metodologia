@@ -14,6 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import bt_planning_flow as planning_flow
 import bt_presence
 from bt_core import SCRIPT, find_req, req_id
 
@@ -45,6 +46,8 @@ def problem(project: str, rdir: Path) -> str | None:
     plan = rdir / "PLAN.md"
     if not plan.exists() or _status(plan) not in OPEN_STATUSES:
         return None
+    if planning_flow.active(rdir) and planning_flow.state(rdir)["phase"] != "ready":
+        return None  # collaborative planning (D-130): tasks arrive subplan by subplan; approval re-checks the plan
     rid = req_id(rdir)
     if not (rdir / "PLAN.json").exists():
         return f"{rid} has a PLAN.md but no PLAN.json (no classification)"

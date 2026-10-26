@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import bt_page_plans as pages
 import bt_plan_gate as gate
+import bt_planning_flow as planning_flow
 import bt_presence as presence
 
 SID = "abcd1234-0000-0000-0000-000000000002"
@@ -98,3 +99,13 @@ class Gate(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_a_collaborative_plan_is_not_held_before_its_subplans_are_confirmed(self):
+        """D-130: the skeleton has no tasks yet, so plan-json check fails until every subplan is defined."""
+        rdir = plan_dir(self.root)
+        planning_flow.start(rdir)
+        self.planned()
+        with self.failing_check():
+            self.assertIsNone(gate.hold_reason(self.root, "p", SID))
+        with self.failing_check(), patch("bt_plan_gate.planning_flow.state", return_value={"phase": "ready"}):
+            self.assertIn("plan-json check", gate.hold_reason(self.root, "p", SID))
