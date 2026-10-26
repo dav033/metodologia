@@ -7,6 +7,7 @@ Move items between sections as they change; closed items keep 14 days in "Recent
 month summary._
 
 ## Open
+- P-201 · Fix `tests/test_plan_amendments.py` fixtures (14 failures): their PLAN.json verification items («smoke T1») no longer match the criteria text, so `plan-json freeze` refuses with PLAN_CHECKS_UNMAPPED; pre-existing on 5020af6a9 (clean worktree) · urgency: med · complexity: S · added 2026-10-26 · session 0976796f
 - P-200 · [closed 2026-10-25, 23023cfe8] Rebuild the web Plan tab to the owner-approved Material layout (canvas https://claude.ai/artifact/VUaSMmBLJkAW26agM9xX91: subplan list, subplan detail with Diseño/Tareas/Criterios, conversation activity feed backed by a new event log, changed-only EN/ES view, approval dialog); waiting for the owner's verdict on the canvas · urgency: high · complexity: M · added 2026-10-25 · D-128
 - P-132 · Owner prerequisite for REQ-027 M6/T22: create the Telegram bot in @BotFather, send it `/start`, and put `TELEGRAM_BOT_TOKEN` in `~/.config/flow/secrets.env` (template exists, mode 600, empty); the OAuth App is created by the agent in its Firefox unless GitHub asks for 2FA/sudo mode · urgency: high · complexity: S · added 2026-10-19 · D-082
   - ✓ P-137 · closed 2026-10-20 · Owner approved reviewed REQ-029 r2; frozen/rebased, T1–T3 preserved and T3a running. D-103.
