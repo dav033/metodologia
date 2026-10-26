@@ -71,7 +71,24 @@
   }
  ],
  "round": 2,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T14:09:23Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "text": "The repository always stays public (never made private). React Bits handling (clean-room or exclusion) is decided when its subplan is in focus."
+  },
+  "q3": {
+   "choice": "a",
+   "note": ""
+  },
+  "q4": {
+   "text": "Accepted the suggestion: package ships AGENTS.md + llms.txt; public catalog serves /llms.txt and /index.json from the same manifest."
+  }
+ },
+ "created_at": "2026-10-26T14:09:23Z",
+ "answered_at": "2026-10-26T14:11:10Z",
+ "answered_via": "terminal"
 }
