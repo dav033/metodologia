@@ -64,7 +64,13 @@
    "delegation": "D-20261026-172009-c1b5",
    "digest": "5c3c52b8ffe60e09",
    "error": "",
-   "feedback": [],
+   "feedback": [
+    {
+     "text": "Planner drafted T4.1–T4.9 plus T4.31 early storage/API checkpoint, and SP-4 Pruebas. Round 9 q5–q7 remains OPEN: proposed first named save then autosave; scene/name only excluding local conversation/images; foreign staff/admin read-only + Save copy. Do not treat recommendations as owner answers. Cover conflict (stop autosave, preserve draft, reload or owned copy), pending/offline save, stale response/project switch, account-scoped drafts and consent-based legacy import preserving raw original. Custom staff role with proyectos.ver_todos but without taller.usar needs a read-only project view. Read SPEC Draft behavior/current PLAN; report material questions, no focus/confirmation changes.",
+     "via": "cli",
+     "when": "2026-10-26T17:26:41-05:00"
+    }
+   ],
    "model": "gpt-6.1-sol",
    "queued": "2026-10-26T17:20:09-05:00",
    "reason": "requested",
@@ -78,7 +84,13 @@
    "delegation": "D-20261026-172009-dac9",
    "digest": "e71205cb4819a312",
    "error": "",
-   "feedback": [],
+   "feedback": [
+    {
+     "text": "Planner drafted T3.1–T3.8 and SP-3 Pruebas, preserving SP-2/focus. Round 9 q1–q4 remains OPEN: table creation cards versus pre-create form; no rental price versus owner prices; seven-ID Backing group in Taller versus aliases/other place; Blender acquisition. These are recommendations, not approved decisions. Read SPEC Draft behavior and the current PLAN; preserve original IDs/ASIGNACION_FONDOS. Current code GrupoCatalogo must not be changed merely for presentation. Please distinguish pending choices in the draft and report material new questions.",
+     "via": "cli",
+     "when": "2026-10-26T17:26:41-05:00"
+    }
+   ],
    "model": "gpt-6.1-sol",
    "queued": "2026-10-26T17:20:06-05:00",
    "reason": "requested",

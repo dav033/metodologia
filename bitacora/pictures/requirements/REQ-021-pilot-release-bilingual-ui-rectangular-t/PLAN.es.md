@@ -196,51 +196,246 @@ Las personas reales inician sesión con su propia cuenta de invitación y cada u
   - Aceptación / funcional: Un administrador cambia el rol de una cuenta, la desactiva y la reactiva, genera un enlace de restablecimiento y elimina una cuenta sin trabajo guardado después de ingresar su correo electrónico; la pantalla explica por qué no se puede eliminar al último administrador ni a una cuenta con trabajo guardado. Comprobar: `npm run cuentas:test-ui-admin -- --solo acciones`
   - Aceptación / funcional: Un administrador crea y edita un rol personalizado por nombre y mediante casillas de permisos agrupadas por herramienta, ve los cinco roles del sistema en modo de solo lectura con sus permisos y no puede eliminar un rol que aún tenga cuentas asignadas. Comprobar: `npm run cuentas:test-ui-admin -- --solo roles`
 
-- [ ] T2.6 — Prueba integral de extremo a extremo en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción · repo: pictures · después de: T2.3, T2.4, T2.5 · verificar: `npm run cuentas:test-integracion-ui` · archivos: scripts/test/test-integracion-cuentas-ui.ts, .evidence/REQ-021/SP-2.integration.json · recursos: scripts de package.json · cubre: R1, R3, R16 · tipo: prueba · subplan: SP-2
+- [ ] T2.6 — Browser end-to-end: invite, activate, sign in and change plan on a production build · repo: pictures · after: T2.3, T2.4, T2.5 · verify: `npm run cuentas:test-integracion-ui` · files: scripts/test/test-integracion-cuentas-ui.ts, .evidence/REQ-021/SP-2.integration.json · resources: package.json scripts · covers: R1, R3, R16 · kind: test · subplan: SP-2
 
-  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 90 minutos.
-  Crea un Administrador en el esquema aislado, compila e inicia la aplicación, usa el navegador del administrador para invitar a una persona del Plan 2 y leer el enlace, lo abre en un segundo contexto, activa la cuenta con el aviso, inicia sesión y comprueba que el chat y los costos estén disponibles y que /3d no lo esté; en el primer navegador cambia el rol a Plan 3 y en el segundo vuelve a cargar /3d. El script de npm `cuentas:test-integracion-ui` = `tsx scripts/test/test-integracion-cuentas-ui.ts`.
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
+  Seeds one Administrador in the isolated schema, builds and starts the app, drives the administrator browser to invite a Plan 2 person and read the link, opens it in a second context, activates with the notice, signs in, checks chat and costs open and /3d does not, changes the role to Plan 3 in the first browser and reloads /3d in the second. npm script `cuentas:test-integracion-ui` = `tsx scripts/test/test-integracion-cuentas-ui.ts`.
 
-  - Aceptación / integración: En una compilación de producción contra la base de datos de prueba de REQ-021, un administrador invita a una persona del Plan 2 desde las pantallas; la persona activa el enlace en otro navegador, acepta el aviso, inicia sesión y accede al chat y a la herramienta de costos, pero no al Taller 3D. Después de que el administrador la cambia al Plan 3, su siguiente solicitud abre el Taller. Comprobar: `npm run cuentas:test-integracion-ui`
+  - Acceptance / integration: On a production build against the REQ-021 test database, an administrator invites a Plan 2 person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Plan 3 their next request opens the Taller. Check: `npm run cuentas:test-integracion-ui`
 
-- [ ] T2.7 — Revisión visual de SP-2 según el contrato cuentas-admin@v1 · repo: pictures · después de: T2.6 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json` · archivos: .evidence/REQ-021/SP-2.visual.md, .evidence/REQ-021/SP-2.visual.findings.json · recursos: ledger:SP-2-visual · cubre: R1, R3 · tipo: auditoría · subplan: SP-2
+- [ ] T2.7 — SP-2 visual review against the cuentas-admin@v1 contract · repo: pictures · after: T2.6 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json` · files: .evidence/REQ-021/SP-2.visual.md, .evidence/REQ-021/SP-2.visual.findings.json · resources: ledger:SP-2-visual · covers: R1, R3 · kind: audit · subplan: SP-2
 
-  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 60 minutos.
-  Eje de revisión `visual` (rendered-ui-fidelity-audit).
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
 
-  - Aceptación / estática: Las pantallas renderizadas de inicio de sesión, activación, cuenta y administración coinciden con el contrato aprobado cuentas-admin@v1 en anchos de teléfono, tableta y escritorio, y cada hallazgo queda registrado con la tarea que debe rehacerlo en el registro visual de SP-2. Comprobar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json`
+  - Acceptance / static: The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json`
 
-- [ ] T2.8 — Auditoría de SP-2: pantallas de cuenta, API de administración y aviso de datos · repo: pictures · después de: T2.7 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json` · archivos: .evidence/REQ-021/SP-2.audit.md, .evidence/REQ-021/SP-2.findings.json · recursos: ledger:SP-2 · cubre: R1, R3, R16 · tipo: auditoría · subplan: SP-2
+- [ ] T2.8 — SP-2 audit: account screens, administration APIs and the data notice · repo: pictures · after: T2.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json` · files: .evidence/REQ-021/SP-2.audit.md, .evidence/REQ-021/SP-2.findings.json · resources: ledger:SP-2 · covers: R1, R3, R16 · kind: audit · subplan: SP-2
 
-  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 75 minutos.
-  Comprueba como mínimo: que las API de administración rechacen solicitudes sin el permiso y las de origen cruzado; que los enlaces se muestren una sola vez y nunca se registren en logs; que los errores de inicio de sesión sean genéricos; que se almacene la versión del aviso; que para eliminar una cuenta se requiera escribir el correo electrónico.
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 75 minutes.
+  Checks at least: admin APIs refuse without the permission and cross-origin; links shown once and never logged; generic sign-in errors; notice version stored; delete requires typing the email.
 
-  - Aceptación / estática: Una auditoría independiente de SP-2 registra cada defecto confirmado, junto con la tarea que debe rehacerlo, en el registro de hallazgos de SP-2; el registro no contiene hallazgos críticos ni altos abiertos. Comprobar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json`
+  - Acceptance / static: An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json`
 
 <!-- /SP-2 tasks -->
 
-- **SP-3 — Elementos esenciales del Taller: mesas rectangulares, Backing y exportación a Blender** (UI: `taller-esenciales@v1`): Una persona agrega y edita una mesa rectangular con sus dimensiones y sillas, y la lista de compras la refleja; el catálogo y el Taller muestran una sola categoría Backing con todos los artículos de fiesta existentes; el archivo GLB exportado se abre en Blender con la misma distribución, dimensiones en metros y colores. Cubre R9, R10, R11.
+- **SP-3 — Taller essentials: rectangular tables, Backing and Blender export** (UI: `taller-esenciales@v1`): A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours. Covers R9, R10, R11.
+
+<!-- SP-3 tasks -->
+
+  Draft behavior and task breakdown; round 9 choices are explicitly pending and must be resolved before confirmation. No focus change or approval is implied.
+
+- [ ] T3.1 — Copy the approved Taller essentials design contract · repo: pictures · after: T1.8 · verify: `cmp -- design/contracts/taller-esenciales@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/taller-esenciales@v1.md` · files: design/contracts/taller-esenciales@v1.md · resources: design:T3.1 · covers: R9, R10, R11 · kind: design · subplan: SP-3 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence medium; estimate 20 minutes.
+  Copy the exact pinned owner-approved artifact without rewriting its content; compare SHA-256 with that approved source.
+
+  - Acceptance / static: The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact. Check: `cmp -- design/contracts/taller-esenciales@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/taller-esenciales@v1.md`
+
+- [ ] T3.2 — Add rectangular tables through the existing table editor · repo: pictures · after: T3.1 · verify: `npx tsx scripts/test/test-taller-mesas-piloto.ts` · files: src/components/tres-d/FondosYMuebles.tsx, src/components/tres-d/EditorConjuntoMesa.tsx, src/lib/globos3d/mobiliario-conjunto-escena.ts, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-taller-mesas-piloto.ts · resources: taller:scene, taller:scene · covers: R9 · kind: implement · subplan: SP-3 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence low; estimate 110 minutes.
+  Pending round 9 q1/q2: proposed one card per existing parametric type, default values from PARTIDA_MESA (rectangular 240 × 90 × 75 cm), then the existing inspector. Do not invent an Imperial parametric type; existing catalogue Imperial pieces remain. Alternative q1=b requires a pre-creation form instead. Shopping list proposal: quantities and dimensions, no invented rental price.
+  Reuse mesaDePedido, agregarConjuntoPorDefecto extended with a typed request, EditorConjuntoMesa and chair placement. Keep cm in the model and metres in the UI; rectangular limits 100–600 cm length, 40–150 cm depth, 40–110 cm height; chairs 0–40, actual capacity controls the list. Preserve supported dispositions, parent transforms and objects on the table; refuse MAX_NODOS overflow without half a table.
+  Implement and register taller:test-mesas-piloto = tsx scripts/test/test-taller-mesas-piloto.ts; test creation, limits, requested versus placed chairs, movement/rotation, undo and deterministic tool parity. Strings in textos-taller-esenciales.ts for later translation.
+  Use the direct tsx command for focused verification before harness registration; do not edit package.json here. The harness later registers the stated npm alias for convenient use.
+
+  - Acceptance / functional: Adding a rectangular table exposes length, depth and chair count, selects it in the inspector and updates the real shopping list with placed chairs, including capacity warnings and undo. Check: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+  - Acceptance / functional: The existing agregar_mesas, cambiar_mesas and cambiar_sillas tools produce the same table dimensions and actual chair counts as manual editing without a paid AI call. Check: `npx tsx scripts/test/test-taller-mesas-piloto.ts`
+
+- [ ] T3.3 — Group existing party props under Backing without changing their identities · repo: pictures · after: T3.2 · verify: `npx tsx scripts/test/test-backing-piloto.ts` · files: src/components/tres-d/FondosYMuebles.tsx, src/lib/catalogo/backing.ts, src/components/tres-d/textos-taller-esenciales.ts, scripts/test/test-backing-piloto.ts · resources: taller:scene, taller:scene · covers: R11 · kind: implement · subplan: SP-3 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence low; estimate 80 minutes.
+  Pending round 9 q3: proposed presentation group in the Taller Fondos y muebles, not Shopify /catalogo. Keep semantic GrupoCatalogo and ASIGNACION_FONDOS unchanged: compute a display grouping from the explicit seven-ID set so RAG and photo readers do not need recategorization. If the owner wants aliases, support both presentation entries without duplicate IDs in scene state.
+  Update search and panel counters together; searching Backing finds all seven, original names still find each, and escenografia/mobiliario repository filters keep ownership. Preserve adding by click, drag and keyboard. Register taller:test-backing-piloto; compare all before/after IDs, original search terms, addability and repository consistency. Do not add imaginary Shopify products or prices.
+  Use the direct tsx command for focused verification before harness registration; do not edit package.json here. The harness later registers the stated npm alias for convenient use.
+
+  - Acceptance / functional: Backing lists panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal and arco_metalico, each addable; existing IDs, saved scenes, repository ownership, search and AI/photo discovery remain compatible. Check: `npx tsx scripts/test/test-backing-piloto.ts`
+
+- [ ] T3.4 — Verify and repair the GLB geometry and material export · repo: pictures · after: T3.3 · verify: `npx tsx scripts/test/test-exportadores-escena-taller.ts` · files: src/components/tres-d/exportar-escena-glb.ts, src/components/tres-d/exportadores-escena-globos.ts, src/components/tres-d/ExportarEscenaTaller.tsx, scripts/test/test-exportadores-escena-taller.ts, scripts/test/fixtures/req021-export-scene.json · resources: taller:scene · covers: R10 · kind: implement · subplan: SP-3 · ui: yes
+
+  Classification: complexity high; scope full_feature; risk medium; coupling medium; confidence low; estimate 140 minutes.
+  Extend existing exporter tests with a deterministic real-scene fixture: translated/rotated rectangular table and chairs, Backing, balloons with distinct colours/finishes, nested attachments and room. Decode GLB accessors and transforms; do not test only the magic header or a synthetic group. Compare model-space cm converted once to metres, all world bounds/positions within 1 mm and base-colour channels within 1/255 in the same colour space.
+  Keep editor-only lights/gizmos out, retain intended room visibility and instancing where the importer supports it. A real Blender importer must decide whether EXT_mesh_gpu_instancing or material extensions need a compatibility path; preserve the source scene and document any appearance limitation. No claim of identical lighting/rendering.
+
+  - Acceptance / functional: The exported GLB preserves actual scene world transforms, dimensions in metres, visible instances and base colours without mutating the editor or calling the network; export failure is visible and retryable. Check: `npx tsx scripts/test/test-exportadores-escena-taller.ts`
+
+- [ ] T3.5 — Implement the Taller browser and Blender verification harness · repo: pictures · after: T3.4 · verify: `npm run taller:test-harness-esenciales` · files: scripts/test/test-integracion-taller-esenciales.ts, scripts/test/blender/verificar_glb.py, scripts/test/test-harness-taller-esenciales.ts, docs/req021-blender.md, package.json · resources: package.json scripts, taller:scene · covers: R9, R10, R11 · kind: implement · subplan: SP-3 · ui: no
+
+  Classification: complexity high; scope full_feature; risk medium; coupling medium; confidence low; estimate 120 minutes.
+  Author scripts and npm commands taller:test-harness-esenciales (deterministic harness tests) and taller:test-integracion-esenciales (real flow). Pin an explicit Blender LTS version and checksum only after round 9 q4 resolves acquisition; no installation is authorized by this draft. BLENDER_EXECUTABLE is an optional location, never download implicitly. Blender option b leaves automated GLB checks plus a documented owner Blender import attestation; do not report a missing importer as success.
+  Use SP-1 isolated-schema and session fixtures, no paid AI and no production access. Build/start on loopback, create a table through UI, adjust size/chairs, add each Backing prop and download the scene GLB. Blender runs background with bounded timeout, opens that downloaded file, verifies evaluated world-space instances, orientation, bounds and base colours at the T3.4 tolerances and records importer/version/limitations. Output .evidence/REQ-021/SP-3.integration.json with source revision, exact command and measurements. Clean up server/schema in finally. Package scripts register T3.2/T3.3 test commands here before T3.6 runs; local implementation checks may invoke tsx directly until registration.
+  Own package.json registration for all new SP-3 npm aliases. Preserve scripts registered by other subplans.
+  Also author taller:test-composicion-esenciales, the same real entrypoint flow with a Plan 3 session and an unauthorized Plan 1 direct API request; record .evidence/REQ-021/CG-2.integration.json on the integrated candidate.
+
+  - Acceptance / functional: The harness starts a real next start build, drives table and Backing operations in Chromium, downloads the actual GLB and compares Blender-imported positions, metre dimensions and base colours against the fixture; missing Blender is reported as blocked. Check: `npm run taller:test-harness-esenciales`
+
+- [ ] T3.6 — Run the real Taller essentials integration scenario · repo: pictures · after: T3.5 · verify: `npm run taller:test-integracion-esenciales` · files: .evidence/REQ-021/SP-3.integration.json · resources: taller:scene · covers: R9, R10, R11 · kind: test · subplan: SP-3 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 50 minutes.
+  Execute the already-authored harness only; report failures without repairing source in this task. The owner manual Blender check in SPEC Pruebas is separate product evidence.
+
+  - Acceptance / integration: A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours. Check: `npm run taller:test-integracion-esenciales`
+  - Acceptance / integration: A production build on loopback completes the real table-to-Backing-to-GLB flow, recording Blender import evidence or an explicit external block; no unexecuted check is reported as passed. Check: `npm run taller:test-integracion-esenciales`
+
+- [ ] T3.7 — Review rendered Taller essentials against the design · repo: pictures · after: T3.6 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.visual.findings.json` · files: .evidence/REQ-021/SP-3.visual.md, .evidence/REQ-021/SP-3.visual.findings.json · resources: ledger:T3.7 · covers: R9, R10, R11 · kind: audit · subplan: SP-3 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  Independent rendered visual review, including keyboard/focus, capacity warning, loading/error export and both themes. Reference the integration evidence and exact source tree.
+
+  - Acceptance / static: Phone, tablet and desktop renderings of table creation/editing, Backing and export states match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.visual.findings.json`
+
+- [ ] T3.8 — Audit Taller essentials and export compatibility · repo: pictures · after: T3.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json` · files: .evidence/REQ-021/SP-3.audit.md, .evidence/REQ-021/SP-3.findings.json · resources: ledger:T3.8 · covers: R9, R10, R11 · kind: audit · subplan: SP-3 · ui: no
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
+  Review R9/R10/R11, old furniture IDs, correct actual-chair shopping counts, instance/transform/material importer behavior, no paid calls, and task-local regressions. Run repository lint, workspace builds, application types and build plus affected existing furniture/export scripts as required by AGENTS.md; retain baseline failures separately.
+
+  - Acceptance / static: An independent SP-3 spec and standards audit has no open critical or high findings, maps each defect to its introducing task and distinguishes GLB structural evidence from real Blender and owner evidence. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json`
+
+<!-- /SP-3 tasks -->
+
 
 <!-- CG-1 tasks -->
 
-  Puerta de composición CG-1: SP-1, SP-2.
+  Composition gate CG-1: SP-1, SP-2.
 
-- [ ] T91 — Comprobación de composición de M1: del primer administrador a un usuario del Plan 1 en el árbol integrado · repo: pictures · después de: T1.8, T2.8 · verificar: `npm run m1:test-composicion` · archivos: scripts/test/test-composicion-m1.ts, .evidence/REQ-021/CG-1.integration.json · recursos: scripts de package.json · cubre: R1, R2, R16 · tipo: prueba
+- [ ] T91 — M1 composition check: first administrator to a Plan 1 user on the integrated tree · repo: pictures · after: T1.8, T2.8 · verify: `npm run m1:test-composicion` · files: scripts/test/test-composicion-m1.ts, .evidence/REQ-021/CG-1.integration.json · resources: package.json scripts · covers: R1, R2, R16 · kind: test
 
-  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 60 minutos.
-  Reutiliza los helpers de T1.7 y T2.6; el script de npm `m1:test-composicion` = `tsx scripts/test/test-composicion-m1.ts`.
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 60 minutes.
+  Reuses the helpers of T1.7 and T2.6; npm script `m1:test-composicion` = `tsx scripts/test/test-composicion-m1.ts`.
 
-  - Aceptación / integración: En el árbol integrado de M1, iniciado con next start contra la base de datos de prueba de REQ-021, cuentas:primer-admin crea un administrador que activa su cuenta desde la pantalla de activación e invita a una persona del Plan 1 que activa su cuenta e inicia sesión. Esa persona accede al chat y al catálogo, pero recibe la página de acceso denegado en el Taller 3D y un 403 en sus API. Comprobar: `npm run m1:test-composicion`
+  - Acceptance / integration: On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites a Plan 1 person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs. Check: `npm run m1:test-composicion`
 
 <!-- /CG-1 tasks -->
 
-### M2 — Trabajo guardado, gasto por usuario y herramientas del chat
-Cada usuario con sesión iniciada guarda y vuelve a abrir proyectos y decoraciones desde cualquier navegador; cada llamada de IA con costo se atribuye a un usuario y una sesión; y el chat asistido consta de tres herramientas independientes cuyo acceso depende del plan.
+<!-- CG-2 tasks -->
 
-- **SP-4 — Proyectos guardados** (UI: `proyectos@v1`): Un usuario guarda, enumera, vuelve a abrir y continúa proyectos del Taller almacenados en su cuenta; los empleados y administradores pueden abrir los proyectos de cualquier persona; al guardar de nuevo nunca se sobrescribe silenciosamente una versión anterior; al iniciar sesión por primera vez se ofrece importar las escenas guardadas en el navegador, sin pérdida de datos. Cubre R6, R7.
-- **SP-5 — Decoraciones guardadas** (UI: `decoraciones@v1`): Un usuario guarda con un nombre una selección o composición de la escena en su biblioteca personal del servidor y la coloca en cualquiera de sus proyectos; se importan los elementos que ya están en la biblioteca propia del navegador. Cubre R8.
-- **SP-6 — Gasto de IA por usuario y sesión** (UI: `gasto-ia@v1`): Cada llamada de IA con costo (Next y ai-api) se guarda con el usuario, la sesión de inicio de sesión, el elemento de trabajo (proyecto o conversación), la herramienta y el tipo (texto o imagen); los empleados y administradores ven los totales agrupados por proyecto o conversación y filtrados por usuario y tipo; un usuario no puede abrir esta vista. Cubre R4, R5.
-- **SP-7 — Chat asistido como tres herramientas y explorador de decoraciones** (UI: `herramientas-chat@v1`): El chat asistido se convierte en un contador de globos, una calculadora de costos y un chat normal, cada uno con sus propias instrucciones y medición de gasto independiente, sin inventar cantidades ni precios; un explorador de decoraciones prediseñadas muestra las decoraciones 3D existentes; cada herramienta solo está disponible con su plan de acceso. Cubre R13, R16.
+  Composition of accepted subplans on the integrated candidate.
+
+- [ ] T92 — Composition check CG-2: accounts and Taller essentials · repo: pictures · after: T91, T3.8 · verify: `npm run taller:test-composicion-esenciales` · files: .evidence/REQ-021/CG-2.integration.json · resources: candidate:CG-2 · covers: R2, R9, R10, R11 · kind: test · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
+  Execute the composition mode authored by T3.5 on the integrated candidate. Record candidate/tree identity; no harness authoring or repairs here.
+
+  - Acceptance / integration: The integrated candidate passes Plan 3 table, Backing and GLB operations and Plan 1 direct access denial. Check: `npm run taller:test-composicion-esenciales`
+
+<!-- /CG-2 tasks -->
+
+### M2 — Saved work, spend per user and the chat tools
+Each signed-in user saves and reopens projects and decorations from any browser, every paid AI call is attributed to a user and a session, and the assisted chat is three separate tools gated by access plan.
+
+- **SP-4 — Saved projects** (UI: `proyectos@v1`): A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss. Covers R6, R7.
+
+<!-- SP-4 tasks -->
+
+  Draft behavior and task breakdown; round 9 choices are explicitly pending and must be resolved before confirmation. No focus change or approval is implied.
+
+- [ ] T4.1 — Copy the approved saved-projects design contract · repo: pictures · after: T92 · verify: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` · files: design/contracts/proyectos@v1.md · resources: design:T4.1 · covers: R6, R7 · kind: design · subplan: SP-4 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence medium; estimate 20 minutes.
+  Copy the pinned owner-approved contract without rewriting it.
+
+  - Acceptance / static: The repository contract is byte-identical to the owner-approved proyectos@v1 artifact. Check: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md`
+
+- [ ] T4.2 — Implement versioned project storage and scene validation · repo: pictures · after: T4.1 · verify: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts` · files: scripts/migrations/038_proyectos.sql, src/lib/proyectos/contrato.ts, src/lib/proyectos/servicio.ts, src/lib/proyectos/repositorio.ts, src/lib/proyectos/validar-escena.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-proyectos-servicio.ts · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: no
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence low; estimate 170 minutes.
+  Use getRagPool and SP-1 isolated schema helper. Migration 038 creates proyectos with UUID id, owner FK RESTRICT, name, schema_version=1, JSONB scene, revision >=1 and created/updated timestamps plus owner/update index. Register it as work in dependientes.ts. Name trimmed 1–120 characters, document UTF-8 limit 2 MiB; enforce existing MAX_NODOS=150 and room limits, complete Pieza variants and references using runtime validation, never the shallow legacy type guard as server validation. Unsupported schema is a stable recoverable error; do not silently drop fields or normalize away user work.
+  Update WHERE id AND owner_id AND revision; increment in same statement, zero rows on stale yields conflict. For create/retry use client mutation UUID unique per account, reject different content under reused key; imports additionally use a unique account+raw-source SHA-256. Lock the owner row in the write transaction with a lock mode conflicting with deletion; FK RESTRICT is the final barrier so delete cannot erase work even if registry precheck races. Service derives caller identity from trusted session context; no client owner id. Proposal pending q6: document is name + complete Escena (including salon, room, materials and attachments), not conversation/media. Extra scope needs a plan revision after response.
+  Expose project-document@1: {schemaVersion:1, nombre, escena}; stored result adds id, ownerId, revision and timestamps. Register proyectos:test-servicio = tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts. Tests cover migrations twice, cross-account ownership, CAS race, idempotency, validation, rollback and delete race.
+  Use the direct tsx command for focused verification before harness registration; do not edit package.json here. The harness later registers the stated npm alias for convenient use.
+  Migration 038 also creates account-scoped mutation receipts and legacy-import receipts: UNIQUE(account_id, mutation_id) binds payload SHA-256 and committed project/revision; UNIQUE(account_id, raw_source_sha256) binds one imported project. A repeated identical create/update returns the committed receipt without another write or revision increment; a reused key with different payload fails. Import receipt and project insert commit together; do not rely on browser-only markers. Receipts are included in account-work cleanup/constraints and are not exposed across accounts.
+
+  - Acceptance / functional: A project is stored in Postgres under the session account with a versioned complete scene document; conditional updates atomically increment revision and reject stale writes without changing stored data. Check: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts`
+  - Acceptance / functional: Account deletion is refused when projects exist, including a project-save/account-delete race; malformed or oversized documents, duplicate node IDs, nonfinite dimensions and broken or cyclic parent links are refused without writes. Check: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts`
+
+- [ ] T4.3 — Implement project APIs with per-resource authorization · repo: pictures · after: T4.2 · verify: `npm run proyectos:test-api` · files: src/app/api/proyectos/route.ts, src/app/api/proyectos/[id]/route.ts, src/lib/proyectos/http.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-proyectos-api.ts, package.json, scripts/test/test-checkpoint-proyectos.ts · resources: package.json scripts, proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: no
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence low; estimate 100 minutes.
+  GET /api/proyectos?cursor= returns paginated metadata only (50 max, updatedAt/id ordering); scope=all requires proyectos.ver_todos and includes owner display identity. GET /api/proyectos/[id] returns authorized document. POST /api/proyectos creates for the session account (also used for Save copy/import). PATCH /api/proyectos/[id] requires baseRevision and mutationId. Proposed round 9 q7: foreign reads only, copy becomes caller-owned; no foreign edit or transfer. If owner selects shared editing, replan write authorization and authorship before implementation.
+  Route permission map: own project routes require taller.usar; read-all may be allowed to proyectos.ver_todos even for custom roles without taller.usar, and the service checks resource ownership independently. Same-origin guard for mutations, schema validation on every request, no-store responses; invalid JSON 400, unauthenticated 401, unauthorized collection scope 403, inaccessible/missing item 404, stale revision 409, too large 413. No deletion UI/API in this pilot draft; it is not required by R6/R7. Register proyectos:test-api using real isolated database and Request-based route tests.
+  Author proyectos:test-checkpoint = tsx --conditions=react-server scripts/test/test-checkpoint-proyectos.ts: start next start on loopback against the isolated schema and run real HTTP ownership/CAS/delete-race checks, emitting SP-4.storage.json. No import-only check is called integration.
+
+  - Acceptance / functional: Project APIs list and read only owned projects unless proyectos.ver_todos is granted, refuse unauthorized writes and cross-origin mutations, and return stable version conflicts without leaking another owner document. Check: `npm run proyectos:test-api`
+
+- [ ] T4.31 — Run the project storage and authorization checkpoint · repo: pictures · after: T4.3 · verify: `npm run proyectos:test-checkpoint` · files: .evidence/REQ-021/SP-4.storage.json · resources: proyectos:document · covers: R6, R7 · kind: test · subplan: SP-4 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 35 minutes.
+  Execute the checkpoint runner authored by T4.3 against the isolated database; write exact observed API/database outcomes and tree identity. Stop downstream UI work on failure; no source repairs in this task.
+
+  - Acceptance / integration: Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race. Check: `npm run proyectos:test-checkpoint`
+
+- [ ] T4.4 — Implement the project list and conflict-safe Taller saving · repo: pictures · after: T4.31 · verify: `npx tsx scripts/test/test-proyectos-cliente.ts` · files: src/app/proyectos/page.tsx, src/components/proyectos/ListaProyectos.tsx, src/components/proyectos/EstadoGuardado.tsx, src/components/proyectos/ConflictoProyecto.tsx, src/components/proyectos/useProyecto.ts, src/components/proyectos/textos-proyectos.ts, src/components/tres-d/Taller3D.tsx, src/app/3d/page.tsx, src/lib/proyectos/borrador-local.ts, scripts/test/test-proyectos-cliente.ts, src/app/proyectos/[id]/page.tsx · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: yes
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence low; estimate 180 minutes.
+  Pending q5/q7: proposed initial explicit Save with name, then 500 ms debounced serialized autosave and explicit Save now; list route /proyectos and deep link /3d?proyecto=<uuid>. Staff all-project list can be read with proyectos.ver_todos; custom roles lacking taller.usar need a read-only project view, not a bypass that grants editing tools. Owner-only editable project route checks both permissions and ownership server-side.
+  Keep one in-flight update per project, latest scene queued behind it, bind response to account+project+request identity and submitted edit generation. A response acknowledges only its submitted generation; older completions cannot clear newer dirty work. On 409 stop queue until explicit resolution; no automatic overwrite or retry with fetched revision. Network/401/permission failure retains a namespaced local draft and exposes retry. Switching/new project or navigation with dirty/pending edits asks to save, keep local draft or cancel; ignore completions for previous identity.
+  Namespace new drafts by account and project; never auto-open the old global scene after account switch. On sign-out/auth loss clear scene state and query caches; a different account cannot enumerate/open drafts. Keep recovery drafts for the same account; do not delete original legacy data. Reset undo history and scene conversation identity on project switch; preserve the full document and do not silently attach another project conversation. Register proyectos:test-cliente with out-of-order replies, offline/reload, account switch and conflict reducer tests. UI states per proyectos@v1.
+  Use the direct tsx command for focused verification before harness registration; do not edit package.json here. The harness later registers the stated npm alias for convenient use.
+  Provide /proyectos/[id] as a server-authorized read-only scene view for proyectos.ver_todos without taller.usar; link staff reads there, never bypass the /3d Taller permission. Save copy also requires taller.usar. Register both project pages in the T4.3 permission map and test custom staff read-only access.
+
+  - Acceptance / functional: The user names, saves, lists and reopens projects with their complete scene unchanged across browsers; pending edits are never labelled saved by an obsolete response. Check: `npx tsx scripts/test/test-proyectos-cliente.ts`
+  - Acceptance / functional: Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; foreign projects follow the owner-approved editing rule. Check: `npx tsx scripts/test/test-proyectos-cliente.ts`
+
+- [ ] T4.5 — Implement a lossless and idempotent legacy-scene import · repo: pictures · after: T4.4 · verify: `npx tsx scripts/test/test-proyectos-importacion.ts` · files: src/lib/proyectos/importar-local.ts, src/components/proyectos/ImportarEscenaLocal.tsx, src/components/tres-d/guardado-escena.ts, src/components/proyectos/useProyecto.ts, scripts/test/test-proyectos-importacion.ts · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: yes
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence low; estimate 110 minutes.
+  Read raw taller3d:escena:v1 before legacy leerGuardada can normalize/discard it. Show import on first authenticated Taller visit with legacy data, not in login handlers; an account without Taller access keeps it until access is granted. Not now is reversible via project list. Consent belongs to the current account; explain the browser scene may be from another person on shared devices. Do not upload until explicit consent.
+  Validate complete supported legacy schema on server. Use account+SHA-256 of original raw bytes for durable idempotency, mapping to imported project in the create transaction; response loss/reload/double-click returns that same project. A different account sees a fresh explicit consent, never a prior import association. Keep the original legacy key unchanged even after success; store separate account-scoped import receipt only after server acknowledgement. Invalid/unknown-version data gets a recoverable explanation and raw JSON download, never empty-scene replacement. Do not depend on existing leerGuardada silently returning null. Register proyectos:test-importacion with malformed/old versions, denial, two tabs and interrupted response tests.
+  Use the direct tsx command for focused verification before harness registration; do not edit package.json here. The harness later registers the stated npm alias for convenient use.
+
+  - Acceptance / functional: A signed-in account with a legacy browser scene is offered an explicit import; acceptance creates exactly one owned project even after retry, refusal or validation failure preserves raw local data, and no account receives a legacy scene automatically. Check: `npx tsx scripts/test/test-proyectos-importacion.ts`
+
+- [ ] T4.6 — Implement the multi-browser saved-project integration harness · repo: pictures · after: T4.5 · verify: `npm run proyectos:test-harness` · files: scripts/test/test-integracion-proyectos.ts, scripts/test/test-harness-proyectos.ts, package.json · resources: package.json scripts, proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: no
+
+  Classification: complexity high; scope full_feature; risk high; coupling high; confidence low; estimate 120 minutes.
+  Author proyectos:test-harness and proyectos:test-integracion, no paid AI. Seed owner A/B, staff and administrator with SP-1 helpers; next build and next start loopback. A creates scene fixture with table, Backing, attachments, colours and room; fresh A context reopens and compares canonical document and computed scene counts. B attempts list/read/write guessed IDs (also direct API); staff opens A read-only and saves copy. Two A contexts start same revision: second write gets 409 and draft survives. Simulate lost create/import response and retry, malformed legacy data, then account switch and verify no scene disclosure.
+  Emit .evidence/REQ-021/SP-4.integration.json with exact tree, commands, browser contexts, expected/observed version and access results, preserve screenshots for visual audit; teardown processes and isolated schema in finally. Use deterministic seeded fixture/test doubles only at paid-provider boundary, not persistence/auth APIs.
+  Own package.json registration for remaining SP-4 aliases (service, client and import); preserve the checkpoint/API aliases already registered in T4.3.
+  Also author proyectos:test-composicion, combining sign-in, a rectangular-table/Backing scene, project persistence, staff read/copy and deletion refusal on the integrated candidate; record .evidence/REQ-021/CG-3.integration.json.
+
+  - Acceptance / functional: The project harness starts real Next entrypoints against an isolated test schema and drives independent authenticated browser contexts through persistence, access denial, conflicts and legacy import. Check: `npm run proyectos:test-harness`
+
+- [ ] T4.7 — Run the cross-browser project and import integration scenario · repo: pictures · after: T4.6 · verify: `npm run proyectos:test-integracion` · files: .evidence/REQ-021/SP-4.integration.json · resources: proyectos:document · covers: R6, R7 · kind: test · subplan: SP-4 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 60 minutes.
+  Run the existing T4.6 harness, record command-level evidence and failures; no source repair or acceptance verdict in this execution task.
+
+  - Acceptance / integration: A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss. Check: `npm run proyectos:test-integracion`
+  - Acceptance / integration: A real production build passes persistence across fresh browser contexts, per-account denial, staff read/copy, competing-save conflict, import retry and account-switch isolation checks on the REQ-021 database. Check: `npm run proyectos:test-integracion`
+
+- [ ] T4.8 — Review the rendered project and import interfaces · repo: pictures · after: T4.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-4.visual.findings.json` · files: .evidence/REQ-021/SP-4.visual.md, .evidence/REQ-021/SP-4.visual.findings.json · resources: ledger:T4.8 · covers: R6, R7 · kind: audit · subplan: SP-4 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 75 minutes.
+  Independent visual-axis review on rendered source; link screenshots, source identity and SP-4.integration.json. Map each mismatch to T4.4/T4.5 rather than blanket rework.
+
+  - Acceptance / static: Project list, saving/offline/conflict states, foreign read-only view and import prompt match approved proyectos@v1 at phone, tablet and desktop widths with keyboard and focus behavior verified. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-4.visual.findings.json`
+
+- [ ] T4.9 — Audit project isolation, concurrency and import preservation · repo: pictures · after: T4.8 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-4.findings.json` · files: .evidence/REQ-021/SP-4.audit.md, .evidence/REQ-021/SP-4.findings.json · resources: ledger:T4.9 · covers: R6, R7 · kind: audit · subplan: SP-4 · ui: no
+
+  Classification: complexity medium; scope small_change; risk high; coupling high; confidence medium; estimate 90 minutes.
+  Review R6/R7 against accepted round 9 answers and source; challenge direct API bypass, metadata leakage, stale-response ordering, project-switch races, delete/save race and invalid legacy recovery. Run required lint, workspace builds, app types/build and affected existing scene tests; distinguish baseline defects and unavailable external resources from passes.
+
+  - Acceptance / static: An independent SP-4 spec and standards audit has no open critical or high findings and verifies ownership, atomic version control, import idempotency and preservation, deletion registration and account-switch isolation. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-4.findings.json`
+
+<!-- /SP-4 tasks -->
+
+- **SP-5 — Saved decorations** (UI: `decoraciones@v1`): A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported. Covers R8.
+- **SP-6 — AI spend per user and session** (UI: `gasto-ia@v1`): Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view. Covers R4, R5.
+- **SP-7 — Assisted chat as three tools and the decorations explorer** (UI: `herramientas-chat@v1`): The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan. Covers R13, R16.
+
+<!-- CG-3 tasks -->
+
+  Composition of accepted subplans on the integrated candidate.
+
+- [ ] T93 — Composition check CG-3: accounts and saved projects · repo: pictures · after: T92, T4.9 · verify: `npm run proyectos:test-composicion` · files: .evidence/REQ-021/CG-3.integration.json · resources: candidate:CG-3 · covers: R2, R6, R7, R9, R11 · kind: test · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
+  Execute the composition mode authored by T4.6 on the integrated candidate. Record candidate/tree identity; no harness authoring or repairs here.
+
+  - Acceptance / integration: The integrated candidate passes account-scoped project save/reopen with rectangular tables and Backing, staff read/copy, conflict rejection and account deletion refusal. Check: `npm run proyectos:test-composicion`
+
+<!-- /CG-3 tasks -->
 
 ### M3 — Inglés / español
 La interfaz usa el idioma del navegador durante la primera visita y luego la elección de la cuenta; el Taller 3D y la navegación se traducen completamente primero, seguidos por los textos de los productos, las pantallas restantes y las respuestas de IA.
