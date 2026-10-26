@@ -24,7 +24,7 @@ During planning a delegated brief names two output files in the requirement fold
 mockup with mock data, a switch for every declared state and responsive layouts). The plan may still change: design
 the plan as it stands, revise the previous draft instead of starting over, address every owner feedback item listed,
 and record undecided points as open questions (section 12 and `Q:` lines in the report) rather than reporting
-`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. Write only those two files. The owner approves the draft together with the plan; the run then copies it
+`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. On the collaborative planning flow you are started for the subplan in focus while the owner and the Planner are still defining it: its tasks may be few or missing, so design from its outcome, covered requirements and SPEC, and ask in `Q:` lines what they have not decided. Write only those two files. The owner approves the draft together with the plan; the run then copies it
 unchanged into `design/contracts/`.
 
 ## Inputs

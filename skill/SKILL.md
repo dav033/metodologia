@@ -79,9 +79,10 @@ plans: pick or create the project (`bind`), run the requirements interview (read
 session with full permissions (`references/execution.md` §1c): only the scheduler runs an approved, frozen plan
 (`launch`/`handoff` -> `scheduler-run`). Don't edit project repos from the HQ.
 
-**UI plans:** the Designer drafts each UI subplan while you plan with the owner (`bitacora.py design draft|sync
-REQ-NNN`); the web Plan tab shows plan EN/ES, subplans and live mockups, and approving the plan approves the designs
-(`requirements.md` §8). Without planning drafts, the run holds UI tasks until `design approve|changes`.
+**Collaborative planning:** owner, Planner and Designer build the plan together (`bitacora.py planning start
+REQ-NNN`): initial questions only → a skeleton of milestones and subplans the owner confirms → one subplan at a time
+(behavior, design, inputs, tasks), each confirmed by the owner while the Designer drafts the one in focus → approval.
+The web Plan tab shows the phases, plan EN/ES, subplans and live mockups (`requirements.md` §8).
 
 The HQ also starts the **local web UI** (`bitacora.py web`): dashboard, documents, artifacts, question rounds
 answerable by form, and plan approval with a button that launches the executor. Everything it shows or receives is

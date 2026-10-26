@@ -28,10 +28,10 @@ from bt_pages import purl
 
 LANGS = (("en", "EN"), ("es", "ES"), ("both", "EN + ES"))
 MODES = (("subplans", "Subplanes"), ("doc", "Plan completo"))
-VIEWS = ("design", "tasks", "criteria")
+VIEWS = ("design", "tasks", "criteria", "inputs")
 STATES = {"none": "sin diseño", "queued": "diseño en cola", "drafting": "diseñando…", "ready": "diseño listo",
           "failed": "error de diseño", "approved": "aprobado con el plan"}
-REASONS = {"requested": "pedido desde la conversación", "web": "pedido desde la web",
+REASONS = {"requested": "pedido desde la conversación", "web": "pedido desde la web", "focus": "es el subplan en foco",
            "feedback": "aplicando tus comentarios", "plan changed": "el subplan cambió"}
 SEND = ('<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
         'aria-hidden="true"><path d="M4 12l16-8-6 16-2-7-8-1z"/></svg>')
@@ -48,7 +48,7 @@ def options(rdir: Path, q: dict) -> dict:
     """Validated view options from the query string."""
     sp = q.get("sp", "")
     return {"lang": q.get("lang") if q.get("lang") in dict(LANGS) else default_lang(rdir),
-            "mode": q.get("mode") if q.get("mode") in ("subplans", "doc", "review") else "subplans",
+            "mode": q.get("mode") if q.get("mode") in ("subplans", "doc", "review", "outline") else "subplans",
             "view": q.get("view") if q.get("view") in VIEWS else "design",
             "sp": sp if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sp) else "",
             "rev": int(q["rev"]) if _number(q.get("rev", "")) else 0,
@@ -72,7 +72,8 @@ def link(project: str, rid: str, opts: dict, **change) -> str:
 def follow(project: str, rdir: Path, lang: str = "en") -> None:
     """Let the Designer and the translator catch up with the conversation, at most every few seconds per requirement.
     Only requirements with planning-time design, or a Spanish view being read, start any background work."""
-    if not drafts.active(rdir) and lang == "en":
+    import bt_planning_flow
+    if not drafts.active(rdir) and not bt_planning_flow.active(rdir) and lang == "en":
         return
     key = str(rdir)
     with _follow_lock:
@@ -97,20 +98,31 @@ def plan_tab(project: str, rid: str, rdir: Path, status: str | None, token: str,
 
 
 def fragment(project: str, rid: str, rdir: Path, status: str | None, token: str, opts: dict) -> str:
+    import bt_page_planning_flow as flow_view
     import bt_page_planning_views as views
+    import bt_planning_flow
     activity.observe(rdir)
     ctx = {"project": project, "rid": rid, "rdir": Path(rdir), "status": status, "token": token, "opts": opts,
            "cache": tr.load_cache(rdir) if opts["lang"] != "en" else {}, "subplans": drafts.subplans(rdir),
-           "rows": {row["ref"]: row for row in drafts.rows(rdir)}}
+           "rows": {row["ref"]: row for row in drafts.rows(rdir)}, "flow": None}
+    if bt_planning_flow.active(rdir):
+        ctx["flow"] = bt_planning_flow.state(rdir, ctx["subplans"], ctx["rows"])
     if not opts["sp"] or opts["sp"] not in {s["id"] for s in ctx["subplans"]}:
-        opts["sp"] = _default_subplan(rdir, ctx["subplans"])
-    if opts["mode"] == "doc" or not ctx["subplans"]:
+        opts["sp"] = _default_subplan(rdir, ctx["subplans"], ctx["flow"])
+    phase = ctx["flow"]["phase"] if ctx["flow"] else ""
+    if phase == "interview":
+        body = [flow_view.interview(ctx)]
+    elif opts["mode"] == "doc" or not ctx["subplans"]:
         body = [views.document(ctx)]
     elif opts["mode"] == "review":
         body = [views.review(ctx)]
+    elif phase and (opts["mode"] == "outline" or phase == "outline"):
+        body = ['<div class="pp-grid board">', _stamp(flow_view.outline(ctx)), _stamp(_feed(ctx)), "</div>"]
     else:
         body = ['<div class="pp-grid">', _stamp(_list(ctx)), _stamp(_detail(ctx)), _stamp(_feed(ctx)), "</div>"]
-    return _stamp(_bar(ctx)) + "".join(body if len(body) > 1 else [_stamp(body[0])]) + _stamp(_dialog(ctx))
+    steps = _stamp(flow_view.steps(ctx)) if phase else ""
+    return (steps + _stamp(_bar(ctx)) + "".join(body if len(body) > 1 else [_stamp(body[0])]) +
+            _stamp(_dialog(ctx)))
 
 
 def _stamp(block: str) -> str:
@@ -123,8 +135,10 @@ def plural(count: int, one: str, many: str) -> str:
     return f"{count} {one if count == 1 else many}"
 
 
-def _default_subplan(rdir: Path, subplans: list[dict]) -> str:
+def _default_subplan(rdir: Path, subplans: list[dict], flow: dict | None = None) -> str:
     ids = [s["id"] for s in subplans]
+    if flow and flow["focus"] in ids:
+        return flow["focus"]
     recent = next((ev["sp"] for ev in activity.events(rdir, 10) if ev.get("sp") in ids), "")
     return recent or next((s["id"] for s in subplans if s["ref"]), ids[0] if ids else "")
 
@@ -158,8 +172,16 @@ def _seg(items: list[tuple[str, str, bool]], label: str) -> str:
 
 def _bar(ctx: dict) -> str:
     opts, rows, p, r = ctx["opts"], ctx["rows"], ctx["project"], ctx["rid"]
-    mode = "doc" if opts["mode"] == "doc" else "subplans"
-    modes = _seg([(link(p, r, opts, mode=k, rev=0), name, mode == k) for k, name in MODES], "Vista")
+    flow = ctx["flow"]
+    if flow and flow["phase"] == "interview":
+        mode_list, mode = (), "doc"  # nothing to browse yet: the skeleton appears once the Planner writes it
+    elif flow:
+        mode_list = (("outline", "Esqueleto"),) + MODES
+        mode = opts["mode"] if opts["mode"] in ("outline", "doc") else "subplans"
+        mode = "outline" if flow["phase"] == "outline" and mode == "subplans" else mode
+    else:
+        mode_list, mode = MODES, "doc" if opts["mode"] == "doc" else "subplans"
+    modes = _seg([(link(p, r, opts, mode=k, rev=0), name, mode == k) for k, name in mode_list], "Vista") if mode_list else ""
     langs = _seg([(link(p, r, opts, lang=k), name, opts["lang"] == k) for k, name in LANGS], "Idioma del plan")
     chips = []
     if opts["lang"] != "en":
@@ -175,7 +197,7 @@ def _bar(ctx: dict) -> str:
             if sources else None)
     live = f'<span class="pp-live" id="pl-live">en vivo{" · " + format(when, "%H:%M:%S") if when else ""}</span>'
     start = ""
-    if rows and not drafts.active(ctx["rdir"]) and drafts.planning(ctx["rdir"]):
+    if rows and not flow and not drafts.active(ctx["rdir"]) and drafts.planning(ctx["rdir"]):
         start = (f'<form method="post" action="{purl(p, "req", r, "design-draft")}" class="pp-start"><input type="hidden" '
                  f'name="token" value="{e(ctx["token"])}"><input type="hidden" name="lang" value="{e(opts["lang"])}">'
                  f'<button type="submit" class="outline">Diseñar {plural(len(rows), "subplan", "subplanes")} con UI'
@@ -188,9 +210,16 @@ def _approve_button(ctx: dict) -> str:
     status = ctx["status"]
     if status in ("approved", "launched", "in-progress", "done"):
         return f'<span class="pp-chip ok">plan {e(status)}</span>'
-    waiting = drafts.readiness(ctx["rdir"])
+    if ctx["flow"] and ctx["flow"]["phase"] in ("interview", "outline"):
+        return ""  # approval comes after the skeleton and every subplan are confirmed
+    waiting = _waiting(ctx)
     label = f"Aprobar · {'falta' if len(waiting) == 1 else 'faltan'} {len(waiting)}" if waiting else "Aprobar plan"
     return f'<button type="button" class="pp-approve" data-open="pp-approve-dlg">{e(label)}</button>'
+
+
+def _waiting(ctx: dict) -> list[str]:
+    import bt_planning_flow
+    return bt_planning_flow.approval_problems(ctx["rdir"]) + drafts.readiness(ctx["rdir"])
 
 
 def _list(ctx: dict) -> str:
@@ -214,6 +243,10 @@ def _list(ctx: dict) -> str:
         cls, label = state_of(ctx["rows"].get(s["ref"]) if s["ref"] else None)
         on = s["id"] == opts["sp"]
         meta = plural(len(s["tasks"]), "tarea", "tareas") + (f" · {label}" if s["ref"] else "")
+        if ctx["flow"]:
+            import bt_page_planning_flow as flow_view
+            cls, label = flow_view.label(ctx, s["id"])
+            meta = f"{label} · " + meta
         items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans"))}"'
                      f' data-nav{" aria-current=true" if on else ""}><span class="pp-id">{e(s["id"])}</span>'
                      f'<span class="pp-item-main"><span class="pp-item-title" title="{e(s["title"])}">{text(ctx, s["title"])}</span>'
@@ -240,9 +273,19 @@ def _detail(ctx: dict) -> str:
     cls, label = state_of(row)
     tabs = [("design", "Diseño"), ("tasks", f"Tareas ({len(s['tasks'])})"),
             ("criteria", f"Criterios ({len(s['criteria'])})")]
+    flow_actions = ""
+    if ctx["flow"]:
+        import bt_page_planning_flow as flow_view
+        import bt_planning_flow
+        pending = sum(1 for row in bt_planning_flow.inputs_for(ctx["rdir"], s["id"], ctx["flow"]["inputs"])
+                      if row["pending"])
+        tabs.append(("inputs", f"Entradas{f' · faltan {pending}' if pending else ''}"))
+        flow_actions = flow_view.actions(ctx, s)
     nav = "".join(f'<a href="{e(link(p, r, opts, view=k))}" data-nav'
                   f'{" class=on aria-current=true" if opts["view"] == k else ""}>{e(name)}</a>' for k, name in tabs)
-    if opts["view"] == "tasks":
+    if opts["view"] == "inputs" and ctx["flow"]:
+        body = flow_view.inputs_panel(ctx, s)
+    elif opts["view"] == "tasks":
         body = '<div class="pp-rows">' + "".join(
             f'<div class="pp-row"><span class="pp-id">{e(t.get("id", ""))}</span><span class="grow">'
             f'{text(ctx, t.get("title") or "")}</span><span class="pp-meta">{e(t.get("kind") or "")}'
@@ -258,7 +301,7 @@ def _detail(ctx: dict) -> str:
     return (f'<section class="pp-detail" data-k="detail-{e(s["id"])}-{e(opts["view"])}">'
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
             f'</h2><span class="pp-state {e(cls)}">{e(label)}</span></header>'
-            f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>'
+            f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{flow_actions}'
             f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}</section>')
 
 
@@ -284,7 +327,7 @@ def _dialog(ctx: dict) -> str:
     if status in ("approved", "launched", "in-progress", "done"):
         return '<div data-k="dialog" hidden></div>'
     rows = []
-    for s in ctx["subplans"]:
+    for s in [] if ctx["flow"] else ctx["subplans"]:
         row = ctx["rows"].get(s["ref"]) if s["ref"] else None
         cls, label = state_of(row)
         mark = {"ready": "✓", "approved": "✓", "none": "–", "failed": "!"}.get(cls, "…")
@@ -294,7 +337,10 @@ def _dialog(ctx: dict) -> str:
         rows.append(f'<div class="pp-check"><span class="pp-mark {e(cls)}" aria-hidden="true">{mark}</span>'
                     f'<span class="pp-id">{e(s["id"])}</span><span class="grow">{text(ctx, s["title"])}<span '
                     f'class="pp-meta block">{e(detail)}</span></span>{see}</div>')
-    waiting = drafts.readiness(ctx["rdir"])
+    if ctx["flow"]:
+        import bt_page_planning_flow as flow_view
+        rows = flow_view.check_rows(ctx)
+    waiting = _waiting(ctx)
     review = status == "review"
     note = (f'<p class="pp-warn">{e("; ".join(waiting))}. El botón se activa cuando terminen.</p>' if waiting else
             "" if review else '<p class="pp-warn">El Planner todavía no deja el plan en revisión.</p>')

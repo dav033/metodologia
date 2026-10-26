@@ -320,7 +320,7 @@ def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
                       "agent": order.get("agent"), "model": order.get("model")})
         if reason == "plan changed":
             entry["auto_runs"] = int(entry.get("auto_runs") or 0) + 1
-        _event(rdir, "Designer", f"Empezó {ref}" + {"feedback": " con tus comentarios",
+        _event(rdir, "Designer", f"Empezó {ref}" + {"feedback": " con tus comentarios", "focus": " (subplan en foco)",
                                                     "plan changed": " porque el subplan cambió"}.get(reason, ""), entry)
         return entry
 
@@ -382,9 +382,13 @@ def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
         settled = now - (Path(rdir) / "PLAN.json").stat().st_mtime >= DEBOUNCE_SEC
     except OSError:
         return []
+    import bt_planning_flow
+    scope = bt_planning_flow.design_scope(rdir)  # collaborative flow: only the subplan in focus, unless asked
     due = []
     for r in rows(rdir):
         if r["status"] in ACTIVE or r["status"] == "approved":
+            continue
+        if scope is not None and r["ref"] not in scope and not r["pending_feedback"]:
             continue
         if r["status"] == "failed" and (_age(r.get("finished")) < FAIL_BACKOFF_SEC or
                                         int(r.get("failures") or 0) >= MAX_FAILURES):
@@ -473,11 +477,12 @@ def follow_project(root: Path, project: str) -> list[str]:
     """Stop-hook nudge: for every requirement still being planned with planning-time design on, log what the
     conversation changed, redesign settled subplans and keep the translation current (also with no web page open)."""
     import bt_planning_activity
+    import bt_planning_flow
     import bt_translate
     from bt_core import _front
     touched = []
     for rdir in sorted((Path(root) / project / "requirements").glob("REQ-*")):
-        if not active(rdir) or _front(rdir / "PLAN.md", "status") in ("approved", "launched", "in-progress", "done",
+        if not (active(rdir) or bt_planning_flow.active(rdir)) or _front(rdir / "PLAN.md", "status") in ("approved", "launched", "in-progress", "done",
                                                                        "merged"):
             continue
         try:

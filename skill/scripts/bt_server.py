@@ -241,7 +241,7 @@ class Handler(BaseHTTPRequestHandler):
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
-            if action in ("design-draft", "design-feedback"):
+            if action in ("design-draft", "design-feedback", "planning-outline", "planning-focus", "planning-confirm"):
                 return self.redirect(self.planning_post(project, rdir, action, form, base))
             if action == "design":
                 import bt_design_web
@@ -272,13 +272,21 @@ class Handler(BaseHTTPRequestHandler):
 
     def planning_post(self, project: str, rdir: Path, action: str, form: dict, base: str) -> str:
         import bt_design_drafts as drafts
+        import bt_planning_flow as flow
         ref, comments = form.get("contract", ""), form.get("comments", "").strip()
-        if action == "design-feedback" or comments:
+        sid = form.get("anchor", "")
+        if action == "planning-outline":
+            msg = flow.confirm_outline(project, rdir, "owner")
+        elif action == "planning-focus":
+            msg = flow.focus(project, rdir, sid, "owner")
+        elif action == "planning-confirm":
+            msg = flow.confirm(project, rdir, sid, "owner")
+        elif action == "design-feedback" or comments:
             msg = drafts.add_feedback(project, rdir, ref, comments, "web")
         else:
             started = drafts.request(project, rdir, [ref] if ref else None, force=bool(ref), reason="web")
             msg = f"Designer iniciado para {', '.join(started)}." if started else "No había diseños que iniciar."
-        commit(ROOT, f"{project}: {req_id(rdir)} design drafts ({action}, web)", push=False)
+        commit(ROOT, f"{project}: {req_id(rdir)} planning ({action}, web)", push=False)
         sp = form.get("anchor", "") if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", form.get("anchor", "")) else ""
         return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sp)}&msg={quote(msg)}"
 

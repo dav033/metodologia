@@ -124,6 +124,10 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
         problem = bt_plan_adapter.publishable_problem(rdir, compatibility_report=compatibility_report)
         if problem:
             raise SystemExit(problem)
+        import bt_planning_flow  # collaborative flow: every subplan confirmed by the owner and unchanged since
+        missing = bt_planning_flow.approval_problems(rdir)
+        if missing:
+            raise SystemExit("El plan no se puede aprobar todavía: " + "; ".join(missing))
         import bt_design_drafts  # planning-time designs are approved with the plan: pinned first, all or none
         bt_design_drafts.pin_for_plan(rdir)
     stamp = f"{dt.datetime.now():%Y-%m-%d %H:%M}"

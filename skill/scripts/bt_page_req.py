@@ -23,8 +23,10 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", q: 
     run = load_run(rdir)
     run_available = has_run(rdir)
     live = bool(run) and run.get("status") in ACTIVE
+    import bt_planning_flow
+    planning_flow = bt_planning_flow.active(rdir) and plan_status in (None, *bt_planning_flow.drafts.PLANNING)
     if not tab:
-        tab = "rounds" if open_round else ("plan" if plan_status == "review" else
+        tab = "rounds" if open_round else ("plan" if plan_status == "review" or planning_flow else
                                            ("run" if live or (run_available and run is None) else
                                             ("review" if plan_status in ("done", "launched") else "spec")))
     tab_list = REQ_TABS + ([("run", "Ejecución")] if run_available else [])
@@ -39,10 +41,11 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", q: 
     elif tab == "plan":
         import bt_design_drafts
         import bt_page_planning
-        legacy = not bt_design_drafts.active(rdir) or not bt_design_drafts.planning(rdir)  # the run's contract panel
+        legacy = not (bt_design_drafts.active(rdir) or bt_planning_flow.active(rdir)) or \
+            not bt_design_drafts.planning(rdir)  # the run's contract panel
         content = (bt_page_planning.plan_tab(project, rid, rdir, plan_status, token, q or {}) +
-                   (design_panel(project, rid, rdir, token) if legacy else "")) \
-            if plan.exists() else '<p class="muted">Todavía no hay plan.</p>'
+                   (design_panel(project, rid, rdir, token) if legacy and plan.exists() else "")) \
+            if plan.exists() or bt_planning_flow.active(rdir) else '<p class="muted">Todavía no hay plan.</p>'
     elif tab == "review":
         from bt_page_review import review_panel
         content = review_panel(project, rid, rdir, token)
@@ -59,7 +62,7 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "", q: 
     head = (f'<div class="head"><div><p class="eyebrow">{e(project)} · {e(rid)}</p><h1>{e(title)}</h1>'
             f'<div class="kpis"><span class="kpi">spec {badge(_front(spec, "status"))}</span>'
             f'{"<span class=kpi>plan " + badge(plan_status) + "</span>" if plan_status else ""}</div></div></div>')
-    flush = " panel-flush" if tab == "plan" and plan.exists() else ""
+    flush = " panel-flush" if tab == "plan" and (plan.exists() or planning_flow) else ""
     body = f'{head}{note}<div class="tabs">{tabs}</div><div class="panel{flush}">{content}</div>'
     return layout(rid, body, [(project, purl(project)), (rid, purl(project, "req", rid))])
 

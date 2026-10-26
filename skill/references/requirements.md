@@ -115,6 +115,8 @@ user's time because the answer may make them moot.
 - **Order by impact × uncertainty.** Scope and goal first; details last. Skip questions whose answer wouldn't change
   what gets built or how it's tested.
 - **Max ~5 questions per round.** More than that and answers get sloppy.
+- **On the collaborative flow (§8) the first rounds cover only what shapes the whole plan.** Questions about one
+  subplan's behavior, design or inputs are asked when that subplan is in focus.
 - **Every question carries your recommended answer, worded so "sí" accepts it.** The user should be able to answer a
   whole round with "1 sí, 2 sí, 3 b, 4 no porque…".
 - **Mix formats:** multiple choice (a/b/c, recommended one marked) when the options are enumerable; open question
@@ -250,26 +252,39 @@ background wake-ups (Codex), run `watch` when the user asks how it is going.
 For each UI subplan, the plan includes a `kind: design` task, owner approval of its versioned contract, dependent
 `ui: true` implementation tasks, a visual review and the audit.
 
-**Plan and design together (default for UI plans).** The Designer works while the owner and the Planner talk; it does
-not wait for the run. As soon as PLAN.json has a UI subplan, start it in the background and keep the conversation
-going:
+**Collaborative planning (default for Standard and Deep requirements, D-130).** The owner, the Planner and the
+Designer build the plan together, in four phases the web Plan tab shows as a stepper (`/p/P/req/REQ-NNN?tab=plan`):
 
-```
-bitacora.py --project P design draft REQ-NNN      # one Designer session per UI subplan, in the background
-bitacora.py --project P design sync REQ-NNN       # after each plan edit: redesign changed subplans, translate
-bitacora.py --project P design drafts REQ-NNN     # state, Designer questions, pending owner feedback
-```
+1. **Requisitos.** Run `bitacora.py --project P planning start REQ-NNN` when the requirement is sized. Ask only the
+   initial, most important questions: goal, scope, the decisions that shape the whole plan and the plan-wide inputs.
+   Everything specific to one subplan waits for that subplan.
+2. **Esqueleto.** Write a skeleton in PLAN.json/PLAN.md: milestones and subplans with title, observable outcome,
+   covered requirements and `ui` block when it has an interface; no tasks yet. The tab shows it as a board by
+   milestone. Change it while the owner talks; the owner confirms it with «Confirmar esqueleto» (or says so and you run
+   `planning outline-confirm REQ-NNN --by owner`).
+3. **Subplanes, one at a time.** The focus starts on the first subplan. With the owner, define its behavior, edge
+   cases, design decisions, inputs (credentials, keys, hosts, paths, accounts: SPEC `## Inputs` with its `Subplan`
+   column, locations only, never values) and then its tasks with acceptance criteria. When the subplan has a UI, the
+   Designer drafts it in the background as soon as it is in focus, and only then (`design_scope`): relay its
+   questions, fold the answers into the plan, send owner comments with `design feedback`. The owner confirms the
+   subplan («Confirmar subplan», or `planning confirm REQ-NNN SP-n --by owner` only when they say so in the chat);
+   confirmation is refused while it has no tasks, a task without criteria, a pending input or a design that is not
+   ready. The focus then moves to the next subplan and its Designer starts. `planning focus REQ-NNN SP-n` (or
+   «Definir ahora») jumps. Any later change to a confirmed subplan (its PLAN.json part, tasks, inputs or design)
+   reopens it.
+4. **Aprobación.** When the last subplan is confirmed the plan goes to `review`; approval refuses anything not
+   confirmed or changed since, pins the designs and launches.
 
+`planning status REQ-NNN` prints the phase, the focus and what each subplan still lacks. The tab also shows the
+selected subplan (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios;
+Entradas), "lo que cambió en la conversación" (`.planning/activity.jsonl`), a design review per subplan, the whole plan
+in English, Spanish or both, and the approval dialog; it updates itself while you edit SPEC/PLAN. The Stop hook keeps
+the Designer and the Spanish translation (`bitacora.py translate REQ-NNN`) following the conversation with no page
+open.
+
+Requirements not started on this flow keep planning-time design as before: `design draft REQ-NNN` drafts every UI
+subplan at once and `design sync REQ-NNN` redoes the changed ones; `design drafts REQ-NNN` lists state and questions.
 Drafts live in the requirement folder (`design/<contract>@vN.md` contract + `.html` mockup), never in a repository.
-Send the owner to the web Plan tab (`/p/P/req/REQ-NNN?tab=plan`): a compact live view with the subplans by milestone,
-the selected subplan (Diseño: mockup at phone/tablet/desktop width, Designer questions with Responder, feedback;
-Tareas; Criterios) and "lo que cambió en la conversación" (plan edits, Designer drafts, owner comments, translation,
-from `.planning/activity.jsonl`); a design review per subplan (draft versions, contract sections changed since the
-previous draft, visual criteria, comment thread); the whole plan in English, Spanish or both with changed sections
-and their diff; and an approval dialog listing what is still missing. The tab updates itself while you edit SPEC/PLAN in the conversation; when the page
-is open it also redesigns a subplan once its PLAN.json part stops changing, and keeps the Spanish translation
-current (`bitacora.py translate REQ-NNN`). Relay the Designer's questions in the conversation and fold the answers
-into the plan; owner comments from the chat go to the Designer with `design feedback REQ-NNN <c>@vN --comments "…"`.
 
 Approving the plan approves its designs: approval is refused while a draft is missing, running, failed, outdated or
 has unapplied feedback, and on approval each ready draft is pinned as the owner-approved `<c>@vN` (SHA-256, `via:
