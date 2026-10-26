@@ -1174,3 +1174,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Consequences:** + bounded retention of reconstructable old copies, explicit reasons for skips, durable action audit; − paused or modified copies remain until reconciled, physical recovery depends on Btrfs snapshots. No Btrfs snapshot deletion authorized by this decision.
 - **Rollback:** Disable the user timer; reconstruct a retired checkout from the retained snapshot ref using `git worktree add --detach`. No commit/ref/branch history is deleted by retention.
 - **Source:** David's explicit cleanup request; [day log](2026-10/W4/2026-10-25.md).
+
+## D-130 — Collaborative planning: requirements, skeleton, subplan by subplan, approval
+
+- **Date:** 2026-10-26 · **Status:** Accepted · **Refines:** D-128
+- **Decision:** Standard and Deep requirements are planned by the owner, the Planner and the Designer together, in four phases shown as a stepper on the web Plan tab (`bt_planning_flow`, state in `<req>/.planning/flow.json`, CLI `bitacora.py planning start|status|outline-confirm|focus|confirm`): (1) only the initial, plan-wide questions; (2) a skeleton of milestones and subplans (outcome, covers, `ui`, no tasks) the owner confirms; (3) one subplan in focus at a time — behavior, design, inputs and tasks — confirmed by the owner, while the Designer drafts only the focused UI subplan; inputs (credentials, hosts, paths, accounts) are asked per subplan and recorded in SPEC `## Inputs` with a `Subplan` column, locations only; (4) the plan goes to `review` when every subplan is confirmed, and approval refuses any subplan not confirmed or changed since (digest of its PLAN.json part, tasks, inputs and draft). Requirements not started on the flow keep D-128.
+- **Consequences:**
+  - \+ Fewer wasted Designer runs (one subplan at a time); the owner closes each slice with its design and credentials before moving on; execution cannot stop for an input that was never asked.
+  - − More owner interactions (one confirmation per subplan); a plan edit after confirmation reopens that subplan.
+- **Source:** owner, 2026-10-26 (session 0976796f): questions answered «Tablero de esqueleto», «Confirmar cada subplan», «Credenciales en cada subplan», «Designer en el subplan en foco»
