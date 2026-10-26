@@ -1,0 +1,55 @@
+/* Plan tab while planning (bt_page_planning): language switch, subplan cards with their Designer drafts. */
+.pl-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between; margin: 0 0 8px; }
+.pl-lang { display: inline-flex; border: 1px solid var(--border); border-radius: 99px; padding: 3px; gap: 2px; }
+.pl-lang a { padding: 5px 14px; border-radius: 99px; color: var(--muted); font-size: 13.5px; font-weight: 600; }
+.pl-lang a:hover { color: var(--text); text-decoration: none; }
+.pl-lang a.on { background: var(--accent); color: var(--on-accent); }
+.kpi.ok { background: var(--ok-soft); color: var(--ok); }
+.kpi.warn { background: var(--warn-soft); color: var(--warn); }
+.kpi.info { background: var(--info-soft); color: var(--info); }
+.kpi.live { color: var(--ok); background: transparent; padding-left: 0; }
+.kpi.live.off { color: var(--bad); }
+.pl-h { margin: 28px 0 12px; }
+.pl-start { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+  background: var(--accent-soft); border-radius: var(--radius); padding: 14px 18px; margin-bottom: 14px; }
+.pl-start p { margin: 0; }
+.pl-sub { margin: 0 0 16px; padding: 20px 22px; scroll-margin-top: 80px; }
+.pl-sub header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.pl-sub h3 { margin: 0; font-size: 17px; flex: 1 1 260px; }
+.pl-id { font: 600 12px var(--mono); color: var(--accent); background: var(--accent-soft); border-radius: 8px; padding: 2px 8px; }
+.pl-ui { font: 600 11px var(--mono); border: 1px solid var(--border); border-radius: 8px; padding: 1px 7px; color: var(--muted); }
+.pl-state { font-size: 12px; font-weight: 700; border-radius: 99px; padding: 2px 10px; background: var(--code); color: var(--muted); }
+.pl-state.ready { background: var(--ok-soft); color: var(--ok); }
+.pl-state.approved { background: var(--info-soft); color: var(--info); }
+.pl-state.drafting, .pl-state.queued, .pl-state.stale { background: var(--warn-soft); color: var(--warn); }
+.pl-state.failed { background: var(--bad-soft); color: var(--bad); }
+.pl-outcome { margin: 10px 0; }
+.pl-orig { display: block; font-size: .86em; color: var(--muted); font-weight: 400; margin-top: 2px; }
+.pl-tasks summary, .pl-contract summary, .pl-feedback summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+.pl-tasks ul { margin: 8px 0; padding-left: 20px; font-size: 14px; }
+.pl-design { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 14px; display: grid; gap: 12px; }
+.pl-dhead { margin: 0; font-weight: 600; }
+.pl-design .notice { margin: 0; }
+.notice.bad { background: var(--bad-soft); color: var(--bad); }
+.pl-questions { background: var(--info-soft); border-radius: var(--radius); padding: 12px 16px; }
+.pl-questions ul { margin: 6px 0 0; padding-left: 20px; }
+.pl-mock { display: grid; gap: 6px; }
+.pl-mock iframe { width: 100%; height: min(72vh, 680px); border: 1px solid var(--border); border-radius: var(--radius);
+  background: #fff; }
+.pl-mock.pending { height: 220px; border: 1px dashed var(--border); border-radius: var(--radius); place-items: center;
+  color: var(--muted); background: repeating-linear-gradient(135deg, var(--code) 0 12px, transparent 12px 24px); }
+.pl-mock a { font-size: 13.5px; justify-self: end; }
+.pl-form textarea { min-height: 64px; }
+.pl-bilingual { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.pl-bilingual > div { min-width: 0; }
+.pl-bilingual > div + div { border-left: 1px solid var(--border); padding-left: 24px; }
+.pl-approve { margin-top: 24px; }
+.pl-waiting { outline: 2px dashed var(--warn); outline-offset: 4px; }
+.planning .flash-new { animation: planflash 1.6s ease-out; }
+@keyframes planflash { from { box-shadow: 0 0 0 3px var(--accent); } to { box-shadow: 0 0 0 0 transparent; } }
+button:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+@media (max-width: 860px) {
+  .pl-bilingual { grid-template-columns: 1fr; }
+  .pl-bilingual > div + div { border-left: 0; padding-left: 0; border-top: 1px solid var(--border); padding-top: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .planning .flash-new { animation: none; } }

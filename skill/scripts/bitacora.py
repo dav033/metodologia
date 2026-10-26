@@ -337,7 +337,7 @@ def main() -> None:
     project = resolve_project(cwd, None, a.project)
     if not project:
         sys.exit("No project: pass --project <name>, run inside a git repo, or create a .bitacora marker file.")
-    if a.cmd == "design":
+    if a.cmd in ("design", "translate"):
         sys.exit(bt_cli_design.dispatch(a, ROOT, project))
     if a.cmd == "knowledge":
         sys.exit(bt_cli_knowledge.dispatch(a, project, ROOT))

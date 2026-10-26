@@ -248,12 +248,37 @@ the executors already start clean, and clearing here only loses the thread the u
 background wake-ups (Codex), run `watch` when the user asks how it is going.
 
 For each UI subplan, the plan includes a `kind: design` task, owner approval of its versioned contract, dependent
-`ui: true` implementation tasks, a visual review and the audit. Design approval is separate from plan approval:
-the owner approves each contract version with `bitacora.py design approve REQ-NNN <contract>@vN` (or requests
-changes with `bitacora.py design changes REQ-NNN <contract>@vN`) or on the web requirement page. During a launched
-run, UI implementation pauses while approval is pending; the scheduler reports that it is awaiting owner contract
-approval, and approval releases the held tasks. Include this pause in handoff timing and tell the owner when it is
-reached. See `execution.md` §1c and `interface-quality.md`.
+`ui: true` implementation tasks, a visual review and the audit.
+
+**Plan and design together (default for UI plans).** The Designer works while the owner and the Planner talk; it does
+not wait for the run. As soon as PLAN.json has a UI subplan, start it in the background and keep the conversation
+going:
+
+```
+bitacora.py --project P design draft REQ-NNN      # one Designer session per UI subplan, in the background
+bitacora.py --project P design sync REQ-NNN       # after each plan edit: redesign changed subplans, translate
+bitacora.py --project P design drafts REQ-NNN     # state, Designer questions, pending owner feedback
+```
+
+Drafts live in the requirement folder (`design/<contract>@vN.md` contract + `.html` mockup), never in a repository.
+Send the owner to the web Plan tab (`/p/P/req/REQ-NNN?tab=plan`): it shows the plan in English, Spanish or both, every
+subplan with its tasks, and under each UI subplan the live mockup, the contract, the Designer's questions and a form
+to ask the Designer for changes. The tab updates itself while you edit SPEC/PLAN in the conversation; when the page
+is open it also redesigns a subplan once its PLAN.json part stops changing, and keeps the Spanish translation
+current (`bitacora.py translate REQ-NNN`). Relay the Designer's questions in the conversation and fold the answers
+into the plan; owner comments from the chat go to the Designer with `design feedback REQ-NNN <c>@vN --comments "…"`.
+
+Approving the plan approves its designs: approval is refused while a draft is missing, running, failed, outdated or
+has unapplied feedback, and on approval each ready draft is pinned as the owner-approved `<c>@vN` (SHA-256, `via:
+plan`). In the run, the `design` task copies that file byte for byte into `design/contracts/`, and UI tasks start
+without a second pause; implementers and the visual review get the mockup as reference.
+
+Without planning-time drafts (no `design draft` was ever run for the requirement) the older flow applies: design
+approval is separate from plan approval; the owner approves each contract version with `bitacora.py design approve
+REQ-NNN <contract>@vN` (or requests changes with `bitacora.py design changes REQ-NNN <contract>@vN`) or on the web
+requirement page. During a launched run, UI implementation pauses while approval is pending; the scheduler reports
+that it is awaiting owner contract approval, and approval releases the held tasks. Include this pause in handoff
+timing and tell the owner when it is reached. See `execution.md` §1c and `interface-quality.md`.
 
 Each milestone then runs in a fresh session that receives only references: the spec, the plan, the bitácora
 pointers, a context bundle, the agents available and the confirmed learnings. Everything that must survive is in

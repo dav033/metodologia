@@ -120,7 +120,8 @@ def _design_context(brief: Brief) -> dict:
     for line in (brief.notes or "").splitlines():
         key, sep, value = line.partition(":")
         key = {"kind": "task kind"}.get(key.strip().lower(), key.strip().lower())
-        if sep and key in ("design contract", "task kind", "ui task", "approval", "sha-256"):
+        if sep and key in ("design contract", "task kind", "ui task", "approval", "sha-256", "planning draft",
+                           "planning mockup"):
             facts.setdefault(key, value.strip())
     path = facts.get("design contract") or getattr(brief, "contract_path", "") or ""
     if not path:
@@ -128,11 +129,17 @@ def _design_context(brief: Brief) -> dict:
     return {"path": path, "version": getattr(brief, "contract_version", None),
             "kind": (facts.get("task kind") or getattr(brief, "task_kind", "") or "").lower(),
             "ui": facts.get("ui task", "").lower() == "true" or bool(getattr(brief, "ui_task", False)),
-            "approval": facts.get("approval", ""), "sha256": facts.get("sha-256", "")}
+            "approval": facts.get("approval", ""), "sha256": facts.get("sha-256", ""),
+            "draft": facts.get("planning draft", ""), "mockup": facts.get("planning mockup", "")}
 
 
 def _design_instructions(brief: Brief, design: dict) -> list[str]:
     contract = f"`{design['path']}`" + (f" (version {design['version']})" if design["version"] is not None else "")
+    if design["kind"] == "design" and design.get("draft"):
+        return [f"This contract was designed during planning and approved with the plan. Copy it byte for byte: "
+                f"`cp {design['draft']} {design['path']}` (create `design/contracts/` first). Do not edit it: the owner "
+                "approved its exact SHA-256 and UI tasks start only when the copied file matches.",
+                "Write nothing else; a later change is a new contract version with its own approval."]
     if design["kind"] == "design":
         return [f"Author the contract at {contract}; read any existing file there first.",
                 "Write only within `design/` (keep contract changes within `design/`); use `design/preview` only when the preview "
@@ -142,8 +149,12 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
     if brief.review_axis == "visual":
         return [f"Judge the rendered UI against {contract}.",
                 "Request Runner screenshots for each breakpoint and each state the contract declares, and base the review on "
-                "that evidence."]
+                "that evidence."] + ([f"The approved planning mockup `{design['mockup']}` shows the intended look; the "
+                                      "contract text still decides."] if design.get("mockup") else [])
     lines = [f"Read {contract} before making changes. Read it before implementing, follow it and report conformance."]
+    if design.get("mockup"):
+        lines.append(f"The owner approved this static mockup with the contract; use it as the visual reference: "
+                     f"`{design['mockup']}`.")
     if design["ui"]:
         lines.append(f"Owner approval: `{design['approval'] or 'unknown'}`, SHA-256 `{design['sha256'] or 'none'}`. "
                      "Proceed only with approval status `approved` and a file matching the approved SHA-256; otherwise stop and "

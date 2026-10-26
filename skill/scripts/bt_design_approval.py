@@ -283,3 +283,22 @@ def repository_for_contract(root: Path, project: str, rdir: Path, ref: str) -> P
     workspaces = repos(Path(root), project)
     role = task.get("repository") or next(iter(workspaces), "")
     return workspaces.get(role)
+
+
+def approve_planning_draft(rdir: Path, ref: str, blob: bytes, draft: str, who: str = "owner") -> dict[str, Any]:
+    """Record the owner's plan approval of a planning-time draft; the run copies those exact bytes into the repo."""
+    path = contract_path(ref)
+    digest = hashlib.sha256(blob).hexdigest()
+    with _decision_lock(Path(rdir)):
+        data = _load(rdir)
+        prior = data["approvals"].get(ref)
+        if isinstance(prior, dict) and prior.get("status") == "approved":
+            if prior.get("sha256") == digest:
+                return prior
+            raise DesignApprovalError(f"{ref} is already approved with another SHA256; approvals are immutable")
+        record = {"contract": ref, "path": path, "status": "approved", "sha256": digest, "who": who, "via": "plan",
+                  "when": datetime.now(UTC).isoformat(timespec="seconds"), "comments": "approved with the plan",
+                  "draft": draft}
+        data["approvals"][ref] = record
+        _write(rdir, data)
+        return record

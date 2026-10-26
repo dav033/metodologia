@@ -8,6 +8,7 @@ from __future__ import annotations
 import hmac
 import json
 import mimetypes
+import re
 import secrets
 import signal
 import shutil
@@ -176,7 +177,9 @@ class Handler(BaseHTTPRequestHandler):
             from bt_page_graph import graph_page
             return self.send(graph_page(project))
         if kind == "req" and len(rest) == 2:
-            return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", "")))
+            return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", ""), q.get("lang", "")))
+        if kind == "req" and len(rest) == 3 and rest[2] in ("planning", "mockup"):
+            return self.planning_get(project, rest[1], rest[2], q)
         if kind == "req" and len(rest) == 3 and rest[2] == "preview":
             import bt_design_web
             rdir = find_req(ROOT / project, rest[1])
@@ -238,6 +241,8 @@ class Handler(BaseHTTPRequestHandler):
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
+            if action in ("design-draft", "design-feedback"):
+                return self.redirect(self.planning_post(project, rdir, action, form, base))
             if action == "design":
                 import bt_design_web
                 msg = bt_design_web.decide(ROOT, project, rid, rdir, form,
@@ -246,6 +251,33 @@ class Handler(BaseHTTPRequestHandler):
         except (SystemExit, ValueError) as exc:
             return self.send(pages.layout("Error", f"<p>{pages.e(str(exc))}</p>"), 400)
         self.send("Not found", 404, "text/plain")
+
+    def planning_get(self, project: str, req: str, what: str, q: dict) -> None:
+        """Live fragment of the plan tab (and a nudge for the Designer and translator), or a sandboxed mockup."""
+        import bt_design_drafts as drafts
+        import bt_page_planning as planning
+        rdir = find_req(ROOT / project, req)
+        if what == "mockup":
+            ref = q.get("contract", "")
+            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}", ref):
+                return self.send("Not found", 404, "text/plain")
+            return self.file(drafts.paths(rdir, ref)[1] if drafts.paths(rdir, ref)[1].is_file() else None)
+        planning.follow(project, rdir)
+        html = planning.fragment(project, req_id(rdir), rdir, planning.plan_status(rdir), token(),
+                                 q.get("lang") or planning.default_lang(rdir))
+        return self.send(json.dumps({"html": html}, ensure_ascii=False), 200, "application/json; charset=utf-8")
+
+    def planning_post(self, project: str, rdir: Path, action: str, form: dict, base: str) -> str:
+        import bt_design_drafts as drafts
+        ref, comments = form.get("contract", ""), form.get("comments", "").strip()
+        if action == "design-feedback" or comments:
+            msg = drafts.add_feedback(project, rdir, ref, comments, "web")
+        else:
+            started = drafts.request(project, rdir, [ref] if ref else None, force=bool(ref), reason="web")
+            msg = f"Designer iniciado para {', '.join(started)}." if started else "No había diseños que iniciar."
+        commit(ROOT, f"{project}: {req_id(rdir)} design drafts ({action}, web)", push=False)
+        anchor = f"#{form.get('anchor')}" if re.fullmatch(r"SP-[\w-]+", form.get("anchor", "")) else ""
+        return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&msg={quote(msg)}{anchor}"
 
     def simulate(self, q: dict) -> None:
         """A demonstration run of one plan on the core's doubles (read-only: nothing is created or executed)."""

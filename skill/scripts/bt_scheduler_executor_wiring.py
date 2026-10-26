@@ -245,8 +245,9 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
 
     executor_config = replace(executor_config or api.m3.Config(), prompt_rtk=bt_config.get("prompts.rtk", True))
     def design_notes(request):
+        import bt_design_drafts
         return contract_notes(scheduler.plan, request, lambda task: repo_of(task.repository or default_repository),
-                              check_design_approval)
+                              check_design_approval, lambda ref: bt_design_drafts.execution_notes(rdir, ref))
 
     executor = api.m3.AgentExecutor(
         root, resolver=resolver or api.RouteResolver(project, m2_lookup=m2_lookup, repos=repo_of, allow_direct=allow_direct),
@@ -430,8 +431,9 @@ def _quality_store_path(value: Path | str, *, rdir: Path, monitor_store_path: Pa
         raise ValueError("M6 quality store must be separate from M1, M4, and M5 stores")
     return resolved
 
-def contract_notes(plan, request, repository_for, check_approval) -> str:
-    """Brief notes naming the UI contract for a design, `ui: true` or visual-review task (empty for any other task)."""
+def contract_notes(plan, request, repository_for, check_approval, planning=None) -> str:
+    """Brief notes naming the UI contract for a design, `ui: true` or visual-review task (empty for any other task).
+    `planning(ref)` adds where the plan-approved planning draft and its mockup live, when the contract has them."""
     task = plan.task(request.task_id)
     ui_task = task.meta.get("ui") is True
     ui = next((item.ui for item in plan.subplans if item.ui and (
@@ -445,5 +447,6 @@ def contract_notes(plan, request, repository_for, check_approval) -> str:
     if repository is not None:
         gate = check_approval(repository, request.base_ref, path)
         state, digest = gate.get("state", "unapproved"), gate.get("sha256") or ""
+    drafted = planning(f"{ui.contract}@v{ui.version}") if planning else ""
     return (f"Design contract: {path}\nTask kind: {task.meta.get('kind', '')}\n"
-            f"UI task: {str(ui_task).lower()}\nApproval: {state}\nSHA-256: {digest}")
+            f"UI task: {str(ui_task).lower()}\nApproval: {state}\nSHA-256: {digest}" + (f"\n{drafted}" if drafted else ""))

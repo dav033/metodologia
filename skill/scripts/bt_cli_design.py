@@ -10,15 +10,23 @@ from bt_core import find_req
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:
-    parser = subparsers.add_parser("design", help="approve versioned UI design contracts")
-    parser.add_argument("action", choices=("list", "show", "approve", "changes"))
+    parser = subparsers.add_parser("design", help="planning-time design drafts and approval of UI design contracts")
+    parser.add_argument("action", choices=("list", "show", "approve", "changes", "draft", "drafts", "feedback", "sync"))
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("contract", nargs="?", help="<contract>@vN")
     parser.add_argument("--comments", default="")
+    parser.add_argument("--force", action="store_true", help="draft: redo the design even when it is current")
+    translate = subparsers.add_parser("translate", help="translate SPEC, PLAN and design drafts to Spanish")
+    translate.add_argument("req", help="REQ-NNN")
+    translate.add_argument("--status", action="store_true", help="only report what is pending")
 
 
 def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     rdir = find_req(root / project, args.req)
+    if args.cmd == "translate":
+        return _translate(args, project, rdir)
+    if args.action in ("draft", "drafts", "feedback", "sync"):
+        return _drafts(args, project, rdir)
     rows = approval.ui_contracts(rdir, project)
     if args.action in ("list", "show"):
         selected = [row for row in rows if args.action == "show" and
@@ -59,3 +67,46 @@ def approval_req_id(rdir: Path) -> str:
     if not match:
         raise SystemExit(f"Invalid requirement directory: {rdir}")
     return match.group(0)
+
+
+def _drafts(args: argparse.Namespace, project: str, rdir: Path) -> int:
+    """Planning-time Designer: start drafts, list them, send owner feedback, or follow plan changes."""
+    import bt_design_drafts as drafts
+    refs = [args.contract] if args.contract else None
+    if args.action == "draft":
+        started = drafts.request(project, rdir, refs, force=args.force, reason="requested")
+        print(f"Designer started for: {', '.join(started)}" if started else "Nothing to draft: every design is current, "
+              "in progress or approved (use --force to redo one).")
+    elif args.action == "feedback":
+        if not args.contract or not args.comments.strip():
+            raise SystemExit("design feedback needs <contract>@vN and --comments")
+        print(drafts.add_feedback(project, rdir, args.contract, args.comments, "cli"))
+    elif args.action == "sync":
+        import bt_translate
+        started = drafts.sync(project, rdir)
+        translating = bt_translate.ensure(project, rdir)
+        print(f"Designer: {', '.join(started) or 'nothing to redo'} · translation: "
+              f"{'started' if translating else 'current or waiting'}")
+    else:
+        keep = ("id", "ref", "status", "stale", "pending_feedback", "summary", "questions", "error", "delegation")
+        print(json.dumps([{k: row.get(k) for k in keep} for row in drafts.rows(rdir)], indent=1, ensure_ascii=False))
+    return 0
+
+
+def _translate(args: argparse.Namespace, project: str, rdir: Path) -> int:
+    import os
+    import time
+
+    import bt_translate
+    if args.status:
+        print(json.dumps(bt_translate.status(rdir)))
+        return 0
+    lock = bt_translate._lock(rdir)
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.write_text(json.dumps({"pid": os.getpid(), "at": time.time()}), encoding="utf-8")
+    try:
+        result = bt_translate.translate(project, rdir)
+    finally:
+        lock.unlink(missing_ok=True)
+    print(json.dumps(result))
+    return 1 if result["failed"] and not result["translated"] else 0

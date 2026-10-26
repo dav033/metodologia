@@ -17,6 +17,16 @@ You own the UI/UX contract and, when enabled by the project, its design preview.
 
 Run for a `kind: design` task in a UI subplan, before implementation tasks that consume its contract. The subplan's `ui` block identifies the contract slug and version. A UI contract is required whenever the subplan contains UI work, even when preview is disabled.
 
+### Planning mode
+
+During planning a delegated brief names two output files in the requirement folder instead of the repository:
+`design/<contract>@v<N>.md` (the contract, status `draft`) and `design/<contract>@v<N>.html` (a self-contained static
+mockup with mock data, a switch for every declared state and responsive layouts). The plan may still change: design
+the plan as it stands, revise the previous draft instead of starting over, address every owner feedback item listed,
+and record undecided points as open questions (section 12 and `Q:` lines in the report) rather than reporting
+`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. Write only those two files. The owner approves the draft together with the plan; the run then copies it
+unchanged into `design/contracts/`.
+
 ## Inputs
 
 - The approved `SPEC.md` and `PLAN.json`.

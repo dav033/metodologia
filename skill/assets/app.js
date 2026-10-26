@@ -3,7 +3,9 @@
 // Wrapping tables in scroll regions is done page-wide by enhance.js.
 const NOT_AN_EMAIL = /@(v?\d|[^@]*\.(md|json|ya?ml|tsx?|jsx?|py|css|html)$)/i; // `contract@v1.md`, `jest@30.5.2`
 
-document.querySelectorAll('script.md-src').forEach((block) => {
+// Exposed as window.renderMarkdown(root) so live regions (planning-live.js) can render the blocks they swap in.
+function renderMarkdown(root) {
+root.querySelectorAll('script.md-src').forEach((block) => {
   const target = document.getElementById(block.dataset.target);
   if (!target || !window.marked) return;
   const src = JSON.parse(block.textContent)
@@ -22,6 +24,9 @@ document.querySelectorAll('script.md-src').forEach((block) => {
     box.setAttribute('aria-label', box.checked ? 'Hecho' : 'Pendiente');
   });
 });
+}
+window.renderMarkdown = renderMarkdown;
+renderMarkdown(document);
 
 // Ids in rendered markdown headings (## D-045 — ...) become anchors, so /go/D-045 lands on the exact section.
 (function () {

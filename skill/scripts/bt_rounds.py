@@ -124,6 +124,8 @@ def plan_decide(rdir: Path, approve: bool, comments: str, via: str) -> str:
         problem = bt_plan_adapter.publishable_problem(rdir, compatibility_report=compatibility_report)
         if problem:
             raise SystemExit(problem)
+        import bt_design_drafts  # planning-time designs are approved with the plan: pinned first, all or none
+        bt_design_drafts.pin_for_plan(rdir)
     stamp = f"{dt.datetime.now():%Y-%m-%d %H:%M}"
     with plan.open("a", encoding="utf-8") as fh:
         if comments.strip():

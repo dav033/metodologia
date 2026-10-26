@@ -14,7 +14,7 @@ from bt_pages import badge, layout, md, purl, read
 REQ_TABS = [("rounds", "Preguntas"), ("spec", "Spec"), ("plan", "Plan"), ("trace", "Trazabilidad"), ("review", "Revisar"), ("handoff", "Handoff")]
 
 
-def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> str:
+def req_page(project: str, req: str, tab: str, token: str, notice: str = "", lang: str = "") -> str:
     rdir = find_req(ROOT / project, req)
     rid = req_id(rdir)
     spec, plan = rdir / "SPEC.md", rdir / "PLAN.md"
@@ -37,8 +37,11 @@ def req_page(project: str, req: str, tab: str, token: str, notice: str = "") -> 
     elif tab == "rounds":
         content = rounds_panel(project, rid, rdir, token)
     elif tab == "plan":
-        content = (plan_panel(project, rid, plan, plan_status, token) + design_panel(project, rid, rdir, token)) if plan.exists() else \
-            '<p class="muted">Todavía no hay plan.</p>'
+        import bt_design_drafts
+        import bt_page_planning
+        content = (bt_page_planning.plan_tab(project, rid, rdir, plan_status, token, lang) +
+                   ("" if bt_design_drafts.active(rdir) else design_panel(project, rid, rdir, token))) \
+            if plan.exists() else '<p class="muted">Todavía no hay plan.</p>'
     elif tab == "review":
         from bt_page_review import review_panel
         content = review_panel(project, rid, rdir, token)
