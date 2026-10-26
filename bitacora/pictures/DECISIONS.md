@@ -462,3 +462,9 @@ Context: three weeks to pilot production (about 2026-11-16) for real external us
 Decision: one plan covers all. If time is short the work moves out of the pilot in this order: (1) language — Taller 3D and navigation first, the rest after; (2) editable quartets/modules beyond colours; (3) chat improvements beyond the split and reliability. Never cut: accounts, roles and permissions, saved projects and decorations, spend per user, rectangular tables, Blender export, Backing. Out of this plan: 3D space, vector export for Illustrator, AI spend caps. Roles are created by the administrator from the pilot (owner: nobody knows which roles will be wanted).
 Alternatives: split into several plans — rejected by the owner for now.
 Source: owner, REQ-021 rounds 1–3.
+
+## D-073 · REQ-021 accounts model and account rules (SP-1/SP-2, rounds 6–8) · 2026-10-26
+- Access plans are roles: Usuario · Plan 1/2/3, Empleado interno, Administrador; one role per account; system roles read-only in the pilot, administrators create custom roles (at least one permission).
+- Session 30 days; password ≥ 8 characters; 5 failures/15 min lock that email 15 min; invitation link 7 days, reset 24 h, both copied by the administrator; a new link invalidates older unused ones; activation signs in directly.
+- Only accounts without saved work can be deleted (others are deactivated); AI spend is kept without personal data as «Cuenta eliminada». Data notice v1 (ES/EN, Ley 1581) approved with placeholders; a new version must be re-accepted.
+- Pilot production = demo-decoracion.vercel.app from pilot day (no new domain); the owner creates the first administrator with a one-time command, or locally with AUTH_LOCAL_SIN_RESTRICCIONES against the production database.

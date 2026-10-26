@@ -3,38 +3,55 @@
   "cuentas-admin@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "72ae2e216da7437cdcbb6fc2478fcfc31fc167e72d7b54d3e14cf596c572a6a9",
-   "delegation": "D-20261026-154952-1a84",
-   "digest": "3df91a8044ceee61",
+   "before": "c860d5e12e40135464a1cc36128b4a9089351058713ef5a3540a0f5affb8021a",
+   "delegation": "D-20261026-160248-b311",
+   "digest": "5790073f7a23515e",
    "error": "",
    "failures": 0,
-   "feedback": [],
-   "finished": "2026-10-26T15:49:44-05:00",
+   "feedback": [
+    {
+     "consumed": "D-20261026-160248-b311",
+     "text": "Owner answers to your five questions. (1) Notice v1 approved as drafted (round 7 q2); the legal name, policy URL and rights email stay as visible placeholders; Sempertex legal reviews before real users are invited. (2) Yes: the administrator can generate a new invitation link for an invited account (and a new reset link); the new link invalidates every older unused link of the same kind; show «Generar enlace nuevo» on invited accounts and explain that older links stop working. (3) Deletion: an account with saved work (projects or decorations) cannot be deleted, only deactivated; the delete action is available only for accounts without saved work and otherwise explains why and offers Deactivate; AI spend is kept without personal data as «Cuenta eliminada»; deletion still requires typing the email. (4) Custom roles need at least one permission. (5) Activation signs the person in directly and takes them to the first tool their role allows; no extra sign-in step.",
+     "via": "cli",
+     "when": "2026-10-26T15:52:19-05:00"
+    },
+    {
+     "consumed": "D-20261026-160248-b311",
+     "text": "Planner rulings on Q6-Q8 (plan updated): Q6 no distinct locked message: one generic refusal for wrong password, unknown email, deactivated and locked; every failure message adds the neutral hint that after several failures one must wait fifteen minutes; remove the locked-state fixture. Q7 own-password change keeps the requesting browser signed in (the service ends all sessions and the route opens a new one), other browsers are signed out; say so in the success message; admin resets end all sessions. Q8 post-login fallback: /cuenta when the role has none of Taller 3D, chat or catalogue. Q1: the bracketed notice fields are a pending owner input tracked in SPEC Inputs; keep them as visible placeholders and do not ask again.",
+     "via": "cli",
+     "when": "2026-10-26T16:02:48-05:00"
+    }
+   ],
+   "finished": "2026-10-26T16:02:17-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
      "rev": 1,
      "summary": "Created cuentas-admin@v1 as a planning draft with all twelve sections, nine views, 34 visual acceptance criteria and five explicit owner questions. Created its self-contained responsive HTML mockup using Pictures tokens, light/dark themes and visible view/state/dialog controls. Approval remains with the owner and plan; no production code was changed."
+    },
+    {
+     "at": "2026-10-26T16:02:17-05:00",
+     "rev": 2,
+     "summary": "Revised the draft cuentas-admin@v1 contract and self-contained offline mockup for SP-2, incorporating owner rounds 7–8 while preserving existing tokens and breakpoints. The artifacts cover 11 views, the shared account menu and 52 visual criteria; plan approval remains pending."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [
-    "What legal entity name, privacy-policy URL and rights-contact email should replace the notice placeholders, and can David approve notice v1 after Sempertex legal review?",
-    "Should administrators regenerate expired/lost invitations, and should replacement invitation/reset links invalidate every older unused link of the same kind?",
-    "When an account is deleted, what happens to its projects, personal decorations and attributable AI-spend records, and what irreversible-loss copy should be shown?",
-    "May custom roles have zero permissions, or should the proposed minimum of one permission apply?",
-    "After invitation activation, should the person explicitly sign in as proposed, or receive a session immediately?"
+    "Q1 — David / Sempertex legal: What legal entity name, privacy-policy URL and rights-contact email replace the bracketed fields, and when will Sempertex complete its review before real activation? The owner already approved v1 text; do not request that approval again.",
+    "Q6 — David / Planner: SP-1 T1.3 returns the same generic refusal for locked emails, but SP-2 T2.3 requests a fifteen-minute lock message. Which must both layers implement? Recommendation: keep the generic refusal and append neutral wait guidance to all failed attempts; remove the distinct locked response. The mock retains both inspectable fixtures until the plan resolves it.",
+    "Q7 — David / Planner: T2.2 says own-password change ends every other session, while SP-1/SPEC says password change ends sessions. Should the requesting session remain active? Recommendation: preserve it as T2.2 specifies; resets still end all sessions. V10 success follows T2.2 and requires this reconciliation before implementation.",
+    "Q8 — David / Planner: What is the post-login fallback for a custom role with none of Taller 3D, chat or catalogue (for example only Administrar roles)? Recommendation: `/cuenta`, which every active account can open after accepting the notice; do not loop between a forbidden home and V9. The mock login success stops at a handoff instead of inventing that destination."
    ],
-   "queued": "2026-10-26T15:49:52-05:00",
-   "reason": "plan changed",
+   "queued": "2026-10-26T16:02:48-05:00",
+   "reason": "feedback",
    "report": "claimed",
-   "revision": 1,
-   "sha256": "72ae2e216da7437cdcbb6fc2478fcfc31fc167e72d7b54d3e14cf596c572a6a9",
-   "started": "2026-10-26T15:49:52-05:00",
+   "revision": 2,
+   "sha256": "c860d5e12e40135464a1cc36128b4a9089351058713ef5a3540a0f5affb8021a",
+   "started": "2026-10-26T16:02:48-05:00",
    "status": "drafting",
    "subplan_id": "SP-2",
-   "summary": "Created cuentas-admin@v1 as a planning draft with all twelve sections, nine views, 34 visual acceptance criteria and five explicit owner questions. Created its self-contained responsive HTML mockup using Pictures tokens, light/dark themes and visible view/state/dialog controls. Approval remains with the owner and plan; no production code was changed."
+   "summary": "Revised the draft cuentas-admin@v1 contract and self-contained offline mockup for SP-2, incorporating owner rounds 7–8 while preserving existing tokens and breakpoints. The artifacts cover 11 views, the shared account menu and 52 visual criteria; plan approval remains pending."
   }
  },
  "schema_version": 1

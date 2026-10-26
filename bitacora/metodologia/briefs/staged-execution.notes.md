@@ -79,3 +79,22 @@ Design change (D-134 to be rewritten accordingly):
 - requirements gate: waive param.
 NEXT: bt_stages.py (eligibility + run), pin_for_plan(refs), bt_launch join, review merge gate, CLI `stage`, web
 button/action, sessions auto refused, projection stage info, docs, pyproject, tests (unit + E2E), full suite.
+
+## Checkpoint before quota relay (2026-10-26 ~16:30)
+Done since last log: bt_stages.py, bt_cli_stage.py (`bitacora.py stage run|freeze|status REQ SP-n[,SP-m]`), web action
+`stage-run` (bt_server.stage_post, loopback) + Plan-tab button (bt_page_planning_flow._run_button → stage-run, only for
+confirmed subplans; «En ejecución · etapa rN» chip once held), sessions auto mode retired (SESSION_AUTO_SUPERSEDED,
+prompt_auto deleted, Sesión tab only hands-on), pin_for_plan(refs), bt_launch joins an existing run on final approval,
+bt_review.stage_gap (STAGE_INCOMPLETE, fail closed), projection `stage` + run page KPI + Ahora card label,
+adapter: second_auditor_lines applied to the stage projection, resume_problem verifies frozen bytes,
+freeze_revision without draft writes plan. pyproject: bt_stages, bt_cli_stage.
+Tests: new tests/test_stages.py (15, OK), tests/test_stage_execution_e2e.py (OK, ~8 s), bt_planner/tests/test_stages.py.
+Updated old tests to new semantics: test_plan_launch_paths, test_plan_contract_compat, test_plan_integration,
+test_plan_adapter_evidence, test_scheduler_integration (hijack test just edited, rerun it), test_planning_flow,
+test_subplan_sessions, planner tests.
+STILL FAILING / TODO (from full suite run 1, before fixes): test_scheduler_watch (2 tests of removed _apply_frozen:
+delete them), test_scheduler_launch_boundaries (existing scheduler authority now joins: update), test_planblock
+(prose drift test: change to task-line edit). test_plan_schema_13_compat = baseline (scans real bitácora drafts).
+Then: rerun full suite (each module alone if run_case_support complains), docs (plan-contract.md, modules.md,
+requirements.md §8, execution.md §1c, agents/planner.md), rewrite D-134 for compat dropped, antagonist review,
+day log `### Delegation`, PENDING items, final report.

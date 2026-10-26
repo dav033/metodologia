@@ -40,3 +40,15 @@
 {"at": "2026-10-26T15:44:35-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 8 secciones traducidas", "diff": ""}
 {"at": "2026-10-26T15:49:44-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 1 listo", "diff": ""}
 {"at": "2026-10-26T15:49:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 porque el subplan cambió", "diff": ""}
+{"at": "2026-10-26T15:52:19-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (criterios)", "diff": "+ Generating a new invitation or reset link for an account invalidates every older unused link of the same kind for that account, and a custom role with no permission is refused with ROL_SIN_PERMISOS."}
+{"at": "2026-10-26T15:52:19-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T15:52:19-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Owner answers to your five questions. (1) Notice v1 approved as drafted (round 7 q2); the legal name, policy URL and rights email stay as visible placeholders; Sempertex legal reviews before real user", "diff": ""}
+{"at": "2026-10-26T15:53:45-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 7 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T15:57:49-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 13 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T16:01:51-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 10 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T16:02:17-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 2 listo", "diff": ""}
+{"at": "2026-10-26T16:02:48-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Planner rulings on Q6-Q8 (plan updated): Q6 no distinct locked message: one generic refusal for wrong password, unknown email, deactivated and locked; every failure message adds the neutral hint that ", "diff": ""}
+{"at": "2026-10-26T16:02:48-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T16:03:10-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (criterios)", "diff": "+ On /login a person signs in with email and password; a wrong password, an unknown email, a deactivated account and a locked email all show the same message, which always adds that after several failures one must wait fifteen minutes, and success returns to the requested page or the first area the "}
+{"at": "2026-10-26T16:03:10-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-26T16:04:14-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 5 secciones traducidas", "diff": ""}
