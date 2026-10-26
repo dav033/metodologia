@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-24 15:11 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-25 22:31 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -44,25 +44,25 @@ _Generated 2026-10-24 15:11 by `bitacora.py index`. Do not edit by hand._
 | [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `cancelled (2026-10-18, owner)` | [done](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | report ✓ · round open |
 | [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `cancelled (2026-10-18, owner)` | — |  |
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
-| [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `planned` | [launched](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/PLAN.md) |  |
+| [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | [launched](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
+- P-187 · REQ-020 production advisor never offers Happia packages: migration `002_catalogue.sql` (ta · high/S
 - P-010 · Commit photo-reading work (uncommitted) and merge e3-rapido f1198efd (precise AI size edit · high/M
 - P-015 · REQ-002 remaining rollout verification: current read-only Neon audit proves 028 tables and · high/M
 - P-021 · Refine acceptance feat/refinar-aceptacion (e4m) — approved, base of integ/foto-taller (was · high/M
 - P-123 · REQ-020 M2 final acceptance still needs a passing LIVE run and deployed phone check. Crede · high/M
 - P-124 · Summary repair integrated locally at 915a75af on feat/req-020-asesor-happia; scheduler r7  · high/M
 - P-062 · After the prod fixes: /api/generate legacy product ids (productosPorIdConFuente) still rea · med/S
-- P-086 · `tamano_pieza` shrink (-1) enlarges a piece whose start size is below the constructor mini · med/S
 
 ## Recent decisions
 
+- D-068 — 2026-10-25 · REQ-020 advisor: no inspiration gallery, no closed packages, custom proposals from services, photo reading and keep list
+- D-067 — 2026-10-25 · REQ-020 absorbs Diana's brief findings in three phases
+- D-066 — 2026-10-25 · Emulated mobile acceptance replaces the physical-phone observations in REQ-020
+- D-065 — 2026-10-25 · Advisor reads the Happia catalogue directly from the API
 - D-064 — Observe release identity and version deployed advisor evidence
-- D-063 — Cancel the isolated REQ-018 run and revert this pass's code
-- D-062 — Reactivate REQ-018 only for the complete isolated product run
-- D-061 — Authorize root-cause repair and isolated T1 retry
-- D-060 — Scope the actual REQ-018 experiment to isolated T1
 
 ## Timeline
 

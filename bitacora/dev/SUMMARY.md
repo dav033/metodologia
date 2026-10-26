@@ -1,4 +1,5 @@
-2026-10-25 22:20: Pictures REQ-020 advisor released to main (f8f8b9e8): Vercel + VPS serve it, one login (original Demo Decoración), VPS acceptance 25/25. Vercel/local AI blocked by the shared Gemini key's monthly spending cap (P-203, owner action). REQ-020 stays open until Vercel acceptance reruns.
+2026-10-25 22:35: Pictures REQ-020 DONE: advisor on main (f8f8b9e8), one login, live on Vercel and the VPS, acceptance 25/25 on both. Gemini now uses one key (0770980b) everywhere; cap/plan unknown (owner to check ai.studio/spend, see cerebro note claves-gemini.md, P-194/P-195). Follow-ups: physical-phone check (D-066), key separation, P-193 venues in Happia, P-189/P-190 catalogue data.
+2026-10-25 22:20: Pictures REQ-020 advisor released to main (f8f8b9e8): Vercel + VPS serve it, one login (original Demo Decoración), VPS acceptance 25/25. Vercel/local AI blocked by the shared Gemini key's monthly spending cap (P-194, owner action). REQ-020 stays open until Vercel acceptance reruns.
 2026-10-25 18:25: Pictures REQ-020 advisor reworked by hand in worktree `login-redirect` (commits not pushed): voice notes (migration 003 applied), inspiration gallery and closed packages switched off, custom proposals from Happia services, theme-first ranking. Waiting for David to test localhost:3020, then gate/push/VPS release.
 # dev — Summary
 

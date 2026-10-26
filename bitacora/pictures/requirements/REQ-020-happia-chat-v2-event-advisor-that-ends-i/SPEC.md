@@ -1,6 +1,6 @@
 ---
 id: REQ-020
-status: planned
+status: done
 created: 2026-10-20
 track: deep
 ---
