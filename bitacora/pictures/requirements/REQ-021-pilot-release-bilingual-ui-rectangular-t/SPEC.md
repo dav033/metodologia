@@ -124,6 +124,7 @@ contract to Designer; the owner approves each version before UI implementation. 
 there is no UI subplan._
 
 ## Priorities & phases
+- **Access plans (owner, round 4):** three plans for external users. Plan 1: assisted chat + balloon counter. Plan 2: plan 1 + costs (calculator) + exploring ready-made decorations. Plan 3: plan 2 + the 3D model (Taller 3D). Staff roles (empleado interno, administrador) stay; the relation between plans, roles and permissions is settled in the accounts subplan.
 - **Cut order if time is short (owner agreed, round 3):** 1) language: Taller 3D and navigation first, the rest after the pilot; 2) editable quartets/modules beyond colours; 3) chat improvements beyond the split and reliability. **Never cut:** accounts, roles and permissions, saved projects and decorations, spend per user, rectangular tables, Blender export, Backing. One plan covers everything; the plan is written by a dedicated Opus 5.5 high Planner session, not by the HQ session.
 - **Assisted chat (round 3):** split into three tools — cost calculator, balloon counter and the «normal» chat — plus a basic chat↔3D integration: in 2–3 messages the chat defines what is needed and recommends already-made 3D decorations.
 - **Added to scope in round 2:** the assisted chat (advisor / guided chat) is IN: it will be broken apart, split and improved (details pending). AI spend caps are OUT for now: measure and show spend only.
@@ -137,6 +138,11 @@ there is no UI subplan._
 - Overlaps with cancelled REQ-004 (users and spend), REQ-005 (decorations from scratch), REQ-006 (venue photo to 3D) and done REQ-011 (module studio), REQ-012 (tables and chairs).
 
 ## Assumptions
+- Invitations are single-use links the administrator copies and sends himself (round 4); no email service in this plan.
+- No feature flags (owner: the working environment is not production). To confirm: which environment each approved subplan is published to, since merging to main may deploy the live site.
+- Local development has no credential or role restrictions, controlled by a flag in `.env`; that flag must be refused in production. The first production administrator is created by a one-off command.
+- One-time translation of products and decorations to English uses the owner's Claude accounts with Haiku 5.5 (no Gemini key, no USD cap).
+- `/asesor` and `/happie` keep their own login and stay outside the pilot's new accounts.
 - Login is email plus password with invitation by email (owner chose «invited», not the mechanism). Revisit if an identity provider is preferred.
 - «Blender export» is the existing GLB, verified and fixed, not a new format.
 - «Modify quartets and modules» means editing more than colours; the exact edits are not specified yet.
@@ -159,6 +165,7 @@ there is no UI subplan._
 
 ## Clarifications
 - Round 1 (2026-10-26): pilot users = real external users + internal employees + administrators; priorities accepted as proposed; «tokens» = AI spend per user, visible to employee and admin (session total, image-generation spend); Backing = one catalogue category grouping party props (metal hoops, pedestals, round panel, half moon, chiara arches); language: EN/ES switch, auto-detected, covering AI replies, products and interface.
+- Round 4 (2026-10-26, Planner): invitation = copyable single-use link; three access plans (see Priorities); no flags; AI spend stored for both login session and project/conversation; cuts by date (9 Nov language, 11 Nov modules, 12 Nov chat) with the owner approving each subplan in under 24 h; translation with Claude accounts on Haiku 5.5; local admin without restrictions via an `.env` flag.
 - Round 2 (2026-10-26): assisted chat is in scope (to be broken apart, split and improved); external accounts are invited by an administrator, no open registration; admin can create roles and choose permissions from the pilot; no spend caps now (measure and show only); English product names/descriptions are AI-generated once from the Spanish source, stored in the database and editable by an administrator.
 
 
