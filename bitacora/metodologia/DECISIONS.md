@@ -1196,3 +1196,14 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - − `verify approve|reject --by owner` is honor-system like `planning confirm`: an agent must pass it only when the owner said so; the web is the real owner channel.
 - **Source:** owner, 2026-10-26 (session d05f524b); implemented manually, not as a bitácora requirement.
 
+
+## D-132 — A subplan can be built WITH the owner in a hands-on agent session before the plan goes on
+
+- **Date:** 2026-10-26 · **Status:** Accepted · **Refines:** D-130
+- **Decision:** From a subplan's «Sesión» tab (or `bitacora.py sessions start|status|finish REQ SP`) the owner opens an interactive Claude Code window (Sonnet 5.5 medium by default, Opus 5.5 high optional) in its own git worktree outside the repos (`~/.local/share/bitacora-sessions/<project>/<REQ>/<SP>`) on a branch `session/<req>-<sp>` created from `origin/main`. The first message carries the subplan's outcome, acceptance criteria, the SPEC requirements it covers and the working rules (small commits, never push, merge or deploy, no other checkout, never print secrets). `finish` records the branch head; `planning resume` lists the sessions and the Planner writes that subplan's tasks around the branch instead of rebuilding it.
+- **Consequences:**
+  - \+ UI-feel or owner-judgment work (rectangular tables, Backing in REQ-021) can be done interactively before the rest of the plan is defined.
+  - \+ No change to the Scheduler or the integration lines; nothing reaches `main`.
+  - − The session's branch is not yet adopted by the engine as the subplan's published version (P-205): until then the Planner plans review/tests/integration tasks around it.
+  - − The window runs with permissions bypassed (as every agent here does) and only opens from loopback on a machine with a desktop; one running session per subplan.
+- **Source:** owner, 2026-10-26 (session d05f524b), REQ-021 SP-3.
