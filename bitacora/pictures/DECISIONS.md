@@ -435,3 +435,24 @@ Consumers/compatibility: `plan/aprobacion.ts` validates both nested versions ins
 - **Consequences:** + honest offers, richer brief; − R9/R10 text in SPEC.md is out of date (owner decision overrides); closed packages and gallery remain in code behind flags.
 - **Source:** [dev day log](../dev/2026-10/W4/2026-10-25.md) session `54d875b5` · REQ-020
 
+
+## D-069 · 2026-10-26 · REQ-020 advisor chat shows no privacy or test-version banners
+- **Context:** the chat header carried two notices (privacy; «Versión de prueba») required by T4.
+- **Decision:** owner order: remove both from `ChatView.tsx`; `chat-ui.test.ts` now asserts they are absent. `ADVISOR_ESTIMATE_NOTICE` on the proposal card is unchanged pending the owner's call.
+- **Alternatives:** keep them — rejected by the owner.
+- **Consequences:** + cleaner chat; − the T4 privacy-notice requirement is no longer met in the UI; SPEC text out of date. Uncommitted in worktree `login-redirect`.
+- **Source:** [pictures day log](2026-10/W5/2026-10-26.md) session `ccaface8` · REQ-020
+
+## D-070 · 2026-10-26 · REQ-020 advisor: summary and proposal hide when the customer replies; voice recording is inline
+- **Context:** owner testing: after the summary or proposal appeared, replying (text or voice) left the card on screen; the voice panel floated over the last message.
+- **Decision:** `ChatView` hides the proposal card and the summary once the customer sends a turn (a corrected summary version returns, an approved one stays). The recording bar replaces the text field in the composer row; warnings and the microphone list render above the composer.
+- **Alternatives:** keep the floating panel — rejected by the owner; hide the approved summary too — not chosen.
+- **Consequences:** + last message stays visible while speaking; − a stale summary stays hidden until the next version. Uncommitted in worktree `login-redirect`.
+- **Source:** [pictures day log](2026-10/W5/2026-10-26.md) session `ccaface8` · REQ-020
+
+## D-071 · 2026-10-26 · REQ-020 advisor never adds assembly/transport by default; desserts come before logistics
+- **Context:** a live proposal included «Montaje y Transporte» ($780.000) without the customer asking; it fit the budget but nobody knew if they wanted it.
+- **Decision:** `buildCustomPackage` holds back logistics services unless `logisticsConfirmed=true` (set only after the customer says yes; the on-screen editor counts as explicit). The tool result tells the model to ask. Prompts prioritise decoration, food/drink, then desserts (pudines, repostería) before anything else.
+- **Alternatives:** prompt-only rule — rejected (the model already ignored the implicit expectation; the server default is deterministic).
+- **Consequences:** + no surprise logistics lines; − the match is by service name, so a differently named logistics service would still pass. Uncommitted in worktree `login-redirect`.
+- **Source:** [pictures day log](2026-10/W5/2026-10-26.md) session `ccaface8` · REQ-020

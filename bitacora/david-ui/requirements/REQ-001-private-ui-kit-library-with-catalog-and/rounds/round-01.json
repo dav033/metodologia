@@ -1,0 +1,90 @@
+{
+ "title": "Plan-wide: package + public catalog",
+ "intro": "Owner redirection 2026-10-26: david-ui becomes an npm package (personal use) plus a public web catalog on Vercel that only shows components and consumes the same package. Package first, web second, iterate on missing components along the way. Replaces the shadcn registry, login, tokens and Netlify of D-001.",
+ "coverage": "6/10",
+ "questions": [
+  {
+   "text": "Where does the package live and how do other projects install it?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Private GitHub repo + GitHub Packages (@dav033/david-ui, private); consumers use an .npmrc with a read token (also as a Vercel env var)"
+    },
+    {
+     "key": "b",
+     "label": "Public npm registry (no token, but React Bits license forbids redistributing it as a library)"
+    },
+    {
+     "key": "c",
+     "label": "Git dependency github:dav033/david-ui#vX (no registry, consumers need git access; build on install)"
+    }
+   ],
+   "recommended": "a",
+   "why": "React Bits MIT+Commons Clause forbids redistributing as a library to third parties (inventory 11.7), so a public npm package is out; GitHub Packages gives real semver versions and normal npm install.",
+   "id": "q1",
+   "type": "choice"
+  },
+  {
+   "text": "Repo layout?",
+   "options": [
+    {
+     "key": "a",
+     "label": "One monorepo (npm workspaces): packages/ui (the package) + apps/catalog (Next.js) consuming it via workspace"
+    },
+    {
+     "key": "b",
+     "label": "Two repos; the catalog installs the published package version"
+    }
+   ],
+   "recommended": "a",
+   "why": "A missing piece found while building the catalog is added to the package and used immediately in the same commit, with no publish round-trip; this is the flexibility you asked for.",
+   "id": "q2",
+   "type": "choice"
+  },
+  {
+   "text": "Milestone order?",
+   "options": [
+    {
+     "key": "a",
+     "label": "M1 package foundation (tokens, motion, build, publish) + P1 shadcn components; M2 public catalog on Vercel; later milestones add each source family to package and catalog together"
+    },
+    {
+     "key": "b",
+     "label": "All 93 components in the package first, the catalog at the very end"
+    }
+   ],
+   "recommended": "a",
+   "why": "Keeps package-first, but you get a visible catalog early to review components instead of waiting for all 93.",
+   "id": "q3",
+   "type": "choice"
+  },
+  {
+   "text": "Scope of this plan: still all 93 inventory entries + 22 Animate UI enhancements?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Yes, all, in milestones (as the current SPEC)"
+    },
+    {
+     "key": "b",
+     "label": "Only foundation + P1 + catalog now; P2, Animate UI capabilities, Bencho and React Bits as later requirements"
+    }
+   ],
+   "recommended": "b",
+   "why": "Smaller first plan reaches a working package + catalog sooner; the rest is added iteratively as you asked, each as its own requirement with fresh decisions.",
+   "id": "q4",
+   "type": "choice"
+  },
+  {
+   "text": "Keep the rest of the current SPEC: Base UI only, React 19 + Tailwind 4 + Motion, Catppuccin Latte/Mocha with mauve accent as default theme (replaceable per project), 3 motion profiles, catalog UI in Spanish, catalog built 100% with the kit, clean-room for restrictive licenses?",
+   "type": "open",
+   "suggested": "Yes, keep all of it.",
+   "why": "Those decisions do not depend on the distribution change; only registry, login, tokens and Netlify are removed.",
+   "id": "q5"
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T14:02:57Z"
+}
