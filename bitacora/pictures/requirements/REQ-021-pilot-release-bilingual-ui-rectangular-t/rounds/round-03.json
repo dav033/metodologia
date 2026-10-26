@@ -78,7 +78,28 @@
    "why": "Con este alcance es probable que algo no entre el 16 de noviembre; decidirlo ahora evita sacrificar sin criterio."
   }
  ],
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T17:26:03Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "text": "Split the assisted chat into three tools: a cost calculator, a balloon counter, and the «normal» chat. For this plan, build a basic integration between the chat and the 3D workshop: within 2–3 messages the chat can define what is needed and recommend already-made 3D decorations."
+  },
+  "q2": {
+   "choice": "a",
+   "note": "Owner: do NOT add the 3D space to this plan (out of scope here); the answer is recorded as asked but the item is excluded."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Accepted."
+  },
+  "q4": {
+   "choice": "a",
+   "note": "Accepted."
+  },
+  "q5": {
+   "text": "Agreed: record the cut order in the bitácora, but for now create ONE plan with everything. Cut order if time is short: 1) language: Taller 3D and navigation first, rest after the pilot; 2) editable quartets/modules beyond colours; 3) chat improvements beyond the split and reliability. Never cut: accounts, roles and permissions, saved projects and decorations, spend per user, rectangular tables, Blender export, Backing."
+  }
+ },
+ "created_at": "2026-10-26T17:26:03Z",
+ "answered_at": "2026-10-26T17:30:41Z",
+ "answered_via": "terminal"
 }
