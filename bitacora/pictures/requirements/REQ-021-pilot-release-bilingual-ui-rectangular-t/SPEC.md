@@ -17,7 +17,10 @@ Illustrator; be able to modify quartets and modules.
 **Success looks like:** _to settle in the interview (what must work on pilot day, for whom)._
 
 ## Users / actors / stakeholders
--
+- **Usuario** (real, external): uses the 3D balloon workshop; no spend dashboard.
+- **Empleado interno**: same plus the token/spend dashboard.
+- **Administrador**: everything above plus user and role management.
+- Owner: David.
 
 ## Scope (in)
 <!-- User stories, ranked. Each one independently valuable and testable.
@@ -28,7 +31,8 @@ As a <actor>, I want <capability> so that <benefit>.
 -->
 
 ## Out of scope
--
+- The assisted chat (advisor / guided chat): owner says it is another requirement or not useful for now (to confirm in round 2).
+- Later (owner agreed 2026-10-26): 3D space from a venue photo; vector export for Illustrator.
 
 ## Requirements
 <!-- EARS style, numbered so tests/plan can cite them:
@@ -58,7 +62,10 @@ contract to Designer; the owner approves each version before UI implementation. 
 there is no UI subplan._
 
 ## Priorities & phases
-_MoSCoW + what is MVP vs later._
+- **Must:** accounts with three roles (usuario, empleado interno, administrador); AI spend per user with cap and dashboard for employee/admin (mainly Taller 3D); save projects; save decorations; rectangular tables; export to Blender.
+- **Should:** switchable English/Spanish for the whole app (interface, AI replies, products), auto-detected; editable modules and quartets; Backing category.
+- **Later:** 3D space from photo; vector export for Illustrator.
+- Tension to resolve: the owner wants the language switch to cover EVERYTHING (not just main flows) although it is ranked Should.
 
 ## Timeline & dependencies
 - Owner deadline: pilot production in three weeks from 2026-10-26 (about 2026-11-16). Not an emergency fix: planned work.
@@ -83,5 +90,5 @@ _Best guesses taken instead of asking, with why. Revisit if they turn out wrong.
 | Timeline | Missing |
 
 ## Clarifications
-<!-- ### Round N — YYYY-MM-DD
-- Q: … → A: … -->
+- Round 1 (2026-10-26): pilot users = real external users + internal employees + administrators; priorities accepted as proposed; «tokens» = AI spend per user, visible to employee and admin (session total, image-generation spend); Backing = one catalogue category grouping party props (metal hoops, pedestals, round panel, half moon, chiara arches); language: EN/ES switch, auto-detected, covering AI replies, products and interface.
+

@@ -1,0 +1,104 @@
+{
+ "round": 2,
+ "title": "Cuentas, roles, gasto e idioma",
+ "coverage": "3/10",
+ "intro": "Entendido: usuarios externos reales, tres roles (usuario, empleado interno, administrador), panel de gasto para empleado y administrador, Backing como una categoría del catálogo, e idioma EN/ES para todo. Ojo con el idioma: «todo» incluye los productos (nombres y descripciones del catálogo) y la IA, y es lo más grande de la lista; lo dejo como Should pero con alcance completo, y abajo te pregunto cómo traducir los productos.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "Dijiste que el chat asistido es otro requerimiento o que ahora no sirve. ¿Queda fuera del piloto? (Hablo del asesor Happia y del chat guiado de clientes.)",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Fuera del piloto: no se traduce ni se cuenta en el gasto por usuario"
+    },
+    {
+     "key": "b",
+     "label": "Fuera como producto, pero el gasto de su IA se cuenta igual"
+    },
+    {
+     "key": "c",
+     "label": "Dentro del piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es el área con más trabajo reciente (REQ-020) y no está en tu lista; así el piloto se centra en el Taller 3D."
+  },
+  {
+   "id": "q2",
+   "text": "¿Cómo obtienen cuenta los usuarios externos?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Los invita un administrador (correo + contraseña); no hay registro abierto"
+    },
+    {
+     "key": "b",
+     "label": "Se registran solos y un administrador los aprueba"
+    },
+    {
+     "key": "c",
+     "label": "Registro abierto"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es un piloto con gente real y con gasto de IA que paga Sempertex: controlar quién entra reduce riesgo y trabajo."
+  },
+  {
+   "id": "q3",
+   "text": "Roles: ¿en el piloto los tres roles son fijos o el administrador puede crear roles nuevos?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Tres roles fijos, con una tabla de permisos por rol; el editor de roles queda para después"
+    },
+    {
+     "key": "b",
+     "label": "El administrador crea roles y elige permisos desde el piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "En tu primer mensaje pedías que el administrador cree roles; con tres roles definidos y permisos como datos, el editor es después un añadido, no una reescritura."
+  },
+  {
+   "id": "q4",
+   "text": "Gasto de IA de los usuarios externos: ¿qué pasa al llegar al límite?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Tope mensual por usuario que fija el administrador; al llegar se bloquean las funciones de IA con un aviso y el resto sigue funcionando"
+    },
+    {
+     "key": "b",
+     "label": "Solo se mide y se avisa al administrador, sin bloquear"
+    }
+   ],
+   "recommended": "a",
+   "why": "El piloto es con externos y la IA cuesta dinero real; hoy solo hay topes globales por hora."
+  },
+  {
+   "id": "q5",
+   "text": "Productos en inglés: ¿cómo se traducen los nombres y descripciones del catálogo?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "El español es la fuente; el inglés lo genera la IA una vez, se guarda en la base de datos y un administrador puede corregirlo"
+    },
+    {
+     "key": "b",
+     "label": "Los traduces tú o alguien del equipo a mano antes del piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "El catálogo tiene miles de productos (3.217 solo de Sempertex); a mano no cabe en tres semanas."
+  }
+ ],
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T17:21:37Z"
+}
