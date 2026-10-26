@@ -95,7 +95,9 @@ As a user I use three separate tools instead of one chat: a cost calculator, a b
 - R11. The catalogue shall have a Backing category that lists the existing party props of those kinds.
 - R12. When the language is changed or detected, the system shall show the interface, AI replies and product text in that language.
 - R13. The assisted chat shall be split into a cost calculator, a balloon counter and a normal chat, and the normal chat shall connect to the 3D workshop.
-- R14. If any of R1–R13 is not finished by the deadline, then the cut order in Priorities shall apply; the never-cut items shall ship.
+- R14. If any of R1–R16 is not finished by its cut date, then the cut order in Priorities shall apply; the never-cut items shall ship.
+- R15. When a user edits a module or quartet in the scene beyond its colours, the system shall apply the edit to that module only and update the counts and the shopping list.
+- R16. When an administrator assigns an access plan to an external account, the system shall grant exactly that plan's tools: Plan 1 the assisted chat and the balloon counter; Plan 2 adds the cost calculator and the ready-made decorations explorer; Plan 3 adds the Taller 3D.
 
 ## UI / design contract (optional)
 <!-- Include when the requirement contains user-facing UI. Record users, supported flows/views, existing design
@@ -175,3 +177,19 @@ there is no UI subplan._
 - Q: Who sees saved projects → A: each user sees their own; employees and administrators see all; browser-saved scenes are imported on login.
 - Q: Saved decoration → A: a composition built in the scene, saved to the user's personal library for other projects (publishing to the global library is later).
 - Q: What moves if time is short → A: cut order above.
+
+## Inputs
+Locations only, never values. Empty Subplan = plan-wide. Rows marked `pending` wait on round 5.
+
+| Item | Subplan | Where it lives | Supplier | Status |
+|---|---|---|---|---|
+| Where each approved subplan is tried and when it reaches production | all | round 5 q1 | Owner | pending |
+| Database for automated checks and local tests | all | round 5 q2; proposed `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env` (Neon branch) | Owner | pending |
+| Production Neon database | SP-13 | `DATABASE_URL` in Vercel Production env and `.env.local` (name only) | Owner | available |
+| Vercel production deploy of `main` | SP-13 | Vercel project `dav033s-projects/demo-decoracion`, Git integration; `vercel` CLI logged in as dav033 | Owner | available |
+| VPS deploy of ai-api | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, environment `production`) via `gh` | Owner | available |
+| Local no-restrictions flag: name and rule | SP-1 | round 5 q3; proposed `AUTH_LOCAL_SIN_RESTRICCIONES` in `.env.local` | Owner | pending |
+| First production administrator: mechanism and email | SP-1, SP-13 | round 5 q4, q5 | Owner | pending |
+| Data-protection text, Sempertex privacy-policy URL and rights contact email | SP-2 | round 5 q6 | Owner | pending |
+| Authorization for automated production smoke | SP-13 | round 5 q7; `~/bitacora/pictures/verification-policy.json` entry | Owner | pending |
+| One-time English translation with Haiku 5.5 | SP-9 | owner's Claude accounts through the Claude Code CLI (round 4 q6); no Gemini key, no USD cap | Owner | available |

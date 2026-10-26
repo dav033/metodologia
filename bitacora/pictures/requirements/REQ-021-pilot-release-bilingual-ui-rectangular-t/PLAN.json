@@ -1,0 +1,276 @@
+{
+  "schema_version": "1.3.0",
+  "plan_id": "REQ-021",
+  "revision": 1,
+  "spec_ref": "SPEC.md",
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Accounts, access plans and Taller essentials",
+      "acceptance_criteria": [
+        "Real people sign in with their own invited account and each one reaches exactly what their role or access plan allows; the shared APP_PASSWORD no longer opens the app; tables, Backing and the Blender file work in the Taller."
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Saved work, spend per user and the chat tools",
+      "acceptance_criteria": [
+        "Each signed-in user saves and reopens projects and decorations from any browser, every paid AI call is attributed to a user and a session, and the assisted chat is three separate tools gated by access plan."
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "English / Spanish",
+      "acceptance_criteria": [
+        "The interface follows the browser language on the first visit and the account's choice afterwards; the Taller 3D and navigation are fully in English first, then product texts, the remaining screens and the AI replies."
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Editable modules and chat → 3D",
+      "acceptance_criteria": [
+        "Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop."
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Pilot release",
+      "acceptance_criteria": [
+        "The pilot runs in production with real accounts: the first administrator exists, every shipped subplan is published, a production smoke passes and anything cut is listed."
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "R10",
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R15",
+    "R16"
+  ],
+  "tasks": [],
+  "interfaces": [],
+  "subplans": [
+    {
+      "id": "SP-1",
+      "milestone_id": "M1",
+      "title": "Accounts, sessions and server-side permissions",
+      "outcome": "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the three access plans are sets of permissions; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command.",
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16"
+      ],
+      "acceptance_criteria": [
+        "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the three access plans are sets of permissions; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command."
+      ]
+    },
+    {
+      "id": "SP-2",
+      "milestone_id": "M1",
+      "title": "Sign-in, invitation and administration screens",
+      "outcome": "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts.",
+      "covers": [
+        "R1",
+        "R3",
+        "R16"
+      ],
+      "acceptance_criteria": [
+        "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns role or access plan, creates roles by choosing permissions, and deactivates or deletes accounts."
+      ],
+      "ui": {
+        "contract": "cuentas-admin",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-3",
+      "milestone_id": "M1",
+      "title": "Taller essentials: rectangular tables, Backing and Blender export",
+      "outcome": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+      "covers": [
+        "R9",
+        "R10",
+        "R11"
+      ],
+      "acceptance_criteria": [
+        "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours."
+      ],
+      "ui": {
+        "contract": "taller-esenciales",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-4",
+      "milestone_id": "M2",
+      "title": "Saved projects",
+      "outcome": "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss.",
+      "covers": [
+        "R6",
+        "R7"
+      ],
+      "acceptance_criteria": [
+        "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss."
+      ],
+      "ui": {
+        "contract": "proyectos",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-5",
+      "milestone_id": "M2",
+      "title": "Saved decorations",
+      "outcome": "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported.",
+      "covers": [
+        "R8"
+      ],
+      "acceptance_criteria": [
+        "A user saves a selection or composition from the scene with a name to their personal library on the server and places it in any of their projects; items already in the browser's own library are imported."
+      ],
+      "ui": {
+        "contract": "decoraciones",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-6",
+      "milestone_id": "M2",
+      "title": "AI spend per user and session",
+      "outcome": "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view.",
+      "covers": [
+        "R4",
+        "R5"
+      ],
+      "acceptance_criteria": [
+        "Every paid AI call (Next and ai-api) is stored with user, sign-in session, work item (project or conversation), tool and kind (text or image); employees and administrators see totals grouped by project or conversation, filtered by user and kind; a usuario cannot open the view."
+      ],
+      "ui": {
+        "contract": "gasto-ia",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-7",
+      "milestone_id": "M2",
+      "title": "Assisted chat as three tools and the decorations explorer",
+      "outcome": "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan.",
+      "covers": [
+        "R13",
+        "R16"
+      ],
+      "acceptance_criteria": [
+        "The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with its access plan."
+      ],
+      "ui": {
+        "contract": "herramientas-chat",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-8",
+      "milestone_id": "M3",
+      "title": "Language switch, Taller 3D and navigation in English",
+      "outcome": "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages.",
+      "covers": [
+        "R12"
+      ],
+      "acceptance_criteria": [
+        "A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages."
+      ],
+      "ui": {
+        "contract": "idioma-taller",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-9",
+      "milestone_id": "M3",
+      "title": "Product and decoration texts in English",
+      "outcome": "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator.",
+      "covers": [
+        "R12"
+      ],
+      "acceptance_criteria": [
+        "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator."
+      ],
+      "ui": {
+        "contract": "textos-producto",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-10",
+      "milestone_id": "M3",
+      "title": "Remaining screens and AI replies in English",
+      "outcome": "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language.",
+      "covers": [
+        "R12"
+      ],
+      "acceptance_criteria": [
+        "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language."
+      ],
+      "ui": {
+        "contract": "idioma-resto",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-11",
+      "milestone_id": "M4",
+      "title": "Editable modules and quartets",
+      "outcome": "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update.",
+      "covers": [
+        "R15"
+      ],
+      "acceptance_criteria": [
+        "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update."
+      ],
+      "ui": {
+        "contract": "modulos-editables",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-12",
+      "milestone_id": "M4",
+      "title": "Normal chat recommends ready-made 3D decorations",
+      "outcome": "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine.",
+      "covers": [
+        "R13"
+      ],
+      "acceptance_criteria": [
+        "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine."
+      ],
+      "ui": {
+        "contract": "chat-a-3d",
+        "version": 1
+      }
+    },
+    {
+      "id": "SP-13",
+      "milestone_id": "M5",
+      "title": "Pilot release in production",
+      "outcome": "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded.",
+      "covers": [
+        "R14"
+      ],
+      "acceptance_criteria": [
+        "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded."
+      ]
+    }
+  ],
+  "composition_gates": []
+}

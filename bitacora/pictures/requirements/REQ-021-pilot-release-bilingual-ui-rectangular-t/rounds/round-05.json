@@ -130,7 +130,35 @@
   }
  ],
  "round": 5,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T18:26:10Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": "Owner: demo-decoracion.vercel.app is NOT production, it is the testing environment; so main -> Vercel is a test deploy. (Real production is something else: Planner to confirm what production is for the pilot, SP-13.)"
+  },
+  "q2": {
+   "text": "Owner: prepare a Postgres on the VPS (it will become a Supabase in the future) for the plan's tests and local account/project/spend tests, instead of a Neon branch. Done by the HQ session, not by the plan."
+  },
+  "q3": {
+   "choice": "a",
+   "note": "Accepted."
+  },
+  "q4": {
+   "text": "Owner: every person who enters locally is administrator right now without credentials. (Taken as the local no-restrictions mode of q3; it does not say how the first PRODUCTION administrator is created: assume the one-time command (option a) with the email of q5 unless the owner says otherwise. Open for the Planner to confirm: «local» means the owner's machine only, never a public deployment.)"
+  },
+  "q5": {
+   "text": "davidt@sempertex.com"
+  },
+  "q6": {
+   "choice": "a",
+   "note": "Owner: the agent writes the data-processing text (Ley 1581), in Spanish and English; the owner approves it in the account-screens subplan. The Sempertex policy link and contact email are not provided yet: leave them as marked placeholders and flag the text for Sempertex legal review; do not invent legal claims."
+  },
+  "q7": {
+   "choice": "a",
+   "note": "Accepted: automated smoke on the deployed environment with the piloto-e2e test account, no paid AI."
+  }
+ },
+ "created_at": "2026-10-26T18:26:10Z",
+ "answered_at": "2026-10-26T18:31:12Z",
+ "answered_via": "terminal"
 }

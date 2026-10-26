@@ -82,20 +82,22 @@ Como usuario, uso tres herramientas separadas en lugar de un solo chat: una calc
 - Para más adelante (acordado por el propietario el 2026-10-26): espacio 3D a partir de una foto del lugar; exportación vectorial para Illustrator.
 
 ## Requisitos
-- R1. Cuando un administrador invita a una dirección de correo electrónico, el sistema deberá permitir que esa persona cree una contraseña e inicie sesión; no deberá existir el registro abierto.
-- R2. El sistema deberá aplicar roles y permisos en el servidor para cada página y API del piloto.
-- R3. Cuando un administrador crea un rol, el sistema deberá permitirle seleccionar sus permisos de una lista definida; deberán existir los tres roles iniciales.
-- R4. Cuando se complete una llamada de IA con costo, el sistema deberá guardar los tokens y el costo estimado asociados al usuario y la sesión.
-- R5. Mientras la sesión esté iniciada como empleado o administrador, el sistema deberá mostrar los totales de gastos por sesión, tipo y usuario.
-- R6. Cuando un usuario guarda un proyecto, el sistema deberá almacenarlo en el servidor bajo su cuenta; los empleados y administradores deberán poder abrir cualquier proyecto.
-- R7. Cuando un usuario inicia sesión por primera vez y tiene escenas guardadas en el navegador, el sistema deberá ofrecerle importarlas sin pérdida de datos.
-- R8. Cuando un usuario guarda una composición como decoración, el sistema deberá añadirla a su biblioteca personal.
-- R9. Cuando un usuario añade una mesa rectangular, el sistema deberá permitirle configurar su tamaño y número de sillas, y actualizar la lista de compras.
-- R10. Cuando un usuario exporta a GLB, el sistema deberá generar un archivo que Blender abra con la distribución, los tamaños y los colores de la escena.
-- R11. El catálogo deberá tener una categoría Backing que incluya los artículos de fiesta existentes de esos tipos.
-- R12. Cuando se cambia o detecta el idioma, el sistema deberá mostrar en ese idioma la interfaz, las respuestas de la IA y el texto de los productos.
-- R13. El chat asistido deberá dividirse en una calculadora de costos, un contador de globos y un chat normal; el chat normal deberá conectarse al taller 3D.
-- R14. Si alguno de los requisitos R1–R13 no se termina para la fecha límite, se deberá aplicar el orden de recorte de la sección Prioridades; los elementos que nunca se recortan deberán entregarse.
+- R1. Cuando un administrador invita una dirección de correo electrónico, el sistema debe permitir que esa persona cree una contraseña e inicie sesión; no debe existir el registro abierto.
+- R2. El sistema debe aplicar roles y permisos en el servidor para cada página y API del piloto.
+- R3. Cuando un administrador crea un rol, el sistema debe permitirle elegir sus permisos de una lista definida; deben existir los tres roles iniciales.
+- R4. Cuando se completa una llamada de IA con costo, el sistema debe guardar los tokens y el costo estimado asociados al usuario y la sesión.
+- R5. Mientras la sesión esté iniciada como empleado o administrador, el sistema debe mostrar los totales de gasto por sesión, tipo y usuario.
+- R6. Cuando un usuario guarda un proyecto, el sistema debe almacenarlo en el servidor bajo su cuenta; los empleados y administradores deben poder abrir cualquier proyecto.
+- R7. Cuando un usuario inicia sesión por primera vez con escenas guardadas en el navegador, el sistema debe ofrecer importarlas sin pérdida de datos.
+- R8. Cuando un usuario guarda una composición como decoración, el sistema debe agregarla a su biblioteca personal.
+- R9. Cuando un usuario agrega una mesa rectangular, el sistema debe permitirle configurar sus dimensiones y sillas, y actualizar la lista de compras.
+- R10. Cuando un usuario exporta a GLB, el sistema debe generar un archivo que Blender pueda abrir con la distribución, las dimensiones y los colores de la escena.
+- R11. El catálogo debe tener una categoría Backing que incluya los artículos para fiestas existentes de esos tipos.
+- R12. Cuando se cambia o detecta el idioma, el sistema debe mostrar la interfaz, las respuestas de IA y el texto de los productos en ese idioma.
+- R13. El chat asistido debe dividirse en una calculadora de costos, un contador de globos y un chat normal; el chat normal debe conectarse con el Taller 3D.
+- R14. Si alguno de R1–R16 no está terminado para su fecha límite, se debe aplicar el orden de recortes de Priorities; los elementos que nunca se recortan deben publicarse.
+- R15. Cuando un usuario edita un módulo o cuarteto de la escena más allá de sus colores, el sistema debe aplicar la edición solo a ese módulo y actualizar las cantidades y la lista de compras.
+- R16. Cuando un administrador asigna un plan de acceso a una cuenta externa, el sistema debe otorgar exactamente las herramientas de ese plan: el Plan 1, el chat asistido y el contador de globos; el Plan 2 agrega la calculadora de costos y el explorador de decoraciones prediseñadas; el Plan 3 agrega el Taller 3D.
 
 ## Contrato de interfaz / diseño (opcional)
 <!-- Incluir cuando el requisito abarque una interfaz para usuarios. Registrar los usuarios, los flujos/vistas compatibles,
@@ -168,8 +170,24 @@ _Si el alcance incluye un subplan de interfaz: identifica a sus usuarios y su ta
 
 
 ### Ronda 3 (2026-10-26)
-- P: Chat asistido → R: tres herramientas (calculadora de costos, contador de globos, chat «normal») + integración básica entre chat y 3D (2–3 mensajes para definir la necesidad; recomienda decoraciones 3D existentes).
+- P: Chat asistido → R: tres herramientas (calculadora de costos, contador de globos y chat «normal») + integración básica entre el chat y 3D (2–3 mensajes para definir la necesidad, recomienda decoraciones 3D existentes).
 - P: Espacio 3D → R: no se agrega a este plan.
 - P: Quién ve los proyectos guardados → R: cada usuario ve los suyos; los empleados y administradores los ven todos; las escenas guardadas en el navegador se importan al iniciar sesión.
-- P: Decoración guardada → R: una composición creada en la escena y guardada en la biblioteca personal del usuario para otros proyectos (la publicación en la biblioteca global se hará más adelante).
-- P: Qué se recorta si falta tiempo → R: seguir el orden indicado arriba.
+- P: Decoración guardada → R: una composición creada en la escena y guardada en la biblioteca personal del usuario para otros proyectos (su publicación en la biblioteca global se hará más adelante).
+- P: Qué se recorta si falta tiempo → R: el orden de recortes indicado arriba.
+
+## Insumos
+Solo ubicaciones, nunca valores. Subplan vacío = todo el plan. Las filas marcadas como `pending` esperan a la ronda 5.
+
+| Elemento | Subplan | Dónde se encuentra | Proveedor | Estado |
+|---|---|---|---|---|
+| Dónde se prueba cada subplan aprobado y cuándo llega a producción | all | ronda 5 q1 | Owner | pending |
+| Base de datos para comprobaciones automatizadas y pruebas locales | all | ronda 5 q2; se propone `PICTURES_REQ021_DATABASE_URL` en `~/.config/flow/secrets.env` (rama de Neon) | Owner | pending |
+| Base de datos Neon de producción | SP-13 | `DATABASE_URL` en el entorno de producción de Vercel y `.env.local` (solo el nombre) | Owner | available |
+| Implementación en producción de `main` en Vercel | SP-13 | Proyecto de Vercel `dav033s-projects/demo-decoracion`, integración con Git; CLI `vercel` con sesión iniciada como dav033 | Owner | available |
+| Implementación de ai-api en VPS | SP-6, SP-13 | `.github/workflows/deploy.yml` (`workflow_dispatch`, entorno `production`) mediante `gh` | Owner | available |
+| Indicador local de acceso sin restricciones: nombre y regla | SP-1 | ronda 5 q3; se propone `AUTH_LOCAL_SIN_RESTRICCIONES` en `.env.local` | Owner | pending |
+| Primer administrador de producción: mecanismo y correo electrónico | SP-1, SP-13 | ronda 5 q4, q5 | Owner | pending |
+| Texto de protección de datos, URL de la política de privacidad de Sempertex y correo electrónico de contacto para ejercer derechos | SP-2 | ronda 5 q6 | Owner | pending |
+| Autorización para la prueba de humo automatizada en producción | SP-13 | ronda 5 q7; entrada en `~/bitacora/pictures/verification-policy.json` | Owner | pending |
+| Traducción única al inglés con Haiku 5.5 | SP-9 | Cuentas Claude del propietario mediante la CLI de Claude Code (ronda 4 q6); sin clave de Gemini, sin límite en USD | Owner | available |
