@@ -64,7 +64,22 @@
   }
  ],
  "round": 7,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T20:39:47Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "b",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": ""
+  },
+  "q3": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-26T20:39:47Z",
+ "answered_at": "2026-10-26T20:41:06Z",
+ "answered_via": "web"
 }
