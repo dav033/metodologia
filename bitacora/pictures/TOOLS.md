@@ -44,3 +44,8 @@ _None registered yet._
   `docker compose -p demo-decoracion -f <release>/compose.vps.yml up -d --no-deps --no-build web`.
 - **Model trials:** /opt/modelos-prueba (compose project `modelos-prueba`, Whisper :8610 / Laya :8611 on 127.0.0.1, stopped).
 - **Notes:** never restart the ai-api without owner notice; never print env files. Values containing `$` (scrypt hashes) must be single-quoted in demo.env: Compose interpolates `$` and silently truncates them.
+
+### req021-db (REQ-021 test Postgres)
+- **Type:** Postgres 16 + pgvector/pg_trgm/unaccent in Docker on the advin VPS (`/opt/req021-db`, container `req021-db`, volume `req021-db-data`, 1 GB memory limit) · created 2026-10-26 for REQ-021's automated and local tests; meant to be replaced by a Supabase later. Not production data.
+- **Access:** bound to `127.0.0.1:5433` on the VPS only; locally through the user unit `pictures-req021-db-tunnel.service` (`ssh -L 127.0.0.1:55433:127.0.0.1:5433 advin`). Connection URL: env var `PICTURES_REQ021_DATABASE_URL` in `~/.config/flow/secrets.env` (mode 600). Never print it.
+- **Notes:** separate from the host Postgres on 5432 and from every other container; the migrations in `scripts/migrations/` have not been applied yet (empty database with the three extensions).
