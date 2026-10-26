@@ -1,6 +1,6 @@
 # Index — pictures
 
-_Generated 2026-10-26 13:20 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 14:30 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
@@ -45,7 +45,7 @@ _Generated 2026-10-26 13:20 by `bitacora.py index`. Do not edit by hand._
 | [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `cancelled (2026-10-18, owner)` | — |  |
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
 | [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | — |  |
-| [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | — |  |
+| [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | [draft](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/PLAN.md) |  |
 
 ## Top pending (urgency, then complexity)
 
