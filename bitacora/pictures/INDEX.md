@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-25 22:31 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 12:09 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-23
+**Last activity:** 2026-10-26
 
 ## Workspace
 
@@ -44,7 +44,8 @@ _Generated 2026-10-25 22:31 by `bitacora.py index`. Do not edit by hand._
 | [REQ-017](requirements/REQ-017-activity-aware-guided-chat-decoration-re/SPEC.md) | Activity-aware guided-chat decoration recommendations | `cancelled (2026-10-18, owner)` | [done](requirements/REQ-017-activity-aware-guided-chat-decoration-re/PLAN.md) | report ✓ · round open |
 | [REQ-018](requirements/REQ-018-category-based-recommendations-of-assemb/SPEC.md) | Category-based recommendations of assembled decorations | `cancelled (2026-10-18, owner)` | — |  |
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
-| [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | [launched](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/PLAN.md) |  |
+| [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | — |  |
+| [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `clarifying` | — |  |
 
 ## Top pending (urgency, then complexity)
 
@@ -58,15 +59,16 @@ _Generated 2026-10-25 22:31 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-071 — 2026-10-26 · REQ-020 advisor never adds assembly/transport by default; desserts come before logistics
+- D-070 — 2026-10-26 · REQ-020 advisor: summary and proposal hide when the customer replies; voice recording is inline
+- D-069 — 2026-10-26 · REQ-020 advisor chat shows no privacy or test-version banners
 - D-068 — 2026-10-25 · REQ-020 advisor: no inspiration gallery, no closed packages, custom proposals from services, photo reading and keep list
 - D-067 — 2026-10-25 · REQ-020 absorbs Diana's brief findings in three phases
-- D-066 — 2026-10-25 · Emulated mobile acceptance replaces the physical-phone observations in REQ-020
-- D-065 — 2026-10-25 · Advisor reads the Happia catalogue directly from the API
-- D-064 — Observe release identity and version deployed advisor evidence
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
+  - [W5](2026-10/W5/WEEK.md): [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

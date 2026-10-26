@@ -1,0 +1,84 @@
+{
+ "round": 1,
+ "title": "Piloto: quién lo usa y qué entra",
+ "coverage": "1/10",
+ "intro": "Lo que dijiste: tres semanas hasta el piloto en producción y nueve capacidades. Lo que veo en main: las mesas rectangulares ya existen; la exportación a Blender ya existe (GLB) pero no hay vector para Illustrator; no hay inglés, ni usuarios, ni roles, ni proyectos guardados por usuario (la escena vive en el navegador); el gasto de IA se registra pero sin usuario. Lo que asumo: que el piloto lo usa gente real de Sempertex/decoradores y no el público.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Quién usa el piloto y cuántas personas?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Equipo interno y decoradores invitados (5–20 personas), con cuenta personal"
+    },
+    {
+     "key": "b",
+     "label": "Clientes finales desde el chat guiado, sin cuenta"
+    },
+    {
+     "key": "c",
+     "label": "Ambos"
+    }
+   ],
+   "recommended": "a",
+   "why": "Administradores, roles, proyectos guardados y gasto por usuario solo tienen sentido con cuentas; el chat guiado público ya funciona sin ellas."
+  },
+  {
+   "id": "q2",
+   "text": "Con tres semanas, ¿qué es imprescindible el día del piloto?",
+   "type": "open",
+   "suggested": "Imprescindible: cuentas con administradores y roles, gasto de IA por usuario con tope, guardar proyectos y decoraciones, mesas rectangulares y exportar a Blender. Deseable: inglés, módulos/cuartetos editables, backing. Después: espacio en 3D desde foto y exportar a vector para Illustrator.",
+   "why": "El plazo no da para todo; fijar el corte ahora evita que el plan se quede sin cerrar lo que más importa."
+  },
+  {
+   "id": "q3",
+   "text": "«Revisar lo de los tokens»: ¿a qué te refieres?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Gasto de IA (Gemini/fal.ai): verlo por usuario y ponerle topes"
+    },
+    {
+     "key": "b",
+     "label": "Tokens de sesión/autenticación (login)"
+    },
+    {
+     "key": "c",
+     "label": "Ambos"
+    }
+   ],
+   "recommended": "a",
+   "why": "Hoy hay registro de cada llamada de IA y topes por hora globales, pero nada por usuario; es lo que cierra con las cuentas."
+  },
+  {
+   "id": "q4",
+   "text": "¿Qué es «backing»?",
+   "type": "open",
+   "suggested": "Un panel o bastidor de fondo detrás de una decoración (como el arco o la guirnalda sobre un panel), que se pueda añadir y colocar en la escena.",
+   "why": "No existe el término en el código ni en la bitácora; lo más cercano son los fondos de escenografía (panel redondo, media luna, arcos)."
+  },
+  {
+   "id": "q5",
+   "text": "Inglés: ¿hasta dónde?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Flujos principales (Taller 3D, chat guiado, exportaciones) y que la IA responda en el idioma elegido; el resto sigue en español"
+    },
+    {
+     "key": "b",
+     "label": "Toda la aplicación"
+    }
+   ],
+   "recommended": "a",
+   "why": "Casi todos los textos están escritos en español en el código (unos 300 archivos de interfaz); traducirlo todo no cabe en tres semanas junto al resto."
+  }
+ ],
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-26T17:11:07Z"
+}
