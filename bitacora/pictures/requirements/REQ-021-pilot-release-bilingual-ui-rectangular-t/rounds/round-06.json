@@ -114,7 +114,30 @@
   }
  ],
  "round": 6,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-26T19:33:43Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": ""
+  },
+  "q3": {
+   "choice": "c",
+   "note": "contrsaeña de 8 caracteres"
+  },
+  "q4": {
+   "choice": "a",
+   "note": "yo como admin local me podre conectar a la base de datos de procduccion y crear los admins que quiera"
+  },
+  "q5": {
+   "choice": "c",
+   "note": "no nos preocupemos del dominio nuevo de produccion lo importante es que todo funcoine bien"
+  }
+ },
+ "created_at": "2026-10-26T19:33:43Z",
+ "answered_at": "2026-10-26T19:53:29Z",
+ "answered_via": "web"
 }
