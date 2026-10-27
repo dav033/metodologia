@@ -64,68 +64,68 @@ Revisión de importación: procedencia (“Solo en este navegador”) → cuenta
 
 No se incorporan eliminación, uso compartido, carpetas, colaboración, explorador del historial de proyectos, publicación global ni acciones en lote. Se mantiene la edición de nombres existente dentro de la escena; no se agrega un flujo de cambio de nombre independiente.
 
-## 4. Design system and visual language
+## 4. Sistema de diseño y lenguaje visual
 
-Read-only evidence: `t12` HEAD `fb872bce` and `pictures`/asesor HEAD `fa101a47`, `src/app/globals.css`, `src/app/layout.tsx`, `src/components/tres-d/{Taller3D.tsx,ui-taller.ts,DialogoTaller.tsx,guardado-escena.ts,archivo-escena.ts}` and shared `src/components/ui/shell/CabeceraApp.tsx`. Both repositories use the same semantic palette. Existing product design takes precedence over desktop preferences. The accounts draft `cuentas-admin@v1` is a consistency reference, not an approved dependency.
+Evidencia de solo lectura: `t12` HEAD `fb872bce` y `pictures`/asesor HEAD `fa101a47`, `src/app/globals.css`, `src/app/layout.tsx`, `src/components/tres-d/{Taller3D.tsx,ui-taller.ts,DialogoTaller.tsx,guardado-escena.ts,archivo-escena.ts}` y el componente compartido `src/components/ui/shell/CabeceraApp.tsx`. Ambos repositorios usan la misma paleta semántica. El diseño actual del producto tiene prioridad sobre las preferencias de escritorio. El borrador de cuentas `cuentas-admin@v1` es una referencia de coherencia, no una dependencia aprobada.
 
-| Existing token | Light | Dark | Role |
+| Token existente | Claro | Oscuro | Función |
 |---|---|---|---|
-| `--fondo`, `--superficie` | #faf9fc / #ffffff | #0b0c10 / #16181f | canvas, panels |
-| `--superficie-suave`, `--superficie-2` | #faf8fd / #efe9f8 | #1c1e26 / #242733 | inset areas, secondary fill |
-| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425 / #6b6178 / #766c85 | #f4f5f7 / #9aa1ad / #8a91a0 | text hierarchy |
-| `--borde`, `--borde-suave` | #e3daef / #efe9f8 | #383c48 / #2a2d38 | panel borders, dividers |
-| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0 / #5530b8 / #ece3fb | #9479ff / #a58dff / #241f3d | actions, hover, selection |
-| `--sobre-acento` | #ffffff | #120b24 | text on primary; do not use white in dark library buttons |
-| `--exito`, `--exito-suave` | #1f7a55 / #dcf5e9 | #78d6a8 / #173b31 | acknowledged save/import |
+| `--fondo`, `--superficie` | #faf9fc / #ffffff | #0b0c10 / #16181f | lienzo, paneles |
+| `--superficie-suave`, `--superficie-2` | #faf8fd / #efe9f8 | #1c1e26 / #242733 | áreas insertadas, relleno secundario |
+| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425 / #6b6178 / #766c85 | #f4f5f7 / #9aa1ad / #8a91a0 | jerarquía del texto |
+| `--borde`, `--borde-suave` | #e3daef / #efe9f8 | #383c48 / #2a2d38 | bordes de panel, divisores |
+| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0 / #5530b8 / #ece3fb | #9479ff / #a58dff / #241f3d | acciones, estado al pasar el cursor, selección |
+| `--sobre-acento` | #ffffff | #120b24 | texto sobre el color primario; no usar blanco en los botones oscuros de la biblioteca |
+| `--exito`, `--exito-suave` | #1f7a55 / #dcf5e9 | #78d6a8 / #173b31 | confirmación de guardado/importación |
 | `--error`, `--error-suave` | #b23a45 / #ffeaec | #ff979f / #43252a | error |
-| `--aviso`, `--aviso-suave` | #8f5f12 / #fff3d8 | #f7c46b / #3f311c | unsaved, offline, conflict |
-| `--overlay` | rgb(28 20 37 / .4) | rgb(0 0 0 / .6) | modal backdrop |
+| `--aviso`, `--aviso-suave` | #8f5f12 / #fff3d8 | #f7c46b / #3f311c | sin guardar, sin conexión, conflicto |
+| `--overlay` | rgb(28 20 37 / .4) | rgb(0 0 0 / .6) | fondo de la ventana modal |
 
-The production source remains read-only. Production typography remains Geist sans (`--font-sans`, `--font-geist-sans`); the offline mockup uses the kit's system sans fallback, with mono only for identifiers. Existing `.taller-3d` scoped `--taller-*` tokens and `DialogoTaller` semantics remain production references; this static contract does not rewrite the 3D editor or shared components.
+El código fuente de producción permanece en modo de solo lectura. La tipografía de producción sigue siendo Geist sans (`--font-sans`, `--font-geist-sans`); la maqueta sin conexión usa la fuente sans del sistema como alternativa del kit, y reserva la monoespaciada para los identificadores. Los tokens `--taller-*` existentes, con alcance `.taller-3d`, y la semántica de `DialogoTaller` siguen siendo referencias de producción; este contrato estático no modifica el editor 3D ni los componentes compartidos.
 
-The planning HTML starts from `kit/templates/mockup.html`, keeps `.mockup-bar`, its labelled native view/state/scene/theme selects and “Mockup” label, and inlines the current `tokens.css`, `components.css` and `kit.js` using the kit's `inline.py`. A single project style block follows the kit. It maps the following semantic roles; components retain their kit anatomy, padding and state rules.
+El HTML de planificación parte de `kit/templates/mockup.html`, conserva `.mockup-bar`, sus selectores nativos etiquetados de vista/estado/escena/tema y la etiqueta “Mockup”, e inserta en línea los archivos actuales `tokens.css`, `components.css` y `kit.js` mediante `inline.py` del kit. Después del kit se incluye un único bloque de estilos del proyecto. Este asigna los siguientes roles semánticos; los componentes conservan la estructura, el relleno y las reglas de estado del kit.
 
-| Kit role | Existing Pictures source / mapping | Reason |
+| Rol del kit | Fuente/asignación existente en Pictures | Motivo |
 |---|---|---|
-| `--background`, `--foreground` | `--fondo`, `--texto` | Canvas and primary text |
-| `--card`, `--popover`, corresponding foregrounds | `--superficie`, `--texto` | Working surfaces and floating layers |
-| `--primary`, `--primary-hover`, `--primary-foreground`, `--ring` | `--acento`, `--acento-hover`, `--sobre-acento`, `--acento` | One primary action; dark primary uses dark text, never white |
-| `--secondary`, `--muted`, `--accent` | `--superficie-2` | Neutral secondary fill and selection; accent here is a kit interaction role, not Pictures' brand-accent token |
-| `--secondary-foreground`, `--accent-foreground` | `--texto` | Neutral readable actions and navigation |
-| `--muted-foreground` | `--texto-suave` | Supporting text, including dark mode |
-| `--border` | `--borde` | Decorative separation, not a control-identification edge |
-| `--input` | proposed control-border alias to `--texto-tenue`: light #766c85; dark #8a91a0 | ≥3:1 meaningful control edge; the source decorative border alone cannot identify a control |
-| `--success`, `--warning`, `--destructive` | `--exito`, `--aviso`, `--error` | State text with an explicit status word |
-| `--info` | `--acento` | Informational status |
-| `--primary-soft`, `--success-soft`, `--warning-soft`, `--destructive-soft`, `--info-soft` | `--fondo` | Neutral notices/groups preserved from previous owner feedback |
-| `--destructive-foreground` | light #ffffff; dark #3a0f13, as in source | Text on error actions; destructive hover retains the same measured fill |
-| `--sidebar`, `--sidebar-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border`, `--sidebar-ring` | `--fondo`, `--texto`, `--superficie-2`, `--texto`, `--borde`, `--acento` | Quiet navigation; active item has a neutral fill |
-| `--radius`, `--spacing` | .8rem; kit .25rem spacing unit | Existing Pictures radius; 4px rhythm |
-| `--control-h`, `--control-h-sm`, `--control-h-lg` | proposed 2.75rem for project actions | Preserve the existing contract's 44px targets at every width |
+| `--background`, `--foreground` | `--fondo`, `--texto` | Lienzo y texto principal |
+| `--card`, `--popover`, los colores de texto correspondientes | `--superficie`, `--texto` | Superficies de trabajo y capas flotantes |
+| `--primary`, `--primary-hover`, `--primary-foreground`, `--ring` | `--acento`, `--acento-hover`, `--sobre-acento`, `--acento` | Una acción primaria; el color primario oscuro usa texto oscuro, nunca blanco |
+| `--secondary`, `--muted`, `--accent` | `--superficie-2` | Relleno secundario neutro y selección; aquí accent es un rol de interacción del kit, no el token de color de marca de Pictures |
+| `--secondary-foreground`, `--accent-foreground` | `--texto` | Acciones y navegación neutras y legibles |
+| `--muted-foreground` | `--texto-suave` | Texto complementario, incluso en modo oscuro |
+| `--border` | `--borde` | Separación decorativa, no un borde para identificar controles |
+| `--input` | alias propuesto para el borde del control, asignado a `--texto-tenue`: claro #766c85; oscuro #8a91a0 | Borde de control significativo con contraste ≥3:1; el borde decorativo de la fuente no basta para identificar un control |
+| `--success`, `--warning`, `--destructive` | `--exito`, `--aviso`, `--error` | Texto de estado con una palabra de estado explícita |
+| `--info` | `--acento` | Estado informativo |
+| `--primary-soft`, `--success-soft`, `--warning-soft`, `--destructive-soft`, `--info-soft` | `--fondo` | Avisos y grupos neutros conservados a partir de comentarios anteriores del propietario |
+| `--destructive-foreground` | claro #ffffff; oscuro #3a0f13, según la fuente | Texto en acciones de error; el estado al pasar el cursor conserva el mismo relleno medido |
+| `--sidebar`, `--sidebar-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border`, `--sidebar-ring` | `--fondo`, `--texto`, `--superficie-2`, `--texto`, `--borde`, `--acento` | Navegación discreta; el elemento activo tiene un relleno neutro |
+| `--radius`, `--spacing` | .8rem; unidad de espaciado del kit de .25rem | Radio existente de Pictures; ritmo de 4px |
+| `--control-h`, `--control-h-sm`, `--control-h-lg` | 2.75rem propuestos para las acciones del proyecto | Conservar objetivos táctiles de 44px en todos los anchos |
 
-Use the kit typography hierarchy: H1 24px/1.25; H2 20px/1.3; card title 16px; body 14px/1.5; metadata 12px. Sentence case, no tracked uppercase headings. Save figures use tabular numerals. Gaps come from `.stack-sm` (8px), `.row` (12px), `.stack`/`.grid` (16px), `.stack-lg` (24px), `.stack-xl` (32px). Card content/header/footer padding is 24px, 20px at phone widths; default control height is token-mapped to 44px. Kit borders, rather than shadows, frame nonfloating cards; floating dialogs/menus/toasts keep kit shadows. No bespoke margins or component skins. Inline SVG icons supplement labels and are hidden from AT.
+Usar la jerarquía tipográfica del kit: H1 24px/1.25; H2 20px/1.3; título de tarjeta 16px; texto de cuerpo 14px/1.5; metadatos 12px. Usar mayúsculas y minúsculas normales, sin encabezados en mayúsculas con espaciado entre letras. Las cifras de guardado usan numerales tabulares. Los espacios se definen con `.stack-sm` (8px), `.row` (12px), `.stack`/`.grid` (16px), `.stack-lg` (24px), `.stack-xl` (32px). El relleno del contenido, encabezado y pie de las tarjetas es de 24px, o 20px en anchos de teléfono; la altura predeterminada de los controles se asigna mediante token a 44px. Los bordes del kit, en lugar de sombras, enmarcan las tarjetas que no flotan; los diálogos, menús y notificaciones flotantes conservan las sombras del kit. No se permiten márgenes personalizados ni estilos de componentes propios. Los iconos SVG en línea complementan las etiquetas y se ocultan a la tecnología de asistencia (AT).
 
-Component inventory (catalog names and exact snippet examples):
+Inventario de componentes (nombres del catálogo y ejemplos exactos de fragmentos):
 
-| Name · variant / state | Snippet | Use |
+| Nombre · variante / estado | Fragmento | Uso |
 |---|---|---|
-| Sidebar · state=expanded · parts=header/group/menu-button | `kit/components/sidebar.html#expanded` | Desktop shell; neutral current item |
-| Button · variant=default/outline/ghost · state=normal/disabled/loading/focus-visible | `kit/components/button.html#variants`, `#states` | One primary per active view/dialog, secondary actions outlined, supporting actions ghost |
-| Card · parts=header/title/description/content/footer · size=default | `kit/components/card.html#actions` | Peer project cards; scene preview within padded content |
-| Field · orientation=vertical · state=default/error; Input · type=text/search | `kit/components/field.html#vertical`, `kit/components/input.html#types` | Search and project name; associated error and description |
-| Select · native · state=default | `kit/components/select.html#native` | Owner filter and planning toolbar |
-| Checkbox · state=unchecked/checked/disabled | `kit/components/checkbox.html#list`, `#states` | Explicit ownership consent; `.choice` label and `.checkbox` input, never an unstyled native square |
-| Badge · variant=secondary/success/warning/destructive | `kit/components/badge.html#variants` | Read-only/save state, with words |
-| Alert · variant=default/success/warning/destructive · action | `kit/components/alert.html#variants` | Import offer, save/recovery/error feedback; neutral mapped fills |
-| Empty · variant=default · parts=title/description/content | `kit/components/empty.html#no-results` | Empty/no-match/denied states, no decorative media tile |
-| Skeleton · shape=line | `kit/components/skeleton.html#card` | Loading content; no false empty result |
-| Dialog · size=default · parts=header/title/description/footer/close | `kit/components/dialog.html#open` | D1–D3 within a native modal host for focus/inertness |
-| DropdownMenu · item variant=default; Avatar · tone=muted | `kit/components/dropdown-menu.html#trigger`, `kit/components/avatar.html#media` | Shared account entry, fictional account identity |
-| Toast · type=info · parts=title/description | `kit/components/toast.html#stack` | Explicitly labelled mockup action results |
+| Sidebar · state=expanded · parts=header/group/menu-button | `kit/components/sidebar.html#expanded` | Estructura de escritorio; elemento actual neutro |
+| Button · variant=default/outline/ghost · state=normal/disabled/loading/focus-visible | `kit/components/button.html#variants`, `#states` | Una acción primaria por vista o diálogo activo; acciones secundarias con contorno; acciones de apoyo sin relleno |
+| Card · parts=header/title/description/content/footer · size=default | `kit/components/card.html#actions` | Tarjetas de proyectos del mismo nivel; vista previa de escena dentro de contenido con relleno |
+| Field · orientation=vertical · state=default/error; Input · type=text/search | `kit/components/field.html#vertical`, `kit/components/input.html#types` | Búsqueda y nombre del proyecto; error y descripción asociados |
+| Select · native · state=default | `kit/components/select.html#native` | Filtro del propietario y barra de herramientas de planificación |
+| Checkbox · state=unchecked/checked/disabled | `kit/components/checkbox.html#list`, `#states` | Consentimiento explícito de propiedad; etiqueta `.choice` e input `.checkbox`, nunca un cuadro nativo sin estilo |
+| Badge · variant=secondary/success/warning/destructive | `kit/components/badge.html#variants` | Estado de solo lectura/guardado, expresado con palabras |
+| Alert · variant=default/success/warning/destructive · action | `kit/components/alert.html#variants` | Oferta de importación, comentarios de guardado/recuperación/error; rellenos neutros asignados |
+| Empty · variant=default · parts=title/description/content | `kit/components/empty.html#no-results` | Estados vacío/sin coincidencias/sin acceso, sin mosaico decorativo de medios |
+| Skeleton · shape=line | `kit/components/skeleton.html#card` | Contenido en carga; no muestra un resultado vacío falso |
+| Dialog · size=default · parts=header/title/description/footer/close | `kit/components/dialog.html#open` | D1–D3 dentro de un contenedor modal nativo para gestionar el foco y la inactividad del fondo |
+| DropdownMenu · item variant=default; Avatar · tone=muted | `kit/components/dropdown-menu.html#trigger`, `kit/components/avatar.html#media` | Entrada a la cuenta compartida, identidad de cuenta ficticia |
+| Toast · type=info · parts=title/description | `kit/components/toast.html#stack` | Resultados de acciones de la maqueta con etiquetas explícitas |
 
-**Proposals outside the kit:** `project-shell/rail/tabs` adapts app layout to the established 200px desktop rail and visible wrapping navigation below 1024px; `project-grid` preserves three/two/one project columns; `project-filters/source/workspace` lays out project-specific content at the existing breakpoints; `project-modal` is a transparent native-dialog host around the unchanged Dialog snippet; `scene-preview` is a noninteractive SVG illustration with role-token fills, clearly labelled “Escena ilustrativa”. These proposals add layout/illustration semantics, not replacements for kit controls. Reflow adapters may allow long status text and action labels to wrap where fixed kit sizing would clip them; such adaptations must retain role colors, padding, focus and 44px targets. Illustrations convey no saved-state truth and are not a 3D round-trip claim. Actual object colors remain scene data, not these illustrative role colors.
+**Propuestas fuera del kit:** `project-shell/rail/tabs` adapta el diseño de la aplicación al riel de escritorio establecido de 200px y a la navegación visible con ajuste de línea por debajo de 1024px; `project-grid` conserva tres/dos/una columna de proyectos; `project-filters/source/workspace` organiza el contenido específico del proyecto en los puntos de quiebre existentes; `project-modal` es un contenedor transparente de diálogo nativo alrededor del fragmento Dialog sin modificar; `scene-preview` es una ilustración SVG no interactiva con rellenos de tokens de rol, etiquetada claramente como “Escena ilustrativa”. Estas propuestas añaden semántica de diseño e ilustración, no reemplazan los controles del kit. Los adaptadores de redistribución pueden permitir que el texto de estado y las etiquetas de acciones largas se ajusten en varias líneas cuando el tamaño fijo del kit las recortaría; esas adaptaciones deben conservar los colores de rol, el relleno, el foco y los objetivos táctiles de 44px. Las ilustraciones no indican que haya un estado guardado ni afirman que exista una conversión 3D de ida y vuelta. Los colores reales de los objetos son datos de la escena, no los colores de rol de estas ilustraciones.
 
-The scene-led recognition from the earlier draft remains the distinctive emphasis; there are no KPIs or decorative dashboard widgets. Import destination, source, consent, actions and retention/download footnote share the same readable column and left axis. Default notices, account avatar and navigation use neutral tokens. Focus uses the kit's 2px `--ring` outline with 2px offset. Keep the template's subtle/natural/expressive motion selector and reduced-motion support; project transitions answer interactions only. The kit loading skeleton uses its standard pulse; reduced motion removes it. No decorative scene animation.
+Se mantiene el énfasis distintivo en el reconocimiento de la escena del borrador anterior; no hay indicadores clave de rendimiento ni elementos decorativos de panel de control. El destino de importación, el origen, el consentimiento, las acciones y la nota al pie sobre conservación/descarga comparten la misma columna legible y el mismo eje izquierdo. Los avisos predeterminados, el avatar de la cuenta y la navegación usan tokens neutros. El foco usa el contorno de `--ring` de 2px del kit, con un desplazamiento de 2px. Se conserva el selector de movimiento sutil/natural/expresivo de la plantilla y la compatibilidad con la reducción de movimiento; las transiciones del proyecto solo responden a interacciones. El esqueleto de carga del kit usa su pulso estándar; la opción de reducir movimiento lo elimina. No hay animación decorativa de escenas.
 
 ## 5. Modelo de navegación e interacción
 
