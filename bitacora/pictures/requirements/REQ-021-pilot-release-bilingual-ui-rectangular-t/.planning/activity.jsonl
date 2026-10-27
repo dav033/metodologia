@@ -118,3 +118,6 @@
 {"at": "2026-10-26T21:35:06-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 porque el subplan cambió", "diff": ""}
 {"at": "2026-10-26T21:35:06-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "Empezó taller-esenciales@v1 porque el subplan cambió", "diff": ""}
 {"at": "2026-10-26T21:35:06-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "Empezó proyectos@v1 porque el subplan cambió", "diff": ""}
+{"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
+{"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
+{"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}

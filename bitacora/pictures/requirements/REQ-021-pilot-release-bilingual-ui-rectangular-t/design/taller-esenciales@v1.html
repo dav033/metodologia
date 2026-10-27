@@ -1,96 +1,666 @@
 <!doctype html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" data-motion="natural">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="dark light">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; font-src 'none'; base-uri 'none'; form-action 'none'">
-<title>Mockup · Taller esenciales @v1</title>
-<style>
-:root{color-scheme:light;--taller-barra:#ffffff;--taller-panel:#faf9fc;--taller-visor:#ebe7f1;--taller-tarjeta:#ffffff;--taller-boton:#ffffff;--taller-encima:#f3eefb;--taller-elegido:#ece3fb;--taller-linea:#ebe5f3;--taller-borde:#ddd3ea;--taller-texto:#1c1425;--taller-texto-2:#3a3146;--taller-medio:#5a5168;--taller-primario:#6d3fe0;--taller-primario-hover:#5530b8;--taller-sobre-primario:#ffffff;--taller-resalte:#6d3fe0;--taller-acento:#5530b8;--taller-peligro:#a8323d;--taller-valido:#1a6a4a;--overlay:rgb(28 20 37 / .45);--sombra:rgb(28 20 37 / .1)}
-:root[data-theme=dark]{color-scheme:dark;--taller-barra:#121018;--taller-panel:#16131d;--taller-visor:#1a1722;--taller-tarjeta:#1d1926;--taller-boton:#1b1724;--taller-encima:#231e2e;--taller-elegido:#2a2140;--taller-linea:#221e2b;--taller-borde:#2d2838;--taller-texto:#f2eff7;--taller-texto-2:#ddd8e6;--taller-medio:#a59db5;--taller-primario:#7a55ec;--taller-primario-hover:#6a46dc;--taller-sobre-primario:#ffffff;--taller-resalte:#8f6ef5;--taller-acento:#b9a4ff;--taller-peligro:#f08a94;--taller-valido:#5fd3a0;--overlay:rgb(0 0 0 / .65);--sombra:rgb(0 0 0 / .35)}
-*{box-sizing:border-box}
-body{margin:0;background:var(--taller-panel);color:var(--taller-texto);font:14px/1.5 system-ui,-apple-system,sans-serif}
-button,input,select,textarea{font:inherit;color:inherit;max-width:100%}
-button{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 11px;border:1px solid var(--taller-medio);border-radius:10px;background:var(--taller-boton);text-align:center;font-size:13px;font-weight:500;line-height:1.35}
-button:hover:not(:disabled){background:var(--taller-tarjeta)}
-button:active:not(:disabled){background:var(--taller-panel)}
-button:disabled{cursor:not-allowed;opacity:.5}
-button.primary{background:var(--taller-primario);border-color:var(--taller-primario);color:var(--taller-sobre-primario);font-weight:600}
-button.primary:hover:not(:disabled){background:var(--taller-primario-hover)}
-button.ghost{background:transparent;border-color:transparent}
-button.ghost:hover:not(:disabled){background:var(--taller-tarjeta)}
-:focus-visible{outline:2px solid var(--taller-resalte);outline-offset:3px}
-input,select,textarea{display:block;width:100%;min-height:38px;padding:7px 10px;background:var(--taller-tarjeta);border:1px solid var(--taller-medio);border-radius:10px;font-size:14px}
-input:hover,select:hover,textarea:hover{border-color:var(--taller-texto-2)}
-input:disabled,select:disabled,textarea:disabled{opacity:.6;cursor:not-allowed}
-input[data-dimension],input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
-textarea{resize:vertical;min-height:108px}
-label{display:block;min-width:0;font-size:12px;font-weight:500;color:var(--taller-texto-2)}
-label input,label select,label textarea{margin-top:5px}
-input[aria-invalid=true],textarea[aria-invalid=true]{border-color:var(--taller-peligro)}
-h1,h2,h3,h4,p{margin:0}h1{font-size:18px;font-weight:600;line-height:1.3}h2{font-size:20px;font-weight:600;line-height:1.3;letter-spacing:-.02em}h3{font-size:14px;font-weight:600}h4{font-size:14px;font-weight:500}
-small,.muted{font-size:12px;color:var(--taller-medio)}
-.mono,output{font-family:inherit;font-variant-numeric:tabular-nums}
-.eyebrow{font-size:12px;color:var(--taller-medio)}
-.stack{display:grid;gap:12px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.full{width:100%}.spacer{flex:1}
-.hidden,[hidden]{display:none!important}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
-.icon{width:18px;height:18px;flex:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;fill:none}
-.badge{display:inline-flex;align-items:center;font-size:11px;color:var(--taller-medio);font-weight:500;line-height:1.5}.badge.dot{padding:2px 6px;border:1px solid var(--taller-medio);border-radius:4px;color:var(--taller-texto-2)}
-.mock-controls{display:grid;grid-template-columns:minmax(180px,1fr) repeat(4,minmax(110px,165px));align-items:center;gap:16px;padding:10px 20px;background:var(--taller-barra);border-bottom:1px solid var(--taller-borde)}
-.mock-title{display:grid;gap:3px;font-size:12px}.mock-title>span:first-child{display:flex;align-items:center;gap:8px}.mock-controls label{font-size:11px}.mock-controls select{min-height:36px;font-size:12px;margin-top:3px}
-.mock-caption{padding:6px 20px;font-size:11px;color:var(--taller-medio);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--taller-borde)}.mock-caption strong{font-weight:500;color:var(--taller-texto-2)}
-.planning-note{padding:10px 20px;border-bottom:1px solid var(--taller-borde);background:var(--taller-panel);display:flex;gap:20px;align-items:baseline;flex-wrap:wrap;font-size:12px}.planning-note strong{font-size:14px;font-weight:600}.planning-note p{color:var(--taller-medio)}
-.app{display:flex;flex-direction:column;min-height:700px;height:calc(100dvh - 163px)}
-.topbar{display:flex;align-items:center;gap:16px;min-height:56px;padding:10px 20px;background:var(--taller-barra);border-bottom:1px solid var(--taller-borde);flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{font-size:15px;font-weight:700;letter-spacing:-.04em;padding-right:12px;border-right:1px solid var(--taller-borde)}
-.brand h1{white-space:nowrap;flex-shrink:0}.project-name{flex:1;min-width:0;font-size:12px;color:var(--taller-medio);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.topbar .actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}.history-tools{display:flex;gap:2px;padding-right:8px;border-right:1px solid var(--taller-borde)}.history-tools button{width:36px;padding:6px;border-color:transparent;background:transparent}
-.workbench{display:flex;flex:1;min-height:0}.rail{display:flex;flex-direction:column;gap:8px;flex-shrink:0;width:60px;padding:12px 6px;background:var(--taller-barra);border-right:1px solid var(--taller-borde)}
-.rail button{display:flex;flex-direction:column;gap:3px;min-height:56px;padding:6px 0;border:0;background:transparent;color:var(--taller-medio)}.rail small{font-size:11px;color:inherit}.rail button[aria-pressed=true]{background:var(--taller-tarjeta);color:var(--taller-texto);font-weight:600}
-.panel{width:320px;flex-shrink:0;overflow:auto;background:var(--taller-panel);border-right:1px solid var(--taller-borde)}.inspector{width:320px;border-right:0;border-left:1px solid var(--taller-borde)}
-.panel-heading{display:grid;gap:4px;padding:14px 16px 12px}.panel-heading small{font-size:12px}.panel-body{display:grid;gap:16px;padding:0 16px 20px}
-.section{display:grid;gap:10px;padding-top:16px;border-top:1px solid var(--taller-borde)}.section h3{margin-bottom:2px}.section:first-child{padding-top:0;border:0}
-.tabs{display:flex;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--taller-borde)}.tabs button{min-height:38px;padding:6px 0;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--taller-medio)}.tabs button[aria-pressed=true]{border-bottom-color:var(--taller-texto);color:var(--taller-texto);font-weight:600}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.card{display:flex;flex-direction:column;align-items:stretch;gap:6px;min-width:0;text-align:left;padding:10px;border:1px solid var(--taller-borde);border-radius:12px;background:var(--taller-tarjeta)}.card:hover{border-color:var(--taller-medio)}
-.card-name{font-size:13px;font-weight:500;line-height:1.35;overflow-wrap:anywhere}.card small{font-size:11px;line-height:1.5}.card small.mono{text-align:right}.card .add-label{font-size:12px;margin-top:auto;justify-content:center;min-height:32px;padding:5px 0;color:var(--taller-texto-2)}.card .add-label.primary{color:var(--taller-sobre-primario);padding:6px}
-.thumb{display:grid;place-items:center;height:58px;position:relative;overflow:hidden}.thumb svg{height:56px;width:100%;max-width:130px}.featured{background:var(--taller-tarjeta)}
-.note{padding:10px 0;border-block:1px solid var(--taller-borde);font-size:12px;color:var(--taller-texto-2);line-height:1.5}.note.error{color:var(--taller-peligro)}.note.success{color:var(--taller-valido)}.note button{margin-top:8px}.state-box{display:grid;gap:10px;padding:16px 0;border-block:1px solid var(--taller-borde);font-size:14px}.state-box button{justify-self:start}.state-box.error>strong{color:var(--taller-peligro)}
-.skeleton{height:110px;background:var(--taller-tarjeta);border:1px solid var(--taller-borde);border-radius:12px}.skeleton-line{height:12px;background:var(--taller-tarjeta);border-radius:4px}
-.viewport{display:flex;flex-direction:column;justify-content:center;flex:1;min-width:0;position:relative;isolation:isolate;overflow:hidden;background:var(--taller-visor)}
-.viewport svg.scene{display:block;flex:1;width:100%;min-height:150px;max-height:560px}
-.scene-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;position:absolute;inset:16px 16px auto}.pill{font-size:11px;color:var(--taller-medio);font-variant-numeric:tabular-nums}.pill:last-child{text-align:right}
-.scene-footer{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px;flex-wrap:wrap}.view-tools{display:flex;gap:4px;background:var(--taller-barra);border:1px solid var(--taller-borde);border-radius:10px;padding:3px}.view-tools button{min-height:30px;padding:4px 8px;font-size:12px;border:0;background:transparent}.view-tools button[aria-pressed=true]{background:var(--taller-tarjeta);font-weight:600}.scene-summary{padding:0 16px 14px;color:var(--taller-medio);font-size:12px;font-variant-numeric:tabular-nums}
-.inspector-tabs{display:flex;gap:16px;padding:0 16px;border-bottom:1px solid var(--taller-borde)}.inspector-tabs button{min-height:40px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--taller-medio);padding:8px 0}.inspector-tabs button[aria-pressed=true]{color:var(--taller-texto);border-bottom-color:var(--taller-texto);font-weight:600}
-.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fields .wide{grid-column:1/-1}.range-help{display:block;font-size:11px;color:var(--taller-medio);font-weight:400;margin-top:4px}.field-error{display:block;margin-top:5px;font-size:12px;color:var(--taller-peligro)}
-.count{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:2px 0;font-size:12px;font-variant-numeric:tabular-nums}.count strong{font-size:22px;font-weight:600;text-align:right}.count .muted{text-align:right}.count>span:first-child{display:flex;align-items:baseline;gap:8px}.seating{align-items:center}.seating .count{flex-direction:column;align-items:flex-end;gap:2px}.seating .count>small{text-align:right;font-size:11px}
-.swatches{display:flex;gap:12px;flex-wrap:wrap}.swatches label{display:flex;flex-direction:column;gap:4px;align-items:center;font-size:11px}.swatches input{width:36px;height:32px;min-height:32px;padding:3px;margin:0;border-radius:6px}
-.list-rows{padding:0;margin:8px 0 0;list-style:none}.list-rows li{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:16px;align-items:start;padding:12px 0;border-bottom:1px solid var(--taller-borde)}.quantity{text-align:right;font-size:18px;font-variant-numeric:tabular-nums;line-height:1.4}.list-rows h4{font-size:14px}.list-columns{display:flex;justify-content:space-between;margin-top:10px;color:var(--taller-medio);font-size:12px}
-.chat-line{display:grid;gap:8px;padding:16px 0;border-top:1px solid var(--taller-borde);font-size:14px}.chat-line:first-child{padding-top:0;border:0}.chat-line.user{font-size:13px}.chat-line .eyebrow{font-weight:600;color:var(--taller-texto-2)}
-.file-card{display:flex;align-items:center;gap:12px;padding:14px 0;border-block:1px solid var(--taller-borde)}.file-icon .icon{width:28px;height:28px;color:var(--taller-texto-2)}
-.export-wrap{position:relative}.export-popover{display:grid;gap:10px;position:absolute;right:0;top:calc(100% + 10px);z-index:8;width:min(320px,calc(100vw - 24px));padding:14px;border:1px solid var(--taller-medio);border-radius:12px;background:var(--taller-boton);box-shadow:0 12px 32px var(--sombra)}.export-popover button{justify-content:flex-start;min-height:44px}.export-popover p{font-size:12px;color:var(--taller-medio)}.export-popover .close{padding:5px;min-height:32px;font-size:12px}.export-popover .close .icon{width:16px;height:16px}
-.mobile-nav{display:none}.gate{display:grid;gap:16px;max-width:600px;margin:auto;padding:50px 24px}.gate h2{font-size:24px}
-dialog{width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:0;overflow:auto;border:1px solid var(--taller-medio);border-radius:12px;background:var(--taller-panel);color:var(--taller-texto);box-shadow:0 20px 60px var(--sombra)}dialog::backdrop{background:var(--overlay)}
-.dialog-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 24px 16px;border-bottom:1px solid var(--taller-borde)}.dialog-heading .eyebrow{margin-bottom:4px}.dialog-body{display:grid;gap:20px;padding:20px 24px}.dialog-footer{display:flex;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--taller-borde)}.toast{padding:9px 20px;border-top:1px solid var(--taller-borde);color:var(--taller-valido);background:var(--taller-barra);font-size:12px}.layout-label,.question-mark{font-size:11px;color:var(--taller-medio)}
-@media(min-width:1024px) and (max-width:1199px){.panel{width:300px}.inspector{width:300px}.app[data-view=table-editor] .left-panel,.app[data-view=ai] .left-panel,.app[data-view=export] .left-panel,.app[data-view=shopping] .left-panel{display:none}.project-name{max-width:130px}.topbar{gap:8px}}
-@media(max-width:1023px){.mock-controls{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px}.mock-title{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}.mock-caption{padding:6px 12px}.planning-note{padding:10px 12px;gap:4px}.planning-note strong{width:100%}.app{height:auto;min-height:calc(100dvh - 150px)}.topbar{gap:8px;padding:10px 12px}.project-name{max-width:190px}.topbar .actions{gap:6px}.topbar button{min-height:44px}.rail{display:none}.workbench{display:grid;grid-template-rows:minmax(220px,36dvh) auto;flex:none;min-height:0}.viewport{grid-row:1;grid-column:1;min-height:220px}.panel{grid-row:2;grid-column:1;width:auto;min-height:280px;overflow:visible;border:0;border-top:1px solid var(--taller-borde);border-radius:20px 20px 0 0}.inspector{display:none}.app[data-view=table-editor] .left-panel,.app[data-view=ai] .left-panel,.app[data-view=export] .left-panel,.app[data-view=shopping] .left-panel{display:none}.app[data-view=table-editor] .inspector,.app[data-view=ai] .inspector,.app[data-view=export] .inspector,.app[data-view=shopping] .inspector{display:block}.panel-body{max-width:760px;margin:auto;gap:16px}.panel-heading{max-width:792px;margin:auto;padding:16px}.panel .cards{grid-template-columns:repeat(3,minmax(0,1fr))}.panel button{min-height:44px}.thumb{height:76px}.thumb svg{height:72px}.mobile-nav{display:flex;gap:4px;flex-wrap:wrap;padding:8px 12px max(8px,env(safe-area-inset-bottom));border-top:1px solid var(--taller-borde);background:var(--taller-barra)}.mobile-nav button{flex:1;min-height:44px;padding:6px;border-color:transparent;font-size:12px;background:transparent}.mobile-nav button[aria-pressed=true]{background:var(--taller-tarjeta);font-weight:600}.scene-meta{inset:12px 12px auto}.scene-footer{padding:6px 12px}.scene-summary{padding-bottom:8px}.viewport svg.scene{max-height:260px}.inspector-tabs{padding:0 16px}.scene-footer button{min-height:36px}.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:767px){.mock-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.mock-title{grid-column:1/-1;align-items:start}.mock-controls select{min-height:40px}.mock-caption .layout-label{display:none}.topbar .brand{width:100%}.brand{gap:10px}.brand-mark{padding-right:10px}.topbar .actions{width:100%;margin-left:0;justify-content:space-between}.topbar .actions>button,.topbar .actions>.export-wrap{flex:1}.topbar .export-wrap>button{width:100%}.project-name{max-width:calc(100vw - 196px)}.panel .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.scene-footer .view-tools{display:none}.dialog-heading,.dialog-body{padding:16px}.dialog-heading h2{font-size:20px}.workbench{grid-template-rows:minmax(200px,32dvh) auto}.viewport svg.scene{min-height:145px;max-height:230px}.history-tools{padding-right:4px}.history-tools button{width:32px}.list-rows li{gap:8px;grid-template-columns:minmax(0,1fr) 42px}.planning-note{font-size:12px}}
-@media(max-width:359px){.fields{grid-template-columns:1fr}.fields .wide{grid-column:auto}.mock-title{gap:12px}.mock-title>.muted{max-width:130px;text-align:right}.topbar .actions button{font-size:12px;padding:6px}.scene-meta .pill:last-child{display:none}.card{padding:8px}.card-name{font-size:12px}.card small{font-size:11px}.panel-body{padding-inline:12px}.cards{gap:10px}}
-@media(orientation:landscape) and (max-height:540px) and (min-width:480px) and (max-width:1023px){.workbench{grid-template-columns:55% 45%;grid-template-rows:minmax(260px,calc(100dvh - 120px))}.viewport{grid-column:1;grid-row:1}.panel{grid-column:2;grid-row:1;overflow:auto;min-height:0;border-radius:0;border-left:1px solid var(--taller-borde)}.panel .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.panel-body{padding:12px}.fields{grid-template-columns:1fr}.fields .wide{grid-column:auto}.viewport svg.scene{max-height:260px}.app{min-height:0}.topbar .brand{width:auto}.topbar .actions{width:auto;margin-left:auto}.scene-summary{font-size:11px}.thumb{height:58px}.thumb svg{height:56px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller esenciales@v1 · Mockup</title>
+<style data-kit="css">
+/* david-ui stand-in tokens. THE file to swap when @dav033/david-ui ships its theme.css (P-207): keep the role names, take
+   the values from the package. Names follow shadcn/ui (what a Tailwind 4 + shadcn theme.css carries); names marked
+   "extension" are proposals for david-ui. Values: Catppuccin Latte (light) / Mocha (dark), mauve accent, deepened only where
+   WCAG AA needs it. Every pair is checked by contrast.py. Components read these roles only, never a raw colour. */
+:root, [data-theme="light"] {
+  --background: #eff1f5; --foreground: #4c4f69;
+  --card: #ffffff; --card-foreground: #4c4f69;
+  --popover: #ffffff; --popover-foreground: #4c4f69;
+  --primary: #7a2ee0; --primary-foreground: #ffffff;
+  --secondary: #e6e9ef; --secondary-foreground: #4c4f69;
+  --muted: #e6e9ef; --muted-foreground: #5c5f77;
+  --accent: #dce0e8; --accent-foreground: #4c4f69;
+  --destructive: #c0173b; --destructive-foreground: #ffffff;
+  --border: #ccd0da; --input: #7c7f93; --ring: #7a2ee0;
+  --chart-1: #7a2ee0; --chart-2: #1858d8; --chart-3: #13777d; --chart-4: #c2410c; --chart-5: #b4237f;
+  --sidebar: #e6e9ef; --sidebar-foreground: #4c4f69; --sidebar-primary: #7a2ee0; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dce0e8; --sidebar-accent-foreground: #4c4f69; --sidebar-border: #ccd0da; --sidebar-ring: #7a2ee0;
+  /* extension: hover fills, soft status fills and status text, modal overlay */
+  --primary-hover: #6a22c9; --destructive-hover: #a8102f; --primary-soft: #ece3fb; --destructive-soft: #fbe1e7;
+  --success: #26691a; --success-soft: #e3f3df; --warning: #8a5608; --warning-soft: #fbf0d8;
+  --info: #1858d8; --info-soft: #e1eafe; --overlay: rgb(76 79 105 / .45);
+  --shadow-xs: 0 1px 2px rgb(76 79 105 / .08); --shadow-sm: 0 1px 3px rgb(76 79 105 / .12), 0 1px 2px rgb(76 79 105 / .08);
+  --shadow-md: 0 6px 16px rgb(76 79 105 / .14); --shadow-lg: 0 16px 40px rgb(76 79 105 / .2);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --background: #1e1e2e; --foreground: #cdd6f4;
+  --card: #262637; --card-foreground: #cdd6f4;
+  --popover: #2a2b3d; --popover-foreground: #cdd6f4;
+  --primary: #cba6f7; --primary-foreground: #11111b;
+  --secondary: #313244; --secondary-foreground: #cdd6f4;
+  --muted: #313244; --muted-foreground: #a6adc8;
+  --accent: #383a4f; --accent-foreground: #cdd6f4;
+  --destructive: #f38ba8; --destructive-foreground: #11111b;
+  --border: #45475a; --input: #8a8fa8; --ring: #cba6f7;
+  --chart-1: #cba6f7; --chart-2: #89b4fa; --chart-3: #94e2d5; --chart-4: #fab387; --chart-5: #f5c2e7;
+  --sidebar: #181825; --sidebar-foreground: #cdd6f4; --sidebar-primary: #cba6f7; --sidebar-primary-foreground: #11111b;
+  --sidebar-accent: #313244; --sidebar-accent-foreground: #cdd6f4; --sidebar-border: #313244; --sidebar-ring: #cba6f7;
+  --primary-hover: #d9bdf9; --destructive-hover: #f6a3bb; --primary-soft: #3a3250; --destructive-soft: #432a3a;
+  --success: #a6e3a1; --success-soft: #2a3a31; --warning: #f9e2af; --warning-soft: #3b3528;
+  --info: #89b4fa; --info-soft: #2a3550; --overlay: rgb(17 17 27 / .7);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / .3); --shadow-sm: 0 1px 3px rgb(0 0 0 / .4);
+  --shadow-md: 0 8px 20px rgb(0 0 0 / .45); --shadow-lg: 0 18px 48px rgb(0 0 0 / .55);
+  color-scheme: dark;
+}
+:root {
+  /* type: one system family (no network fonts in mockups), Tailwind scale; body copy of working screens is text-sm */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem; --text-xl: 1.25rem;
+  --text-2xl: 1.5rem; --text-3xl: 1.875rem;
+  /* spacing: Tailwind 4's single unit; every gap and padding is a multiple of it (4 px) */
+  --spacing: 0.25rem;
+  /* radii: shadcn derives every radius from one */
+  --radius: 0.625rem; --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px);
+  /* extension: control heights (shadcn h-8 / h-9 / h-10), raised to a 40 px touch target on small screens */
+  --control-h-sm: 2rem; --control-h: 2.25rem; --control-h-lg: 2.5rem;
+  /* motion (SPEC R8): natural is the default profile */
+  --duration-fast: 140ms; --duration-normal: 200ms; --duration-slow: 280ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1); --ease-emphasis: cubic-bezier(.2, .8, .2, 1);
+  --motion-distance: 8px; --motion-scale: .97;
+}
+[data-motion="subtle"] { --duration-fast: 90ms; --duration-normal: 140ms; --duration-slow: 200ms; --motion-distance: 4px; --motion-scale: .99; }
+[data-motion="expressive"] {
+  --duration-fast: 180ms; --duration-normal: 280ms; --duration-slow: 420ms; --motion-distance: 16px; --motion-scale: .92;
+  --ease-emphasis: cubic-bezier(.34, 1.4, .64, 1);
+}
+@media (max-width: 640px) { :root { --control-h: 2.5rem; --control-h-sm: 2.25rem; } }
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-motion] { --duration-fast: 1ms; --duration-normal: 1ms; --duration-slow: 1ms; --motion-distance: 0px; --motion-scale: 1; }
+}
+
+/* david-ui stand-in components: shadcn/ui anatomy written from scratch for static mockups. Reads tokens.css roles only.
+   Variants are data attributes named like the props (data-variant, data-size, data-side); states are the real attributes
+   (disabled, aria-invalid, aria-busy, aria-selected, aria-current, aria-expanded, data-state). data-demo="hover|focus|active"
+   pins an interaction state for a static picture. Layout helpers keep one rhythm: gaps, never ad-hoc margins. */
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+body { margin: 0; min-height: 100vh; background: var(--background); color: var(--foreground); font: 400 var(--text-sm)/1.5 var(--font-sans); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
+legend { padding: 0; }
+h1 { font-size: var(--text-2xl); line-height: 1.25; font-weight: 600; letter-spacing: -0.01em; }
+h2 { font-size: var(--text-xl); line-height: 1.3; font-weight: 600; }
+h3 { font-size: var(--text-base); line-height: 1.4; font-weight: 600; }
+h4 { font-size: var(--text-sm); line-height: 1.4; font-weight: 600; }
+a { color: var(--primary); text-underline-offset: 3px; }
+code, kbd, .font-mono { font-family: var(--font-mono); font-size: .92em; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.icon { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.text-muted { color: var(--muted-foreground); } .text-xs { font-size: var(--text-xs); } .text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); } .text-right { text-align: right; } .text-center { text-align: center; }
+.tabular { font-variant-numeric: tabular-nums; } .font-medium { font-weight: 500; } .font-semibold { font-weight: 600; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.separator { flex: none; height: 1px; width: 100%; background: var(--border); border: 0; margin: 0; }
+.separator[data-orientation="vertical"] { width: 1px; height: auto; align-self: stretch; }
+.label { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 2); font-size: var(--text-sm); font-weight: 500; line-height: 1.25; }
+kbd, .kbd { display: inline-flex; align-items: center; height: 20px; padding: 0 calc(var(--spacing) * 1.5); border-radius: var(--radius-sm); background: var(--muted); color: var(--muted-foreground); font-size: var(--text-xs); font-family: var(--font-sans); font-weight: 500; }
+
+/* ---------- layout ---------- */
+.stack { display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); }
+.stack-sm { display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); }
+.stack-lg { display: flex; flex-direction: column; gap: calc(var(--spacing) * 6); }
+.stack-xl { display: flex; flex-direction: column; gap: calc(var(--spacing) * 8); }
+.row { display: flex; align-items: center; gap: calc(var(--spacing) * 3); flex-wrap: wrap; }
+.row-sm { display: flex; align-items: center; gap: calc(var(--spacing) * 2); flex-wrap: wrap; }
+.row[data-justify="between"], .row-sm[data-justify="between"] { justify-content: space-between; }
+.row[data-justify="end"], .row-sm[data-justify="end"] { justify-content: flex-end; }
+.row[data-align="start"] { align-items: flex-start; }
+.grow { flex: 1 1 0; min-width: 0; }
+.grid { display: grid; gap: calc(var(--spacing) * 4); grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); }
+.grid[data-cols="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid[data-cols="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.app { display: grid; grid-template-columns: 256px minmax(0, 1fr); min-height: 100vh; }
+.app-main { display: flex; flex-direction: column; min-width: 0; }
+.app-header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: calc(var(--spacing) * 3); height: 56px; padding: 0 calc(var(--spacing) * 6); background: var(--background); border-bottom: 1px solid var(--border); }
+.app-header .sidebar-trigger { display: none; }
+.page { width: 100%; max-width: 1200px; margin: 0 auto; padding: calc(var(--spacing) * 8) calc(var(--spacing) * 6); display: flex; flex-direction: column; gap: calc(var(--spacing) * 6); }
+.page[data-width="narrow"] { max-width: 720px; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: calc(var(--spacing) * 4); flex-wrap: wrap; }
+.page-header > div:first-child { display: flex; flex-direction: column; gap: calc(var(--spacing) * 1); min-width: 0; }
+.page-header p { color: var(--muted-foreground); }
+.auth-layout { min-height: 100vh; display: grid; place-items: center; padding: calc(var(--spacing) * 6) calc(var(--spacing) * 4); }
+.auth-layout > .auth-column { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: calc(var(--spacing) * 6); }
+.auth-brand { display: flex; align-items: center; justify-content: center; gap: calc(var(--spacing) * 2); font-weight: 600; font-size: var(--text-base); }
+.auth-footer { text-align: center; color: var(--muted-foreground); font-size: var(--text-xs); }
+.brand-mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); }
+
+/* ---------- Button ---------- */
+.button { display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--spacing) * 2); height: var(--control-h); padding: 0 calc(var(--spacing) * 4); border: 1px solid transparent; border-radius: var(--radius-md); background: var(--primary); color: var(--primary-foreground); font: 500 var(--text-sm)/1 var(--font-sans); white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none; transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out); }
+.button:hover, .button[data-demo="hover"] { background: var(--primary-hover); }
+.button:active, .button[data-demo="active"] { transform: scale(var(--motion-scale)); }
+.button:focus-visible, .button[data-demo="focus"] { outline: 2px solid var(--ring); outline-offset: 2px; }
+.button[data-variant="secondary"] { background: var(--secondary); color: var(--secondary-foreground); }
+.button[data-variant="secondary"]:hover, .button[data-variant="secondary"][data-demo="hover"] { background: var(--accent); }
+.button[data-variant="outline"] { background: transparent; color: var(--foreground); border-color: var(--input); }
+.button[data-variant="outline"]:hover, .button[data-variant="outline"][data-demo="hover"] { background: var(--accent); }
+.button[data-variant="ghost"] { background: transparent; color: var(--foreground); }
+.button[data-variant="ghost"]:hover, .button[data-variant="ghost"][data-demo="hover"] { background: var(--accent); }
+.button[data-variant="destructive"] { background: var(--destructive); color: var(--destructive-foreground); }
+.button[data-variant="destructive"]:hover, .button[data-variant="destructive"][data-demo="hover"] { background: var(--destructive-hover); }
+.button[data-variant="link"] { background: transparent; color: var(--primary); height: auto; padding: 0; text-decoration: underline; text-underline-offset: 3px; }
+.button[data-variant="link"]:hover { background: transparent; text-decoration-thickness: 2px; }
+.button[data-size="sm"] { height: var(--control-h-sm); padding: 0 calc(var(--spacing) * 3); gap: calc(var(--spacing) * 1.5); }
+.button[data-size="lg"] { height: var(--control-h-lg); padding: 0 calc(var(--spacing) * 6); }
+.button[data-size="icon"] { width: var(--control-h); padding: 0; }
+.button[data-size="icon-sm"] { width: var(--control-h-sm); height: var(--control-h-sm); padding: 0; }
+.button[data-width="full"] { width: 100%; align-self: stretch; }
+/* in a column a button keeps its own width and the column's left edge (a stretched button centres its label) */
+:is(.page, .stack, .stack-sm, .stack-lg, .stack-xl, .card-content, .field, .auth-column, .sheet-body) > .button:not([data-width="full"]) { align-self: flex-start; }
+.button:disabled, .button[aria-disabled="true"] { opacity: .5; cursor: not-allowed; pointer-events: none; transform: none; }
+.button[aria-busy="true"] { cursor: progress; pointer-events: none; }
+.button[aria-busy="true"]::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: kit-spin 700ms linear infinite; }
+@keyframes kit-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Card ---------- */
+.card { display: flex; flex-direction: column; gap: calc(var(--spacing) * 6); padding: calc(var(--spacing) * 6) 0; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); border-radius: var(--radius-xl); }
+.card-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: calc(var(--spacing) * 1.5) calc(var(--spacing) * 4); padding: 0 calc(var(--spacing) * 6); }
+.card-header > :not(.card-action) { grid-column: 1; }
+.card-title { font-size: var(--text-base); font-weight: 600; line-height: 1.3; }
+.card-description { color: var(--muted-foreground); font-size: var(--text-sm); }
+.card-action { grid-column: 2; grid-row: 1 / span 2; align-self: start; justify-self: end; }
+.card-content { padding: 0 calc(var(--spacing) * 6); }
+.card-content[data-flush] { padding: 0; }
+.card-footer { display: flex; align-items: center; gap: calc(var(--spacing) * 2); padding: 0 calc(var(--spacing) * 6); }
+.card-footer[data-justify="end"] { justify-content: flex-end; } .card-footer[data-justify="between"] { justify-content: space-between; }
+.card[data-border-sections] .card-header { padding-bottom: calc(var(--spacing) * 6); border-bottom: 1px solid var(--border); }
+.card[data-border-sections] .card-footer { padding-top: calc(var(--spacing) * 6); border-top: 1px solid var(--border); }
+.card[data-size="sm"] { gap: calc(var(--spacing) * 4); padding: calc(var(--spacing) * 4) 0; }
+.card[data-size="sm"] > * { padding-left: calc(var(--spacing) * 4); padding-right: calc(var(--spacing) * 4); }
+
+/* ---------- Badge ---------- */
+.badge { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1.5); height: 22px; padding: 0 calc(var(--spacing) * 2); border: 1px solid transparent; border-radius: var(--radius-sm); background: var(--primary); color: var(--primary-foreground); font-size: var(--text-xs); font-weight: 500; line-height: 1; white-space: nowrap; vertical-align: middle; }
+.badge .icon { width: 12px; height: 12px; }
+.badge[data-variant="secondary"] { background: var(--secondary); color: var(--secondary-foreground); }
+.badge[data-variant="outline"] { background: transparent; color: var(--foreground); border-color: var(--border); }
+.badge[data-variant="destructive"] { background: var(--destructive-soft); color: var(--destructive); }
+.badge[data-variant="success"] { background: var(--success-soft); color: var(--success); }
+.badge[data-variant="warning"] { background: var(--warning-soft); color: var(--warning); }
+.badge[data-variant="info"] { background: var(--info-soft); color: var(--info); }
+.badge[data-variant="accent"] { background: var(--primary-soft); color: var(--primary); }
+.badge[data-dot]::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ---------- Avatar ---------- */
+.avatar { position: relative; display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: var(--primary-soft); color: var(--primary); font-size: var(--text-xs); font-weight: 600; }
+.avatar[data-size="sm"] { width: 24px; height: 24px; font-size: 10px; } .avatar[data-size="lg"] { width: 40px; height: 40px; font-size: var(--text-sm); }
+.avatar[data-tone="muted"] { background: var(--muted); color: var(--muted-foreground); }
+.avatar-group { display: flex; } .avatar-group .avatar { box-shadow: 0 0 0 2px var(--background); } .avatar-group .avatar + .avatar { margin-left: -8px; }
+.media { display: flex; align-items: center; gap: calc(var(--spacing) * 3); min-width: 0; }
+.media-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.media-text > :last-child:not(:first-child) { color: var(--muted-foreground); font-size: var(--text-xs); }
+
+/* ---------- Field ---------- */
+.field { display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); min-width: 0; }
+.field[data-orientation="horizontal"] { flex-direction: row; align-items: flex-start; gap: calc(var(--spacing) * 3); }
+.field[data-orientation="horizontal"] > .field-text { display: flex; flex-direction: column; gap: calc(var(--spacing) * 1); }
+.field-description { color: var(--muted-foreground); font-size: var(--text-sm); }
+.field-error { display: flex; align-items: flex-start; gap: calc(var(--spacing) * 1.5); color: var(--destructive); font-size: var(--text-sm); }
+.field-error .icon { margin-top: 2px; width: 14px; height: 14px; }
+.field[data-disabled] > .label { opacity: .5; }
+.field-set { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); min-width: 0; }
+.field-legend { padding: 0; font-size: var(--text-base); font-weight: 600; }
+.field-group { display: flex; flex-direction: column; gap: calc(var(--spacing) * 6); }
+
+/* ---------- Input, Textarea, native Select ---------- */
+.input, .textarea, .select { display: block; width: 100%; min-width: 0; height: var(--control-h); padding: 0 calc(var(--spacing) * 3); background: transparent; color: var(--foreground); border: 1px solid var(--input); border-radius: var(--radius-md); font: 400 var(--text-sm)/1.4 var(--font-sans); box-shadow: var(--shadow-xs); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.textarea { height: auto; min-height: 88px; padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3); resize: vertical; }
+.input::placeholder, .textarea::placeholder { color: var(--muted-foreground); opacity: 1; }
+.input:focus-visible, .textarea:focus-visible, .select:focus-visible, .input[data-demo="focus"], .textarea[data-demo="focus"], .select[data-demo="focus"] { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent); }
+.input[aria-invalid="true"], .textarea[aria-invalid="true"], .select[aria-invalid="true"] { border-color: var(--destructive); }
+/* focused and invalid: the edge thickens in the error colour (a 25 % halo alone is under 3:1) */
+.input[aria-invalid="true"]:focus-visible, .textarea[aria-invalid="true"]:focus-visible, .select[aria-invalid="true"]:focus-visible, .select-trigger[aria-invalid="true"]:focus-visible, .input-group[aria-invalid="true"]:focus-within { border-color: var(--destructive); box-shadow: 0 0 0 1px var(--destructive), 0 0 0 4px color-mix(in srgb, var(--destructive) 25%, transparent); }
+.input:disabled, .textarea:disabled, .select:disabled { opacity: .5; cursor: not-allowed; }
+.input[readonly] { background: var(--muted); box-shadow: none; }
+.select { appearance: none; padding-right: calc(var(--spacing) * 9); cursor: pointer; background-color: transparent; }
+.select option { background: var(--popover); color: var(--popover-foreground); }
+.select-wrap { position: relative; display: block; min-width: 0; }
+.select-wrap::after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; margin-top: -5px; border-right: 2px solid var(--muted-foreground); border-bottom: 2px solid var(--muted-foreground); transform: rotate(45deg); pointer-events: none; }
+
+/* ---------- Select (custom popup) and Combobox ---------- */
+.select-trigger { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--spacing) * 2); width: 100%; height: var(--control-h); padding: 0 calc(var(--spacing) * 3); background: transparent; color: var(--foreground); border: 1px solid var(--input); border-radius: var(--radius-md); font: 400 var(--text-sm)/1 var(--font-sans); box-shadow: var(--shadow-xs); cursor: pointer; text-align: left; }
+.select-trigger[data-placeholder] > span { color: var(--muted-foreground); }
+.select-trigger .icon { color: var(--muted-foreground); transition: transform var(--duration-fast) var(--ease-out); }
+.select-trigger[aria-expanded="true"] .icon { transform: rotate(180deg); }
+.select-trigger:focus-visible, .select-trigger[aria-expanded="true"] { outline: none; border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent); }
+.select-trigger[aria-invalid="true"] { border-color: var(--destructive); }
+.select-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.listbox { display: flex; flex-direction: column; gap: 1px; min-width: 12rem; max-height: 280px; overflow: auto; padding: calc(var(--spacing) * 1); background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); }
+.listbox-label { padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2); color: var(--muted-foreground); font-size: var(--text-xs); font-weight: 500; }
+.listbox-item { display: flex; align-items: center; gap: calc(var(--spacing) * 2); min-height: var(--control-h-sm); padding: 0 calc(var(--spacing) * 8) 0 calc(var(--spacing) * 2); border-radius: var(--radius-sm); position: relative; cursor: pointer; font-size: var(--text-sm); }
+.listbox-item:hover, .listbox-item[data-highlighted] { background: var(--accent); color: var(--accent-foreground); }
+.listbox-item[aria-selected="true"]::after { content: ""; position: absolute; right: 12px; top: 50%; width: 5px; height: 9px; margin-top: -6px; border-right: 2px solid var(--primary); border-bottom: 2px solid var(--primary); transform: rotate(45deg); }
+.listbox-item[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.listbox-empty { padding: calc(var(--spacing) * 6) calc(var(--spacing) * 2); text-align: center; color: var(--muted-foreground); font-size: var(--text-sm); }
+.listbox-separator { height: 1px; margin: calc(var(--spacing) * 1) calc(var(--spacing) * -1); background: var(--border); }
+.combobox { position: relative; display: block; min-width: 0; }
+.combobox > .input { padding-right: calc(var(--spacing) * 9); }
+.combobox > .icon { position: absolute; right: 12px; top: 50%; margin-top: -8px; color: var(--muted-foreground); pointer-events: none; }
+.combobox > .listbox, .select-root > .listbox { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30; }
+.select-root { position: relative; display: block; min-width: 0; }
+.combobox > .listbox[hidden], .select-root > .listbox[hidden] { display: none; }
+/* .anchored pins an open popup into the flow under its trigger, for static pictures of the open state */
+.anchored > .listbox, .anchored > .dropdown-menu-content, .anchored > .popover-content { position: static; margin-top: 4px; }
+.menu-root.anchored { display: inline-flex; flex-direction: column; align-items: flex-start; }
+.menu-root.anchored > [data-align="end"] { align-self: flex-end; }
+
+/* ---------- Checkbox, Radio, Switch ---------- */
+.checkbox, .radio { appearance: none; flex: none; display: inline-grid; place-items: center; width: 16px; height: 16px; margin: 2px 0 0; border: 1px solid var(--input); border-radius: 4px; background: transparent; box-shadow: var(--shadow-xs); cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out); }
+.radio { border-radius: 50%; }
+.checkbox::after { content: ""; width: 4px; height: 8px; margin-top: -2px; border-right: 2px solid var(--primary-foreground); border-bottom: 2px solid var(--primary-foreground); transform: rotate(45deg) scale(0); transition: transform var(--duration-fast) var(--ease-emphasis); }
+.checkbox:checked, .checkbox:indeterminate, .checkbox[aria-checked="mixed"], .radio:checked { background: var(--primary); border-color: var(--primary); }
+.checkbox:checked::after { transform: rotate(45deg) scale(1); }
+.checkbox:indeterminate::after, .checkbox[aria-checked="mixed"]::after { width: 8px; height: 0; margin: 0; border-right: 0; transform: none; }
+.radio::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary-foreground); transform: scale(0); transition: transform var(--duration-fast) var(--ease-emphasis); }
+.radio:checked::after { transform: scale(1); }
+.checkbox:focus-visible, .radio:focus-visible, .checkbox[data-demo="focus"], .radio[data-demo="focus"] { outline: 2px solid var(--ring); outline-offset: 2px; }
+.checkbox[aria-invalid="true"], .radio[aria-invalid="true"] { border-color: var(--destructive); }
+.checkbox:disabled, .radio:disabled, .switch:disabled { opacity: .5; cursor: not-allowed; }
+.choice { display: flex; align-items: flex-start; gap: calc(var(--spacing) * 3); cursor: pointer; }
+.choice > span { display: flex; flex-direction: column; gap: 2px; line-height: 1.4; }
+.choice > span > :last-child:not(:first-child) { color: var(--muted-foreground); }
+.radio-group { display: grid; gap: calc(var(--spacing) * 3); }
+.radio-group[data-variant="cards"] .choice { padding: calc(var(--spacing) * 4); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.radio-group[data-variant="cards"] .choice:has(> .radio:checked:not([hidden])) { border-color: var(--primary); background: var(--primary-soft); }
+.switch { appearance: none; flex: none; position: relative; width: 32px; height: 18px; margin: 1px 0 0; border-radius: 999px; background: var(--input); cursor: pointer; transition: background-color var(--duration-normal) var(--ease-out); }
+.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--background); transition: transform var(--duration-normal) var(--ease-emphasis), background-color var(--duration-normal) var(--ease-out); }
+.switch:checked { background: var(--primary); }
+.switch:checked::after { transform: translateX(14px); background: var(--primary-foreground); }
+.switch:focus-visible, .switch[data-demo="focus"] { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* ---------- Input Group ---------- */
+.input-group { display: flex; align-items: center; width: 100%; min-width: 0; height: var(--control-h); border: 1px solid var(--input); border-radius: var(--radius-md); box-shadow: var(--shadow-xs); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+.input-group:focus-within, .input-group[data-demo="focus"] { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 30%, transparent); }
+.input-group[aria-invalid="true"] { border-color: var(--destructive); }
+.input-group > .input { flex: 1 1 auto; height: 100%; border: 0; box-shadow: none; background: transparent; }
+.input-group > .input:focus-visible { box-shadow: none; }
+.input-group-addon { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1.5); height: 100%; padding: 0 calc(var(--spacing) * 3); color: var(--muted-foreground); font-size: var(--text-sm); white-space: nowrap; }
+.input-group-addon:first-child { padding-right: 0; } .input-group-addon:last-child { padding-left: 0; padding-right: calc(var(--spacing) * 1); }
+.input-group-addon[data-align="end-text"] { padding: 0 calc(var(--spacing) * 3) 0 0; }
+.input-group .button { height: calc(var(--control-h) - 10px); }
+
+/* ---------- Sidebar ---------- */
+.sidebar { display: flex; flex-direction: column; min-height: 100vh; position: sticky; top: 0; max-height: 100vh; background: var(--sidebar); color: var(--sidebar-foreground); border-right: 1px solid var(--sidebar-border); }
+.sidebar-header, .sidebar-footer { display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 3) calc(var(--spacing) * 5); }
+.sidebar-header { min-height: 56px; justify-content: center; }
+.sidebar-content { flex: 1 1 auto; overflow: auto; display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 1) 0; }
+.sidebar-footer { border-top: 1px solid var(--sidebar-border); }
+.sidebar-group { display: flex; flex-direction: column; gap: calc(var(--spacing) * 1); padding: 0 calc(var(--spacing) * 3); }
+.sidebar-group-label { display: flex; align-items: center; height: 28px; padding: 0 calc(var(--spacing) * 2); color: var(--muted-foreground); font-size: var(--text-xs); font-weight: 500; }
+.sidebar-menu { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-menu-button { display: flex; align-items: center; gap: calc(var(--spacing) * 2); width: 100%; height: var(--control-h-sm); padding: 0 calc(var(--spacing) * 2); border: 0; border-radius: var(--radius-md); background: transparent; color: var(--sidebar-foreground); font: 400 var(--text-sm)/1 var(--font-sans); text-decoration: none; text-align: left; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-out); }
+.sidebar-menu-button:hover, .sidebar-menu-button[data-demo="hover"] { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); }
+.sidebar-menu-button[aria-current="page"] { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); font-weight: 600; }
+.sidebar-menu-button:focus-visible { outline: 2px solid var(--sidebar-ring); outline-offset: -2px; }
+.sidebar-menu-badge { margin-left: auto; color: var(--muted-foreground); font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.sidebar[data-state="collapsed"] { width: 56px; } .sidebar[data-state="collapsed"] .sidebar-group-label, .sidebar[data-state="collapsed"] .sidebar-menu-button > span, .sidebar[data-state="collapsed"] .sidebar-menu-badge { display: none; }
+.sidebar[data-state="collapsed"] .sidebar-menu-button { justify-content: center; padding: 0; }
+
+/* ---------- Tabs ---------- */
+.tabs { display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); min-width: 0; }
+.tabs-list { display: inline-flex; align-items: center; align-self: flex-start; max-width: 100%; overflow-x: auto; height: var(--control-h); padding: 3px; gap: 2px; border-radius: var(--radius-lg); background: var(--muted); color: var(--muted-foreground); }
+.tabs-trigger { display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--spacing) * 1.5); height: 100%; padding: 0 calc(var(--spacing) * 3); border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--muted-foreground); font: 500 var(--text-sm)/1 var(--font-sans); white-space: nowrap; cursor: pointer; transition: background-color var(--duration-normal) var(--ease-out), color var(--duration-normal) var(--ease-out); }
+.tabs-trigger:hover { color: var(--foreground); }
+.tabs-trigger[aria-selected="true"] { background: var(--background); color: var(--foreground); border-color: var(--input); box-shadow: var(--shadow-sm); }
+.tabs-trigger:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
+.tabs-trigger:disabled { opacity: .5; cursor: not-allowed; }
+.tabs-list[data-variant="line"] { height: auto; padding: 0; gap: calc(var(--spacing) * 4); background: transparent; border-radius: 0; border-bottom: 1px solid var(--border); align-self: stretch; }
+.tabs-list[data-variant="line"] .tabs-trigger { height: var(--control-h); padding: 0 calc(var(--spacing) * 0.5); border: 0; border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px; box-shadow: none; background: transparent; }
+.tabs-list[data-variant="line"] .tabs-trigger[aria-selected="true"] { border-bottom-color: var(--primary); color: var(--foreground); font-weight: 600; }
+.tabs-content { min-width: 0; animation: kit-fade var(--duration-normal) var(--ease-out); }
+.tabs-content[hidden] { display: none; }
+
+/* ---------- Dropdown Menu, Popover, Tooltip, Hover-anchored layers ---------- */
+.menu-root { position: relative; display: inline-block; }
+.dropdown-menu-content { text-align: left; display: flex; flex-direction: column; gap: 1px; min-width: 12rem; padding: calc(var(--spacing) * 1); background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); transform-origin: top; animation: kit-pop var(--duration-normal) var(--ease-emphasis); }
+.menu-root > .dropdown-menu-content, .menu-root > .popover-content { position: absolute; top: calc(100% + 4px); z-index: 30; }
+.menu-root > [data-align="end"] { right: 0; } .menu-root > [data-align="start"], .menu-root > :not([data-align]) { left: 0; }
+.menu-root > [hidden] { display: none; }
+.dropdown-menu-label { padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2); font-size: var(--text-sm); font-weight: 600; }
+.dropdown-menu-item { display: flex; align-items: center; gap: calc(var(--spacing) * 2); width: 100%; min-height: var(--control-h-sm); padding: 0 calc(var(--spacing) * 2); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font: 400 var(--text-sm)/1 var(--font-sans); text-align: left; text-decoration: none; cursor: pointer; }
+.dropdown-menu-item .icon { color: var(--muted-foreground); }
+.dropdown-menu-item:hover, .dropdown-menu-item:focus-visible, .dropdown-menu-item[data-highlighted] { background: var(--accent); color: var(--accent-foreground); }
+.dropdown-menu-item:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.dropdown-menu-item[data-variant="destructive"], .dropdown-menu-item[data-variant="destructive"] .icon { color: var(--destructive); }
+.dropdown-menu-item[data-variant="destructive"]:hover, .dropdown-menu-item[data-variant="destructive"][data-highlighted] { background: var(--destructive-soft); }
+.dropdown-menu-item[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.dropdown-menu-shortcut { margin-left: auto; color: var(--muted-foreground); font-size: var(--text-xs); letter-spacing: .04em; }
+.dropdown-menu-separator { height: 1px; margin: calc(var(--spacing) * 1) calc(var(--spacing) * -1); background: var(--border); }
+.popover-content { text-align: left; width: 18rem; max-width: calc(100vw - 32px); padding: calc(var(--spacing) * 4); display: flex; flex-direction: column; gap: calc(var(--spacing) * 3); background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-md); animation: kit-pop var(--duration-normal) var(--ease-emphasis); }
+.tooltip-root { position: relative; display: inline-flex; }
+.tooltip-content { display: inline-block; max-width: 18rem; padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 3); border-radius: var(--radius-md); background: var(--foreground); color: var(--background); font-size: var(--text-xs); line-height: 1.4; animation: kit-pop var(--duration-fast) var(--ease-out); }
+.tooltip-root > .tooltip-content { position: absolute; bottom: calc(100% + 6px); left: 50%; translate: -50% 0; white-space: nowrap; z-index: 40; pointer-events: none; visibility: hidden; opacity: 0; transition: opacity var(--duration-fast) var(--ease-out); animation: none; }
+.tooltip-root:hover > .tooltip-content, .tooltip-root:focus-within > .tooltip-content, .tooltip-root[data-state="open"] > .tooltip-content { visibility: visible; opacity: 1; }
+
+/* ---------- Breadcrumb, Pagination ---------- */
+.breadcrumb { display: block; min-width: 0; }
+.breadcrumb-list { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--spacing) * 1.5); list-style: none; padding: 0; color: var(--muted-foreground); font-size: var(--text-sm); }
+.breadcrumb-item { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1.5); }
+.breadcrumb-link { color: var(--muted-foreground); text-decoration: none; transition: color var(--duration-fast) var(--ease-out); }
+.breadcrumb-link:hover { color: var(--foreground); text-decoration: underline; }
+.breadcrumb-page { color: var(--foreground); font-weight: 500; }
+.breadcrumb-separator { display: inline-flex; color: var(--muted-foreground); } .breadcrumb-separator .icon { width: 14px; height: 14px; }
+.pagination { display: flex; justify-content: center; }
+.pagination[data-align="end"] { justify-content: flex-end; }
+.pagination-content { display: flex; align-items: center; gap: calc(var(--spacing) * 1); list-style: none; padding: 0; flex-wrap: wrap; }
+.pagination-link { display: inline-flex; align-items: center; justify-content: center; gap: calc(var(--spacing) * 1); min-width: var(--control-h); height: var(--control-h); padding: 0 calc(var(--spacing) * 2.5); border: 1px solid transparent; border-radius: var(--radius-md); color: var(--foreground); font-size: var(--text-sm); font-weight: 500; text-decoration: none; font-variant-numeric: tabular-nums; transition: background-color var(--duration-fast) var(--ease-out); }
+.pagination-link:hover { background: var(--accent); }
+.pagination-link[aria-current="page"] { border-color: var(--input); background: var(--background); }
+.pagination-link[aria-disabled="true"] { opacity: .5; pointer-events: none; }
+.pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; width: var(--control-h); color: var(--muted-foreground); }
+.pagination-summary { color: var(--muted-foreground); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+
+/* ---------- Dialog, Alert Dialog, Sheet ---------- */
+.dialog-overlay { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: calc(var(--spacing) * 4); background: var(--overlay); animation: kit-fade var(--duration-normal) var(--ease-out); }
+.dialog-overlay[hidden], .sheet-overlay[hidden] { display: none; }
+.dialog-content { position: relative; width: 100%; max-width: 32rem; max-height: calc(100vh - 32px); overflow: auto; display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); padding: calc(var(--spacing) * 6); background: var(--background); color: var(--foreground); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); animation: kit-dialog var(--duration-normal) var(--ease-emphasis); }
+.dialog-content[data-size="sm"] { max-width: 26rem; } .dialog-content[data-size="lg"] { max-width: 42rem; }
+.dialog-header { display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); padding-right: calc(var(--spacing) * 6); }
+.dialog-title { font-size: var(--text-lg); font-weight: 600; line-height: 1.3; }
+.dialog-description { color: var(--muted-foreground); font-size: var(--text-sm); }
+.dialog-footer { display: flex; justify-content: flex-end; gap: calc(var(--spacing) * 2); flex-wrap: wrap; }
+.dialog-close { position: absolute; top: 14px; right: 14px; }
+[role="alertdialog"] .dialog-header { padding-right: 0; }
+.sheet-overlay { position: fixed; inset: 0; z-index: 50; background: var(--overlay); animation: kit-fade var(--duration-normal) var(--ease-out); }
+.sheet-content { position: fixed; z-index: 51; display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); background: var(--background); color: var(--foreground); box-shadow: var(--shadow-lg); top: 0; bottom: 0; right: 0; width: min(24rem, 85vw); border-left: 1px solid var(--border); animation: kit-sheet-right var(--duration-slow) var(--ease-emphasis); }
+.sheet-content[data-side="left"] { right: auto; left: 0; border-left: 0; border-right: 1px solid var(--border); animation-name: kit-sheet-left; }
+.sheet-content[data-side="bottom"] { top: auto; left: 0; width: auto; max-height: 85vh; border-left: 0; border-top: 1px solid var(--border); border-radius: var(--radius-xl) var(--radius-xl) 0 0; animation-name: kit-sheet-bottom; }
+.sheet-header { display: flex; flex-direction: column; gap: calc(var(--spacing) * 1.5); padding: calc(var(--spacing) * 6) calc(var(--spacing) * 6) 0; padding-right: calc(var(--spacing) * 12); }
+.sheet-body { flex: 1 1 auto; overflow: auto; padding: 0 calc(var(--spacing) * 6); display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); }
+.sheet-footer { display: flex; justify-content: flex-end; gap: calc(var(--spacing) * 2); padding: calc(var(--spacing) * 4) calc(var(--spacing) * 6); border-top: 1px solid var(--border); }
+.sheet-content .dialog-close { top: 18px; right: 18px; }
+/* static pictures of overlays (gallery, a scene frozen in a mockup): the layer fills its stage instead of the window */
+.demo-stage { position: relative; min-height: 360px; overflow: hidden; border-radius: var(--radius-lg); border: 1px dashed var(--border); background: var(--background); }
+.demo-stage > .dialog-overlay, .demo-stage > .sheet-overlay, .demo-stage > .sheet-content, .demo-stage > .toaster { position: absolute; }
+.demo-stage > .sidebar { position: absolute; inset: 0 auto 0 0; width: 256px; min-height: 0; max-height: none; }
+.demo-stage > .sidebar[data-state="collapsed"] { width: 56px; }
+.demo-stage[data-size="lg"] { min-height: 520px; }
+/* gallery-only wrappers: a labelled grid of states; never needed in a screen */
+.demo-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: calc(var(--spacing) * 6) calc(var(--spacing) * 8); }
+.demo-grid[data-layout="grid"] { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr)); }
+.demo-cell { display: flex; flex-direction: column; align-items: flex-start; gap: calc(var(--spacing) * 2); margin: 0; min-width: 0; }
+.demo-grid[data-layout="grid"] > .demo-cell { align-items: stretch; }
+.demo-cell > figcaption { color: var(--muted-foreground); font-size: var(--text-xs); }
+
+/* ---------- Accordion ---------- */
+.accordion { display: flex; flex-direction: column; }
+.accordion-item { border-bottom: 1px solid var(--border); }
+.accordion-trigger { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--spacing) * 4); padding: calc(var(--spacing) * 4) 0; font-size: var(--text-sm); font-weight: 500; cursor: pointer; list-style: none; border-radius: var(--radius-sm); }
+.accordion-trigger::-webkit-details-marker { display: none; }
+.accordion-trigger:hover { text-decoration: underline; text-underline-offset: 3px; }
+.accordion-trigger .icon { color: var(--muted-foreground); transition: transform var(--duration-normal) var(--ease-out); }
+.accordion-item[open] > .accordion-trigger .icon { transform: rotate(180deg); }
+.accordion-content { padding: 0 0 calc(var(--spacing) * 4); color: var(--foreground); animation: kit-slide-down var(--duration-normal) var(--ease-out); }
+.accordion-item[aria-disabled="true"] > .accordion-trigger { opacity: .5; pointer-events: none; }
+
+/* ---------- Alert ---------- */
+.alert { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 2px calc(var(--spacing) * 3); padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--card); color: var(--card-foreground); font-size: var(--text-sm); }
+.alert > .icon { grid-row: 1 / span 2; margin-top: 2px; }
+.alert:not(:has(> .icon)) { grid-template-columns: minmax(0, 1fr); }
+.alert-title { font-weight: 600; line-height: 1.4; }
+.alert-description { color: var(--muted-foreground); }
+.alert-action { grid-column: 2; margin-top: calc(var(--spacing) * 2); display: flex; gap: calc(var(--spacing) * 2); flex-wrap: wrap; }
+.alert[data-variant="destructive"] { color: var(--destructive); background: var(--destructive-soft); border-color: transparent; }
+.alert[data-variant="success"] { color: var(--success); background: var(--success-soft); border-color: transparent; }
+.alert[data-variant="warning"] { color: var(--warning); background: var(--warning-soft); border-color: transparent; }
+.alert[data-variant="info"] { color: var(--info); background: var(--info-soft); border-color: transparent; }
+.alert[data-variant] .alert-description { color: var(--foreground); }
+
+/* ---------- Toast (Sonner-style) ---------- */
+.toaster { position: fixed; z-index: 60; right: calc(var(--spacing) * 6); bottom: calc(var(--spacing) * 6); display: flex; flex-direction: column; gap: calc(var(--spacing) * 2); width: min(22rem, calc(100% - 32px)); pointer-events: none; }
+.toaster[data-position="bottom-center"] { right: 50%; translate: 50% 0; }
+.toast { pointer-events: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 2px calc(var(--spacing) * 3); padding: calc(var(--spacing) * 4); background: var(--popover); color: var(--popover-foreground); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); font-size: var(--text-sm); animation: kit-toast var(--duration-slow) var(--ease-emphasis); }
+.toast > .icon { grid-row: 1 / span 2; margin-top: 2px; }
+.toast:not(:has(> .icon)) { grid-template-columns: minmax(0, 1fr) auto; }
+.toast-title { font-weight: 600; line-height: 1.4; }
+.toast-description { color: var(--muted-foreground); grid-column: 2; }
+.toast:not(:has(> .icon)) .toast-description { grid-column: 1; }
+.toast-action { grid-row: 1 / span 2; grid-column: -2; align-self: center; }
+.toast[data-type="success"] > .icon { color: var(--success); } .toast[data-type="error"] > .icon { color: var(--destructive); }
+.toast[data-type="warning"] > .icon { color: var(--warning); } .toast[data-type="info"] > .icon { color: var(--info); }
+
+/* ---------- Skeleton, Spinner, Progress ---------- */
+.skeleton { display: block; height: 16px; border-radius: var(--radius-md); background: var(--muted); animation: kit-pulse 1.6s var(--ease-in-out) infinite; }
+.skeleton[data-shape="circle"] { border-radius: 50%; }
+.spinner { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; color: var(--muted-foreground); animation: kit-spin 700ms linear infinite; }
+.spinner[data-size="lg"] { width: 24px; height: 24px; }
+.progress { position: relative; width: 100%; height: 8px; overflow: hidden; border-radius: 999px; background: var(--muted); }
+.progress-indicator { display: block; height: 100%; border-radius: inherit; background: var(--primary); transition: width var(--duration-slow) var(--ease-out); }
+.progress[data-state="indeterminate"] .progress-indicator { width: 40%; animation: kit-indeterminate 1.4s var(--ease-in-out) infinite; }
+.progress-label { display: flex; justify-content: space-between; gap: calc(var(--spacing) * 2); font-size: var(--text-sm); }
+.progress-label > :last-child { color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+
+/* ---------- Empty ---------- */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--spacing) * 6); padding: calc(var(--spacing) * 12) calc(var(--spacing) * 6); text-align: center; border-radius: var(--radius-lg); }
+.empty[data-variant="outline"] { border: 1px dashed var(--input); }
+.empty-header { display: flex; flex-direction: column; align-items: center; gap: calc(var(--spacing) * 2); max-width: 26rem; }
+.empty-media { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: calc(var(--spacing) * 2); border-radius: var(--radius-lg); background: var(--muted); color: var(--foreground); }
+.empty-media .icon { width: 20px; height: 20px; }
+.empty-title { font-size: var(--text-base); font-weight: 600; }
+.empty-description { color: var(--muted-foreground); }
+.empty-content { display: flex; gap: calc(var(--spacing) * 2); flex-wrap: wrap; justify-content: center; }
+
+/* ---------- Table, Data Table ---------- */
+.table-container { width: 100%; overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); caption-side: bottom; }
+.table th { height: 40px; padding: 0 calc(var(--spacing) * 3); text-align: left; vertical-align: middle; color: var(--muted-foreground); font-weight: 500; white-space: nowrap; border-bottom: 1px solid var(--border); }
+.table td { padding: calc(var(--spacing) * 3); vertical-align: middle; border-bottom: 1px solid var(--border); }
+.table tbody tr { transition: background-color var(--duration-fast) var(--ease-out); }
+.table tbody tr:hover, .table tbody tr[data-demo="hover"] { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.table tbody tr[data-state="selected"] { background: var(--muted); }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tfoot td { font-weight: 500; border-top: 1px solid var(--border); border-bottom: 0; background: color-mix(in srgb, var(--muted) 50%, transparent); }
+.table caption { padding-top: calc(var(--spacing) * 4); color: var(--muted-foreground); font-size: var(--text-sm); }
+.table [data-align="end"], .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table th:first-child, .table td:first-child { padding-left: calc(var(--spacing) * 4); }
+.table th:last-child, .table td:last-child { padding-right: calc(var(--spacing) * 4); }
+.table .cell-check { width: 40px; padding-right: 0; } .table .cell-check .checkbox { margin: 0; vertical-align: middle; }
+.table .cell-actions { width: 1%; white-space: nowrap; text-align: right; }
+.table td[colspan] .empty { padding: calc(var(--spacing) * 10) calc(var(--spacing) * 4); }
+.data-table { display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); min-width: 0; }
+.data-table-toolbar { display: flex; align-items: center; gap: calc(var(--spacing) * 2); flex-wrap: wrap; }
+.data-table-toolbar > .input, .data-table-toolbar > .input-group { max-width: 20rem; }
+.data-table-frame { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--card); }
+.data-table-footer { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--spacing) * 3); flex-wrap: wrap; }
+.data-table-sort { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1); margin-left: calc(var(--spacing) * -2); height: var(--control-h-sm); padding: 0 calc(var(--spacing) * 2); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.data-table-sort:hover { background: var(--accent); color: var(--foreground); }
+.data-table-sort[aria-sort="ascending"], .data-table-sort[aria-sort="descending"] { color: var(--foreground); }
+[data-align="end"] > .data-table-sort { margin-left: 0; margin-right: calc(var(--spacing) * -2); }
+
+/* ---------- Chart ---------- */
+.chart { display: flex; flex-direction: column; gap: calc(var(--spacing) * 4); min-width: 0; }
+.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-axis { fill: var(--muted-foreground); font-size: 12px; font-family: var(--font-sans); }
+.chart-value { fill: var(--foreground); font-size: 12px; font-weight: 600; font-family: var(--font-sans); font-variant-numeric: tabular-nums; }
+.chart-bar { transition: opacity var(--duration-fast) var(--ease-out); } .chart-bar:hover { opacity: .85; }
+.chart-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.chart-legend { display: flex; flex-wrap: wrap; gap: calc(var(--spacing) * 4); color: var(--muted-foreground); font-size: var(--text-xs); }
+.chart-legend > span { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 1.5); }
+.chart-legend i { width: 10px; height: 10px; border-radius: 3px; }
+.series-1 { fill: var(--chart-1); stroke: var(--chart-1); background: var(--chart-1); } .series-2 { fill: var(--chart-2); stroke: var(--chart-2); background: var(--chart-2); }
+.series-3 { fill: var(--chart-3); stroke: var(--chart-3); background: var(--chart-3); } .series-4 { fill: var(--chart-4); stroke: var(--chart-4); background: var(--chart-4); }
+.series-5 { fill: var(--chart-5); stroke: var(--chart-5); background: var(--chart-5); }
+.chart-line.series-1, .chart-line.series-2, .chart-line.series-3, .chart-line.series-4, .chart-line.series-5 { fill: none; }
+.stat { display: flex; flex-direction: column; gap: calc(var(--spacing) * 1); }
+.stat-label { color: var(--muted-foreground); font-size: var(--text-sm); }
+.stat-value { font-size: var(--text-2xl); font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat-delta { font-size: var(--text-xs); color: var(--muted-foreground); }
+.stat-delta[data-trend="good"] { color: var(--success); } .stat-delta[data-trend="bad"] { color: var(--destructive); }
+
+/* ---------- planning mockup chrome (templates/mockup.html): the selector bar the plan page reads and hides ---------- */
+.mockup-bar { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--spacing) * 2) calc(var(--spacing) * 6); padding: calc(var(--spacing) * 2) calc(var(--spacing) * 6); background: var(--muted); color: var(--foreground); border-bottom: 1px solid var(--border); font-size: var(--text-xs); }
+.mockup-id { display: flex; align-items: center; gap: calc(var(--spacing) * 3); min-width: 0; }
+.mockup-id > span:last-child { color: var(--muted-foreground); }
+.mockup-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 calc(var(--spacing) * 2); border: 1px solid var(--input); border-radius: var(--radius-sm); font-weight: 600; }
+.mockup-controls { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--spacing) * 2) calc(var(--spacing) * 4); margin-left: auto; }
+.mockup-control { display: inline-flex; align-items: center; gap: calc(var(--spacing) * 2); }
+.mockup-control > label { color: var(--muted-foreground); font-weight: 500; }
+.mockup-control .select { height: 30px; width: auto; min-width: 8.5rem; padding-left: calc(var(--spacing) * 2.5); font-size: var(--text-xs); background-color: var(--background); box-shadow: none; }
+.mockup-control .select-wrap::after { right: 11px; width: 6px; height: 6px; margin-top: -4px; }
+@media (max-width: 767px) {
+  .mockup-bar { padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4); }
+  .mockup-controls { margin-left: 0; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mockup-control { display: grid; grid-template-columns: minmax(0, 1fr); gap: calc(var(--spacing) * 1); }
+  .mockup-control .select { width: 100%; min-width: 0; }
+}
+
+/* ---------- motion ---------- */
+@keyframes kit-fade { from { opacity: 0; } }
+@keyframes kit-pop { from { opacity: 0; transform: translateY(calc(var(--motion-distance) * -0.5)) scale(var(--motion-scale)); } }
+@keyframes kit-dialog { from { opacity: 0; transform: translateY(var(--motion-distance)) scale(var(--motion-scale)); } }
+@keyframes kit-sheet-right { from { transform: translateX(100%); } }
+@keyframes kit-sheet-left { from { transform: translateX(-100%); } }
+@keyframes kit-sheet-bottom { from { transform: translateY(100%); } }
+@keyframes kit-toast { from { opacity: 0; transform: translateY(var(--motion-distance)) scale(var(--motion-scale)); } }
+@keyframes kit-slide-down { from { opacity: 0; transform: translateY(calc(var(--motion-distance) * -0.5)); } }
+@keyframes kit-pulse { 50% { opacity: .55; } }
+@keyframes kit-indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
+  .skeleton { animation: none; } .spinner, .button[aria-busy="true"]::before { animation: kit-spin 1.6s linear infinite !important; animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
+}
+
+/* ---------- responsive: md 768, sm 640 (Tailwind breakpoints) ---------- */
+@media (max-width: 1023px) {
+  .grid[data-cols="3"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .app > .sidebar { position: fixed; z-index: 55; top: 0; bottom: 0; left: 0; width: min(18rem, 85vw); transform: translateX(-102%); transition: transform var(--duration-slow) var(--ease-emphasis); }
+  .app[data-sidebar="open"] > .sidebar { transform: none; box-shadow: var(--shadow-lg); }
+  .app[data-sidebar="open"]::after { content: ""; position: fixed; inset: 0; z-index: 54; background: var(--overlay); }
+  .app-header { padding: 0 calc(var(--spacing) * 4); } .app-header .sidebar-trigger { display: inline-flex; }
+  .page { padding: calc(var(--spacing) * 6) calc(var(--spacing) * 4); gap: calc(var(--spacing) * 5); }
+  .grid[data-cols="2"], .grid[data-cols="3"] { grid-template-columns: minmax(0, 1fr); }
+  .page-header { align-items: stretch; flex-direction: column; } .page-header > .row, .page-header > .button { justify-content: flex-start; }
+  .data-table-toolbar > .input, .data-table-toolbar > .input-group { max-width: none; flex: 1 1 100%; }
+}
+@media (max-width: 640px) {
+  .card { gap: calc(var(--spacing) * 4); padding: calc(var(--spacing) * 5) 0; }
+  .card-header, .card-content, .card-footer { padding-left: calc(var(--spacing) * 5); padding-right: calc(var(--spacing) * 5); }
+  .dialog-overlay { align-items: end; padding: calc(var(--spacing) * 3); }
+  .dialog-content { max-width: none; padding: calc(var(--spacing) * 5); }
+  .dialog-footer { flex-direction: column-reverse; } .dialog-footer > .button { width: 100%; }
+  .toaster { right: 16px; left: 16px; bottom: 16px; width: auto; }
+  .table-responsive thead { display: none; }
+  .table-responsive, .table-responsive tbody, .table-responsive tr, .table-responsive td { display: block; width: 100%; }
+  .table-responsive tr { padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4); border-bottom: 1px solid var(--border); }
+  .table-responsive tbody tr:last-child { border-bottom: 0; }
+  .table-responsive td, .table-responsive td:first-child, .table-responsive td:last-child { display: flex; justify-content: space-between; align-items: center; gap: calc(var(--spacing) * 3); padding: calc(var(--spacing) * 1) 0; border: 0; text-align: right; }
+  .table-responsive td[data-label]::before { content: attr(data-label); color: var(--muted-foreground); text-align: left; font-weight: 400; }
+  .table-responsive td[data-primary] { justify-content: flex-start; text-align: left; padding-bottom: calc(var(--spacing) * 2); }
+  .table-responsive td.cell-check { display: none; }
+  .table-responsive tr { position: relative; }
+  .table-responsive td[data-primary] { padding-right: calc(var(--spacing) * 10); }
+  .table-responsive td.cell-actions, .table-responsive td.cell-actions:last-child { position: absolute; top: calc(var(--spacing) * 3); right: calc(var(--spacing) * 3); width: auto; padding: 0; }
+  .app-header .breadcrumb-item:not(:has(.breadcrumb-page)), .app-header .breadcrumb-separator { display: none; }
+}
 </style>
+<style id="project-design">
+:root, [data-theme="light"] {
+ --background:#faf9fc; --foreground:#1c1425; --card:#ffffff; --card-foreground:#1c1425;
+ --popover:#ffffff; --popover-foreground:#1c1425; --primary:#6d3fe0; --primary-foreground:#ffffff; --primary-hover:#5530b8;
+ --secondary:#f3eefb; --secondary-foreground:#1c1425; --muted:#f3eefb; --muted-foreground:#5a5168;
+ --accent:#f3eefb; --accent-foreground:#1c1425; --border:#ddd3ea; --input:#5a5168; --ring:#6d3fe0;
+ --sidebar:#ffffff; --sidebar-foreground:#1c1425; --sidebar-primary:#6d3fe0; --sidebar-primary-foreground:#ffffff; --sidebar-accent:#faf9fc; --sidebar-accent-foreground:#1c1425; --sidebar-border:#ddd3ea; --sidebar-ring:#6d3fe0;
+ --primary-soft:#faf9fc; --destructive:#a8323d; --destructive-foreground:#ffffff; --destructive-hover:#a8323d; --destructive-soft:#faf9fc;
+ --success:#1a6a4a; --success-soft:#faf9fc; --warning:#5a5168; --warning-soft:#faf9fc; --info:#5530b8; --info-soft:#faf9fc;
+ --scene-background:#ebe7f1; --scene-edge:#5a5168;
+}
+[data-theme="dark"] {
+ --background:#16131d; --foreground:#f2eff7; --card:#1d1926; --card-foreground:#f2eff7;
+ --popover:#1d1926; --popover-foreground:#f2eff7; --primary:#b9a4ff; --primary-foreground:#120b24; --primary-hover:#ddd8e6;
+ --secondary:#231e2e; --secondary-foreground:#f2eff7; --muted:#231e2e; --muted-foreground:#a59db5;
+ --accent:#231e2e; --accent-foreground:#f2eff7; --border:#2d2838; --input:#a59db5; --ring:#8f6ef5;
+ --sidebar:#121018; --sidebar-foreground:#f2eff7; --sidebar-primary:#b9a4ff; --sidebar-primary-foreground:#120b24; --sidebar-accent:#1d1926; --sidebar-accent-foreground:#f2eff7; --sidebar-border:#2d2838; --sidebar-ring:#8f6ef5;
+ --primary-soft:#1d1926; --destructive:#f08a94; --destructive-foreground:#120b24; --destructive-hover:#f08a94; --destructive-soft:#1d1926;
+ --success:#5fd3a0; --success-soft:#1d1926; --warning:#a59db5; --warning-soft:#1d1926; --info:#b9a4ff; --info-soft:#1d1926;
+ --scene-background:#1a1722; --scene-edge:#a59db5;
+}
+/* Proposals: workshop split-pane layout, object-art frame and numeric layout.
+   Components retain kit classes, anatomy, padding, focus and state styling. */
+.workshop { min-height:0; grid-template-columns:64px minmax(0,1fr); }
+.workshop-tools { padding:calc(var(--spacing)*4) calc(var(--spacing)*6); border-bottom:1px solid var(--border); }
+.workshop-grid { display:grid; grid-template-columns:340px minmax(0,1fr) 340px; min-height:680px; }
+.workshop-pane { min-width:0; padding:calc(var(--spacing)*6); background:var(--background); }
+.add-pane { border-right:1px solid var(--border); }
+.inspector-pane { border-left:1px solid var(--border); }
+.scene-pane { min-width:0; padding:calc(var(--spacing)*6); background:var(--scene-background); }
+.scene { width:100%; height:auto; min-height:180px; max-height:480px; }
+.scene-summary { font-size:var(--text-xs); }
+.object-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:calc(var(--spacing)*3); }
+.object-art { height:72px; display:grid; place-items:center; }
+.object-art svg { width:100%; height:100%; }
+.measure-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:calc(var(--spacing)*4); }
+.measure-grid > :last-child:nth-child(3) { grid-column:1/-1; }
+.dimension-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:calc(var(--spacing)*3); }
+.workshop-mobile { display:none; }
+.export-wrap { position:relative; }
+.export-wrap > .popover-content { right:0; width:min(340px,calc(100vw - 32px)); }
+.shopping-host { padding:0; border:0; background:transparent; color:var(--foreground); width:min(672px,calc(100vw - 32px)); max-width:none; max-height:calc(100dvh - 32px); overflow:visible; }
+.shopping-host::backdrop { background:var(--overlay); }
+.planning-context { flex-basis:100%; padding:0; }
+@media (min-width:1024px) {
+ .workshop-pane { max-height:calc(100dvh - 190px); min-height:680px; overflow:auto; }
+ .scene-pane { align-self:start; position:sticky; top:0; }
+}
+@media (min-width:1024px) and (max-width:1279px) {
+ .workshop-grid { grid-template-columns:320px minmax(0,1fr); }
+ #app[data-view="table-editor"] .workshop-grid, #app[data-view="ai"] .workshop-grid, #app[data-view="export"] .workshop-grid, #app[data-view="shopping"] .workshop-grid { grid-template-columns:minmax(0,1fr) 340px; }
+ #app[data-view="table-editor"] .add-pane, #app[data-view="ai"] .add-pane, #app[data-view="export"] .add-pane, #app[data-view="shopping"] .add-pane { display:none; }
+ #app[data-view="tables"] .inspector-pane, #app[data-view="backing"] .inspector-pane { display:none; }
+}
+@media (max-width:1023px) {
+ .workshop { display:block; }
+ .workshop > .sidebar { display:none; }
+ .workshop-grid { display:flex; flex-direction:column; min-height:0; }
+ .scene-pane { order:0; }
+ .scene { max-height:220px; }
+ .workshop-pane { order:1; border:0; }
+ #app[data-view="tables"] .inspector-pane, #app[data-view="backing"] .inspector-pane { display:none; }
+ #app[data-view="table-editor"] .add-pane, #app[data-view="ai"] .add-pane, #app[data-view="export"] .add-pane, #app[data-view="shopping"] .add-pane { display:none; }
+ .workshop-mobile { display:flex; padding:calc(var(--spacing)*4) calc(var(--spacing)*6); border-top:1px solid var(--border); }
+ .object-grid { grid-template-columns:repeat(auto-fit,minmax(min(148px,100%),1fr)); }
+ .workshop-tools,.workshop-pane,.scene-pane { padding:calc(var(--spacing)*4); }
+ .project-name { display:none; }
+}
+@media (max-width:1023px) and (min-width:640px) and (max-height:540px) {
+ .workshop-grid { display:grid; grid-template-columns:45% minmax(0,1fr); }
+ .scene-pane { order:0; }
+ .workshop-pane { order:1; max-height:75dvh; overflow:auto; }
+}
+@media (max-width:479px) {
+ .measure-grid,.dimension-grid { grid-template-columns:minmax(0,1fr); }
+ .export-wrap > .popover-content { position:fixed; left:16px; right:16px; top:16px; max-height:calc(100dvh - 32px); overflow:auto; }
+}
+</style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'">
 </head>
 <body>
-<div class="mock-controls" aria-label="Controles del mockup">
- <div class="mock-title"><span><span class="badge dot">Mockup</span> <strong>Taller esenciales</strong></span><span class="muted">taller-esenciales@v1 · draft</span></div>
- <label for="view">Vista<select id="view"><option value="tables">Añadir mesa</option><option value="table-editor">Editar mesa</option><option value="backing">Backing · Taller</option><option value="shopping">Lista de compra</option><option value="ai">IA · mesa rectangular</option><option value="export">Exportar · Blender</option></select></label>
- <label for="state">Estado<select id="state"></select></label>
- <label for="scene">Diálogo<select id="scene"><option value="none">Ninguno</option><option value="export">Exportar (grupo)</option><option value="shopping">Lista de compra</option></select></label>
- <label for="theme">Tema<select id="theme"><option value="dark">Oscuro</option><option value="light">Claro</option></select></label>
-</div>
-<div class="mock-caption"><span><strong>Datos ficticios.</strong> Geometría esquemática; capacidad de ejemplo. Sin IA, compras ni descargas reales.</span><span class="layout-label">SP-3 · R9 / R10 / R11 · decisiones de ronda 9 incorporadas · draft</span></div>
-<aside class="planning-note" aria-label="Contexto de diseño del mockup"><strong id="proposalTitle"></strong><p id="proposalText"></p></aside>
-<div id="app" class="app" data-view="tables"></div>
-<dialog id="purchaseDialog" aria-labelledby="purchaseTitle"><div id="purchaseContent"></div></dialog>
+<header class="mockup-bar">
+  <div class="mockup-id"><span class="mockup-tag">Mockup</span><strong>taller-esenciales@v1</strong><span>Borrador · datos ficticios</span></div>
+  <div class="mockup-controls">
+    <div class="mockup-control"><label for="view">Vista</label><span class="select-wrap"><select class="select" id="view"><option value="tables">Añadir mesa</option><option value="table-editor">Editar mesa</option><option value="backing">Backing · Taller</option><option value="shopping">Lista de compra</option><option value="ai">IA · mesa rectangular</option><option value="export">Exportar · Blender</option></select></span></div>
+    <div class="mockup-control"><label for="state">Estado</label><span class="select-wrap"><select class="select" id="state"></select></span></div>
+    <div class="mockup-control"><label for="scene">Diálogo</label><span class="select-wrap"><select class="select" id="scene"><option value="none">Ninguno</option><option value="export">Exportar (grupo)</option><option value="shopping">Lista de compra</option></select></span></div>
+    <div class="mockup-control"><label for="theme">Tema</label><span class="select-wrap"><select class="select" id="theme"><option value="light">Claro</option><option value="dark" selected>Oscuro</option></select></span></div>
+    <div class="mockup-control"><label for="motion">Movimiento</label><span class="select-wrap"><select class="select" id="motion"><option value="subtle">Sutil</option><option value="natural" selected>Natural</option><option value="expressive">Expresivo</option></select></span></div>
+  </div>
+<div class="planning-context stack-sm" aria-label="Contexto del mockup"><p><strong id="proposalTitle"></strong> <span id="proposalText" class="text-muted"></span></p></div></header>
+<main id="app"></main>
+<dialog class="shopping-host" id="purchaseDialog" aria-labelledby="purchaseTitle"><div class="dialog-content" data-size="lg" id="purchaseContent"></div></dialog>
 <div id="announcement" role="status" aria-live="polite" class="sr-only"></div>
 <script>
 'use strict';
@@ -126,6 +696,7 @@ const selectedTable=()=>tableSpecs[model.tableType];
 function setTable(type){const spec=tableSpecs[type];Object.assign(model,{tableType:type,length:spec.size[0],width:spec.size[1],height:spec.size[2],requested:8,placed:8,showTable:true,cloth:type==='coctel'?'Sin mantel':'Hasta el piso'});}
 const model = {tableType:'rectangular',length:2.4,width:.9,height:.75,requested:8,placed:8,chair:'Tiffany',distribution:'Alrededor',cloth:'Hasta el piso',clothColor:'#e8dcf5',legColor:'#6f6f6f',chairColor:'#d8b25a',query:'',prompt:'Añade una mesa rectangular de 2,40 × 0,90 m con 8 sillas Tiffany.',notice:'',added:[],showTable:true,angle:'Perspectiva',legacy:'editable'};
 let lastInvoker = null;
+let isRendering = false;
 const history = {past:[],future:[]};
 const snapshot = () => JSON.parse(JSON.stringify(model));
 function remember() { history.past.push(snapshot()); history.future=[]; }
@@ -173,112 +744,76 @@ function sceneArt(empty=false) {
  return `<g transform="translate(${x} ${y})"><path d="M0 0V23M20 -9V14M0 8L20 -2" fill="none" stroke="${escapeHTML(model.chairColor)}" stroke-width="4"/><path d="M-3 7L16 -3L30 6L10 16Z" fill="#e6d3ed"/><path d="M10 16V32M30 6V22" stroke="${escapeHTML(model.chairColor)}" stroke-width="3"/></g>`;
  }).join('');
  const balloons = [[112,190,17],[108,159,15],[125,132,18],[118,110,14],[140,95,19],[162,86,14],[169,110,11],[139,117,12],[104,132,10],[116,215,15],[139,220,13],[97,199,10],[154,91,8]].map(([x,y,r],i)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${['#cbb3e0','#eee3f5','#a788c4','#e9d2de'][i%4]}"/><circle cx="${x-4}" cy="${y-5}" r="${r*.22}" fill="white" opacity=".25"/>`).join('');
- return `<svg class="scene" viewBox="0 0 520 430" role="img" aria-label="${empty?'Escena vacía':`Escena esquemática: ${selectedTable().name.toLowerCase()} de ${fmt(model.length)} por ${fmt(model.width)} metros, ${model.placed} sillas, panel redondo y pedestales`}"><defs><pattern id="floorGrid" width="40" height="24" patternUnits="userSpaceOnUse" patternTransform="skewY(-25)"><path d="M40 0H0V24" fill="none" stroke="var(--taller-medio)" stroke-width=".5" opacity=".15"/></pattern></defs><ellipse cx="265" cy="311" rx="210" ry="88" fill="var(--taller-encima)"/><path d="M0 210L260 80L520 210V430H0Z" fill="url(#floorGrid)"/>${empty?'<text x="260" y="245" text-anchor="middle" fill="var(--taller-medio)" font-size="14">Tu escena empieza aquí</text>':`<g transform="${angles}"><ellipse cx="227" cy="260" rx="122" ry="20" fill="var(--sombra)"/><path d="M115 146L212 96L384 185V273L211 188L115 237Z" fill="var(--taller-encima)" opacity=".5"/><circle cx="210" cy="154" r="75" fill="#eadce9" stroke="#d8b25a" stroke-width="4"/><text x="210" y="150" text-anchor="middle" fill="#7f658f" font-size="10" letter-spacing="3">HAPPY</text><text x="210" y="170" text-anchor="middle" fill="#7f658f" font-size="14" font-style="italic">birthday</text>${balloons}<g><path d="M313 204H350V265Q331 277 313 265Z" fill="#baa0d0"/><ellipse cx="331.5" cy="204" rx="18.5" ry="8" fill="#e7d8f0"/><path d="M354 229H389V273Q371 284 354 273Z" fill="#d0bcdf"/><ellipse cx="371.5" cy="229" rx="17.5" ry="7" fill="#f1e7f7"/></g>${model.showTable?`<ellipse cx="278" cy="314" rx="105" ry="34" fill="var(--sombra)"/>${chairs}${model.tableType!=='rectangular'?art(selectedTable().art).replace('<svg viewBox','<svg x="195" y="215" width="180" height="120" viewBox'):`<path d="M221 271V320M310 227V278M346 268V313M257 313V358" stroke="${escapeHTML(model.legColor)}" stroke-width="6"/><path d="M202 270L306 218L357 257L252 312Z" fill="${escapeHTML(model.clothColor)}" stroke="#a98bbd" stroke-width="2"/><path d="M202 270L252 312L252 334L202 291Z" fill="#bda3d2"/><path d="M252 312L357 257L357 280L252 334Z" fill="#ceb7df"/><path d="M247 248L298 287L312 280L261 241Z" fill="#b18fce"/><path d="M195 274L247 316L363 259" fill="none" stroke="var(--taller-resalte)" stroke-width="2" stroke-dasharray="5 4"/><path d="M209 361L363 283" stroke="var(--taller-acento)" stroke-width="1"/><path d="M207 355V367M362 277V289" stroke="var(--taller-acento)"/><text x="300" y="344" font-size="11" fill="var(--taller-acento)" transform="rotate(-26 300 344)">${fmt(model.length)} m</text>`}`:''}</g>`}</svg>`;
+ return `<svg class="scene" viewBox="0 0 520 430" role="img" aria-label="${empty?'Escena vacía':`Escena esquemática: ${selectedTable().name.toLowerCase()} de ${fmt(model.length)} por ${fmt(model.width)} metros, ${model.placed} sillas, panel redondo y pedestales`}"><defs><pattern id="floorGrid" width="40" height="24" patternUnits="userSpaceOnUse" patternTransform="skewY(-25)"><path d="M40 0H0V24" fill="none" stroke="var(--muted-foreground)" stroke-width=".5" opacity=".15"/></pattern></defs><ellipse cx="265" cy="311" rx="210" ry="88" fill="var(--accent)"/><path d="M0 210L260 80L520 210V430H0Z" fill="url(#floorGrid)"/>${empty?'':`<g transform="${angles}"><ellipse cx="227" cy="260" rx="122" ry="20" fill="var(--overlay)"/><path d="M115 146L212 96L384 185V273L211 188L115 237Z" fill="var(--accent)" opacity=".5"/><circle cx="210" cy="154" r="75" fill="#eadce9" stroke="#d8b25a" stroke-width="4"/>${balloons}<g><path d="M313 204H350V265Q331 277 313 265Z" fill="#baa0d0"/><ellipse cx="331.5" cy="204" rx="18.5" ry="8" fill="#e7d8f0"/><path d="M354 229H389V273Q371 284 354 273Z" fill="#d0bcdf"/><ellipse cx="371.5" cy="229" rx="17.5" ry="7" fill="#f1e7f7"/></g>${model.showTable?`<ellipse cx="278" cy="314" rx="105" ry="34" fill="var(--overlay)"/>${chairs}${model.tableType!=='rectangular'?art(selectedTable().art).replace('<svg viewBox','<svg x="195" y="215" width="180" height="120" viewBox'):`<path d="M221 271V320M310 227V278M346 268V313M257 313V358" stroke="${escapeHTML(model.legColor)}" stroke-width="6"/><path d="M202 270L306 218L357 257L252 312Z" fill="${escapeHTML(model.clothColor)}" stroke="#a98bbd" stroke-width="2"/><path d="M202 270L252 312L252 334L202 291Z" fill="#bda3d2"/><path d="M252 312L357 257L357 280L252 334Z" fill="#ceb7df"/><path d="M247 248L298 287L312 280L261 241Z" fill="#b18fce"/><path d="M195 274L247 316L363 259" fill="none" stroke="var(--ring)" stroke-width="2" stroke-dasharray="5 4"/><path d="M209 361L363 283" stroke="var(--primary)" stroke-width="1"/><path d="M207 355V367M362 277V289" stroke="var(--primary)"/><text x="300" y="344" font-size="11" fill="var(--primary)" transform="rotate(-26 300 344)">${fmt(model.length)} m</text>`}`:''}</g>`}</svg>`;
+}
+
+// Component compositions: kit card#actions, field#vertical, select#native,
+// button#variants, dialog#open, popover#open, alert#variants, empty#no-results.
+function button(text,action,{primary=false,disabled=false,attrs='',variant='outline'}={}) {
+ return `<button class="button" type="button" ${primary?'':`data-variant="${variant}"`} data-action="${action}" ${disabled?'disabled':''} ${attrs}>${text}</button>`;
+}
+function alertBox(title,description='',variant='default',action='') {
+ return `<div class="alert" ${variant==='default'?'':`data-variant="${variant}"`} role="${variant==='destructive'?'alert':'status'}">${icon(variant==='success'?'piece':'file')}<p class="alert-title">${title}</p>${description?`<p class="alert-description">${description}</p>`:''}${action?`<div class="alert-action">${action}</div>`:''}</div>`;
 }
 function notice(view=currentView()) {
  const state=currentState();
- if(state==='offline') return '<div class="note" role="status">Sin conexión. La escena ya cargada sigue disponible; no se actualizarán los datos remotos. <button data-action="retry">Reintentar conexión</button></div>';
- if(state==='disabled') return `<div class="note">${view==='export'?'La escena no está lista. Espera a que termine de cargar.':'Se alcanzó el límite de piezas de esta escena. La acción no está disponible.'}</div>`;
- if(state==='partial') return `<div class="note">${view==='export'?'Hay una pieza sin resolver. Revisa las piezas antes de exportar.':view==='ai'?'Propuesta pendiente de aplicar. Tu escena sigue igual.':`Pedidas ${model.requested} · Colocadas ${model.placed}. En esta mesa con esta disposición solo caben 8 (ejemplo). La lista usa las colocadas.`}</div>`;
- if(state==='pending') return `<div class="note" role="status">${view==='export'?'Preparando GLB… Conserva esta ventana abierta.':'La IA está preparando una propuesta…'}</div>`;
- if(state==='success') return `<div class="note success" role="status">${view==='export'?'Descarga GLB iniciada. (Simulación)':view==='table-editor'?'Mesa actualizada. La lista refleja las sillas colocadas.':view==='shopping'?'Lista actualizada con las cantidades colocadas.':view==='ai'?`Propuesta aplicada: 1 mesa rectangular · ${model.placed} sillas colocadas.`:'Pieza añadida a la escena. (Simulación)'}</div>`;
+ if(state==='offline')return alertBox('Sin conexión','La escena ya cargada sigue disponible. Los datos remotos no se actualizarán.','default',button('Reintentar conexión','retry'));
+ if(state==='disabled')return alertBox('Acción no disponible',view==='export'?'La escena no está lista. Espera a que termine de cargar.':'Se alcanzó el límite de piezas de esta escena.');
+ if(state==='partial')return alertBox(view==='export'?'Revisa las piezas antes de exportar':view==='ai'?'Propuesta pendiente de aplicar':`${model.requested} pedidas · ${model.placed} colocadas`,view==='export'?'Hay una pieza sin resolver. La exportación está bloqueada.':view==='ai'?'Tu escena sigue igual.':`En esta disposición caben 8 sillas (ejemplo). La lista usa las ${model.placed} colocadas.`);
+ if(state==='pending')return alertBox(view==='export'?'Preparando GLB…':'La IA está preparando una propuesta…','Conserva esta ventana abierta. No se puede iniciar otra petición.');
+ if(state==='success')return alertBox(view==='export'?'Descarga GLB iniciada. (Simulación)':view==='table-editor'?'Mesa actualizada':view==='shopping'?'Lista actualizada':view==='ai'?'Propuesta aplicada':'Pieza añadida a la escena',view==='table-editor'?'La lista refleja las sillas colocadas.':view==='ai'?`1 mesa rectangular · ${model.placed} sillas colocadas.`:'Datos ficticios de este mockup.','success');
  return '';
 }
+function emptyBox(title,desc,action,label) {return alertBox(title,desc,'default',button(label,action));}
 function dataState(view=currentView()) {
  const state=currentState();
- if(state==='loading') return `<div class="stack" aria-busy="true"><p class="muted" role="status">${view==='tables'?'Cargando mesas':view==='backing'?'Cargando Backing':view==='shopping'?'Actualizando la lista':view==='table-editor'?'Cargando la mesa':view==='ai'?'Preparando la propuesta':'Preparando la escena'}… Tu escena sigue aquí.</p><div class="cards"><div class="skeleton"></div><div class="skeleton"></div></div><div class="skeleton-line"></div></div>`;
- if(state==='error') return `<div class="state-box error" role="alert"><strong>${view==='shopping'?'No pudimos actualizar la lista':view==='export'?'No se pudo exportar el GLB':view==='ai'?'No pudimos preparar la propuesta':'No pudimos cargar las piezas'}</strong><p>Tu escena y los últimos cambios válidos siguen aquí.</p><button data-action="retry">Reintentar</button></div>`;
- if(state==='empty') return `<div class="state-box"><strong>${view==='table-editor'?'Selecciona una mesa':view==='ai'?'¿Qué quieres añadir a tu escena?':view==='shopping'?'Todavía no hay piezas':view==='export'?'La escena necesita una pieza':'No encontramos piezas'}</strong><p>${['tables','backing'].includes(view)?'Prueba con otro nombre o quita los filtros.':'Añade una pieza para continuar.'}</p><button data-action="${['tables','backing'].includes(view)?'clear-search':'go-tables'}">${['tables','backing'].includes(view)?'Limpiar búsqueda':'Añadir mesa'}</button></div>`;
+ if(state==='loading')return `<div class="stack" aria-busy="true" aria-label="Cargando contenido"><p class="text-muted" role="status">${view==='shopping'?'Actualizando la lista':'Cargando contenido'}… Tu escena sigue aquí.</p><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>`;
+ if(state==='error')return alertBox(view==='shopping'?'No pudimos actualizar la lista':view==='export'?'No se pudo exportar el GLB':view==='ai'?'No pudimos preparar la propuesta':'No pudimos cargar las piezas','Tu escena y los últimos cambios válidos siguen aquí.','destructive',button('Reintentar','retry'));
+ if(state==='empty')return emptyBox(view==='table-editor'?'Selecciona una mesa':view==='ai'?'¿Qué quieres añadir a tu escena?':view==='shopping'?'Todavía no hay piezas':view==='export'?'La escena necesita una pieza':'No encontramos piezas',['tables','backing'].includes(view)?'Prueba con otro nombre o quita los filtros.':'Añade una pieza para continuar.',['tables','backing'].includes(view)?'clear-search':'go-tables',['tables','backing'].includes(view)?'Limpiar búsqueda':'Añadir mesa');
  return '';
 }
 function planningContext() {
- const notes={
- tables:['¿Qué mesa necesita esta escena?','Añade el tipo de mesa y ajusta sus medidas en el inspector.'],
- 'table-editor':['¿Qué medidas y cuántas sillas caben?','Ajusta la mesa y comprueba las cantidades colocadas.'],
- backing:['¿Qué piezas completan el Backing?','Encuentra aros, paneles y pedestales y añádelos a la escena.'],
- shopping:['¿Qué piezas tengo que preparar?','Revisa cantidades colocadas y medidas, sin precios de alquiler.'],
- ai:['¿Cómo añado esta mesa con la IA?','Describe la mesa, revisa la propuesta y aplícala a la escena.'],
- export:['¿Cómo llevo esta escena a Blender?','Descarga el GLB a escala en metros y ábrelo en Blender.']
- };
- const [question,job]=notes[currentView()];
- document.getElementById('proposalTitle').textContent=question;
- document.getElementById('proposalText').textContent=job;
+ const notes={tables:['¿Qué mesa necesita esta escena?','Añade el tipo de mesa y ajusta sus medidas en el inspector.'],'table-editor':['¿Qué medidas y cuántas sillas caben?','Ajusta la mesa y comprueba las cantidades colocadas.'],backing:['¿Qué piezas completan el Backing?','Encuentra aros, paneles y pedestales y añádelos a la escena.'],shopping:['¿Qué piezas tengo que preparar?','Revisa cantidades colocadas y medidas, sin precios de alquiler.'],ai:['¿Cómo añado esta mesa con la IA?','Describe la mesa, revisa la propuesta y aplícala a la escena.'],export:['¿Cómo llevo esta escena a Blender?','Descarga el GLB a escala en metros y ábrelo en Blender.']};
+ const [q,j]=notes[currentView()];document.getElementById('proposalTitle').textContent=q;document.getElementById('proposalText').textContent=j;
 }
-function categoryTabs() { return `<div class="tabs" aria-label="Categorías"><button data-action="go-tables" aria-pressed="${currentView()==='tables'}">Mobiliario</button><button data-action="go-backing" aria-pressed="${currentView()==='backing'}">Backing</button></div>`; }
-const normalized = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-function filteredProps() {
- const words=normalized(model.query).trim().split(/\s+/).filter(Boolean);
- return props.filter(item=>words.every(word=>normalized('Backing '+item.name+' '+(item.alias||'')+' '+item.desc+' '+(item.semanticGroup==='fondo'?'Fondos y tapetes':'Decorado de pie')).includes(word)));
+const normalized=text=>text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function filteredProps(){const words=normalized(model.query).trim().split(/\s+/).filter(Boolean);return props.filter(item=>words.every(word=>normalized('Backing '+item.name+' '+(item.alias||'')+' '+item.desc+' '+(item.semanticGroup==='fondo'?'Fondos y tapetes':'Decorado de pie')).includes(word)));}
+function categoryTabs() {
+ return `<div class="row-sm" aria-label="Categorías">${button('Mobiliario','go-tables',{variant:'ghost',attrs:`aria-pressed="${currentView()==='tables'}"`})}${button('Backing','go-backing',{variant:'ghost',attrs:`aria-pressed="${currentView()==='backing'}"`})}</div>`;
 }
-function propCards() {
- const visible=filteredProps();
- if(!visible.length)return '<div class="state-box"><strong>No encontramos piezas</strong><button data-action="clear-search">Limpiar búsqueda</button></div>';
- return `<div class="cards">${visible.map(item=>`<article class="card" data-display-group="Backing" data-canonical-id="${item.id}" data-repository="${item.repository}" data-semantic-group="${item.semanticGroup}"><div class="thumb">${art(item.type)}</div><h3 class="card-name">${item.name}</h3><small>${item.desc}</small><button class="ghost add-label" data-action="add-prop" data-id="${item.id}" ${notReady()?'disabled':''} aria-label="Añadir ${item.name}">${icon('plus')}Añadir</button></article>`).join('')}</div>`;
+function objectCard(title,description,artType,action,attrs='',primary=false,metadata='') {
+ return `<article class="card" data-size="sm" ${metadata}><div class="card-content"><div class="object-art">${art(artType)}</div></div><div class="card-header"><h3 class="card-title">${title}</h3><p class="card-description tabular text-right">${description}</p></div><div class="card-footer">${button(icon('plus')+'Añadir',action,{primary,disabled:notReady(),attrs:`aria-label="Añadir ${title}" ${attrs}`})}</div></article>`;
 }
-function leftPanel() {
- const backing=currentView()==='backing';
- const unmatchedTable=!backing&&model.query.trim()&&!model.query.toLowerCase().split(/\s+/).every(word=>'mesa rectangular silla mobiliario a medida redonda cuadrada ovalada coctel cóctel media luna serpentina banquete'.includes(word));
- const content=unmatchedTable?'<div class="state-box"><strong>No encontramos mesas</strong><button data-action="clear-search">Limpiar búsqueda</button></div>':dataState(backing?'backing':'tables');
+function propCards(){const visible=filteredProps();return visible.length?`<div class="object-grid">${visible.map(item=>objectCard(item.name,item.desc,item.type,'add-prop',`data-id="${item.id}"`,false,`data-display-group="Backing" data-canonical-id="${item.id}" data-repository="${item.repository}" data-semantic-group="${item.semanticGroup}"`)).join('')}</div>`:emptyBox('No encontramos piezas','Prueba otro nombre.','clear-search','Limpiar búsqueda');}
+function leftPanel(){
+ const backing=currentView()==='backing',view=backing?'backing':'tables';
+ const unmatched=!backing&&model.query.trim()&&!normalized(model.query).split(/\s+/).every(w=>'mesa rectangular silla mobiliario a medida redonda cuadrada ovalada coctel media luna serpentina banquete'.includes(w));
+ const content=unmatched?emptyBox('No encontramos mesas','Prueba otro nombre.','clear-search','Limpiar búsqueda'):dataState(view);
  const types=[['rectangular',tableSpecs.rectangular],...tableKinds];
- return `<aside class="panel left-panel" aria-label="Añadir piezas"><div class="panel-heading"><p class="eyebrow">Fondos y muebles</p><h2>Añadir</h2></div><div class="panel-body">${categoryTabs()}<label>Buscar piezas<input id="search" type="search" placeholder="${backing?'Aro, pedestal, panel…':'Mesa, silla…'}" value="${escapeHTML(model.query)}"></label>${notice(backing?'backing':'tables')}${content||(backing?`<div class="row between"><div><h3>Backing</h3><p class="muted">Aros, pedestales y paneles</p></div><span class="badge">${filteredProps().length} piezas · ejemplo</span></div>${propCards()}<p class="muted">Piezas de escenografía · no son productos de la tienda.</p>`:`<p class="muted">Elige un tipo. Después podrás ajustar las medidas y las sillas.</p><div class="cards">${types.map(([type,spec])=>`<article class="card"><div class="thumb">${art(spec.art)}</div><h3 class="card-name">${spec.name}</h3><small class="mono">${spec.size.slice(0,2).map(fmt).join(' × ')} m<br>Alto ${fmt(spec.size[2])} m</small><button class="add-label ${type==='rectangular'&&currentView()==='tables'&&selectors.scene.value==='none'?'primary':''}" data-action="${type==='rectangular'?'add-table':'add-table-kind'}" data-table-type="${type}" ${notReady()?'disabled':''} aria-label="Añadir ${spec.name}">${icon('plus')}Añadir</button></article>`).join('')}</div><p class="muted">La mesa y sus sillas se mueven juntas.</p>`)}</div></aside>`;
+ return `<aside class="workshop-pane add-pane" aria-label="Añadir piezas"><div class="stack-lg"><div class="stack-sm"><p class="text-muted text-xs">Fondos y muebles</p><h2>Añadir</h2></div>${categoryTabs()}<div class="field"><label class="label" for="search">Buscar piezas</label><input class="input" id="search" type="search" value="${escapeHTML(model.query)}" placeholder="${backing?'Aro, pedestal, panel…':'Mesa, silla…'}"></div>${notice(view)}${content||(backing?`<div class="row" data-justify="between"><div class="stack-sm"><h3>Backing</h3><p class="text-muted">Aros, pedestales y paneles</p></div><span class="badge" data-variant="secondary">${filteredProps().length} piezas · ejemplo</span></div>${propCards()}<p class="text-muted">Piezas de escenografía · no son productos de la tienda.</p>`:`<p class="text-muted">Elige un tipo. Después ajusta las medidas y las sillas.</p><div class="object-grid">${types.map(([type,spec])=>objectCard(spec.name,`${spec.size.slice(0,2).map(fmt).join(' × ')} m<br>Alto ${fmt(spec.size[2])} m`,spec.art,type==='rectangular'?'add-table':'add-table-kind',`data-table-type="${type}"`,type==='rectangular'&&currentView()==='tables'&&selectors.scene.value==='none')).join('')}</div><p class="text-muted">La mesa y sus sillas se mueven juntas.</p>`)}</div></aside>`;
 }
-function dimensionField(key,label,min,max) {
- const invalid=currentState()==='validation'&&key==='length';
- return `<label>${label} (m)<input data-dimension="${key}" inputmode="decimal" type="text" value="${invalid?fmt(max+2):fmt(model[key])}" aria-invalid="${invalid}" aria-describedby="${key}-help${invalid?' length-error':''}"><span id="${key}-help" class="range-help">${fmt(min)}–${fmt(max)} m</span>${invalid?`<span class="field-error" id="length-error" role="alert">Introduce un valor entre ${fmt(min)} y ${fmt(max)} m. La escena conserva el último valor válido.</span>`:''}</label>`;
+function dimensionField(key,label,min,max){const invalid=currentState()==='validation'&&key==='length';return `<div class="field"><label class="label" for="dim-${key}">${label} (m)</label><input class="input tabular text-right" id="dim-${key}" data-dimension="${key}" ${key==='height'?'aria-label="Alto de la tapa (m)"':''} inputmode="decimal" type="text" value="${invalid?fmt(max+2):fmt(model[key])}" aria-invalid="${invalid}" aria-describedby="${key}-help${invalid?' length-error':''}"><p class="field-description" id="${key}-help">${fmt(min)}–${fmt(max)} m</p>${invalid?`<p class="field-error" id="length-error" role="alert">Introduce un valor entre ${fmt(min)} y ${fmt(max)} m. La escena conserva el último valor válido.</p>`:''}</div>`;}
+function selectField(id,label,values,selected){return `<div class="field"><label class="label" for="${id}">${label}</label><span class="select-wrap"><select class="select" id="${id}">${values.map(v=>`<option ${v===selected?'selected':''}>${v}</option>`).join('')}</select></span></div>`;}
+function tableEditor(){
+ if(['loading','empty','error'].includes(currentState()))return dataState('table-editor');
+ const spec=selectedTable(),lengthLabel=['redonda','coctel','media_luna'].includes(model.tableType)?'Diámetro':model.tableType==='cuadrada'?'Lado':model.tableType==='u'?'Ancho total':'Largo';
+ return `${notice('table-editor')}<section class="stack" aria-labelledby="measureTitle"><h3 id="measureTitle">Medidas de la mesa</h3><div class="dimension-grid">${dimensionField('length',lengthLabel,...spec.ranges[0])}${spec.derived?`<div class="stack-sm"><p class="text-muted">Ancho derivado</p><p class="tabular text-right">${fmt(model.width)} m</p></div>`:dimensionField('width',model.tableType==='u'?'Fondo total':'Ancho',...spec.ranges[1])}${dimensionField('height','Alto',...spec.ranges[2])}</div><p class="field-description">Pasos de 0,05 m.</p>${currentState()==='validation'?button('Restablecer valores','reset-dimensions'):''}</section><hr class="separator"><section class="stack" aria-labelledby="chairsTitle"><h3 id="chairsTitle">Sillas</h3><div class="measure-grid"><div class="field"><label class="label" for="chair-count">Cantidad pedida</label><input class="input tabular text-right" id="chair-count" type="number" min="0" max="40" step="1" value="${model.requested}" aria-describedby="chair-help"></div><div class="stack-sm"><p class="label">Colocadas</p><p class="tabular text-right font-semibold">${model.placed}</p><p class="field-description">Capacidad: 8 · ejemplo</p></div></div><p class="field-description" id="chair-help">${model.requested} pedidas · ${model.placed} colocadas.</p><div class="measure-grid">${selectField('chair-type','Tipo de silla',['Tiffany','Crossback','Ghost','Plegable','Moderna','Banca','Taburete'],model.chair)}${selectField('chair-layout','Disposición',['Alrededor','Un lado','Dos lados (los largos)','Solo cabeceras','Frente al escenario'],model.distribution)}</div></section><hr class="separator"><section class="stack" aria-labelledby="materialsTitle"><h3 id="materialsTitle">Materiales</h3>${selectField('cloth','Mantel',['Hasta el piso','Corto','Sin mantel'],model.cloth)}<div class="stack-sm">${[['clothColor','Mantel / tapa'],['legColor','Patas'],['chairColor','Sillas']].map(([key,label])=>`<div class="field"><label class="label" for="${key}">${label}</label><input class="input" type="color" id="${key}" value="${model[key]}" data-color="${key}"></div>`).join('')}</div></section><p class="text-muted">La mesa y las sillas se mueven, giran y duplican juntas.</p>${button('Ver lista de compra','shopping',{primary:currentView()==='table-editor'&&selectors.scene.value==='none',disabled:notReady()})}<div class="accordion"><details class="accordion-item"><summary class="accordion-trigger">Conjuntos de versiones anteriores${icon('piece')}</summary><div class="accordion-content stack" hidden><p id="legacy-message" class="text-muted">${model.legacy==='editable'?'Este conjunto ya es editable.':'Este conjunto tiene sus sillas fijas.'}</p>${button('Ver ejemplo de conjunto fijo','legacy-fixed')}${button('Hacerla editable','convert-legacy')}<p class="text-muted">Las mesas del salón armado se ajustan con la IA: «ajustar el salón».</p></div></details></div>`;
 }
-function tableEditor() {
- if(currentState()==='loading'||currentState()==='empty'||currentState()==='error') return dataState('table-editor');
- const requested=model.requested;
- const spec=selectedTable();
- const lengthLabel=['redonda','coctel','media_luna'].includes(model.tableType)?'Diámetro':model.tableType==='cuadrada'?'Lado':model.tableType==='u'?'Ancho total':'Largo';
- return `${notice('table-editor')}<div class="section"><h3>Medidas de la mesa</h3><div class="fields">${dimensionField('length',lengthLabel,...spec.ranges[0])}${spec.derived?`<div><small>Ancho derivado</small><p class="mono">${fmt(model.width)} m</p></div>`:dimensionField('width',model.tableType==='u'?'Fondo total':'Ancho',...spec.ranges[1])}<div class="wide">${dimensionField('height','Alto de la tapa',...spec.ranges[2])}</div></div><small>Las medidas se ajustan en pasos de 0,05 m.</small>${currentState()==='validation'?'<button data-action="reset-dimensions">Restablecer valores</button>':''}</div><div class="section"><h3>Sillas</h3><div class="fields seating"><label>Cantidad pedida<input id="chair-count" type="number" min="0" max="40" step="1" value="${requested}" aria-describedby="chair-help"></label><div class="count"><span><small>Colocadas</small><strong>${model.placed}</strong></span><small>Capacidad: 8 · ejemplo</small></div></div><small id="chair-help">${requested} pedidas · ${model.placed} colocadas. La lista recoge las sillas colocadas.</small><div class="fields"><label>Tipo de silla<select id="chair-type">${['Tiffany','Crossback','Ghost','Plegable','Moderna','Banca','Taburete'].map(name=>`<option ${model.chair===name?'selected':''}>${name}</option>`).join('')}</select></label><label>Disposición<select id="chair-layout">${['Alrededor','Un lado','Dos lados (los largos)','Solo cabeceras','Frente al escenario'].map(name=>`<option ${model.distribution===name?'selected':''}>${name}</option>`).join('')}</select></label></div></div><div class="section"><h3>Materiales</h3><label>Mantel<select id="cloth">${['Hasta el piso','Corto','Sin mantel'].map(name=>`<option ${model.cloth===name?'selected':''}>${name}</option>`).join('')}</select></label><div class="swatches"><label><input type="color" value="${model.clothColor}" data-color="clothColor">Mantel / tapa</label><label><input type="color" value="${model.legColor}" data-color="legColor">Patas</label><label><input type="color" value="${model.chairColor}" data-color="chairColor">Sillas</label></div></div><p class="muted">La mesa y las sillas se mueven, giran y duplican juntas.</p><button class="${currentView()==='table-editor'&&selectors.scene.value==='none'?'primary ':''}full" data-action="shopping" ${notReady()?'disabled':''}>Ver lista de compra</button><details><summary class="muted">Conjuntos de versiones anteriores</summary><div class="stack" style="margin-top:10px"><p class="muted" id="legacy-message">${model.legacy==='editable'?'Este conjunto ya es editable.':'Este conjunto tiene sus sillas fijas.'}</p><button data-action="legacy-fixed">Ver ejemplo de conjunto fijo</button><button data-action="convert-legacy">Hacerla editable</button><p class="muted">Las mesas del salón armado se ajustan con la IA: «ajustar el salón».</p></div></details>`;
-}
-function aiPanel() {
- const state=currentState();
- const blocked=['pending','loading','disabled','offline'].includes(state);
- return `${notice('ai')}${state==='loading'||state==='error'?dataState('ai'):state==='empty'?'<div class="note">Describe qué mesa necesitas. Aún no hay mensajes.</div>':`<div class="chat-line user"><p class="eyebrow">Tu petición</p><p>${escapeHTML(model.prompt)}</p></div>${state==='pending'?'':`<div class="chat-line"><p class="eyebrow">Propuesta de mesa · ejemplo</p><p>Una mesa rectangular de ${fmt(model.length)} × ${fmt(model.width)} m con ${model.placed} sillas Tiffany colocadas.</p><p class="muted">La lista se actualizará con las sillas colocadas.</p>${state==='partial'?`<button class="${selectors.scene.value==='none'?'primary ':''}full" data-action="apply-ai">Aplicar propuesta</button>`:'<button data-action="go-editor" class="full">Editar mesa a mano</button>'}</div>`}`}<label>¿Qué quieres cambiar?<textarea id="prompt" ${blocked?'disabled':''} aria-invalid="${state==='validation'}" aria-describedby="prompt-help">${state==='validation'?'':escapeHTML(model.prompt)}</textarea></label><small id="prompt-help" class="${state==='validation'?'field-error':''}">${state==='validation'?'Escribe qué necesitas antes de enviar.':'Ejemplo: una mesa rectangular con 8 sillas.'}</small><button class="${state==='partial'||selectors.scene.value!=='none'?'':'primary '}full" data-action="send-ai" ${blocked?'disabled':''}>${state==='pending'?'Preparando propuesta…':'Enviar'}</button>${blocked?'<p class="muted">Espera a que termine la petición o se recupere la conexión antes de enviar otra.</p>':''}<p class="muted">Mockup: conversación simulada, sin consumo de IA.</p>`;
-}
-function exportPanel() {
- const state=currentState();
- return `${notice('export')}${['loading','empty','error'].includes(state)?dataState('export'):''}<div class="file-card"><span class="file-icon" aria-hidden="true">${icon('file')}</span><div><h3>Modelo para Blender</h3><small>Archivo GLB · escala en metros</small></div></div><p class="muted">La escena completa conserva la distribución, las medidas y los colores. Se omiten las ayudas del editor.</p><button class="${selectors.scene.value==='none'?'primary ':''}full" data-action="open-export" ${blockedExport()?'disabled':''}>Abrir opciones de exportación</button>${blockedExport()?'<p class="muted">La descarga estará disponible cuando la escena tenga piezas y esté lista, sin cambios pendientes.</p>':''}<div class="section"><h3>Cómo abrirlo en Blender</h3><p class="muted">Archivo → Importar → glTF 2.0 (.glb/.gltf).</p><p class="muted">Selecciona el archivo de esta escena y comprueba la medida de la mesa.</p></div><div class="note">“Descarga iniciada” confirma el inicio de la descarga. La verificación del modelo en Blender es un paso aparte.</div><small>Mockup: no se genera ningún archivo.</small>`;
-}
-function inspector() {
- const view=currentView();
- const content=view==='ai'?aiPanel():view==='export'?exportPanel():tableEditor();
- return `<aside class="panel inspector" aria-label="Pieza elegida e IA"><div class="inspector-tabs"><button data-action="go-editor" aria-pressed="${view!=='ai'}">Pieza</button><button data-action="go-ai" aria-pressed="${view==='ai'}">IA</button></div><div class="panel-heading"><span class="eyebrow">${view==='ai'?'IA de la escena':view==='export'?'Escena actual':'Mesa y sillas'}</span><h2 tabindex="-1" id="inspectorTitle">${view==='ai'?'IA de la escena':view==='export'?'Exportar a Blender':selectedTable().name+' 01'}</h2><small>${view==='export'?'Escena actual · GLB':`1 mesa · ${model.placed} sillas colocadas`}</small></div><div class="panel-body">${content}</div></aside>`;
-}
-function exportPopover() {
- const state=currentState();
- return `<div class="export-popover" id="exportActions" role="group" aria-label="Descargar archivos de la escena"><div class="row between"><strong>Exportar escena</strong><button data-action="close-export" class="ghost close" aria-label="Cerrar opciones de exportación">Cerrar ${icon('close')}</button></div><button data-action="png" ${blockedExport()?'disabled':''}>${icon('image')} Descargar PNG · 3000 px</button><button data-action="glb" class="primary" ${blockedExport()?'disabled':''}>${icon('file')} ${state==='pending'?'Preparando GLB…':'Descargar modelo GLB · Blender'}</button><p>Escena completa · escala en metros</p>${state==='pending'||state==='partial'||state==='disabled'||state==='empty'?'<p>Espera a que la escena esté lista y completa para iniciar una nueva exportación.</p>':''}<p>En Blender: Archivo → Importar → glTF 2.0.</p><small>Sin descarga real en este mockup.</small></div>`;
-}
-function topbar() {
- const denied=currentState()==='permission-denied';
- return `<header class="topbar"><div class="brand"><span class="brand-mark">Pictures</span><h1>Taller 3D</h1>${denied?'':`<span class="project-name">Cumpleaños · lavanda</span>`}</div><div class="actions">${denied?'<button data-action="home">Volver</button>':`<div class="history-tools" aria-label="Historial de edición"><button data-action="undo" aria-label="Deshacer" title="Deshacer último cambio simulado" ${history.past.length?'':'disabled'}>${icon('undo')}</button><button data-action="redo" aria-label="Rehacer" title="Rehacer cambio simulado" ${history.future.length?'':'disabled'}>${icon('redo')}</button></div><button data-action="shopping" id="shoppingTrigger">Lista de compra</button><div class="export-wrap"><button data-action="open-export" id="exportTrigger" aria-label="Exportar escena" aria-expanded="${selectors.scene.value==='export'}" aria-controls="exportActions" ${['loading','permission-denied'].includes(currentState())?'disabled':''}>${icon('download')}Exportar</button>${selectors.scene.value==='export'?exportPopover():''}</div>`}</div></header>`;
-}
-function shoppingContent() {
- const state=currentState();
- const rows=[{qty:1,title:selectedTable().name,desc:`${fmt(model.length)} × ${fmt(model.width)} × ${fmt(model.height)} m`},{qty:model.placed,title:`Silla ${model.chair}`,desc:`${model.distribution} · colocadas en la escena`},{qty:1,title:'Panel redondo',desc:'Backing · diámetro 1,50 m'},{qty:1,title:'Juego de pedestales',desc:'Backing · cilindros escalonados'}];
- return `<div class="dialog-heading"><div><p class="eyebrow">Escena actual</p><h2 id="purchaseTitle">Lista de compra</h2></div><button data-action="close-shopping" aria-label="Cerrar lista de compra">${icon('close')}</button></div><div class="dialog-body"><p class="muted">${state==='permission-denied'?'':'Cumpleaños · lavanda · cantidades colocadas'}</p>${state==='permission-denied'?'<div class="state-box"><h3>Tu cuenta no tiene acceso a esta herramienta</h3><button data-action="home">Volver</button></div>':`${notice('shopping')}${dataState('shopping')||`<section><h3>Mobiliario</h3><div class="list-columns"><span>Pieza / medidas</span><span>Cantidad</span></div><ul class="list-rows">${rows.slice(0,2).map(line=>`<li><div><h4>${line.title}</h4><p class="muted mono">${line.desc}</p></div><span class="quantity" aria-label="${line.qty} unidades">${line.qty}</span></li>`).join('')}</ul></section><section><h3>Escenografía</h3><div class="list-columns"><span>Pieza</span><span>Cantidad</span></div><ul class="list-rows">${rows.slice(2).map(line=>`<li><div><h4>${line.title}</h4><p class="muted mono">${line.desc}</p></div><span class="quantity" aria-label="${line.qty} unidades">${line.qty}</span></li>`).join('')}</ul></section>`}<div class="note">Mobiliario y escenografía no son productos de la tienda. Esta lista no les asigna precios.</div>`}</div><div class="dialog-footer"><button data-action="close-shopping" class="primary">Volver a la escena</button></div>`;
-}
-function render({focusPanel=false,focusExport=false}={}) {
- const view=currentView(), state=currentState();
- planningContext();
- if(purchaseDialog.open) purchaseDialog.close();
- app.dataset.view=view;
- app.setAttribute('aria-busy',String(['loading','pending'].includes(state)));
- if(state==='permission-denied'){
- selectors.scene.value='none';
- app.innerHTML=topbar()+'<main class="gate"><span class="badge">Acceso restringido</span><h2>Tu cuenta no tiene acceso a esta herramienta</h2><p class="muted">Contacta con un administrador si necesitas este acceso.</p><button class="primary" data-action="home">Volver</button></main>';
- return;
- }
- app.innerHTML=topbar()+`<div class="workbench"><nav class="rail" aria-label="Paneles"><button aria-label="Añadir" aria-pressed="${['tables','backing'].includes(view)}" data-action="go-tables">${icon('plus')}<small>Añadir</small></button><button aria-label="Editar pieza" aria-pressed="${view==='table-editor'}" data-action="go-editor">${icon('piece')}<small>Pieza</small></button><button aria-label="IA de la escena" aria-pressed="${view==='ai'}" data-action="go-ai">${icon('ai')}<small>IA</small></button></nav>${leftPanel()}<main class="viewport" aria-label="Visor 3D esquemático"><div class="scene-meta"><span class="pill">${model.angle} · ejemplo</span><span class="pill">${state==='empty'&&view==='export'?'0 piezas':`${model.placed} sillas colocadas`}</span></div>${sceneArt(state==='empty'&&view==='export')}<div class="scene-footer"><button data-action="go-editor">Editar mesa</button><div class="view-tools" aria-label="Vistas del visor"><button data-action="perspective" aria-pressed="${model.angle==='Perspectiva'}">Perspectiva</button><button data-action="plan" aria-pressed="${model.angle==='Planta'}">Planta</button></div></div><p class="scene-summary">${state==='empty'&&view==='export'?'Escena sin piezas.':`${selectedTable().name}: ${fmt(model.length)} × ${fmt(model.width)} m · ${model.placed} sillas.`} Geometría esquemática.</p></main>${inspector()}</div><nav class="mobile-nav" aria-label="Secciones del Taller"><button data-action="go-tables" aria-pressed="${view==='tables'}">Añadir</button><button data-action="go-backing" aria-pressed="${view==='backing'}">Backing</button><button data-action="go-editor" aria-pressed="${view==='table-editor'}">Pieza</button><button data-action="go-ai" aria-pressed="${view==='ai'}">IA</button></nav>`;
- if(model.notice) app.insertAdjacentHTML('beforeend',`<div class="toast" role="status">${escapeHTML(model.notice)}</div>`);
- if(selectors.scene.value==='shopping'){
- document.getElementById('purchaseContent').innerHTML=shoppingContent();
- purchaseDialog.showModal();
- }
- if(focusPanel) document.getElementById('inspectorTitle')?.focus();
- if(focusExport) document.querySelector('#exportActions button')?.focus();
+function aiPanel(){const state=currentState(),blocked=['pending','loading','disabled','offline'].includes(state);return `${notice('ai')}${['loading','error'].includes(state)?dataState('ai'):state==='empty'?alertBox('Aún no hay mensajes','Describe qué mesa necesitas.'):`<section class="stack"><h3>Tu petición</h3><p>${escapeHTML(model.prompt)}</p></section>${state==='pending'?'':`<hr class="separator"><section class="stack"><h3>Propuesta de mesa · ejemplo</h3><p>Una mesa rectangular de ${fmt(model.length)} × ${fmt(model.width)} m con ${model.placed} sillas Tiffany colocadas.</p><p class="text-muted">La lista usa las sillas colocadas.</p>${state==='partial'?button('Aplicar propuesta','apply-ai',{primary:selectors.scene.value==='none'}):button('Editar mesa a mano','go-editor')}</section>`}`}<div class="field"><label class="label" for="prompt">¿Qué quieres cambiar?</label><textarea class="textarea" id="prompt" ${blocked?'disabled':''} aria-invalid="${state==='validation'}" aria-describedby="prompt-help">${state==='validation'?'':escapeHTML(model.prompt)}</textarea><p class="${state==='validation'?'field-error':'field-description'}" id="prompt-help">${state==='validation'?'Escribe qué necesitas antes de enviar.':'Ejemplo: una mesa rectangular con 8 sillas.'}</p></div>${button(state==='pending'?'Preparando propuesta…':'Enviar','send-ai',{primary:state!=='partial'&&selectors.scene.value==='none',disabled:blocked})}${blocked?'<p class="text-muted">Espera a que termine la petición o se recupere la conexión.</p>':''}<p class="text-muted text-xs">Mockup: conversación simulada, sin consumo de IA.</p>`;}
+function exportPanel(){return `${notice('export')}${['loading','empty','error'].includes(currentState())?dataState('export'):''}<div class="row">${icon('file')}<div class="stack-sm"><h3>Modelo para Blender</h3><p class="text-muted">Archivo GLB · escala en metros</p></div></div><p class="text-muted">La escena completa conserva distribución, medidas y colores. Se omiten las ayudas del editor.</p>${button('Abrir opciones de exportación','open-export',{primary:selectors.scene.value==='none',disabled:blockedExport()})}${blockedExport()?'<p class="text-muted">La descarga estará disponible cuando la escena tenga piezas y esté lista, sin cambios pendientes.</p>':''}<hr class="separator"><section class="stack"><h3>Cómo abrirlo en Blender</h3><p class="text-muted">Archivo → Importar → glTF 2.0 (.glb/.gltf).</p><p class="text-muted">Selecciona el archivo y comprueba la medida de la mesa.</p></section>${alertBox('La verificación en Blender es un paso aparte','“Descarga iniciada” solo confirma el inicio de la descarga.')}<p class="text-muted text-xs">Mockup: no se genera ningún archivo.</p>`;}
+function inspector(){const view=currentView();return `<aside class="workshop-pane inspector-pane" aria-label="Pieza elegida e IA"><div class="stack"><div class="row-sm">${button('Pieza','go-editor',{variant:'ghost',attrs:`aria-pressed="${view!=='ai'}"`})}${button('IA','go-ai',{variant:'ghost',attrs:`aria-pressed="${view==='ai'}"`})}</div><div class="stack-sm"><h2 tabindex="-1" id="inspectorTitle">${view==='ai'?'IA de la escena':view==='export'?'Exportar a Blender':selectedTable().name+' 01'}</h2><p class="text-muted">${view==='export'?'Escena actual · GLB':`1 mesa · ${model.placed} sillas colocadas`}</p></div><div class="stack">${view==='ai'?aiPanel():view==='export'?exportPanel():tableEditor()}</div></div></aside>`;}
+function exportPopover(){return `<div class="popover-content" data-align="end" id="exportActions" role="group" aria-label="Descargar archivos de la escena"><div class="row" data-justify="between"><h3>Exportar escena</h3>${button(icon('close'),'close-export',{variant:'ghost',attrs:'aria-label="Cerrar opciones de exportación" data-size="icon"'})}</div>${button(icon('image')+'Descargar PNG · 3000 px','png',{disabled:blockedExport()})}${button(icon('file')+(currentState()==='pending'?'Preparando GLB…':'Descargar modelo GLB · Blender'),'glb',{primary:true,disabled:blockedExport()})}<p>Escena completa · escala en metros</p>${blockedExport()?'<p>Espera a que la escena esté lista y completa para exportar.</p>':''}<p class="text-muted">En Blender: Archivo → Importar → glTF 2.0.</p><p class="text-muted text-xs">Sin descarga real en este mockup.</p></div>`;}
+function topbar(){const denied=currentState()==='permission-denied';return `<header class="app-header"><h1>Taller 3D</h1>${denied?'':'<span class="text-muted project-name">Cumpleaños · lavanda</span>'}</header>${denied?'':`<div class="workshop-tools row" data-justify="between"><div class="row-sm" aria-label="Historial de edición">${button(icon('undo'),'undo',{disabled:!history.past.length,attrs:'aria-label="Deshacer" data-size="icon"'})}${button(icon('redo'),'redo',{disabled:!history.future.length,attrs:'aria-label="Rehacer" data-size="icon"'})}</div><div class="row-sm">${button('Lista de compra','shopping',{attrs:'id="shoppingTrigger"'})}<div class="menu-root export-wrap">${button(icon('download')+'Exportar','open-export',{attrs:`id="exportTrigger" aria-label="Exportar escena" aria-expanded="${selectors.scene.value==='export'}" aria-controls="exportActions"`,disabled:currentState()==='loading'})}${selectors.scene.value==='export'?exportPopover():''}</div></div></div>`}`;}
+function shoppingContent(){const state=currentState();const rows=[{qty:1,title:selectedTable().name,desc:`${fmt(model.length)} × ${fmt(model.width)} × ${fmt(model.height)} m`},{qty:model.placed,title:`Silla ${model.chair}`,desc:`${model.distribution} · colocadas en la escena`},{qty:1,title:'Panel redondo',desc:'Backing · diámetro 1,50 m'},{qty:1,title:'Juego de pedestales',desc:'Backing · cilindros escalonados'}];return `<div class="dialog-header"><h2 class="dialog-title" id="purchaseTitle">Lista de compra</h2><p class="dialog-description">Cumpleaños · lavanda · cantidades colocadas</p></div><div class="stack-lg">${notice('shopping')}${dataState('shopping')||['Mobiliario','Escenografía'].map((name,i)=>`<section class="stack"><h3>${name}</h3><table class="table"><thead><tr><th>Pieza / medidas</th><th data-align="end">Cantidad</th></tr></thead><tbody>${rows.slice(i*2,i*2+2).map(row=>`<tr><td><p class="font-medium">${row.title}</p><p class="text-muted tabular">${row.desc}</p></td><td data-align="end" class="tabular">${row.qty}</td></tr>`).join('')}</tbody></table></section>`).join('')}${alertBox('Sin precios de alquiler','Mobiliario y escenografía no son productos de la tienda.')}</div><div class="dialog-footer">${button('Volver a la escena','close-shopping',{primary:true})}</div><button class="button dialog-close" data-variant="ghost" data-size="icon-sm" type="button" data-action="close-shopping" aria-label="Cerrar lista de compra">${icon('close')}</button>`;}
+function render({focusPanel=false,focusExport=false}={}){
+ if(isRendering)return;isRendering=true;try {
+ const view=currentView(),state=currentState();planningContext();if(purchaseDialog.open)purchaseDialog.close();app.dataset.view=view;app.setAttribute('aria-busy',String(['loading','pending'].includes(state)));
+ if(state==='permission-denied'){selectors.scene.value='none';app.innerHTML=`<section class="page" data-width="narrow"><div class="page-header"><div><h1>Taller 3D</h1></div></div>${emptyBox('Tu cuenta no tiene acceso a esta herramienta','Contacta con un administrador si necesitas este acceso.','home','Volver')}</section>`;return;}
+ app.innerHTML=`<div class="app workshop"><aside class="sidebar" data-state="collapsed" aria-label="Paneles"><div class="sidebar-header"><span class="brand-mark">${icon('piece')}</span><span class="sr-only">Pictures</span></div><div class="sidebar-content"><div class="sidebar-group"><ul class="sidebar-menu">${[['go-tables','plus','Añadir',view==='tables'||view==='backing'],['go-editor','piece','Editar pieza',view==='table-editor'],['go-ai','ai','IA de la escena',view==='ai']].map(([action,i,label,on])=>`<li><button class="sidebar-menu-button" type="button" data-action="${action}" aria-label="${label}" ${on?'aria-current="page"':''}>${icon(i)}<span>${label}</span></button></li>`).join('')}</ul></div></div></aside><div class="app-main">${topbar()}<div class="workshop-grid">${leftPanel()}<section class="scene-pane stack" aria-label="Visor 3D esquemático"><div class="row" data-justify="between"><span class="badge" data-variant="secondary">${model.angle} · ejemplo</span><span class="text-muted">${state==='empty'&&view==='export'?'0 piezas':`${model.placed} sillas colocadas`}</span></div>${sceneArt(state==='empty'&&view==='export')}<div class="row" data-justify="between">${button('Editar mesa','go-editor')}<div class="row-sm" aria-label="Vistas del visor">${button('Perspectiva','perspective',{variant:'ghost',attrs:`aria-pressed="${model.angle==='Perspectiva'}"`})}${button('Planta','plan',{variant:'ghost',attrs:`aria-pressed="${model.angle==='Planta'}"`})}</div></div><p class="text-muted scene-summary">${state==='empty'&&view==='export'?'Escena sin piezas.':`${selectedTable().name}: ${fmt(model.length)} × ${fmt(model.width)} m · ${model.placed} sillas.`} Geometría esquemática.</p></section>${inspector()}</div><nav class="workshop-mobile row-sm" aria-label="Secciones del Taller">${[['go-tables','Añadir','tables'],['go-backing','Backing','backing'],['go-editor','Pieza','table-editor'],['go-ai','IA','ai']].map(([action,label,id])=>button(label,action,{variant:'ghost',attrs:`aria-pressed="${view===id}"`})).join('')}</nav></div></div>`;
+ if(model.notice)app.insertAdjacentHTML('beforeend',`<section class="toaster" aria-label="Notificaciones"><div class="toast" role="status">${icon("piece")}<p class="toast-title">${escapeHTML(model.notice)}</p></div></section>`);
+ if(selectors.scene.value==='shopping'){document.getElementById('purchaseContent').innerHTML=shoppingContent();purchaseDialog.showModal();}
+ if(focusPanel)document.getElementById('inspectorTitle')?.focus();if(focusExport)document.querySelector('#exportActions button')?.focus();
+ } finally {isRendering=false;}
 }
 function changeView(view,state='ready') {
  lastInvoker=null;selectors.view.value=view;model.query='';model.notice='';setStates(state);
@@ -346,6 +881,7 @@ document.addEventListener('click',event=>{
 });
 document.addEventListener('change',event=>{
  const input=event.target;
+ if(isRendering)return;
  if(input.matches('[data-dimension]')){
  const [lengthRange,widthRange,heightRange]=selectedTable().ranges;
  const ranges={length:lengthRange,width:widthRange,height:heightRange};
@@ -371,7 +907,7 @@ document.addEventListener('keydown',event=>{
  if(event.key==='Escape'&&selectors.scene.value==='export'){event.preventDefault();closeOverlay('export');}
 });
 document.addEventListener('pointerdown',event=>{
- if(selectors.scene.value==='export'&&!event.target.closest('.export-wrap')&&!event.target.closest('.mock-controls')) closeOverlay('export');
+ if(selectors.scene.value==='export'&&!event.target.closest('.export-wrap')&&!event.target.closest('.mockup-bar')) closeOverlay('export');
 });
 purchaseDialog.addEventListener('keydown',event=>{
  if(event.key!=='Tab')return;
@@ -381,7 +917,181 @@ purchaseDialog.addEventListener('keydown',event=>{
  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
 });
 purchaseDialog.addEventListener('cancel',event=>{event.preventDefault();closeOverlay('shopping');});
+document.addEventListener('toggle',event=>{if(event.target.matches('details.accordion-item'))event.target.querySelector('.accordion-content').hidden=!event.target.open;},true);
 setStates();render();
+
+</script>
+<script data-kit="js">
+/* david-ui stand-in behaviour for static mockups (optional, no network). Inlined by inline.py next to the kit CSS.
+   - select#theme / select#motion (or ?theme= / ?motion=) set <html data-theme|data-motion>.
+   - [data-kit-open="id"] opens a layer (dialog overlay, sheet, menu, popover, listbox); [data-kit-close] closes the nearest
+     one; Escape and a click outside close the top one; focus moves into the layer and back to its opener.
+   - [role=tablist] switches tabs (click, arrows); [data-kit-toast="template-id"] shows a toast for 5 s;
+     .combobox filters its .listbox-item by the input; [data-kit-sidebar] toggles the mobile sidebar of .app.
+   - Mockup switcher: an element with data-show-view="login reset", data-show-state="error", data-hide-state="loading" or
+     data-show-scene="confirm" is shown only while select#view / #state / #scene hold one of those values.
+   - A parent page may post {kit: 'set', theme, motion}; the kit applies it and syncs the selects. */
+(function () {
+  if (window.__kit) return;
+  window.__kit = true;
+  var root = document.documentElement, stack = [];
+  var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+  function apply(kind, value) {
+    if (!value) return;
+    root.setAttribute('data-' + kind, value);
+    var sel = document.getElementById(kind);
+    if (sel && sel.tagName === 'SELECT' && sel.value !== value && [].some.call(sel.options, function (o) { return o.value === value; })) {
+      sel.value = value;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+  function bindSelect(kind) {
+    var sel = document.getElementById(kind);
+    if (!sel || sel.tagName !== 'SELECT') return;
+    sel.addEventListener('change', function () { root.setAttribute('data-' + kind, sel.value); });
+    if (!root.getAttribute('data-' + kind) || root.getAttribute('data-' + kind) !== sel.value) root.setAttribute('data-' + kind, sel.value);
+  }
+
+  function open(layer, opener) {
+    if (!layer) return;
+    layer.hidden = false;
+    layer.setAttribute('data-state', 'open');
+    if (opener) opener.setAttribute('aria-expanded', 'true');
+    stack.push({ layer: layer, opener: opener });
+    var target = layer.querySelector('[autofocus]') || layer.querySelector(FOCUSABLE);
+    if (target && layer.matches('.dialog-overlay, .sheet-overlay, .sheet-content, [role=dialog], [role=alertdialog]')) target.focus();
+  }
+  function close(layer) {
+    for (var i = stack.length - 1; i >= 0; i--) {
+      if (stack[i].layer !== layer) continue;
+      var item = stack.splice(i, 1)[0];
+      layer.hidden = true;
+      layer.setAttribute('data-state', 'closed');
+      var sheet = layer.id && document.querySelector('[data-kit-pair="' + layer.id + '"]');
+      if (sheet) { sheet.hidden = true; }
+      if (item.opener) { item.opener.setAttribute('aria-expanded', 'false'); item.opener.focus(); }
+      return;
+    }
+    layer.hidden = true;
+  }
+  function layerOf(el) { return el.closest('[data-kit-layer]'); }
+
+  document.addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-kit-open], [data-kit-close], [data-kit-toast], [data-kit-sidebar]');
+    if (t && t.hasAttribute('data-kit-open')) {
+      var layer = document.getElementById(t.getAttribute('data-kit-open'));
+      if (layer && !layer.hidden) close(layer); else open(layer, t);
+      var pair = layer && document.querySelector('[data-kit-pair="' + layer.id + '"]');
+      if (pair) pair.hidden = layer.hidden;
+      ev.preventDefault();
+      return;
+    }
+    if (t && t.hasAttribute('data-kit-close')) { var l = layerOf(t); if (l) close(l); ev.preventDefault(); return; }
+    if (t && t.hasAttribute('data-kit-toast')) { toast(t.getAttribute('data-kit-toast')); return; }
+    if (t && t.hasAttribute('data-kit-sidebar')) {
+      var app = document.querySelector('.app');
+      if (app) app.setAttribute('data-sidebar', app.getAttribute('data-sidebar') === 'open' ? 'closed' : 'open');
+      return;
+    }
+    var app2 = document.querySelector('.app[data-sidebar="open"]');
+    if (app2 && !ev.target.closest('.sidebar')) app2.setAttribute('data-sidebar', 'closed');
+    if (!stack.length) return;
+    var top = stack[stack.length - 1].layer;
+    if (ev.target === top && top.matches('.dialog-overlay, .sheet-overlay')) { close(top); return; }
+    if (!top.contains(ev.target) && !top.matches('.dialog-overlay, .sheet-overlay, .sheet-content')) close(top);
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && stack.length) { close(stack[stack.length - 1].layer); return; }
+    var tab = ev.target.closest && ev.target.closest('[role=tab]');
+    if (tab && (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft')) {
+      var tabs = [].slice.call(tab.closest('[role=tablist]').querySelectorAll('[role=tab]:not([disabled])'));
+      var next = tabs[(tabs.indexOf(tab) + (ev.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      select(next); next.focus(); ev.preventDefault();
+    }
+  });
+
+  function select(tab) {
+    var list = tab.closest('[role=tablist]');
+    [].forEach.call(list.querySelectorAll('[role=tab]'), function (t) {
+      var on = t === tab;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      var panel = t.getAttribute('aria-controls') && document.getElementById(t.getAttribute('aria-controls'));
+      if (panel) panel.hidden = !on;
+    });
+  }
+  document.addEventListener('click', function (ev) {
+    var tab = ev.target.closest('[role=tab]');
+    if (tab && !tab.disabled) select(tab);
+  });
+
+  function toast(templateId) {
+    var tpl = document.getElementById(templateId);
+    if (!tpl) return;
+    var host = document.querySelector('.toaster');
+    if (!host) { host = document.createElement('section'); host.className = 'toaster'; host.setAttribute('aria-label', 'Notificaciones'); document.body.appendChild(host); }
+    host.setAttribute('aria-live', 'polite');
+    var node = (tpl.content ? tpl.content.firstElementChild : tpl).cloneNode(true);
+    node.hidden = false;
+    host.appendChild(node);
+    while (host.children.length > 3) host.removeChild(host.firstElementChild);
+    var close = node.querySelector('[data-kit-dismiss]');
+    if (close) close.addEventListener('click', function () { node.remove(); });
+    setTimeout(function () { node.remove(); }, 5000);
+  }
+
+  document.addEventListener('input', function (ev) {
+    var box = ev.target.closest && ev.target.closest('.combobox');
+    if (!box || ev.target.tagName !== 'INPUT') return;
+    var q = ev.target.value.trim().toLowerCase(), list = box.querySelector('.listbox'), shown = 0;
+    if (!list) return;
+    list.hidden = false;
+    ev.target.setAttribute('aria-expanded', 'true');
+    [].forEach.call(list.querySelectorAll('.listbox-item'), function (item) {
+      var hit = !q || item.textContent.toLowerCase().indexOf(q) >= 0;
+      item.hidden = !hit; if (hit) shown++;
+    });
+    var empty = list.querySelector('.listbox-empty');
+    if (empty) empty.hidden = shown > 0;
+  });
+
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || d.kit !== 'set' || ev.source !== window.parent) return;
+    apply('theme', d.theme); apply('motion', d.motion);
+  });
+
+  // mockup switcher: [data-show-view|data-show-state|data-hide-state|data-show-scene]="a b" follow the planning selects
+  function val(id) { var s = document.getElementById(id); return s && s.tagName === 'SELECT' ? s.value : ''; }
+  function inList(list, v) { return (' ' + list + ' ').indexOf(' ' + v + ' ') >= 0; }
+  function switcher() {
+    var v = val('view'), s = val('state'), c = val('scene');
+    root.setAttribute('data-view', v); root.setAttribute('data-mock-state', s); root.setAttribute('data-scene', c);
+    [].forEach.call(document.querySelectorAll('[data-show-view], [data-show-state], [data-hide-state], [data-show-scene]'), function (el) {
+      var a = el.getAttribute.bind(el);
+      el.hidden = !((!el.hasAttribute('data-show-view') || inList(a('data-show-view'), v)) &&
+        (!el.hasAttribute('data-show-state') || inList(a('data-show-state'), s)) &&
+        (!el.hasAttribute('data-hide-state') || !inList(a('data-hide-state'), s)) &&
+        (!el.hasAttribute('data-show-scene') || (c && inList(a('data-show-scene'), c))));
+    });
+  }
+  document.addEventListener('change', function (ev) {
+    if (ev.target && /^(view|state|scene)$/.test(ev.target.id)) switcher();
+  });
+
+  function start() {
+    bindSelect('theme'); bindSelect('motion');
+    switcher();
+    var q = new URLSearchParams(location.search);
+    apply('theme', q.get('theme')); apply('motion', q.get('motion'));
+    [].forEach.call(document.querySelectorAll('[role=tablist]'), function (list) {
+      var on = list.querySelector('[role=tab][aria-selected="true"]') || list.querySelector('[role=tab]');
+      if (on) select(on);
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
 </script>
 </body>
 </html>
