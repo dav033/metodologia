@@ -1,0 +1,69 @@
+{
+ "schema": 1,
+ "revisions": [
+  {
+   "revision": 1,
+   "sha256": "e579d36f1f0a85d6edfc01fb57b108fb7c2ca5fc48905fe54e5e957cf00c1088",
+   "frozen_at": "2026-10-27T11:59:25",
+   "source": "approval",
+   "stage": {
+    "subplans": [
+     "SP-1"
+    ],
+    "pending_subplans": [
+     "SP-2",
+     "SP-14",
+     "SP-3",
+     "SP-4",
+     "SP-5",
+     "SP-6",
+     "SP-7",
+     "SP-8",
+     "SP-9",
+     "SP-10",
+     "SP-11",
+     "SP-12",
+     "SP-13"
+    ],
+    "complete": false,
+    "requirements_sha256": "e0ccdf68dc93141369eb95451c5f7b566fc936401798ffcf5229ee49716f450d",
+    "plan_md_sha256": "9ad3407b60633a438e4c150af2c50bb3eacb28d8458c458aebcb6a64a300721e"
+   }
+  },
+  {
+   "revision": 2,
+   "sha256": "74116074188ebce9925744bb548bb27d4563f08aecbc198984e3795db112eaff",
+   "frozen_at": "2026-10-27T15:49:10",
+   "source": "remediation"
+  },
+  {
+   "revision": 3,
+   "sha256": "7549d22d665c24882a3b61e337708c4e2b69681b7cd4449d0931d0a46ec43a9a",
+   "frozen_at": "2026-10-27T15:59:33",
+   "source": "approval",
+   "stage": {
+    "subplans": [
+     "SP-1",
+     "SP-2"
+    ],
+    "pending_subplans": [
+     "SP-14",
+     "SP-3",
+     "SP-4",
+     "SP-5",
+     "SP-6",
+     "SP-7",
+     "SP-8",
+     "SP-9",
+     "SP-10",
+     "SP-11",
+     "SP-12",
+     "SP-13"
+    ],
+    "complete": false,
+    "requirements_sha256": "e0ccdf68dc93141369eb95451c5f7b566fc936401798ffcf5229ee49716f450d",
+    "plan_md_sha256": "3aa77da0b5a05fe60c6305e8a5c9c1d94b10dc0a545cf775eef193df13add5a5"
+   }
+  }
+ ]
+}

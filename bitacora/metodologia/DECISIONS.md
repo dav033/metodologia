@@ -1251,7 +1251,7 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 
 ## D-135 — The Designer composes mockups from a checked david-ui stand-in kit; the owner browses it at `/components`
 
-- **Date:** 2026-10-26 · **Status:** Accepted · **Refines:** D-127 · **Tracks:** P-207 (swap for the real package)
+- **Date:** 2026-10-26 · **Status:** Superseded by D-136 · **Refines:** D-127 · **Tracks:** P-207 (swap for the real package)
 - **Context:** The REQ-021 mockups had off-centre layouts, cramped padding and failing contrast, worst in dark theme. The owner wants the Designer to «steal» the components of the planned `@dav033/david-ui` (not built yet: no package, `theme.css` or catalog) and to see them himself.
 - **Decision:**
   - **Tokens mirror shadcn/ui names** (`--background`, `--foreground`, `--card`, `--popover`, `--primary`, `--secondary`, `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--chart-1..5`, `--sidebar-*`, `--radius`), which is what david-ui's Tailwind 4 `theme.css` will carry (SPEC R3/R18, shadcn base), plus proposed extensions (`--success|warning|info[-soft]`, `--primary-soft`, `--destructive-soft`), type/spacing/shadow scales and the three motion profiles of R8 (`data-motion=subtle|natural|expressive`, `prefers-reduced-motion` collapses to instant). Values: Catppuccin Latte/Mocha, mauve accent, deepened where AA needs it. All of it lives in `kit/tokens.css`; `kit/components.css` reads tokens only (no raw colours). P-207 = replace `tokens.css` values from the real `theme.css` and rename snippet ids to catalog ids; no component rewrite.
@@ -1263,3 +1263,67 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   - **Audit honesty (after the independent review):** colours are read through a canvas (oklch, color-mix…), an unreadable text colour fails as `unmeasured`; focus compares each stop with itself unfocused (an unchanged shadow is not an indicator) and walks every rendered view/state/dialog at desktop width; 0 keyboard stops fails; the planning chrome is the highest block holding the selects and nothing product-like; phone gutters (12 px) and field text inset are checked; sampling, capped walks, gradient backgrounds and a missing `<main>` print warnings. Limits left: P-209.
 - **Consequences:** + Designers compose from vetted anatomy and must show a measured PASS; the owner sees every component, variant, state, theme and motion profile. − The audit is heuristic (P-209); the kit's tablet range keeps the full sidebar (P-210); until P-207 the look is a stand-in.
 - **Source:** owner, 2026-10-26 («nos vamos a robar los componentes», «una parte donde pueda ver los componentes»); brief `briefs/designer-kit.md`; built manually outside the flow (owner rule).
+## D-136 — Real library workspace and owner-chosen creative directions for planning designs
+
+- **Date:** 2026-10-26 · **Status:** Accepted · **Supersedes:** D-135
+- **Context:** The owner rejected recreated shadcn-style components and generic mockups, requested real libraries,
+  rich motion, three structurally distinct alternatives and an explicit choice before finalizing the contract.
+  Implementation is a direct skill edit under the owner's exception, outside the methodology flow.
+- **Decision:** Install real shadcn/Base UI, Animate UI, Bencho and React Bits through their published methods in
+  `~/.local/share/bitacora/kit-workspace`, outside Git with a local lockfile. The skill owns the manifest, theme,
+  demos, offline builder and audit. `/components` shows real demos, source/category/priority/status filters,
+  reduced motion, copyable imports and truthful gaps; the HTML stand-in remains at `/components/kit`.
+  Planning draft requests launch one bounded batch of 1–3 independent Designer explorations per requirement
+  (default 3), each with two candidate thumbnails, revision-specific artifacts, eight-axis notes and rendered
+  selector evidence. A rendered DNA gate checks geometry, typography, navigation and motion. The owner chooses
+  through authenticated local-panel controls or CLI; only then a finalizer writes the single canonical contract
+  and selected HTML. Confirmation/approval refuses unchosen, failed, stale or unfinished designs. `--fresh`
+  starts from requirements/unresolved feedback and preserves history. Failed siblings do not erase good work;
+  abandoned queued directions expire and automatic failures obey retry/backoff limits.
+- **Alternatives:** Recreated stand-in as primary — rejected by owner. One default style or colour-only variants —
+  rejected by owner. Production package `@dav033/david-ui` — not available; keep P-207 for eventual catalog adoption.
+- **Consequences:** + Real imports, offline single-file mockups, creative choice and reproducible render evidence.
+  − Three explorations plus finalization spend more quota. The heuristic gate does not prove aesthetic quality;
+  screenshots still need inspection. Provider CLIs already run unrestricted: task scope is contractual, not an OS
+  sandbox claim. The installed Bencho Picker does not satisfy the inventory's inertial-wheel contract (visible gap).
+- **Rollback:** Use `--directions 1` while preserving owner choice; use the explicit fallback kit if the workspace
+  is unavailable. Restore the previous skill implementation only with its historical approval semantics and
+  retain all existing exploration/history files. No service restart or REQ-021 relaunch was performed here.
+- **Evidence:** `briefs/designer-kit-v2.notes.md`, `briefs/designer-kit-phase4.research.md`, isolated real fixture
+  recorded in `/tmp/designer-real-e2e-root`; independent Antagonist A1–A5 corrected with regression tests.
+- **Source:** owner briefs `designer-kit-v2.md` and `designer-kit-phase4.md` including ADDENDUM; relay
+  `dev/relay/RELAY-20261026-214844.md` continued by Codex.
+
+## D-137 — Security gate per task, independent test oracles and a buildable remediation for subplan plans
+
+- **Date:** 2026-10-27 · **Status:** Accepted · **Supersedes:** the "high risk does not override audit coverage" clause of D-066
+- **Context:** REQ-021 SP-1 audit (T1.8) found 5 high and 10 lower defects across T1.2–T1.7; rework would have sent 6
+  accepted tasks back (limit 3 without owner confirmation) and the owner called a mass return unacceptable. Evidence:
+  `bt_review_policy` forbade any antagonist pass per task while the subplan audit was pending, including risk-high
+  security tasks; task checks were self-written happy-path scripts; T1.7's matrix took its oracle from the
+  implementation's route map, sent only GET and counted 405/5xx as allowed (F15). The designed fallback (audit
+  findings → remediation tasks on the integrated tree) never fired: `_command_covers` accepted only commands that name
+  a path, and `npm run <script>` names none; and remediation tasks lacked `subplan_id`, so 1.3.0 plans rejected them.
+- **Decision:** (1) Security-sensitive tasks (`bt_planner.quality.security_sensitive`: risk high, kind implement, text
+  names a security surface) keep ONE security-only antagonist pass before acceptance under audit coverage
+  (`bt_review_policy.SECURITY_GATE`, checklist in `subagents.md` §The security gate). (2) Test oracles come from the SPEC,
+  cover every role × method and assert denied cases (`engineering.md` §5, Reviewer standards axis, `oracle_independence`
+  warning). (3) Planner states an abuse-case criterion per security-sensitive task (`security_abuse_cases` warning, planner
+  instructions). (4) Package-script checks cover their owner's own paths and remediation tasks join the audit's subplan.
+- **Alternatives:** Per-commit antagonist everywhere (rejected: one Opus session per commit); a new plan field
+  `security: true` (rejected: old plans would not benefit, the text heuristic needs no schema change); making the new
+  planner checks errors (rejected: frozen plans are not re-gated, warnings are the cue before approval).
+- **Consequences:** + Defects of the SP-1 class are met while the builder still has the context; + an audit rejection
+  becomes small remediation tasks (REQ-021: T1.9, T1.10) instead of a 6-task rework. − About one extra security pass
+  per security-sensitive task. The security pass is an instruction to the builder, not enforced by the scheduler; the
+  audit remains the backstop. The text heuristic can miss a surface that names none of its words.
+- **Rollback:** Restore `WITH_AUDIT` in `commit_review_rule` (remove the `_security_unit` branch); drop the two
+  warnings in `bt_planner/contract.py`; the coverage and `subplan_id` fixes are independent bug fixes.
+- **Evidence:** `bt_remediation.build_revision` on REQ-021's real plan and T1.8 ledger returns revision 2 with T1.9/T1.10
+  (it returned None before); `oracle_independence` flags T1.7, T2.6, T4.7, T4.31, T5.4, T6.5 of the same plan;
+  tests `test_harness_optimization.ReviewPolicyTests`, `bt_planner.tests.test_security_checks`, `test_remediation`,
+  `test_recovery_compiler`; 385 planner tests pass.
+- **Source:** owner request in session b4d5d9f9 (relay `dev/relay/RELAY-20261027-145405.md`).
+- **Addendum (2026-10-27, same session):** the first real remediation in a staged 1.3.0 plan exposed two more gaps, now fixed in `bt_remediation.apply`: it marked the audited subplan "changed" (owner had to reconfirm a running subplan) and left new tasks out of PLAN.md (stage approval refused). `apply` now re-pins confirmations that held (`keep_confirmed`) and writes the task lines (`sync_markdown`). Tests in `test_remediation`.
+- **Addendum 2 (2026-10-27):** `bt_design_directions.choosable` — one direction whose mockup lacks its declared traits no longer hides the sound ones (the aggregate comparison used to block every choice). Owner ruling: SP-3 drops its design contract because its UI is only cards and a group inside the existing Fondos y muebles panel.
+

@@ -1,0 +1,35 @@
+{
+  "name": "Registro de herramientas",
+  "axes": {
+    "concept": "An operational register: compare the complete contents of each access plan, without a sales hierarchy.",
+    "layout": "Four horizontal plan rows in one shared panel; plan/price, available tools and unavailable tools form three desktop columns. Each row stacks on phones.",
+    "navigation": "A local four-plan anchor index focuses the chosen plan heading; a contextual return link leads to the access screen or the originating account surface. The existing account disclosure adds one Plans link.",
+    "typography": "Existing locally embedded Geist and Geist Mono; 24px page title/prices, 19px plan names, 14px tools and 12px availability labels. Phone prices are 21px.",
+    "density": "One divided register rather than four promotional cards; all cumulative tools are repeated explicitly. Compact row groups expose both price and availability without expanders.",
+    "components": "Real shadcn/Base UI Button and Input, real Skeleton, existing SP-2 native account disclosure, inline lucide checks and semantic lists. The comparison row is a custom composition, not an invented library component.",
+    "colour": "Pictures semantic tokens unchanged in light and dark; neutral shell/rows, muted unavailable-tool text, existing accent only for links, focus and existing primary controls.",
+    "motion": "Precise registration: 12px horizontal row settlement at 240ms in Expressive, 35ms row offsets, and rule expansion from .65 to 1 over 360ms. Index underlines use 150ms transforms. Reduced motion/still shows the final state immediately; hidden tabs suspend CSS motion."
+  },
+  "evidence": {
+    "layout": [
+      ".plan-sheet",
+      ".ledger-labels",
+      ".plan-row",
+      ".plan-identity"
+    ],
+    "navigation": [
+      ".plan-index",
+      ".index-link",
+      ".back-link"
+    ],
+    "typography": [
+      ".plans-heading h1",
+      ".plan-row h2",
+      ".price",
+      ".availability"
+    ],
+    "motion": [
+      ".plan-row"
+    ]
+  }
+}

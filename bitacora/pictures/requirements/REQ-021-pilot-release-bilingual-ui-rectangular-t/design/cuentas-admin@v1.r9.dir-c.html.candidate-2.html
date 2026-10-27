@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Thumbnail C2 · Tira de guirnalda</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1d1a14;--mute:#59534a;--edge:#7a7366;--line:#d8d1c3;--pri:#0f6e8c;--on:#fff;--b1:#ff8fb8;--b2:#ffd23f;--b3:#7dd3c0}
+[data-theme=dark]{--bg:#141310;--card:#1f1d18;--ink:#f6f2ea;--mute:#bcb4a5;--edge:#958d7d;--line:#3a362e;--pri:#7cd0ee;--on:#06202a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+.chrome{display:flex;gap:12px;align-items:center;padding:8px 16px;background:#11111b;color:#cdd6f4;font-size:12px}.chrome strong{margin-right:auto}
+.toggle{font:inherit;color:inherit;background:transparent;border:1px solid #8a8fa8;border-radius:6px;padding:2px 8px}
+/* a perforated decorating strip runs across the page: navigation holes along it */
+.strip{position:relative;height:56px;margin:18px 0 0;background:var(--card);border-block:1.5px solid var(--edge);display:flex;align-items:center;gap:28px;padding:0 24px;overflow:hidden}
+.hole{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px}
+.hole i{width:22px;height:22px;border-radius:50%;border:2px solid var(--edge);background:var(--bg)}
+.hole.on i{background:var(--b1);border-color:var(--ink);transform:scale(1.25);box-shadow:inset -4px -4px 0 #0002}
+.page{display:grid;grid-template-columns:1fr;gap:20px;padding:24px;max-width:1100px;margin:auto}
+.cap{font:600 11px/1 monospace;color:var(--mute);margin:0 0 10px}
+/* garland of people: each account is a balloon clipped to the strip */
+.garland{display:flex;gap:18px;align-items:flex-start;overflow-x:auto;padding:8px 4px 16px}
+.person{flex:0 0 150px;display:grid;justify-items:center;gap:6px;text-align:center}
+.person .b{width:84px;height:98px;border-radius:50% 50% 46% 46%/56% 56% 44% 44%;display:grid;place-items:center;font-weight:800;color:#1d1a14;animation:bob 3s ease-in-out infinite alternate}
+.person:nth-child(2) .b{animation-delay:-1s}.person:nth-child(3) .b{animation-delay:-2s}
+@keyframes bob{to{transform:translateY(-6px) rotate(2deg)}}
+.person small{color:var(--mute)}
+.form{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form i{display:block;height:40px;border:1.5px solid var(--edge);border-radius:8px}
+.form .btn{grid-column:1/-1;height:44px;border-radius:8px;background:var(--pri);color:var(--on);display:grid;place-items:center;font-weight:700}
+h1{font:italic 700 40px/1 Georgia,serif;margin:0}
+@media (max-width:760px){.form{grid-template-columns:1fr;padding:20px}.page{padding:20px}.strip{gap:16px;padding:0 20px}}
+@media (prefers-reduced-motion:reduce){.person .b{animation:none}}
+</style>
+</head>
+<body>
+<div class="chrome"><strong>Mockup · C2 «Tira de guirnalda» (miniatura)</strong><button class="toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">Tema</button></div>
+<nav class="strip" aria-label="Administración"><span class="hole on"><i></i>Cuentas</span><span class="hole"><i></i>Roles</span><span class="hole"><i></i>Mi cuenta</span></nav>
+<div class="page">
+  <h1>Equipo del piloto</h1>
+  <p class="cap">CUENTAS · cada persona es un globo de la guirnalda</p>
+  <div class="garland">
+    <div class="person"><span class="b" style="background:var(--b2)">AM</span><b>Ana Mejía</b><small>Plan 2 · activa</small></div>
+    <div class="person"><span class="b" style="background:var(--b3)">JR</span><b>Julián Rojas</b><small>Empleado · activa</small></div>
+    <div class="person"><span class="b" style="background:var(--b1)">LC</span><b>Laura Cano</b><small>Plan 1 · desactivada</small></div>
+  </div>
+  <p class="cap">INVITAR · formulario en dos columnas</p>
+  <div class="form"><i></i><i></i><i></i><i></i><span class="btn">Invitar persona</span></div>
+</div>
+</body>
+</html>

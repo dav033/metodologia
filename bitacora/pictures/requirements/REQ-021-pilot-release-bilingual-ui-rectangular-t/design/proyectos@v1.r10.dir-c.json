@@ -1,0 +1,37 @@
+{
+  "name": "Estuche",
+  "axes": {
+    "concept": "A decorator’s padded travel case: named projects live in stitched pockets, the zipper opens the collection and each composition can be picked up again.",
+    "layout": "Stepped three-pocket wall with a larger first pocket and 0/42/84px vertical offsets; full-width title and zipper line. Editor becomes a broad schematic with a narrow unboxed ownership note. Phone uses one vertical pocket sequence.",
+    "navigation": "Direct actions on each project pocket, a named Back to projects control and a separate browser-scene retrieval link. Authorized staff expose in-flow Mine/Everyone scope controls, never a sidebar or fixed bottom dock.",
+    "typography": "Embedded Rounded Mplus 1c ExtraBold display at 44–78px and 25px project titles, paired with installed FreeSans at 14–16px for working copy; inflated rounded letterforms echo the padded case and latex without repeating the sibling serif families.",
+    "density": "Generous 44px desktop and 20px phone gutters, 27px pocket padding; illustrated compositions and named actions instead of compact account rows. Pockets have 60px top lobes, 27px base corners and inset dashed seams.",
+    "components": "Real installed shadcn/Base UI Button, Input, Skeleton; Animate UI/Base UI modal and alert dialog primitives. Custom stitched project pockets, SVG schematic previews and a Motion zipper slider with keyboard parity.",
+    "colour": "Pool-blue #c9e7f3 ground, pale blue-white #f3fbff pockets and ink #103247, with deep cyan #07577a action and bright cyan #36c1eb zipper hardware. Pink latex and silver-blue foil define the material. Dark water-blue #102d40/#183e55 uses #82d9ff actions. This deliberately differs from sibling orange/vermilion accents.",
+    "motion": "Tactile compression and elastic seating: cubic-bezier(.16,1.3,.38,1), expressive 650ms pocket arrival with 70ms offsets, 190ms presses, 850ms zipper travel, 900ms balloon inflation, 5.8s foil rock; Motion spring drag. Reduced/still removes travel, hover transforms and ambient loops."
+  },
+  "evidence": {
+    "layout": [
+      ".pocket-wall",
+      ".pocket",
+      ".project-plane"
+    ],
+    "navigation": [
+      ".pocket .actions",
+      ".more",
+      ".mast-tools"
+    ],
+    "typography": [
+      ".display",
+      ".pocket h2"
+    ],
+    "motion": [
+      ".pocket",
+      ".display",
+      ".zip-track",
+      ".zip-pull",
+      ".balloon-group",
+      ".foil-shine"
+    ]
+  }
+}

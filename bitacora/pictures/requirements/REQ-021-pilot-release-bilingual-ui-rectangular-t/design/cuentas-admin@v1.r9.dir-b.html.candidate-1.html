@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boceto B1 · Guirnalda · cuentas-admin r9</title>
+<style>
+/* Thumbnail candidate 1: a balloon garland strung across the venue ceiling is the navigation;
+   every screen is a placard hanging from it on two ribbons. Both themes, reflows at 640px. */
+:root{--bg:#eef3ff;--card:#fff;--ink:#0c1638;--mut:#46507a;--cob:#1f3fd6;--tan:#ff6b2c;--edge:#7b86a8}
+@media (prefers-color-scheme:dark){:root{--bg:#070b24;--card:#10173a;--ink:#eef1ff;--mut:#a9b3da;--cob:#8ea2ff;--tan:#ff7a3d;--edge:#6b77a8}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+.sheet{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:28px;max-width:1100px;margin:auto}
+h1{grid-column:1/-1;margin:0;font:800 22px/1.1 system-ui}h1 small{display:block;font:500 13px system-ui;color:var(--mut);margin-top:6px}
+figure{margin:0;border:1px solid var(--edge);border-radius:18px;background:var(--bg);overflow:hidden}
+figcaption{padding:12px 16px;color:var(--mut);font-size:12.5px;border-top:1px solid var(--edge)}
+.stage{position:relative;height:300px}
+.garland{position:absolute;inset:0 0 auto 0;height:90px}
+.b{position:absolute;width:46px;height:54px;border-radius:50% 50% 48% 48%;background:radial-gradient(circle at 32% 28%,#fff9 0 12%,transparent 13%),var(--c);animation:bob 3.6s ease-in-out infinite}
+.b.on{transform:translateY(16px)}
+.lbl{position:absolute;font:800 10px system-ui;letter-spacing:.02em;color:var(--ink)}
+.rib{position:absolute;width:2px;background:var(--tan);top:84px;height:46px}
+.placard{position:absolute;left:50%;top:128px;width:62%;transform:translateX(-50%);background:var(--card);border-radius:14px;border:1px solid var(--edge);padding:14px;transform-origin:50% -40px;animation:swing 2.4s cubic-bezier(.34,1.56,.64,1) both}
+.placard i{display:block;height:8px;border-radius:4px;background:var(--edge);opacity:.45;margin:7px 0}
+.placard b{display:block;font:800 17px system-ui;margin-bottom:6px}
+.placard .cta{height:20px;border-radius:999px;background:var(--cob);width:44%;margin-top:10px}
+@keyframes bob{50%{translate:0 -5px}}
+@keyframes swing{0%{rotate:-7deg;translate:0 -40px}50%{rotate:3deg}100%{rotate:0deg;translate:0 0}}
+@media (max-width:640px){.sheet{grid-template-columns:1fr}.placard{width:84%}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <h1>Candidato 1 · Guirnalda <small>La guirnalda del techo es la navegación; cada pantalla cuelga de ella con dos cintas.</small></h1>
+  <figure>
+    <div class="stage" aria-label="Boceto de Ingresar">
+      <svg class="garland" viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 18 Q200 96 400 18" fill="none" stroke="var(--mut)" stroke-width="2"/></svg>
+      <span class="b" style="--c:var(--cob);left:12%;top:14px"></span><span class="b" style="--c:var(--tan);left:27%;top:30px;animation-delay:.4s"></span>
+      <span class="b" style="--c:var(--cob);left:62%;top:30px;animation-delay:.8s"></span><span class="b" style="--c:var(--tan);left:78%;top:14px;animation-delay:1.2s"></span>
+      <span class="rib" style="left:40%"></span><span class="rib" style="left:60%"></span>
+      <div class="placard"><b>Iniciar sesión</b><i></i><i style="width:70%"></i><i></i><div class="cta"></div></div>
+    </div>
+    <figcaption>Acceso: letrero centrado bajo el punto más bajo de la guirnalda; entra balanceándose y se asienta.</figcaption>
+  </figure>
+  <figure>
+    <div class="stage" aria-label="Boceto de Cuentas">
+      <svg class="garland" viewBox="0 0 400 90" preserveAspectRatio="none" aria-hidden="true"><path d="M0 14 Q200 70 400 14" fill="none" stroke="var(--mut)" stroke-width="2"/></svg>
+      <span class="b on" style="--c:var(--cob);left:22%;top:20px"></span><span class="lbl" style="left:20%;top:6px">Cuentas</span>
+      <span class="b" style="--c:var(--tan);left:46%;top:28px;animation-delay:.5s"></span><span class="lbl" style="left:46%;top:6px">Roles</span>
+      <span class="b" style="--c:var(--cob);left:70%;top:20px;animation-delay:1s"></span><span class="lbl" style="left:66%;top:6px">Mi cuenta</span>
+      <span class="rib" style="left:27%;top:90px;height:40px"></span>
+      <div class="placard" style="width:86%"><b>Cuentas</b><i></i><i></i><i></i><i style="width:60%"></i></div>
+    </div>
+    <figcaption>Administración: el globo activo baja tirado de su cinta, y esa cinta sostiene el letrero de la tabla.</figcaption>
+  </figure>
+</main>
+</body>
+</html>

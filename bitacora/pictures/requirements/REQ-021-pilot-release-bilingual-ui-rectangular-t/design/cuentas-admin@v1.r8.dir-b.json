@@ -1,0 +1,36 @@
+{
+  "name": "Órbita de acceso",
+  "axes": {
+    "concept": "A metal event hoop becomes a spatial access orbit. People occupy stations; a stable inflated aperture holds the current task.",
+    "layout": "230px elliptical navigation at left, offset 44px from one asymmetric 82px-radius working aperture. At phone width the ellipse flattens horizontally above the content.",
+    "navigation": "Three labelled stations follow an ellipse rather than a straight sidebar or bottom dock. Account menu and native preview selectors remain explicit; invitation and reset require existing links.",
+    "typography": "Locally embedded Rounded Mplus 1c ExtraBold as Air Display at 38–58px, paired with embedded Adwaita Sans as Studio Sans at 14–16px. Rounded heavy titles echo inflated latex.",
+    "density": "One generous working aperture, 42px desktop and 22px phone internal padding; people are ruled rows with 56px oval identifiers, not dashboard cards. Permission groups use a selectable two-column matrix.",
+    "components": "Real installed shadcn/Base UI Button/Input/Checkbox/Skeleton, Animate UI-backed Dialog/AlertDialog and Motion. Custom elliptical station navigation, inline hoop mark, oval person identifiers and a single-use-link receipt.",
+    "colour": "Proposal: blue-air #deedf0 with white surfaces and raspberry foil #8b2146; night petroleum #0c2831/#183d49 with rose #f5a5ba. Project semantic role names and written status meanings are retained; no shared purple accent.",
+    "motion": "Elastic spatial grammar: spring-registering hoop, perspective pod arrival, inflated title settle, rotated arrow settle, staggered person registration, floating foil bead, compressed feedback and tactile controls. Expressive default; all travel/infinite effects collapse for reduced motion and still=1; hidden tabs pause ambient CSS."
+  },
+  "evidence": {
+    "layout": [
+      ".orbital-layout",
+      ".pod",
+      ".orbit-track"
+    ],
+    "navigation": [
+      ".orbit-nav",
+      ".station",
+      ".language"
+    ],
+    "typography": [
+      ".pod-title",
+      ".brand",
+      ".field label"
+    ],
+    "motion": [
+      ".pod",
+      ".float-bead",
+      ".pod-title",
+      ".station"
+    ]
+  }
+}

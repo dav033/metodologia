@@ -1,0 +1,40 @@
+{
+  "name": "Planos de consulta",
+  "axes": {
+    "concept": "A spatial consultation workspace: a local plan index beside one continuous four-panel comparison sheet; the optional selector highlights an informational comparison only.",
+    "layout": "At >=1100px a 216px left rail sits beside a ruled 2-by-2 sheet. At 640-1099px the rail becomes an upper dock and the sheet stays two columns. Below 640px plan panels stack.",
+    "navigation": "Preserved access/account entry links and masthead; a neutral in-page comparison/selection rule; anchor index in comparison changes into pressed-state choice buttons in selection, with a persistent full-comparison return.",
+    "typography": "Existing embedded Geist Sans and Geist Mono only. Page 24px, plan heading 20px, tabular monthly price 22px (20px phone), tools 14px, availability 12px. No display typography.",
+    "density": "One outer 32px sheet with shared rules, 24px peer-panel insets (20px phone) and compact fully visible cumulative tool lists. A narrow catalogue index keeps the main working area distinct from navigation.",
+    "components": "Real installed shadcn/Base UI Button, Input and Skeleton; source-compatible ring-and-dot masthead and account disclosure. Native buttons/anchors form the plan dock; no plan-tools disclosure.",
+    "colour": "Unchanged Pictures globals.css semantic palette in both themes; source accent marks only the comparison selection/focus/links, neutral paper and navigation, existing warning token labels unavailable tools.",
+    "motion": "Opposing spatial entrance: rail translates from -16px while plan quadrants arrive from +22px with 45ms staggering; expressive 440ms cubic-bezier(.16,1,.3,1). Selection has a shared spring marker and a short underline settle. Reduced motion and still=1 settle immediately."
+  },
+  "evidence": {
+    "layout": [
+      ".comparison-workspace",
+      ".comparison-rail",
+      ".sheets",
+      ".plan-sheet"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".rail-options",
+      ".rail-option",
+      ".selection-summary"
+    ],
+    "typography": [
+      ".heading h1",
+      ".plan-identity h2",
+      ".price",
+      ".tools-heading",
+      ".availability"
+    ],
+    "motion": [
+      ".comparison-rail",
+      ".plan-sheet",
+      ".rail-mark",
+      ".selected-label"
+    ]
+  }
+}

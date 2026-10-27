@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Candidate 2 · Arco de entrada (cuentas-admin r8 dir-b)</title>
+<style>
+body{margin:0;padding:24px;background:#d9e0da;font:13px/1.35 system-ui,sans-serif;color:#10241b;display:flex;gap:24px;flex-wrap:wrap}
+.t{width:420px;height:270px;border-radius:14px;overflow:hidden;background:#0f2a20;position:relative;color:#f3f7f2}
+.cap{width:100%;font-weight:600}
+.arch{position:absolute;left:50%;top:150px;width:360px;height:360px;margin-left:-180px;border-radius:50%;}
+.arch i{position:absolute;width:34px;height:34px;border-radius:50%;background:#f76707;left:50%;top:50%;margin:-17px}
+.arch i:nth-child(odd){background:#f3f7f2}
+.nav{position:absolute;top:30px;left:0;right:0;display:flex;justify-content:center;gap:52px}
+.nav span{padding:4px 10px;border-radius:999px;border:1px solid #7fa491}.nav .on{background:#ff8f3f;color:#1d0c02;border-color:#ff8f3f;font-weight:700;transform:translateY(-6px)}
+.floor{position:absolute;left:30px;right:30px;top:104px;bottom:14px;background:#f3f7f2;color:#10241b;border-radius:10px;padding:12px;display:grid;gap:6px;align-content:start}
+.floor h4{margin:0;font:800 18px/1 system-ui;text-align:center}
+.row{display:flex;justify-content:space-between;border-top:1px solid #c9d4cc;padding-top:5px}
+.form{width:190px;margin:0 auto;display:grid;gap:7px}.f{height:22px;border:1.5px solid #6f8277;border-radius:6px}
+.btn{height:26px;border-radius:999px;background:#b8460b;color:#fff;display:grid;place-items:center;font-weight:700}
+</style></head><body>
+<p class="cap">Candidate 2 — Arco de entrada: a balloon arch spans each screen; destinations hang on the arch and drop when chosen; content sits centred on the floor beneath.</p>
+<div class="t" aria-label="Sign-in thumbnail">
+  <div class="arch" id="a1"></div>
+  <div class="floor" style="left:105px;right:105px;top:70px"><h4>Pictures</h4><div class="form"><div class="f"></div><div class="f"></div><div class="btn">Entrar</div></div></div>
+</div>
+<div class="t" aria-label="Accounts thumbnail">
+  <div class="arch" id="a2"></div>
+  <div class="nav"><span class="on">Cuentas</span><span>Roles</span><span>Mi cuenta</span></div>
+  <div class="floor"><h4>Cuentas · 6 personas</h4>
+    <div class="row"><span>Lucía Gómez</span><span>Plan 2 · Activa</span></div>
+    <div class="row"><span>Andrés Rojas</span><span>Empleado · Activa</span></div>
+    <div class="row"><span>María Pérez</span><span>Plan 1 · Inactiva</span></div></div>
+</div>
+<script>
+for (const id of ["a1","a2"]) { const a = document.getElementById(id);
+  for (let k = 0; k < 15; k++) { const i = document.createElement("i"); const ang = Math.PI + k * Math.PI / 14;
+    i.style.transform = `translate(${Math.cos(ang) * 170}px, ${Math.sin(ang) * 170}px)`; a.append(i); } }
+</script>
+</body></html>

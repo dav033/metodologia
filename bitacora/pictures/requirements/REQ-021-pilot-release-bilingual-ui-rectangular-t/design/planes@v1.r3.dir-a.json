@@ -1,0 +1,37 @@
+{
+  "name": "Pliegues de consulta · Operativa",
+  "axes": {
+    "concept": "Operational reading of the owner-selected Pliegues de consulta; public plan information without account mutation.",
+    "layout": "One continuous paper with four ruled bands. Desktop uses a 240px identity column; tablet moves identity above a two-column tool list; phone uses a single column.",
+    "navigation": "Wrapping in-page plan index and a separate informational selection view; contextual return to sign-in or Mi cuenta; no new app destination in sibling navigation.",
+    "typography": "Production Geist Sans; 24px page title, 20px plan names, 22px tabular prices (20px phone), 14px tool lines, 12–13px supporting text.",
+    "density": "Dense grouped catalogue reading with 20px desktop band padding and 12px tool-row gaps; all cumulative tools remain visible.",
+    "components": "Installed Base UI/shadcn Button, Input, Skeleton; retained native language selector and account disclosure; custom semantic plan bands, index and tool lists.",
+    "colour": "Exact Pictures globals.css light/dark tokens. Neutral chrome and separators; existing accent marks the comparison highlight and keyboard focus. No new palette.",
+    "motion": "Precise 480ms horizontal band registration with 35ms offsets and ease-out (.23,1,.32,1), counter-direction 180ms index cut, quick hover/press feedback; natural/subtle profiles and reduced/still parity."
+  },
+  "evidence": {
+    "layout": [
+      ".plan-paper",
+      ".plan-band",
+      ".tool-list"
+    ],
+    "navigation": [
+      ".comparison-toolbar",
+      ".plan-nav",
+      ".view-switch",
+      ".back-link"
+    ],
+    "typography": [
+      ".plan-heading h1",
+      ".plan-identity h2",
+      ".plan-price strong",
+      ".tools-caption"
+    ],
+    "motion": [
+      ".plan-band",
+      ".comparison-toolbar",
+      ".btn"
+    ]
+  }
+}

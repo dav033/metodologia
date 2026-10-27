@@ -1,0 +1,38 @@
+{
+  "name": "Umbral de aire",
+  "axes": {
+    "concept": "An inflatable entrance to the decorator’s workplace: a blue latex threshold, a tethered yellow foil balloon and a working plane that seats beside them.",
+    "layout": "Asymmetric two-plane stage: 0.78fr story/sculpture and 1.6fr working surface, with 32px separation. The working surface has a 72px upper entrance corner. Below 760px the story becomes a compact mast above the full-width work plane.",
+    "navigation": "Signed-in pages use an in-flow upper conveyor with an active station puck for Accounts, Roles and My account; account actions open a detail view. Authentication stays invitation-only; no carousel or bottom dock.",
+    "typography": "Embedded DejaVu Sans Condensed Bold Oblique is the 48–78px display voice; embedded Liberation Sans Regular/Bold handles 13–26px working copy. Large compressed italic words suggest filled latex under forward tension.",
+    "density": "Open stage with 34px desktop plane padding, 22px phone plane padding and 20px phone outer gutters; roster rows unfold their metadata on phone. 44px minimum buttons and 48px fields; no metric cards.",
+    "components": "Real shadcn/Base UI buttons, inputs, Animate UI checkboxes, skeletons, Dialog, AlertDialog and DropdownMenu. Bespoke CSS latex gate, foil volume, tether, asymmetric working plane and station puck; native language and planning selectors.",
+    "colour": "Cobalt latex #1545cc and sunflower foil #ffcf49 on blue #d9e7fb; navy #10294f information. Dark stage #081d42 and work plane #102b56 with yellow actions and #f3f7ff text. Pictures semantic token roles retained; this is an explicitly proposed exploration palette.",
+    "motion": "Spatial seating rather than generic fading: gate rotates and expands, foil travels diagonally, tether uncoils, plane settles in perspective, display squares on a spring, rows seat laterally with 55ms offsets, status compresses, empty ring settles, foil sways gently on its tether after arriving. 800ms expressive stage, 480ms natural, 240ms subtle; 180ms control lifts/press. The 6s foil sway pauses offscreen, in hidden tabs and on sculpture hover. Reduced motion and still=1 show final positions."
+  },
+  "evidence": {
+    "layout": [
+      ".stage",
+      ".work-plane",
+      ".story",
+      ".roster-row"
+    ],
+    "navigation": [
+      ".conveyor",
+      ".account-trigger",
+      ".mast-actions .lang"
+    ],
+    "typography": [
+      ".story h1",
+      ".plane-head h2",
+      ".field > label"
+    ],
+    "motion": [
+      ".air-gate",
+      ".foil-ball",
+      ".tension",
+      ".work-plane",
+      ".roster-row"
+    ]
+  }
+}

@@ -190,3 +190,9 @@ with `Supersedes: D-xxx` and edit only the old entry's `Status` line to `Superse
 - **Consequences:** + Provenance matches the reviewed source revision; − a future upstream SHA requires a fresh license check.
 - **Source:** [day log](2026-10/W4/2026-10-23.md) · session 01a16b2e
 
+## Cross-project continuation — session 01a17b42
+
+Designer-kit decisions belong to metodologia: D-136 supersedes D-135 (real libraries, three creative directions,
+owner choice/finalizer and fresh history). See [canonical decision log](../metodologia/DECISIONS.md) and
+[evidence notes](../metodologia/briefs/designer-kit-v2.notes.md). No separate dev architecture decision was made.
+

@@ -1,0 +1,41 @@
+{
+  "name": "Parte de acceso",
+  "axes": {
+    "concept": "An event production call sheet: people are registered against their exact tools, access state and next action. The ring-and-dot Pictures mark and foil seam connect the operational page to Sempertex installations.",
+    "layout": "Broad asymmetric running head (large condensed title left, live account count right), horizontal route rule, full-width ruled register with a narrow plan annotation rail; role list and permission sheet replace the register without a dashboard-card grid. Phone stacks the register then plan annotation.",
+    "navigation": "Neutral horizontal in-flow Cuentas / Roles y permisos / Mi cuenta route buttons, contextual per-person Manage dialogs and a named account disclosure; invitation-only entry has no open-registration route. Native preview selectors remain outside the product.",
+    "typography": "Embedded DejaVu Sans Condensed Bold as Dispatch, 38–68px display, 23–28px section/dialog titles; embedded Adwaita Sans as Work at 14–16px, embedded Adwaita Mono as Measure at 11–13px for access timestamps and edition details. English and Spanish reflow.",
+    "density": "Airier ruled account rows with 24px vertical padding, 28px desktop / 20px phone paper padding, 32px panel corners, 24px inset surfaces, 18px input/role-control corners, 8px checkbox corners and pill actions/selects/status chips; no KPI tiles.",
+    "components": "Real installed shadcn/Base UI Button, Input, Checkbox and Skeleton; Animate UI Dialog and AlertDialog with focus containment. Custom register rows, production running head, permission fieldsets and foil seam; rounded paper/plan panels, softly filled role selection and semantic pill status chips. Native role/state/language selects, no snippet fallback.",
+    "colour": "Proposed local exploration mapping of Pictures semantic roles: cold steel #e4ebf2, ink #112c48, cobalt #12489e; dark navy #0b1c2e with #a6caff action. Copper foil is confined to a Sempertex material sample; green/amber/red name status meaning. Softer neutral rules and a low-contrast plan surface lighten the hierarchy without changing the palette or accessible control edges. Neutral navigation uses text and a rule, not the accent.",
+    "motion": "Precise kinetic registration, cubic-bezier(.76,0,.24,1), expressive 480ms sheets with 55ms row offsets and 180ms controls; distinct paper registration, row registration, rule registration, rail counter-motion, 900ms foil stamp, 6s ambient foil registration, status stamping, skeleton scan and hover/press arrow shift. Subtle/natural shorten timings. Content remains visible during travel. Reduced/still removes all animation; hidden/offscreen suspension."
+  },
+  "evidence": {
+    "layout": [
+      ".heading",
+      ".workspace",
+      ".register-head",
+      ".person-row",
+      ".role-layout"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".user-menu summary",
+      ".filterbar"
+    ],
+    "typography": [
+      ".heading h1",
+      ".edition .count",
+      ".mono",
+      ".identity strong"
+    ],
+    "motion": [
+      ".paper",
+      ".person-row",
+      ".route-nav",
+      ".rail",
+      ".material .seam",
+      ".btn"
+    ]
+  }
+}

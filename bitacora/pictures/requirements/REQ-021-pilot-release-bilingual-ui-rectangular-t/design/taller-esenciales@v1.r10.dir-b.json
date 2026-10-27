@@ -1,0 +1,41 @@
+{
+  "name": "Mesa en plano",
+  "axes": {
+    "concept": "Spatial workbench: the existing Taller scene sits directly over its table inspector, with the original catalogue and tool rail at the left.",
+    "layout": "Desktop 60px tool rail + 312px catalogue + canvas-over-inspector workspace; two fieldsets under the canvas. On phone the scene precedes one switchable working sheet.",
+    "navigation": "Existing Paneles rail stays in place. Native Grupo selector browses catalogue groups; Mesa y lista buttons switch the dock; Añadir/Pieza/Lista de compra switch the phone sheet. Export remains in the header and the shopping list remains a dialog.",
+    "typography": "Existing embedded Geist Sans, 24px catalogue title, 20px dock headings, 14px controls and Geist Mono dimensions/quantities. No new font family.",
+    "density": "Two-column illustrated catalogue, two-column desktop inspector, three compact numeric measures together. Flat scene and divided dock; existing 10/12px controls/cards and rounded sibling account disclosure.",
+    "components": "Real installed shadcn/Base UI Button, Input, Skeleton and Animate UI Dialog. Custom SVG scene illustration and catalogue miniatures, native selects/details, and the product table perimeter/default data.",
+    "colour": "Unchanged Pictures and Taller tokens from globals.css; shared accessible primary/input mappings from cuentas-admin. Neutral group navigation; purple only on existing primary controls and focus. Scene material colours come from the existing furniture data.",
+    "motion": "Spatial settling: catalogue enters from left, canvas from right, dock unfolds upward, cards stagger 35ms with a slight rotation, table lands, chairs settle sequentially, feedback folds in, export panel opens from its header anchor. Expressive 620ms, controls 180ms; cubic-bezier(.34,1.4,.64,1) and production ease-out. Reduced motion removes travel, hidden tabs and offscreen export progress pause."
+  },
+  "evidence": {
+    "layout": [
+      ".work-body",
+      ".catalog-panel",
+      ".stage",
+      ".inspector-dock",
+      ".inspector-grid"
+    ],
+    "navigation": [
+      ".tool-rail",
+      ".group-select",
+      ".dock-nav"
+    ],
+    "typography": [
+      ".catalog-panel h1",
+      ".dock-heading h2",
+      ".creation-card small",
+      ".dimension"
+    ],
+    "motion": [
+      ".catalog-panel",
+      ".stage",
+      ".creation-card",
+      ".inspector-dock",
+      ".table-projection",
+      ".chair"
+    ]
+  }
+}

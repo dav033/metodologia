@@ -1,0 +1,39 @@
+{
+  "name": "Molde — piezas a presión",
+  "axes": {
+    "concept": "Molde: a decorator presses, seats and packs event pieces in a molded tool tray. Latex and foil inform the rounded cavities, table silhouette and responsive press feedback.",
+    "layout": "A wide overhead scene occupies the upper left, a specification tag seats at its right, and an eight-shape cavity tray follows below. Backing becomes a broad specimen tray, the shopping list a quantity-first packing slip, and export a two-part parcel. At 700px these planes stack; the four-tool belt stays near the bottom.",
+    "navigation": "A fixed lower four-station molded toolbelt selects Tables, Backing, List and Export. Table cards add at default dimensions and enter the inspector immediately; inline Return and Undo keep the working context. A separate help dialog explains Blender import; native planning selectors remain outside the product.",
+    "typography": "Embedded local FreeSerif Bold Italic at 54–88px gives the working title a sculpted, compressed silhouette; embedded Liberation Sans at 13–26px handles labels and data. Quantity-first packing numerals use the expressive serif at 38–45px. This pairing differs from sibling condensed and rounded sans directions.",
+    "density": "Generous scene field and 26px inspector insets, four 20px-inset cavities across desktop and two 16px-inset cavities on phone. Working controls have at least 44px targets; selection, capacity and next action remain explicit text. No KPI dashboard or ornamental metrics.",
+    "components": "Real installed shadcn/Base UI Button, Input and Skeleton; Animate UI Base UI Dialog primitives, Motion drag and profile springs. Custom SVG table/balloon/prop silhouettes, molded toolbelt and packaging composition. Existing pure table normalization, contours, chair placement and repository ownership are bundled read-only from Pictures.",
+    "colour": "Proposed raspberry #a20c48 actions on pink packing material #f4dfe7, dark plum #381526 ink, foil #c79750 restricted to decorative material. Dark plum ground #28131f and #3a2030 surfaces use pale rose #ffc0d7 actions and #fff1f7 text. Existing Pictures semantic roles map onto kit roles; purple production values are not silently changed.",
+    "motion": "Press-and-seat grammar with cubic-bezier(.18,1.38,.48,1), expressive 720ms plane/label choreography and 180ms controls; tray perspective seating, italic type compression, label torsion, staggered cavity/chair clips, toolbelt engagement, parcel unrolling, ambient latex breathing, error pressure release, success stamp and interruptible direct dragging. Natural 460/160ms, subtle 260/120ms; reduced/still has immediate parity. Ambient effects pause offscreen and in hidden tabs."
+  },
+  "evidence": {
+    "layout": [
+      ".work-top",
+      ".scene-plane",
+      ".mold-tray",
+      ".mold-label"
+    ],
+    "navigation": [
+      ".toolbelt",
+      ".tool-button",
+      ".mast-actions"
+    ],
+    "typography": [
+      ".display-title",
+      ".spec-pair strong",
+      ".object-slot h3"
+    ],
+    "motion": [
+      ".scene-plane",
+      ".display-title",
+      ".table-piece",
+      ".balloon-ambient",
+      ".toolbelt",
+      ".object-slot"
+    ]
+  }
+}

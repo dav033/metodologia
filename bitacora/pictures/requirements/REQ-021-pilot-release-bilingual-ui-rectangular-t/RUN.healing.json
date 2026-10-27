@@ -1,0 +1,21 @@
+{
+ "actions": 0,
+ "analyst_stops": {},
+ "cases": {
+  "b3881870b07f9253": {
+   "applied": 0,
+   "blocker": "producer_remediation_required",
+   "class": "regression",
+   "evidence": [
+    "the independent audit still finds blocking problems after its remediation rounds and would send back accepted tasks",
+    "reason code: rework_impact"
+   ],
+   "first_at": 1793130605.091,
+   "history": [],
+   "id": "b3881870b07f9253",
+   "repair": "none",
+   "status": "unrepairable",
+   "task": "T1.8"
+  }
+ }
+}

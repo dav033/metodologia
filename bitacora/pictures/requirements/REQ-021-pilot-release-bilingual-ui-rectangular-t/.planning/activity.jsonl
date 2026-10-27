@@ -121,3 +121,175 @@
 {"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
 {"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
 {"at": "2026-10-26T21:47:55-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1 · el diseño falló: failed: the delegation's process died before writing an outcome (killed, for instance by restarting the service that sta", "diff": ""}
+{"at": "2026-10-26T21:58:00-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 33 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T22:48:45-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-26T23:17:26-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-26T23:18:35-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-26T23:25:26-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 42 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T23:47:20-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-26T23:48:14-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-26T23:53:57-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-26T23:54:15-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-26T23:54:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-26T23:56:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 31 secciones traducidas, 1 pendientes", "diff": ""}
+{"at": "2026-10-27T00:17:27-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T00:31:58-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T00:36:24-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 21 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T00:36:57-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T00:47:17-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T00:50:32-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Owner verdict on round 1 (all three contracts): the directions differ in structure, but they share the same purple-on-near-white look and calm motion, which reads as a safe SaaS default. Redo EVERY di", "diff": ""}
+{"at": "2026-10-27T00:50:35-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T00:50:36-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-3", "text": "taller-esenciales@v1: Owner verdict on round 1 (all three contracts): the directions differ in structure, but they share the same purple-on-near-white look and calm motion, which reads as a safe SaaS default. Redo EVERY di", "diff": ""}
+{"at": "2026-10-27T00:50:36-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-4", "text": "proyectos@v1: Owner verdict on round 1 (all three contracts): the directions differ in structure, but they share the same purple-on-near-white look and calm motion, which reads as a safe SaaS default. Redo EVERY di", "diff": ""}
+{"at": "2026-10-27T00:51:32-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-27T00:52:01-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T01:03:25-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-27T01:04:23-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T01:07:32-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 9 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T01:17:39-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-27T01:17:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T01:17:47-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: fallaron todas las direcciones", "diff": ""}
+{"at": "2026-10-27T01:17:47-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T02:31:11-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T02:56:37-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 33 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T02:58:30-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 14 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T03:01:38-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T03:52:11-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T04:17:19-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T05:22:10-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T05:51:05-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T06:35:22-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 73 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T07:02:14-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: elegida dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T07:02:14-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: elegida dirección A · Cota viva", "diff": ""}
+{"at": "2026-10-27T07:02:15-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: elegida dirección A · Pliego — archivo de montaje", "diff": ""}
+{"at": "2026-10-27T07:16:45-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T07:20:59-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 7 listo", "diff": ""}
+{"at": "2026-10-27T08:01:11-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1 · A: Bordes mucho más redondeados en tarjetas, botones, inputs, chips y paneles (radios generosos, formas tipo pastilla donde encaje). Look más moderno y menos corporativo: superficies suaves, más aire, je", "diff": ""}
+{"at": "2026-10-27T08:01:12-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: iterando dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T08:07:10-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 7 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T08:11:23-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T08:12:10-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: dirección A iterada", "diff": ""}
+{"at": "2026-10-27T08:36:57-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1 · A: Conserva lo que ya funciona: esquinas muy redondeadas, pastillas, chips de estado y la composición. Cambios: (1) Quita por completo el panel lateral «Cada persona. Sus herramientas.» (lista de Plan 1/", "diff": ""}
+{"at": "2026-10-27T08:37:00-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: iterando dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T08:41:01-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 11 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T08:57:43-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: dirección A iterada", "diff": ""}
+{"at": "2026-10-27T09:08:57-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1 · A: Ahora mismo esta muy desalineado acia la izquierda lios disenos, ahyqeu aprovecharmejor ele spacio", "diff": ""}
+{"at": "2026-10-27T09:08:58-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: iterando dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T09:24:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: dirección A iterada", "diff": ""}
+{"at": "2026-10-27T09:26:16-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 18 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T09:48:00-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: elegida dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T09:57:45-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 8 listo", "diff": ""}
+{"at": "2026-10-27T09:58:43-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 11 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (resultado, criterios, tareas)", "diff": "+ Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the six system roles."}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3", "diff": ""}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Nuevo subplan SP-14: Plans section: the four access plans, public and informative", "diff": ""}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-4", "text": "Actualizó SP-4", "diff": ""}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-7", "text": "Actualizó SP-7 (resultado, criterios)", "diff": "+ The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations; each tool is reachable only with the access plans the p"}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "plan", "sp": "SP-8", "text": "Actualizó SP-8 (resultado, criterios)", "diff": "+ A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages; the public plans section and the data notice move from the browser language to this mechanism."}
+{"at": "2026-10-27T09:59:22-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M1 — Accounts, access plans and Taller essentials», «M2 — Saved work, spend per user and the chat tools» y 3 más cambió", "diff": ""}
+{"at": "2026-10-27T10:00:51-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Actualizó SP-14", "diff": ""}
+{"at": "2026-10-27T10:00:51-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-27T10:01:43-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T10:03:55-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 41 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T10:27:18-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T10:37:11-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 61 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (criterios)", "diff": "+ The six system roles hold exactly these permissions: the four plan roles take theirs only from the plan catalogue, Entusiasta and Designer the assisted chat, the balloon counter and the catalogue, Designer Plus adds the cost calculator and Master Designer adds the Taller 3D with its scene AI, asse"}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-2", "text": "Actualizó SP-2 (resultado, criterios)", "diff": "+ An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the six system roles (Usuario · Entusiasta, Usuario · Designer, Usuario · Designer Plus, Usuario · Master Designer, Empleado interno and Administrador) read-only with their permissions, and can"}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (resultado, criterios, tareas)", "diff": "+ The proposal lists each candidate Backing structure and table type with Spanish and English names, real reference dimensions with at least one cited source, parametric limits and defaults, the chair rule for tables, the generator approach, photo-reading relevance and an estimate, keeps the seven e"}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Actualizó SP-14 (criterios)", "diff": "+ With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English."}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-4", "text": "Actualizó SP-4", "diff": ""}
+{"at": "2026-10-27T10:48:15-05:00", "who": "Planner", "kind": "plan", "sp": "SP-7", "text": "Actualizó SP-7 (resultado, criterios)", "diff": "+ The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations and, like everything of the Taller 3D, is reachable only"}
+{"at": "2026-10-27T10:48:51-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 43 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T10:49:28-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-27T10:50:13-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M1 — Accounts, access plans and Taller essentials», «M2 — Saved work, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T10:50:28-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Review focus — amendment A-1 (plans)», «Review focus — SP-3 re-scope (2026-10-27)» cambió", "diff": ""}
+{"at": "2026-10-27T10:51:13-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials» cambió", "diff": ""}
+{"at": "2026-10-27T10:51:43-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (criterios)", "diff": "+ The existing chairs-per-table suite passes unchanged with the new table types in the catalogue."}
+{"at": "2026-10-27T10:51:43-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials», «Review focus — SP-3 re-scope (2026-10-27)» cambió", "diff": ""}
+{"at": "2026-10-27T10:54:24-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: actualizando el diseño elegido por cambio del plan", "diff": ""}
+{"at": "2026-10-27T10:55:32-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 19 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T11:00:59-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 36 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T11:16:58-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 10 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T11:19:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: contrato actualizado por cambio del plan", "diff": ""}
+{"at": "2026-10-27T11:39:51-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Actualizó SP-14", "diff": ""}
+{"at": "2026-10-27T11:39:51-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (resultado, criterios, tareas)", "diff": "+ The proposal JSON conforms to PropuestaPilotoSchema: every candidate Backing structure and table type has Spanish and English names, real reference dimensions with at least one cited source, limits and a default inside them, the chair rule for tables, geometry from caja, cilindro and panel only fo"}
+{"at": "2026-10-27T11:39:51-05:00", "who": "Planner", "kind": "plan", "sp": "SP-4", "text": "Actualizó SP-4 (criterios)", "diff": "+ «Escena nueva», a template or «Abrir en Escena» start a new unsaved project: the open project keeps its last saved revision (its pending edits are saved first, or the user is asked before a never-saved scene is discarded), the new scene is linked to no project and nothing reaches the server until "}
+{"at": "2026-10-27T11:40:23-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3", "diff": ""}
+{"at": "2026-10-27T11:40:39-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3", "diff": ""}
+{"at": "2026-10-27T11:41:03-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3", "diff": ""}
+{"at": "2026-10-27T11:42:27-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M1 — Accounts, access plans and the plans section», «M2 — Saved work, Taller essentials, spend per user and the chat tools» y 1 más cambió", "diff": ""}
+{"at": "2026-10-27T11:43:07-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (criterios)", "diff": "+ The eight existing table types, their dimension text, AI tool descriptions, table-runner and symmetry rules and default chair counts give exactly the same results as before the registries."}
+{"at": "2026-10-27T11:43:07-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M1 — Accounts, access plans and the plans section», «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T11:48:30-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Confirmaste SP-1 en la web; sigue SP-2", "diff": ""}
+{"at": "2026-10-27T11:53:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 356 secciones traducidas, 1 pendientes", "diff": ""}
+{"at": "2026-10-27T11:59:23-05:00", "who": "Plan", "kind": "flow", "sp": "SP-1", "text": "Se añadió T1.8b, auditoría cruzada de T1.8: la etapa tenía una sola auditoría y la regla del segundo auditor pide dos", "diff": ""}
+{"at": "2026-10-27T11:59:24-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (tareas)", "diff": "+ tarea: Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands"}
+{"at": "2026-10-27T11:59:24-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section», «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T11:59:25-05:00", "who": "Tú", "kind": "flow", "sp": "SP-1", "text": "Ejecutar SP-1: etapa r1 aprobada (SP-1), faltan 13 subplanes", "diff": ""}
+{"at": "2026-10-27T12:07:42-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 157 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T12:34:07-05:00", "who": "Planner", "kind": "plan", "sp": "SP-5", "text": "Actualizó SP-5 (resultado, criterios, tareas)", "diff": "+ A signed-in user can save the current scene or selected piece with a name and occasion, and the saved item appears in that account’s personal library after reload and from another browser."}
+{"at": "2026-10-27T12:34:07-05:00", "who": "Planner", "kind": "plan", "sp": "SP-6", "text": "Actualizó SP-6 (resultado, criterios, tareas)", "diff": "+ Every successful paid model call in the covered Next and ai-api paths produces one durable usage row linked to the authenticated account and session, with work item, tool, call kind, provider/model, available token details and estimated USD cost."}
+{"at": "2026-10-27T12:34:07-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «Approach», «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T12:34:33-05:00", "who": "Tú", "kind": "flow", "sp": "SP-2", "text": "Confirmaste SP-2 en la web; sigue SP-14", "diff": ""}
+{"at": "2026-10-27T12:34:34-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T12:39:16-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 113 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T12:44:30-05:00", "who": "Planner", "kind": "plan", "sp": "SP-6", "text": "Actualizó SP-6 (resultado, criterios)", "diff": "+ Every completed paid model call in the covered Next and ai-api paths produces one durable usage row linked to the authenticated account and session, with project plus conversation detail when applicable (otherwise conversation), tool, call kind, provider/model, available token details and estimate"}
+{"at": "2026-10-27T12:44:30-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T12:48:40-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 47 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T12:51:16-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 14 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T12:53:17-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T13:59:24-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:00:46-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: elegida dirección C · Pliegues de consulta", "diff": ""}
+{"at": "2026-10-27T14:01:47-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:07:35-05:00", "who": "Planner", "kind": "plan", "sp": "SP-5", "text": "Actualizó SP-5 (resultado, criterios)", "diff": "+ A user can place a saved item into a project; employee and administrator roles can open another account’s saved decorations read-only, but only the owning account can update or delete them, including through direct API requests."}
+{"at": "2026-10-27T14:07:35-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-27T14:12:46-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1 · borrador 1 listo", "diff": ""}
+{"at": "2026-10-27T14:13:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 33 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:17:14-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:17:57-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1 · A: Sobre «¿Qué razón social, correo para ejercer derechos y URL de la política deben sustituir los campos legales pendientes antes de invitar personas reales?»: pone que la empresa es sempertex pero el r", "diff": ""}
+{"at": "2026-10-27T14:17:58-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: iterando dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T14:18:02-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Sobre «¿Qué razón social, correo para ejercer derechos y URL de la política deben sustituir los campos legales pendientes antes de invitar personas reales?»: pone que la empresa es sempertex pero el r", "diff": ""}
+{"at": "2026-10-27T14:19:57-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-14", "text": "planes@v1: quitar el ocultar herramientass, ademas el responsiv de tablet de ve mal y crea una vista extra para que sea como para elegir el plan y tal", "diff": ""}
+{"at": "2026-10-27T14:22:44-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 8 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:25:18-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: dirección A iterada", "diff": ""}
+{"at": "2026-10-27T14:26:17-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 2 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:38:31-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1: elegida dirección A · Parte de acceso", "diff": ""}
+{"at": "2026-10-27T14:38:33-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:39:56-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-14", "text": "planes@v1: /tmp/REQ-021-planes-feedback-1.md", "diff": ""}
+{"at": "2026-10-27T14:40:48-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:43:27-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 6 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:43:28-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Actualizó SP-14 (resultado, criterios)", "diff": "+ The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an «Ocultar herramientas» control."}
+{"at": "2026-10-27T14:43:28-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
+{"at": "2026-10-27T14:43:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 10 listo", "diff": ""}
+{"at": "2026-10-27T14:44:49-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-14", "text": "planes@v1: Apply the already owner-selected direction C (Pliegues de consulta) to the current SP-14 draft. Owner feedback: remove the per-plan «Ocultar herramientas» control; repair tablet responsiveness; add an", "diff": ""}
+{"at": "2026-10-27T14:44:49-05:00", "who": "Planner", "kind": "plan", "sp": "SP-14", "text": "Actualizó SP-14", "diff": ""}
+{"at": "2026-10-27T14:44:49-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
+{"at": "2026-10-27T14:44:49-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T14:45:26-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:46:29-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 6 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:55:17-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 14 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T14:58:42-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 31 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:25:36-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T15:25:57-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:43:41-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:44:07-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:49:12-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (tareas)", "diff": "+ tarea: Remediate T1.8 findings F1, F2, F3, F4"}
+{"at": "2026-10-27T15:49:17-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:50:08-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 20 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:50:51-05:00", "who": "Tú", "kind": "flow", "sp": "SP-2", "text": "Confirmaste SP-2 en la web; sigue SP-14", "diff": ""}
+{"at": "2026-10-27T15:50:52-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-27T15:57:20-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
+{"at": "2026-10-27T15:57:47-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 10 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T15:59:33-05:00", "who": "Tú", "kind": "flow", "sp": "SP-2", "text": "Ejecutar SP-2: etapa r3 aprobada (SP-1, SP-2), faltan 12 subplanes", "diff": ""}
+{"at": "2026-10-27T15:59:43-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-27T16:03:30-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 34 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:03:56-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:04:28-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:09:08-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:16:37-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-14", "text": "planes@v1 · B: Mantén la dirección B tal cual (composición, rail, hoja 2x2, movimiento y comportamiento) y corrige solo esto: el chequeo de comparación falla porque la evidencia de movimiento declara .rail-mark y .s", "diff": ""}
+{"at": "2026-10-27T16:16:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: iterando dirección B · Planos de consulta", "diff": ""}
+{"at": "2026-10-27T16:18:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 6 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:20:32-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: dirección B iterada", "diff": ""}
+{"at": "2026-10-27T16:20:53-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T16:21:32-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1: elegida dirección B · Planos de consulta", "diff": ""}
+{"at": "2026-10-27T16:27:35-05:00", "who": "Designer", "kind": "design", "sp": "SP-14", "text": "planes@v1 · borrador 2 listo", "diff": ""}

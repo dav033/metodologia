@@ -1,0 +1,37 @@
+{
+  "name": "Pliegues de consulta · información abierta",
+  "axes": {
+    "concept": "Open consultation folds: dense working information, every cumulative tool list stays visible; selecting means highlighting for comparison only.",
+    "layout": "One ruled paper; four horizontal plan blocks with a name/price column and adjacent tool lists. Desktop 192px index, tablet index above the paper in two columns, phone stacked plan blocks.",
+    "navigation": "Existing Pictures/Sempertex shell; neutral comparison/selection route rule, in-page four-plan index, sign-in and account-menu /planes entry points, explicit return to comparison and origin.",
+    "typography": "Existing embedded Geist Sans and Geist Mono; 24px page title and prices, 20px plan names, 14px tools, 12px availability, tabular price figures.",
+    "density": "Compact 12px tool spacing and 24px ruled plan separation inside one 28px-padded paper; 20px phone insets; all four plan headings and first tools visible at 1280x1100.",
+    "components": "Real installed shadcn/Base UI Button, Input and Skeleton; native account disclosure, language select and comparison-only radios; custom ruled lists instead of pricing cards or accordions.",
+    "colour": "Exact Pictures globals.css light/dark tokens and sibling accessible input alias; neutral active navigation, primary only for selected plan and return action. No new palette.",
+    "motion": "Precise registration: plan rows travel 12px with 45ms offsets, rule grows from .45 to 1; 300ms expressive ease(.23,1,.32,1), 180ms controls. Reduced/still removes travel and repetition; hidden tabs pause CSS effects."
+  },
+  "evidence": {
+    "layout": [
+      ".consultation",
+      ".paper",
+      ".plan-row",
+      ".tools"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".plan-index",
+      ".return-link"
+    ],
+    "typography": [
+      "#page-title",
+      ".plan-heading h2",
+      ".price",
+      ".unavailable"
+    ],
+    "motion": [
+      ".plan-row",
+      ".rule-trace",
+      ".plan-index a"
+    ]
+  }
+}

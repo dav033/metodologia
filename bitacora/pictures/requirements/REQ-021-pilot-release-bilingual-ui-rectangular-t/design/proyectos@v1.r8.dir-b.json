@@ -1,0 +1,43 @@
+{
+  "name": "Bastidor",
+  "axes": {
+    "concept": "Bastidor: a saved installation is brought back onto its physical frame, with balloon clusters, Backing and a rectangular table. Projects are scenes to resume rather than dashboard statistics.",
+    "layout": "A broad front-elevation stage and a narrower project caption form a 1.6:1 composition; a four-thumbnail ribbon sits below. Below 768px the stage, caption and two-column ribbon stack. Editor has a 280px summary; import uses a 1.3:1 consent spread.",
+    "navigation": "Choose projects directly in the thumbnail ribbon or with labelled previous/next buttons; the selected title and Continue action stay beside the stage. The header returns to Projects. There is no sidebar, floating dock, drag dependency or tool-station rail. Native preview and language selectors remain visible.",
+    "typography": "Shared system sans: 30px collection title, 34px light-weight selected project title, 24px editor title, 22px dialog title and 14–15px working text. Metadata is 12–13px. Project titles wrap freely on phone; no display face or decorative KPI numerals.",
+    "density": "One selected project receives a 325px stage and 40px separation from its caption. Desktop structure uses 24px outer padding, phone 20px. Dialogs have 28/24px padding and controls are at least 44px tall. Four thumbnail objects form a compact ribbon rather than equal information cards.",
+    "components": "Installed shadcn/Base UI Button, Input and Skeleton; shadcn Dialog/AlertDialog roots and titles with real Animate UI Portal/Backdrop/Popup composed locally to pass profile-aware enter/exit transitions. Custom SVG installation, stage, thumbnail ribbon, scene summary and native filters. No stand-in HTML fallback.",
+    "colour": "Existing Pictures roles: light #faf9fc/#ffffff/#1c1425 and primary #6d3fe0; dark #0b0c10/#16181f/#f4f5f7 and primary #9479ff with #120b24 text. Controls use readable project text tokens #766c85/#8a91a0 as edges. Lavender/pink in the scene represent materials; green/amber/red carry written save/recovery status.",
+    "motion": "Spatial spring brings the selected stage 39.6px sideways with -5deg perspective rotation and .98 scale in expressive mode; its rig registers 30px/3deg over 832ms, balloon cluster drops 24px/7deg over 936ms, and table settles 18px over 650ms. Ribbon enters with 45ms offsets and lifts 5px on hover. Controls use 200ms; dialogs use the profile ease (420/220/140ms). Reduced motion and still=1 remove travel and use zero-duration modal backdrop/popup transitions; CSS pauses on hidden tabs."
+  },
+  "evidence": {
+    "layout": [
+      ".project-stage",
+      ".stage-frame",
+      ".stage-caption",
+      ".ribbon",
+      ".editor-layout",
+      ".import-layout"
+    ],
+    "navigation": [
+      ".thumb-nav",
+      ".stage-counter",
+      ".mast-actions",
+      "#owner"
+    ],
+    "typography": [
+      ".heading h1",
+      ".stage-caption h2",
+      ".editor-head h1",
+      ".preview-card strong"
+    ],
+    "motion": [
+      ".stage-motion",
+      ".scene-art .rig",
+      ".scene-art .balloon-group",
+      ".scene-art .table-assembly",
+      ".preview-card",
+      ".preview-picture"
+    ]
+  }
+}

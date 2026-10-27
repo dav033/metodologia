@@ -1,0 +1,40 @@
+{
+  "name": "Mesa de acreditación",
+  "axes": {
+    "concept": "An event accreditation desk run like a newsroom: every person who enters Pictures is a named line in a ruled register, every permission is written down, every invitation is a single-use pass. A foil balloon hangs over the desk as the only object.",
+    "layout": "Editorial masthead, oversized condensed title with a tabular counter, a heavy ink rule, then the working surface: a full-width five-column account register with the chosen person's actions docked in a horizontal rail above it. Roles use an asymmetric index + permission sheet; sign-in screens split into a typographic spread (left) and a ruled form sheet (right).",
+    "navigation": "Two baseline text tabs (Cuentas, Roles) under the ink rule with a drawn underline on hover, a mono running head on the right, and a corner account summary (name + role) that opens Mi cuenta and sign out. Row actions are explicit named buttons in the working rail; no sidebar, dock or cards.",
+    "typography": "Bricolage Grotesque Variable ExtraBold at 76% width as display (108px admin titles, 112px sign-in spreads, 58px phone), 34px condensed section heads; Instrument Sans Variable 13–17px for working copy; JetBrains Mono Variable 12px tabular for running heads, counters and timestamps. Three families, extreme scale contrast between title and data.",
+    "density": "Dense register: six realistic people per screen in 20px-padded ruled rows (name/email/company stack, role, state, last access, action). Square 2px corners, 44px controls, 1px rules and one 3px ink rule; 48px desktop gutters, 20px phone.",
+    "components": "Real shadcn Button, Input and Skeleton; Animate UI Checkbox, Dialog and AlertDialog restyled square; native selects for filters and notice language; custom ruled register, working rail, permission sheet with check/cross proof, one-use pass receipt stamp and CSS foil balloon.",
+    "colour": "Proposal: sage paper #edf1ec with ink #111c17 and one viridian spot #0a5a4c used only on the primary action, focus ring, counter, chosen-row bar and register underline; dark: forest night #0d1412 / #17211d with mint spot #83d8bf. Leaf green, amber and red carry named states only. Pictures semantic role names are retained; this palette is an exploration, not a token migration.",
+    "motion": "Typesetter registration grammar, one easing family cubic-bezier(.76,0,.24,1): title slides 22px and un-skews from -7deg; the ink rule and the register underline draw in with scaleX; the whole sheet cuts in 28px on every view change; rows register 14px with 35ms offsets and status ticks grow after them; the working rail docks 9px; notices and the pass receipt stamp in from -2deg; dialogs cut sideways 22px; the foil balloon swings in (-12 to +13deg) then sways ambiently every 7.2s (paused in hidden tabs); buttons lift 2px on hover and press 1px; tab underline draws on hover. Expressive 580ms, natural 340ms, subtle 210ms; controls 160/140/90ms. Reduced motion and ?still=1 remove all travel and the infinite sway, leaving final content and immediate feedback."
+  },
+  "evidence": {
+    "layout": [
+      ".headline",
+      ".register-head",
+      ".working-line",
+      ".person",
+      ".filters"
+    ],
+    "navigation": [
+      ".desk-nav",
+      ".nav-item",
+      ".account-menu summary"
+    ],
+    "typography": [
+      "h1",
+      ".person-name",
+      ".mono",
+      ".brand"
+    ],
+    "motion": [
+      "h1",
+      ".sheet",
+      ".foil",
+      ".person",
+      ".working-line"
+    ]
+  }
+}

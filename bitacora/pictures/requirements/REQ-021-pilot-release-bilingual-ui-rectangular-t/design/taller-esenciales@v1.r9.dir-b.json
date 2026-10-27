@@ -1,0 +1,42 @@
+{
+  "name": "Órbita de montaje",
+  "axes": {
+    "concept": "Un escenario de evento en preparación: la mesa ocupa la pista elíptica, el Backing forma el fondo y tres paletas de trabajo orbitan el montaje.",
+    "layout": "Escenario elíptico grande a la izquierda y plano operativo recortado a la derecha; selección de ocho formas o siete Backing en rieles inferiores. A 760 px el escenario precede al plano sin navegación fija.",
+    "navigation": "Tres paletas inclinadas Mesas, Backing y Salida GLB distribuidas alrededor de la pista. Editar mesa es un punto sobre el objeto; Lista vive en la cabecera y en el inspector. Todos son botones con teclado.",
+    "typography": "Liberation Serif Italic embebida como Air, display 52–90 px y medidas de 56 px, emparejada con Adwaita Sans embebida como Workshop, controles y datos de 13–24 px.",
+    "density": "Escenario abierto de 440 px; plano con 28 px de relleno y esquina de 60 px; rieles compactos de formas con 12 px interiores; controles de 44–46 px. Teléfono con 20 px de margen y 22 px interiores.",
+    "components": "shadcn/Base UI Button Input Skeleton reales; Animate UI Dialog real con transiciones del perfil; dibujo SVG propio de globos de látex y foil, mesa y sillas, paletas orbitales y lista rayada. Normalización y distribución de sillas existentes empaquetadas en lectura.",
+    "colour": "Verde frío #e3eeea / tinta #173e32 con una acción cereza #a51b34; oscuro verde profundo #0c2b23 / #123c30, texto #f0f7f1 y acciones rosa #ff9caf. Plata de foil y látex cereza son materiales de escena, sin morado por defecto.",
+    "motion": "Tensión y asentamiento espacial: pista giratoria, estructura que corrige inclinación, globos que se inflan, mesa que se asienta en diagonal, paletas con torsión escalonada, plano en perspectiva, tipos que se enderezan, piezas que se registran y foil suspendido. Cubic-bezier(.22,1.35,.45,1), 760 ms expresivo / 460 natural / 240 sutil, controles 180/150/110 ms, bucle foil 7 s; quieto y reduced eliminan viaje y bucles."
+  },
+  "evidence": {
+    "layout": [
+      ".assembly",
+      ".orbit-stage",
+      ".working-plane",
+      ".shape-grid"
+    ],
+    "navigation": [
+      ".orbit-nav",
+      ".nav-mesas",
+      ".nav-backing",
+      ".nav-export",
+      ".table-action"
+    ],
+    "typography": [
+      ".display",
+      ".plane-title",
+      ".big-measure"
+    ],
+    "motion": [
+      ".floor",
+      ".rig",
+      ".balloons",
+      ".table-unit",
+      ".orbit-nav .nav-backing",
+      ".working-plane",
+      ".foil-shine"
+    ]
+  }
+}

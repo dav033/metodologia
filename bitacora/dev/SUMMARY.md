@@ -1,3 +1,7 @@
+2026-10-27: Planning navigation optimized in session 01a17e87; live SP-1/SP-2 requests improved from 2.19–2.41 s to 0.62–0.74 s by reusing per-request state. 119 tests and scoped Ruff passed; first measured browser click still took 2.60 s, later clicks ~0.83 s.
+
+2026-10-27: Pictures REQ-021 supervision resumed from RELAY-20261027-130236 (session 01a17e87). T1.1–T1.7 completed (7/9 stage tasks); T1.3 att-0005 finished its eight verification checks. T1.8 blocked on decision T1.8:1: five high security findings and rework of five accepted tasks exceeds threshold 3; owner decision pending, Scheduler/watcher alive, no open decisions or blocked tasks. SP-2 confirmed but outside the active stage; SP-14 direction C chosen and its Designer finalising; SP-3 Backing modelling assumption awaits the owner. Chosen designs no longer show discarded options; pending SP-2 A iteration now shows one preview without the old canonical, and awaits selection. Web service restarted with owner authorization; live SP-2 page and 62 tests checked. SPEC Inputs rows already corrected. Existing dirty/staged work preserved; no code changes, commits or pushes.
+
 2026-10-25 23:20: Pictures advisor release a9f3d6e5 (portion-aware quantities + Happia service explorer with editable proposal) live on Vercel and the VPS, acceptance 33/33 on both. Gemini key 0770980b shared everywhere (P-195). Computer suspended by owner order.
 2026-10-25 22:35: Pictures REQ-020 DONE: advisor on main (f8f8b9e8), one login, live on Vercel and the VPS, acceptance 25/25 on both. Gemini now uses one key (0770980b) everywhere; cap/plan unknown (owner to check ai.studio/spend, see cerebro note claves-gemini.md, P-194/P-195). Follow-ups: physical-phone check (D-066), key separation, P-193 venues in Happia, P-189/P-190 catalogue data.
 2026-10-25 22:20: Pictures REQ-020 advisor released to main (f8f8b9e8): Vercel + VPS serve it, one login (original Demo Decoración), VPS acceptance 25/25. Vercel/local AI blocked by the shared Gemini key's monthly spending cap (P-194, owner action). REQ-020 stays open until Vercel acceptance reruns.
@@ -11,6 +15,11 @@ _What this project is and who it is for._
 Last confirmed with owner: YYYY-MM-DD (set only after the owner confirms; otherwise write `not yet confirmed`).
 
 ## Current state
+2026-10-26: Designer-kit relay continued in session01a17b42. Real-library gallery and three-direction/fresh owner-choice
+pipeline implemented and independently reviewed; real isolated Designers and rendered audits passed. Acceptance135/135
+passed before a stronger hot-switch Motion regression exposed P-213. Further correction awaits the owner's answer under
+AGENTS §1 after two failed attempts. Canonical decision/evidence: metodologia D-136 and briefs/designer-kit-v2.notes.md.
+
 2026-10-25: Pictures REQ-020 r22 at 29/32: T15.11 live Happia catalogue released; T15.9 emulated mobile acceptance (D-066) running, then T15/T15b; advisor passwords changed to owner-chosen values on Vercel + VPS (verified). david-ui fully wiped incl. GitHub repo; REQ-001 r10 (1.3.0) awaits owner inputs 2–5 and approval.
 
 2026-10-24 14:45: Pictures REQ-020 resumed on v2 (only active run, 28/31). david-ui wiped by owner order (david-ui D-002); GitHub repo pending `delete_repo` scope; REQ-001 being replanned on schema 1.3.0.

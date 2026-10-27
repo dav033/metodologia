@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Candidate 1 · Escenario de inflado (cuentas-admin r8 dir-b)</title>
+<style>
+body{margin:0;padding:24px;background:#d9e0da;font:13px/1.35 system-ui,sans-serif;color:#10241b;display:flex;gap:24px;flex-wrap:wrap}
+.t{width:420px;height:270px;border-radius:14px;overflow:hidden;background:#eef2ec;box-shadow:0 1px 0 #a9b7ad;position:relative;display:grid}
+.cap{width:100%;font-weight:600}
+/* sign-in: stage at left, form at right */
+.s1{grid-template-columns:1.15fr 1fr}
+.stage{background:#123a2c;color:#f3f7f2;position:relative;padding:18px;overflow:hidden}
+.stage b{font:800 34px/0.95 system-ui;letter-spacing:-.02em;display:block;margin-top:58px}
+.stage i{position:absolute;border-radius:50% 50% 48% 52%/55% 55% 45% 45%;background:radial-gradient(circle at 35% 30%,#ffc38f,#f76707 60%,#b8460b)}
+.stage i:after{content:"";position:absolute;left:50%;top:100%;width:1px;height:60px;background:#7fa491}
+.floor{position:absolute;left:0;right:0;bottom:0;height:42px;background:repeating-linear-gradient(90deg,#0d2c21 0 18px,#164536 18px 20px)}
+.form{background:#fff;margin:22px 18px;border-radius:12px;padding:16px;display:grid;gap:9px;align-content:start}
+.f{height:24px;border:1.5px solid #6f8277;border-radius:8px}
+.btn{height:28px;border-radius:999px;background:#b8460b;color:#fff;display:grid;place-items:center;font-weight:700}
+/* admin: gauge column + inflated panel */
+.s2{grid-template-columns:118px 1fr}
+.col{background:#123a2c;color:#f3f7f2;padding:12px 10px;display:grid;align-content:start;gap:8px}
+.gauge{width:88px;height:88px;border-radius:50%;border:3px solid #f3f7f2;position:relative;margin:4px auto}
+.gauge:after{content:"";position:absolute;left:50%;top:50%;width:36px;height:3px;background:#ff8f3f;transform-origin:0 50%;transform:rotate(-38deg)}
+.col span{display:block;padding:3px 6px;border-radius:999px}.col .on{background:#ff8f3f;color:#1d0c02;font-weight:700}
+.panel{margin:14px;border-radius:22px 22px 22px 6px;background:#fff;padding:14px;display:grid;gap:7px;align-content:start;transform-origin:0 100%}
+.panel h4{margin:0;font:800 19px/1 system-ui}
+.row{display:grid;grid-template-columns:22px 1fr 54px 40px;gap:8px;align-items:center;border-top:1px solid #d4ddd6;padding-top:6px}
+.dot{width:20px;height:24px;border-radius:50% 50% 46% 54%/56% 56% 44% 44%;background:#f76707}
+.dot.g{background:#2f8f6b}.dot.k{background:#8a9a90}
+.pill{font-size:11px;border:1px solid #6f8277;border-radius:999px;text-align:center}
+</style></head><body>
+<p class="cap">Candidate 1 — Escenario de inflado: a bottle-green stage holds tethered latex; a helium-gauge needle navigates; panels inflate from the nozzle corner.</p>
+<div class="t s1" aria-label="Sign-in thumbnail">
+  <div class="stage"><i style="width:46px;height:54px;left:150px;top:16px"></i><i style="width:30px;height:36px;left:196px;top:44px"></i>
+    <b>Entra<br>al taller</b><div class="floor"></div></div>
+  <div class="form"><strong>Correo</strong><div class="f"></div><strong>Contraseña</strong><div class="f"></div><div class="btn">Entrar</div></div>
+</div>
+<div class="t s2" aria-label="Accounts thumbnail">
+  <div class="col"><div class="gauge"></div><span class="on">Cuentas</span><span>Roles</span><span>Mi cuenta</span></div>
+  <div class="panel"><h4>Cuentas</h4>
+    <div class="row"><i class="dot"></i><span>Lucía Gómez · Plan 2</span><span class="pill">Activa</span><span>⋯</span></div>
+    <div class="row"><i class="dot g"></i><span>Andrés Rojas · Empleado</span><span class="pill">Activa</span><span>⋯</span></div>
+    <div class="row"><i class="dot k"></i><span>María Pérez · Plan 1</span><span class="pill">Inactiva</span><span>⋯</span></div>
+    <div class="btn" style="width:120px">Invitar persona</div></div>
+</div>
+</body></html>

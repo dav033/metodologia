@@ -1,0 +1,38 @@
+{
+  "name": "Control de conjunto",
+  "axes": {
+    "concept": "Operacional: añadir, medir y verificar cantidades en el mismo Taller existente.",
+    "layout": "Riel de 60 px, catálogo lateral de 310 px, visor central y un inspector de 300 px; catálogo con desplazamiento propio e inspector de altura natural en escritorio.",
+    "navigation": "Índice compacto de los cinco grupos junto a búsqueda por nombre; riel Añadir/Piezas/Plantillas/Sala conservado; lista en diálogo.",
+    "typography": "Geist original: título 18 px, tarjetas 13 px y medidas 28 px con números tabulares; las cantidades son el segundo nivel de lectura.",
+    "density": "Tarjetas de creación en dos columnas; catálogo compacto e inspector de altura natural, sin convertir el Taller en una página de resumen.",
+    "components": "Button/Input/Field/Card/Alert/Dialog reales del kit; tarjetas con dibujo de pieza, formulario agrupado por Mesa y Sillas, tabla semántica de cantidades.",
+    "colour": "Tokens Pictures originales en ambos temas, como cuentas-admin: superficies neutrales; acento para acción, selección y foco; aviso/error/éxito semánticos.",
+    "motion": "Cortes precisos con ease-out (.23,1,.32,1): cabecera 480 ms, catálogo e inspector 300 ms, controles 160 ms; regla y cifras se asientan, exportación sólo anima mientras prepara; Quieto y reduced motion conservan resultados."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".catalog-grid",
+      ".inspector",
+      ".scene-facts"
+    ],
+    "navigation": [
+      ".tool-rail",
+      ".group-index",
+      ".header-actions"
+    ],
+    "typography": [
+      ".measure-line",
+      ".card-name",
+      ".scene-facts strong"
+    ],
+    "motion": [
+      ".product-header",
+      ".catalog-card",
+      ".ruler",
+      ".quantity",
+      ".group-index [aria-pressed=\"true\"]"
+    ]
+  }
+}

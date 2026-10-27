@@ -1,0 +1,22 @@
+{
+ "request": "REQ-021:r1:att-0001:verify",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "Los checks de esquema no tuvieron veredicto: recurso externo no disponible",
+ "origin": "El verificador ejecuta `npm run cuentas:test-esquema` en un sandbox con entorno vacío, salvo las variables de su archivo `verifier.env_file`. Los tres checks necesitan la base de datos de pruebas REQ-021 (`PICTURES_REQ021_DATABASE_URL`, criterio 3), y el sistema devolvió `CHECK_UNAVAILABLE: A declared external resource or trusted authorization is unavailable.` No hay fallos de intentos ni salida de npm que apunte a la migración 037 o al código de T1.1, así que el problema viene del entorno del verificador. La evidencia no dice qué variable falta ni si la base rechazó la conexión.",
+ "steps": [
+  "Revisa `~/.config/metodologia/verifier-pictures.env`: debe contener `PICTURES_REQ021_DATABASE_URL` apuntando a la base de pruebas REQ-021 (y `APP_ENV=test` si es una base de CI). Añade lo que falte.",
+  "Comprueba a mano que la base responde ejecutando `npm run cuentas:test-esquema -- --test-name-pattern=migracion` con esa variable exportada.",
+  "Rechaza con `review_fail` para que T1.1 se reintente con el entorno corregido. No apruebes a mano sin que los tres checks hayan pasado."
+ ],
+ "option": "review_fail",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-27T12:19:43",
+ "seconds": 15.4
+}

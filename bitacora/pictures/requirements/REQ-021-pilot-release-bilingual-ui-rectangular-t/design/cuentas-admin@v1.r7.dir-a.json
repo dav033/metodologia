@@ -1,0 +1,40 @@
+{
+  "name": "Registro de acceso",
+  "axes": {
+    "concept": "An operational register for the people who imagine, calculate and build decorations: who can enter, and which tools they can use.",
+    "layout": "An asymmetric 232px editorial margin plus a fluid working ledger, separated by 48px; account forms and their footers share the working-column left edge. The margin becomes a compact heading above content below 768px.",
+    "navigation": "Three text entries in the editorial margin (Cuentas, Roles y permisos, Mi cuenta), with a neutral active baseline; a named account menu in the masthead. Phone navigation becomes one in-flow horizontal row, not a drawer.",
+    "typography": "Arial/system sans, 34px compact two-line margin heading against a 24px task title; 13px ledger records and 12px metadata. Monospace is reserved for access times, notice versions and links.",
+    "density": "Six accounts across six table columns on desktop; flat ruled records instead of cards. Phone records retain company, role, state and last access in a labelled hierarchy. Forms use 22px group gaps and 44px inputs.",
+    "components": "Real shadcn/Base UI buttons and inputs, Animate UI-backed checkboxes, dialogs, alert dialogs and account dropdown; a custom semantic HTML ledger and typographic rail. Grouped permission checkboxes act as a tool-access receipt.",
+    "colour": "Existing Pictures light lavender-neutral canvas and near-black dark canvas, mapped to kit roles. Purple identifies the primary action and registration rule; green/amber communicate account state. Readable project text tokens also supply control edges.",
+    "motion": "Precise registration rather than elastic bounce: a left-origin rule sweep, 12px pane cut, 5px title lock and 7px row settling with 35ms successive delays, cubic-bezier(.76,0,.24,1). Profile-scaled entrance ~340ms expressive / 178ms natural / 113ms subtle; repeat hover/press stays 150–160ms. Reduced motion and still=1 show the same final content immediately."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".editorial-rail",
+      ".work-pane",
+      ".ledger",
+      ".section-head"
+    ],
+    "navigation": [
+      ".rail-nav",
+      ".rail-nav button[aria-current=\"page\"]",
+      ".account-trigger"
+    ],
+    "typography": [
+      ".editorial-rail h1",
+      ".section-head h2",
+      ".ledger td",
+      ".ledger time"
+    ],
+    "motion": [
+      ".registration-line",
+      ".ledger-row",
+      ".work-pane",
+      ".section-head h2",
+      ".btn svg"
+    ]
+  }
+}

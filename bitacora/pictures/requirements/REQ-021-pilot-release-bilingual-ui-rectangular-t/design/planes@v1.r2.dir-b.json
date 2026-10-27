@@ -1,0 +1,33 @@
+{
+  "name": "Paneles de consulta",
+  "axes": {
+    "concept": "One public plan reference organised as a spatial consultation sheet; comparison selection is local, reversible and unrelated to account assignment.",
+    "layout": "A 180px plan index beside one rounded sheet of four horizontal plan rows; each row pairs identity/price with its full tool list. The extra selection view uses a two-by-two set of full plan options.",
+    "navigation": "Preserved Pictures/Sempertex header, horizontal comparison/selection navigation, plan-name anchor index, existing sign-in/account links and explicit return to full comparison.",
+    "typography": "Existing embedded Geist Sans: 24px page title and prices, 20px plan names, 14px tools, 12px availability/monthly metadata; tabular prices. No new family or display treatment.",
+    "density": "One shared comparison surface with 28px row insets and 24px tool spacing; full lists rather than disclosures. Tablet retains a 200px identity column and one tool column; phone stacks each row.",
+    "components": "Real installed shadcn/Base UI Button, Input and Skeleton, production ring-and-dot mark, native language selector, details-based account disclosure and native radio selection inside rounded sibling panels.",
+    "colour": "Exact Pictures light/dark semantic tokens, including acento/sobre-acento for primary controls and selection; neutral section navigation and readable texto-suave availability labels. No palette changes.",
+    "motion": "Alternating horizontal row registration, vertically settling selection panels, a short selected-summary arrival and reversible hover/press response. Expressive 520ms/65ms stagger, 180ms controls; profile and reduced/still parity."
+  },
+  "evidence": {
+    "layout": [
+      ".compare-layout",
+      ".paper",
+      ".plan-row"
+    ],
+    "navigation": [
+      ".plan-index",
+      ".section-nav"
+    ],
+    "typography": [
+      ".page-title",
+      ".price",
+      ".identity h2"
+    ],
+    "motion": [
+      ".plan-row",
+      ".plan-index a"
+    ]
+  }
+}

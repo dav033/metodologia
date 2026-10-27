@@ -1,10 +1,10 @@
 # Index — pictures
 
-_Generated 2026-10-26 21:57 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-27 15:59 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/pictures) · [graph](http://127.0.0.1:8765/p/pictures/graph)  
-**Last activity:** 2026-10-26
+**Last activity:** 2026-10-27
 
 ## Workspace
 
@@ -20,6 +20,7 @@ _Generated 2026-10-26 21:57 by `bitacora.py index`. Do not edit by hand._
 - REQ-016: executor finished — review & merge
 - REQ-017: question round waiting for answers
 - REQ-017: executor finished — review & merge
+- REQ-022: question round waiting for answers
 
 ## Requirements
 
@@ -46,6 +47,7 @@ _Generated 2026-10-26 21:57 by `bitacora.py index`. Do not edit by hand._
 | [REQ-019](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/SPEC.md) | Taller 3D stuck viewer fix, mobile usability and React Bits UI polish | `in-progress` | [launched](requirements/REQ-019-taller-3d-stuck-viewer-fix-mobile-usabil/PLAN.md) |  |
 | [REQ-020](requirements/REQ-020-happia-chat-v2-event-advisor-that-ends-i/SPEC.md) | Happia chat v2 event advisor that ends in a brief | `done` | — |  |
 | [REQ-021](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/SPEC.md) | Pilot release: bilingual UI, rectangular tables, backing, 3D space, admin roles, AI spend, save projects and decorations, Blender/Illustrator export, editable quartets and modules | `ready` | [draft](requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/PLAN.md) |  |
+| [REQ-022](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/SPEC.md) | Plans catalogue: subscription tiers section (Free, 20k, Designer, Designer Max) | `dropped` | [draft](requirements/REQ-022-plans-catalogue-subscription-tiers-secti/PLAN.md) | round open |
 
 ## Top pending (urgency, then complexity)
 
@@ -59,16 +61,16 @@ _Generated 2026-10-26 21:57 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-076 — REQ-021 SP-14 selected visual direction: Pliegues de consulta (c) · 2026-10-27
+- D-075 — REQ-021 SP-2 selected visual direction: Parte de acceso (a) · 2026-10-27
 - D-074 — REQ-021 SP-2 sign-in refusal, password-session continuity and safe fallback · 2026-10-26
 - D-073 — REQ-021 accounts model and account rules (SP-1/SP-2, rounds 6–8) · 2026-10-26
 - D-072 — REQ-021 pilot: one plan with everything, written by a dedicated Planner; cut order if time is short · 2026-10-26
-- D-071 — 2026-10-26 · REQ-020 advisor never adds assembly/transport by default; desserts come before logistics
-- D-070 — 2026-10-26 · REQ-020 advisor: summary and proposal hide when the customer replies; voice recording is inline
 
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W5](2026-10/W5/WEEK.md): [26](2026-10/W5/2026-10-26.md)
+  - [W5](2026-10/W5/WEEK.md): [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md)
   - [W2](2026-10/W2/WEEK.md): [11](2026-10/W2/2026-10-11.md), [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

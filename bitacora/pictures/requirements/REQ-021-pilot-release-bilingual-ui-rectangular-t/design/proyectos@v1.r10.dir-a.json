@@ -1,0 +1,19 @@
+{
+  "name": "Pliego — archivo de montaje",
+  "axes": {
+    "concept": "A decorator's folded installation record: reopen the complete balloon installation, not a thumbnail detached from its ownership and save state. Foil seams and a ruled production register connect the working information to Sempertex materials.",
+    "layout": "A narrow 154px index beside a broad continuous register. A large serif noun anchors the upper left; the named row unfolds in place into a scene plate and two-column contents slip. Taller uses a broad scene and narrow inventory; browser import is a source ticket beside consent. At 760px the index becomes three in-flow stations and record metadata reorders below the name.",
+    "navigation": "A left in-flow vertical Archivo / En el Taller / Del navegador index, changing to a three-station strip on phone. Project names unfold context; separate Abrir/Consultar buttons enter the owned editor or foreign read-only view. No fixed bottom belt, orbiting palettes, carousel or permanent hero inspector.",
+    "typography": "Embedded local DejaVu Serif Condensed Regular as Archive at 57–84px for the editorial noun and 25–36px for content headings. Embedded Adwaita Sans as Work at 13–19px carries actual project names and controls; embedded Liberation Mono as Measure at 11–14px registers dates and revisions. Dark graphite typography stays fully opaque during motion.",
+    "density": "Compact 108px ruled metadata rows, an intentionally expanded first record, square 2px control corners and no project-card grid. Desktop main inset 38px and phone inset 20px; source ticket inset 26/22px, modal inset 28/24px. Actions meet a 44px minimum, with real names, owners, timestamps and revisions visible together.",
+    "components": "Real installed shadcn/Base UI Button, Input and Skeleton; Animate UI Base UI Dialog and AlertDialog with explicit cancellation and focus management. Custom inline SVG scene plate, ruled project records, folded source ticket, foil seam and a native consent checkbox with authored checked/unchecked appearance in both themes. No HTML fallback kit.",
+    "colour": "Proposed Pictures semantic role mapping: cold stock #e8eceb and #f8faf9, graphite #202c2b, signal orange #a43800 for the primary action. Dark evergreen stock #192522/#24332e, pale ink #f2f6f4 and peach-orange #ffb386 actions. Silver foil and orange latex belong to the illustrative installation. Production purple tokens are read-only and not changed.",
+    "motion": "Mechanical fold/register grammar: cubic-bezier(.86,0,.14,1), expressive 640ms registration, 45ms row offsets, 180ms controls; title typesetting, lateral record sequencing, perspective unfolding, plate rise, table registration, latex seating, foil's seven-second stepped drift, rule extension, feedback stamp, source-ticket straightening, empty outline settlement, save rotation and scroll registration. Natural 420/150ms, subtle 220/120ms. Reduced/still removes travel, loops and transitions; offscreen/hidden suspension applies to ambient foil."
+  },
+  "evidence": {
+    "layout": [".product-frame", ".register", ".unfold", ".workspread", ".import-layout"],
+    "navigation": [".index nav", ".index button[aria-current=page]", ".record-name button", ".open-btn"],
+    "typography": [".display", ".record-name h2", ".date-tab", ".scene-spec h3"],
+    "motion": [".display", ".record", ".unfold", ".drawing", ".scene-table", ".foil", ".fold-mark", ".source-ticket"]
+  }
+}

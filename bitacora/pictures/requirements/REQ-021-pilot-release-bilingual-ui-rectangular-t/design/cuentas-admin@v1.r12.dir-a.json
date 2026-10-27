@@ -1,0 +1,40 @@
+{
+  "name": "Parte de acceso",
+  "axes": {
+    "concept": "An operational access register: invited accounts, assigned role, access state and the next management action. No marketing panels or plan promotion.",
+    "layout": "Compact Pictures/Sempertex header, sober 24px page title, preserved horizontal route rule and one full-width ruled accounts register. Roles retain the selector and grouped permission sheet. No annotation rail, material card or decorative account counter.",
+    "navigation": "Preserved neutral horizontal Cuentas / Roles y permisos / Mi cuenta navigation, contextual account dialogs and named account disclosure. Invitation-only access has no registration route. Planning selectors remain outside the product shell.",
+    "typography": "Production Geist Sans and Geist Mono embedded from the existing local build. Page title 24px, section titles 20px, body 14–16px and metadata 11–13px; no display family or hero. ES is the initial language; EN appears through the language selector.",
+    "density": "Preserved 24px account-row padding, 28px desktop / 20px phone paper insets, 32px panels, 24px inset surfaces, 18px inputs, 8px checkboxes and pill controls/status chips. The account register uses the width released by the removed sidebar.",
+    "components": "Installed shadcn/Base UI Button, Input, Checkbox, Skeleton, Dialog and AlertDialog, composed as account rows and permission fieldsets. Production ring-and-dot mark; rounded panels, semantic pill statuses and neutral navigation. Dialog close text follows ES/EN.",
+    "colour": "Exact Pictures globals.css palette mapped as in proyectos@v1: light #faf9fc / #ffffff with #6d3fe0 actions; dark #0b0c10 / #16181f with #9479ff actions and #120b24 foreground. Existing success/warning/error tokens; input edges alias texto-tenue. No exploration palette.",
+    "motion": "Preserved kinetic registration: cubic-bezier(.76,0,.24,1), 480ms paper/row/rule/status registration, 55ms row offsets and 180ms controls, natural 300/140ms and subtle 160/100ms. Skeleton scan and hover/press arrow shift remain; retired rail/foil motion is removed. Reduced/still disables movement and hidden tabs pause animation."
+  },
+  "evidence": {
+    "layout": [
+      ".heading",
+      ".workspace",
+      ".register-head",
+      ".person-row",
+      ".role-layout"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".user-menu summary",
+      ".filterbar"
+    ],
+    "typography": [
+      ".heading h1",
+      ".paper h2",
+      ".identity strong",
+      ".access-time"
+    ],
+    "motion": [
+      ".paper",
+      ".person-row",
+      ".route-nav",
+      ".filterbar",
+      ".btn"
+    ]
+  }
+}

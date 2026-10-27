@@ -1,0 +1,37 @@
+{
+  "name": "Bambalinas",
+  "axes": {
+    "concept": "Bambalinas: a decorator’s fly system. A complete balloon installation hangs from a gantry; project names are counterweights that bring one scene into working position.",
+    "layout": "A broad working title and collection search precede a full-width gantry. A 57% suspended scene and 43% stepped counterweight directory share one beam; phone stacks scene, detail, project names and import recovery. Workshop replaces the directory with a narrow scene/save slip.",
+    "navigation": "Named project counterweights are actual buttons in a navigation landmark, with aria-pressed selection and a separate explicit Open action. Authorized staff use collection/owner selectors. The top return link and a scoped import strip provide exits without a sidebar, orbit, carousel or thumbnail ribbon.",
+    "typography": "Embedded DejaVu Serif Condensed Bold upright as Marquee, 48–88px display and 27–34px scene headings; embedded Liberation Sans regular/bold for working text, Liberation Mono for loading counts, revision tags and stage captions. The title stretches vertically into registration.",
+    "density": "40px outer desktop margin, 40px stage gap, 22px counterweight padding, 44px minimum actions, 46px fields; 20px phone margins and a single column below 768px. Rectilinear scene plates contrast with one rounded counterweight end.",
+    "components": "Real installed shadcn/Base UI Button, Input, Skeleton and Animate UI Checkbox, Dialog, AlertDialog; Motion profile springs seat a custom SVG latex/foil scene. Custom gantry, cables, stepped counterweight buttons and save thread are product-world composition, not snippets presented as installed library components.",
+    "colour": "Proposal mapped onto Pictures semantic roles: cool stage grey #e8eceb, opaque white-green #f8faf8, ink #232c28, vermilion action #b62913 and silver-sage foil. Dark stage #14211b/#20342a, text #f0f7f0, peach foil-reflection action #ffb3a0. Material gradients exist only inside the balloon illustration; no text is on a gradient.",
+    "motion": "Fly-system spring grammar: beam pulley turn, suspended perspective descent, staggered upward counterweights, vertical display tension, tethered latex breathing, foil torsion, short hover lever/press compression, notice seating, save-thread tension and success stamp. Expressive 760ms stage/65ms stagger/180ms controls; natural 460/40/160; subtle 240/20/120. Finite travels retain full-opacity text. Reduced motion, still=1 and Quieto remove travel/ambient loops, and hidden/offscreen content pauses."
+  },
+  "evidence": {
+    "layout": [
+      ".gantry",
+      ".stage-side",
+      ".cue-stack"
+    ],
+    "navigation": [
+      "nav.cue-stack",
+      "button.cue",
+      ".import-strip"
+    ],
+    "typography": [
+      "h1.display",
+      ".scene-title",
+      ".cue-name"
+    ],
+    "motion": [
+      ".scene-plane",
+      ".cue",
+      ".display",
+      ".balloon-raft",
+      ".foil-piece"
+    ]
+  }
+}

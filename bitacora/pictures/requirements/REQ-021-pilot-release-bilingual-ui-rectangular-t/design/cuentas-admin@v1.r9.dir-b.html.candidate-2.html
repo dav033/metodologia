@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boceto B2 · Altímetro · cuentas-admin r9</title>
+<style>
+/* Thumbnail candidate 2: the screens are altitudes inside a tall venue; a helium gauge on the left is the
+   navigation and moving between screens lifts or lowers the whole stage. Both themes, reflows at 640px. */
+:root{--bg:#eef3ff;--card:#fff;--ink:#0c1638;--mut:#46507a;--cob:#1f3fd6;--tan:#ff6b2c;--edge:#7b86a8}
+@media (prefers-color-scheme:dark){:root{--bg:#070b24;--card:#10173a;--ink:#eef1ff;--mut:#a9b3da;--cob:#8ea2ff;--tan:#ff7a3d;--edge:#6b77a8}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+.sheet{display:grid;grid-template-columns:1fr 1fr;gap:28px;padding:28px;max-width:1100px;margin:auto}
+h1{grid-column:1/-1;margin:0;font:800 22px/1.1 system-ui}h1 small{display:block;font:500 13px system-ui;color:var(--mut);margin-top:6px}
+figure{margin:0;border:1px solid var(--edge);border-radius:18px;overflow:hidden}
+figcaption{padding:12px 16px;color:var(--mut);font-size:12.5px;border-top:1px solid var(--edge)}
+.stage{position:relative;height:300px;display:grid;grid-template-columns:64px 1fr}
+.gauge{position:relative;border-right:1px solid var(--edge);display:flex;flex-direction:column;justify-content:space-between;padding:18px 0;align-items:center}
+.gauge span{width:12px;height:12px;border-radius:50%;border:2px solid var(--mut)}.gauge span.on{background:var(--tan);border-color:var(--tan)}
+.tube{position:absolute;left:30px;top:18px;bottom:18px;width:2px;background:var(--edge)}
+.shaft{overflow:hidden;position:relative}
+.floors{animation:lift 4s cubic-bezier(.34,1.3,.64,1) infinite alternate}
+.floor{height:300px;padding:22px;display:grid;align-content:center;gap:8px}
+.floor b{font:800 20px system-ui}.floor i{display:block;height:9px;border-radius:4px;background:var(--edge);opacity:.45}
+.panel{background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:14px;display:grid;gap:8px}
+.cta{height:20px;border-radius:999px;background:var(--cob);width:40%}
+.cloud{position:absolute;right:16px;width:34px;height:40px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff9 0 12%,transparent 13%),var(--tan);animation:rise 5s linear infinite}
+@keyframes lift{to{transform:translateY(-300px)}}
+@keyframes rise{from{top:300px}to{top:-50px}}
+@media (max-width:640px){.sheet{grid-template-columns:1fr}.stage{grid-template-columns:44px 1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="sheet">
+  <h1>Candidato 2 · Altímetro <small>Cada pantalla es una altura del salón; un medidor de helio a la izquierda sube o baja el escenario.</small></h1>
+  <figure>
+    <div class="stage" aria-label="Boceto de acceso por alturas">
+      <div class="gauge" aria-hidden="true"><div class="tube"></div><span class="on"></span><span></span><span></span><span></span></div>
+      <div class="shaft"><div class="floors">
+        <div class="floor"><b>Iniciar sesión</b><div class="panel"><i></i><i style="width:70%"></i><div class="cta"></div></div></div>
+        <div class="floor"><b>Activa tu cuenta</b><div class="panel"><i></i><i></i><i style="width:50%"></i><div class="cta"></div></div></div>
+      </div><span class="cloud" aria-hidden="true"></span></div>
+    </div>
+    <figcaption>Acceso: el escenario sube un piso por paso (ingresar → activar → aviso); el globo suelto marca la subida.</figcaption>
+  </figure>
+  <figure>
+    <div class="stage" aria-label="Boceto de administración por alturas">
+      <div class="gauge" aria-hidden="true"><div class="tube"></div><span></span><span class="on"></span><span></span></div>
+      <div class="shaft"><div class="floor"><b>Cuentas</b><div class="panel"><i></i><i></i><i></i><i style="width:60%"></i></div></div></div>
+    </div>
+    <figcaption>Administración: Cuentas, Roles y Mi cuenta son pisos; el medidor vertical repite la columna lateral de otras herramientas.</figcaption>
+  </figure>
+</main>
+</body>
+</html>

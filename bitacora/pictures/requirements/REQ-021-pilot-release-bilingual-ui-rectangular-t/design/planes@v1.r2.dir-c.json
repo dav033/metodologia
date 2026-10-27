@@ -1,0 +1,39 @@
+{
+  "name": "Pliegues de consulta",
+  "axes": {
+    "concept": "Open consultation sheets: press a plan to highlight it for comparison, without editing catalogue facts or assigning an account plan. All tool lists remain visible.",
+    "layout": "Full-width horizontal sheets with a 248px identity/price column and a two-column tool list at 1100px and above. At 640–1099px the comparison becomes a two-by-two sheet grid; below 640px it becomes a single stack. The extra selection view uses a two-by-two grid from 640px.",
+    "navigation": "Preserved Pictures/Sempertex masthead and account disclosure; neutral horizontal Compare plans / Select to compare links, four jump anchors in the full comparison, and return to the complete comparison. Existing login and account entries retain /planes destinations.",
+    "typography": "Existing locally embedded Geist Sans and Geist Mono: 24px task heading, 20px plan names, 22px tabular prices, 14px tool labels, 12–13px availability and context. No display typography or new family.",
+    "density": "Open, content-sized sheets; 28px desktop, 24px tablet and 20px phone horizontal insets. Existing 32px panels and pill controls. Tablet tools use one text column per sheet rather than squeezed desktop columns.",
+    "components": "Installed shadcn/Base UI Button, Input and Skeleton recomposed into plan selection and the existing entry surfaces; native view/state/theme/motion/language selectors, native account disclosure, semantic article/list/link elements and Lucide check/arrow icons.",
+    "colour": "Exact Pictures light/dark semantic tokens. Neutral sheet surfaces and navigation; existing acento marks only comparison selection and actions; aviso identifies unavailable tools. Same source palette and dark primary foreground as sibling contracts.",
+    "motion": "Expressive open-sheet settling uses 440ms unfold with 45ms offsets and the existing ease-out curve; selected-label stamp and interruptible Motion spring on selection press. Controls respond in 180ms. Natural/subtle reduce timing; reduced motion and still remove travel and preserve all feedback; hidden tabs pause CSS animation."
+  },
+  "evidence": {
+    "layout": [
+      ".sheets",
+      ".plan-sheet",
+      ".plan-identity",
+      ".tool-list"
+    ],
+    "navigation": [
+      ".masthead",
+      ".route-nav",
+      ".plan-index",
+      ".back",
+      ".user-menu"
+    ],
+    "typography": [
+      ".heading h1",
+      ".plan-identity h2",
+      ".price",
+      ".availability"
+    ],
+    "motion": [
+      ".plan-sheet",
+      ".selection-mode .pick",
+      ".btn"
+    ]
+  }
+}

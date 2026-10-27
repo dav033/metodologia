@@ -1,0 +1,40 @@
+{
+  "name": "Índice y paneles",
+  "axes": {
+    "concept": "A continuous plan document with a spatial price index: compare the four monthly prices while reading every cumulative tool list.",
+    "layout": "One shared rounded paper, a sticky 264px plan index at left and ruled tool sections at right; one column below 761px, with all four price rows before the tool document.",
+    "navigation": "Four real in-page anchors in catalogue order; an active location follows scroll, anchors focus the corresponding heading, and return links restore the originating entry focus. Existing login and account disclosure each gain one Plans link.",
+    "typography": "Existing embedded Geist Sans and Geist Mono only; 24px page title, 20px section names, 24px desktop / 20px phone prices, 14px tools, 12px availability and cumulative labels.",
+    "density": "A calm index of 100px desktop rows / 72px phone rows beside compact two-column tools at 1101px and above; single-column tools at narrower widths. No feature carousel or collapsed benefits.",
+    "components": "Installed shadcn Button, Input and Skeleton; native account details and language select retained; custom anchor index and ruled sections recompose the sibling role-list/editor vocabulary.",
+    "colour": "Unchanged Pictures light/dark tokens. Neutral secondary fill locates the reading position; source accent appears on links and focus. Availability remains explicit muted text with a distinct outline icon.",
+    "motion": "Expressive spatial springs move the index marker between anchors, settle the document from -8px and sections from 26px with 63ms offsets; rules extend from 80% width over 500ms. Hover arrows move 4px over 180ms; reduced motion and still mode keep every destination and final layout without travel."
+  },
+  "evidence": {
+    "layout": [
+      ".comparison",
+      ".plan-index",
+      ".plan-document",
+      ".plan-section"
+    ],
+    "navigation": [
+      ".index-item[href^=\"#plan-\"]",
+      ".return-row .back-link",
+      ".plan-index"
+    ],
+    "typography": [
+      ".heading h1",
+      ".index-name",
+      ".price-value",
+      ".section-heading h2",
+      ".tool-status"
+    ],
+    "motion": [
+      ".comparison",
+      ".index-indicator",
+      ".plan-section",
+      ".section-rule",
+      ".index-arrow"
+    ]
+  }
+}

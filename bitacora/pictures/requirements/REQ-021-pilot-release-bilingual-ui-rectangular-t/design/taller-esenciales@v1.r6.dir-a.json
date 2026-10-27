@@ -1,0 +1,41 @@
+{
+  "name": "Corte de montaje",
+  "axes": {
+    "concept": "La escena se lee como una hoja de montaje: medidas de una mesa, sillas que realmente caben y piezas que hay que preparar, ligadas por una línea de registro. Mantiene el mundo material de Pictures sin tomar la composición del registro de Cuentas.",
+    "layout": "Dos bandas horizontales: escenario de 250 px de índice de objetos más esquema amplio, y franja de trabajo asimétrica 218 px / fluida / 264 px. La biblioteca ocupa dos columnas mayores, mientras que el inspector mantiene medidas y cantidades en el mismo renglón. Debajo de 1024 px se simplifica a una zona activa; debajo de 768 px se apila.",
+    "navigation": "Barra de seis herramientas integrada en la junta entre escena y hoja de trabajo. Etiquetas completas con numeración de secuencia de trabajo en escritorio; rejilla 3 por 2 bajo 1024 px. Selección neutra con línea inferior. Exportar y lista de compra se conservan en la cabecera; no hay sidebar ni dock fijo.",
+    "typography": "Arial/sistema, título de objeto 30 px en dos líneas con tracking -1.1 px, sección 20 px, datos editables 24 px y conteo real 64 px con denominador de 18 px. Metadatos de 12–13 px y cifras tabulares; monospace solo para índices de navegación y extensión GLB.",
+    "density": "Información de trabajo compacta y agrupada por reglas: medidas simultáneas, sillas y materiales en secciones de 16–24 px de separación; márgenes de 32/24/20 px y controles de al menos 40–44 px. Catálogo de cuatro columnas a partir de 1280 px, tres en tablet y una bajo 480 px. No hay tarjetas de indicadores.",
+    "components": "Button/Input/Field/Textarea/Alert/Skeleton reales shadcn/Base UI; Popover y Dialog reales con primitivas Animate UI. Composiciones propias: esquema isométrico SVG, regla de registro, fichas de catálogo sin caja y resumen numerador/denominador. Sin checkbox nativo ni componente sustituto no declarado.",
+    "colour": "Tokens --taller-* del producto: fondo #faf9fc/#16131d, tarjeta #ffffff/#1d1926, texto #1c1425/#f2eff7. Primario claro #6d3fe0 y pareja existente de acento oscuro #b9a4ff/#120b24. Bordes de controles toman --taller-medio (#5a5168/#a59db5); borde decorativo conserva el original. Lavanda representa tela de la escena; éxito/error tienen color semántico.",
+    "motion": "Registro preciso con cubic-bezier(.8,0,.2,1): título se alinea 7 px, hoja entra 8 px conservando opacidad mínima .75, línea se extiende desde la izquierda, sillas se registran diagonalmente con stagger 28 ms y fichas con 24 ms. Escena usa Motion con 5 px y duración del perfil. Duraciones natural 220/320 ms, expresiva 340/520 ms, sutil 140/200 ms; pulsación 2 px/160 ms. Movimiento reducido y still=1 muestran contenido final y mantienen overlays en su posición; animaciones finitas se pausan con pestaña oculta."
+  },
+  "evidence": {
+    "layout": [
+      ".stage",
+      ".object-index",
+      ".scene-board",
+      ".work-strip",
+      ".number-grid"
+    ],
+    "navigation": [
+      ".tool-nav",
+      ".tool-nav button[aria-current=page]",
+      "#export-trigger",
+      "#shopping-trigger"
+    ],
+    "typography": [
+      ".object-index h1",
+      ".count-lock",
+      ".number-grid input",
+      ".nav-no"
+    ],
+    "motion": [
+      ".registration-sweep",
+      ".measure-line",
+      ".chair-group",
+      ".work-main",
+      ".scene-svg"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "Mesa de pases",
+  "axes": {
+    "concept": "El acceso a Pictures como pase material de una mesa de montaje: un cuarteto de globos, una junta perforada y permisos que encajan en alojamientos. Es una exploración draft, no una identidad aprobada.",
+    "layout": "Acceso en ficha horizontal de 928 px: talón de 340 px y formulario en un único marco, con pie sobre el mismo ancho. En móvil la perforación gira a horizontal. Cuentas en fichas de tres zonas, roles en registro y tablero.",
+    "navigation": "Entrada sin sidebar: idioma en la cabecera de acceso. Después de iniciar sesión, bandeja horizontal Cuentas/Roles y menú de cuenta; el registro de roles se convierte en selector nativo a menos de 768 px.",
+    "typography": "Geist Variable real e incrustada, igual que Pictures. Título 32/28 px, reclamo del talón 32/20 px, nombres 16 px, campos 15 px y metadatos 12–13 px. Jerarquía por peso y tamaño, sin titulares ornamentales.",
+    "density": "24–40 px de aire en marcos; controles de 44–48 px; fichas de personas con 22–24 px de padding. Sin KPIs: espacio dedicado a identidad, alcance de acceso y acciones.",
+    "components": "Button e Input Base UI, Checkbox, Dialog, AlertDialog y DropdownMenu reales de shadcn con primitivas Animate UI. Pase perforado, fichas de cuenta y sockets de permisos son composiciones propias sobre esas piezas.",
+    "colour": "Tokens Pictures: fondo #faf9fc/#0b0c10, superficie #ffffff/#16181f, índigo #6d3fe0/#9479ff y texto #1c1425/#f4f5f7. Color para acción principal, permiso elegido y estado; bordes interactivos #766c85/#8a91a0.",
+    "motion": "La ficha se asienta en 520 ms con translateY(14px) y giro −0.45°, el cuarteto gira −14° a 0 con resorte stiffness 220/damping 16, cuentas encajan lateralmente con stagger 90 ms, pulsaciones comprimen y bajan en 200 ms. Perfiles sutil/natural/expresivo; reduced-motion y still eliminan el viaje sin ocultar contenido."
+  },
+  "evidence": {
+    "layout": [
+      ".access-pass",
+      ".pass-stub",
+      ".pass-body",
+      ".aligned-footer"
+    ],
+    "navigation": [
+      ".topline",
+      ".top-tools",
+      "#language"
+    ],
+    "typography": [
+      ".product h1",
+      ".stub-title"
+    ],
+    "motion": [
+      ".access-pass",
+      ".press"
+    ]
+  }
+}

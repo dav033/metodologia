@@ -1,0 +1,38 @@
+{
+  "name": "Pliegues de consulta",
+  "axes": {
+    "concept": "Pliegues de consulta: directly fold and reopen the tool lists in their original plan bands; catalogue data remains informative and immutable.",
+    "layout": "One ruled paper with four full-width bands. Desktop bands place identity and price in a 28% left column, full cumulative tools in a two-column right region; phone bands stack identity above a single tool list.",
+    "navigation": "Four wrapping in-page plan links expand their destination band, scroll it into view and focus its heading. Each plan has an independent disclosure. Retained login/account entry links and contextual back link.",
+    "typography": "Existing embedded Geist Sans and Geist Mono. Fixed 24px H1, 20px plan names, 22px tabular prices (20px on phones), 14px tools and 12px availability annotations; no new font family.",
+    "density": "Compact 24px ruled bands inside one 32px-radius paper, 28px desktop and 20px phone inset. Every tool is initially visible; folding removes its list without removing name or monthly price.",
+    "components": "Existing Pictures masthead and native account disclosure, real shadcn/Base UI Button and Input, real Skeleton, semantic article and tool list. Button disclosures replace any plan acquisition action.",
+    "colour": "Exact Pictures globals.css palette mapped to kit roles with sibling input-edge alias --texto-tenue. Neutral navigation and checkmarks; accent limited to existing brand, links, focus and retained access form action.",
+    "motion": "Tactile compressed/settled bands: 480ms translateY/scaleY registration staggered by 65ms, 180ms press feedback, rotating disclosure chevrons and spring-settled tool-list reveal. Profile-aware Motion, quiet/reduced final-state parity and hidden-tab CSS pause."
+  },
+  "evidence": {
+    "layout": [
+      ".plan-paper",
+      ".plan-band",
+      ".tool-list"
+    ],
+    "navigation": [
+      ".plan-nav",
+      ".fold-toggle",
+      ".back-link",
+      ".user-menu"
+    ],
+    "typography": [
+      ".plan-heading h1",
+      ".plan-identity h2",
+      ".plan-price strong",
+      ".availability"
+    ],
+    "motion": [
+      ".plan-band",
+      ".fold-toggle",
+      ".fold-toggle svg",
+      ".tool-list"
+    ]
+  }
+}

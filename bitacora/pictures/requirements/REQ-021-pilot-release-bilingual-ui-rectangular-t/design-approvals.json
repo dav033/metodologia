@@ -1,0 +1,16 @@
+{
+ "approvals": {
+  "cuentas-admin@v1": {
+   "comments": "approved with the plan",
+   "contract": "cuentas-admin@v1",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/cuentas-admin@v1/approved.md",
+   "path": "design/contracts/cuentas-admin@v1.md",
+   "sha256": "4cb6d75a5370ca0bf21de58da18554d761a6da291c4f119e857491b4fcee1feb",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-10-27T20:58:51+00:00",
+   "who": "owner"
+  }
+ },
+ "schema_version": 1
+}

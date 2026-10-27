@@ -1,0 +1,39 @@
+{
+  "name": "Cota viva",
+  "axes": {
+    "concept": "A decorator’s measured installation sheet: a live top-view drawing, actual furniture quantities and the GLB handoff.",
+    "layout": "Asymmetric two-line title and right project caption; broad drawing with a narrow inspector; eight type cards below; seven ruled Backing rows; a count rail beside the shopping list; a file sheet beside import instructions.",
+    "navigation": "Four direct ruled chapter buttons across the working width; 2×2 chapter matrix on phones; no drawer, folder index, carousel or gesture dependency.",
+    "typography": "Locally embedded Syne Variable display at 50–80 px, Instrument Sans Variable working copy at 13–16 px, JetBrains Mono Variable measures at 11–13 px; tabular quantities.",
+    "density": "Compact measured information with open gutters, square edged working fields, ruled rows, 44 px controls; drawing takes precedence over decorative cards.",
+    "components": "Real shadcn/Base UI Button and Input, real Alert and Skeleton; custom CSS drawing, dimension rules, table type silhouettes and Backing cross-sections; no fallback HTML kit.",
+    "colour": "Proposed cool installation paper #e9ecee/#f9fafb and registration red #a81e2d; dark graphite #161c20/#20292f with pale red #ff9ba6. Existing Pictures semantic token names are mapped to kit roles.",
+    "motion": "Precise registration cuts, cubic-bezier(.76,0,.24,1), 350–820 ms staged entrances; seats offset 45 ms and type cards 32 ms; 200 ms press/hover; scroll catalogue register, state strike and GLB index; reduced motion and still mode settle immediately."
+  },
+  "evidence": {
+    "layout": [
+      ".intro",
+      ".work-grid",
+      ".table-types",
+      ".list-layout",
+      ".export-layout"
+    ],
+    "navigation": [
+      ".chapters",
+      ".chapter[aria-current=\"page\"]"
+    ],
+    "typography": [
+      ".display-title",
+      ".dimension-readout",
+      ".scene-caption small"
+    ],
+    "motion": [
+      ".scene-table",
+      ".measure-x",
+      ".inspector",
+      ".seat",
+      ".type-card",
+      ".chapter svg"
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "Nudos — acceso en tensión",
+  "axes": {
+    "concept": "Nudos: latex bands link people to the tools they may use; the soft valve is the shared product-world signature.",
+    "layout": "Asymmetric tension rig: sticky 38% identity rail and 62% continuous working column. Account rows stretch between two rounded anchors; phone stacks identity, navigation and rows.",
+    "navigation": "Left peg-shaped spool buttons for Personas, Roles and Mi cuenta; selected peg tilts. Account menu stays in the masthead; form and destructive actions use modal confirmations.",
+    "typography": "Embedded Rounded Mplus 1c ExtraBold, 43–72px tightly set display; embedded Adwaita Sans for 13–17px controls and data. Rounded letterforms echo inflated latex without a geometric SaaS grotesk.",
+    "density": "Generous 38px form inset, 22px people-band inset and 17px row gaps. Long low bands expose all six account facts; no KPI or equal-card dashboard.",
+    "components": "Real shadcn Button, Input and Skeleton; Animate UI checkbox and Base UI modal/alert-dialog primitives. Custom latex loop SVG, compressed action surfaces, band-shaped account rows and grouped permission selector.",
+    "colour": "Proposal: pale pool blue #dfeded and deep petrol #075e60, with latex yellow #f7ce45 for material anchors only. Dark: #10282b/#193b3e with mint #8ce0d5 controls. Text #123b3f or #f0f9f7; no purple, cream/terracotta or shared default accent.",
+    "motion": "Elastic tension grammar, cubic-bezier(.22,1.35,.55,1), expressive 680ms composition and 190ms controls: stretched-band entry, knot torsion, display compression, peg seating, plug engagement, error pressure release, success seal press, empty rocking, hover lift/press squash and profile-driven spring dragging. Natural 440/160ms; subtle 240/120ms. Reduced motion and still=1 settle immediately."
+  },
+  "evidence": {
+    "layout": [
+      ".workbench",
+      ".rubber-band",
+      ".person-band"
+    ],
+    "navigation": [
+      ".spool-nav",
+      ".user-menu"
+    ],
+    "typography": [
+      ".big-title",
+      ".person-name"
+    ],
+    "motion": [
+      ".rubber-band",
+      ".latex-loop",
+      ".big-title",
+      ".press"
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup · Candidata 2 · Riel panorámico</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1ece2;color:#1d1b16;font:15px/1.45 system-ui,sans-serif}
+.tag{position:fixed;top:8px;left:8px;background:#1d1b16;color:#f1ece2;font:600 11px system-ui;padding:3px 8px;border-radius:4px;z-index:3}
+.pano{height:440px;overflow:hidden;border-bottom:3px solid #1d1b16;position:relative;background:#e3dccd}
+.strip{display:flex;height:100%;width:300%;animation:pan 6s cubic-bezier(.65,0,.35,1) infinite alternate}
+@keyframes pan{to{transform:translateX(-50%)}}
+.seg{flex:1;border-right:2px dashed #8b8273;position:relative;padding:32px}
+.seg h2{font:800 64px/1 system-ui;letter-spacing:-.05em;margin:0;color:#1d1b16}
+.arch{position:absolute;bottom:0;border-radius:999px 999px 0 0;border:10px solid #1f6f8b;border-bottom:0}
+.hoop{position:absolute;bottom:60px;width:160px;height:160px;border-radius:50%;border:8px solid #b38b2d}
+.tbl{position:absolute;bottom:40px;left:30%;width:260px;height:70px;background:#fff;border:3px solid #1d1b16}
+.track{display:flex;align-items:center;gap:0;padding:24px 32px}
+.rail{flex:1;height:8px;background:#1d1b16;border-radius:4px;position:relative}
+.puck{position:absolute;top:-14px;left:20%;width:36px;height:36px;border-radius:50%;background:#1f6f8b;border:3px solid #1d1b16;animation:slide 6s cubic-bezier(.65,0,.35,1) infinite alternate}
+@keyframes slide{to{left:70%}}
+.stops{display:flex;justify-content:space-between;padding:0 32px;font:700 14px system-ui}
+.sheet{margin:24px 32px;padding:24px;background:#fff;border:2px solid #1d1b16;max-width:520px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<div class="tag">Mockup · candidata 2</div>
+<div class="pano"><div class="strip">
+ <div class="seg"><h2>Mesas</h2><div class="tbl"></div></div>
+ <div class="seg"><h2>Backing</h2><div class="arch" style="left:20%;width:180px;height:260px"></div><div class="hoop" style="left:55%"></div></div>
+ <div class="seg"><h2>Lista y GLB</h2></div>
+</div></div>
+<div class="track"><div class="rail"><div class="puck"></div></div></div>
+<div class="stops"><span>Mesas</span><span>Backing</span><span>Lista</span><span>Exportar</span></div>
+<div class="sheet"><b>Riel panorámico:</b> la pared del salón se desplaza en elevación lateral; se navega arrastrando el carro por el riel o con los nombres de parada.</div>

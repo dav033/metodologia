@@ -1,0 +1,21 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup · Candidato 1 · Tablero de ganchos</title>
+<style>
+:root{--board:#245c43;--hole:#1a4733;--paper:#fffdf8;--ink:#13261d;--soft:#46594f;--hook:#c2185b;--onhook:#fff;--edge:#5e7568;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--board:#0f241b;--hole:#1d3d2f;--paper:#17322a;--ink:#effaf4;--soft:#bcd3c5;--hook:#ff8cc0;--onhook:#2a0716;--edge:#8fb3a0;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,sans-serif;color:var(--ink);background:var(--board)}
+.tag{position:fixed;top:8px;left:8px;background:#11111b;color:#cdd6f4;font:600 11px system-ui;padding:3px 8px;border-radius:4px;z-index:2}
+.board{min-height:100vh;padding:56px 40px;background-image:radial-gradient(circle,var(--hole) 3px,transparent 3.6px);background-size:28px 28px;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:start}
+h1{font:900 clamp(44px,7vw,96px)/.92 Georgia,serif;color:#fff;margin:40px 0 18px;letter-spacing:-2px}
+.lede{color:#e3f1e8;max-width:340px}
+.balloons{display:flex;gap:14px;margin-top:36px}.b{width:70px;height:86px;border-radius:50% 50% 48% 52%/58% 58% 42% 42%;background:#ff8cc0;position:relative}.b:nth-child(2){background:#ffd166;transform:translateY(-14px)}.b:nth-child(3){background:#fffdf8}.b:after{content:"";position:absolute;left:50%;top:100%;width:2px;height:46px;background:#e3f1e8}
+.hang{position:relative;padding-top:46px;justify-self:center;width:min(100%,380px)}
+.hook{position:absolute;top:0;left:50%;width:30px;height:46px;border:5px solid var(--hook);border-top:0;border-radius:0 0 20px 20px;transform:translateX(-50%)}
+.pass{background:var(--paper);border:2px solid var(--edge);border-radius:26px 26px 30px 30px;padding:34px 28px 26px;transform:rotate(2deg);transform-origin:50% 0}
+.pass:before{content:"";display:block;width:22px;height:22px;border-radius:50%;border:3px solid var(--edge);margin:-20px auto 18px;background:var(--board)}
+.pass h2{font:800 30px Georgia,serif;margin:0 0 6px}.f{height:44px;border:2px solid var(--edge);border-radius:14px;margin:14px 0}.btn{height:48px;border-radius:24px;background:var(--hook);color:var(--onhook);display:grid;place-items:center;font-weight:800}
+.foot{margin-top:16px;font-size:13px;color:var(--soft)}
+@media(max-width:700px){.board{grid-template-columns:1fr;padding:44px 20px}.balloons{display:none}h1{margin-top:8px}}
+</style>
+<span class="tag">Mockup · candidato 1</span>
+<main class="board"><section><h1>Cuelga tu pase.</h1><p class="lede">Pictures · Sempertex. Entra con el correo de tu invitación.</p><div class="balloons" aria-hidden="true"><i class="b"></i><i class="b"></i><i class="b"></i></div></section>
+<section class="hang"><i class="hook" aria-hidden="true"></i><div class="pass"><h2>Entra a Pictures</h2><p style="color:var(--soft);margin:0">ana@globoyfiesta.co</p><div class="f"></div><div class="f"></div><div class="btn">Entrar</div><p class="foot">Sin registro abierto: pide un enlace a tu administrador.</p></div></section></main>

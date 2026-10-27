@@ -1,0 +1,35 @@
+{
+  "name": "Archivo de muestrarios",
+  "axes": {
+    "concept": "A decorator files complete arrangements as material samples: a projecting dated tab, scene sample and named owner make each project recoverable.",
+    "layout": "A full-width vertical archive of horizontal folders: 200 px sample, flexible title/ownership, trailing action; phone folds the action below a 96 px sample and title. The editing folio pairs a wide sample with a 300 px binding note.",
+    "navigation": "Top text-labelled workspace tools, direct Open project actions on each folder, name search and staff-only owner selector; back-to-projects in the folio. No dock, carousel or gestural navigation.",
+    "typography": "Local Arial/Helvetica body, 32/28 px compact page title, 20/17 px folder names, 14-15 px working copy; 12 px monospaced dated tabs and counts.",
+    "density": "Generous 24 px folder padding, 20 px on phones, 40 px inter-folder space for projecting tabs; 44 px minimum actions and 46 px fields; flat outlined folios with dashed internal bindings.",
+    "components": "Installed shadcn/Base UI Button, Input and Skeleton; Animate UI Dialog and AlertDialog. Custom SVG scene sample, folder silhouette, binding note, conflict fold and save stamp.",
+    "colour": "Pictures light #faf9fc/#ffffff/#1c1425 with #6d3fe0 primary; existing dark #0b0c10/#16181f/#f4f5f7 with Taller #b9a4ff on #120b24. Material mauve/lavender belongs to scene data; navigation stays neutral.",
+    "motion": "Folder insertion and rising tabs use 520 ms expressive overshoot with 45 ms stagger; view hinges and saved stamp compress into place; press feedback follows 200 ms. Scene drag settles through the installed profile spring, with equivalent move buttons. Reduced motion and still query remove travel and retain actions."
+  },
+  "evidence": {
+    "layout": [
+      ".file-stack",
+      ".project-file",
+      ".file-action"
+    ],
+    "navigation": [
+      ".global-nav",
+      ".archive-tools",
+      ".project-file .press"
+    ],
+    "typography": [
+      ".page-heading h1",
+      ".file-info h2",
+      ".file-tab"
+    ],
+    "motion": [
+      ".project-file",
+      ".file-tab",
+      ".press"
+    ]
+  }
+}

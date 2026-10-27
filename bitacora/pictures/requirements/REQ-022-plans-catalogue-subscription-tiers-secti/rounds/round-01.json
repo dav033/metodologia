@@ -1,0 +1,168 @@
+{
+ "title": "REQ-022 — Planes: contenido, alcance y relación con REQ-021",
+ "coverage": "plan completo",
+ "intro": "Lo que dijiste: cuatro planes (Free: chat básico + contador de globos, con límites; segundo plan: 20k pesos / 7 USD al mes; Designer: chat extendido, calculadora de costos, detección de estructuras y detección de globos avanzado, 45k / 14 USD; Designer Max: todo lo anterior + Taller 3D) y una sección propia para verlos y compararlos, que va primero y es informativa. Lo que encontré: en main no existen todavía cuentas ni permisos (los planea REQ-021 SP-1, con «Usuario · Plan 1/2/3»); el conteo de globos por foto y el análisis de estructuras existen solo dentro del chat asistido, no como herramientas propias; «chat extendido» no existe. Borrador: SP-1 = sección informativa (catálogo de planes + página), SP-2 = acceso por plan, SP-3 = límites del Free, SP-4 = plan actual marcado y herramientas bloqueadas que dicen qué plan las incluye. No invento datos: lo que falte bloquea la tarea que lo usa.",
+ "questions": [
+  {
+   "id": "q1",
+   "type": "open",
+   "text": "Segundo plan (20k / 7 USD) y límites del Free: ¿cómo se llama el segundo plan y qué incluye? Del Free: ¿qué se cuenta (mensajes de chat, conteos de globos…), cuántos, por día o por mes, y qué pasa al llegar al límite?",
+   "suggested": "Responde en este formato: «Plan 2 se llama …; incluye …. Free: … mensajes de chat y … conteos por (día|mes); al llegar al límite …».",
+   "why": "Son los datos del catálogo (SP-1, tarea T1.2) y de los límites (SP-3). No propongo valores: tienen que ser tuyos."
+  },
+  {
+   "id": "q2",
+   "type": "choice",
+   "text": "Después de la sección informativa, ¿qué acción tiene cada plan?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ninguna por ahora: solo informativa; el administrador asigna el plan en la pantalla de cuentas de REQ-021"
+    },
+    {
+     "key": "b",
+     "label": "«Solicitar este plan»: la persona lo pide y el administrador ve la solicitud y lo asigna"
+    },
+    {
+     "key": "c",
+     "label": "Compra en línea (pasarela de pago, renovación, cancelación); proveedor y credenciales en otra ronda"
+    }
+   ],
+   "recommended": "a",
+   "why": "Encaja con cuentas solo por invitación de REQ-021 y no necesita pasarela ni credenciales. b o c se agregan después como subplan propio sin cambiar SP-1."
+  },
+  {
+   "id": "q3",
+   "type": "choice",
+   "text": "¿Cómo se relacionan los cuatro planes con los roles de REQ-021 («Usuario · Plan 1/2/3»)?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Los cuatro planes reemplazan a Plan 1/2/3 como roles del sistema (Usuario · Free, · segundo plan, · Designer, · Designer Max); una cuenta = un rol"
+    },
+    {
+     "key": "b",
+     "label": "Se suman: Plan 1/2/3 siguen y los cuatro planes son roles nuevos"
+    },
+    {
+     "key": "c",
+     "label": "Van aparte de los roles: la cuenta tiene un rol y además un plan"
+    }
+   ],
+   "recommended": "a",
+   "why": "Es la misma regla que aprobaste en REQ-021 ronda 6 («los planes son roles»), un solo control en el servidor. Implica una revisión de REQ-021 (R16 y sus cinco roles); no la hago yo, la dejo como propuesta."
+  },
+  {
+   "id": "q4",
+   "type": "choice",
+   "text": "¿Quién ve la sección de planes y desde dónde se llega?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Pública (sin iniciar sesión), con enlace desde la pantalla de inicio de sesión y desde el menú de cuenta"
+    },
+    {
+     "key": "b",
+     "label": "Solo con sesión iniciada, desde el menú de cuenta"
+    },
+    {
+     "key": "c",
+     "label": "Solo administradores"
+    }
+   ],
+   "recommended": "a",
+   "why": "Quien todavía no tiene cuenta (son por invitación) es quien más necesita ver los planes. Si prefieres b, la sección no cambia, solo la regla de acceso (T1.4)."
+  },
+  {
+   "id": "q5",
+   "type": "choice",
+   "text": "«Chat extendido», «detección de estructuras» y «detección de globos avanzado»: hoy no existen como herramientas propias. ¿Qué hacemos?",
+   "options": [
+    {
+     "key": "a",
+     "label": "La sección los muestra en Designer marcados como «aún no disponible» y cada herramienta se construye en su propio requerimiento"
+    },
+    {
+     "key": "b",
+     "label": "Ya existen (dime dónde) y solo hay que darles acceso"
+    },
+    {
+     "key": "c",
+     "label": "No se muestran hasta que existan"
+    },
+    {
+     "key": "d",
+     "label": "Se construyen dentro de REQ-022 (lo agranda mucho)"
+    }
+   ],
+   "recommended": "a",
+   "why": "Mantiene tu definición de Designer sin prometer algo que no funciona; REQ-022 queda del tamaño de una sección y la lógica de acceso."
+  },
+  {
+   "id": "q6",
+   "type": "choice",
+   "text": "¿Cuándo va REQ-022 respecto al piloto del 2026-11-16?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Después del piloto"
+    },
+    {
+     "key": "b",
+     "label": "Solo la sección informativa (SP-1) dentro del piloto; acceso por plan y límites después"
+    },
+    {
+     "key": "c",
+     "label": "Todo dentro del piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "REQ-021 ya ocupa las tres semanas con lo que «nunca se corta», y todo REQ-022 se construye encima de sus cuentas (REQ-021 SP-1). b es posible si REQ-021 SP-1 llega a main a tiempo."
+  },
+  {
+   "id": "q7",
+   "type": "open",
+   "text": "¿Cuánto cuesta Designer Max al mes, en pesos y en dólares?",
+   "suggested": "Responde «Designer Max: … COP / … USD al mes».",
+   "why": "Diste el precio del segundo plan y de Designer, no el de Designer Max. Sin él la sección no puede salir."
+  },
+  {
+   "id": "q8",
+   "type": "choice",
+   "text": "¿Cada plan incluye todo lo de los planes de abajo?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sí: segundo plan ⊃ Free, Designer ⊃ segundo plan, Designer Max ⊃ Designer"
+    },
+    {
+     "key": "b",
+     "label": "No: dime qué incluye cada uno por separado"
+    }
+   ],
+   "recommended": "a",
+   "why": "Lo dijiste explícitamente solo para Designer Max («todo lo anterior»); confirmar evita que la tabla y los permisos digan cosas distintas."
+  },
+  {
+   "id": "q9",
+   "type": "choice",
+   "text": "¿Cómo se muestran los precios?",
+   "options": [
+    {
+     "key": "a",
+     "label": "Según el idioma: en español en pesos (COP), en inglés en dólares (USD)"
+    },
+    {
+     "key": "b",
+     "label": "Siempre los dos: «20.000 COP · 7 USD»"
+    }
+   ],
+   "recommended": "b",
+   "why": "Muestra exactamente los dos precios que diste sin suponer que el idioma indica el país."
+  }
+ ],
+ "round": 1,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-27T13:43:40Z"
+}

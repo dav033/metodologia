@@ -1,10 +1,10 @@
 # Index — metodologia
 
-_Generated 2026-10-26 21:35 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-27 16:11 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
-**Last activity:** 2026-10-26
+**Last activity:** 2026-10-27
 
 ## Workspace
 
@@ -56,11 +56,11 @@ _Generated 2026-10-26 21:35 by `bitacora.py index`. Do not edit by hand._
 
 ## Recent decisions
 
+- D-137 — Security gate per task, independent test oracles and a buildable remediation for subplan plans
+- D-136 — Real library workspace and owner-chosen creative directions for planning designs
 - D-135 — The Designer composes mockups from a checked david-ui stand-in kit; the owner browses it at `/components`
 - D-134 — The Scheduler runs a plan in stages: a stage is a frozen projection of the draft onto confirmed subplans
 - D-133 — Agents the owner needs to talk to run in tmux, so the web can read and type into them
-- D-132 — A subplan can be built WITH the owner in a hands-on agent session before the plan goes on
-- D-131 — Each finished subplan is tried and approved by the owner; the plan is not done until all are
 
 ## Artifacts
 
@@ -77,7 +77,7 @@ _Generated 2026-10-26 21:35 by `bitacora.py index`. Do not edit by hand._
 ## Timeline
 
 - **2026-10** — [month summary](2026-10/MONTH.md)
-  - [W5](2026-10/W5/WEEK.md): [26](2026-10/W5/2026-10-26.md)
+  - [W5](2026-10/W5/WEEK.md): [27](2026-10/W5/2026-10-27.md), [26](2026-10/W5/2026-10-26.md)
   - [W4](2026-10/W4/WEEK.md): [25](2026-10/W4/2026-10-25.md), [24](2026-10/W4/2026-10-24.md), [23](2026-10/W4/2026-10-23.md), [22](2026-10/W4/2026-10-22.md), [21](2026-10/W4/2026-10-21.md), [20](2026-10/W4/2026-10-20.md), [19](2026-10/W4/2026-10-19.md)
   - [W3](2026-10/W3/WEEK.md): [18](2026-10/W3/2026-10-18.md), [17](2026-10/W3/2026-10-17.md), [16](2026-10/W3/2026-10-16.md), [15](2026-10/W3/2026-10-15.md), [14](2026-10/W3/2026-10-14.md), [13](2026-10/W3/2026-10-13.md), [12](2026-10/W3/2026-10-12.md)
   - [W2](2026-10/W2/WEEK.md): [10](2026-10/W2/2026-10-10.md), [09](2026-10/W2/2026-10-09.md), [08](2026-10/W2/2026-10-08.md)

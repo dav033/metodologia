@@ -1,0 +1,900 @@
+{
+ "schema_version": "1.3.0",
+ "plan_id": "REQ-022",
+ "revision": 1,
+ "spec_ref": "SPEC.md",
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Plans section (informative)",
+   "acceptance_criteria": [
+    "A person compares the four plans, with the owner's prices, tools and limits, in their own section reached from the entry points the owner chose, without any purchase or access change."
+   ]
+  },
+  {
+   "id": "M2",
+   "title": "Access by plan, Free limits and plan awareness",
+   "acceptance_criteria": [
+    "Each account reaches exactly the tools of its plan on the server, a Free account is stopped at its limits with a clear message, and a signed-in person sees their current plan and which plan unlocks a locked tool."
+   ]
+  }
+ ],
+ "requirements": [
+  "R1",
+  "R2",
+  "R3",
+  "R4",
+  "R5",
+  "R6",
+  "R7"
+ ],
+ "tasks": [
+  {
+   "id": "T1.1",
+   "milestone_id": "M1",
+   "title": "Copy the owner-approved planes@v1 contract into the repository",
+   "objective": "The repository holds the exact owner-approved visual contract of the plans section before any of it is built.",
+   "repository": "pictures",
+   "after": [],
+   "complexity": "low",
+   "scope": "isolated_fix",
+   "estimated_minutes": 10,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 10 to copy the plan-pinned draft and compare its hash; the design is made during planning.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Copying an already approved file byte for byte needs no design decision.",
+     "evidence": [
+      "task:T1.3",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "scope": {
+     "justification": "One markdown file added under design/contracts and nothing else.",
+     "evidence": [
+      "task:T1.3",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "duration": {
+     "justification": "Ten minutes to copy the file and compare its hash.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind design -> status unknown, no comparable samples",
+      "task:T1.3"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong copy only holds UI tasks at the hash gate and is cheap to redo.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.4"
+     ]
+    },
+    "coupling": {
+     "justification": "Both UI tasks of SP-1 read this contract, so they wait for it.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.4"
+     ]
+    },
+    "confidence": {
+     "justification": "The step copies a pinned draft through the existing flow without open choices.",
+     "evidence": [
+      "task:T1.6",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    }
+   },
+   "expected_paths": [
+    "design/contracts/planes@v1.md"
+   ],
+   "shared_resources": [
+    "design:planes@v1"
+   ],
+   "acceptance_criteria": [
+    "The owner-approved planes@v1 contract is copied byte for byte into design/contracts/planes@v1.md."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "test -s design/contracts/planes@v1.md",
+     "purpose": "The owner-approved planes@v1 contract is copied byte for byte into design/contracts/planes@v1.md.",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R2"
+   ],
+   "kind": "design",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.2",
+   "milestone_id": "M1",
+   "title": "Plan catalogue: the four plans, prices, tools and limits in one module",
+   "objective": "One typed module is the only definition of the four plans that every screen and later check reads.",
+   "repository": "pictures",
+   "after": [],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "low",
+   "estimate_rationale": "Agent estimate in minutes: 20 module + 25 tests = 45, provisional until the owner supplies the missing plan data.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "A typed data module with load-time validation; medium rather than low because cumulative inclusion and bilingual fields must be validated.",
+     "evidence": [
+      "file:src/app/globals.css",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "scope": {
+     "justification": "Two new files, one module and its test, no existing file changes.",
+     "evidence": [
+      "file:scripts/test/test-ui-armado-columna.ts",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "duration": {
+     "justification": "Twenty minutes for the module and twenty-five for its tests.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:package.json"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong price or tool here appears on every plan screen and later in access checks.",
+     "evidence": [
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess",
+      "task:T1.3"
+     ]
+    },
+    "coupling": {
+     "justification": "The section, entitlements, Free limits and locked-tool screens all consume this contract.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.7"
+     ]
+    },
+    "confidence": {
+     "justification": "Second tier contents and name, Free limits and the Designer Max price are still unanswered by the owner.",
+     "evidence": [
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess",
+      "assumption:the owner answers round 1 before this task starts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/planes/catalogo.ts",
+    "scripts/test/test-catalogo-planes.ts"
+   ],
+   "shared_resources": [
+    "contract:plan-catalogue"
+   ],
+   "acceptance_criteria": [
+    "The catalogue lists exactly four plans in the order Free, second tier, Designer, Designer Max, and each plan has a Spanish and an English name, a monthly price in COP and USD, its included tools and its limits exactly as recorded in SPEC from the owner's answers.",
+    "The catalogue holds the second tier at COP 20,000 / USD 7 per month and Designer at COP 45,000 / USD 14 per month, Free includes the basic decoration chat and the balloon counter, Designer includes extended chat, cost calculator, structure detection and advanced balloon detection, and Designer Max includes everything before plus the Taller 3D.",
+    "Loading the catalogue fails with an error naming the plan and the field when a plan lacks a name, a price or a tool, or lists a tool key outside the catalogue's declared tool list."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-catalogo-planes.ts",
+     "purpose": "The catalogue lists exactly four plans in the order Free, second tier, Designer, Designer Max, and each plan has a Spanish and an English name, a monthly price in COP and USD, its included tools and its limits exactly as recorded in SPEC from the owner's answers.",
+     "category": "functional",
+     "created_by": "T1.2"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-catalogo-planes.ts",
+     "purpose": "The catalogue holds the second tier at COP 20,000 / USD 7 per month and Designer at COP 45,000 / USD 14 per month, Free includes the basic decoration chat and the balloon counter, Designer includes extended chat, cost calculator, structure detection and advanced balloon detection, and Designer Max includes everything before plus the Taller 3D.",
+     "category": "functional",
+     "created_by": "T1.2"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-catalogo-planes.ts",
+     "purpose": "Loading the catalogue fails with an error naming the plan and the field when a plan lacks a name, a price or a tool, or lists a tool key outside the catalogue's declared tool list.",
+     "category": "functional",
+     "created_by": "T1.2"
+    }
+   ],
+   "covers": [
+    "R1"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": false
+  },
+  {
+   "id": "T1.3",
+   "milestone_id": "M1",
+   "title": "Plans section page: compare the four plans from the catalogue",
+   "objective": "A person sees the four plans side by side, rendered only from the catalogue, in the approved design.",
+   "repository": "pictures",
+   "after": [
+    "T1.1",
+    "T1.2"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 45 page and component + 30 static-render tests = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Responsive comparison of four plans with existing tokens; no state, persistence or streaming.",
+     "evidence": [
+      "file:src/app/globals.css",
+      "file:scripts/test/test-ui-armado-columna.ts"
+     ]
+    },
+    "scope": {
+     "justification": "A new route, one component, its text module and a static-render test.",
+     "evidence": [
+      "file:src/components/ui/shell/MenuApp.tsx",
+      "task:T1.2"
+     ]
+    },
+    "duration": {
+     "justification": "Forty-five minutes for the page and thirty for the render tests.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "task:T1.1"
+     ]
+    },
+    "risk": {
+     "justification": "A page that retypes prices would drift from the catalogue; the test pins rendering to it.",
+     "evidence": [
+      "task:T1.2",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads the catalogue contract and the approved contract only.",
+     "evidence": [
+      "task:T1.1",
+      "task:T1.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The static-render test pattern already exists in the repository.",
+     "evidence": [
+      "file:scripts/test/test-ui-armado-columna.ts",
+      "assumption:the route name /planes is kept unless the owner names another"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/app/planes/page.tsx",
+    "src/components/planes/ComparadorPlanes.tsx",
+    "src/components/planes/textos-planes.ts",
+    "scripts/test/test-ui-planes.ts"
+   ],
+   "shared_resources": [
+    "contract:plan-catalogue",
+    "design:planes@v1"
+   ],
+   "acceptance_criteria": [
+    "The plans section renders the four plans in catalogue order with name, monthly price, included tools and limits taken from the catalogue, and a changed catalogue value appears on the rendered page without editing the page.",
+    "The plans section shows no purchase, subscription or request action and no text beyond plan names, prices, tools, limits and the headings fixed by the approved planes@v1 contract."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-ui-planes.ts",
+     "purpose": "The plans section renders the four plans in catalogue order with name, monthly price, included tools and limits taken from the catalogue, and a changed catalogue value appears on the rendered page without editing the page.",
+     "category": "functional",
+     "created_by": "T1.3"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-ui-planes.ts",
+     "purpose": "The plans section shows no purchase, subscription or request action and no text beyond plan names, prices, tools, limits and the headings fixed by the approved planes@v1 contract.",
+     "category": "functional",
+     "created_by": "T1.3"
+    }
+   ],
+   "covers": [
+    "R2"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": true
+  },
+  {
+   "id": "T1.4",
+   "milestone_id": "M1",
+   "title": "Entry points and access rule of the plans section, and its browser check script",
+   "objective": "People reach the section from the places the owner chose, only the chosen audience opens it, and a browser script proves it.",
+   "repository": "pictures",
+   "after": [
+    "T1.3"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 90,
+   "risk": "high",
+   "coupling": "high",
+   "confidence": "low",
+   "estimate_rationale": "Agent estimate in minutes: 30 access rule + 20 entry links + 40 browser script = 90, provisional until visibility and location are answered.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Touches the request guard whose shape REQ-021 SP-1 replaces, plus links in shared navigation.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "file:src/components/ui/shell/CabeceraApp.tsx"
+     ]
+    },
+    "scope": {
+     "justification": "A matcher or route-map entry, two or three links and two scripts.",
+     "evidence": [
+      "file:scripts/test/test-proxy-matcher.ts",
+      "file:src/app/login/page.tsx"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, twenty and forty minutes for rule, links and script.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:scripts/e2e/humo.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong guard change could open other routes without a session; the matcher regression guards it.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "file:scripts/test/test-proxy-matcher.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Depends on the REQ-021 permission map and shared header and sign-in screens.",
+     "evidence": [
+      "spec:SPEC.md#constraints",
+      "file:src/app/login/page.tsx"
+     ]
+    },
+    "confidence": {
+     "justification": "Who sees the section and where it sits are unanswered owner decisions.",
+     "evidence": [
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess",
+      "assumption:REQ-021 SP-1 has replaced the APP_PASSWORD guard before this task starts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/proxy.ts",
+    "src/lib/cuentas/mapa-rutas.ts",
+    "scripts/test/test-proxy-matcher.ts",
+    "src/app/login/page.tsx",
+    "src/components/ui/shell/CabeceraApp.tsx",
+    "scripts/test/test-ui-planes-entrada.ts",
+    "scripts/test/test-integracion-planes.ts"
+   ],
+   "shared_resources": [
+    "contract:permission-map",
+    "design:planes@v1"
+   ],
+   "acceptance_criteria": [
+    "Each entry point to the plans section recorded in SPEC for SP-1 links to it, and the section opens only for the audience recorded there while every other request gets the app's existing sign-in redirect.",
+    "The existing proxy matcher cases still pass after the plans section route is added."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-ui-planes-entrada.ts",
+     "purpose": "Each entry point to the plans section recorded in SPEC for SP-1 links to it, and the section opens only for the audience recorded there while every other request gets the app's existing sign-in redirect.",
+     "category": "functional",
+     "created_by": "T1.4"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx --conditions=react-server scripts/test/test-proxy-matcher.ts",
+     "purpose": "The existing proxy matcher cases still pass after the plans section route is added.",
+     "category": "regression"
+    }
+   ],
+   "covers": [
+    "R3"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-1",
+   "ui": true
+  },
+  {
+   "id": "T1.5",
+   "milestone_id": "M1",
+   "title": "Production-build browser check of the plans section",
+   "objective": "The shipped app, started as in production, shows the section through its real entry points at phone and desktop widths.",
+   "repository": "pictures",
+   "after": [
+    "T1.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build + 15 browser run + 10 evidence = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Runs an existing script against next start at two widths; no authoring.",
+     "evidence": [
+      "file:scripts/e2e/humo.ts",
+      "task:T1.4"
+     ]
+    },
+    "scope": {
+     "justification": "Produces only the evidence file of one run.",
+     "evidence": [
+      "task:T1.4",
+      "file:package.json"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen build, fifteen run and ten evidence minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "file:package.json"
+     ]
+    },
+    "risk": {
+     "justification": "Last barrier before the reviews for the screen prospective users meet.",
+     "evidence": [
+      "task:T1.6",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises the catalogue, page and entry points together.",
+     "evidence": [
+      "task:T1.2",
+      "task:T1.3"
+     ]
+    },
+    "confidence": {
+     "justification": "Playwright is already used by the smoke script; build time in the sandbox is unmeasured.",
+     "evidence": [
+      "file:scripts/e2e/humo.ts",
+      "assumption:next build finishes within the sandbox time limit"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-022/SP-1.integration.json"
+   ],
+   "shared_resources": [
+    "port:3000"
+   ],
+   "acceptance_criteria": [
+    "On a production build started with next start, a browser follows each entry point to the plans section and sees the four plans with the catalogue's names and prices at 390 px and 1280 px widths, with no horizontal page scroll at 390 px and keyboard focus moving through the plans in visual order."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-integracion-planes.ts",
+     "purpose": "On a production build started with next start, a browser follows each entry point to the plans section and sees the four plans with the catalogue's names and prices at 390 px and 1280 px widths, with no horizontal page scroll at 390 px and keyboard focus moving through the plans in visual order.",
+     "category": "integration",
+     "created_by": "T1.4"
+    }
+   ],
+   "covers": [
+    "R2",
+    "R3"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-1"
+  },
+  {
+   "id": "T1.6",
+   "milestone_id": "M1",
+   "title": "SP-1 visual review against the planes@v1 contract",
+   "objective": "A fresh reviewer compares the rendered section with the approved contract and records each mismatch with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T1.5"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 screenshots and comparison + 15 ledger = 45.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Comparing rendered states with a written contract needs judgement but no new design.",
+     "evidence": [
+      "task:T1.1",
+      "task:T1.5"
+     ]
+    },
+    "scope": {
+     "justification": "Writes only a report and its findings ledger.",
+     "evidence": [
+      "task:T1.5",
+      "task:T1.3"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty minutes of comparison and fifteen for the ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T1.3"
+     ]
+    },
+    "risk": {
+     "justification": "A missed mismatch reaches people as a confusing price table.",
+     "evidence": [
+      "task:T1.3",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger can send T1.3 or T1.4 back.",
+     "evidence": [
+      "task:T1.3",
+      "task:T1.4"
+     ]
+    },
+    "confidence": {
+     "justification": "One section with a bounded set of states.",
+     "evidence": [
+      "task:T1.1",
+      "task:T1.5"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-022/SP-1.visual.md",
+    ".evidence/REQ-022/SP-1.visual.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-1-visual"
+   ],
+   "acceptance_criteria": [
+    "The rendered plans section matches the approved planes@v1 contract at phone, tablet and desktop widths in light and dark theme, and every finding is recorded with the task to redo in the SP-1 visual ledger."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-022/SP-1.visual.findings.json",
+     "purpose": "The rendered plans section matches the approved planes@v1 contract at phone, tablet and desktop widths in light and dark theme, and every finding is recorded with the task to redo in the SP-1 visual ledger.",
+     "category": "static",
+     "created_by": "T1.6"
+    }
+   ],
+   "covers": [
+    "R2"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-1"
+  },
+  {
+   "id": "T1.7",
+   "milestone_id": "M1",
+   "title": "SP-1 audit: catalogue data, section copy and access rule",
+   "objective": "An independent auditor confirms the section tells the truth about the plans and opens only for the chosen audience.",
+   "repository": "pictures",
+   "after": [
+    "T1.6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 review of catalogue, copy and guard + 15 ledger = 45.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Cross-checks data against SPEC and the guard change against the matcher cases.",
+     "evidence": [
+      "file:src/proxy.ts",
+      "task:T1.2"
+     ]
+    },
+    "scope": {
+     "justification": "Writes only a report and its findings ledger.",
+     "evidence": [
+      "task:T1.5",
+      "task:T1.6"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty minutes of review and fifteen for the ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T1.4"
+     ]
+    },
+    "risk": {
+     "justification": "Wrong prices or an opened route are the defects that matter here.",
+     "evidence": [
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess",
+      "file:src/proxy.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger can send any SP-1 task back.",
+     "evidence": [
+      "task:T1.2",
+      "task:T1.4"
+     ]
+    },
+    "confidence": {
+     "justification": "Small surface with explicit owner data to compare against.",
+     "evidence": [
+      "task:T1.2",
+      "spec:SPEC.md#open-questions-for-the-owner-the-planner-must-ask-not-guess"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-022/SP-1.audit.md",
+    ".evidence/REQ-022/SP-1.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-1"
+   ],
+   "acceptance_criteria": [
+    "Every name, price, tool and limit shown in the plans section matches the catalogue and the owner's words recorded in SPEC, no invented marketing copy appears, the access rule matches the owner's visibility decision, and every finding is recorded with the task to redo in the SP-1 ledger."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-022/SP-1.findings.json",
+     "purpose": "Every name, price, tool and limit shown in the plans section matches the catalogue and the owner's words recorded in SPEC, no invented marketing copy appears, the access rule matches the owner's visibility decision, and every finding is recorded with the task to redo in the SP-1 ledger.",
+     "category": "static",
+     "created_by": "T1.7"
+    }
+   ],
+   "covers": [
+    "R1",
+    "R2",
+    "R3"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-1"
+  }
+ ],
+ "interfaces": [],
+ "subplans": [
+  {
+   "id": "SP-1",
+   "milestone_id": "M1",
+   "title": "Plans section: look at and compare the four plans (informative)",
+   "outcome": "A person opens the plans section from the entry points the owner chooses and sees Free, the second tier, Designer and Designer Max side by side with monthly price (second tier COP 20,000 / USD 7, Designer COP 45,000 / USD 14), included tools and limits, all read from one plan catalogue; the section is informative only and grants no access.",
+   "covers": [
+    "R1",
+    "R2",
+    "R3"
+   ],
+   "acceptance_criteria": [
+    "The catalogue lists exactly four plans in the order Free, second tier, Designer, Designer Max, and each plan has a Spanish and an English name, a monthly price in COP and USD, its included tools and its limits exactly as recorded in SPEC from the owner's answers.",
+    "The catalogue holds the second tier at COP 20,000 / USD 7 per month and Designer at COP 45,000 / USD 14 per month, Free includes the basic decoration chat and the balloon counter, Designer includes extended chat, cost calculator, structure detection and advanced balloon detection, and Designer Max includes everything before plus the Taller 3D.",
+    "The plans section renders the four plans in catalogue order with name, monthly price, included tools and limits taken from the catalogue, and a changed catalogue value appears on the rendered page without editing the page.",
+    "The plans section shows no purchase, subscription or request action and no text beyond plan names, prices, tools, limits and the headings fixed by the approved planes@v1 contract.",
+    "Each entry point to the plans section recorded in SPEC for SP-1 links to it, and the section opens only for the audience recorded there while every other request gets the app's existing sign-in redirect.",
+    "On a production build started with next start, a browser follows each entry point to the plans section and sees the four plans with the catalogue's names and prices at 390 px and 1280 px widths, with no horizontal page scroll at 390 px and keyboard focus moving through the plans in visual order."
+   ],
+   "ui": {
+    "contract": "planes",
+    "version": 1,
+    "design_task": "T1.1",
+    "visual_review_task": "T1.6"
+   },
+   "integration_test_task": "T1.5",
+   "audit_task": "T1.7",
+   "produces": [
+    {
+     "contract": "plan-catalogue",
+     "version": 1,
+     "defined_by": "T1.2"
+    }
+   ],
+   "consumes": [
+    {
+     "contract": "permission-map",
+     "version": 1,
+     "from": "external",
+     "dependency": "contract"
+    }
+   ],
+   "ui_brief": {
+    "flows": [
+     {
+      "name": "Look at and compare the plans",
+      "steps": [
+       "The person reaches the plans section from the entry points the owner chooses (open question on visibility and location).",
+       "The four plans appear in order Free, second tier, Designer, Designer Max, each with name, monthly price, included tools and limits.",
+       "On a phone the person moves between plans without losing which tools each one adds over the previous one."
+      ]
+     }
+    ],
+    "screens_states": [
+     "Plans section as the chosen audience sees it (signed out only if the owner makes it public).",
+     "A plan whose tool is not available yet, only if the owner keeps such tools in the catalogue (open question 5).",
+     "Phone, tablet and desktop widths; light and dark theme; keyboard and screen-reader order matching the visual plan order."
+    ],
+    "existing_surface": {
+     "routes": [
+      "New section; its route and navigation entry depend on the owner's answer on visibility and location."
+     ],
+     "paths": [
+      "src/app/login/page.tsx",
+      "src/components/ui/shell/CabeceraApp.tsx",
+      "src/components/ui/shell/MenuApp.tsx",
+      "src/app/globals.css"
+     ],
+     "components": [
+      "src/components/ui/shell/MenuApp.tsx (header menu on origin/main)",
+      "REQ-021 SP-2 account menu MenuCuenta (planned, not on origin/main yet)"
+     ],
+     "notes": "New section, not a change to the REQ-021 SP-2 administration screens: the owner removed the plan side panel «Cada persona. Sus herramientas.» from that design and asked for this section instead. Candidate entry points: the sign-in page, the header menu and the REQ-021 account menu; the owner picks."
+    },
+    "must_not_change": [
+     "REQ-021 SP-2 screens (accounts, roles, sign-in, Mi cuenta) beyond adding a link to this section where the owner places it.",
+     "Prices as given by the owner: second tier COP 20,000 / USD 7 per month, Designer COP 45,000 / USD 14 per month.",
+     "The Pictures design tokens and type in src/app/globals.css; the visual direction follows the existing app and the REQ-021 «Parte de acceso» rounded surfaces.",
+     "Server-side permission checks: the section shows plans, it never grants access by itself.",
+     "No purchase, subscription, request or contact action in this subplan: the section is informative first; any plan action is a later subplan decided by open question 2."
+    ],
+    "copy_rules": [
+     "Plan names, prices, tools and limits are rendered from the SP-1 catalogue; the screen never retypes them.",
+     "Tool names use the labels already used in the app and in REQ-021 (Chat asistido, Contador de globos, Calculadora de costos, Taller 3D) plus the owner's words for the new tools («chat extendido», «detección de estructuras», «detección de globos avanzado»).",
+     "No invented marketing copy, taglines, testimonials, discounts, trial or savings claims; any headline or description beyond names, prices, tools and limits needs the owner's words.",
+     "Spanish by default, English through the REQ-021 language switch; how COP and USD are shown is the owner's decision."
+    ],
+    "criteria": [
+     "The plans section renders the four plans in catalogue order with name, monthly price, included tools and limits taken from the catalogue, and a changed catalogue value appears on the rendered page without editing the page.",
+     "The plans section shows no purchase, subscription or request action and no text beyond plan names, prices, tools, limits and the headings fixed by the approved planes@v1 contract.",
+     "Each entry point to the plans section recorded in SPEC for SP-1 links to it, and the section opens only for the audience recorded there while every other request gets the app's existing sign-in redirect.",
+     "On a production build started with next start, a browser follows each entry point to the plans section and sees the four plans with the catalogue's names and prices at 390 px and 1280 px widths, with no horizontal page scroll at 390 px and keyboard focus moving through the plans in visual order."
+    ]
+   }
+  },
+  {
+   "id": "SP-2",
+   "milestone_id": "M2",
+   "title": "Access by plan: each account reaches exactly its plan's tools",
+   "outcome": "An account assigned to a plan opens and calls exactly the tools that plan includes (basic chat and balloon counter for Free; extended chat, cost calculator, structure detection and advanced balloon detection for Designer; plus the Taller 3D for Designer Max) and is refused every other tool on the server, building on the REQ-021 accounts, roles and permission guard.",
+   "covers": [
+    "R4"
+   ],
+   "acceptance_criteria": []
+  },
+  {
+   "id": "SP-3",
+   "milestone_id": "M2",
+   "title": "Free plan limits",
+   "outcome": "A Free account that reaches one of its limits is refused further use of that tool with a message that names the limit, when it resets and where to see the plans; its count restarts at the start of the next period, and an account on a plan without that limit is never refused for usage.",
+   "covers": [
+    "R5"
+   ],
+   "acceptance_criteria": [],
+   "ui": {
+    "contract": "limites-free",
+    "version": 1
+   },
+   "ui_brief": {
+    "flows": [
+     {
+      "name": "Free account reaches a limit",
+      "steps": [
+       "A signed-in Free account uses the basic chat or the balloon counter normally.",
+       "The tool shows how much of the current limit is used, in the units the owner defines for the Free plan.",
+       "When the limit is reached, the next attempt is refused and the tool shows the limit message instead of a result.",
+       "The message names the limit, says when the count resets and links to the plans section.",
+       "After the reset moment the tool works again without any action from the person."
+      ]
+     }
+    ],
+    "screens_states": [
+     "Basic chat: normal, near the limit, limit reached (input disabled with the limit message).",
+     "Balloon counter: normal, near the limit, limit reached.",
+     "Limit reached while a request is in flight: the request that crossed the limit gets the refusal, never a partial result.",
+     "Phone and desktop widths, light and dark theme."
+    ],
+    "existing_surface": {
+     "routes": [
+      "/asistente (assisted chat on origin/main; REQ-021 SP-7 splits it into the normal chat, balloon counter and cost calculator)"
+     ],
+     "paths": [
+      "src/app/asistente/page.tsx",
+      "src/app/globals.css"
+     ],
+     "components": [
+      "src/components/ui/shell/Compositor.tsx",
+      "src/components/errores/AvisoError.tsx"
+     ],
+     "notes": "Modifies the tool screens REQ-021 SP-7 creates (chat, balloon counter); they are not on origin/main yet, so the exact surface is pinned when SP-3 is in focus. Limit units, values and period come from the owner (open question), never from the design."
+    },
+    "must_not_change": [
+     "What the chat and the balloon counter answer and how they compute counts (REQ-021 SP-7 behavior).",
+     "REQ-021 sign-in, account menu and no-access behavior for tools outside the plan (that is SP-5).",
+     "The Pictures design tokens in src/app/globals.css: no new palette, fonts or theme."
+    ],
+    "copy_rules": [
+     "Spanish by default, English through the REQ-021 language switch; every string lives in the tool's text module, never inline.",
+     "State the limit, the usage and the reset moment with the owner's numbers and units only; no invented marketing copy, discounts or urgency wording.",
+     "Plan names and prices come from the SP-1 catalogue, never retyped in the screen."
+    ]
+   }
+  },
+  {
+   "id": "SP-4",
+   "milestone_id": "M2",
+   "title": "Plan awareness: current plan marked and locked tools name their plan",
+   "outcome": "A signed-in person sees their current plan marked in the plans section, and when they open or are refused a tool their plan does not include, the screen names the lowest plan that includes it and links to the plans section instead of the generic no-access page; the refusal itself stays server-side.",
+   "covers": [
+    "R6",
+    "R7"
+   ],
+   "acceptance_criteria": [],
+   "ui": {
+    "contract": "plan-en-uso",
+    "version": 1
+   },
+   "ui_brief": {
+    "flows": [
+     {
+      "name": "See my current plan",
+      "steps": [
+       "A signed-in person opens the plans section.",
+       "Their current plan is marked as current; the other plans keep the SP-1 informative layout."
+      ]
+     },
+     {
+      "name": "Open a tool outside the plan",
+      "steps": [
+       "A signed-in person opens a tool route or follows a link to a tool their plan does not include.",
+       "The server refuses it as REQ-021 already does.",
+       "The person sees the tool's name, the lowest plan that includes it and a link to the plans section.",
+       "Following the link opens the plans section with that plan in view."
+      ]
+     }
+    ],
+    "screens_states": [
+     "Plans section signed in with the current plan marked, one variant per plan.",
+     "Tool locked, page entry (replaces the generic no-access content for tools that belong to a plan).",
+     "Tool locked inside navigation or a menu entry, if the owner wants locked tools listed rather than hidden (decided with SP-5 in focus).",
+     "Staff-only areas (spend, administration) keep the generic no-access content: they are not plan tools.",
+     "Phone and desktop widths, light and dark theme."
+    ],
+    "existing_surface": {
+     "routes": [
+      "The SP-1 plans section (new in this requirement)",
+      "/sin-acceso (planned by REQ-021 T1.4, not on origin/main yet)"
+     ],
+     "paths": [
+      "src/app/sin-acceso/page.tsx (REQ-021 T1.4, planned)",
+      "src/app/globals.css"
+     ],
+     "components": [
+      "src/components/ui/shell/MenuApp.tsx"
+     ],
+     "notes": "Extends the REQ-021 no-access page only for plan tools; exact surface pinned once REQ-021 SP-1 and SP-7 are on main."
+    },
+    "must_not_change": [
+     "Server-side enforcement and the REQ-021 permission keys' meaning.",
+     "Generic no-access behavior for staff-only areas.",
+     "The Pictures design tokens in src/app/globals.css."
+    ],
+    "copy_rules": [
+     "Name the tool and the plan from the SP-1 catalogue; no invented persuasion copy.",
+     "Spanish by default, English through the REQ-021 language switch."
+    ]
+   }
+  }
+ ],
+ "composition_gates": []
+}

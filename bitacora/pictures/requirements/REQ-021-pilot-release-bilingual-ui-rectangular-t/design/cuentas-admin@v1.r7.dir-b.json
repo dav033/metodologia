@@ -1,0 +1,39 @@
+{
+  "name": "Pase al montaje",
+  "axes": {
+    "concept": "A hinged access pass laid on a decoration assembly stage: balloon rig, tear seam and registration corners come from Pictures’ physical world.",
+    "layout": "A centred 950px two-leaf access pass; 1120px ruled roster stage; grouped permission bench. At 767px the pass folds into one column and account rows become stacked records.",
+    "navigation": "Persistent bottom tool dock for Accounts, Roles and My account; a separate named account menu. Full text and icons remain visible, with native preview and language selectors.",
+    "typography": "System sans at 32/28px with tight title tracking, 26/18px light-weight physical-stage statement, 14/15px working copy and 12px monospace location and pass metadata.",
+    "density": "Generous 40px form padding and 32px sheet padding; 20px phone inner padding; ruled rows with 22px vertical space. A compact fixed dock keeps the working stage broad.",
+    "components": "Real Base UI/shadcn Button, Input, DropdownMenu, Dialog and destructive AlertDialog; Animate UI Checkbox; Skeleton. Custom pass, balloon rig, roster and permission grouping recompose those installed controls.",
+    "colour": "Pictures project tokens: light #faf9fc/#ffffff/#1c1425 with #6d3fe0; dark #0b0c10/#16181f/#f4f5f7 with #9479ff. Neutral surfaces; mauve on primary actions and balloons; green/red only convey status. Contrast-adjusted control edges and muted dark text are explicit proposals.",
+    "motion": "Spatial unfolding: perspective-hinged pass, three staggered balloon settles (780/920/1060ms), roster lateral settling and a Motion spring on the stage. Profile-aware 520/340/200ms surfaces, 200/140/90ms repeated controls. Reduced motion and ?still=1 remove travel and preserve every control."
+  },
+  "evidence": {
+    "layout": [
+      ".access-pass",
+      ".physical",
+      ".roster-row",
+      ".roles-layout"
+    ],
+    "navigation": [
+      ".dock",
+      ".dock [aria-current=page]",
+      ".account-button"
+    ],
+    "typography": [
+      ".page-title",
+      ".physical h2",
+      ".breadcrumb",
+      ".physical-meta"
+    ],
+    "motion": [
+      ".signature",
+      ".balloon.b1",
+      ".balloon.b2",
+      ".stage",
+      ".roster-row:not(.roster-head)"
+    ]
+  }
+}

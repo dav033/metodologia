@@ -1,0 +1,39 @@
+{
+  "name": "Molde de montaje",
+  "axes": {
+    "concept": "A reusable silicone assembly mould: furniture silhouettes become push-in pieces around a real-scale event composition, with latex and foil outlines.",
+    "layout": "Broad 1.25:1 shared mould with a 64px-radius scene well on the left and two-column silhouette slots on the right; below 760px the mould stacks with the tool slots first and the scene after them. No sidebar, folio, bottom dock or ruled work bands.",
+    "navigation": "Four short top-right latch tabs choose Tables, Backing, List and Export; selecting or adding a table enters the inspector. The original scene remains the common reference.",
+    "typography": "Locally embedded Rounded Mplus 1c ExtraBold display at clamp(36px,4.4vw,62px) and 24–25px headings, paired with Adwaita Sans working text at 14–15px and tabular measurement figures. Rounded mass echoes inflated latex.",
+    "density": "Generous single containing mould with 28px desktop and 20px phone padding, rounded 132px silhouette slots, 44px minimum action targets; forms use compact three-field rows and table rules.",
+    "components": "Real installed shadcn/Base UI Buttons, Input and Skeleton, Animate UI Dialog, Motion profile spring, custom SVG silhouettes and a press-and-settle material scene. Native labelled view/state/scene/theme/motion selectors remain.",
+    "colour": "Cool blue mould and paper, cherry red action/selection, sunflower latex and foil pink as object materials; navy night surfaces with high-contrast pink action. Project semantic roles map once per theme. No purple accent, purple gradient, terracotta or acid-green black.",
+    "motion": "Elastic fit-and-release grammar: mould seats, silhouette slots settle with 45ms offsets, latex floats, table snaps, chairs fit independently, measuring dashes feed, Backing settles, status stamps and export crate rocks. Press/hover/focus are 120–200ms; showcase 560–900ms. Profiles, hidden/offscreen pause, reduced motion and still query retain identical content."
+  },
+  "evidence": {
+    "layout": [
+      ".work-mould",
+      ".scene-frame",
+      ".slot-grid"
+    ],
+    "navigation": [
+      ".mould-nav",
+      ".mould-nav .tool[aria-current=\"page\"]"
+    ],
+    "typography": [
+      ".heading-row h1",
+      ".tooling h2",
+      ".dimension-rail strong"
+    ],
+    "motion": [
+      ".work-mould",
+      ".piece-slot",
+      ".balloon-float",
+      ".table-assembly",
+      ".seat",
+      ".measure-line",
+      ".backing-shape",
+      ".mould-nav .tool"
+    ]
+  }
+}

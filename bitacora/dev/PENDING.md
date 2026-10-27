@@ -61,3 +61,8 @@ _None_
 
 ## Recently closed
 _None_
+
+## Notes
+Designer-kit follow-ups are tracked once in [metodologia/PENDING.md](../metodologia/PENDING.md): P-211 (Animate
+enhancement gaps), P-212 (Bencho Picker mismatch), P-213 (Quieto/Motion interruption). P-213 awaits the owner's
+answer after two failed corrections under AGENTS §1; no timeout or documentation hook authorizes another attempt.

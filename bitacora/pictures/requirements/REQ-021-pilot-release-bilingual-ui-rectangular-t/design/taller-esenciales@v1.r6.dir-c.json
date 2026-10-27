@@ -1,0 +1,38 @@
+{
+  "name": "Banco de montaje",
+  "axes": {
+    "concept": "La escena se trabaja sobre un banco de corte: tablero punteado, regla superior, piezas y una bandeja de materiales. La metáfora sirve para colocar y medir mesas y Backing.",
+    "layout": "Plano ancho sobre una bandeja inferior; el inspector reemplaza la bandeja con una regla de tres grupos horizontales. Sin panel lateral. Biblioteca 4/3/2/1 columnas; el inspector se apila en móvil.",
+    "navigation": "Cuatro herramientas nombradas en la junta superior del banco: Mesas, Backing, Ajustar mesa e IA de escena. Lista y Exportar permanecen en la cabecera; Deshacer/Rehacer en la misma junta. Diálogos locales, sin dock inferior.",
+    "typography": "Arial/Helvetica/sans offline. Título 30 px, 27 px móvil; título de panel 21 px; etiquetas 13–14 px; nombres de pieza 15/14 px. Medidas y cantidades usan monospace tabular, separadas del lenguaje de acción.",
+    "density": "Piezas con radio 16 px, banco de 24/18 px; controles de 44 px y padding de panel 24 px, 20 px en móvil. El plano mantiene 294/320 px; no se comprimen los campos para simular tres paneles.",
+    "components": "Botones, Input, Textarea, Checkbox Animate UI/Base UI, Skeleton y Dialog reales. El tablero, regla, iconos SVG de piezas, recibo semántico y inspector horizontal son composiciones propias.",
+    "colour": "Tokens Pictures: fondo #faf9fc/#0b0c10, superficie #ffffff/#16181f, primario #6d3fe0/#9479ff. Visor #ebe7f1/#1a1722. Acento en piezas y acción primaria, navegación neutra; bordes de control legibles y estados con texto.",
+    "motion": "Regla desenrollada desde la izquierda, piezas que se asientan con giro y sobrepaso, bandeja que encaja desde abajo; arrastre con resorte de Motion y presión de controles 180 ms. Perfil expresivo 650 ms, natural 400 ms, sutil 220 ms; desfase de piezas 40 ms. Reduced motion y still=1 muestran la misma geometría sin animaciones."
+  },
+  "evidence": {
+    "layout": [
+      ".bench",
+      ".cutting-plane",
+      ".pieces-grid",
+      ".measure-rule"
+    ],
+    "navigation": [
+      ".tool-tabs",
+      ".header-actions",
+      ".history"
+    ],
+    "typography": [
+      ".project-line h1",
+      ".piece-info h3",
+      ".dimension-tag"
+    ],
+    "motion": [
+      ".ruler-edge",
+      ".table-assembly",
+      ".piece-card",
+      ".work-area",
+      ".press"
+    ]
+  }
+}

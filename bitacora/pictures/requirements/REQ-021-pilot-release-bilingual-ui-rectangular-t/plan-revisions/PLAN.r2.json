@@ -1,0 +1,1551 @@
+{
+  "schema_version": "1.3.0",
+  "plan_id": "REQ-021",
+  "revision": 2,
+  "spec_ref": "SPEC.md",
+  "composition_gates": [],
+  "interfaces": [],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Accounts, access plans and the plans section",
+      "acceptance_criteria": [
+        "Real people sign in with their own invited account and each one reaches exactly what their role or access plan allows; the shared APP_PASSWORD no longer opens the app; anyone can compare the four access plans in the public plans section."
+      ]
+    }
+  ],
+  "requirements": [
+    "R1",
+    "R2",
+    "R3",
+    "R16",
+    "R17"
+  ],
+  "stage": {
+    "subplans": [
+      "SP-1"
+    ],
+    "version": 1
+  },
+  "subplans": [
+    {
+      "acceptance_criteria": [
+        "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the six system roles.",
+        "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+        "The six system roles hold exactly these permissions: the four plan roles take theirs only from the plan catalogue, Entusiasta and Designer the assisted chat, the balloon counter and the catalogue, Designer Plus adds the cost calculator and Master Designer adds the Taller 3D with its scene AI, assembly plans and sheet, export, own projects and decorations and the ready-made decorations explorer; Empleado interno holds every plan permission, everyone's projects, AI spend and internal tools; Administrador holds every permission.",
+        "The plan catalogue holds exactly four plans in the order Entusiasta, Designer, Designer Plus and Master Designer, each with its name in Spanish and English (Entusiasta is Enthusiast in English; Designer, Designer Plus and Master Designer keep their names), its monthly price in COP and USD (free; 20,000 and 7; 45,000 and 14; 70,000 and 25), its tools in cumulative order with the Entusiasta chat described as with limits and the Designer chat as with higher limits and no limit number, extended chat, structure detection and advanced balloon detection marked not available yet, and its permission list; a catalogue with a missing name, price or tool, an unknown permission key or a plan that lacks a permission of the plan below it fails to load naming the plan and the field.",
+        "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+        "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+        "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+        "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+        "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+        "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+        "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+        "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+        "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+        "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+        "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+        "Against a production build started with next start on the REQ-021 test database, one Entusiasta, one Designer Plus, one Master Designer, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+        "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding."
+      ],
+      "audit_task": "T1.8b",
+      "checkpoints": [
+        {
+          "purpose": "Integration evidence the two independent audits start from (added with the cross-check audit).",
+          "task": "T1.7"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16",
+        "R17"
+      ],
+      "id": "SP-1",
+      "integration_test_task": "T1.7",
+      "milestone_id": "M1",
+      "outcome": "Invited accounts with hashed passwords and revocable server sessions replace the shared APP_PASSWORD; every page and API of the pilot checks the permission it needs on the server; roles and the four access plans of Usuario accounts (Entusiasta, Designer, Designer Plus, Master Designer) are sets of permissions read from one plan catalogue; the local no-restrictions flag cannot be enabled in production; the first administrator is created by a one-off command.",
+      "produces": [
+        {
+          "contract": "permission-map",
+          "defined_by": "T1.2",
+          "version": 1
+        },
+        {
+          "contract": "account-service",
+          "defined_by": "T1.3",
+          "version": 1
+        },
+        {
+          "contract": "session-guard",
+          "defined_by": "T1.4",
+          "version": 1
+        },
+        {
+          "contract": "plan-catalogue",
+          "defined_by": "T1.2",
+          "version": 1
+        }
+      ],
+      "title": "Accounts, sessions and server-side permissions"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "T1.1",
+      "milestone_id": "M1",
+      "title": "Accounts schema: migration 037 and the isolated test-schema helper",
+      "objective": "Postgres holds accounts, roles, role permissions, sessions, single-use links and sign-in attempts, and every database test runs in its own throwaway schema of the REQ-021 test database.",
+      "repository": "pictures",
+      "after": [],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Agent estimate in minutes: 20 additive migration + 25 schema helper + 15 tests = 60. No comparable history for implement tasks.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:scripts/migrations/036_shared_taller_quotes.sql",
+            "file:scripts/migrate.ts"
+          ],
+          "justification": "Additive tables follow the existing numbered migration style; the isolated-schema helper needs search_path care with public extensions."
+        },
+        "scope": {
+          "evidence": [
+            "file:scripts/migrations/035_topes_gasto.sql",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "One new migration, one test helper and one test file, without touching existing tables."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:scripts/migrate.ts"
+          ],
+          "justification": "Twenty minutes for the migration, twenty-five for the helper and fifteen for its tests, totaling sixty."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The schema stores personal data and password hashes of real external users, so a wrong constraint leaks or loses accounts."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.3",
+            "task:T1.4"
+          ],
+          "justification": "The account service, session guard and every later subplan that stores an owner read these tables."
+        },
+        "confidence": {
+          "evidence": [
+            "file:scripts/migrate.ts",
+            "file:scripts/migrations/036_shared_taller_quotes.sql"
+          ],
+          "justification": "The migration runner and an existing migration were read, so table and runner conventions are known."
+        }
+      },
+      "expected_paths": [
+        "scripts/migrations/037_cuentas.sql",
+        "scripts/test/lib/base-prueba.ts",
+        "scripts/test/test-cuentas-esquema.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the six system roles.",
+        "The database rejects a second account whose email differs only in letter case and removes an account's sessions and links when the account is deleted.",
+        "Each test run works in its own throwaway schema of the REQ-021 test database, drops it at the end, and refuses to run against any database other than PICTURES_REQ021_DATABASE_URL or a CI database marked APP_ENV=test."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-esquema -- --test-name-pattern=migracion",
+          "purpose": "Migration 037 applies on an empty isolated schema and again on an already migrated one without error, creates the account, role, session, link and sign-in attempt tables, and seeds exactly the six system roles.",
+          "created_by": "T1.1",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-esquema -- --test-name-pattern=restricciones",
+          "purpose": "The database rejects a second account whose email differs only in letter case and removes an account's sessions and links when the account is deleted.",
+          "created_by": "T1.1",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-esquema -- --test-name-pattern=aislamiento",
+          "purpose": "Each test run works in its own throwaway schema of the REQ-021 test database, drops it at the end, and refuses to run against any database other than PICTURES_REQ021_DATABASE_URL or a CI database marked APP_ENV=test.",
+          "created_by": "T1.1",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.2",
+      "milestone_id": "M1",
+      "title": "Permission catalogue, the plan catalogue, the six system roles and the route permission map",
+      "objective": "One code module names every permission and the permissions of the staff roles, one plan catalogue holds the four access plans with their names, prices, tools and permissions, and one map assigns every page and API path its permission, public access or own authentication, with a test that fails on any unmapped file.",
+      "repository": "pictures",
+      "after": [
+        "T1.1"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 15 permission keys and staff roles + 30 plan catalogue with load-time validation + 45 classifying 115 page and route files + 30 filesystem-walking test = 120. Confidence medium because a few routes may belong to more than one tool. Amendment A-1 (2026-10-27) added the plan catalogue (+30).",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/proxy.ts",
+            "spec:SPEC.md#clarifications"
+          ],
+          "justification": "Assigning 95 API routes and 20 pages to the owner's tools needs judgement for routes shared by the chat and the Taller."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/lib/auth/shared-quote-public-path.ts",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "Two small modules and one test, with no behavior change until the guard consumes them."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:src/proxy.ts"
+          ],
+          "justification": "Fifteen permission keys, thirty plan catalogue, forty-five classifying every file and thirty for the walking test, one hundred twenty in total."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/proxy.ts"
+          ],
+          "justification": "A route placed under the wrong permission exposes paid AI or internal tools to external users."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.4",
+            "task:T1.6"
+          ],
+          "justification": "The guard, the admin screens of SP-2 and every tool subplan read contract:permission-map."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/proxy.ts",
+            "assumption:shared chat and Taller routes go to the plan that first includes the tool",
+            "spec:SPEC.md#clarifications"
+          ],
+          "justification": "The route tree and the proxy exceptions were listed, but the tool each shared route belongs to is partly assumed."
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/permisos.ts",
+        "src/lib/planes/catalogo.ts",
+        "src/lib/cuentas/mapa-rutas.ts",
+        "scripts/test/test-mapa-rutas.ts",
+        "scripts/test/test-catalogo-planes.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:permission-map",
+        "contract:plan-catalogue"
+      ],
+      "acceptance_criteria": [
+        "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+        "The six system roles hold exactly these permissions: the four plan roles take theirs only from the plan catalogue, Entusiasta and Designer the assisted chat, the balloon counter and the catalogue, Designer Plus adds the cost calculator and Master Designer adds the Taller 3D with its scene AI, assembly plans and sheet, export, own projects and decorations and the ready-made decorations explorer; Empleado interno holds every plan permission, everyone's projects, AI spend and internal tools; Administrador holds every permission.",
+        "The plan catalogue holds exactly four plans in the order Entusiasta, Designer, Designer Plus and Master Designer, each with its name in Spanish and English (Entusiasta is Enthusiast in English; Designer, Designer Plus and Master Designer keep their names), its monthly price in COP and USD (free; 20,000 and 7; 45,000 and 14; 70,000 and 25), its tools in cumulative order with the Entusiasta chat described as with limits and the Designer chat as with higher limits and no limit number, extended chat, structure detection and advanced balloon detection marked not available yet, and its permission list; a catalogue with a missing name, price or tool, an unknown permission key or a plan that lacks a permission of the plan below it fails to load naming the plan and the field.",
+        "A path the map does not list is reachable only with the users-administration permission, and the public and own-auth exceptions of today's proxy matcher stay public or own-auth."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=cobertura",
+          "purpose": "Every page.tsx and route.ts under src/app matches exactly one entry of the route permission map, and the test fails naming any file that matches none or several.",
+          "created_by": "T1.2",
+          "category": "static"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=roles-sistema",
+          "purpose": "The six system roles hold exactly these permissions: the four plan roles take theirs only from the plan catalogue, Entusiasta and Designer the assisted chat, the balloon counter and the catalogue, Designer Plus adds the cost calculator and Master Designer adds the Taller 3D with its scene AI, assembly plans and sheet, export, own projects and decorations and the ready-made decorations explorer; Empleado interno holds every plan permission, everyone's projects, AI spend and internal tools; Administrador holds every permission.",
+          "created_by": "T1.2",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run planes:test-catalogo",
+          "purpose": "The plan catalogue holds exactly four plans in the order Entusiasta, Designer, Designer Plus and Master Designer, each with its name in Spanish and English (Entusiasta is Enthusiast in English; Designer, Designer Plus and Master Designer keep their names), its monthly price in COP and USD (free; 20,000 and 7; 45,000 and 14; 70,000 and 25), its tools in cumulative order with the Entusiasta chat described as with limits and the Designer chat as with higher limits and no limit number, extended chat, structure detection and advanced balloon detection marked not available yet, and its permission list; a catalogue with a missing name, price or tool, an unknown permission key or a plan that lacks a permission of the plan below it fails to load naming the plan and the field.",
+          "created_by": "T1.2",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=excepciones",
+          "purpose": "A path the map does not list is reachable only with the users-administration permission, and the public and own-auth exceptions of today's proxy matcher stay public or own-auth.",
+          "created_by": "T1.2",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R2",
+        "R3",
+        "R16",
+        "R17"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.3",
+      "milestone_id": "M1",
+      "title": "Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands",
+      "objective": "A server-only service invites, activates, signs in, locks out, resets, deactivates and deletes accounts and manages custom roles under the owner's rules, and two commands create the first administrator and the local test accounts.",
+      "repository": "pictures",
+      "after": [
+        "T1.2"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 15 moving scrypt + 60 service rules + 25 links and lockout + 20 commands + 30 database tests = 150. No comparable history.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "spec:SPEC.md#clarifications",
+            "file:src/lib/asesor/auth.ts"
+          ],
+          "justification": "Lockout windows, single-use links, last-administrator protection and generic refusals interact and must hold under concurrent requests."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/lib/asesor/auth.ts",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "A new service, two link and lockout helpers, two commands and a shared hashing module reused by the advisor login."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:src/lib/asesor/auth.ts"
+          ],
+          "justification": "Fifteen hashing, sixty service, twenty-five links and lockout, twenty commands and thirty tests, one hundred fifty minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "file:src/lib/asesor/auth.ts"
+          ],
+          "justification": "Authentication code: an error lets someone in without a password or locks real users out of the pilot."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.4",
+            "task:T1.7"
+          ],
+          "justification": "The session guard, the SP-2 screens and the release subplan call contract:account-service."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/lib/asesor/auth.ts",
+            "assumption:row locks on the account serialise concurrent activations"
+          ],
+          "justification": "The existing scrypt code was read and the rules are fixed by the owner, though concurrency details remain partly assumed."
+        }
+      },
+      "expected_paths": [
+        "src/lib/seguridad/scrypt.ts",
+        "src/lib/asesor/auth.ts",
+        "src/lib/cuentas/servicio.ts",
+        "src/lib/cuentas/enlaces.ts",
+        "src/lib/cuentas/limite-intentos.ts",
+        "scripts/cuentas/primer-admin.ts",
+        "scripts/cuentas/sembrar-prueba.ts",
+        "scripts/test/test-cuentas-servicio.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:account-service",
+        "contract:permission-map"
+      ],
+      "acceptance_criteria": [
+        "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+        "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+        "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+        "An administrator-generated reset link is single-use, expires after 24 hours, sets a new password and revokes every open session of that account.",
+        "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+        "An administrator creates a role from permissions of the catalogue only; the six system roles cannot be edited or deleted; a role still assigned to accounts cannot be deleted.",
+        "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+        "npm run cuentas:sembrar-prueba creates one active account per system role with a password read from the terminal without echo, and refuses when the target database is not the REQ-021 test database."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=invitacion",
+          "purpose": "An administrator's invitation creates an invited account with a single-use link valid seven days; activating it sets a password of at least eight characters, records the data-notice version and date, and a second use of the same link is refused.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=ingreso",
+          "purpose": "Signing in with the right email and password of an active account creates a session; a wrong password, an unknown email and a deactivated account all get the same generic refusal.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=bloqueo",
+          "purpose": "After five failed sign-ins for one email within fifteen minutes that email is refused for fifteen minutes even with the right password, and other emails are unaffected.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=restablecer",
+          "purpose": "An administrator-generated reset link is single-use, expires after 24 hours, sets a new password and revokes every open session of that account.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=ultimo-admin",
+          "purpose": "Deactivating, deleting or changing the role of the last active Administrador is refused; deleting an account removes its personal data rows.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=roles",
+          "purpose": "An administrator creates a role from permissions of the catalogue only; the six system roles cannot be edited or deleted; a role still assigned to accounts cannot be deleted.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=primer-admin",
+          "purpose": "npm run cuentas:primer-admin creates an invited Administrador for the given email and prints its activation link once, and refuses without changes when an active Administrador already exists.",
+          "created_by": "T1.3",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=sembrar",
+          "purpose": "npm run cuentas:sembrar-prueba creates one active account per system role with a password read from the terminal without echo, and refuses when the target database is not the REQ-021 test database.",
+          "created_by": "T1.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R3",
+        "R16"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.4",
+      "milestone_id": "M1",
+      "title": "Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD",
+      "objective": "Every request is resolved to an account and its permissions from a revocable server session, the proxy enforces the route map for pages and APIs, and the shared APP_PASSWORD no longer opens anything.",
+      "repository": "pictures",
+      "after": [
+        "T1.3"
+      ],
+      "complexity": "high",
+      "scope": "large_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 35 sessions + 40 proxy and guard + 20 sign-in and sign-out APIs + 15 probe command + 40 tests = 150. No comparable history.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/proxy.ts",
+            "file:src/lib/auth/request.ts"
+          ],
+          "justification": "The proxy must keep today's exceptions while adding a database lookup per request and distinguishing page redirects from API errors."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/app/api/login/route.ts",
+            "file:src/lib/auth/session.ts"
+          ],
+          "justification": "Replaces the shared-password session across proxy, login API and helpers, adding sessions, guard, probe command and tests."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:src/proxy.ts"
+          ],
+          "justification": "Thirty-five sessions, forty guard, twenty APIs, fifteen probe and forty tests make one hundred fifty minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/proxy.ts"
+          ],
+          "justification": "A gap in the guard exposes every tool and real users' data; a wrong redirect locks everyone out of the pilot."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.6",
+            "task:T1.5"
+          ],
+          "justification": "Every API handler of T1.6 and every later subplan call contract:session-guard."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/proxy.ts",
+            "assumption:Next 16.3 proxy runs on the Node.js runtime"
+          ],
+          "justification": "The proxy, the request helpers and the login route were read; the Node runtime of the Next 16 proxy is assumed to allow a pg query."
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/sesion.ts",
+        "src/lib/cuentas/guardia.ts",
+        "src/proxy.ts",
+        "src/lib/auth/session.ts",
+        "src/lib/auth/request.ts",
+        "src/app/api/login/route.ts",
+        "src/app/api/cuentas/ingresar/route.ts",
+        "src/app/api/cuentas/salir/route.ts",
+        "src/app/sin-acceso/page.tsx",
+        "scripts/cuentas/probar-acceso.ts",
+        "scripts/test/test-sesion-guardia.ts",
+        "scripts/test/test-proxy-matcher.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:session-guard",
+        "contract:account-service",
+        "contract:permission-map"
+      ],
+      "acceptance_criteria": [
+        "A session cookie is httpOnly, SameSite=Lax, Secure outside localhost, lasts 30 days, and only the SHA-256 of its random token is stored.",
+        "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+        "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+        "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+        "npm run cuentas:probar-acceso signs in against a running server with an email and a password read without echo and prints, for every mapped area, whether that account is allowed or denied."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion -- --test-name-pattern=cookie",
+          "purpose": "A session cookie is httpOnly, SameSite=Lax, Secure outside localhost, lasts 30 days, and only the SHA-256 of its random token is stored.",
+          "created_by": "T1.4",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion -- --test-name-pattern=revocacion",
+          "purpose": "Deactivating an account, changing its password or signing out ends its sessions on the next request, and a role change applies on the next request without signing in again.",
+          "created_by": "T1.4",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion -- --test-name-pattern=proxy",
+          "purpose": "Without a valid session a page request redirects to /login keeping the path and an API request gets 401 JSON; with a session lacking the mapped permission a page shows the no-access page and an API gets 403 JSON.",
+          "created_by": "T1.4",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion -- --test-name-pattern=sin-clave-compartida",
+          "purpose": "A cookie or form built from the old APP_PASSWORD no longer grants access, and no code path reads APP_PASSWORD.",
+          "created_by": "T1.4",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-sesion -- --test-name-pattern=probar-acceso",
+          "purpose": "npm run cuentas:probar-acceso signs in against a running server with an email and a password read without echo and prints, for every mapped area, whether that account is allowed or denied.",
+          "created_by": "T1.4",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.5",
+      "milestone_id": "M1",
+      "title": "Local no-restrictions mode that refuses to start outside next dev on loopback",
+      "objective": "AUTH_LOCAL_SIN_RESTRICCIONES=1 lets the owner work locally as the Administrador local account without signing in, and any build, start or deployment with the variable set refuses to run.",
+      "repository": "pictures",
+      "after": [
+        "T1.4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "high",
+      "estimate_rationale": "Agent estimate in minutes: 20 mode and start guards + 10 ai-api refusal + 30 tests = 60. No comparable history.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/instrumentation.ts",
+            "file:next.config.ts"
+          ],
+          "justification": "The refusal must fire in three places, next.config at build, instrumentation at start and the ai-api, with loopback detection per request."
+        },
+        "scope": {
+          "evidence": [
+            "file:src/instrumentation.ts",
+            "spec:SPEC.md#inputs"
+          ],
+          "justification": "One mode module, start guards in two existing files, an ai-api refusal and their tests."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:src/instrumentation.ts"
+          ],
+          "justification": "Twenty for the guards, ten for the ai-api and thirty for the tests make sixty minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#clarifications",
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "If the variable ever works in a deployment, anyone on the internet is an administrator of the pilot."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.4",
+            "task:T1.7"
+          ],
+          "justification": "It plugs into contract:session-guard from T1.4 as an alternative session source."
+        },
+        "confidence": {
+          "evidence": [
+            "file:src/instrumentation.ts",
+            "file:next.config.ts"
+          ],
+          "justification": "Instrumentation and the Next config were read and the owner fixed the rule in round 5."
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/modo-local.ts",
+        "src/instrumentation.ts",
+        "next.config.ts",
+        "services/ai-api/app/main.py",
+        "scripts/test/test-modo-local.ts",
+        "services/ai-api/tests/test_modo_local.py"
+      ],
+      "shared_resources": [
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+        "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+        "Without the variable next dev asks to sign in like production, and DEV_REQUIRE_LOGIN no longer changes anything."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+          "purpose": "With AUTH_LOCAL_SIN_RESTRICCIONES=1 under next dev, a request from 127.0.0.1, ::1 or localhost runs as the Administrador local account without signing in, and a request from any other address must sign in.",
+          "created_by": "T1.5",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque",
+          "purpose": "With AUTH_LOCAL_SIN_RESTRICCIONES set, next build, next start, a Vercel environment and the ai-api deployment refuse to start with an error naming the variable.",
+          "created_by": "T1.5",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable",
+          "purpose": "Without the variable next dev asks to sign in like production, and DEV_REQUIRE_LOGIN no longer changes anything.",
+          "created_by": "T1.5",
+          "category": "regression"
+        }
+      ],
+      "covers": [
+        "R2"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.6",
+      "milestone_id": "M1",
+      "title": "Apply the permission guard to every API handler and move the existing suites to a shared test session",
+      "objective": "Each API handler checks its mapped permission on the server before doing work, and the suites that used APP_PASSWORD sign in through a shared test-session helper.",
+      "repository": "pictures",
+      "after": [
+        "T1.4"
+      ],
+      "complexity": "low",
+      "scope": "large_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "high",
+      "estimate_rationale": "Agent estimate in minutes: 70 guards on about 80 handlers + 70 moving 40 suites and the smoke to the helper + 40 guard-coverage test and fixes = 180. Mechanical but wide.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:src/lib/auth/request.ts",
+            "file:src/lib/feedback-ia/acceso.ts"
+          ],
+          "justification": "Mostly mechanical: replace isAuthenticatedRequest with the guard and the permission the map gives each path."
+        },
+        "scope": {
+          "evidence": [
+            "file:scripts/test/datos-vista-motor3d.ts",
+            "file:scripts/e2e/humo/configuracion.ts"
+          ],
+          "justification": "About eighty handlers and forty test files change, a transversal edit across the repository."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+            "file:scripts/test/datos-vista-motor3d.ts"
+          ],
+          "justification": "Seventy handlers, seventy suites and forty for the coverage test and fixes make one hundred eighty minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#requirements",
+            "file:src/lib/auth/request.ts"
+          ],
+          "justification": "A handler left unguarded exposes a paid AI endpoint to anyone with any session."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.4",
+            "task:T1.7"
+          ],
+          "justification": "It touches route files that later subplans also edit, so it consumes contract:session-guard and must land before them."
+        },
+        "confidence": {
+          "evidence": [
+            "command:grep -rln APP_PASSWORD src scripts services -> 59 files",
+            "file:src/lib/auth/request.ts"
+          ],
+          "justification": "Every handler and test using the shared password was listed by search, so the size is measured."
+        }
+      },
+      "expected_paths": [
+        "src/app/api/**/route.ts",
+        "src/lib/feedback-ia/acceso.ts",
+        "src/lib/guiada-motor/manejadores.ts",
+        "src/lib/happie/panel-prueba.ts",
+        "src/lib/shared-quotes/dependencies.server.ts",
+        "src/lib/taller/cotizacion-taller.ts",
+        "src/lib/asesor/voice.ts",
+        "scripts/test/lib/sesion-prueba.ts",
+        "scripts/test/test-guardias-rutas.ts",
+        "scripts/test/*.ts",
+        "scripts/e2e/humo/configuracion.ts",
+        "scripts/e2e/humo/pasos-asistente.ts",
+        "scripts/e2e/humo/navegacion.ts",
+        "scripts/eval/eval-chat-jerga.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:session-guard",
+        "contract:permission-map"
+      ],
+      "acceptance_criteria": [
+        "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+        "The existing suites that signed in with APP_PASSWORD pass using the shared test-session helper and none of them sets APP_PASSWORD.",
+        "Lint and the TypeScript check pass on the whole repository after the guards are applied."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-rutas",
+          "purpose": "Every API route handler outside the public and own-auth exceptions calls the permission guard with the permission the map assigns to its path before doing any work.",
+          "created_by": "T1.6",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run test-cotizacion-unica",
+          "purpose": "The existing suites that signed in with APP_PASSWORD pass using the shared test-session helper and none of them sets APP_PASSWORD.",
+          "category": "regression",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-estatico",
+          "purpose": "Lint and the TypeScript check pass on the whole repository after the guards are applied.",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R2"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1",
+      "ui": false
+    },
+    {
+      "id": "T1.7",
+      "milestone_id": "M1",
+      "title": "End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI",
+      "objective": "A production build started with next start against the REQ-021 test database proves each system role reaches exactly its areas, revocation is immediate and the shared password is dead, and CI runs the SP-1 suites.",
+      "repository": "pictures",
+      "after": [
+        "T1.5",
+        "T1.6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 15 build + 60 driving four accounts through pages and APIs + 25 CI steps + 20 evidence = 120. Build time on the sandbox is the main unknown.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "file:.github/workflows/checks.yml",
+            "task:T1.6"
+          ],
+          "justification": "Starting the real server against a throwaway schema and driving four roles needs careful setup and teardown."
+        },
+        "scope": {
+          "evidence": [
+            "file:.github/workflows/checks.yml",
+            "task:T1.5"
+          ],
+          "justification": "One integration script, CI steps and an evidence file, without product code changes."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+            "file:package.json"
+          ],
+          "justification": "Fifteen build, sixty driving the accounts, twenty-five CI and twenty evidence add to one hundred twenty minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "task:T1.8"
+          ],
+          "justification": "It is the last barrier before the audit for authentication of real users."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.4",
+            "task:T1.6"
+          ],
+          "justification": "It exercises contract:session-guard and every SP-1 task's output together."
+        },
+        "confidence": {
+          "evidence": [
+            "file:.github/workflows/checks.yml",
+            "assumption:next build finishes within the sandbox time limit"
+          ],
+          "justification": "The CI workflow and its Postgres service were read; next build duration in the sandbox is not measured."
+        }
+      },
+      "expected_paths": [
+        "scripts/test/test-integracion-cuentas.ts",
+        ".github/workflows/checks.yml",
+        ".evidence/REQ-021/SP-1.integration.json"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:session-guard"
+      ],
+      "acceptance_criteria": [
+        "Against a production build started with next start on the REQ-021 test database, one Entusiasta, one Designer Plus, one Master Designer, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+        "The CI checks workflow runs the SP-1 suites against its Postgres service and fails when a build is started with AUTH_LOCAL_SIN_RESTRICCIONES set."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-integracion",
+          "purpose": "Against a production build started with next start on the REQ-021 test database, one Entusiasta, one Designer Plus, one Master Designer, one Empleado interno and one Administrador account each reach exactly their mapped pages and APIs, a deactivated account loses access on its next request, and the old shared password is refused.",
+          "created_by": "T1.7",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-integracion -- --solo-ci",
+          "purpose": "The CI checks workflow runs the SP-1 suites against its Postgres service and fails when a build is started with AUTH_LOCAL_SIN_RESTRICCIONES set.",
+          "created_by": "T1.7",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-1"
+    },
+    {
+      "id": "T1.8",
+      "milestone_id": "M1",
+      "title": "SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands",
+      "objective": "An independent read-only security review confirms SP-1 against R1, R2, R3 and R16 and records each confirmed defect with the task to redo in a blocking findings ledger.",
+      "repository": "pictures",
+      "after": [
+        "T1.7",
+        "T1.10"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Agent estimate in minutes: 30 session and token handling + 25 route map and handler coverage + 15 local mode and commands + 20 ledger and report = 90.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1.4",
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Reviewing token storage, lockout, revocation and route coverage needs security judgement across modules."
+        },
+        "scope": {
+          "evidence": [
+            "task:T1.7",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The audit writes only its report and ledger and changes no code."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+            "task:T1.6"
+          ],
+          "justification": "Thirty sessions, twenty-five coverage, fifteen local mode and twenty ledger make ninety minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "task:T1.7"
+          ],
+          "justification": "A missed defect here reaches real external users on the first milestone deployment."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.3",
+            "task:T1.6"
+          ],
+          "justification": "Its ledger:SP-1 can send T1.1 to T1.6 back for targeted rework."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1.7",
+            "task:T1.2"
+          ],
+          "justification": "The review surface is bounded by three produced contracts with tests, so the estimate rests on concrete tasks."
+        }
+      },
+      "expected_paths": [
+        ".evidence/REQ-021/SP-1.audit.md",
+        ".evidence/REQ-021/SP-1.findings.json"
+      ],
+      "shared_resources": [
+        "ledger:SP-1"
+      ],
+      "acceptance_criteria": [
+        "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json",
+          "purpose": "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding.",
+          "created_by": "T1.8",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16"
+      ],
+      "kind": "audit",
+      "subplan_id": "SP-1"
+    },
+    {
+      "id": "T1.8b",
+      "milestone_id": "M1",
+      "title": "Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands",
+      "objective": "An independent second audit of the scope of T1.8. Do not read its report or ledger first: confirm findings yourself and record every one in your own ledger.",
+      "repository": "pictures",
+      "after": [
+        "T1.8"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 90,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Cross-check of T1.8: a bounded independent pass over the same scope; Agent estimate in minutes: 30 session and token handling + 25 route map and handler coverage + 15 local mode and commands + 20 ledger and report = 90.",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1.4",
+            "spec:SPEC.md#constraints"
+          ],
+          "justification": "Reviewing token storage, lockout, revocation and route coverage needs security judgement across modules."
+        },
+        "scope": {
+          "evidence": [
+            "task:T1.7",
+            "spec:SPEC.md#requirements"
+          ],
+          "justification": "The audit writes only its report and ledger and changes no code."
+        },
+        "duration": {
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+            "task:T1.6"
+          ],
+          "justification": "Thirty sessions, twenty-five coverage, fifteen local mode and twenty ledger make ninety minutes."
+        },
+        "risk": {
+          "evidence": [
+            "spec:SPEC.md#constraints",
+            "task:T1.7"
+          ],
+          "justification": "A missed defect here reaches real external users on the first milestone deployment."
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.3",
+            "task:T1.6"
+          ],
+          "justification": "Its ledger:SP-1 can send T1.1 to T1.6 back for targeted rework."
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1.7",
+            "task:T1.2"
+          ],
+          "justification": "The review surface is bounded by three produced contracts with tests, so the estimate rests on concrete tasks."
+        }
+      },
+      "expected_paths": [
+        ".evidence/REQ-021/SP-1.audit-crosscheck.md",
+        ".evidence/REQ-021/SP-1.audit-crosscheck.findings.json"
+      ],
+      "shared_resources": [],
+      "acceptance_criteria": [
+        "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-1.audit-crosscheck.findings.json",
+          "purpose": "An independent security audit of SP-1 records every confirmed defect with the task that must redo it in the SP-1 findings ledger, and the ledger has no open critical or high finding.",
+          "created_by": "T1.8",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R2",
+        "R3",
+        "R16"
+      ],
+      "kind": "audit",
+      "subplan_id": "SP-1"
+    },
+    {
+      "id": "T1.9",
+      "milestone_id": "M1",
+      "title": "Remediate T1.8 findings F1, F2, F3, F4",
+      "objective": "Fix these confirmed audit findings of T1.8 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F1 (high; owned by T1.5): Production standalone startup bypasses the local-auth environment rejection and can enable unrestricted administration. Evidence from the audit: att-0013, snapshot 490d2a8260a63f7aed1e1c8fe935224ce0218cba: node --import tsx --conditions=react-server --input-type=module (stdin probe described in SP-1.audit.md), exit 0. With NODE_ENV=production, local flag=1 and serialized standalone config, actual next/dist/server/config accepted phase-production-server and the actual local resolver granted administrator. Dockerfile starts node server.js; instrumentation has no runtime rejection. Remains open; no container deployment was tested.\n- F2 (high; owned by T1.5): A remote client can forge a loopback X-Forwarded-For header and receive the unrestricted local administrator session. Evidence from the audit: att-0013: actual sesionAdministradorLocal(new Request('http://192.0.2.10:3000/admin', {headers: {'x-forwarded-for': '127.0.0.1'}})) returned administrador-local with local flag=1; stdin Node probe exit 0. Installed Next base-server.js:612 preserves supplied x-forwarded-for with ??=. Remains open; this was a resolver/config probe, not a real remote TCP request.\n- F3 (high; owned by T1.2, T1.6): Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions. Evidence from the audit: att-0013: actual handleProxyRequest admitted Entusiasta DELETE /api/productos/item and /api/productos and Master Designer DELETE /api/decoraciones/item (200, x-middleware-next=1); stdin Node probe exit 0. All catalogue mutation handlers still require catalogo/decoraciones rather than staff permission. DELETE /api/productos directly deletes all shared products. Source and consumers inspected; no mutation executed. Remains open for T1.2/T1.6.\n- F4 (high; owned by T1.2, T1.6): Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff. Evidence from the audit: att-0013: actual proxy admitted Entusiasta POST /api/plan-armado-arco and Designer POST /api/plan-dibujo-estructura (200, x-middleware-next=1); stdin Node probe exit 0. mapa-rutas.ts and all plan-armado, plan-dibujo-estructura, plan-editar, plan-idea and plan-patron handlers still require chat_asistido. Handler authorization inspected without calling a provider. Remains open for T1.2/T1.6.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T1.7"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 160,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "4 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T1.5, T1.2, T1.6, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "4 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/modo-local.ts",
+        "src/instrumentation.ts",
+        "next.config.ts",
+        "services/ai-api/app/main.py",
+        "scripts/test/test-modo-local.ts",
+        "services/ai-api/tests/test_modo_local.py",
+        "src/lib/cuentas/permisos.ts",
+        "src/lib/planes/catalogo.ts",
+        "src/lib/cuentas/mapa-rutas.ts",
+        "scripts/test/test-mapa-rutas.ts",
+        "scripts/test/test-catalogo-planes.ts",
+        "src/app/api/**/route.ts",
+        "src/lib/feedback-ia/acceso.ts",
+        "src/lib/guiada-motor/manejadores.ts",
+        "src/lib/happie/panel-prueba.ts",
+        "src/lib/shared-quotes/dependencies.server.ts",
+        "src/lib/taller/cotizacion-taller.ts",
+        "src/lib/asesor/voice.ts",
+        "scripts/test/lib/sesion-prueba.ts",
+        "scripts/test/test-guardias-rutas.ts",
+        "scripts/test/*.ts",
+        "scripts/e2e/humo/configuracion.ts",
+        "scripts/e2e/humo/pasos-asistente.ts",
+        "scripts/e2e/humo/navegacion.ts",
+        "scripts/eval/eval-chat-jerga.ts"
+      ],
+      "shared_resources": [
+        "contract:permission-map",
+        "contract:plan-catalogue",
+        "contract:session-guard",
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "F1 (high) is fixed: Production standalone startup bypasses the local-auth environment rejection and can enable unrestricted administration.",
+        "F2 (high) is fixed: A remote client can forge a loopback X-Forwarded-For header and receive the unrestricted local administrator session.",
+        "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+        "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+          "purpose": "F1 (high) is fixed: Production standalone startup bypasses the local-auth environment rejection and can enable unrestricted administration.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque",
+          "purpose": "F1 (high) is fixed: Production standalone startup bypasses the local-auth environment rejection and can enable unrestricted administration.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable",
+          "purpose": "F1 (high) is fixed: Production standalone startup bypasses the local-auth environment rejection and can enable unrestricted administration.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+          "purpose": "F2 (high) is fixed: A remote client can forge a loopback X-Forwarded-For header and receive the unrestricted local administrator session.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque",
+          "purpose": "F2 (high) is fixed: A remote client can forge a loopback X-Forwarded-For header and receive the unrestricted local administrator session.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable",
+          "purpose": "F2 (high) is fixed: A remote client can forge a loopback X-Forwarded-For header and receive the unrestricted local administrator session.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=cobertura",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=roles-sistema",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run planes:test-catalogo",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=excepciones",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-rutas",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run test-cotizacion-unica",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-estatico",
+          "purpose": "F3 (high) is fixed: Ordinary plan accounts can create, edit and delete the shared product/decorations catalogue because write handlers reuse read/tool permissions.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=cobertura",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=roles-sistema",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run planes:test-catalogo",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-permisos -- --test-name-pattern=excepciones",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-rutas",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run test-cotizacion-unica",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-estatico",
+          "purpose": "F4 (high) is fixed: Entusiasta and Designer can invoke assembly-plan, drawing and plan-edit APIs reserved to Master Designer and staff.",
+          "created_by": "T1.9",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R16",
+        "R17",
+        "R2",
+        "R3"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1"
+    },
+    {
+      "id": "T1.10",
+      "milestone_id": "M1",
+      "title": "Remediate T1.8 findings F6",
+      "objective": "Fix these confirmed audit findings of T1.8 (remediation round 1) on the tree already integrated, without rewriting the tasks that built it:\n- F6 (high; owned by T1.3): A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed. Evidence from the audit: att-0013: actual createAccountService with a controlled two-client SQL double reproduced login-read-old-hash -> reset-password -> reset-revoke -> reset-commit -> login-insert-session; resulting session unrevoked, stdin Node probe exit 0. signIn and resetPassword still have no shared credential lock/version. npm run cuentas:test-servicio could not initialize without a dedicated test database; real PostgreSQL concurrency not executed. Remains open for T1.3.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T1.7",
+        "T1.9"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 40,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "1 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T1.3, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "1 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1.3",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "src/lib/seguridad/scrypt.ts",
+        "src/lib/asesor/auth.ts",
+        "src/lib/cuentas/servicio.ts",
+        "src/lib/cuentas/enlaces.ts",
+        "src/lib/cuentas/limite-intentos.ts",
+        "scripts/cuentas/primer-admin.ts",
+        "scripts/cuentas/sembrar-prueba.ts",
+        "scripts/test/test-cuentas-servicio.ts"
+      ],
+      "shared_resources": [
+        "contract:account-service",
+        "contract:permission-map",
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=invitacion",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=ingreso",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=bloqueo",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=restablecer",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=ultimo-admin",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=roles",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=primer-admin",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-servicio -- --test-name-pattern=sembrar",
+          "purpose": "F6 (high) is fixed: A sign-in using the old password can insert an unrevoked session after a concurrent password reset has committed.",
+          "created_by": "T1.10",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R1",
+        "R16",
+        "R3"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1"
+    }
+  ]
+}

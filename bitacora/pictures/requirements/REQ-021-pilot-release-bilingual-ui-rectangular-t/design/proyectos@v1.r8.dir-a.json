@@ -1,0 +1,37 @@
+{
+  "name": "Archivo de montajes",
+  "axes": {
+    "concept": "A working archive of balloon installations: each named scene is a live folded record with its owner and saved revision.",
+    "layout": "Full-width stacked records unfold in place into an asymmetric scene/details spread; no global sidebar, dashboard tiles or preview-card grid.",
+    "navigation": "An in-flow collection underline, server-collection search and authorized owner filter lead into keyboard-operated record disclosures; project-local return and recovery actions stay beside the project title.",
+    "typography": "Arial/Helvetica offline product fallback: 32px page title, 21/23px record names, 24px fold and conflict titles, 14–15px controls, 12px tabular monospace timestamps.",
+    "density": "Compact 91px desktop records with 24px unfolding gutters; phone records use two rows with a 23px name. Flat rules carry dense ownership/revision data; rounded frames are reserved for scene diagrams, controls and modal decisions.",
+    "components": "Real shadcn/Base UI Button and Input, Animate UI Dialog and AlertDialog, Skeleton; custom folded record, schematic installation, version spread and import receipt. Native planning selectors and owner filter.",
+    "colour": "Pictures tokens mapped to shadcn roles: pale violet background/neutral ink in light, near-black/white ink in dark, mauve action, green saved state and amber conflict. Stronger local input edges and dark metadata prevent low contrast.",
+    "motion": "Precise folio choreography: 9px horizontal registration, 45ms record sequencing, -4deg perspective fold to flat, and two version sheets collating 80ms apart. Expressive cut 420ms/fold 588ms, natural 220/308ms, subtle 140/196ms; .16,1,.3,1 easing. Buttons settle in 160ms. Reduced motion/still=1 preserve the final content without travel."
+  },
+  "evidence": {
+    "layout": [
+      ".archive",
+      ".record-toggle",
+      ".record-fold",
+      ".folio-info"
+    ],
+    "navigation": [
+      ".scope-nav",
+      ".search-field",
+      ".record-toggle"
+    ],
+    "typography": [
+      ".intro-copy h1",
+      ".record-title",
+      ".record-date"
+    ],
+    "motion": [
+      ".record",
+      ".record-fold",
+      ".archive-tools",
+      ".record-arrow"
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mockup · Thumbnail C1 · Medidor y tubo 260</title>
+<style>
+:root{--bg:#eef6f2;--card:#fff;--ink:#14201d;--mute:#4a5a55;--edge:#6e827b;--line:#c9d8d1;--pri:#b8124f;--on:#fff;--yel:#ffd23f;--teal:#0f766e}
+[data-theme=dark]{--bg:#0e1614;--card:#17221f;--ink:#eff7f3;--mute:#a9bdb5;--edge:#7f968e;--line:#2c3c37;--pri:#ff6aa0;--on:#2b0614;--yel:#ffd23f;--teal:#5eead4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+.chrome{display:flex;gap:12px;align-items:center;padding:8px 16px;background:#11111b;color:#cdd6f4;font-size:12px}
+.chrome strong{margin-right:auto}
+.wrap{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;padding:24px;max-width:1100px;margin:auto}
+.frame{background:var(--card);border:1.5px solid var(--line);border-radius:28px;padding:24px;position:relative}
+.cap{font:600 11px/1 monospace;color:var(--mute);margin:0 0 12px}
+/* sizer board: the login lives inside the board, the balloon inflates through the ring */
+.board{display:flex;flex-direction:column;align-items:center;gap:14px}
+.ring{width:150px;height:150px;border-radius:50%;border:3px dashed var(--edge);display:grid;place-items:center;position:relative}
+.ring::after{content:"11 in";position:absolute;bottom:-18px;font:600 11px monospace;color:var(--mute)}
+.balloon{width:96px;height:112px;border-radius:50% 50% 46% 46%/56% 56% 44% 44%;background:radial-gradient(circle at 34% 30%,#ffffff88 0 10%,transparent 11%),var(--pri);animation:inflate 1.6s cubic-bezier(.5,1.8,.4,.8) infinite alternate;transform-origin:50% 90%}
+@keyframes inflate{0%{transform:scale(.55,.5)}60%{transform:scale(1.04,.96)}100%{transform:scale(1)}}
+h1{font:800 34px/1 system-ui;letter-spacing:-1px;margin:6px 0 0;font-stretch:125%}
+.f{width:100%;display:grid;gap:8px}.f i{display:block;height:40px;border:1.5px solid var(--edge);border-radius:14px}
+.btn{height:44px;border-radius:999px;background:var(--pri);color:var(--on);display:grid;place-items:center;font-weight:700;width:100%}
+.meter{display:flex;gap:4px;width:100%}.meter b{flex:1;height:8px;border-radius:9px;background:var(--line)}.meter b.on{background:var(--pri)}
+/* twisted modelling balloon as navigation */
+.tube{display:flex;align-items:center;margin:0 auto 18px;width:max-content}
+.seg{height:34px;padding:0 18px;border-radius:999px;background:color-mix(in srgb,var(--pri) 16%,var(--card));border:1.5px solid var(--edge);display:grid;place-items:center;font-weight:700;font-size:12px}
+.seg.on{height:42px;background:var(--pri);color:var(--on);border-color:var(--pri)}
+.twist{width:8px;height:12px;background:var(--edge);border-radius:3px}
+.row{display:grid;grid-template-columns:40px 1.4fr 1fr 90px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.av{width:34px;height:40px;border-radius:50% 50% 46% 46%/56% 56% 44% 44%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#14201d}
+.av.off{transform:scale(1,.62) translateY(10px);filter:grayscale(1);opacity:.7}
+.pill{justify-self:start;font-size:11px;padding:3px 9px;border-radius:999px;border:1.5px solid var(--edge)}
+.dots{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.dot{display:flex;gap:6px;align-items:center;font-size:12px;padding:6px 10px 6px 6px;border-radius:999px;border:1.5px solid var(--edge)}
+.dot i{width:18px;height:18px;border-radius:50%;border:2px solid var(--edge)}.dot.on i{background:var(--pri);border-color:var(--pri);box-shadow:inset -3px -3px 0 #0003}
+.toggle{font:inherit;color:inherit;background:transparent;border:1px solid #8a8fa8;border-radius:6px;padding:2px 8px}
+@media (max-width:760px){.wrap{grid-template-columns:1fr;padding:20px}.row{grid-template-columns:40px 1fr}.row .pill,.row span:nth-child(3){grid-column:2}}
+@media (prefers-reduced-motion:reduce){.balloon{animation:none}}
+</style>
+</head>
+<body>
+<div class="chrome"><strong>Mockup · C1 «Medidor y tubo 260» (miniatura)</strong><button class="toggle" onclick="document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark'">Tema</button></div>
+<div class="wrap">
+  <section class="frame board" aria-label="Acceso dentro del medidor">
+    <p class="cap">ACCESO · tablero medidor</p>
+    <div class="ring"><div class="balloon" aria-hidden="true"></div></div>
+    <h1>Pictures</h1>
+    <div class="f"><i></i><i></i></div>
+    <div class="meter" aria-hidden="true"><b class="on"></b><b class="on"></b><b class="on"></b><b></b></div>
+    <div class="btn">Entrar</div>
+  </section>
+  <section class="frame" aria-label="Administración">
+    <p class="cap">ADMIN · tubo de modelar como navegación</p>
+    <div class="tube"><span class="seg on">Cuentas</span><span class="twist"></span><span class="seg">Roles</span><span class="twist"></span><span class="seg">Mi cuenta</span></div>
+    <div class="row"><span class="av" style="background:#ffd23f">AM</span><b>Ana Mejía</b><span>Plan 2</span><span class="pill">Activa</span></div>
+    <div class="row"><span class="av" style="background:#5eead4">JR</span><b>Julián Rojas</b><span>Empleado interno</span><span class="pill">Activa</span></div>
+    <div class="row"><span class="av off" style="background:#f9a8c9">LC</span><b>Laura Cano</b><span>Plan 1</span><span class="pill">Desactivada</span></div>
+    <div class="dots"><span class="dot on"><i></i>Chat asistido</span><span class="dot on"><i></i>Contador</span><span class="dot"><i></i>Taller 3D</span><span class="dot"><i></i>Exportar</span></div>
+  </section>
+</div>
+</body>
+</html>

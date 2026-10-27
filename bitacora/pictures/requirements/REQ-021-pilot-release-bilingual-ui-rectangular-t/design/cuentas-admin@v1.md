@@ -3,400 +3,347 @@ contract: cuentas-admin
 version: 1
 status: draft
 subplan: SP-2
-requirements: [R1, R3, R16]
+requirements: [R1, R3, R16, R17]
 owner: David
 author: Designer
-date: 2026-10-26
+date: 2026-10-27
+direction: Parte de acceso (a)
+source_revision: r14.dir-a
+source_behavior: cuentas-admin@v1.r14.behavior.md
 ---
 
-# cuentas-admin@v1 — Sign-in, invitation and administration
+# cuentas-admin@v1 — Parte de acceso
 
 ## 1. Identity and traceability
 
-This is a revision of the existing v1 planning draft, **not approved for implementation**. Approval belongs to the owner with the plan; the planning workflow copies this snapshot unchanged to `design/contracts/` after approval. The previous v1 draft is revised in place because it has never been approved; no approved contract is changed. This task deliberately writes only this contract and its adjacent HTML mockup, plus the required delegation result; it does not create a changelog or repository preview.
+**Draft; not approved for implementation.** Finalization of the owner's web-selected direction **Parte de acceso (a), r14**. Choosing a direction does not approve this contract. This complete twelve-section behavioral and visual contract supersedes the previous unapproved canonical draft, preserves the selected composition/navigation/motion, and remains subject to independent owner/plan approval. T2.1 may copy only the exact subsequently approved snapshot into `design/contracts/cuentas-admin@v1.md`; Designer grants no approval.
 
-Source snapshot: REQ-021 `SPEC.md`, including Clarifications rounds 4–9 and the owner-approved bilingual data-processing notice v1; Planner rulings Q6–Q8 dated 2026-10-26T16:02 as incorporated in PLAN.md/PLAN.json; `PLAN.md` status draft; `PLAN.json` schema 1.3.0, revision 1. SHA-256 at inspection:
+Inputs: current SPEC.md and PLAN.json (schema 1.3.0, revision 1), `cuentas-admin@v1.r14.behavior.md`, and the selected r14 direction Markdown, self-contained HTML and TSX. The 2026-10-27T14:17 direction-a feedback recorded in r14 supplies **Sempertex** as the company name in both notice languages; rights-contact and policy placeholders stay. This later owner clarification governs the notice's legal-name substitution while the SPEC's remaining v1 body is preserved. No legal suffix, address, URL or legal approval is invented.
 
-- SPEC: `65b1e5ecc06f20d97fe6151dacc30d0bec0d7d0736aaa95db7a1c9af1b44f5e4`.
-- PLAN.md: `cc7e53f2abf3c23c1bb8cde797cabf6005719d2dd8183295595a0a2bf5c18ca3`.
-- PLAN.json: `7a2c833a7e711508d0a3bc96edb2d3f0d42ff6fe57a6370f62ce0d438338ffc8`.
+Source SHA-256 snapshots for this finalization:
 
-Exact consumer search: only SP-2 names `ui.contract: cuentas-admin`, `version: 1`, `design_task: T2.1`, `visual_review_task: T2.7`. T2.1 copies the approved snapshot unchanged; UI consumers are T2.3 (V1–V3, V11), T2.4 (V10, C1 account menu on every signed-in pilot page), T2.5 (V4–V8). T2.2 supplies APIs, current notice content and deletion eligibility; T2.6 validates integrated flows; T2.7 checks rendered fidelity; T2.8 audits the result. Upstream: SP-1 T1.2 `permission-map@1`, T1.3 `account-service@1`, T1.4 `session-guard@1`. T1.4 already owns the plain `/sin-acceso` response; V9 styles and actions require coordination with that task, without duplicating server authorization.
+| Input | SHA-256 |
+|---|---|
+| `SPEC.md` | `85733361b25e8b6c9ff055cde3ddee45e77d36c0326698e01cde675b44aae204` |
+| `PLAN.json` | `7b33d8cb90b956bcac2fdec6603dd6ad68c69f9c156381f32567f63175a546b1` |
+| `design/cuentas-admin@v1.r14.behavior.md` | `76936ca02335918683373873e8e28c321f95ccf020761795865ffbbf3b7f5302` |
+| `design/cuentas-admin@v1.r14.dir-a.md` | `b97d0a3defc2fea5ee3db1f3270cda3849c54c62a38435cf4d4696aba5026542` |
+| `design/cuentas-admin@v1.r14.dir-a.tsx` | `ef11a0cc3d89ce9589a6a3db7fdd60a2508fd43ed11f32cb425615054f5c713b` |
+| `design/cuentas-admin@v1.r14.dir-a.html` | `312dfaadd4b07c6fc38a803d35a14b79e25925079266f724b2285e77d3a370fd` |
+
+Only **SP-2** binds `ui.contract=cuentas-admin`, version 1, design-copy **T2.1** and visual review **T2.7**. UI implementation consumers are **T2.3** (sign-in, activation, reset, notice), **T2.4** (shared account menu/Mi cuenta), and **T2.5** (accounts, invitations, roles). **T2.2** supplies the account APIs, **T2.6** verifies integrated browser flows, and **T2.8** independently audits. SP-1 supplies account-service@1, session-guard@1, permission-map@1 and plan-catalogue@1. Its catalogue owns plan labels/order/prices/availability/permissions; SP-2 reads it without becoming a second plan-logic owner. SP-14 owns the public plans section and its two entry links in sign-in/account-menu; those additions compose with these views through planes@v1 and are outside the r14 finalization delta. No other UI subplan becomes a consumer merely through dependency.
 
 | Requirement | Views / flows | Acceptance |
 |---|---|---|
-| R1 invited accounts, no open registration | V1–V6, V10–V11, C1; F1–F4, F7–F8 | UI-AC-01–09, 13, 18, 35–44 |
-| R3 choose permissions and manage roles | V7–V8; F6 | UI-AC-14–17, 23 |
-| R16 assign exactly one role/access plan | V5–V6, V8; F3, F5 | UI-AC-10–12, 15 |
+| R1 invited accounts | V1–V4, V6–V7 / F1–F5, F7–F8 | UI-AC-06–14, 19–24, 29–30, 44 |
+| R3 roles and permissions | V4–V5 / F5–F6 | UI-AC-15–19, 25, 31, 35 |
+| R16 cumulative assigned plans | V4–V5 / F2–F3, F5–F6 | UI-AC-15–16, 25, 41–42 |
+| R17 shared plan catalogue | V4–V6 / F3, F5–F6 | UI-AC-15, 25, 41–43 |
 
-Compatibility: **breaking relative to the prior unapproved draft**, because the plan adds account-menu/password and mandatory re-acceptance flows, fixes route locations/deletion policy, unifies invalid-link handling, adds replacement links and signs in immediately after activation (round 8). There is no approved predecessor or production conformance claim. T2.3 must include V11, T2.4 V10/C1, T2.5 the saved-work deletion guard and company in the listing. T2.2 must provide notice-version, own-password and eligibility results. To render V2’s existing role readout, its valid-invitation metadata also needs the assigned role’s display label alongside the currently listed name/email; this is a presentation-field dependency for the Planner to align, not public access to role administration. T2.6/T2.7/T2.8 must include these cases; CG-1/T91 covers composition. SP-1 T1.2/T1.4 require explicit route/session mappings. SP-8/SP-10 later translate the interface; no unrelated Taller or spend UI is changed.
+Embedded version/impact record, **2026-10-27: draft finalization, compatible with the selected r14 direction**. No interaction, hierarchy, navigation, state, responsive structure, palette, typography or motion is redesigned. The already amended four plans, six read-only system roles, twelve grants, Master Designer-only explorer and own-password session renewal are retained. Relative to the previous canonical amendment, naming Sempertex in both notices is a compatible copy clarification affecting T2.3 activation/reacceptance and T2.7 review; T2.4/T2.5 retain their amended expectations. T2.1 awaits independent approval of this exact snapshot. A separate changelog, history update, PLAN change and repository contract copy are outside this delegation's permitted writes; this embedded record provides traceability without redirecting consumers.
 
-Revision record (kept here because the delegated planning boundary permits no extra changelog): 2026-10-26 — align with rounds 7–8, T2.1–T2.8 and Planner rulings Q6–Q8 at 16:02. This revision removes the separate lockout fixture, adds the neutral fifteen-minute hint to every generic sign-in refusal, specifies requesting-browser re-sign-in after own-password change, resolves the no-tool destination to `/cuenta`, and labels invitation regeneration “Generar enlace nuevo”. These behavior/copy changes affect T2.3 (V1/V2), T2.4 (V10), T2.5 (V6), and T2.2 session/destination results; T2.6–T2.8 must verify them. Compatibility remains breaking relative to the prior unapproved draft. Preserve tokens, component language, breakpoints and all unaffected flows. Owner approval of the plan promotes this draft; the Designer does not approve it.
-
-Earlier revalidation record — 2026-10-26, before round 9: the then-current SPEC/PLAN hashes were unchanged and there was no new owner feedback. Preserve the previous design. This revision aligns two mock interactions with existing requirements: V6 disables saving an unchanged role and enables it after a different role is selected; V10 required-field validation asks for the current password instead of claiming an empty password is incorrect. These are **compatible corrections** to the existing draft expectations, affecting T2.4/T2.5 and their T2.7 visual checks only; the earlier breaking-draft assessment above remains historical. No new behavior or owner decision is introduced.
-
-Current planning revision — 2026-10-26: re-read the current SP-2 outcome, T2.1–T2.8 and round-9 project decisions; the three source hashes above pin this inspection. SP-2 flows, routes, tokens, breakpoints and all unaffected copy are retained. Clarify the `proyectos.ver_todos` helper: other people’s originals are read-only, and a person with `taller.usar` can save an owned copy. Correct the mockup’s V6/V8 `conflict` state to disable mutations until its explicit refresh action, as section 8 already required. These are **compatible clarifications/corrections** to the existing draft, affecting T2.5 help copy and T2.7 rendered checks; no new permission or SP-4 project screen is introduced. T2.2 still supplies authoritative conflict data. UI-AC-57/58 make the existing expectations explicit. Earlier breaking-draft assessments remain historical; approval is still pending.
-
-Visual revision — 2026-10-26, owner feedback 19:35: rebuilt the complete mockup visual layer after reading `agents/designer/references/mockup-craft.md`, rather than adding decorative patches. Rechecked the unchanged source hashes above and SP-2's exact consumers. Preserve V1–V11, C1, F1–F8, all state/dialog names, legal text, permission meanings, routes, breakpoints and UI-AC-01–58. Working surfaces are flat; navigation/secondary actions are neutral; the Pictures brand mark and one primary action retain the real accent token. V4 uses an unbanded ruled table; V7 puts system/custom role lists side by side on wide screens; V6 puts recovery and deletion beside role access; V8 puts Save in the title row and the deletion guard under the access summary. Visual compatibility is **breaking relative to the unapproved draft** because V6–V8 content hierarchy and wide layout change; interaction/service contracts are unchanged. Affected consumers: T2.1 pins this new draft only after owner approval; T2.3 V1–V3/V11, T2.4 C1/V10 and T2.5 V4–V8/V9 coordinate the common visual treatment; T2.7 must re-render all affected screens, T2.6/T2.8 retain behavior coverage. No SP-1 service/API adaptation is introduced by this visual revision. New UI-AC-59–65 capture its observable visual rules. Approval remains with the owner and plan.
-
-Kit revision — 2026-10-26, owner feedback 21:01: rebuilt the HTML from `kit/templates/mockup.html`, composing the visual layer from `kit/components/*` and preserving V1–V11, C1, F1–F8, all state/scene values, exact legal text, permissions and UI-AC-01–65. The kit CSS/JS is inlined; the Pictures palette overrides its semantic roles. Public forms now use AuthLayout → AuthColumn → Card with proper CardContent padding, and the brand, card and footer share one centred column. Password recovery stays on the password-label row. Checkboxes use Checkbox, controls use accessible `--input` edges, and floating account disclosure uses kit menu parts. Management views use the kit app shell and neutral permission-filtered Sidebar; compact navigation stays visible as kit buttons. Compatibility is **breaking visual, relative only to the unapproved draft**, because card anatomy, spacing and navigation composition change; product behavior and SP-1 service contracts are unchanged. Affects T2.3 public forms, T2.4 C1/V10, T2.5 management surfaces and T2.7 visual review; T2.1 must pin this revision only with owner approval. T2.6/T2.8 retain the same behavioral coverage. This entry supersedes earlier visual descriptions where they differ, not their functional rules. No new changelog/preview file is authorized by this delegated planning task.
+`cuentas-admin@v1.html` is rebuilt directly from the immutable selected TSX with the CURRENT offline builder. No exploration/source edit, new TSX, generated-HTML patch, package installation or fallback is used. The inspector's r14 direction label identifies the selected source and does not grant approval. Production behavioral requirements below remain binding; illustrative local handlers and static visual evidence are not a substitute for account-service behavior.
 
 ## 2. Purpose and users
 
-- Invited person: identify the invitation, create a password, read and accept the data notice, and enter Pictures directly. Observable success: an active account, consent version/date recorded by the service and a session and the first permitted destination after activation. When the notice version changes, acceptance of the current version is required before returning to any other page.
-- Returning person: email/password login, recovery guidance, password reset via a link supplied by an administrator, sign out. No open signup, self-service email sender, payment, upgrade or plan prices.
-- Signed-in person: open the account menu, see their name and role, visit Mi cuenta, change their own password using the current password, or sign out.
-- Account administrator (`cuentas.administrar`): find an account, invite it, copy its activation/reset link, review its access, change its single role, deactivate/reactivate or explicitly delete it when the deletion policy permits.
-- Role administrator (`roles.administrar`): inspect five system roles, create/edit a custom role using named permissions, and delete only an unassigned custom role. A custom role may grant either administration permission independently; do not rely on a role name or `internas.usar` to grant these screens.
-- A person who lacks a permission gets an explanation and a safe return destination, without seeing restricted account data.
+The administrator answers “Who has access, what is their role, and what needs changing?” The complete ruled register keeps each person's identity, role, status and management action together. Invited people set a personal password, accept the notice and reach a permitted tool. Signed-in people identify themselves, change their own password and sign out.
+
+Account administration requires `cuentas.administrar`; role administration independently requires `roles.administrar`. Role names or `internas.usar` never substitute for these permissions. Success means a server-confirmed change and an explicit next step. Denied users see a scoped refusal without restricted data.
+
+The HTML labels mock data and simulated operations. Neutral `@prueba.local` account fixtures correspond to the SPEC test vocabulary, not real identities. Mi cuenta and the account menu both identify Cuenta administradora / admin@prueba.local; activation identifies Cuenta Master Designer / master@prueba.local. Reserved pictures.example links never issue live access. Counts derive from the same fixture rows; sample last-access values and notice dates are illustrative.
 
 ## 3. Information architecture and hierarchy
 
-Public shell: Pictures mark → page title → identifying context → fields → one primary action → recovery/invitation guidance. Password forms remain narrow; the data notice is full-length inline disclosure, never hidden behind an acceptance checkbox.
+Preserve the selected r14 composition: compact Pictures/Sempertex ring-and-dot masthead with language/account controls → 24px task heading → neutral horizontal Cuentas / Roles y permisos / Mi cuenta navigation on permitted signed-in surfaces → a single working paper → aligned footer. There is no edition counter, plan rail, slogan, material sample or secondary promotional card.
 
-Management shell: neutral permission-filtered Sidebar with Pictures identity and “Administración” group at ≥768px, and the same two destinations in a visible compact navigation row below 768px; AppHeader has theme and shared current-account menu C1. Main Page order is title and primary action → search/filters → list → detail page. No new destination is added. The existing catalogue/internal administration is a separate destination, not a new miscellaneous tab in this flow.
+Accounts fill the available register width: Cuentas del piloto / Datos de ejemplo and Invitar persona → search/role/state filters → ruled records → derived result count and Bogotá-time caption. Desktop filters share flexible 2:1:1 columns. Each row keeps name/email/company, assigned role, state, last access and Gestionar together.
 
-Account detail: a compact identity rail holds status, dates and notice acceptance; the main area places role/permissions beside recovery and a separately ruled danger section. At medium/compact widths the reading order is identity → role/permissions → recovery → danger. Invitations emphasize recipient and access **before** link creation. The resulting link is the main content, accompanied by expiry and manual-sharing instructions.
+Roles retain the role-list/editor composition: heading/Create role → six read-only system roles and custom examples → selected-role title and explanation → custom role name when editable → four tool fieldsets → save/delete and feedback. The desktop list is 240px wide; the editor fills remaining space. Taller sub-capabilities are explanatory text under the single Taller grant.
 
-Mi cuenta: read-only name/email/role → password section with current/new/confirmation fields → session consequence → save. Notice re-acceptance: current version and reason → full notice in browser language → unchecked consent → accept and continue or sign out. The gate omits administration tabs and home links.
-
-Role editor: title and one Save action → name → grouped permission checkboxes; the wide summary column holds exact access, assigned accounts and the separated custom-role deletion guard. On smaller screens this column follows the matrix, with Cancel at the end. Save uses the native form association, so keyboard validation still focuses the first invalid field. Never display an unexplained permission key as the only label. Counts are secondary and right-aligned in tabular figures; no decorative analytics cards or fabricated adoption metrics. V7 displays the two peer role lists side by side at wide widths, stacked below 1024px.
-
-| View | One product question | Main job / largest useful block |
-|---|---|---|
-| V1 | How do I enter Pictures with my invitation email? | Sign in; the labelled email/password form dominates. |
-| V2 | What access was I invited to, and what must I accept? | Verify recipient/role, set a password and accept the full notice. |
-| V3 | How do I replace my forgotten password? | Set and confirm the new password for the identified account. |
-| V4 | Who has access to the pilot, and whom do I need to invite? | Find a person in the account list; Invite is the one primary action. |
-| V5 | Am I inviting the right person with the right tools? | Recipient fields beside the exact permission preview, followed by creation/copy. |
-| V6 | What can this person access, and how do I change or stop that access? | Compare their role with exact tools; recovery and account status stay adjacent. |
-| V7 | Which roles grant these tools, and who uses them? | Scan system/custom role rows with exact permission and assigned-account counts. |
-| V8 | Which tools should this role grant? | Independent permission checkboxes and an exact access summary; one Save in the title row. |
-| V9 | Why can I not open this section, and where can I go? | Permission explanation and safe exits, without restricted account data. |
-| V10 | How do I change my own Pictures password? | Current/new/confirmation fields beneath my own identity. |
-| V11 | What changed in the data notice before I continue? | Full versioned notice, unchecked acceptance and sign-out as the refusal path. |
-| C1 | Which account am I using, and how do I leave it? | Name/role, Mi cuenta and sign-out, plus permitted administration destinations. |
-
-The product inventory is Pictures, its existing ring-and-dot mark, the pilot, people who create balloon decorations, companies, the three access plans, exact named tools, invitations and saved work. Fictional Ana Martínez (Estudio Nube), Luis Rojas (Taller de eventos), Camila Torres and Valeria Soto make those objects concrete; a single mockup notice labels every person and link fictitious. Compared with a generic administration template, the largest blocks show actual access permissions and manually shared invitation links, never engagement cards or charts. Boldness is concentrated in the exact access matrix; surrounding navigation and surfaces stay quiet. Long notice and permission content scroll in the page, never inside decorative cards.
+Login, activation, reset, Mi cuenta and mandatory notice use a centred workspace capped at 676px, with a 620px form axis, matching heading/feedback and stacked footer. Activation places invited identity before passwords, full notice before unchecked consent, and consent before submission. Mandatory notice withholds other product routes until acceptance. Contextual dialogs keep invitation, selected-account management, one-time receipt and permanent confirmation beside their originating workflow.
 
 ## 4. Design system and visual language
 
-Read-only evidence: `t12` HEAD `fb872bce` and `pictures`/asesor HEAD `fa101a47`, both `src/app/globals.css`; `src/app/layout.tsx`; `src/app/login/{page.tsx,LoginForm.tsx}`; `src/components/ui/shell/{CabeceraApp.tsx,MenuApp.tsx}`; existing admin entry. These worktrees are references, not the execution base. Semantic palette is shared; asesor additionally extracts icon-button CSS. Reuse the product palette rather than replacing the app with desktop-theme colors.
+### Eight-axis direction note
 
-| Existing tokens | Light | Dark | Use |
-|---|---|---|---|
-| `--fondo`, `--superficie` | #faf9fc, #ffffff | #0b0c10, #16181f | canvas / panels |
-| `--superficie-suave`, `--superficie-2` | #faf8fd, #efe9f8 | #1c1e26, #242733 | sections / secondary fills |
-| `--borde`, `--borde-suave` | #e3daef, #efe9f8 | #383c48, #2a2d38 | decorative borders / separators |
-| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425, #6b6178, #766c85 | #f4f5f7, #9aa1ad, #8a91a0 | headings, body, metadata |
-| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0, #5530b8, #ece3fb | #9479ff, #a58dff, #241f3d | primary action / hover, focus; soft token retained but not used on navigation |
-| `--sobre-acento` | #ffffff | #120b24 | primary text (dark theme must not use white) |
-| `--exito`, `--exito-suave` | #1f7a55, #dcf5e9 | #78d6a8, #173b31 | completed / active |
-| `--error`, `--error-suave` | #b23a45, #ffeaec | #ff979f, #43252a | failure / danger |
-| `--aviso`, `--aviso-suave` | #8f5f12, #fff3d8 | #f7c46b, #3f311c | stale, pending legal input |
-
-The stand-in kit owns component anatomy and sizing. Its inlined block is copied unchanged by `kit/inline.py`; the single `pictures-role-map` block maps the existing Pictures palette to its roles. This replaces the previous hand-styled components, not the product palette. Role mapping:
-
-| Kit role | Pictures source / choice |
+| Axis | Present expression |
 |---|---|
-| `--background`, `--foreground` | `--fondo`, `--texto` |
-| `--card`, `--card-foreground`, `--popover`, `--popover-foreground` | `--superficie`, `--texto` |
-| `--primary`, `--primary-hover`, `--primary-foreground`, `--primary-soft` | `--acento`, `--acento-hover`, `--sobre-acento`, `--acento-suave` |
-| `--secondary`, `--muted`, `--accent` | `--superficie-2`; neutral navigation/hover, not an accent stripe |
-| `--secondary-foreground`, `--accent-foreground`, `--muted-foreground` | `--texto`, `--texto`, `--texto-suave` |
-| `--border`, `--input`, `--ring` | `--borde`, `--texto-tenue` (the prior proposed `--control-borde`), `--acento` |
-| `--destructive[-soft]`, `--success[-soft]`, `--warning[-soft]` | `--error[-suave]`, `--exito[-suave]`, `--aviso[-suave]` |
-| `--destructive-foreground` | white light / `--sobre-acento` dark; the light error fill is darkened on hover to #9a303a, dark fill lightened to #ffb0b6 (proposed derived interaction colors, checked for contrast) |
-| `--info`, `--info-soft` | existing `--acento-hover`, `--acento-suave` |
-| `--sidebar[-foreground]`, `--sidebar-accent[-foreground]`, `--sidebar-border`, `--sidebar-ring` | `--superficie-suave` light / `--superficie` dark; `--texto`; `--superficie-2` / `--texto`; `--borde`; `--acento` |
+| Concept | An operational access register: invited accounts, assigned role, access state and the next management action. No marketing panels or plan promotion. |
+| Layout | Compact Pictures/Sempertex header, sober 24px page title and preserved horizontal route rule. Accounts fill the register width with balanced 2:1:1 search/role/state filters; roles use a 240px selector beside the permission sheet. Access, activation, reset, notice and Mi cuenta use a centred 676px panel and a shared 620px form/feedback axis, eliminating the empty right half. |
+| Navigation | Preserved neutral horizontal Cuentas / Roles y permisos / Mi cuenta navigation, contextual account dialogs and named account disclosure. Invitation-only access has no registration route. Planning selectors remain outside the product shell. |
+| Typography | Production Geist Sans and Geist Mono embedded from the existing local build. Page title 24px, section titles 20px, body 14–16px and metadata 11–13px; no display family or hero. ES is the initial language; EN appears through the language selector. |
+| Density | Preserved 24px account-row padding, 28px desktop / 20px phone paper insets, 32px panels, 24px inset surfaces, 18px inputs, 8px checkboxes and pill controls/status chips. Content-sized form panels have equal outer gutters; wide management views retain available working space and flexible filters. |
+| Components | Installed shadcn/Base UI Button, Input, Checkbox, Skeleton, Dialog and AlertDialog, composed as account rows and permission fieldsets. Production ring-and-dot mark; rounded panels, semantic pill statuses and neutral navigation. Dialog close text follows ES/EN. Six catalogue/staff system roles remain read-only; four cumulative plans use catalogue labels. Both notice languages name Sempertex and retain rights-contact/policy placeholders. |
+| Colour | Exact Pictures globals.css palette mapped as in proyectos@v1: light #faf9fc / #ffffff with #6d3fe0 actions; dark #0b0c10 / #16181f with #9479ff actions and #120b24 foreground. Existing success/warning/error tokens; input edges alias texto-tenue. No exploration palette. |
+| Motion | Preserved kinetic registration: cubic-bezier(.76,0,.24,1), 480ms paper/row/rule/status registration, 55ms row offsets and 180ms controls, natural 300/140ms and subtle 160/100ms. Skeleton scan and hover/press arrow shift remain; retired rail/foil motion is removed. Reduced/still disables movement and hidden tabs pause animation. |
 
-All component colors read roles. The Pictures radius remains `--radius: .8rem`; derived kit radii apply. The six product meanings remain surface, ink, secondary ink, primary action, positive status and attention status. No extra color encodes a permission. Unused chart roles remain the kit defaults; SP-2 has no charts. The legacy `--neutral-hover`/`--neutral-line` proposals are superseded by neutral kit `--accent`/`--border` roles.
+Production sources inspected read-only: t12 and asesor `src/app/globals.css`, layout/font setup, login form, AdminTabs and CabeceraApp; sibling planes@v1, proyectos@v1 and taller-esenciales@v1 contracts. The product's tokens/fonts and written sibling mappings govern. Some sibling bundled HTMLs retain older exploratory styling; that mismatch is not imported. The owner's selected horizontal navigation, generous rounded forms and kinetic registration are preserved. No new palette or font family is introduced.
 
-Typography uses the kit's local system sans family in the standalone artifact (no external font), mono only for selectable links. Body/labels 14px, metadata 12–14px, H1 24px, H2 20px, section labels 16px. Production may reuse existing Geist via its system `--font-sans`. The kit spacing unit is 4px: stack gaps 8/16/24/32px, row gaps 8/12px; Card/CardContent padding 24px (20px at ≤640px), table cells 12px. Controls are 36px high desktop and 40px at ≤640px. Form and action spacing supplies the target-size spacing exception where necessary; do not force a 44px component override onto the kit. Focus uses the kit 2px `--ring` outline and 2px offset. Natural motion is 140/200/280ms for interaction feedback; the visible mock Motion selector also exposes Subtle/Expressive. Reduced motion follows the kit; no decorative looping motion is introduced.
+Project role mapping comes from both repositories' globals.css and the matching shared roles in proyectos@v1. Every value below already exists in the product; no new colour is introduced.
 
-Vetted component inventory and exact snippet examples:
-
-| Catalog name / contract variant | Source example | Usage |
+| Pictures source | Kit role | Light / dark |
 |---|---|---|
-| Button · variant=default\|outline\|ghost\|link\|destructive · state=normal\|hover\|focus-visible\|disabled\|loading | `kit/components/button.html#variants`, `#states` | One default primary per view, secondary navigation, destructive confirmations |
-| Card · parts=header\|content\|footer | `kit/components/card.html#sections` | Public auth card; peer compact account cards; no nested cards |
-| Input · type=text\|email\|password\|search · state=default\|error\|disabled\|readonly | `kit/components/input.html#types`, `#states` | Labelled fields in all forms |
-| Field · orientation=vertical · description/error | `kit/components/field.html#vertical` | Permission choice and full-width associated helper; name/form groups |
-| InputGroup · addon=button | `kit/components/input-group.html#addons` | Password input and Show/Hide button |
-| Select · native · state=default\|error\|disabled | `kit/components/select.html#native` | Role/status filters, one-role choice and mock selectors |
-| Checkbox · state=unchecked\|checked\|error\|disabled | `kit/components/checkbox.html#list`, `#states` | Explicit notice consent and independent permission matrix |
-| Sidebar · state=expanded · parts=header\|group\|menu-button\|footer | `kit/components/sidebar.html#expanded` | Permission-filtered administration navigation; whole-screen reference `kit/reference/cuentas.html` |
-| DropdownMenu · align=end · item variant=default | `kit/components/dropdown-menu.html#open` | C1 content/label/item anatomy; native disclosure retains ordinary Tab behavior rather than claiming an ARIA menu |
-| Alert · variant=default\|warning\|destructive\|success · action | `kit/components/alert.html#variants` | Persistent status/errors with descriptive body and explicit recovery |
-| Badge · variant=secondary\|warning\|success · data-dot | `kit/components/badge.html#variants` | Role type and text-labelled account status |
-| Table · parts=header\|body\|row\|head\|cell\|caption | `kit/components/table.html#default` | Desktop account rows, actual numeric/date alignment |
-| Empty · parts=header\|title\|description\|content | `kit/components/empty.html#default`, `#no-results` | No accounts, no custom roles, no matching filters |
-| Skeleton · shape=line | `kit/components/skeleton.html#card` | Loading form/list silhouette |
-| AlertDialog · action variant=default\|destructive · state=open\|loading | `kit/components/alert-dialog.html#destructive`, `#loading` | All eight confirmation scenes; native modal dialog provides focus containment/inert background |
-| Toast · type=info\|success\|error | `kit/components/toast.html#stack` | Copy outcome and explicit simulated-action feedback |
+| `--fondo` | background | #faf9fc / #0b0c10 |
+| `--superficie` | card, popover | #ffffff / #16181f |
+| `--texto` | foregrounds | #1c1425 / #f4f5f7 |
+| `--texto-suave` | muted foreground | #6b6178 / #9aa1ad |
+| `--superficie-2` | secondary, muted, accent | #efe9f8 / #242733 |
+| `--acento`, `--sobre-acento` | primary, primary foreground | #6d3fe0, #ffffff / #9479ff, #120b24 |
+| `--acento-hover`, `--acento` | primary hover, ring | #5530b8, #6d3fe0 / #a58dff, #9479ff |
+| `--borde`, `--borde-suave` | decorative border, rule | #e3daef, #efe9f8 / #383c48, #2a2d38 |
+| `--texto-tenue` | input (existing sibling accessible control alias) | #766c85 / #8a91a0 |
+| `--superficie-suave` | soft selected-role surface | #faf8fd / #1c1e26 |
+| `--exito`, `--exito-suave` | success, success-soft | #1f7a55, #dcf5e9 / #78d6a8, #173b31 |
+| `--aviso`, `--aviso-suave` | warning, warning-soft | #8f5f12, #fff3d8 / #f7c46b, #3f311c |
+| `--error`, `--error-suave` | destructive, destructive-soft | #b23a45, #ffeaec / #ff979f, #43252a |
+| Existing destructive foreground | destructive-foreground | #ffffff / #3a0f13 |
+| `--fondo` | info-soft, primary-soft | #faf9fc / #0b0c10 |
 
-Layout compositions use kit AuthLayout/AuthColumn/Card for public pages (`kit/reference/acceso.html`), App/Sidebar/AppMain/AppHeader/Page for administration (`kit/reference/cuentas.html`), and PageHeader/Grid/Stack/Row for invitation (`kit/reference/invitar.html`). The auth reference's example password/mail policy is not copied: SPEC's 8–200-character password and manual sharing remain authoritative.
+Typography is the actual production Geist Sans / Geist Mono, embedded offline from the existing t12 Next build's local Latin WOFF2 assets. No font or asset is fetched. H1 is 24px/1.25 at every width, section title 20px/1.3 desktop, body 14–16px and metadata 11–13px; mono is limited to identifiers/metadata. Phone section sizing and the generous shapes are retained from r11. R11 shape roles stay `--radius-panel:32px`, `--radius-inset:24px`, `--radius-field:18px`, `--radius-check:8px`, `--radius-pill:999px`. These are the owner's retained draft shape choices, not new production palette or font choices. Paper and dialog padding remain 28px desktop, 20px phone paper / 24px phone dialogs; rows remain 24px desktop / 20px phone.
 
-Named **proposal** compositions extend layout only, without restyling kit components: `pictures-auth` preserves 440/640px column limits; `pictures-two`/`pictures-detail`/`pictures-role-columns` and `pictures-permission-choices` preserve the contract's responsive hierarchy; `pictures-wide-nav`/`pictures-compact-admin` provide equivalent visible administration destinations; `pictures-compact-list` switches between a kit Table and equivalent peer Cards below 640px; `pictures-facts`/`pictures-access` lay out labelled metadata and permission names; `pictures-link` provides a selectable wrapping non-input token block with 16px padding and `--input` edge; `pictures-modal` hosts the unchanged AlertDialog anatomy in a native `<dialog>`; `pictures-result` sizes the success SVG. These are composition proposals, not new domain behavior or replacements for base controls.
+Components are named **source:id variant state**; all paths refer to actual installed components, not HTML snippets:
 
-One axis per public screen: brand, padded card and footnote share AuthColumn; card content is left-aligned. Recovery sits beside the password label and expands explanatory guidance below that field. Management content stays left-aligned, title-row actions trail their title, counts sit beside their group title, dates/counts are tabular, and neutral navigation does not compete with the one primary action. Status is never color alone. No gradients, decorative avatars, nested cards or Unicode icons; consistent inline SVG keeps the Pictures ring-and-dot mark. Flat work forms/list sections have separators; shadows appear only on floating menu/dialog/toast layers.
+| Name | Import / composition |
+|---|---|
+| `shadcn:button default default\|hover\|focus\|pressed\|disabled\|loading` | `@/components/ui/button`, selected Action composition; primary submit/invite/copy |
+| `shadcn:button outline default\|hover\|focus\|pressed\|disabled` | Same import; management, recovery, cancel/navigation |
+| `shadcn:button destructive default\|hover\|focus\|disabled\|loading` | Same import; explicit permanent-delete confirmation |
+| `shadcn:input text\|email\|password default\|focus\|invalid\|disabled` | `@/components/ui/input`; custom Field is associated label, control and hint, not stock shadcn Field |
+| `shadcn:checkbox permission\|consent unchecked\|checked\|focus\|disabled` | `@/components/ui/checkbox`, installed Animate UI/Base UI enhancement |
+| `shadcn:skeleton record\|form loading` | `@/components/ui/skeleton` |
+| `shadcn:dialog invitation\|management\|link open\|closed` | `@/components/ui/dialog`, installed Animate UI/Base UI enhancement |
+| `shadcn:alert-dialog account-delete\|role-delete open\|blocked\|pending\|closed` | `@/components/ui/alert-dialog`, installed Animate UI/Base UI enhancement |
+| `native:select role\|status\|language default\|focus\|disabled` | Native HTML select with label; no shadcn Select claim |
+| `native:details account closed\|open` | Named account disclosure with Mi cuenta/sign-out; non-modal |
+| `custom:access-register ruled normal\|loading\|empty\|error` | `.register-head`, `.person-row`, `.identity`, `.footline` |
+| `custom:permission-sheet grouped system-readonly\|custom-editable\|validation` | `.role-layout`, `.role-list`, `.role-editor`, fieldset/legend |
+| `custom:app-header compact normal` | `.masthead`, `.heading`, `.route-nav`; Pictures ring-and-dot mark |
+| `custom:message ruled error\|success` | `.message` with alert/status semantics |
+
+`mountMockup` / `useMockup` import from `@kit/mockup`; `useMotionProfile` from `@kit/motion`. The real offline workspace bundles React, controls, fonts and motion. No CDN, package installation, external image/font request or plain-HTML fallback was used.
+
+
+**Motion: kinetic registration, unchanged from the selected r14 source.** `useMotionProfile()` supplies profile/reduced state. Cubic-bezier(.76,0,.24,1); expressive paper/row/rule/status 480ms with 55ms row offsets, controls 180ms; natural 300/140ms; subtle 160/100ms. Paper travels vertically 12px, rows horizontally 14px, rules/status 6px. Buttons lift −2px on hover, press 1px with scale(.98), arrows move 3px. Skeleton scan repeats at 1.4s. No retired rail/foil motion is reintroduced. Readable text stays present. Hidden tabs pause animation; no offscreen decorative animation remains. OS reduced motion, Quieto and `?still=1` suppress movement/repeating effects, preserve final layout and retain all actions.
 
 ## 5. Navigation and interaction model
 
-Route contract aligned to T2.3–T2.5 (query parameters for management subviews are presentation proposals, with no additional page files):
-
-| View | Proposed path | Access / exit |
+| View | Product path / permission | Preview value |
 |---|---|---|
-| V1 sign in | `/login?from=<relative-path>` | public; success returns to safe same-origin relative `from`, otherwise first permitted area: Taller 3D, chat, then catalogue; `/cuenta` if none is allowed |
-| V2 activate | `/activar/<token>` | public; consumes invitation only on explicit submit; success → first permitted tool with an active session, or `/cuenta` when none is allowed |
-| V3 reset password | `/restablecer/<token>` | public; consumes reset only on submit; success → V1 |
-| V4 accounts | `/admin/cuentas` | `cuentas.administrar`; exits to permitted home |
-| V5 invite / created link | `/admin/cuentas?vista=invitar` | `cuentas.administrar`; back → V4 |
-| V6 account detail | `/admin/cuentas?cuenta=<id>` | `cuentas.administrar`; back → V4 |
-| V7 roles | `/admin/roles` | `roles.administrar`; back → permitted home |
-| V8 create / edit / inspect role | `/admin/roles?rol=nuevo`, `/admin/roles?rol=<id>` | `roles.administrar`; back → V7 |
-| V9 access denied | `/sin-acceso` response | existing SP-1 denied response; “Volver al inicio”, “Cerrar sesión” |
-| V10 own account | `/cuenta` | any active session with current notice; C1 → Mi cuenta; back to permitted home |
-| V11 notice re-acceptance | `/aviso-datos?from=<relative-path>` | active session with outdated notice; accept → revalidated destination; sign out → V1 |
+| V1 sign in | `/login?from=<relative-path>`; public | `view=login` |
+| V2 activate | `/activar/<token>`; public valid invitation | `view=activar` |
+| V3 reset | `/restablecer/<token>`; public valid reset | `view=restablecer` |
+| V4 accounts | `/admin/cuentas`; `cuentas.administrar` | `view=cuentas` |
+| V5 roles/editor | `/admin/roles`; `roles.administrar` | `view=roles` |
+| V6 own account | `/cuenta`; active session | `view=cuenta` |
+| V7 mandatory notice | `/aviso-datos?from=<relative-path>`; active session | `view=aviso` |
 
-No administration links in unauthorized navigation. Direct requests still rely on server guards. Do not place all account routes under the existing `/admin/*` rule (`internas.usar`) without explicit permission overrides. A role-only administrator must reach V7/V8 even without account permissions. SP-1 owns sign-in/sign-out; T2.2 owns activation/reset/notice/own-password and admin APIs. Administration forms are full content subviews of the two planned page routes; the mockup view switch exposes them independently. Query parameters must never contain activation/reset tokens.
+Invitation/management/link are contextual dialogs of V4, and role editing is inline in V5. Do not retain the previous draft's invented query-subview routes as requirements. SP-1 owns `/sin-acceso`; the `sin-permiso` fixture shows its scoped visual refusal and Mi cuenta recovery. It does not authorize a new route or disclose a denied resource.
 
-Navigation moves focus to the new H1 (`tabindex=-1`); form validation focuses the first invalid field after announcing the summary. Search does not steal focus. Native select keyboard behavior; labelled controls. Confirmation uses a modal dialog, traps focus, starts on Cancel, closes on Escape except while a committed request is pending, and returns focus to the trigger. No modal for ordinary forms. Browser back preserves non-secret filters; never persist passwords, tokens or full forms to storage. The mockup has its own labelled view/state bar outside the product shell and no external destinations.
+On successful login, use a permitted safe same-origin relative `from`, otherwise first allowed Taller 3D, chat, catalogue, then `/cuenta` when none is allowed (T2.3). Activation creates a session and uses the same allowed-tool fallback without requiring login again. After notice acceptance revalidate the saved destination and current permissions. No target tool outside SP-2 is mocked as a working authenticated page. Next request enforces deactivation, permission and role changes server-side.
 
-C1 shared account menu: align to the trailing edge of each signed-in pilot header, including V9, V10 and V11. Trigger “Cuenta” exposes name and role in the expanded panel at all widths. Panel order: name/role, “Mi cuenta”, permission-filtered “Cuentas” and “Roles y permisos”, then “Cerrar sesión”. At V11 the same identity and sign-out remain but all navigation entries are disabled with “Acepta el aviso para continuar”. Native disclosure/non-modal panel, no nested ARIA menu unless the full menu keyboard pattern is implemented. Enter/Space opens, Tab traverses links, Escape closes and returns focus; clicking outside closes. Opening never navigates. The independent mock “Menú: Cerrado/Abierto” switch exposes both states on every signed-in view; public auth pages have no menu. C1 adds no second header to existing shells. The mock Session selector supplies Administrator, internal employee, Plan 3, accounts-only and roles-only fixtures to inspect independently filtered links; it never changes real permissions.
+Signed-in pages show the account name/role and Mi cuenta/sign out; compact summary keeps the name and disclosure reveals the role. Show Cuentas and Roles links only for their independent permissions. The static direction supplies the administrator fixture; it is not a permission service. On V7 preserve identity and sign out while withholding other product destinations until acceptance. Preview controls are external inspection chrome, never a product bypass.
 
-On the next request after a notice-version change, V11 replaces the requested page; no underlying account/admin/workshop data is rendered. Preserve only a safe same-origin relative destination and re-check permissions after acceptance. Sign-out stays available without acceptance. Changing the notice again while V11 is open shows `conflict`, requires a fresh unchecked acceptance of the new content and never records acceptance for unread text.
+Navigation focuses the new page heading; invalid submission announces the error and focuses the first invalid field. Search/filters preserve typing focus. Dialog opens focus inside, contains Tab, makes the background inert and restores focus to the initiating action after dismissal. Invitation/management/link support Escape; destructive dialogs require explicit Cancel/confirm and start on Cancel. If data mutation is pending, disable repeated submission; avoid dismissing an already committed request as if cancelled. The native account disclosure uses disclosure semantics, not a partial ARIA-menu pattern; keyboard actions retain visible focus.
+
+The mockup bar retains native `view`, `state`, `scene`, `theme`, `motion`, labeled Vista, Estado, Diálogo, Tema, Movimiento. Every declared preview state/scene is reachable. The product language selector is ES/EN, initially ES in this selected inspection artifact, with EN explicitly selectable. In the product, the invitation notice initially follows browser language; later persisted language preference follows SP-8/SP-10. Preview selection does not persist account settings or change server permissions. Translation rollout follows PLAN: SP-2 Spanish strings remain grouped for SP-8/SP-10; the notice is bilingual from the start. This bilingual visual reference does not claim those later tasks are implemented.
 
 ## 6. Flows
 
-**F1 sign in.** 1) Enter email and password with password-manager support. 2) Submit once; label becomes “Ingresando…”. 3) On success use the safe requested destination if permitted, otherwise the first permitted area of Taller 3D, chat, catalogue; if none is permitted, use `/cuenta` (Mi cuenta). Re-acceptance takes precedence. Direct unauthorized visits still use V9. 4) Wrong password, unknown email, deactivated account and locked email show exactly the same refusal: “No pudimos iniciar sesión. Revisa el correo y la contraseña o consulta con tu administrador. Si has tenido varios intentos fallidos, espera 15 minutos antes de volver a intentarlo.” This is the only service-refusal fixture (`error`); the neutral hint is always present, regardless of the underlying cause. There is no distinct locked state, attempt counter, account-existence disclosure or client-side lockout inference. 5) Recovery disclosure: “Pide a tu administrador un enlace para restablecer tu contraseña.” Session expiry uses V1 with “Tu sesión terminó. Inicia sesión para continuar.” The 30-day session has no “remember me” toggle.
+**F1 — Sign in.** Enter invited email/password → submit once → loading → server-confirmed safe destination. Wrong password, unknown email, deactivated account and locked email use the same refusal: “Revisa el correo y la contraseña. Después de varios intentos fallidos debes esperar quince minutos.” English: “Check your email and password. After several failed attempts you must wait fifteen minutes.” Do not expose existence/state/attempt counters. SP-1 locks an email after five failures in fifteen minutes for fifteen minutes; the UI always supplies the neutral hint. Invitation-only copy and administrator-issued recovery are visible; no open registration or automatic email reset. Sessions last 30 days under SP-1 and end on sign-out/deactivation/password change as specified below.
 
-**F2 activate.** 1) Validate link without consuming it; show read-only recipient and assigned role from server. 2) Set password (8–200 characters), confirmation and show/hide control; paste allowed. 3) Read full supplied notice, explicit unchecked acceptance checkbox “He leído el aviso y autorizo el tratamiento descrito.” 4) “Activar cuenta” validates and submits password plus notice version. 5) Only confirmed service success creates the session and redirects to the first permitted tool (round 8, T2.2/T2.3). The mockup stops on “Tu cuenta está activa. Ya iniciaste sesión” with “Continuar” because the destination tool is outside SP-2; it never asks for a second sign-in. A custom role without any of the three tools lands on `/cuenta` with the new session. The same deterministic destination rule applies to sign-in, activation, safe return after notice acceptance and “Volver al inicio”; it never loops to a forbidden tool. The mock Session selector’s accounts-only/roles-only fixtures expose this fallback; tool destinations stay explicit handoffs outside SP-2. Expired/used/invalid links all replace the form with the same “Este enlace no es válido o ya no está disponible. Pide a tu administrador un nuevo enlace.” and “Ir a iniciar sesión”. The API gives only LINK_INVALIDO; do not reveal a cause, identity or role. Never consume on page load.
+**F2 — Activate.** Validate the invitation without consuming it on load → display invited name/email → new password and confirmation → full current notice in browser/selected language → unchecked consent → Activate disabled until checked → explicit valid submission. Password is 8–200 characters, confirmation equal; allow password-manager/paste. Only confirmed activation stores notice version/date, consumes the one-use seven-day token, creates a session and opens the first allowed tool or Mi cuenta. Expired, used or replaced links use one generic `LINK_INVALIDO` recovery, hide password entry and ask the administrator for a new link; do not disclose which condition or recipient data from an invalid link. The fixture's Taller 3D destination is an example for its Master Designer role, not a destination forced on all roles.
 
-**F3 invite.** 1) V4 “Invitar persona”. 2) Required name/email, optional company, required single-role select initially unselected. 3) Preview exact permissions before creation; five system choices plus custom roles, no separate additive plan control. 4) “Crear invitación” → service → same V5 result showing recipient, role, server expiry and selectable link. 5) “Copiar enlace” performs a user-initiated copy; if unavailable, select/copy manually. Announce “Enlace copiado” only after copy succeeds. Explain “Compártelo directamente con esta persona. No se envió ningún correo.” No mail-sent fiction. 6) Return to V4; link is not redisplayed from a hash. Lost/expired invitation recovery: V6 of an invited account → “Generar enlace nuevo” → confirmation explaining that older unused invitations will stop working → fresh seven-day link shown once. Cancel leaves existing links valid. No action revokes or consumes links before confirmed server success.
+**F3 — Invite.** Cuentas → Invitar persona → required name/email, optional company, exactly one role/plan in catalogue order (Entusiasta, Designer, Designer Plus, Master Designer), then Empleado interno, Administrador and custom roles → Generar invitación → pending → server-confirmed one-time link receipt. Registered email returns `CORREO_REGISTRADO` and “Este correo ya está registrado. Gestiona su cuenta existente.” without creating another invitation. Receipt names recipient, one-use/lifetime and manual sharing; nothing claims email delivery. Copy reports success only after clipboard success; failure instructs selecting/copying the wrapping link manually. Closing/leaving removes the receipt. Generate a new invitation from an invited account's management dialog to recover a lost/expired receipt; explain before generation and on receipt that all older unused invitations for that account become invalid. Reset and invitation kinds do not cross-revoke.
 
-**F4 reset.** 1) V6 active account “Crear enlace de restablecimiento”. 2) Confirm recipient and explain “Válido por 24 horas. Al cambiar la contraseña se cerrarán sus sesiones.” 3) Generate → copyable result in V6 with expiry/manual sharing. 4) Recipient V3 enters and confirms new password; no repeated legal acceptance. 5) Server success revokes sessions and shows “Contraseña actualizada. Inicia sesión con tu nueva contraseña.” Self-service email reset is out of scope; own-password editing is F7. Expired/used/invalid handling matches F2. Creating a new reset link invalidates every older unused reset link (round 8); explain this in its confirmation. Invitation and reset replacements are independent kinds, never cross-revoke. V6 result offers a selectable/copyable link once; leaving removes it. Server errors retain the old valid link and never show a new one.
+**F4 — Administrator reset.** Manage an existing account → Generar restablecimiento → explain older unused resets become invalid, new link is single-use for 24 hours → generate/copy/close once. Recipient opens V3 → new password twice, 8–200 and matching → confirmed reset revokes sessions → sign in with the new password. No repeated notice consent is added to reset; invalid link recovery matches F2. Generating a reset does not itself assert that a password was changed.
 
-**F5 manage account.** 1) Search name/email; filter by status and role. 2) Open V6; identity is read-only (profile editing not scoped). 3) Change single role: show new exact permissions, “Guardar rol”; confirm if administrative permissions are added or this removes one's own access; explain applies on next request. 4) “Desactivar cuenta” confirmation states sessions end on next request, data is retained; on success status becomes Desactivada and reactivation replaces deactivation. 5) “Reactivar cuenta” uses service confirmation and returns active; no invitation creation implied. 6) Delete uses separate danger dialog with recipient email and typed-email confirmation. Last active Administrador cannot be deactivated, deleted or demoted; display reason next to disabled controls; stale server rejection refreshes authoritative status. Account deletion follows round 7: any saved project or personal decoration blocks deletion (`CUENTA_CON_TRABAJO`); explain “Esta cuenta tiene trabajo guardado. Puedes desactivarla para conservarlo.” Accounts without saved work can be deleted after typing the email. Explain “Se eliminarán la cuenta y sus datos personales. El gasto de IA se conservará sin datos personales como Cuenta eliminada. Esta acción no se puede deshacer.” Spend is never saved work. Unknown eligibility (`eligibility_unknown`) disables delete with retry; no guess of zero work. Recheck on the server at confirm; a concurrent saved project replaces the dialog with the saved-work explanation and changes nothing.
+**F5 — Account administration.** Search name/email and filter role/state → Manage selected row → read identity and choose one role from that same ordered catalogue/staff/custom list → Guardar rol; effects apply next request. Deactivate ends sessions and preserves saved work; Reactivate restores access subject to the same role and notice. Last active Administrator cannot be deactivated/deleted/demoted (`ULTIMO_ADMIN`); fixture Cuenta administradora is the last administrator, not a rule that all administrators are immutable. Saved projects/decorations or any registered saved-work row block deletion (`CUENTA_CON_TRABAJO`) and change nothing; explain deactivation as the alternative. Spend alone is not saved work. Only a work-free account can proceed to permanent-delete AlertDialog; require exact matching email, explain irreversibility and retention of anonymous spend as “Cuenta eliminada”. Unknown/stale eligibility never enables deletion; recheck on confirm. Handle a concurrent refusal in place with refreshed authoritative data and no success claim. Profile editing, bulk operations and account transfer are outside scope.
 
-**F6 manage roles.** 1) V7 separates five “Del sistema · Solo lectura” rows and custom roles. 2) V8 “Crear rol” requires name, explicit permission choices; none is preselected. At least one permission is required (round 8); zero permissions shows “Selecciona al menos un permiso” and maps service ROL_SIN_PERMISOS to that fieldset. 3) Checkboxes are independent capabilities, not an enforced inheritance tree: selecting a capability never silently adds another. `taller.usar` is intentionally coarse and its helper lists scene AI, export, own projects/decorations, assembly plans/sheet. 4) Summary lists precisely selected names and count; “Guardar rol” shows service success. 5) Edit custom role keeps assigned-account count visible and confirms that affected accounts change on next request. 6) System role renders the same matrix read-only with no save/delete. 7) Delete custom role only when assigned count is zero; otherwise “Este rol está asignado a N cuentas. Asígnales otro rol antes de eliminarlo.” No bulk reassignment tool is implied.
+**F6 — Roles and plans.** Select one of six system roles to inspect its read-only permissions → or Crear rol → name and initially unselected independent checkboxes grouped by tool → require at least one permission (`ROL_SIN_PERMISOS`) → Save confirmed custom role. Editing loads that role's actual selected permissions; it never inherits another role's transient checkbox state. System roles cannot be edited/deleted (`ROL_SISTEMA`). Assigned custom roles refuse deletion (`ROL_EN_USO`) and explain assigning another role first; unassigned custom roles use permanent-delete confirmation. The displayed assigned count must come from real account assignments, not list position. No separate additive plan field exists: the four access plans are Usuario roles, one role per account; staff/custom roles follow them. Custom roles remain independent of plans. Read names, ordering and plan permissions directly from plan-catalogue@1 rather than copying tier logic into SP-2.
 
-**F7 own password.** 1) C1 → Mi cuenta shows the session account, never the administrator's selected account. 2) Enter current password and new password twice; all allow paste and show/hide. 3) Validate current required, new 8–200 and confirmation equal, then “Cambiar contraseña”; duplicate submit disabled. 4) Incorrect current password (`current_incorrect`) identifies only that field and offers retry without ending the session. 5) Confirmed success clears all password fields, announces “Contraseña actualizada. Se cerraron tus otras sesiones. Sigues conectado en este navegador.” The service revokes all sessions and the route opens a new session for the requesting browser, so the visible experience stays signed in and every other browser must sign in again. Admin-generated resets still end all sessions and return to V1 without this automatic re-sign-in. Do not imply a changed password before success. No profile, email or role self-editing.
+**F7 — Own password.** Account disclosure → Mi cuenta → read own identity/company/role and notice version/date → enter current password, new password and confirmation → validate → confirm service success. Wrong current password is actionable without ending the valid session. The service ends all old sessions and T2.2 opens a new one for the requesting browser; clear secret fields and announce “Contraseña cambiada. Esta sesión se renovó; tus otras sesiones terminaron.” The person remains signed in here; other browsers must sign in again. This is distinct from F4 reset. No self-editing of email/profile/role is introduced.
 
-**F8 re-accept notice.** 1) Outdated acceptance → V11 on next page request. 2) Explain “Actualizamos el aviso de tratamiento de datos. Léelo y acepta la versión actual para continuar.” Show full current approved version; draft v2 fixture uses v1 body unchanged to avoid inventing legal copy. 3) Accept checkbox begins unchecked, “Aceptar y continuar” validates and sends exactly the displayed version. 4) Only confirmed success restores the revalidated permitted destination; success mock shows a handoff CTA. 5) Error/offline retains unchecked/checked choice for the same version, offers deliberate retry; changed version clears it. 6) Refusal means remaining on V11 or “Cerrar sesión”; no bypass, “Más tarde” or pre-consent home link.
+**F8 — Notice update.** On next request after a notice version change, replace requested content with V7 → show full displayed version and unchecked consent → accept and store exactly that version/date → permitted destination, or sign out to V1. No skip/later or underlying product links before consent. If displayed version changes while open, discard acceptance of the old text and ask for fresh consent. Failure/offline retains input for that version with explicit retry and no recorded-success fiction. The v1 body in the preview is an illustrative reacceptance scenario, not a newly invented v2 legal text.
 
 ## 7. View specifications
 
-| View | Structure, data and visible copy | Primary / secondary actions | Responsive treatment |
+| View | Structure / copy and data | Actions and related flow |
+|---|---|---|
+| V1 | “Iniciar sesión” / “Sign in”; Iniciar sesión, email/password, invitation-only explanation, administrator reset guidance | Entrar; generic error/retry; F1 |
+| V2 | “Activar cuenta” / “Activate account”; invited name/email, new/repeated password, full notice, unchecked consent, seven-day explanation | Activar cuenta disabled until consent; invalid-link replacement/Volver al acceso; F2 |
+| V3 | “Restablecer contraseña” / “Reset password”; reset password twice; one-use 24-hour explanation | Guardar contraseña then sign in; invalid-link replacement; F4 |
+| V4 | “Cuentas” / “Accounts”; Cuentas del piloto / Datos de ejemplo, filters and five illustrative complete account records, result count/timezone | Invitar persona, Gestionar, clear filters, retry; F3/F5 |
+| V5 | “Roles y permisos” / “Roles and permissions”; six system roles/custom list, selected name, permission groups and explanatory Taller bundle | Crear rol, Guardar rol, Eliminar rol if custom; read-only system state; F6 |
+| V6 | “Mi cuenta” / “My account”; current signed-in identity/company/role, current/new/repeated password, version/date | Cambiar contraseña; signed-in session-renewal feedback; shared account disclosure; F7 |
+| V7 | “Aviso de tratamiento de datos personales” / “Personal data notice”; Aviso actualizado, gate explanation, full versioned text, unchecked consent | Aceptar y continuar, Cerrar sesión; no other product routes; F8 |
+
+Contextual scenes (`scene`): `invitar` = name/email/company/one-role form; `gestionar` = selected identity, role, regenerate/reset, deactivate/reactivate and delete with inline reasons; `enlace` = recipient, selectable link, lifetime/one-use/replacement warning, Copy and Done; `eliminar` = account refusal or exact-email confirmation; `eliminar-rol` = role refusal or permanent-delete confirmation. Empty `scene` is Ninguno. No other exploratory view is required.
+
+Permission catalogue is **12 permissions**, supplied once by SP-1. The six Taller capabilities are supporting text for one coarse `taller.usar`; they must never become independent checkboxes or fabricated permission keys. Preserve four grouped fieldsets and the chosen editor geometry.
+
+| Tool group | Key → ES / EN label |
+|---|---|
+| Planificación | `chat.usar` → Chat asistido / Assisted chat; `contador.usar` → Contador de globos / Balloon counter; `catalogo.ver` → Catálogo / Catalogue; `costos.usar` → Calculadora de costos / Cost calculator; `decoraciones.explorar` → Explorador de decoraciones / Decoration explorer |
+| Taller 3D | `taller.usar` → Taller 3D / 3D workshop. Includes scene AI, assembly plans/build sheet, export, own projects and decorations; no independently selectable sub-capabilities. |
+| Herramientas internas | `proyectos.ver_todos` → Proyectos de todos / Everyone’s projects; `gasto.ver` → Consumo de IA / AI spend; `internas.usar` → Herramientas internas / Internal tools |
+| Administración | `cuentas.administrar` → Gestionar usuarios / Manage users; `roles.administrar` → Gestionar roles / Manage roles; `textos.corregir` → Corregir textos en inglés / Correct English copy |
+
+System roles, in exact picker/list order:
+
+| System role ES / EN | Selected grants (read-only) | Count |
+|---|---|---|
+| Usuario · Entusiasta / User · Enthusiast | chat, counter, catalogue | 3 |
+| Usuario · Designer / User · Designer | Same as Entusiasta; no additional grant or numeric chat limit | 3 |
+| Usuario · Designer Plus / User · Designer Plus | Entusiasta grants + costs | 4 |
+| Usuario · Master Designer / User · Master Designer | Designer Plus grants + Taller + ready-made decorations explorer | 6 |
+| Empleado interno / Internal employee | All Master Designer grants + everyone's projects, spend and internal tools | 9 |
+| Administrador / Administrator | All permissions, including account/role/text administration | 12 |
+
+There is no seventh generic Usuario. Custom roles follow the six system roles and retain independent checkboxes without silent inheritance. `proyectos.ver_todos` permits reading foreign originals; with `taller.usar` an owned copy can be saved, never editing the original (SPEC round 9). Routes/services use keys, never translated labels. Availability is distinct from assignment: do not invent extra selectable grants for extended chat, structure detection or advanced balloon detection. T1.2 currently marks those three unavailable and keeps the cost grant with Designer Plus; no tool is made available by changing its role label.
+
+**Shared catalogue data (R17, reference data, not a new SP-2 price screen):**
+
+| Order | Name ES / EN | Monthly COP | Monthly USD |
 |---|---|---|---|
-| V1 | Pictures; “Iniciar sesión”; “Usa el correo con el que te invitaron”; visible Correo/Contraseña labels; helper “El acceso es por invitación.” | “Entrar”; show/hide; recovery disclosure | 440px column, full-width primary; page scroll with keyboard/zoom |
-| V2 | “Activa tu cuenta”; recipient/role; new password + confirmation; “Aviso de tratamiento de datos · versión 1”; full notice and acceptance; legal-input warning in mock | “Activar cuenta”; show/hide; success → permitted tool | 640px column; notice full width; no nested legal scrollbox |
-| V3 | “Restablecer contraseña”; identified link recipient; 8–200 helper and two password fields; link expiry | “Guardar contraseña”; V1 after success | 440px column |
-| V4 | “Cuentas”; invitation CTA; search, status and role filters; list shows name/email, company, role, status, last access; total/filtered result text | “Invitar persona”; per-row “Ver cuenta” | ≥640px semantic table; <640px equivalent labelled cards, no hidden identity/access/status |
-| V5 | Back; “Invitar persona”; name/email/company/role; exact-access preview; result recipient, expiry, full link | “Crear invitación”; Cancel; result “Copiar enlace”, “Volver a cuentas” | ≥1024px form + 300px access sidebar; below stack preview before submit |
-| V6 | Back; name/email/company/status; invitation/activation/last-access dates; notice version/date or “Aún no ha aceptado”; single-role select and preview; reset or invitation-replacement section; danger section | “Guardar rol”; reset / replace invitation; deactivate/reactivate; delete | ≥1024px 220px identity rail + main; ≥1200px role and recovery/danger occupy adjacent columns; 1024–1199px operations follow role in main; below 1024px all stack; destructive controls never icon-only |
-| V7 | “Roles y permisos”; “Crear rol”; system-role rows with permission counts; custom-role rows with assigned counts | “Ver rol” or “Editar rol” | ≥1024px system/custom peer lists in two columns; below stack; permission/account counts right-aligned and tabular, labels wrap rather than clip |
-| V8 | Back; “Crear rol” / role name; custom name field; grouped permission matrix, independent checks with explanations; summary; assigned count | “Guardar rol”; Cancel; delete unassigned custom role | ≥1024px matrix + 300px summary with deletion guard; checkbox choices use two columns within each group; smaller one column, full checkbox label hit target. Save remains in title row and Cancel follows content |
-| V10 | “Mi cuenta”; read-only name/email/role; current/new/confirm password with length helper and other-session explanation | “Cambiar contraseña”; “Volver al inicio”; C1 sign out | 640px maximum content, one column at every width |
-| V11 | “Revisa el aviso actualizado”; account identity, version, full notice, explicit acceptance; gate reason | “Aceptar y continuar”; “Cerrar sesión” | Same 640px notice layout as V2; no administration tabs |
-| V9 | “No tienes acceso a esta sección”; “Tu rol actual no incluye este permiso. Consulta con tu administrador si necesitas acceso.” No restricted resource details | “Volver al inicio”; “Cerrar sesión” | 440px column, buttons wrap |
+| 1 | Entusiasta / Enthusiast | Free | Free |
+| 2 | Designer / Designer | 20,000 | 7 |
+| 3 | Designer Plus / Designer Plus | 45,000 | 14 |
+| 4 | Master Designer / Master Designer | 70,000 | 25 |
 
-Every view uses these catalog components (variants/states as section 4; exact example anchors there):
+The mock TSX contains one clearly marked plan-catalogue fixture (names, both currency prices, cumulative tools with availability and selected grants). Role options and plan checkmarks read that fixture; they do not maintain competing tier arrays. Production reads SP-1's real catalogue; this design fixture is not a new production owner. Neither invitation nor account management adds prices, purchase actions or a separate plan selector. Entusiasta/Designer have identical grants now; the owner deferred numeric chat limits, so no values or limit control are invented. The complete comparison, unavailable-feature copy and entry links are SP-14's scope.
 
-| View | Component composition / state variants |
-|---|---|
-| V1 | Card + Input email + InputGroup password; Button default/ghost/link, Alert destructive, Skeleton loading; AuthLayout |
-| V2 | Card + identity Badge secondary + InputGroup password twice + Alert warning + Checkbox unchecked/error/disabled + Button default; full notice |
-| V3 | Card + InputGroup twice + Button default/ghost; Alert destructive, Skeleton loading |
-| V4 | PageHeader + Button default; Grid of Input search and Select native; Table default / peer Cards compact; Badge success/warning/secondary; Empty default/no-results, Alert, Skeleton |
-| V5 | Input text/email + Select native + exact-access Stack; Button default/outline; Alert and wrapping-link proposal in success |
-| V6 | Metadata Stack + Select native + access Stack; Button default/outline/destructive; Alert warning/success; AlertDialog default/destructive for account actions |
-| V7 | Two peer role-list Stacks, Badge secondary and Button default/ghost; Empty default; Alert warning/error |
-| V8 | Input text/readonly + FieldSet/Legend + Checkbox checked/unchecked/disabled/error; Button default/destructive, AlertDialog default/destructive, Alert and exact-summary Stack |
-| V9 | AuthLayout/Card + Button default/outline; no restricted list or form |
-| V10 | Page narrow + identity Badge secondary + three InputGroups + Button default/ghost; Alert destructive/success and Skeleton |
-| V11 | AuthLayout/Card + full notice + Checkbox unchecked/error/disabled + Button default/ghost; Alert warning/destructive, Skeleton |
-| C1 | Disclosure with Button outline trigger, DropdownMenu end-aligned content/label, ghost destination actions, disabled destinations during notice gate |
+Full notice preserves the SPEC v1 body with the owner-authorized substitution of Sempertex for the legal-name placeholder in both languages. The rights-contact email and policy URL remain bracketed placeholders as explicitly requested; their existing legal-review annotation remains visible. No policy hyperlink, contact address or claim of legal completion is fabricated.
 
-Permission labels from SP-1 catalogue (one source at implementation):
+**ES — Aviso de tratamiento de datos personales (versión 1)**
 
-| Group | Key → visible ES label / helper |
-|---|---|
-| Herramientas | `chat.usar` → Chat asistido; `contador.usar` → Contador de globos; `catalogo.ver` → Catálogo; `costos.usar` → Calculadora de costos; `decoraciones.explorar` → Explorador de decoraciones |
-| Taller y proyectos | `taller.usar` → Taller 3D / Incluye IA de escena, planes y hoja de armado, exportación, proyectos y decoraciones propios; `proyectos.ver_todos` → Proyectos de todas las cuentas / Lectura de proyectos ajenos. Con Taller 3D puedes guardar una copia propia; el original no se modifica. |
-| Equipo interno | `gasto.ver` → Gasto de IA; `internas.usar` → Herramientas internas |
-| Administración | `cuentas.administrar` → Administrar cuentas; `roles.administrar` → Administrar roles; `textos.corregir` → Corregir textos en inglés |
+Sempertex tratará tus datos personales —nombre, correo, empresa (si la indicas), el rol y el plan que te asignen, y las fechas de invitación, activación y último acceso— para darte acceso a Pictures durante el piloto, administrar tu cuenta y medir el uso de las herramientas, incluido el consumo de inteligencia artificial. Los proyectos y decoraciones que guardes quedan asociados a tu cuenta. Puedes conocer, actualizar, rectificar o pedir la supresión de tus datos, y revocar esta autorización, escribiendo a [CORREO PARA DERECHOS]. La política de tratamiento de datos está en [URL DE LA POLÍTICA]. Al activar tu cuenta declaras que leíste este aviso y autorizas el tratamiento descrito, conforme a la Ley 1581 de 2012.
 
-System role summary: Usuario · Plan 1 = first three; Usuario · Plan 2 adds costs/explorer; Usuario · Plan 3 adds Taller; Empleado interno adds all-projects, spend, internal; Administrador adds all three administration permissions. These have 3/5/6/9/12 permissions respectively, exactly the service catalogue. No sixth generic Usuario role. Product copy is Spanish in SP-2; every screen keeps its strings together as T2.3–T2.5 specify for SP-8/SP-10. The mockup separately offers the **already supplied** ES/EN legal notice as a content inspection control, not an account language preference or a claim that the whole UI is translated.
+**EN — Personal data notice (version 1)**
 
-Legal content: reproduce SPEC “Data-processing notice (v1, SP-2)” ES/EN **verbatim**, retaining bracketed fields for the legal name, rights email and policy URL. Show “Aviso v1 aprobado por el propietario · datos legales y revisión de Sempertex pendientes” beside the mock notice. Never turn a placeholder into a fake policy link or invent legal advice. `notice_pending` disables activation/re-acceptance until the remaining legal review and fields are complete; the normal valid-notice scenario is explicitly simulated for design review only. Owner approval of v1 text is confirmed in round 7; legal identity/contact/URL and Sempertex review remain outstanding before real users are invited. Implementers must use approved content/version and actual URL. This is the existing SPEC gate, not a new approval flow.
+Sempertex will process your personal data —name, email, company (if you provide it), the role and plan assigned to you, and the dates of invitation, activation and last access— to give you access to Pictures during the pilot, manage your account and measure the use of the tools, including artificial-intelligence usage. The projects and decorations you save are linked to your account. You can access, update, correct or request deletion of your data, and withdraw this authorization, by writing to [RIGHTS CONTACT EMAIL]. The data-processing policy is at [POLICY URL]. By activating your account you confirm that you have read this notice and authorize the processing described, under Colombian Law 1581 of 2012.
 
 ## 8. States
 
-State names below are exact mockup selector values. Every applicable pair is reachable with the visible “Vista” and “Estado” selectors; dialog variations have a separate “Diálogo” selector. Selector changes are design controls, not product features. Mockup data uses fictional people and `example.com`/`.invalid`; nothing is stored or sent.
+The global preview intentionally permits unrelated view/state combinations. The applicable product behavior is defined below; do not implement a nonsensical cross-product solely because the inspector can select it.
 
-| State | Applicable views | Appearance, available action, transition / recovery |
-|---|---|---|
-| `ready` | V1–V11 | Normal view; V9 is already a denial response. Blank forms count as ready, not an empty data state. |
-| `loading` | V1–V8, V10–V11 | Labelled static skeleton / “Cargando…”; no data flashes or enabled mutation. V1 loading represents session/destination check, not remote form data. |
-| `error` | V1–V8, V10–V11 | Alert; auth uses generic refusal, others “No pudimos cargar/guardar…” with safe retry and preserved non-secret inputs. A mutation error never shows success. |
-| `offline` | V1–V8, V10–V11 | “Sin conexión. Vuelve a conectarte y reintenta.” Form drafts remain in memory; mutation disabled; no queued saves or automatic replay. |
-| `pending` | V1–V3, V5–V6, V8, V10–V11 | In-flight submit; changing fields/repeating submit disabled; verb-specific label. Enter cannot duplicate the request. Outcome comes only from confirmed service response. |
-| `validation` | V1–V3, V5–V6, V8, V10–V11 | Summary and inline labelled errors, first invalid field focused; email syntax, required name/role, 8–200 password, matching confirmation, required consent. Role requires at least one permission; focus the permission group on ROL_SIN_PERMISOS. |
-| `success` | V1–V3, V5–V6, V8, V10–V11 | Explicit completed action; V5 retains copy result until navigation; V6/V8 refreshed authoritative data. Auth success CTA goes to the scoped handoff; mockup does not pretend to render the home product. |
-| `empty` | V4, V7 | V4 no accounts: “Aún no hay cuentas” + Invite. This fixture represents a permitted empty listing, not deletion of the current admin. V7 no custom roles: five system roles remain + Create. |
-| `no_results` | V4 | Search/filter matching zero: “No hay cuentas con estos filtros” + “Limpiar filtros”; distinct from no accounts. |
-| `stale` | V4, V6–V8 | Timestamp and “No pudimos actualizar. Estos datos pueden haber cambiado.” Read-only cached data, mutation disabled; “Actualizar” fetches fresh state. Partial responses use the same warning, identify unavailable fields as “No disponible”; never show false zero. |
-| `denied` | V4–V8 | Replace view with V9; discard restricted data, no form underneath. 401 instead returns V1/session-ended. |
-| `expired`, `used`, `invalid` | V2–V3 | Replace password form with the identical LINK_INVALIDO explanation for all three fixtures, “Ir a iniciar sesión”, ask administrator for a new link; no token, cause or account information. |
-| `notice_pending` | V2, V11 | Legal placeholders/warning visible; checkbox and acceptance/activation disabled with adjacent reason. |
-| `conflict` | V5–V6, V8, V11 | Duplicate invite email: identify existing account only to authorized admin and offer list; concurrent role/status change: refresh authoritative record before resubmitting. Preserve proposed input separately; never overwrite silently. V11 means a newer notice version: reload its full content and clear the checkbox before another submit. |
-| `invited` | V6 | Invited account shows Generar enlace nuevo, seven-day expiry and an invalidation warning; reset-password creation is absent until activated. Replacement result follows confirmed success and is shown once. |
-| `last_admin` | V6 | Last active Administrator; role-change, deactivation and delete disabled with the same explanation; reset stays available. Server refusal remains authoritative. |
-| `fixed` | V8 | System role name/permissions read-only, “Rol del sistema · Solo lectura”; no save or delete. |
-| `role_in_use` | V8 | Custom role editable; delete disabled with assigned-account count and required next step. |
-| `session_expired` | V1 | “Tu sesión terminó. Inicia sesión para continuar.” No restricted data retained. |
-| `has_work` | V6 | Delete disabled with saved-project/decoration explanation; deactivate stays available unless last admin. |
-| `eligibility_unknown` | V6 | “No pudimos comprobar si tiene trabajo guardado.” Delete disabled; “Comprobar de nuevo” refreshes eligibility. Other actions follow their own permission/session checks. |
-| `current_incorrect` | V10 | Inline “La contraseña actual no es correcta”; focus current field, retain only in-memory non-secret context and retry, no success. |
-| `closed`, `open` | C1 | Independent visible Menú selector; identity, role and Mi cuenta/sign-out visible in open state at all widths. On V11 only sign-out navigates. |
-| `disabled` | V1–V3, V5–V6, V8, V10–V11 | Primary action disabled with visible reason (incomplete input, unchanged role, or pending legal requirement). No unexplained disabled icon. |
+| Preview id / label | Applicable result, action and recovery |
+|---|---|
+| `normal` / Normal | Editable form/register; valid read-only system roles; no request pending. |
+| `cargando` / Cargando | Account/role/form skeletons and processing action; no duplicate submission or editable pending mutation. Never imply zero records from loading. |
+| `vacio` / Vacío | Accounts no-match/initial-empty explanation. Filtered empty offers clear filters; true initial-empty points to Invite. Six system roles cannot be an empty catalogue. |
+| `error` / Error | Account/role reads hide unconfirmed rows and offer Reintentar. Forms preserve safe input, describe failure and permit retry. Login uses the same fifteen-minute generic refusal for every service cause. |
+| `exito` / Éxito | View-specific confirmed result: signed-in destination; activated/session; reset/sign-in; own-password/new session; notice version/date; saved role/account. No success before authoritative acknowledgement. |
+| `validacion` / Validación | Announced error and invalid control, required identity/current password, 8–200/matching new password, name/role selection and at least one custom permission. Retain input, focus correction. |
+| `sin-permiso` / Sin permiso | Scoped refusal with no restricted form/rows; request permission, open Mi cuenta or sign out. Service still enforces 403. |
+| `enlace-vencido` / Enlace vencido o usado | V2/V3 form replaced with one invalid-link recovery; no password submission or cause/identity disclosure. |
+| `duplicado` / Correo duplicado | Invitation refused; email marked, manage existing account; no new link/account. |
+| `con-trabajo` / Cuenta con trabajo | Delete refused unchanged with `CUENTA_CON_TRABAJO`; explain deactivation; confirm disabled. |
+| `ultimo-admin` / Último administrador | Cannot delete/deactivate/demote the last active administrator; explain guard and disable/refuse mutation. |
+| `rol-en-uso` / Rol en uso | Assigned custom-role delete refused; reassign accounts first; system-role read-only remains separate. |
 
-Dialogs selectable in the mockup: `change_role`, `deactivate`, `reactivate`, `delete_account`, `reset_link`, `replace_invite` in V6; `edit_role`, `delete_role` in V8. Each has `confirm`, `pending`, `error` phases. Final deletion/reset/role changes never execute on opening the dialog. Password and token secrets are never echoed into alerts. Clipboard failure remains a local error with selectable link, not a recreated invitation.
+Control states include default, hover, focus, pressed, disabled, loading, invalid and checked/unchecked consent/permissions. One-time receipt has copy success and manual-copy fallback. The account disclosure has open/closed states. Exact-email delete is disabled until an exact match; “pending” also disables confirmation.
 
-Genuinely inapplicable: V9 has no list, mutation, loading, empty, success or offline state; it is a server denial explanation. No infinite scroll/pagination required by the current plan: data-volume/pagination must be specified if the implementation API is paginated; never silently truncate accounts. V10–V11 have no list/empty state because identity and mandatory content are either present or loading/error. V10 has no permission-denied state for an active current-notice session: an expired/deactivated session returns V1. C1 has no remote loading or empty state because identity comes with the server session.
-
-No optimistic destructive operations or background offline queue. No email delivery/loading/delivery error because no sender exists. No spending caps or billing state.
+Offline, incomplete or stale reads share the recoverable error presentation: no unconfirmed save, misleading authoritative count or unrestricted mutation from stale eligibility. Keep local safe input, explain retry, refetch authoritative role/eligibility/notice as appropriate; a changed notice resets consent. Distinct new offline/conflict routes are unnecessary. An empty system-role dataset and self-service public registration are inapplicable, because the system roles are seeded and access is invited. Paid AI, spend charts, saving projects, legal completion, database race resolution and real token/session mechanics are not simulated proof of this artifact.
 
 ## 9. Responsive behavior
 
-Breakpoints are explicit proposed layout rules for this subplan, grounded in existing `body { min-width: 320px }` and Tailwind `sm`/`lg` conventions, not inferred support for only certain devices:
+Supported contractual floor: **360px**. Vertical scrolling is expected for long notice/editor/dialog content. No horizontal page scrolling or clipped essential controls in either theme/language. The actual selected CSS uses 760px and 1100px transitions.
 
-- **Compact 320–639px:** 16px page gutter; single column; mock controls wrap; account list becomes cards with labelled fields; search/status/role filters stack. Header brand and actions wrap; C1 remains visible, its open panel shows the full name and role at compact widths too. Cuentas/Roles links remain visible and wrap (no hidden hamburger navigation required). All form/action groups can wrap, main actions fill width. Dialog width `calc(100% - 32px)`, max-height `calc(100dvh - 32px)`, internal scroll; Cancel precedes destructive confirm. Page remains scrollable with virtual keyboard and at 200% text size.
-- **Medium 640–1023px:** kit gutter 16px below 768px and 24px from 768px; semantic account table with wrapping email/role (no truncation-only identity); the kit TableContainer may scroll within its region when all columns cannot fit beside Sidebar, while the document never scrolls horizontally; controls use the responsive Grid; forms and access previews stack; Sidebar occupies 256px from 768px, otherwise equivalent navigation stays visible above Page; dialogs max-width 520px.
-- **Wide ≥1024px:** 24px Page gutter, max-width 1200px inside the app main region; invitation/role form and summary use 1fr/300px columns, system/custom role lists are peer columns, and account detail uses a 220px identity rail. At ≥1200px account role and recovery/danger are adjacent within its main column; from 1024–1199px they stack inside main. Checkbox choices in each permission group use two columns. The account table stays full width; auth remains narrow rather than stretching. No sticky summary that can cover actions on short viewports.
+| Range | Layout |
+|---|---|
+| **1101px+** | `.app` max width 1520px, 40px side padding; paper inset 28px. One full-width accounts/register workspace; filters 2:1:1; four aligned record columns, 24px row padding. Role list 240px beside editor, two-column permissions. Form workspace/heading/footer capped at 676px and centred; form content max 620px. |
+| **761–1100px** | Outer padding 28px; paper 28px; search spans both filter columns. Account action follows record fields; role list 200px beside editor; permissions one column. Form panel remains centred, cap 676px. |
+| **360–760px** | Outer/paper padding 20px; header tools wrap, name stays visible, disclosure reveals role. H1 stays 24px. Filters and field/identity groups stack; account identity spans row, role/state reflow below, Manage follows. Rows have 20px vertical padding. Role selector stacks before editor, top divider replaces left divider. Actions stack full width. Form panel contracts to available space. Feedback spans the paper width while its text aligns with the field inset. |
 
-Full URLs/emails use `overflow-wrap:anywhere`; no page-level horizontal scroll at any declared width including 320px. 639/640, 767/768, 1023/1024 and 1199/1200 boundaries must be tested. At 400% desktop zoom (equivalent 320px CSS viewport), compact reflow applies. No element depends on hover alone; mobile has the same operations. No full-screen navigation takeover.
+Dialogs retain max width `min(560px, 100vw − 32px)`, 28px desktop / 24px phone padding, max height `100svh − 48px` and vertical scroll. Paper/dialog radii are 32px; notice/feedback 24px; fields/selected role 18px; checkboxes 8px; buttons/selects/status chips/account disclosure 999px. Phone notice has 16px padding. Main management footer uses the workspace axis; form footer stacks on its 676px axis. Inspect 390/768/1280px and the 360px floor; English strings must reflow without a new layout.
 
 ## 10. Accessibility targets
 
-Target **WCAG 2.2 AA**, awaiting rendered product verification; a draft/mockup is not a conformance claim.
+Target WCAG 2.2 AA for applicable content and interactions; this description and automated audit are not a conformance certificate. Text target ≥4.5:1, large text ≥3:1 under the applicable exception, meaningful control edges/focus ≥3:1. Keep the 3px focus ring with 4px offset. Primary working actions are at least 44px tall; checkbox labels expand the small visual square into a larger hit area. Test zoom/reflow at 200% and 320 CSS px equivalent; the contractual visual floor is 360px and browser zoom verification remains explicit evidence work.
 
-- One H1; header/nav/main landmarks, skip link, table captions and scoped headers; compact cards preserve labels and equivalent operation. Use anchors for real navigation, buttons for actions. Mockup scene controls are labelled selects outside the product.
-- Visible form labels, required indicators in text, correct autocomplete (`username`/email, `current-password`, `new-password`, name/organization); no password composition puzzle, paste blocking or timer challenge. Show/hide buttons expose current state and field association.
-- Native controls or existing accessible Radix patterns. Group permission checkboxes in fieldsets/legends; helper describes coarse permission implications. Tab/Shift+Tab reach every action; Space toggles a checkbox; Enter submits once. Focus ring 2px, offset 2px, never clipped.
-- Error summary/live alert plus field `aria-invalid` and `aria-describedby`; generic auth rejection does not reveal account existence. Announce loading/completion/copy status politely; no announcement of complete rerendered tables per keystroke. `aria-busy` during pending/loading.
-- Dialog labelled title/description, inert background, focus trap, Cancel-first initial focus, Escape close and trigger focus return; visible close/cancel. During pending, explain why closing is temporarily disabled. Destructive action requires email confirmation; it is never prefilled with the target email.
-- Text contrast ≥4.5:1 (large text ≥3:1), meaningful controls/focus ≥3:1. Use kit `--input` (mapped from prior `--control-borde` proposal) on control boundaries and existing semantic pairs; decorative panel borders are not interactive boundaries. Disabled controls additionally have a readable adjacent reason. Do not communicate status only by hue.
-- Target WCAG 2.2 AA 24×24px minimum or spacing exceptions. Kit controls are 36px desktop/40px compact; Checkbox uses its complete adjacent label and ≥16px gaps between choices. Do not shrink labels to the checkbox square alone. Text resize 200%, reflow at 320px CSS width, no forced viewport zoom restriction. Reduced motion disables nonessential transitions/animations.
-- Rendered verification still required: keyboard and focus sequence, native dialog behavior, screen-reader announcements, measured color combinations in both themes, high zoom and legal-policy link once supplied. English notice uses `lang=en`; interface remains `lang=es` until SP-10 translation.
+Use headings in hierarchy, main/navigation landmarks, associated label/input/hint/error, type=email/password autocomplete, accessible named groups via fieldset/legend, and real native buttons/selects. Use status for successful results and alerts for errors; do not rely on icon/color. Permission IDs are normalized without spaces so Base UI's accessible labels resolve. In production associate summaries/field errors with their controls and expose request busy state. Password paste/autofill remains allowed; no forced timed interaction.
 
-## 11. Visual acceptance criteria
+Maintain search/form typing focus, route focus, modal containment/inert background and dismissal return. Destructive confirmations start with safe Cancel and require exact-email account confirmation. Do not imply inaccessible read-only system controls can be changed. Consent is explicit and initially unchecked for each activation/new notice version. Reduced/still suppresses all animation while preserving final content, focus, dialog alignment and immediate feedback; no flashing, hidden text or mid-animation illegible state.
+
+The offline inspector and automated checks measure rendered mechanics. Manual screen-reader sessions, all zoom levels, full disclosure keyboard behavior, cross-browser testing, real server errors and production routing require later implementation verification. Preserve those as targets instead of claiming that the illustrative local handlers implement them.
+
+## 11. Visual acceptance criteria and verification
 
 | ID | Breakpoint | State | Observable expectation |
 |---|---|---|---|
-| UI-AC-01 | 320–639px | V1 ready | Correo and Contraseña labels and Entrar fit without horizontal scroll. |
-| UI-AC-02 | ≥320px | V1 error | Unknown email, wrong password, deactivated account and locked email display the same generic refusal including the neutral fifteen-minute wait hint. |
-| UI-AC-03 | ≥320px | V1 pending | Entrar becomes Ingresando… and repeat submission is disabled. |
-| UI-AC-04 | ≥320px | V1 ready | The invitation-only guidance is visible and there is no signup action. |
-| UI-AC-05 | ≥320px | V2 ready | Recipient, assigned role and full data notice precede the activation action. |
-| UI-AC-06 | ≥320px | V2 validation | Unaccepted notice is identified beside the unchecked checkbox. |
-| UI-AC-07 | ≥320px | V2 notice_pending | Legal placeholders carry a pending-content warning and activation is disabled. |
-| UI-AC-08 | ≥320px | V2/V3 expired/used/invalid | The password form is replaced by recovery guidance and a sign-in action. |
-| UI-AC-09 | ≥320px | V3 success | The page confirms the password change and offers sign-in rather than showing another password form. |
-| UI-AC-10 | ≥1024px | V5 ready | A single role choice and its exact permission preview are simultaneously visible in two columns. |
-| UI-AC-11 | 320–1023px | V5 ready | The same access preview stacks before submit without removing permissions. |
-| UI-AC-12 | ≥320px | V5 ready | Plan 1/2/3 previews show respectively 3/5/6 named permissions and no price or payment control. |
-| UI-AC-13 | ≥320px | V5 success | Recipient, seven-day/server expiry, selectable link and manual-sharing instructions appear together. |
-| UI-AC-14 | ≥320px | V7 empty | Five read-only system roles remain visible when there are no custom roles. |
-| UI-AC-15 | ≥320px | V8 ready | Checking one permission updates the exact summary without selecting other permissions. |
-| UI-AC-16 | ≥320px | V8 fixed | A system role has a read-only label and no save/delete control. |
-| UI-AC-17 | ≥320px | V8 role_in_use | Delete is disabled beside the assigned-account count and reassignment guidance. |
-| UI-AC-18 | ≥320px | V6 ready/reset_link | The reset dialog states 24-hour validity and session closure only after password change. |
-| UI-AC-19 | ≥320px | V6 last_admin | Role change, deactivate and delete are disabled beside the last-admin explanation. |
-| UI-AC-20 | 320–639px | V4 ready | Each account card retains name, email, company, role, status and Ver cuenta. |
-| UI-AC-21 | 640–1023px / ≥1024px | V4 ready | Table headers identify person, company, role, status, last access and action; long email wraps. |
-| UI-AC-22 | ≥320px | V4 no_results | Limpiar filtros restores the unfiltered list without creating an account. |
-| UI-AC-23 | ≥320px | V8 ready/edit_role | The custom-role save confirmation states that assigned accounts change on next request. |
-| UI-AC-24 | ≥320px | V4/V6–V8 stale | A stale-data warning includes a last-update time and mutations are disabled. |
-| UI-AC-25 | ≥320px | V1–V8, V10–V11 offline | No mutation is offered as queued or successful; retry requires a deliberate action. |
-| UI-AC-26 | ≥320px | V6 ready/delete_account | Delete confirmation requires typing the shown email and retains a visible Cancel action. |
-| UI-AC-27 | ≥320px | V6 disabled | The generic disabled account fixture explains that an unchanged role has no save action; saved-work guards use UI-AC-39/40. |
-| UI-AC-28 | ≥320px | V4–V8 denied | Only the access-denied explanation and safe exits remain; restricted data is absent. |
-| UI-AC-29 | 320 / 639 / 640 / 1023 / 1024 / 1440px | all reachable states | The document has no horizontal overflow. |
-| UI-AC-30 | ≥320px | all interactive states | Keyboard focus remains visible on every actionable control in both themes. |
-| UI-AC-31 | ≥320px | dialogs confirm/error | Escape closes the dialog and restores focus to its trigger. |
-| UI-AC-32 | ≥320px | dialogs pending | Dialog confirmation is disabled and no duplicate action is possible. |
-| UI-AC-33 | ≥320px | ready/error/success | Status messages use text labels and measured foreground/background pairs meet AA contrast. |
-| UI-AC-34 | ≥320px | all mockup states | The Mockup/draft label and view/state selectors remain visible and usable. |
-| UI-AC-35 | ≥320px | C1 open | The panel shows account name, role, Mi cuenta and Cerrar sesión, with denied administration destinations absent. |
-| UI-AC-36 | 320–639px | V10 ready | Current, new and confirmation password labels fit in one column without horizontal scroll. |
-| UI-AC-37 | ≥320px | V10 current_incorrect | Only the current-password field carries the incorrect-password message and receives focus. |
-| UI-AC-38 | ≥320px | V10 success | Password fields are absent and the success message says other sessions closed while this browser stays signed in. |
-| UI-AC-39 | ≥320px | V6 has_work | Delete is disabled with the saved-work reason and deactivation is available. |
-| UI-AC-40 | ≥320px | V6 eligibility_unknown | Delete is disabled and Comprobar de nuevo is offered without claiming there is no saved work. |
-| UI-AC-41 | ≥320px | V11 ready | The full current notice, version and unchecked consent appear with no route to another page before acceptance. |
-| UI-AC-42 | ≥320px | V11 conflict | Acceptance is disabled until the newer version is loaded and the checkbox is cleared. |
-| UI-AC-43 | ≥320px | V11 pending | Aceptando… replaces the primary label and repeat submission is disabled. |
-| UI-AC-44 | ≥320px | V2/V11 ready | Switching notice language displays the supplied ES or EN text verbatim with the matching lang attribute. |
-| UI-AC-45 | ≥320px | V1 error | The sole refusal fixture shows “Si has tenido varios intentos fallidos, espera 15 minutos antes de volver a intentarlo.” and the state selector has no locked fixture. |
-| UI-AC-46 | ≥320px | V1 session_expired | The expired-session explanation appears above the sign-in form. |
-| UI-AC-47 | ≥320px | C1 open | Escape closes the panel and returns focus to Cuenta. |
-| UI-AC-48 | ≥320px | V5/V6 success | The created link warns that it will not be shown again after leaving the result. |
-| UI-AC-49 | ≥320px | V6 invited/replace_invite | The invited-account action reads “Generar enlace nuevo” and its confirmation explains that older unused invitation links stop working; the new link lasts seven days. |
-| UI-AC-50 | ≥320px | V6 ready/reset_link | The reset confirmation states that old unused reset links will stop working. |
-| UI-AC-51 | ≥320px | V8 validation | Saving a role with no checked permission shows Selecciona al menos un permiso beside the permission group. |
-| UI-AC-52 | ≥320px | V2 success | Activation confirms the new session and offers Continuar without requiring another sign-in. |
-| UI-AC-53 | ≥320px | V1/V2 success · accounts-only/roles-only fixture | Continuar opens Mi cuenta when the assigned role allows none of Taller 3D, chat or catalogue. |
-| UI-AC-54 | ≥320px | V6 ready/reset_link | Reset copy says all sessions end when the recipient changes the password; no automatic re-sign-in is promised. |
-| UI-AC-55 | ≥320px | V6 ready | Guardar rol is disabled with the unchanged-role explanation until a different role is selected. |
-| UI-AC-56 | ≥320px | V10 validation | An empty current-password field says Escribe tu contraseña actual; only current_incorrect claims the password is incorrect. |
-| UI-AC-57 | ≥320px | V6/V8 conflict | Save and mutation actions are disabled until Actualizar datos reloads the authoritative record. |
-| UI-AC-58 | ≥320px | V8 ready/fixed | The Proyectos de todas las cuentas helper states that foreign originals are read-only and an owned copy requires Taller 3D. |
-| UI-AC-59 | ≥320px | V4–V8 ready | Active navigation and secondary controls use neutral surfaces/text; accent is confined to the brand mark, focus and the single primary action. |
-| UI-AC-60 | ≥320px | all ready views | Working surfaces have no decorative shadow, nested cards, uppercase tracked eyebrow or Unicode icon; shadows appear only on floating elements. |
-| UI-AC-61 | 640–1023px / ≥1024px | V4 ready | The table has row separators without a header fill or zebra striping; last-access dates align right with tabular figures. |
-| UI-AC-62 | ≥1024px | V7 ready/empty | System and custom role headings and their first row or empty instruction appear together in peer columns; role counts align right with tabular figures and zero stays grey. |
-| UI-AC-63 | ≥1200px | V6 ready | Identity, role access, recovery and the separately ruled state/deletion section occupy adjacent regions without stacked card containers. |
-| UI-AC-64 | ≥320px | V8 ready/pending/disabled/fixed | There is exactly one Save primary action in the title row for custom roles, with the pending label/disabled reason as applicable, and none for a system role. |
-| UI-AC-65 | ≥320px | V1–V11 ready | The Pictures mark, specific tool names, invitation-only copy and product-specific recovery/empty instructions replace generic dashboard decoration. |
+| UI-AC-01 | 1101px+ | accounts normal | The 24px task title sits above one full-width ruled accounts paper; no edition cell, rail or material card is present. |
+| UI-AC-02 | 1101px+ | accounts normal | Every record visibly groups name, email, company, role, status, last access and Manage. |
+| UI-AC-03 | 360–760px | accounts normal | Identity spans its record; role/status and Manage reflow below without page overflow. |
+| UI-AC-04 | 761–1100px | accounts normal | Search spans both filter columns and Manage follows the row's other fields. |
+| UI-AC-05 | 360px+ | accounts filtered/empty | Result count matches displayed records; clear filters restores the unfiltered register. |
+| UI-AC-06 | 360px+ | loading | Skeletons replace unresolved content and pending submission cannot repeat. |
+| UI-AC-07 | 360px+ | accounts/roles error | Unconfirmed rows are absent and Reintentar is visible. |
+| UI-AC-08 | 360px+ | login error | The same refusal and fifteen-minute wait hint appear for all four credential-refusal causes. |
+| UI-AC-09 | 360px+ | activation normal | Two password controls and the full notice precede unchecked consent and disabled Activate. |
+| UI-AC-10 | 360px+ | activation checked | Checking consent enables valid activation and success explains an active signed-in session. |
+| UI-AC-11 | 360px+ | invalid invitation/reset | Password entry is replaced by administrator-issued-link recovery without a cause-specific disclosure. |
+| UI-AC-12 | 360px+ | invitation | Name/email/optional company/one role precede generation; duplicate email produces a refusal. |
+| UI-AC-13 | 360px+ | one-time receipt | Recipient, selectable wrapping link, Copy, one-use/lifetime and replacement warning are visible. |
+| UI-AC-14 | 360px+ | receipt dismissed | The closed receipt cannot retrieve its previous link; regeneration is the recovery. |
+| UI-AC-15 | 360px+ | role system | Exactly six system roles are read-only and have 3/3/4/6/9/12 selected permissions in catalogue/staff order. |
+| UI-AC-16 | 360px+ | role custom | Four tool groups contain twelve available permissions; Taller is one checkbox with bundled-capability helper text. |
+| UI-AC-17 | 360px+ | role validation | Saving a named custom role with no permission announces ROL_SIN_PERMISOS and preserves editing. |
+| UI-AC-18 | 360px+ | role in use | Permanent deletion is disabled and the reassign-first explanation is visible. |
+| UI-AC-19 | 360px+ | saved-work/last-admin | The refusal explains its invariant and permanent-delete confirmation is disabled. |
+| UI-AC-20 | 360px+ | work-free account delete | Permanent deletion is disabled until the typed email exactly matches the selected account. |
+| UI-AC-21 | 360px+ | own account | Identity matches the account disclosure and current password precedes the new password pair. |
+| UI-AC-22 | 360px+ | own-password success | Feedback states this browser's session was renewed and previous sessions ended; no second-login requirement appears. |
+| UI-AC-23 | 360px+ | reset success | Feedback asks the person to sign in with the new password. |
+| UI-AC-24 | 360px+ | notice gate | Full versioned notice, unchecked consent and sign out are present while other product navigation is absent. |
+| UI-AC-25 | 360px+ | account role changed | The selected single role updates with copy explaining next-request enforcement; plan labels remain cumulative. |
+| UI-AC-26 | 360px+ | light/dark | Field edges, checkbox states, outline actions and focus are visible against their actual surfaces. |
+| UI-AC-27 | 360px+ | expressive | Paper registers vertically, records horizontally and rule/status feedback by short strokes, with the selected r14 easing/timing and readable text. |
+| UI-AC-28 | 360px+ | reduced/still | No running motion or displaced dialog remains; the same controls and content are usable. |
+| UI-AC-29 | 360px+ | invitation open/dismissed | Tab stays inside the dialog; dismissal restores the initiating action's focus. |
+| UI-AC-30 | 360px+ | ES/EN | Headings, labels, notices and dialog actions reflow without horizontal page scrolling. |
+| UI-AC-31 | 360–760px | roles normal | The role selector stacks before the permission editor with its horizontal divider. |
+| UI-AC-32 | 761px+ | login/activation/reset/Mi cuenta/notice | The form workspace is at most 676px, centred with equal outer gutters; fields stay within a 620px axis. |
+| UI-AC-33 | 761px+ | form error/success/invalid link | Heading, feedback, recovery and stacked footer follow the centred form axis. |
+| UI-AC-34 | 1101px+ | accounts normal | Search/role/state filters occupy flexible 2:1:1 columns across the register width. |
+| UI-AC-35 | 1101px+ | roles normal | The role selector is 240px; the remaining editor width contains two permission columns. |
+| UI-AC-36 | 360px+ | both themes | Paper/dialog radii are 32px, notice/feedback 24px, fields 18px and checkbox 8px, with pill actions. |
+| UI-AC-37 | 1101px+ | accounts normal | Paper padding is 28px and record vertical padding is 24px. |
+| UI-AC-38 | 360px+ | both themes | Body uses embedded Geist; semantic colours match the production mapping and input edges use texto-tenue. |
+| UI-AC-39 | 360px+ | ES/EN, dialog | Initial inspection language is ES; EN translates labels; the ES dialog close accessible name is Cerrar. |
+| UI-AC-40 | 360–760px | form views | Panel contracts with 20px paper padding and all essential actions remain reachable without horizontal scrolling. |
+| UI-AC-41 | 360px+ | invitation/account role picker, ES/EN | The four catalogue plan names appear in plan order, then Empleado interno, Administrador and custom roles; EN uses Enthusiast. |
+| UI-AC-42 | 360px+ | system role selected | Entusiasta and Designer show the same grants; costs first checks at Designer Plus, Taller and explorer first check at Master Designer; staff roles include all plan grants. |
+| UI-AC-43 | 360px+ | accounts/roles, ES/EN | No Plan 1/2/3 label, invented numeric chat limit, payment action or additional additive plan field is displayed. |
+| UI-AC-44 | 360px+ | activation / mandatory notice, ES/EN | The notice begins with Sempertex, without a legal-name placeholder; the contact email and policy URL retain their language-specific bracketed placeholders. |
 
-| UI-AC-66 | ≥320px | V1–V3/V9/V11 ready/error/success | Brand, Card and footer share the same horizontal centre; all form content inside CardContent aligns left. |
-| UI-AC-67 | ≥320px | V1 ready/error | Password recovery stays in the password-label row and expands guidance below the same field. |
-| UI-AC-68 | ≥320px | all controls, light/dark | Inputs/selects/unchecked checkboxes have measured edges ≥3:1; checked boxes use kit Checkbox styling, with no native white-square fallback. |
-| UI-AC-69 | ≥320px | all form views ready/error | CardContent has 24px side padding (20px at ≤640px); field groups use kit Stack/Field gaps rather than touching labels or box edges. |
-| UI-AC-70 | 320–767px / ≥768px | V4–V8 ready | The same permitted Cuentas/Roles destinations are visible in compact navigation / Sidebar, with no inaccessible administration destination. |
+### Finalization verification — current canonical artifact
+
+HTML SHA-256: `a882555eccb6b8c2e53c73afa08a0f6adf1e96c1e3986c4a79a22812841455d9`. The selected TSX and exploration artifacts remain unchanged. Rebuilt HTML equals the selected r14 HTML after normalizing only the output-document `<title>`; embedded composition, copy, runtime, styles and motion are otherwise identical. No verified behavioral defect required an additional artifact patch.
+
+- `python3 /home/david/dev/metodologia/skill/scripts/bitacora.py components status` → installed/built, **96/96 entries OK**.
+- `python3 /home/david/dev/metodologia/skill/scripts/bitacora.py components mockup build <design>/cuentas-admin@v1.r14.dir-a.tsx --out <design>/cuentas-admin@v1.html` → **679 KB, 2150 source files, offline**, exit 0. The CURRENT installed builder was used; no fallback, downloads or exploration edits.
+- `python3 <kit>/kit/contrast.py <design>/cuentas-admin@v1.html` → **contrast: 158 pairs checked in light and dark, all pass**, exit 0.
+- `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <design>/cuentas-admin@v1.html --max-combos 476` → **476 renders (476 combinations planned), 12,454 text measurements, 1,436 focus stops**, exit 0. It covers every view/state/theme and each declared dialog scene at 1280/390px without sampling, plus its motion/reduced-motion probes. No warnings were reported.
+
+**RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems**
+
+Here `<design>` is this requirement's `design` directory and `<kit>` is `/home/david/.agents/skills/metodologia/agents/designer/skills/david-ui-kit`.
+
+Supplementary cached Playwright/Chromium run: **216 assertions PASS**, exit 0. All seven normal views were checked at **360/390/768/1280px × light/dark × ES/EN** (112 reflow cases); desktop/tablet forms were checked for the centred 676px cap; activation/reacceptance were checked for Sempertex, the remaining localized placeholders and submission disabled without consent. **Zero page exceptions and zero HTTP(S) requests** were observed. This verifies initial consent gating, not the complete activation service flow. The first PNG screenshot payload exceeded the terminal output limit; its successful command result and small statistics were visible, but clipped images were not counted as visual inspection. The four captures alone were then repeated as compressed JPEGs in memory and inspected; the assertion suite was not rerun.
+
+Visually inspected full-page screenshots, without writing additional artifacts: **1280/light activation ES, 1280/dark accounts ES, 390/light activation ES and 390/dark mandatory notice EN**. The register retains its aligned ruled records; the form remains centred on desktop; mobile notice/identity/consent/actions stack and remain readable without clipped essential controls. Source comparison preserves the selected kinetic registration rather than substituting a new motion grammar.
+
+These are fresh checks on the canonical HTML, not copied exploration results. Static checks and screenshots do not establish production authentication, server permission enforcement, durable state, legal readiness or complete WCAG conformance. Production lint/types/tests/build and live service checks were not run: this delegation changes only planning artifacts. T2.6/T2.7/T2.8 still provide independent implementation evidence and approval remains outstanding.
+
 
 ## 12. Open questions and assumptions
 
-**Open questions for the owner:** none in this revision. Q1 is an outstanding input, not a repeated question: the legal entity name, privacy-policy URL and rights-contact email remain visible bracketed placeholders tracked in SPEC Inputs. David supplies those fields and Sempertex legal reviews before real users are invited; the v1 text is already owner-approved. Q2–Q5 were resolved by rounds 7–8; Q6–Q8 were resolved by the Planner on 2026-10-26T16:02.
+**Open questions for the owner: none introduced by this finalization.** The owner selected r14 direction A and already resolved the company-name question: use **Sempertex**, retain `[CORREO PARA DERECHOS]` / `[RIGHTS CONTACT EMAIL]` and `[URL DE LA POLÍTICA]` / `[POLICY URL]`. These deliberately deferred fields and their legal-review annotation remain; no working policy link, contact address or legal readiness is claimed.
 
-**Confirmed:** single-role accounts; five system roles; fixed system roles/custom roles editable per current Planner ruling; invitation copied manually (7 days), admin-generated reset (24 hours), password 8–200, 30-day server session; one generic login refusal for wrong password, unknown email, deactivated and locked accounts, always including the neutral fifteen-minute wait hint; no public registration; `/asesor` and `/happie` remain separate; account/role mutation enforced by the server; first administrator is created outside these screens by the owner-run command. Round 7 confirms saved-work accounts cannot be deleted (deactivate only), spend is retained without personal data as Cuenta eliminada, notice v1 text is owner-approved, and changed notice versions require re-acceptance on the next request. Round 8 confirms regeneration invalidates older unused links of the same kind, roles require at least one permission, and activation opens a session directly. Typed-email deletion confirmation is required by T2.2/T2.5. Own-password change revokes all sessions then opens a new session for the requesting browser; admin resets end all sessions. The fallback when no Taller/chat/catalogue permission exists is `/cuenta`. Former Q1–Q8 are not open questions. Do not reopen them.
+**Confirmed decisions:** selected register/form composition, horizontal navigation, centred form axis and kinetic registration; production palette/Geist; one role per account; four catalogue plans and six read-only system roles; twelve available grants with system counts 3/3/4/6/9/12; Taller capabilities remain text under one grant; explorer only for Master Designer/staff; English Entusiasta = Enthusiast. Custom roles require at least one permission. Invitations last seven days and resets 24 hours, both single use; newer unused same-kind links invalidate older ones. Activation signs in immediately. Login uses the generic fifteen-minute hint. New notice versions require fresh consent. Saved work and the last active administrator prevent deletion. Own-password change renews this browser's session and ends other sessions; administrator reset returns to sign-in. Numeric chat limits are deferred and not displayed/enforced here.
 
-**Proposals awaiting plan approval:** management query parameters and breakpoints in sections 5/9, and the presentation/interaction choices in this draft. Chosen mock data is illustrative, not a discovered customer list. Dates/expiry in the product come from the server, formatted in the user's locale with timezone available; the mockup fixes 26 Oct 2026 15:40 America/Bogota for reproducibility.
+**Artifact assumptions:** all identities, timestamps, tokens, role assignment counts and operations are clearly simulated. The static administrator fixture does not authorize access; service data and eligibility must replace fixture positions. Production initially follows browser language (non-ES/EN falls back to ES), later account preference follows the language subplans; the selected planning inspector starts ES and exposes EN. State/view inspection can reset local mock inputs and is not persistence. The source's shared notice component keeps activation and reacceptance copy identical. The seven-day invitation and 24-hour reset rules are requirements even where the mockup only illustrates them in contextual copy.
 
-**Planner handoff:** exact consumers are now assigned (T2.1–T2.8). Implement the resolved Q6–Q8 rules consistently across SP-1 and SP-2, confirm the remaining presentation proposals, map session-only `/cuenta` and `/aviso-datos` without permission leakage, and decide list API pagination if needed. SP-4/SP-5 register saved-work ownership checks and SP-6 anonymizes retained spend as already ruled; do not reopen that policy as a question. Normal/success mock scenarios simulate completed legal inputs, never authorize real activation while the legal fields/review tracked in SPEC Inputs are pending. Version 2 in V11 is an illustrative next-version fixture using the exact v1 body, not new approved legal content. This task finishes planning artifacts; approval and production validation remain outside the Designer's authority.
+**CONCERNS:** approval remains outstanding. Deferred rights contact/policy and Sempertex legal review remain as recorded in the SPEC/owner feedback. Authentication, authorization, real routes, token/session lifetimes, password upper-bound/current-password validation, durable independent custom-role grants/assignment counts, pending/error recovery, authoritative last-admin/saved-work guards, clipboard delivery and versioned consent storage require implementation and independent verification; this static mockup does not prove them. Modal/route/invalid-field focus and screen-reader announcements, zoom/reflow, cross-browser support and real-server failures remain implementation targets. SP-14's login/account-menu plans links must compose with this contract; they are not silently added to the immutable selected exploration. Some sibling HTMLs use older exploratory fonts/palettes; the selected production token mapping is retained. Actual finalization audit: **RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems** (476/476 renders, exit 0); contrast also passes all 158 pairs. Section 11 records the commands and verification limits; prior exploration results are not reused as fresh evidence.
 
-Earlier mockup verification — 2026-10-26 (prior draft): local headless Chromium through the existing `pictures` worktree Playwright dependency, opening the standalone file URL. Before the two compatible corrections, all 11 views and 105 view/state pairs passed at 320/639/640/1023/1024/1440px in light/dark themes (1,260 rendered combinations), with no page errors, network requests, horizontal document overflow or broken `aria-describedby` references. After the corrections, 322 assertions passed, including 288 affected-view combinations for V6/V10 across the same widths/themes; checks covered unchanged-role enablement, required versus incorrect current-password feedback, password-change completion, generic sign-in refusal, indistinguishable invalid links, notice language, notice-menu gating, Escape focus return, no-tool fallback, saved-work deletion guards and read-only system roles. An additional 36 dialog state/width combinations passed at 320/1024px, including confirmation/pending/error, Cancel-first focus and Escape focus return; invitation replacement copy and independent permission selection passed. Static inspection confirmed twelve numbered sections, draft status, 56 acceptance rows, no external assets and exact SPEC ES/EN notice text. Rendered images inspected: V4 wide/light and V10 compact/dark. This evidence concerns only the planning mockup: production API behavior, full screen-reader coverage, measured contrast and production visual acceptance remain for T2.6–T2.8.
-
-Earlier mockup verification — 2026-10-26, before the visual rebuild: after the round-9 helper clarification and conflict-state correction, headless Chromium through the existing `/home/david/dev/pictures-wt/asesor/node_modules/playwright` dependency opened the standalone `file://` artifact. All 11 views and 105 view/state pairs at 320/639/640/1023/1024/1440px in light/dark themes passed (1,260 combinations): no horizontal document overflow, missing H1, broken `aria-describedby`, JavaScript page error or network request. A separate interaction run passed 195 assertions, including eight dialog variants at 320/1024px and all three phases (48 dialog-phase combinations), Cancel-first focus, pending-request protection, Escape focus return, conflict refresh gating, saved-work and last-administrator guards, read-only system roles, no-tool fallback, generic sign-in refusal, indistinguishable invalid links, own-password validation and exact ES/EN notice text. Static checks confirmed twelve numbered sections, draft status, 58 unique acceptance rows, labelled `view`/`state`/`scene`/`theme` selectors, no external assets and network-blocking CSP. `git diff --check` passed for the two artifacts. Rendered images inspected before revision: V4 wide/light and V2 compact/dark; after revision: V6 conflict wide/light and V8 project-permission help compact/dark. No production code, repository tests, build, live account/API behavior, screen-reader audit or measured contrast audit was run; those remain outside this planning-artifact verification.
-
-
-Earlier pre-kit visual-rebuild verification — 2026-10-26: opened the self-contained file in local headless `/usr/bin/chromium` with the existing `/home/david/dev/pictures-wt/asesor/node_modules/playwright` dependency; no server or installation. The final snapshot passed **1,680 combinations** (11 views, 105 view/state pairs × 8 widths: 320/639/640/1023/1024/1199/1200/1440px × light/dark): zero JavaScript errors, non-file requests, page-level horizontal overflow, missing/duplicate H1 or broken `aria-describedby`; fixed roles never show deletion. Separate runs passed **393 interaction assertions**, including all eight dialog variants × confirmation/pending/error × 320/1440px (**48 dialog-phase combinations**), focus return from both scene controls and the new title-row Save, pending protection, independent permissions, invitation creation and one-time link exit, typed-email deletion, acceptance-required activation, password-change completion, generic login refusal, invalid links, conflict refresh, notice gating, no-tool fallback and reduced motion. During verification, caught and corrected a relocated deletion section accidentally visible for system roles; reran the focused interaction suite and the complete final matrix. A supplemental harness initially matched a hidden account-menu link; scoped its navigation locator to main content and reran successfully. Neither failure remains outstanding.
-
-Measured 22 semantic foreground/background or control/focus pairs in both themes using browser-resolved colours and the WCAG relative-luminance formula: all tested text pairs ≥4.94:1, controls/focus pairs ≥3:1. This is a bounded palette check, not full WCAG certification. Static checks passed: twelve numbered sections, 65 unique acceptance criteria (all prior 58 preserved), identical permission/state vocabularies, verbatim SPEC ES/EN notice, visible labelled native selectors, no external assets, network-blocking CSP, and `git diff --check` for the two artifacts. Directly inspected render images before and after the rebuild: wide Cuentas, Roles, account detail, role editor, sign-in, invitation, reset and notice; compact activation, own account, denial and account list in the applicable light/dark themes. Rechecked after moving recovery/deletion into the account action column and Save into the role title row. Images were inspected in memory; no extra screenshot or preview files were written. Repository lint/types/tests/build, live APIs, legal-policy URL, full screen-reader and production visual acceptance were not run; T2.6–T2.8 and the tracked legal inputs still own those checks. No new owner question; the plan and this contract remain draft.
-
-
-Kit verification — 2026-10-26 (this revision): `python3 <kit>/inline.py <mockup>` produced a self-contained inline artifact; `python3 <kit>/contrast.py <mockup>` measured **158 effective token pairs in both themes, all pass**. The absolute kit tools are under `/home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit/kit/`. The Playwright render audit was run with the requested `uv run --with playwright python <kit>/audit_mockup.py <mockup>` command and local Chromium. Its default switcher matrix is supplemented below because this mockup's state/scene options depend on the selected view, so the command's initial option set alone does not cover every declared combination.
-
-Supplemental local Playwright evidence: all **11 views / 105 view-state pairs × 10 widths (320/639/640/767/768/1023/1024/1199/1200/1440px) × light/dark = 2,100 combinations** passed one-H1, `aria-describedby` resolution, no JavaScript page error, no non-file network request and no horizontal document overflow. A separate **420-render** run used the kit's actual browser probes for every 105 view-state pairs at 390/1280px in both themes; no contrast, non-text, alignment, padding, overflow or unmeasured-color findings. **128 additional combinations** covered eight confirmation scenes × confirm/pending/error × 320/1440px × both themes (96) plus C1 open in eight signed-in views (32); no probe finding, and 120 measured focus stops passed. After final composition refinements to the administration footer and the dialog-phase Field, the final 96-dialog matrix was remeasured: no findings. The final kit command below rechecks the finished ordinary-view layout.
-
-A focused functional simulator run passed **42 assertions**: password recovery disclosure, identical invalid-link fixtures, required consent and activation session, changed/unchanged-role gating, confirmation focus/return, saved-work/unknown-eligibility/last-admin deletion guards, typed-email confirmation, independent permissions, immutable system roles, conflict gates, own-password required versus incorrect feedback, own-password session outcome, permission-filtered menu, no-tool destination, notice-gate navigation, fresh unchecked acceptance, verbatim SPEC ES/EN notice, and centred auth axes in both themes. These are mockup checks, not authentication/API guarantees.
-
-Direct render inspection in memory covered sign-in light/wide, activation dark/390px, role editor dark/wide, account detail light/wide and destructive confirmation dark/320px after animation settlement. No screenshot or auxiliary preview files were written. Static checks passed: twelve numbered sections, draft status, all **65 prior criteria preserved plus five kit criteria (70 unique total)**, labelled native view/state/scene/theme selectors, current unchanged inlined kit, no external assets, blocking CSP, sole SP-2 contract consumer, source hashes unchanged and `git diff --check` for both artifacts. Earlier audit findings (closed-disclosure phantom content, footer axis, table caption padding and an absolute hidden table label at 768px) were corrected; no test or audit was weakened. Existing legal placeholders/review and owner plan approval remain pending. Repository lint/types/build/tests, live APIs, production accessibility and T2.6–T2.8 acceptance were not run because this delegated task changes planning artifacts only.
-
-Final kit command: **352 renders**, **8,938 text measurements**, **989 focus stops**, exit **0**.
-
-`RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`
-
-No new open owner question. The contract remains `draft` and is not an implementation approval.
+Only the two assigned canonical design artifacts and the mandatory delegation RESULT are written. No exploration, history, translation, SPEC, PLAN, changelog, production file, optional repository preview, project log or memory file is changed.

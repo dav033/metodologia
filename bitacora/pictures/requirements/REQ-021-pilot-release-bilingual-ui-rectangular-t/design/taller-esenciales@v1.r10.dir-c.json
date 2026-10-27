@@ -1,0 +1,41 @@
+{
+  "name": "En la pieza",
+  "axes": {
+    "concept": "En la pieza: select the table, touch its dimensions and edit the selected set without leaving the Taller scene.",
+    "layout": "Existing masthead and Taller toolbar above the 60px panel rail, 292px object catalogue and flexible scene; the changed inspector is a horizontal tray directly below the selected object, rather than a second sidebar.",
+    "navigation": "Existing panel rail and Fondos y muebles groups; dimension buttons focus matching fields, Pieza discloses the inspector, and native details disclose the existing type/mantel/chair settings. Shopping list and export retain the surrounding scene.",
+    "typography": "Embedded production Geist; 24px maximum title, 20px inspector title, 16px object hierarchy, 14px working text and tabular dimension values. No display font or new family.",
+    "density": "Two-column object cards and four-column direct editing at desktop; two-column fields plus full-width chair stepper at phone. Flat selected-object strip joins canvas and inspector; 24px/20px work-area padding.",
+    "components": "Installed shadcn/Base UI Button, Input and Skeleton, arranged as object cards, numeric dimension targets and a chair stepper. Native select/details preserve keyboard interaction; custom schematic SVG provides scene context.",
+    "colour": "Fixed Pictures and scoped Taller tokens in both themes. Primary action/selection use existing acento; warning and failure use existing aviso/error. Control edges use the siblings’ texto-tenue alias; no new palette.",
+    "motion": "Tactile press/settle grammar: profile-aware spring card placement, compressed table seating, staggered chair seating, rising inspector tray, lateral warning correction, receipt settling, export preparation sweep and confirmation stamp. CSS rebote (.34,1.4,.64,1), expressive 480/180ms; natural 300/140ms, subtle 160/100ms. Reduced/still removes travel and repeated animation."
+  },
+  "evidence": {
+    "layout": [
+      ".taller-frame",
+      ".stage-column",
+      ".inspector-tray",
+      ".direct-fields"
+    ],
+    "navigation": [
+      ".panel-rail",
+      ".group-nav",
+      ".dimension-actions",
+      ".tray-more"
+    ],
+    "typography": [
+      ".editor-title h1",
+      ".tray-heading h2",
+      ".direct-fields",
+      ".receipt-line .amount"
+    ],
+    "motion": [
+      ".scene-table",
+      ".chair-unit",
+      ".inspector-tray",
+      ".receipt",
+      ".export-panel",
+      ".type-grid button"
+    ]
+  }
+}

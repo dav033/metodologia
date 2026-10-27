@@ -1,0 +1,34 @@
+{
+  "name": "Mesa de montaje",
+  "axes": {
+    "concept": "A measured assembly stage derived from tables, Tiffany chairs, round panels, balloon rigs and physical set building.",
+    "layout": "Three unequal tracks: a 112px tool spine, a flexible axonometric scene and a 350px ruled inspector; mobile stacks navigation, stage and inspector.",
+    "navigation": "Six explicit vertical tool stations with icon and text, an offset bracket for the active station, and named header triggers for shopping Dialog and export Popover; no bottom dock or gesture requirement.",
+    "typography": "Shared system sans with 24px project title and 26px inspector heading; monospaced 24px dimension fields, 32px placed-chair total and 14px scene measurements.",
+    "density": "Open scene against a compact working folio; 24px structural gaps, 26px panel padding, 44px controls and a two-column shelf of illustrated objects.",
+    "components": "Real shadcn/Base UI Button, Input, Textarea and Skeleton; Animate UI Dialog and Popover; custom measured SVG stage, tool spine, ruled list and object silhouettes.",
+    "colour": "Existing Pictures Taller neutral surfaces and lavender accent mapped to shadcn roles; light #6d3fe0/white and dark #b9a4ff/#120b24 actions, high-contrast input edges. Material colours belong to scene data.",
+    "motion": "Elastic spatial settling: table drops onto the floor, Backing lifts into position after a short stagger, inspector aligns against its registration corner; dashed rulers resolve and object thumbnails lift/tilt on hover. Profile-aware springs, immediate reduced-motion and still-mode parity."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".scene-stage",
+      ".section-panel"
+    ],
+    "navigation": [
+      ".tool-spine",
+      ".tool-spine button[aria-current=\"page\"]"
+    ],
+    "typography": [
+      ".projectbar h1",
+      ".panel-title",
+      ".measure-label"
+    ],
+    "motion": [
+      ".dimension-line",
+      ".object-card .mini-stage",
+      ".tool-spine button"
+    ]
+  }
+}

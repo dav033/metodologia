@@ -1,0 +1,56 @@
+{
+ "title": "SP-5 — Biblioteca personal de decoraciones",
+ "coverage": "SP-5",
+ "intro": "Para definir la biblioteca personal, revisé el flujo actual del Taller: hoy se puede guardar la escena completa o una pieza seleccionada en `taller3d:biblioteca-propia:v1` del navegador y colocarla después, pero no viaja a otro navegador. El catálogo global de decoraciones usa otra API y otra tabla. Propongo que lo guardado quede privado por cuenta y que importar lo existente sea una acción explícita que conserva el original local hasta confirmar que se guardó en el servidor.",
+ "round": 11,
+ "status": "answered",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Qué hacemos con las decoraciones que ya guardaste en la biblioteca de este navegador cuando entre la biblioteca personal del servidor?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Ofrecer una importación explícita por cuenta; no borrar el original del navegador hasta confirmar que cada elemento quedó guardado"
+    },
+    {
+     "key": "b",
+     "label": "Dejar la biblioteca local como está; importar decoraciones existentes queda fuera del piloto"
+    }
+   ],
+   "recommended": "a",
+   "why": "Permite conservar y llevar al servidor el trabajo ya guardado sin subirlo sin consentimiento ni borrar el original ante un error."
+  },
+  {
+   "id": "q2",
+   "text": "¿Quién puede abrir las decoraciones de la biblioteca personal de otra cuenta?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Solo su dueño; empleados y administradores no pueden leerlas, aunque puedan revisar proyectos ajenos"
+    },
+    {
+     "key": "b",
+     "label": "Empleados y administradores pueden abrirlas en solo lectura; solo el dueño puede cambiarlas o borrarlas"
+    }
+   ],
+   "recommended": "a",
+   "why": "La historia de usuario dice «biblioteca personal» y SP-4 distingue proyectos compartidos para revisión; mantener privacidad por defecto evita ampliar acceso."
+  }
+ ],
+ "answers": {
+  "q1": {
+   "choice": "b",
+   "note": "el sistema no esta en pdrodciion seria asi qeu no importa "
+  },
+  "q2": {
+   "choice": "b",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-27T17:03:53Z",
+ "answered_at": "2026-10-27T19:01:26Z",
+ "answered_via": "web"
+}

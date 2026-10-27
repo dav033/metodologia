@@ -149,3 +149,14 @@ bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks-final/s
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks-final/source-hashes-before.json:sumologic-access-token:1041
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks-final/source-hashes-before.json:sumologic-access-token:3121
 bitacora/pictures/artifacts/REQ-018-T1-retry-20261018/independent-checks-final/source-hashes-before.json:sumologic-access-token:3129
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:81
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:686
+# Verified false positives: translation cache keyed by SHA-256 hashes, Spanish text that mentions API or APP_PASSWORD (REQ-021).
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:185
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:245
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:606
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:628
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:811
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1089
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1160
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1581

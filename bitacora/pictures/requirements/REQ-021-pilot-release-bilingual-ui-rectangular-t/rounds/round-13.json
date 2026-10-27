@@ -1,0 +1,35 @@
+{
+ "title": "SP-14 — Vista adicional para elegir un plan",
+ "coverage": "SP-14",
+ "intro": "En tu comentario sobre planes@v1 pides una vista adicional «para elegir el plan». La decisión anterior dejó la sección como informativa: sin cambiar la asignación de la cuenta, comprar, pedir o registrarse. Para que el contrato no contradiga ese alcance, recomiendo que la vista sirva para escoger y comparar visualmente un plan, sin aplicarlo a ninguna cuenta.",
+ "round": 13,
+ "status": "answered",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "¿Qué debe hacer la vista adicional para elegir un plan?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Solo permite destacar o comparar un plan; no cambia la asignación de ninguna cuenta"
+    },
+    {
+     "key": "b",
+     "label": "Permite cambiar el plan asignado a la cuenta desde esta vista"
+    }
+   ],
+   "recommended": "a",
+   "why": "Respeta la decisión anterior: /planes es pública e informativa; el administrador asigna el plan desde Cuentas. Si se quiere cambiar esa regla, debemos actualizar el requisito, permisos, tareas y pruebas antes de implementarlo."
+  }
+ ],
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-27T19:39:56Z",
+ "answered_at": "2026-10-27T19:42:20Z",
+ "answered_via": "web"
+}

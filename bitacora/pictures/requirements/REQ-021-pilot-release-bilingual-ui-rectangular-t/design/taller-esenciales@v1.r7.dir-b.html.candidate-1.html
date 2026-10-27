@@ -1,0 +1,43 @@
+<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mockup · Candidata 1 · Plano vivo</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e6efea;color:#0f2a22;font:15px/1.45 system-ui,sans-serif}
+.tag{position:fixed;top:8px;left:8px;background:#0f2a22;color:#e6efea;font:600 11px system-ui;padding:3px 8px;border-radius:4px;z-index:3}
+.wrap{display:grid;grid-template-columns:1fr 320px;gap:24px;padding:40px 32px;min-height:100vh;align-items:center}
+.floor{position:relative;height:520px;perspective:900px;overflow:hidden;border-radius:28px;background:#d5e4dc}
+.plane{position:absolute;inset:-20% -10%;transform:rotateX(58deg) rotateZ(-38deg) scale(1.15) translate(-6%,4%);
+ background:repeating-linear-gradient(0deg,#c3d8cd 0 1px,transparent 1px 48px),repeating-linear-gradient(90deg,#c3d8cd 0 1px,transparent 1px 48px),#dbe9e1;animation:dolly 3.2s cubic-bezier(.2,1.35,.3,1) infinite alternate}
+@keyframes dolly{to{transform:rotateX(58deg) rotateZ(-30deg) scale(1.45) translate(4%,-6%)}}
+.tbl{position:absolute;left:44%;top:46%;width:240px;height:90px;background:#fffdf8;border:3px solid #0f2a22;border-radius:6px}
+.ch{position:absolute;width:26px;height:26px;border-radius:7px;background:#e0b34a;border:2px solid #0f2a22}
+.wall{position:absolute;left:18%;top:14%;width:420px;height:28px;background:#0f2a22;border-radius:4px}
+.pin{position:absolute;display:grid;justify-items:center;gap:2px;font:800 13px system-ui;color:#0f2a22;animation:bob 2.4s ease-in-out infinite}
+.pin b{display:block;width:34px;height:40px;border-radius:50% 50% 48% 48%;background:#d4570f;box-shadow:inset -6px -8px 0 rgba(0,0,0,.14)}
+.pin i{display:block;width:2px;height:28px;background:#0f2a22}
+.pin:nth-child(2){animation-delay:.3s}.pin:nth-child(3){animation-delay:.6s}.pin:nth-child(4){animation-delay:.9s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.mini{position:absolute;right:20px;bottom:20px;width:150px;height:100px;border:2px solid #0f2a22;border-radius:14px;background:#e6efea}
+.mini span{position:absolute;width:12px;height:12px;border-radius:50%;background:#d4570f}
+.panel{background:#fff;border-radius:22px;padding:24px;border:2px solid #0f2a22;transform-origin:left center;animation:tether 1.4s cubic-bezier(.2,1.35,.3,1) both}
+@keyframes tether{from{transform:translateX(-40px) rotate(-4deg);opacity:0}}
+h1{font:800 44px/1 system-ui;letter-spacing:-.04em;margin:0 0 8px}h2{font:700 20px system-ui;margin:16px 0 8px}
+.row{display:flex;justify-content:space-between;border-bottom:1px solid #9db3a8;padding:8px 0;font-variant-numeric:tabular-nums}
+button{font:700 15px system-ui;background:#b5440b;color:#fff;border:0;border-radius:999px;padding:12px 20px;margin-top:16px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}.floor{height:360px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<div class="tag">Mockup · candidata 1</div>
+<div class="wrap">
+ <div class="floor" aria-label="Plano del salón">
+  <div class="plane"><div class="wall"></div><div class="tbl"></div>
+   <div class="ch" style="left:46%;top:41%"></div><div class="ch" style="left:51%;top:41%"></div><div class="ch" style="left:56%;top:41%"></div><div class="ch" style="left:61%;top:41%"></div>
+   <div class="ch" style="left:46%;top:60%"></div><div class="ch" style="left:51%;top:60%"></div><div class="ch" style="left:56%;top:60%"></div><div class="ch" style="left:61%;top:60%"></div></div>
+  <div class="pin" style="left:44%;top:30%"><b></b><i></i>Mesas</div>
+  <div class="pin" style="left:16%;top:8%"><b></b><i></i>Backing</div>
+  <div class="pin" style="left:76%;top:52%"><b></b><i></i>Lista</div>
+  <div class="pin" style="left:70%;top:12%"><b></b><i></i>Exportar</div>
+  <div class="mini"><span style="left:60px;top:44px"></span></div>
+ </div>
+ <aside class="panel"><h1>Mesa rectangular</h1><p>La cámara viaja a la zona; la ficha queda atada al globo de la zona.</p>
+  <h2>Medidas</h2><div class="row"><span>Largo</span><b>240 cm</b></div><div class="row"><span>Fondo</span><b>90 cm</b></div><div class="row"><span>Sillas</span><b>10 de 10</b></div>
+  <button>Añadir mesa rectangular</button></aside>
+</div>

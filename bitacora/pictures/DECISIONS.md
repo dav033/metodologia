@@ -474,3 +474,14 @@ Source: owner, REQ-021 rounds 1–3.
 - Wrong password, unknown email, deactivated and locked accounts receive one generic refusal, always including a neutral hint to wait 15 minutes after several failures. No distinct locked-message fixture or account-state disclosure.
 - Own-password change ends all sessions at the service and opens a new session for the requesting browser; other browsers sign in again. Admin-generated resets end all sessions.
 - Login uses a safe permitted requested destination, otherwise Taller 3D, chat, catalogue, then /cuenta when none is permitted. Activation opens a session directly and uses the permitted-tool or /cuenta fallback.
+
+## D-075 · REQ-021 SP-2 selected visual direction: Parte de acceso (a) · 2026-10-27
+- Source: owner CLI selection, as supplied in finalization delegation D-20261027-070214-1740. Finalize cuentas-admin@v1 from r10.dir-a; preserve its production call-sheet composition and kinetic-registration motion. Other explorations remain immutable.
+- Selection is not contract or plan approval: canonical Markdown/HTML stay draft; only an independently approved snapshot may feed T2.1. Existing D-074 session continuity and T1.2's single Taller permission remain authoritative over exploration defects.
+
+
+## D-076 · REQ-021 SP-14 selected visual direction: Pliegues de consulta (c) · 2026-10-27
+- Source: owner web selection supplied in finalization delegation D-20261027-140046-e9a4. Canonical planes@v1 retains four continuous cumulative-tool bands, independent folds, wrapping index, Pictures tokens/shell and tactile registration motion from r1.dir-c.
+- Selection is not contract/plan approval: canonical Markdown/HTML remain draft; T14.1 may copy only an independently approved exact snapshot. Catalogue content stays owned by SP-1 plan-catalogue@1; current SPEC/T1.2 confirm the Catálogo row.
+- One verified behavioral correction cancels residual in-flight list motion when Quieto is selected, without resetting folds; applied only in memory while rebuilding canonical HTML. Exploration/shared runtime remain unchanged; exact transform and evidence are in contract §11, upstream follow-up P-208.
+- Source: 2026-10/W5/2026-10-27.md, session 01a17ebc; requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/planes@v1.md.

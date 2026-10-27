@@ -1,0 +1,40 @@
+{
+  "name": "Pase de montaje",
+  "axes": {
+    "concept": "A decorator’s team receives physical-looking punched access passes on a blue tool mat: invitation, identity and a bundle of permitted tools. The balloon material belongs to Pictures and Sempertex; no borrowed branding.",
+    "layout": "A broad rounded tool mat holds a material illustration on the left and a punched pass/form on the right. Administration replaces the mat with full-width wristband-shaped people records; role permissions use tool compartments. Phone stacks the pass and collapses each record into one column.",
+    "navigation": "Two hanging tool tabs, Cuentas and Roles, under the brand rule; a named account disclosure exposes Mi cuenta and sign out. Account management and invitations open modal passes. The mandatory notice gate disables Mi cuenta and leaves sign out available.",
+    "typography": "Embedded local Liberation Serif Bold Italic, renamed Crew Display, gives 80px desktop / 48px phone expressive headings. Embedded DejaVu Sans, Crew Sans, handles 15px body, 14px controls, 13px metadata and 28px form/dialog titles. No external fonts.",
+    "density": "Roomy 30px tool mat, 28px perforated pass, 26px account workbench, 22px account strips and 46–48px controls. Phone uses 20px container and inner padding; dense metadata stays inside the same record as the person and action.",
+    "components": "Installed shadcn/Base UI Button, Input, Skeleton; Animate UI Checkbox, Dialog and AlertDialog. Custom punched pass, balloon/cord SVG, wristband account row and hanging navigation tabs. Native view/state/dialog/theme/motion and role/state/language selectors. No fallback snippets. Permission compartments disclose one tool group at a time; every checkbox remains reachable.",
+    "colour": "Exploration-specific tool blue #153f67 with slate #e9eef5 paper, navy #102b4a text and yellow #ffdf5d primary labels; foil pink #efb2cf remains illustrative material. Dark navy #091b30 / blue #163650 with #f4f8ff text and #91b2ce edges. Pictures semantic token names map to kit roles; this palette is a proposal, not an approved token migration.",
+    "motion": "Tactile compression and hanging settlement: spring heading registration; pass swing (850/500/300ms expressive/natural/subtle); latex squeeze 1050ms; cord settling 1300ms; account tags feed sideways over 620ms with 65ms offsets; tab tilt 180ms; button lift/press 170ms; status pop 420ms; success check press 230ms; live Animate UI modal/checkbox feedback. Reduced motion and still=1 remove travel and preserve all content; hidden-tab CSS animations pause. No opacity entrance weakens legibility."
+  },
+  "evidence": {
+    "layout": [
+      ".access-mat",
+      ".material-panel",
+      ".pass",
+      ".person-tag",
+      ".role-grid"
+    ],
+    "navigation": [
+      ".tool-tabs",
+      ".tool-tab",
+      ".account-button"
+    ],
+    "typography": [
+      ".display-title",
+      ".pass h2",
+      ".person-tag h2"
+    ],
+    "motion": [
+      ".pass",
+      ".balloon-piece",
+      ".cord-piece",
+      ".person-tag",
+      ".tool-tab",
+      ".btn"
+    ]
+  }
+}

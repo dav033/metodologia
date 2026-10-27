@@ -1,0 +1,28 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Miniatura A2 · Cinta de obra</title>
+<style>
+:root{--paper:#e9ebec;--ink:#15181b;--soft:#4a5158;--rule:#7d848b;--tape:#f2c12e}
+*{box-sizing:border-box;margin:0}body{background:#cfd3d6;font:13px/1.35 system-ui,sans-serif;color:var(--ink);padding:24px}
+.tag{font:600 11px system-ui;color:var(--soft);margin-bottom:8px}
+.t{width:880px;background:var(--paper);border:1px solid var(--rule)}
+.tape{height:54px;background:var(--tape);border-bottom:2px solid var(--ink);position:relative;display:flex;align-items:flex-end;
+ background-image:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px 11px);background-size:100% 12px;background-repeat:no-repeat;background-color:var(--tape)}
+.tape a{flex:1;padding:6px 14px;font:700 15px system-ui;color:var(--ink);border-left:1.5px solid var(--ink);text-decoration:none}
+.tape a.on{background:var(--ink);color:var(--tape)}
+.body{display:grid;grid-template-columns:1.4fr 1fr;gap:0}
+.big{padding:22px;border-right:1px solid var(--rule)}
+.big .n{font:800 110px/.85 system-ui;font-stretch:75%;letter-spacing:-.04em}.big .n span{display:block;color:var(--soft);font-size:28px;font-weight:600}
+.side{padding:22px;display:grid;gap:8px;align-content:start}
+.side p{display:flex;justify-content:space-between;border-bottom:1px solid #c9cdd1;padding:6px 0}
+.side b{font-family:ui-monospace,monospace}
+.warn{border-left:4px solid var(--ink);background:#fff4cc;padding:8px 10px}
+</style></head><body>
+<p class="tag">Candidata 2 — Cinta de obra: la navegación es una cinta métrica; medidas a escala de cartel</p>
+<div class="t">
+ <nav class="tape"><a class="on">Mesas</a><a>Backing</a><a>Lista de compra</a><a>Exportar GLB</a></nav>
+ <div class="body">
+  <div class="big"><div class="n">300<span>largo cm</span></div><div class="n">100<span>ancho cm · alto 75</span></div></div>
+  <div class="side"><p><span>Sillas pedidas</span><b>14</b></p><p><span>Caben alrededor</span><b>12</b></p>
+   <div class="warn">2 sillas no caben: la lista cuenta 12.</div><p><span>Tipo de silla</span><b>Tiffany</b></p><p><span>Deshacer</span><b>⌘Z</b></p></div>
+ </div>
+</div></body></html>
