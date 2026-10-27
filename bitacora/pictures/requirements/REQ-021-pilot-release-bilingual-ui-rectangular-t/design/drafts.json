@@ -86,8 +86,8 @@
    "before": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
    "delegation": "D-20261026-210140-99d5",
    "digest": "749be52ec4afc053",
-   "error": "",
-   "failures": 0,
+   "error": "failed: \",\n  \"ui\": false\n}\n  \"id\": \"T4.31\",\n  \"milestone_id\": \"M2\",\n  \"title\": \"Run the project storage and authorization checkpoint\",\n  \"objective\": \"Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race.\",\n  \"repository\": \"pictures\",\n  \"after\": [\n    \"T4.3\"\n  ],\n  \"complexity\": ",
+   "failures": 1,
    "feedback": [
     {
      "consumed": "D-20261026-183544-981e",
@@ -108,13 +108,12 @@
      "when": "2026-10-26T19:36:03-05:00"
     },
     {
-     "consumed": "D-20261026-210140-99d5",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:40-05:00"
     }
    ],
-   "finished": "2026-10-26T19:49:07-05:00",
+   "finished": "2026-10-26T21:03:00-05:00",
    "history": [
     {
      "at": "2026-10-26T18:35:35-05:00",
@@ -151,9 +150,9 @@
    "revision": 5,
    "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
    "started": "2026-10-26T21:01:40-05:00",
-   "status": "drafting",
+   "status": "failed",
    "subplan_id": "SP-4",
-   "summary": "Rebuilt the saved-projects mockup visual layer to address the owner’s 19:36 feedback while preserving all views, states, flows and existing criteria. Updated the twelve-section proyectos@v1 draft with screen questions, visual decisions, consumer impact and ten additional visual criteria. The draft awaits owner approval with the plan."
+   "summary": "\",\n  \"ui\": false\n}\n  \"id\": \"T4.31\",\n  \"milestone_id\": \"M2\",\n  \"title\": \"Run the project storage and authorization checkpoint\",\n  \"objective\": \"Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race.\",\n  \"repository\": \"pictures\",\n  \"after\": [\n    \"T4.3\"\n  ],\n  \"complexity\": "
   },
   "taller-esenciales@v1": {
    "agent": "codex",
