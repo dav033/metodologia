@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-26 16:06 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-26 21:35 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -50,17 +50,17 @@ _Generated 2026-10-26 16:06 by `bitacora.py index`. Do not edit by hand._
 - P-155 · [live checks working 2026-10-22: see D-121] REQ-020 T14a needs its LIVE checks run by the  · high/S
 - P-180 · [closed 2026-10-23, 8e2b7fe84] Planner requires `bitacora.py audit-ledger check` but M6 tr · high/S
 - P-182 · [closed 2026-10-23, 3c5ac6eb] M6 verdict stays pending for post-verification guard failure · high/S
+- P-208 · Relaunch the REQ-021 Designers (SP-2 cuentas-admin, SP-3 taller-esenciales, SP-4 proyectos · high/S
 - P-013 · Live bitácora backup: `~/bitacora` is now a symlink into the `metodologia` repo (origin =  · high/M
 - P-041 · Decide whether to re-plan REQ-020 T24 after its bounded real-provider attempt failed · high/M
-- P-118 · Enforce owner no-commit/no-push policy in bitacora CLI and native session hooks · high/M
 
 ## Recent decisions
 
+- D-135 — The Designer composes mockups from a checked david-ui stand-in kit; the owner browses it at `/components`
 - D-134 — The Scheduler runs a plan in stages: a stage is a frozen projection of the draft onto confirmed subplans
 - D-133 — Agents the owner needs to talk to run in tmux, so the web can read and type into them
 - D-132 — A subplan can be built WITH the owner in a hands-on agent session before the plan goes on
 - D-131 — Each finished subplan is tried and approved by the owner; the plan is not done until all are
-- D-130 — Collaborative planning: requirements, skeleton, subplan by subplan, approval
 
 ## Artifacts
 

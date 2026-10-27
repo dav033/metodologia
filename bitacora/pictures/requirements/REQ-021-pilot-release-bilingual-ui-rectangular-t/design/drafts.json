@@ -6,7 +6,7 @@
    "before": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
    "delegation": "D-20261026-210139-c6dc",
    "digest": "abde9480c2f8d545",
-   "error": "failed: signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: ",
+   "error": "",
    "failures": 1,
    "feedback": [
     {
@@ -69,13 +69,13 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T21:01:39-05:00",
-   "reason": "feedback",
+   "queued": "2026-10-26T21:35:02-05:00",
+   "reason": "plan changed",
    "report": "claimed",
    "revision": 6,
    "sha256": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
    "started": "2026-10-26T21:01:39-05:00",
-   "status": "failed",
+   "status": "queued",
    "subplan_id": "SP-2",
    "summary": "signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: "
   },
