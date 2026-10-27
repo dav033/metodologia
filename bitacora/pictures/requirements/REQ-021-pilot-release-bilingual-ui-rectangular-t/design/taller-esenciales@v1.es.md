@@ -166,38 +166,38 @@ Membresía canónica / invariantes de F3 (todas siguen en `ASIGNACION_FONDOS →
 
 El texto visible del producto está en español en este borrador. Las cadenas semánticas están listas para traducirse; el despliegue bilingüe corresponde al subplan de idioma (R12), no a una implementación implícita de SP-3. Backing y GLB conservan esos nombres en ambos idiomas. No se introduce un selector de idioma nuevo. Prueba las etiquetas traducidas con una expansión del 40 %; solo el nombre del proyecto puede truncarse y debe tener un nombre completo accesible. El selector de maqueta claro/oscuro representa ambos temas existentes del producto.
 
-## 8. States
+## 8. Estados
 
-`#state` is a visible native select; only states applicable to the current view are offered. `#view` uses the six active ids above; `#scene` offers `none`, `export`, `shopping`; `#theme` offers `dark`, `light`. All have visible labels. The bridge can set value and dispatch `change`. State options update when the view changes. Dialog state comes from the chosen view/state; exported example data is never downloaded. Mock-only status explicitly says any resulting change is simulated. The template’s fifth `#motion` select exposes subtle/natural/expressive motion profiles; it is planning-only.
+`#state` es un selector nativo visible; solo se ofrecen los estados aplicables a la vista actual. `#view` usa los seis ids activos anteriores; `#scene` ofrece `none`, `export`, `shopping`; `#theme` ofrece `dark`, `light`. Todos tienen etiquetas visibles. El puente puede establecer el valor y despachar `change`. Las opciones de estado se actualizan cuando cambia la vista. El estado del diálogo proviene de la vista/estado elegidos; los datos de ejemplo exportados nunca se descargan. El estado de solo simulación indica explícitamente que cualquier cambio resultante es simulado. El quinto selector `#motion` de la plantilla expone perfiles de movimiento sutil/natural/expresivo; es solo para planificación.
 
-| ID / selector | Visible result and enabled recovery | Transition / applicability |
+| ID / selector | Resultado visible y recuperación habilitada | Transición / aplicabilidad |
 |---|---|---|
-| S1 `ready` | Stable content; one clear primary action; actual counts | Initial state for every view |
-| S2 `loading` | Stable shell, labelled skeleton/loading message; disable content-dependent add/export; committed scene remains | All; resolve to ready/empty/error; no fabricated percentages |
-| S3 `empty` | Context: no search match → “No encontramos piezas” + “Limpiar búsqueda”; no selection → “Selecciona una mesa” + return to Add; empty shopping/scene → “Añade una pieza para continuar” | All; export disabled when scene empty; AI empty is no messages, prompt usable |
-| S4 `error` | “No pudimos cargar las piezas”, “No pudimos actualizar la lista” or “No se pudo exportar el GLB”, contextual retry; keep prior valid scene/input | All; Retry → pending/loading → ready; no stack traces or false success |
-| S5 `success` | Named piece added / table updated / list current / download initiated; status region, not forced navigation | All; returns to ready without erasing content; export success refers to initiated download only |
-| S6 `validation` | Error below affected numeric/prompt field, linked by `aria-describedby`; value retained; last valid scene untouched | V2, V6 only; correction → ready; not applicable to Backing/export/list |
-| S7 `disabled` | Non-available action plus adjacent reason (scene/node limit or export not ready); no unreachable enabled fake action | All; condition cleared → ready; no disabled-only tooltip |
-| S8 `partial` | V2 fewer chairs fitted, requested and placed explicit; V6 proposed result not yet applied; V7 unresolved pieces → export blocked, “Revisa las piezas antes de exportar” | V2,V6,V7; resolving issue → ready; no silently partial GLB |
-| S9 `permission-denied` | “Tu cuenta no tiene acceso a esta herramienta” and “Volver”; hide scene/private data; SP-1/2 owns auth destination | All; no self-upgrade/payment flow |
-| S10 `offline` | “Sin conexión”; remote library refresh/AI disabled; existing in-memory scene retained; “Reintentar” checks again | All; local edits, shopping derived from a complete scene and already-loaded export remain available; if assets unavailable block export with reason, never assume server save |
-| S11 `pending` | “La IA está preparando una propuesta…” / “Preparando GLB…”; block duplicate submit/export, keep scene read-only only as needed for coherent snapshot | V6,V7 only; completion → success/error; no fake cancel button unless operation supports cancellation |
+| S1 `ready` | Contenido estable; una acción principal clara; conteos reales | Estado inicial de cada vista |
+| S2 `loading` | Estructura estable, mensaje de esqueleto/carga etiquetado; deshabilita agregar/exportar si depende del contenido; la escena confirmada permanece | Todas; se resuelve en listo/vacío/error; sin porcentajes inventados |
+| S3 `empty` | Contexto: sin coincidencias de búsqueda → “No encontramos piezas” + “Limpiar búsqueda”; sin selección → “Selecciona una mesa” + volver a Agregar; compras/escena vacías → “Añade una pieza para continuar” | Todas; exportar se deshabilita cuando la escena está vacía; IA vacía significa que no hay mensajes, el prompt se puede usar |
+| S4 `error` | “No pudimos cargar las piezas”, “No pudimos actualizar la lista” o “No se pudo exportar el GLB”, con reintento contextual; conserva la escena/entrada válida anterior | Todas; Reintentar → pendiente/cargando → listo; sin trazas de pila ni falsos éxitos |
+| S5 `success` | Pieza agregada con nombre / mesa actualizada / lista al día / descarga iniciada; región de estado, sin navegación forzada | Todas; vuelve a listo sin borrar contenido; el éxito de exportación solo indica que se inició la descarga |
+| S6 `validation` | Error debajo del campo numérico/prompt afectado, vinculado mediante `aria-describedby`; conserva el valor; la última escena válida no cambia | V2, V6 únicamente; corregir → listo; no aplicable a Backing/exportar/lista |
+| S7 `disabled` | Acción no disponible con el motivo adyacente (límite de escena/nodos o exportación no lista); no presenta una acción falsa habilitada e inalcanzable | Todas; al eliminarse la condición → listo; sin información sobre herramientas solo al deshabilitar |
+| S8 `partial` | V2 indica explícitamente cuántas sillas se solicitaron y cuántas se ubicaron cuando no coinciden; el resultado propuesto de V6 aún no se aplica; piezas sin resolver en V7 → exportación bloqueada, “Revisa las piezas antes de exportar” | V2,V6,V7; resolver el problema → listo; sin GLB parcialmente generado en silencio |
+| S9 `permission-denied` | “Tu cuenta no tiene acceso a esta herramienta” y “Volver”; oculta la escena/datos privados; SP-1/2 define el destino de autenticación | Todas; sin flujo de actualización propia/pago |
+| S10 `offline` | “Sin conexión”; actualización remota de la biblioteca/IA deshabilitadas; conserva la escena existente en memoria; “Reintentar” vuelve a comprobar | Todas; las ediciones locales, las compras derivadas de una escena completa y la exportación ya cargada siguen disponibles; si los recursos no están disponibles, bloquea la exportación con el motivo, nunca supongas que hubo un guardado en el servidor |
+| S11 `pending` | “La IA está preparando una propuesta…” / “Preparando GLB…”; bloquea envíos/exportaciones duplicados y mantiene la escena de solo lectura solo cuando sea necesario para una instantánea coherente | V6,V7 únicamente; al completarse → éxito/error; sin botón falso para cancelar salvo que la operación admita cancelación |
 
-Partial remote Backing results are not introduced: failed catalogue loading reports an error and keeps previously known complete data visibly stale. `offline` covers unavailable refresh and stale retained data. No separate silent stale-success state. No destructive-confirmation state is needed; these flows do not delete data. Export has no separate permission beyond the existing Taller permission. Active preview state is not eligible for export until resolved. Runtime authorization and entitlements are authoritative, not the mock selectors.
+No se introducen resultados parciales remotos de Backing: si falla la carga del catálogo, se informa un error y se conservan los datos completos conocidos anteriormente, marcados visiblemente como desactualizados. `offline` abarca la actualización no disponible y los datos conservados que están desactualizados. No hay un estado separado de éxito silencioso con datos desactualizados. No se necesita un estado de confirmación destructiva; estos flujos no eliminan datos. Exportar no requiere permisos adicionales a los permisos existentes de Taller. El estado de vista previa activa no se puede exportar hasta que se resuelva. La autorización y los permisos efectivos en tiempo de ejecución son la fuente de verdad, no los selectores de simulación.
 
-## 9. Responsive behavior
+## 9. Comportamiento adaptable
 
-Supported range: 320 px and up; primary review widths 360, 768, 1024, 1440 px plus 320 px reflow. Reuse existing 1024 px workshop cut and low-height landscape rule; 1440 px is an evidence width, not a new feature boundary.
+Rango admitido: 320 px en adelante; anchos principales de revisión: 360, 768, 1024, 1440 px, además del reflujo a 320 px. Reutilizar el corte existente del taller de 1024 px y la regla para orientación horizontal y poca altura; 1440 px es un ancho para recopilar evidencia, no un nuevo límite de funcionalidad.
 
-- **320–767 px:** wrapping tools row with named Export and shopping actions; one active Add/Inspector/IA pane below the scene preview. Preview SVG is 180–220 px high; its controls and summary retain their own padding. Use vertical document scrolling so the toolbar, full fields and keyboard cannot hide each other. Preserve selected piece/search when navigating panels; the mock’s planning view selector resets illustrative search, as before. Shopping/export fit `100vw - 32px`. Numeric fields become a single column below 480 px; object cards use one column when two kit-padded cards do not fit. No page-level horizontal scroll, mandatory drag or clipped primary action.
-- **768–1023 px:** same single-active-pane model; content-driven peer cards may expand to three columns; no squeezed triple-pane desktop layout. The sidebar rail is replaced by the labelled mobile navigation row.
-- **1024–1279 px:** collapsed 56 px Sidebar within a 64 px layout track, one active 320–340 px side panel and flexible scene. Hide Add when editing/using AI/export, hide Inspector when browsing Tables/Backing. Header 56 px plus a wrapping padded actions row.
-- **≥1280 px:** Add 340 px + flexible scene + Inspector 340 px with the existing rail. Each side panel scrolls independently with at least 680 px content viewport; the scene can remain sticky. At 1440×980 the default rectangular inspector shows dimensions, chairs, Materials heading and first control without scrolling.
-- **Landscape 640–1023 px and height ≤540 px:** active panel beside preview (45% preview / 55% panel), vertically scrollable controls. Below 640 px or at large zoom, prioritize readable vertical flow over forced columns. Shopping body scrolls within viewport height; export becomes a bounded fixed floating panel below 480 px.
-- Backing shares Add and its responsive behavior; no storefront/facet route. Maintain logical DOM order (Add → scene → Inspector on desktop; scene → active pane when narrow). Spanish/English label expansion is a production review target; this draft remains Spanish.
+- **320–767 px:** fila de herramientas con ajuste de línea y acciones con nombre Exportar y Compras; un panel activo de Agregar/Inspector/IA debajo de la vista previa de la escena. El SVG de vista previa mide 180–220 px de alto; sus controles y resumen conservan su propio relleno. Usar desplazamiento vertical del documento para que la barra de herramientas, los campos completos y el teclado no se oculten entre sí. Conservar la pieza seleccionada/búsqueda al navegar entre paneles; el selector de vista de planificación de la maqueta restablece la búsqueda ilustrativa, como antes. Compras/exportación caben en `100vw - 32px`. Los campos numéricos pasan a una sola columna por debajo de 480 px; las tarjetas de objetos usan una columna cuando no caben dos tarjetas con el relleno del kit. Sin desplazamiento horizontal de página, arrastre obligatorio ni acción principal recortada.
+- **768–1023 px:** mismo modelo de un solo panel activo; las tarjetas relacionadas pueden expandirse a tres columnas según el contenido; sin diseño de escritorio de tres paneles comprimido. La barra lateral se sustituye por la fila de navegación móvil etiquetada.
+- **1024–1279 px:** barra lateral contraída de 56 px dentro de una cuadrícula de diseño de 64 px, un panel lateral activo de 320–340 px y una escena flexible. Ocultar Agregar al editar/usar IA/exportar; ocultar Inspector al explorar Mesas/Backing. Encabezado de 56 px más una fila de acciones con ajuste de línea y relleno.
+- **≥1280 px:** Agregar de 340 px + escena flexible + Inspector de 340 px con la barra existente. Cada panel lateral se desplaza de forma independiente con una vista de contenido de al menos 680 px; la escena puede permanecer fija durante el desplazamiento. A 1440×980, el inspector rectangular predeterminado muestra dimensiones, sillas, el encabezado Materiales y el primer control sin desplazarse.
+- **Orientación horizontal de 640–1023 px y altura ≤540 px:** panel activo junto a la vista previa (45% vista previa / 55% panel), controles con desplazamiento vertical. Por debajo de 640 px o con zoom alto, priorizar un flujo vertical legible en lugar de forzar columnas. El cuerpo de Compras se desplaza dentro de la altura de la ventana; Exportar pasa a ser un panel flotante fijo y acotado por debajo de 480 px.
+- Backing comparte Agregar y su comportamiento adaptable; no hay ruta de tienda ni facetas. Mantener el orden lógico del DOM (Agregar → escena → Inspector en escritorio; escena → panel activo en pantallas estrechas). La expansión de etiquetas en español/inglés es un objetivo de revisión de producción; este borrador permanece en español.
 
-Mockup toolbar is outside the product shell; its height is not part of product geometry. No remote image assets, Google Fonts or runtime APIs are required.
+La barra de herramientas de la maqueta está fuera del contenedor del producto; su altura no forma parte de la geometría del producto. No se requieren recursos de imágenes remotos, Google Fonts ni API en tiempo de ejecución.
 
 ## 10. Objetivos de accesibilidad
 
@@ -211,64 +211,64 @@ Objetivo: WCAG 2.2 AA para la interfaz modificada. Una descripción de diseño n
 - Se prefieren objetivos táctiles de 44 px; el mínimo WCAG para el tamaño de objetivo es 24 CSS px o un espaciado conforme para controles compactos de escritorio. El texto al 200%/zoom al 400% se redistribuye sin acciones recortadas a 320 CSS px. Ninguna información esencial depende solo del desplazamiento del puntero, el movimiento, la perspectiva o el lienzo.
 - Respetar `prefers-reduced-motion`; no animar los esqueletos del mockup. Nombres de botones estables; el estado pendiente también establece la semántica de ocupado. La usabilidad real de Blender y una interfaz completa de autoría 3D no visual están fuera del alcance de este artefacto de diseño; la edición de texto, el resumen de escena y los controles modificados sí están incluidos.
 
-## 11. Visual acceptance criteria
+## 11. Criterios de aceptación visual
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| UI-AC-01 | ≥1024 px | ready | V1 has a visible “Mesa rectangular” entry inside Mobiliario. |
-| UI-AC-02 | 320–1023 px | ready | Activating Add shows table controls in a readable active sheet without horizontal page scrolling. |
-| UI-AC-03 | All | ready | V2 displays separate length, width and tabletop height fields with metre units. |
-| UI-AC-04 | All | validation | An out-of-range length shows a linked field error while the scene retains its last valid geometry. |
-| UI-AC-05 | All | partial | V2 shows both requested and placed chair counts when they differ. |
-| UI-AC-06 | All | success | V5 displays the same placed chair count as V2 after an edit. |
-| UI-AC-07 | All | ready | V3 exposes one named Backing display group inside Fondos y muebles. |
-| UI-AC-08 | All | ready | V3 lists each of the seven canonical Backing members once within the group. |
-| UI-AC-09 | 320–1023 px | empty | V3 shows “Limpiar búsqueda” without horizontal overflow. |
-| UI-AC-10 | All | ready | D1 labels the GLB action with Blender and displays metre scale. |
-| UI-AC-11 | All | pending | V7 shows “Preparando GLB…” and cannot start another export. |
-| UI-AC-12 | All | error | V7 offers retry while leaving the committed scene visible. |
-| UI-AC-13 | All | success | V7 says “Descarga GLB iniciada.” without claiming local save or Blender verification. |
-| UI-AC-14 | All | empty | V7 disables GLB and explains that the scene needs a piece. |
-| UI-AC-15 | 360,768,1024,1440 px | ready | Both themes use the stated shared Taller surface and accent tokens. |
-| UI-AC-16 | All | permission-denied | Denied workshop content contains no scene or project details. |
-| UI-AC-17 | All | ready | Closing D2 with Escape restores focus to the list trigger. |
-| UI-AC-18 | All | ready | V6 exposes a manual-edit path after the table proposal is applied. |
-| UI-AC-19 | All | ready | Non-store Backing pieces have no invented price or stock claim. |
-| UI-AC-20 | 640–1023 px, height ≤540 px | ready | Active panel is beside the preview and its controls can scroll vertically. |
-| UI-AC-21 | All | partial | Export is blocked with an explicit unresolved-piece reason. |
-| UI-AC-22 | All | loading | Loading catalogue content retains the shell and blocks add actions. |
-| UI-AC-23 | All | offline | The banner distinguishes offline status from retained local scene availability. |
-| UI-AC-24 | All | ready | Keyboard focus is visible on every changed control. |
-| UI-AC-25 | All | ready | The HTML exposes labelled native selects with ids view, state, scene and theme. |
-| UI-AC-26 | 320 px / 400% zoom equivalent | ready | Dialog content and primary actions reflow without page-level horizontal scrolling. |
-| UI-AC-27 | All | disabled | Every disabled primary action has an adjacent visible explanation. |
-| UI-AC-28 | All | ready | Undo after a table edit restores the preceding dimensions and placed chair count in the inspector and shopping list. |
-| UI-AC-29 | All | ready | Searching “Backing” in V3 displays the seven canonical cards and a matching filtered result count. |
-| UI-AC-30 | All | ready | The mockup has six active views and no Shopify Backing view or catalogue handoff. |
-| UI-AC-31 | All | ready | Activating a table-type card inserts its default-sized group and opens the existing inspector without an intermediate form. |
-| UI-AC-32 | All | ready | V5 shows furniture quantities and dimensions without rental prices. |
-| UI-AC-33 | All | ready | The seven Backing cards do not appear in Fondos y tapetes or Decorado de pie. |
-| UI-AC-34 | All | partial | After requesting 20 chairs with the eight-chair mock fixture, the warning and input both say 20 requested and the placed count remains 8. |
-| UI-AC-35 | All | validation → ready | Correcting an invalid dimension or chair quantity back to its previous valid value removes the field error. |
-| UI-AC-36 | All | ready | Active rail, category tabs and mobile navigation have neutral text/surface selection, without a purple strip or tinted banner. |
-| UI-AC-37 | All | ready / partial | At most one foreground action uses the primary fill, including when export or shopping is open. |
-| UI-AC-38 | All | ready | V1 uses eight peer cards of equal column width; rectangular has no tinted enclosing hero. |
-| UI-AC-39 | All | ready | V5 quantities share a right-aligned column and use tabular figures. |
-| UI-AC-40 | All | ready | V2 numeric input values and type-card dimensions are right aligned with tabular figures. |
-| UI-AC-41 | All | ready | Fixed panels and notices have flat token surfaces with no shadow, gradient, blur or glow. |
-| UI-AC-42 | All | ready | Navigation, export and add icons are inline SVG; supporting UI text is at least 11 CSS px. |
-| UI-AC-43 | 1440×980 px | ready | V2 shows the dimensions and chairs groups plus the Materials heading and its first control in the initial desktop inspector viewport. |
+| UI-AC-01 | ≥1024 px | ready | V1 tiene una opción visible “Mesa rectangular” dentro de Mobiliario. |
+| UI-AC-02 | 320–1023 px | ready | Al activar Agregar, se muestran los controles de mesa en un panel activo legible, sin desplazamiento horizontal de página. |
+| UI-AC-03 | All | ready | V2 muestra campos separados para el largo, el ancho y la altura de la superficie de la mesa, con unidades en metros. |
+| UI-AC-04 | All | validation | Un largo fuera de rango muestra un error vinculado al campo, mientras la escena conserva su última geometría válida. |
+| UI-AC-05 | All | partial | V2 muestra los conteos de sillas solicitadas y ubicadas cuando son distintos. |
+| UI-AC-06 | All | success | V5 muestra el mismo conteo de sillas ubicadas que V2 después de una edición. |
+| UI-AC-07 | All | ready | V3 expone un grupo de visualización Backing con nombre dentro de Fondos y muebles. |
+| UI-AC-08 | All | ready | V3 enumera una vez cada uno de los siete miembros canónicos de Backing dentro del grupo. |
+| UI-AC-09 | 320–1023 px | empty | V3 muestra “Limpiar búsqueda” sin desbordamiento horizontal. |
+| UI-AC-10 | All | ready | D1 etiqueta la acción GLB con Blender y muestra la escala en metros. |
+| UI-AC-11 | All | pending | V7 muestra “Preparando GLB…” y no permite iniciar otra exportación. |
+| UI-AC-12 | All | error | V7 ofrece reintentar y mantiene visible la escena confirmada. |
+| UI-AC-13 | All | success | V7 indica “Descarga GLB iniciada.” sin afirmar que se guardó localmente ni que Blender lo verificó. |
+| UI-AC-14 | All | empty | V7 deshabilita GLB y explica que la escena necesita una pieza. |
+| UI-AC-15 | 360,768,1024,1440 px | ready | Ambos temas usan los tokens compartidos de superficie y acento de Taller establecidos. |
+| UI-AC-16 | All | permission-denied | El contenido del taller al que se denegó el acceso no contiene detalles de la escena ni del proyecto. |
+| UI-AC-17 | All | ready | Al cerrar D2 con Escape, el foco vuelve al activador de la lista. |
+| UI-AC-18 | All | ready | V6 expone una ruta de edición manual después de aplicar la propuesta de mesa. |
+| UI-AC-19 | All | ready | Las piezas de Backing que no son de tienda no tienen precios ni afirmaciones de existencias inventados. |
+| UI-AC-20 | 640–1023 px, height ≤540 px | ready | El panel activo está junto a la vista previa y sus controles permiten desplazamiento vertical. |
+| UI-AC-21 | All | partial | La exportación está bloqueada con un motivo explícito que indica que hay piezas sin resolver. |
+| UI-AC-22 | All | loading | Al cargar el contenido del catálogo se conserva el contenedor y se bloquean las acciones para agregar. |
+| UI-AC-23 | All | offline | El banner distingue el estado sin conexión de la disponibilidad de la escena local conservada. |
+| UI-AC-24 | All | ready | El foco del teclado es visible en cada control modificado. |
+| UI-AC-25 | All | ready | El HTML expone selectores nativos etiquetados con los ids view, state, scene y theme. |
+| UI-AC-26 | 320 px / equivalente a zoom del 400% | ready | El contenido del diálogo y las acciones principales se reorganizan sin desplazamiento horizontal de página. |
+| UI-AC-27 | All | disabled | Cada acción principal deshabilitada tiene una explicación visible adyacente. |
+| UI-AC-28 | All | ready | Deshacer una edición de mesa restaura las dimensiones anteriores y el conteo de sillas ubicadas en el inspector y la lista de compras. |
+| UI-AC-29 | All | ready | Al buscar “Backing” en V3, se muestran las siete tarjetas canónicas y un conteo de resultados filtrados que coincide. |
+| UI-AC-30 | All | ready | La maqueta tiene seis vistas activas y no incluye una vista Shopify Backing ni un traspaso al catálogo. |
+| UI-AC-31 | All | ready | Al activar una tarjeta de tipo mesa, se inserta el grupo con su tamaño predeterminado y se abre el inspector existente sin un formulario intermedio. |
+| UI-AC-32 | All | ready | V5 muestra las cantidades y dimensiones del mobiliario sin precios de alquiler. |
+| UI-AC-33 | All | ready | Las siete tarjetas de Backing no aparecen en Fondos y tapetes ni en Decorado de pie. |
+| UI-AC-34 | All | partial | Después de solicitar 20 sillas con el fixture simulado de ocho sillas, tanto la advertencia como la entrada indican que se solicitaron 20 y el conteo de ubicadas permanece en 8. |
+| UI-AC-35 | All | validation → ready | Al corregir una dimensión o cantidad de sillas no válida y restaurar su último valor válido, desaparece el error del campo. |
+| UI-AC-36 | All | ready | La barra activa, las pestañas de categoría y la navegación móvil usan selección con texto/superficie neutros, sin franja morada ni banner teñido. |
+| UI-AC-37 | All | ready / partial | Como máximo una acción en primer plano usa el relleno principal, incluso cuando Exportar o Compras está abierto. |
+| UI-AC-38 | All | ready | V1 usa ocho tarjetas relacionadas de igual ancho de columna; la tarjeta rectangular no tiene un bloque destacado contenedor teñido. |
+| UI-AC-39 | All | ready | Las cantidades de V5 comparten una columna alineada a la derecha y usan cifras tabulares. |
+| UI-AC-40 | All | ready | Los valores de entrada numéricos y las dimensiones de las tarjetas de tipo de V2 están alineados a la derecha y usan cifras tabulares. |
+| UI-AC-41 | All | ready | Los paneles fijos y los avisos tienen superficies planas de tokens, sin sombra, degradado, desenfoque ni resplandor. |
+| UI-AC-42 | All | ready | Los iconos de navegación, exportación y agregar son SVG insertados en línea; el texto complementario de la interfaz tiene al menos 11 px CSS. |
+| UI-AC-43 | 1440×980 px | ready | V2 muestra los grupos de dimensiones y sillas, además del encabezado Materiales y su primer control, en la vista inicial del inspector de escritorio. |
 
-| UI-AC-44 | All | ready | Every view uses the inlined kit and the named component anatomy from sections 4/7; `Mockup` remains visible. |
-| UI-AC-45 | All | ready / validation | Inspector field labels, controls, help and action starts share their container’s left edge. |
-| UI-AC-46 | All | ready | Card header/content/footer have matching kit size=sm insets of 16 px. |
-| UI-AC-47 | All | ready / error | Text meets 4.5:1 and interactive boundaries/focus meet 3:1 in both themes. |
-| UI-AC-48 | 320–767 px | ready / empty / error | Export controls and the shopping footer fit inside the viewport’s 16 px side insets. |
-| UI-AC-49 | All | ready | Motion profiles are reachable through the labelled planning selector, and reduced motion removes displacement. |
+| UI-AC-44 | All | ready | Cada vista usa el kit integrado y la anatomía de componentes con nombre de las secciones 4/7; `Mockup` permanece visible. |
+| UI-AC-45 | All | ready / validation | Las etiquetas de los campos, los controles, la ayuda y el inicio de las acciones del inspector comparten el borde izquierdo de su contenedor. |
+| UI-AC-46 | All | ready | El encabezado, el contenido y el pie de la tarjeta tienen rellenos size=sm del kit de 16 px. |
+| UI-AC-47 | All | ready / error | El texto cumple con una relación de contraste de 4.5:1 y los límites interactivos/el foco, con una de 3:1 en ambos temas. |
+| UI-AC-48 | 320–767 px | ready / empty / error | Los controles de Exportar y el pie de Compras caben dentro de los márgenes laterales de 16 px de la ventana. |
+| UI-AC-49 | All | ready | Se puede acceder a los perfiles de movimiento mediante el selector de planificación etiquetado, y el movimiento reducido elimina el desplazamiento. |
 
-Round 9 q1–q4 settle these behaviors; the contract itself still requires owner approval. The seven cards move into Backing and leave their former visual groups, which retain their other pieces. Original-name search remains; no duplicate card aliases are created. Identity, `GrupoCatalogo`, `ASIGNACION_FONDOS`, AI/photo compatibility and absence of the seven cards from former groups require source/functional checks in T3.3/T3.8; a rendered grouping cannot prove them.
+La ronda 9, q1–q4, define estos comportamientos; el contrato aún requiere la aprobación del propietario. Las siete tarjetas pasan a Backing y salen de sus grupos visuales anteriores, que conservan sus otras piezas. Se mantiene la búsqueda por nombre original; no se crean alias de tarjetas duplicados. La identidad, `GrupoCatalogo`, `ASIGNACION_FONDOS`, la compatibilidad con IA/fotos y la ausencia de las siete tarjetas en los grupos anteriores requieren comprobaciones de código fuente/funcionales en T3.3/T3.8; la agrupación renderizada no puede demostrarlos.
 
-Engine/layout/scale/colour parity and original-name/AI/photo discovery need functional tests plus the documented Blender import; screenshot review cannot accept R9–R11 alone. HTML renders schematic geometry and simulates interactions; it does not produce a GLB, quote, actual catalogue count or live AI response.
+La paridad del motor/diseño/escala/color y la búsqueda por nombre original/IA/fotos requieren pruebas funcionales y la importación documentada en Blender; la revisión de capturas de pantalla por sí sola no puede aceptar R9–R11. El HTML renderiza geometría esquemática y simula interacciones; no produce un GLB, una cotización, un conteo real del catálogo ni una respuesta de IA en vivo.
 
 ## 12. Preguntas abiertas y supuestos
 
