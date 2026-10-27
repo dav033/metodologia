@@ -2634,6 +2634,7 @@
    "ui_digest": "04b1c41557084c57"
   },
   "planes@v1": {
+   "approved": "2026-10-27T18:48:34-05:00",
    "attempt": 4,
    "before": "a80dc174d8dc676d59f971664d66b91a82667a9fae465864b4e1a65b08e99766",
    "before_html": "45823d440fd29ea53dc251ea07f2a2b8866e7492fdde82224937a67d68033338",
@@ -5762,7 +5763,7 @@
    "selected_sha256": "174233f344c1f5c55c54a5abfae1ec89d3785a76641a65cdb2bfbfcd6eb8cb41",
    "sha256": "1fed82d257d1d32c9bf43f817e9afaa680724a1e0b145fbef638bfe9f5fef0cd",
    "started": "2026-10-27T16:21:32-05:00",
-   "status": "ready",
+   "status": "approved",
    "subplan_id": "SP-14",
    "summary": "Finalized the owner-selected Planos de consulta (b), r4, into the complete twelve-section planes@v1 draft and canonical self-contained HTML. Rebuilt the unchanged selected TSX with the current offline builder, preserving composition and motion; the contract remains unapproved.",
    "ui_digest": "1ff9fb21a6e90061"
