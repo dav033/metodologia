@@ -241,18 +241,18 @@ La maqueta expone selectores nativos `view`, `state`, `scene`, `theme` con etiqu
 
 La cola durable de carga sin conexión, la presencia en vivo de varios usuarios, el estado de generación de IA en segundo plano y los estados de eliminación de proyectos no son aplicables: no hay ninguna de esas funciones asignada a SP-4. Las miniaturas son opcionales; si fallan, se muestra un marcador de posición y nunca un error fatal del proyecto. Una escena malformada es un error, nunca se descarta silenciosamente para crear un proyecto vacío. La expiración de sesión reutiliza SP-2, no un nuevo diálogo de inicio de sesión. No se usa un estado parcial para simular una escena parcialmente cargada.
 
-## 9. Responsive behavior
+## 9. Comportamiento adaptable
 
-Supported width starts at the product's existing 320px minimum. Content breakpoints align with existing Tailwind `sm` (640), `md` (768), `lg` (1024) and Taller's narrow/landscape behavior. Test 320, 390, 768, 1024 and 1440px, plus 844×390 landscape.
+El ancho mínimo compatible comienza en los 320px que ya admite el producto. Los puntos de quiebre del contenido se alinean con los existentes de Tailwind `sm` (640), `md` (768), `lg` (1024) y con el comportamiento de Taller en pantallas estrechas o en orientación horizontal. Probar en 320, 390, 768, 1024 y 1440px, además de 844×390 en orientación horizontal.
 
-| Range | Library / import | Taller / dialogs |
+| Rango | Biblioteca / importación | Taller / diálogos |
 |---|---|---|
-| 320–639px | Compact header, horizontally wrapping section navigation; H1/action stack; labelled filters one column; cards one column, full names wrap; 16px gutters | Save status on its own wrapping row, explicit labelled save action; canvas then contextual scene summary; dialog spans viewport width with a naturally sized, internally scrolling kit Dialog body; all actions remain in normal flow |
-| 640–767px | Navigation above content; 24px gutters; two-card grid if available width fits; filters wrap | Dialog centered ≤560px, max-height 92dvh; editor context remains below canvas |
-| 768–1023px | Two-card grid, filter search/owner on one line; import readable max-width 760px | Canvas and scene summary fit side by side; header wraps rather than clipping |
-| ≥1024px | 200px section nav rail, main max-width 1200px, three-card grid; filters full row | Existing Taller rail and canvas/inspector layout retained; centered dialogs |
+| 320–639px | Encabezado compacto; navegación de secciones con ajuste de línea horizontal; H1 y acción apilados; filtros etiquetados en una columna; tarjetas en una columna, nombres completos con ajuste de línea; márgenes laterales de 16px | Estado de guardado en su propia fila con ajuste de línea, acción de guardado explícita y etiquetada; lienzo seguido del resumen contextual de la escena; el diálogo ocupa el ancho de la ventana gráfica, con un cuerpo del Dialog del kit de altura natural y desplazamiento interno; todas las acciones permanecen en el flujo normal |
+| 640–767px | Navegación sobre el contenido; márgenes laterales de 24px; cuadrícula de dos tarjetas si cabe en el ancho disponible; filtros con ajuste de línea | Diálogo centrado de ≤560px, altura máxima de 92dvh; el contexto del editor permanece debajo del lienzo |
+| 768–1023px | Cuadrícula de dos tarjetas; búsqueda y propietario en una línea; importación con ancho máximo legible de 760px | El lienzo y el resumen de la escena caben uno junto al otro; el encabezado se ajusta en lugar de recortarse |
+| ≥1024px | Barra lateral de navegación de secciones de 200px, contenido principal con ancho máximo de 1200px y cuadrícula de tres tarjetas; filtros en una fila completa | Se conserva la barra lateral existente de Taller y la disposición de lienzo e inspector; diálogos centrados |
 
-At ≤1023px landscape and height ≤540px, prioritize canvas space and put context beside it if content fits; do not force a tall mobile bottom panel. At zoom/reflow 320 CSS px, stack again. No page-wide horizontal scrolling. Long names wrap at safe opportunities; ellipsis is permitted only where full name is otherwise available to touch/keyboard, never only a hover tooltip. Dialog actions wrap; no fixed footer covers content; body has overscroll containment. EN expansion up to roughly 35% is a layout stress case, not a translation guarantee. ES copy is specified here; SP-8/SP-10 wire account language and complete translations. No RTL support is declared by this pilot.
+En orientación horizontal con ≤1023px de ancho y ≤540px de alto, priorizar el espacio del lienzo y colocar el contexto a su lado si cabe; no forzar un panel móvil inferior alto. Con zoom o redistribución del contenido a 320 CSS px, volver a apilar los elementos. No debe haber desplazamiento horizontal de toda la página. Los nombres largos se ajustan en puntos de corte seguros; se permiten puntos suspensivos solo si el nombre completo está disponible de otro modo mediante interacción táctil o teclado, nunca únicamente en una ayuda emergente al pasar el cursor. Las acciones del diálogo se ajustan en varias líneas; ningún pie fijo cubre el contenido; el cuerpo contiene el desplazamiento excedente. La expansión de EN de hasta aproximadamente un 35% es un caso de estrés de diseño, no una garantía de traducción. Aquí se especifica el texto en ES; SP-8/SP-10 conectan el idioma de la cuenta y completan las traducciones. Este piloto no declara compatibilidad con RTL.
 
 ## 10. Objetivos de accesibilidad
 
@@ -264,77 +264,77 @@ Todos los nuevos objetivos en los que se puede hacer clic miden ≥44×44 px CSS
 
 ## 11. Criterios de aceptación visual
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| UI-AC-01 | ≥1024px | ready / V1 | The library displays three columns of project cards beside the section rail. |
-| UI-AC-02 | 320–639px | ready / V1 | Cards, search and the new-project action fit one column without horizontal page scrolling. |
-| UI-AC-03 | 640–1023px | ready / V1 | The project grid has two columns and navigation sits above content. |
-| UI-AC-04 | 320–1440px | ready / V2 | Every project card shows its owner as visible text. |
-| UI-AC-05 | 320–1440px | no-results | A clear-filters action is shown with the zero-results explanation. |
-| UI-AC-06 | 320–1440px | empty / V1 | “Aún no tienes proyectos guardados” appears with “Nuevo proyecto”. |
-| UI-AC-07 | 320–1440px | loading | Skeletons and a loading label appear instead of an empty-library success. |
-| UI-AC-08 | 320–1440px | dirty / V3 | “Cambios sin guardar” is visible adjacent to the enabled save action outside the canvas. |
-| UI-AC-09 | 320–1440px | success / V3 | Account-save confirmation includes the saved time in visible text. |
-| UI-AC-10 | 320–1440px | validation / D1 | Submitting a blank name keeps the modal open and associates its error with the name input. |
-| UI-AC-11 | 320–1440px | pending / D1 | The submit button reads “Guardando…” and cannot issue a second save. |
-| UI-AC-12 | 320–1440px | stale / D2 | Both local-unsaved and server-saved versions are labelled without a force-overwrite action. |
-| UI-AC-13 | 320–639px | dirty / D3 | All three departure choices remain reachable through vertical scrolling. |
-| UI-AC-14 | 320–1440px | disabled / V4 | Owner and “Solo lectura” are visible and no update-original action is offered. |
-| UI-AC-15 | 320–1440px | permission-denied | Restricted project names, owners and thumbnails are absent from the denied view. |
-| UI-AC-16 | 320–1440px | ready / V5 | Import shows the signed-in destination account above the unchecked ownership confirmation. |
-| UI-AC-17 | 320–1440px | disabled / V5 | Import is disabled until the ownership checkbox is checked. |
-| UI-AC-18 | 320–1440px | validation / V5 | An incompatible source shows its reason and the original-copy download action. |
-| UI-AC-19 | 320–1440px | success / V5 | Confirmed import shows an open-project action and says the browser original is retained. |
-| UI-AC-20 | 320–1440px | partial / V1 | Previously loaded cards remain visible beside a next-page retry control. |
-| UI-AC-21 | 320–1440px | offline | The account-save status explicitly says that saving cannot be confirmed. |
-| UI-AC-22 | 320–1440px | error | A labelled retry control appears without replacing existing scene contents with an empty scene. |
-| UI-AC-23 | 320–1440px | ready / D1–D3 | Escape closes the dialog and restores focus to the activating control. |
-| UI-AC-24 | 320–1440px | ready / both themes | Focus on each project/save control is visible against its actual background. |
-| UI-AC-25 | 844×390px | dirty / V3 | Save controls and status remain reachable while the workspace reflows for the low-height viewport. |
-| UI-AC-26 | 320–1440px | ready / dark | Generic primary buttons use `--sobre-acento` rather than white. |
-| UI-AC-27 | 320px at reflow | ready / V1 | Long project names wrap without requiring a hover tooltip to read them. |
-| UI-AC-28 | 320–1440px | ready / V4b | The read-only custom-role view has no copy or Taller action. |
-| UI-AC-29 | 320–1440px | recovery / V3 | The recovery banner identifies this account and exposes an explicit recover action. |
-| UI-AC-30 | 320–1440px | unknown | An outcome-reconciliation action appears while new mutations are disabled. |
-| UI-AC-31 | 320–1440px | late-response / V3 | The Boda project title remains visible with “Cambios sin guardar” after the mocked previous-project completion. |
-| UI-AC-32 | 320–1440px | pending-newer / V3 | The save badge explicitly distinguishes submitted changes from newer unsaved edits. |
-| UI-AC-33 | 320–1440px | offline / V3 | The mockup’s edit control remains enabled while account saving is unavailable. |
-| UI-AC-34 | 320–1440px | already-imported / V5 | The existing-import message offers opening a project without another import submission. |
-| UI-AC-35 | 320–1440px | ready / V5 | Changing the fixture account clears ownership consent and never reveals another account’s import result. |
-| UI-AC-36 | 320–1440px | error / V4b | The failure describes loading the project and offers no save or copy action. |
-| UI-AC-37 | 320–1440px | unavailable | The unavailable-project screen contains no project title, owner or scene illustration. |
-| UI-AC-38 | 320–1440px | draft-error | A failed local backup leaves the current project visible and offers retrying the local backup. |
-| UI-AC-39 | 320–1440px | too-large | The size-limit message states 2 MiB and does not claim successful saving. |
-| UI-AC-40 | 320–1440px | stale / D1 copy | The copy dialog names the current destination account and never offers overwriting the original. |
-| UI-AC-41 | 320–1440px | ready / V1 | Searching “Horizonte” finds “Ceremonia · Horizonte” before loading page two of the unfiltered fixture collection. |
-| UI-AC-42 | 320–1440px | ready / V1 | The initial 50-row fixture page shows “50 proyectos cargados”. |
-| UI-AC-43 | 320–1440px | ready / V1 | “Cargar más proyectos” appends the next page without duplicate cards. |
-| UI-AC-44 | 320–1440px | query-loading / V1/V2 | The results region displays “Buscando proyectos…” while the labelled filters remain operable. |
-| UI-AC-45 | 320–1440px | query-late-response / V1/V2 | “Horizonte” and its matching card remain after the mock obsolete “Boda” response. |
-| UI-AC-46 | 320–1440px | partial / V1/V2 | Changing a filter removes the failed old page's retry control and starts a first-page query. |
-| UI-AC-47 | 320–1440px | ready / V2 | The owner selector includes the authorized fixture owners Lucía, Mateo and Ana. |
-| UI-AC-48 | 320–1440px | page-loading / V1/V2 | “Cargando más proyectos…” appears below retained cards with a disabled pagination button. |
-| UI-AC-49 | 320–1440px | ready / V1 | After loading page two, changing the name filter resets pagination to at most 50 matching rows. |
-| UI-AC-50 | 320–1440px | ready / V5 | Import explains that the complete scene is saved and separately stored AI conversation/images remain in this browser. |
-| UI-AC-51 | 320–1440px | cursor-invalid / V1/V2 | “Recargar lista” restarts the first page while preserving the visible name/owner filters. |
-| UI-AC-52 | 320–1440px | pending / unknown / V3 | Choosing “Nuevo proyecto” opens D3 and retains the current title until departure is resolved. |
-| UI-AC-53 | 320–1440px | stale / D2 → D1 or D3 | Cancelling the second dialog restores focus to the original page trigger or the current conflict-resolution control. |
-| UI-AC-54 | 320–1440px | pending / pending-newer / unknown / offline / D3 | A visible explanation inside D3 states why “Guardar y continuar” is disabled. |
-| UI-AC-55 | 320–1440px | ready / V1–V5 / both themes | Active section navigation has neutral surface/text tokens, without an accent fill or colored rail. |
-| UI-AC-56 | 320–1440px | ready / V1–V5 / both themes | Default notices, account avatar and destination groups have no accent-colored background. |
-| UI-AC-57 | 320–1440px | ready / V1/V2 | Every card save date is right-aligned and uses tabular figures. |
-| UI-AC-58 | 320–1440px | ready / V1–V5 | Page headings and supporting section labels use sentence case without tracked uppercase eyebrows. |
-| UI-AC-59 | 320–1440px | ready / D2 | Local-work and account-version details are separated by rules instead of nested cards. |
-| UI-AC-60 | 1440×1000px | ready / V1/V2 | The first project row includes visible titles, save dates, owner where applicable and opening actions within the viewport. |
-| UI-AC-61 | 320–1440px | empty / V1/V2 | The empty-state instruction and next action appear without a decorative icon tile. |
-| UI-AC-62 | 320–1440px | ready / V1–V5 | Nonfloating peer cards and scene panels have borders without shadows. |
-| UI-AC-63 | 320–1440px | ready / V1/V2 | The loaded count is right-aligned at the end of the result summary and uses tabular figures. |
-| UI-AC-64 | 320–1440px | success / V3 | The visible save time matches the selected project’s save timestamp in the library. |
-| UI-AC-65 | 320–1440px | ready / V5 / both themes | Destination, consent and retention/download group share the import column's left content edge. |
-| UI-AC-66 | 320–1440px | ready / V5 / dark | Ownership consent uses the kit Checkbox with an identifiable ≥3:1 unchecked edge and a visible checked state. |
-| UI-AC-67 | 320–1440px | ready / both themes | Input and Select edges use the measured `--input` role and remain distinguishable from adjacent surfaces. |
-| UI-AC-68 | 320–1440px | ready / V1/V2 | Project card titles, content and footer use the kit's 24px content padding, reduced to 20px on phones. |
-| UI-AC-69 | 320–1440px | all | Visible labelled Vista, Estado, Diálogo and Tema selectors and the Mockup label remain available for inspection. |
+| UI-AC-01 | ≥1024px | ready / V1 | La biblioteca muestra tres columnas de tarjetas de proyectos junto a la barra lateral de secciones. |
+| UI-AC-02 | 320–639px | ready / V1 | Las tarjetas, la búsqueda y la acción para crear un proyecto caben en una columna, sin desplazamiento horizontal de la página. |
+| UI-AC-03 | 640–1023px | ready / V1 | La cuadrícula de proyectos tiene dos columnas y la navegación está sobre el contenido. |
+| UI-AC-04 | 320–1440px | ready / V2 | Cada tarjeta de proyecto muestra a su propietario como texto visible. |
+| UI-AC-05 | 320–1440px | no-results | Se muestra una acción para borrar los filtros junto con la explicación de que no hay resultados. |
+| UI-AC-06 | 320–1440px | empty / V1 | Aparece “Aún no tienes proyectos guardados” junto con “Nuevo proyecto”. |
+| UI-AC-07 | 320–1440px | loading | Aparecen esqueletos y una etiqueta de carga en lugar de indicar que la biblioteca está vacía. |
+| UI-AC-08 | 320–1440px | dirty / V3 | “Cambios sin guardar” está visible junto a la acción de guardado habilitada, fuera del lienzo. |
+| UI-AC-09 | 320–1440px | success / V3 | La confirmación de guardado en la cuenta incluye la hora de guardado como texto visible. |
+| UI-AC-10 | 320–1440px | validation / D1 | Al enviar un nombre en blanco, el modal permanece abierto y el error se asocia al campo del nombre. |
+| UI-AC-11 | 320–1440px | pending / D1 | El botón de envío muestra “Guardando…” y no puede iniciar un segundo guardado. |
+| UI-AC-12 | 320–1440px | stale / D2 | Las versiones sin guardar localmente y guardadas en el servidor están etiquetadas, sin una acción para sobrescribir a la fuerza. |
+| UI-AC-13 | 320–639px | dirty / D3 | Las tres opciones para salir siguen siendo accesibles mediante desplazamiento vertical. |
+| UI-AC-14 | 320–1440px | disabled / V4 | El propietario y “Solo lectura” están visibles y no se ofrece una acción para actualizar el original. |
+| UI-AC-15 | 320–1440px | permission-denied | Los nombres, propietarios y miniaturas de proyectos restringidos no aparecen en la vista de acceso denegado. |
+| UI-AC-16 | 320–1440px | ready / V5 | La importación muestra la cuenta de destino con sesión iniciada sobre la confirmación de propiedad sin marcar. |
+| UI-AC-17 | 320–1440px | disabled / V5 | La importación está deshabilitada hasta que se marque la casilla de propiedad. |
+| UI-AC-18 | 320–1440px | validation / V5 | Una fuente incompatible muestra el motivo y la acción para descargar la copia original. |
+| UI-AC-19 | 320–1440px | success / V5 | La importación confirmada muestra una acción para abrir el proyecto e indica que se conserva el original del navegador. |
+| UI-AC-20 | 320–1440px | partial / V1 | Las tarjetas cargadas anteriormente siguen visibles junto a un control para reintentar la página siguiente. |
+| UI-AC-21 | 320–1440px | offline | El estado de guardado en la cuenta indica explícitamente que no se puede confirmar el guardado. |
+| UI-AC-22 | 320–1440px | error | Aparece un control de reintento etiquetado sin reemplazar el contenido existente de la escena por una escena vacía. |
+| UI-AC-23 | 320–1440px | ready / D1–D3 | Escape cierra el diálogo y devuelve el foco al control que lo activó. |
+| UI-AC-24 | 320–1440px | ready / both themes | El foco en cada control de proyecto o guardado es visible sobre su fondo real. |
+| UI-AC-25 | 844×390px | dirty / V3 | Los controles y el estado de guardado siguen siendo accesibles mientras el espacio de trabajo se reorganiza para la ventana gráfica de poca altura. |
+| UI-AC-26 | 320–1440px | ready / dark | Los botones primarios genéricos usan `--sobre-acento` en lugar de blanco. |
+| UI-AC-27 | 320px at reflow | ready / V1 | Los nombres largos de proyectos se ajustan en varias líneas y no requieren una ayuda emergente al pasar el cursor para poder leerlos. |
+| UI-AC-28 | 320–1440px | ready / V4b | La vista de rol personalizado de solo lectura no tiene acción para copiar ni para abrir Taller. |
+| UI-AC-29 | 320–1440px | recovery / V3 | El banner de recuperación identifica esta cuenta y ofrece una acción explícita para recuperar. |
+| UI-AC-30 | 320–1440px | unknown | Aparece una acción para conciliar el resultado mientras las nuevas mutaciones están deshabilitadas. |
+| UI-AC-31 | 320–1440px | late-response / V3 | El título del proyecto Boda permanece visible junto a “Cambios sin guardar” después de completarse la solicitud simulada del proyecto anterior. |
+| UI-AC-32 | 320–1440px | pending-newer / V3 | La insignia de guardado distingue explícitamente entre los cambios enviados y las ediciones más recientes aún sin guardar. |
+| UI-AC-33 | 320–1440px | offline / V3 | El control de edición de la maqueta permanece habilitado mientras no está disponible el guardado en la cuenta. |
+| UI-AC-34 | 320–1440px | already-imported / V5 | El mensaje de importación existente ofrece abrir un proyecto sin enviar otra solicitud de importación. |
+| UI-AC-35 | 320–1440px | ready / V5 | Al cambiar la cuenta de prueba, se borra el consentimiento de propiedad y nunca se muestra el resultado de importación de otra cuenta. |
+| UI-AC-36 | 320–1440px | error / V4b | El error describe la carga del proyecto y no ofrece acciones para guardar ni copiar. |
+| UI-AC-37 | 320–1440px | unavailable | La pantalla de proyecto no disponible no contiene título del proyecto, propietario ni ilustración de la escena. |
+| UI-AC-38 | 320–1440px | draft-error | Si falla la copia de seguridad local, el proyecto actual permanece visible y se ofrece reintentarla. |
+| UI-AC-39 | 320–1440px | too-large | El mensaje sobre el límite de tamaño indica 2 MiB y no afirma que el guardado se haya completado correctamente. |
+| UI-AC-40 | 320–1440px | stale / D1 copy | El diálogo para copiar indica la cuenta de destino actual y nunca ofrece sobrescribir el original. |
+| UI-AC-41 | 320–1440px | ready / V1 | Buscar “Horizonte” encuentra “Ceremonia · Horizonte” antes de cargar la página dos de la colección de prueba sin filtrar. |
+| UI-AC-42 | 320–1440px | ready / V1 | La página inicial de 50 filas de prueba muestra “50 proyectos cargados”. |
+| UI-AC-43 | 320–1440px | ready / V1 | “Cargar más proyectos” agrega la página siguiente sin duplicar tarjetas. |
+| UI-AC-44 | 320–1440px | query-loading / V1/V2 | La región de resultados muestra “Buscando proyectos…” mientras los filtros etiquetados siguen operables. |
+| UI-AC-45 | 320–1440px | query-late-response / V1/V2 | “Horizonte” y su tarjeta correspondiente permanecen después de la respuesta obsoleta simulada de “Boda”. |
+| UI-AC-46 | 320–1440px | partial / V1/V2 | Al cambiar un filtro, se elimina el control de reintento de la página anterior que falló y se inicia una consulta de la primera página. |
+| UI-AC-47 | 320–1440px | ready / V2 | El selector de propietarios incluye a los propietarios de prueba autorizados Lucía, Mateo y Ana. |
+| UI-AC-48 | 320–1440px | page-loading / V1/V2 | “Cargando más proyectos…” aparece debajo de las tarjetas que se conservan, junto a un botón de paginación deshabilitado. |
+| UI-AC-49 | 320–1440px | ready / V1 | Después de cargar la página dos, cambiar el filtro por nombre restablece la paginación a un máximo de 50 filas coincidentes. |
+| UI-AC-50 | 320–1440px | ready / V5 | La importación explica que se guarda la escena completa y que la conversación o las imágenes de IA almacenadas por separado permanecen en este navegador. |
+| UI-AC-51 | 320–1440px | cursor-invalid / V1/V2 | “Recargar lista” reinicia la primera página y conserva los filtros visibles de nombre y propietario. |
+| UI-AC-52 | 320–1440px | pending / unknown / V3 | Al elegir “Nuevo proyecto”, se abre D3 y se conserva el título actual hasta resolver la salida. |
+| UI-AC-53 | 320–1440px | stale / D2 → D1 or D3 | Al cancelar el segundo diálogo, el foco vuelve al control original de la página que lo activó o al control actual para resolver el conflicto. |
+| UI-AC-54 | 320–1440px | pending / pending-newer / unknown / offline / D3 | Una explicación visible dentro de D3 indica por qué está deshabilitado “Guardar y continuar”. |
+| UI-AC-55 | 320–1440px | ready / V1–V5 / both themes | La navegación de secciones activa usa tokens neutrales de superficie y texto, sin relleno de acento ni barra lateral de color. |
+| UI-AC-56 | 320–1440px | ready / V1–V5 / both themes | Los avisos predeterminados, el avatar de la cuenta y los grupos de destino no tienen fondo de color de acento. |
+| UI-AC-57 | 320–1440px | ready / V1/V2 | La fecha de guardado de cada tarjeta está alineada a la derecha y usa cifras tabulares. |
+| UI-AC-58 | 320–1440px | ready / V1–V5 | Los encabezados de página y las etiquetas complementarias de sección usan mayúsculas de oración, sin rótulos en mayúsculas con espaciado entre letras. |
+| UI-AC-59 | 320–1440px | ready / D2 | Los detalles del trabajo local y de la versión de la cuenta están separados por líneas divisorias en lugar de tarjetas anidadas. |
+| UI-AC-60 | 1440×1000px | ready / V1/V2 | La primera fila de proyectos incluye títulos, fechas de guardado, propietario cuando corresponda y acciones para abrir, todo visible en la ventana gráfica. |
+| UI-AC-61 | 320–1440px | empty / V1/V2 | La instrucción del estado vacío y la siguiente acción aparecen sin una ficha de ícono decorativa. |
+| UI-AC-62 | 320–1440px | ready / V1–V5 | Las tarjetas contiguas que no flotan y los paneles de escena tienen bordes, sin sombras. |
+| UI-AC-63 | 320–1440px | ready / V1/V2 | La cantidad de elementos cargados está alineada a la derecha al final del resumen de resultados y usa cifras tabulares. |
+| UI-AC-64 | 320–1440px | success / V3 | La hora de guardado visible coincide con la marca de tiempo de guardado del proyecto seleccionado en la biblioteca. |
+| UI-AC-65 | 320–1440px | ready / V5 / both themes | El destino, el consentimiento y el grupo de conservación o descarga comparten el borde izquierdo del contenido de la columna de importación. |
+| UI-AC-66 | 320–1440px | ready / V5 / dark | El consentimiento de propiedad usa el Checkbox del kit, con un borde sin marcar identificable de ≥3:1 y un estado marcado visible. |
+| UI-AC-67 | 320–1440px | ready / both themes | Los bordes de Input y Select usan el rol medido `--input` y se distinguen de las superficies adyacentes. |
+| UI-AC-68 | 320–1440px | ready / V1/V2 | Los títulos, el contenido y el pie de las tarjetas de proyecto usan el espaciado interno de contenido de 24px del kit, reducido a 20px en teléfonos. |
+| UI-AC-69 | 320–1440px | all | Los selectores visibles y etiquetados Vista, Estado, Diálogo y Tema, junto con la etiqueta Mockup, siguen disponibles para inspección. |
 
 ## 12. Open questions and assumptions
 
