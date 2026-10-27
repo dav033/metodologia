@@ -124,7 +124,7 @@ Vetted component inventory and exact snippet examples:
 | InputGroup · addon=button | `kit/components/input-group.html#addons` | Password input and Show/Hide button |
 | Select · native · state=default\|error\|disabled | `kit/components/select.html#native` | Role/status filters, one-role choice and mock selectors |
 | Checkbox · state=unchecked\|checked\|error\|disabled | `kit/components/checkbox.html#list`, `#states` | Explicit notice consent and independent permission matrix |
-| Sidebar · state=expanded · parts=header\|group\|menu-button\|footer | `kit/components/sidebar.html#default` | Permission-filtered administration navigation; whole-screen reference `kit/reference/cuentas.html` |
+| Sidebar · state=expanded · parts=header\|group\|menu-button\|footer | `kit/components/sidebar.html#expanded` | Permission-filtered administration navigation; whole-screen reference `kit/reference/cuentas.html` |
 | DropdownMenu · align=end · item variant=default | `kit/components/dropdown-menu.html#open` | C1 content/label/item anatomy; native disclosure retains ordinary Tab behavior rather than claiming an ARIA menu |
 | Alert · variant=default\|warning\|destructive\|success · action | `kit/components/alert.html#variants` | Persistent status/errors with descriptive body and explicit recovery |
 | Badge · variant=secondary\|warning\|success · data-dot | `kit/components/badge.html#variants` | Role type and text-labelled account status |
@@ -132,7 +132,7 @@ Vetted component inventory and exact snippet examples:
 | Empty · parts=header\|title\|description\|content | `kit/components/empty.html#default`, `#no-results` | No accounts, no custom roles, no matching filters |
 | Skeleton · shape=line | `kit/components/skeleton.html#card` | Loading form/list silhouette |
 | AlertDialog · action variant=default\|destructive · state=open\|loading | `kit/components/alert-dialog.html#destructive`, `#loading` | All eight confirmation scenes; native modal dialog provides focus containment/inert background |
-| Toast · type=info\|success\|error | `kit/components/toast.html#variants` | Copy outcome and explicit simulated-action feedback |
+| Toast · type=info\|success\|error | `kit/components/toast.html#stack` | Copy outcome and explicit simulated-action feedback |
 
 Layout compositions use kit AuthLayout/AuthColumn/Card for public pages (`kit/reference/acceso.html`), App/Sidebar/AppMain/AppHeader/Page for administration (`kit/reference/cuentas.html`), and PageHeader/Grid/Stack/Row for invitation (`kit/reference/invitar.html`). The auth reference's example password/mail policy is not copied: SPEC's 8–200-character password and manual sharing remain authoritative.
 
