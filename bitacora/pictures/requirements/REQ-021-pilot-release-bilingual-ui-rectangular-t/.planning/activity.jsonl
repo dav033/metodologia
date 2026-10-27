@@ -296,3 +296,7 @@
 {"at": "2026-10-27T18:01:18-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
 {"at": "2026-10-27T18:24:31-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
 {"at": "2026-10-27T18:25:11-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-27T18:48:10-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (tareas)", "diff": "+ tarea: Remediate T1.8 findings F16, F17"}
+{"at": "2026-10-27T18:48:10-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
+{"at": "2026-10-27T18:48:24-05:00", "who": "Tú", "kind": "flow", "sp": "SP-14", "text": "Confirmaste SP-14 en la web; sigue SP-3", "diff": ""}
+{"at": "2026-10-27T18:48:25-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1: explorando 3 direcciones", "diff": ""}

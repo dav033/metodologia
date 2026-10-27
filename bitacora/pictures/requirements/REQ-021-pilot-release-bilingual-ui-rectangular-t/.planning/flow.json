@@ -1,5 +1,5 @@
 {
- "focus": "SP-14",
+ "focus": "SP-3",
  "outline": {
   "at": "2026-10-26T14:13:28-05:00",
   "by": "owner",
@@ -25,14 +25,21 @@
   "SP-1": {
    "at": "2026-10-27T11:48:30-05:00",
    "by": "owner",
-   "digest": "c37ccd4b079d3e01",
-   "repinned": "2026-10-27T15:54:40-05:00 auto remediation of T1.8 (restored after the fact)",
+   "digest": "c5a8756a86722e5a",
+   "repinned": "2026-10-27T18:39:19-05:00 auto remediation of T1.8",
+   "via": "web"
+  },
+  "SP-14": {
+   "at": "2026-10-27T18:48:24-05:00",
+   "by": "owner",
+   "digest": "d0646a82f247c96b",
    "via": "web"
   },
   "SP-2": {
    "at": "2026-10-27T15:50:51-05:00",
    "by": "owner",
    "digest": "2c7597e0829daaf8",
+   "repinned": "2026-10-27T18:39:19-05:00 auto remediation of T1.8",
    "via": "web"
   }
  }

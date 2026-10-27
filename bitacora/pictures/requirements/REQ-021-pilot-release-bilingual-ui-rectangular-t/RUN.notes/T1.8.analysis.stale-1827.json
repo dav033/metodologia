@@ -1,0 +1,17 @@
+{
+ "at": "2026-10-27T18:27:12",
+ "cause": "T1.8 cannot pass by re-running the audit alone. Its acceptance needs the SP-1 ledger (`.evidence/REQ-021/SP-1.findings.json`) to have no open critical/high finding, but the audit's own high findings (F1, F2, F3, F4, F6) are unfixed defects owned by T1.5, T1.2/T1.6 and T1.3. The current tree still shows them: `src/app/api/cotizacion-profesional/route.ts:57` still requires `administracion_usuarios`, and the catalogue routes still use `PERMISOS.catalogo` or `gestionar_catalogo`. The T1.8 `after` list is only T1.7 and T1.10, so nothing orders the audit after those remediations. The expected SP-1.audit.md and SP-1.findings.json are also absent from the source tree.",
+ "confidence": "media",
+ "failures": 4,
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 32.9,
+ "solution": "1. Do not re-run T1.8 on the current tree. Redo the remediation tasks first: T1.5 (F1, F2, F10, F11), T1.2/T1.6 (F3, F4, F5), T1.3 (F6, F7, F12, F13, F14) and T1.4 (F8, F9).\n2. Add T1.2, T1.3, T1.4, T1.5 and T1.6 to the `after` list of T1.8, so the audit runs on the fixed tree.\n3. Re-run the independent read-only audit. Write only `.evidence/REQ-021/SP-1.audit.md` and `.evidence/REQ-021/SP-1.findings.json`, marking fixed findings with command and result as `evidence`.\n4. Run `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` and confirm it passes with no open critical/high finding.\n5. Record any remaining open critical/high finding with its owning task, and only the owner may accept a risk.",
+ "source_attempt": "att-0022",
+ "source_available": true,
+ "source_directory": "/tmp/bt-analyst-ai4ip_16/source",
+ "source_snapshot": "0c627a13b013a8c5cc352483afbae575c0eb313d",
+ "state": "done",
+ "task": "T1.8"
+}

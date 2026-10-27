@@ -1,6 +1,17 @@
 {
- "failures": 4,
- "started": 1793143599.5589218,
- "state": "running",
+ "at": "2026-10-27T18:39:57",
+ "cause": "El gate de auditoría falla correctamente, no por un error del trabajo de auditoría: el snapshot 4f4234993 (att-0029) sigue con dos defectos high abiertos que el código confirma. F16: src/lib/cuentas/modo-local.ts:28 toma el hostname de new URL(request.url) (destino, no socket par) y en :36-37 concede administrador-local si ese hostname es loopback, así que una petición remota adaptada a una URL interna loopback obtiene administración. F17: src/app/api/shopify/sync/route.ts:13-16 POST no comprueba sesión, mapa-rutas.ts:107 lo declara own_auth y proxy.ts:22-23 lo exime. Como el ledger exige cero high/critical abiertos, audit-ledger check no puede pasar mientras las tareas de remediación T1.5 (F16) y T1.6 (F17) no estén hechas; repetir T1.8 sobre este mismo snapshot falla siempre.",
+ "confidence": "alta",
+ "failures": 3,
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 37.4,
+ "solution": "1. No marcar F16 ni F17 como fixed ni rebajar su severidad: conservarlas open/high con tasks [\"T1.5\"] y [\"T1.6\"] en SP-1.findings.json y anotar el snapshot 4f4234993 en SP-1.audit.md. 2. Enviar la remediación al ejecutor: en modo-local.ts admitir administrador-local solo según la dirección del socket par (o fallar cerrado si no está disponible), nunca según new URL(request.url).hostname; en shopify/sync/route.ts exigir sesión y permiso gestionar_catalogo en POST y GET, y cambiar mapa-rutas.ts:107 de own_auth a la regla estándar. 3. Añadir pruebas de regresión: petición con Host loopback y par 203.0.113.8 da 401/403; POST /api/shopify/sync anónimo da 401; administrador da 200 sin tocar Shopify real. 4. Tras la remediación, crear un snapshot nuevo y reejecutar T1.8 como auditoría independiente de solo lectura sobre ese snapshot, no sobre 4f4234993. 5. Verificar con bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json; solo cuenta como pasado si no hay high/critical abiertos. Los medium abiertos (F5, F7 a F15) no bloquean el gate, pero deben quedar registrados con su tarea de rehacer.",
+ "source_attempt": "att-0029",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-futqv7wc/source",
+ "source_snapshot": "4f4234993f1902ce2484e1d7df63bc455c665955",
+ "state": "done",
  "task": "T1.8"
 }

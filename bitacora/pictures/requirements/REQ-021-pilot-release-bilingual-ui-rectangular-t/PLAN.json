@@ -1,7 +1,7 @@
 {
   "schema_version": "1.3.0",
   "plan_id": "REQ-021",
-  "revision": 2,
+  "revision": 4,
   "spec_ref": "SPEC.md",
   "composition_gates": [
     {
@@ -1909,7 +1909,8 @@
       "repository": "pictures",
       "after": [
         "T1.7",
-        "T1.10"
+        "T1.10",
+        "T1.11"
       ],
       "complexity": "high",
       "scope": "small_change",
@@ -6937,6 +6938,148 @@
         "R16"
       ],
       "kind": "test"
+    },
+    {
+      "id": "T1.11",
+      "milestone_id": "M1",
+      "title": "Remediate T1.8 findings F16, F17",
+      "objective": "Fix these confirmed audit findings of T1.8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F16 (high; owned by T1.5): Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration. Evidence from the audit: Probe A exited 0: actual NextNodeServer.attachRequestMeta and NextRequestAdapter transformed a request with peer 203.0.113.8 and Host 192.0.2.10 into http://localhost:3000/api/admin/ordenes when server fetchHostname=127.0.0.1. With the flag=1, actual sesionAdministradorLocal granted administrador and actual handleProxyRequest admitted the admin route. modo-local.ts:23-38 ignores peer identity. This is an adapter/resolver reproduction, not an actual remote TCP or deployed-proxy test; it applies when a remote caller reaches a dev server through a loopback internal URL. F2's old header-injection \n- F17 (high; owned by T1.6): The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes. Evidence from the audit: Probe D exited 0: anonymous POST /api/shopify/sync passed actual handleProxyRequest without invoking its session resolver; actual POST handler then called its doubled synchronization boundary and returned HTTP 200. mapa-rutas.ts:107 declares own_auth; proxy.ts:22-23 exempts it; api/shopify/sync/route.ts:13-16 calls synchronization unconditionally. The real sincronizar.ts:25 persists the shared catalogue. Provider/persistence boundaries were doubled; no real sync, network fetch or database write occurred.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+      "repository": "pictures",
+      "after": [
+        "T1.7",
+        "T1.10"
+      ],
+      "complexity": "medium",
+      "scope": "large_change",
+      "estimated_minutes": 80,
+      "risk": "high",
+      "coupling": "high",
+      "confidence": "medium",
+      "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+      "classification_evidence": {
+        "complexity": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Defects in T1.5, T1.6, found by an independent audit"
+        },
+        "scope": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "2 finding(s) with known symptoms and owners"
+        },
+        "duration": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "40 minutes per finding, regression tests included"
+        },
+        "risk": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Changes code that other accepted tasks were built on"
+        },
+        "coupling": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "Touches what several accepted tasks share"
+        },
+        "confidence": {
+          "evidence": [
+            "task:T1.5",
+            "spec:SPEC.md"
+          ],
+          "justification": "The audit states the symptom; the cause is found while fixing"
+        }
+      },
+      "expected_paths": [
+        "src/lib/cuentas/modo-local.ts",
+        "src/instrumentation.ts",
+        "next.config.ts",
+        "services/ai-api/app/main.py",
+        "scripts/test/test-modo-local.ts",
+        "services/ai-api/tests/test_modo_local.py",
+        "src/app/api/**/route.ts",
+        "src/lib/feedback-ia/acceso.ts",
+        "src/lib/guiada-motor/manejadores.ts",
+        "src/lib/happie/panel-prueba.ts",
+        "src/lib/shared-quotes/dependencies.server.ts",
+        "src/lib/taller/cotizacion-taller.ts",
+        "src/lib/asesor/voice.ts",
+        "scripts/test/lib/sesion-prueba.ts",
+        "scripts/test/test-guardias-rutas.ts",
+        "scripts/test/*.ts",
+        "scripts/e2e/humo/configuracion.ts",
+        "scripts/e2e/humo/pasos-asistente.ts",
+        "scripts/e2e/humo/navegacion.ts",
+        "scripts/eval/eval-chat-jerga.ts"
+      ],
+      "shared_resources": [
+        "contract:permission-map",
+        "contract:session-guard",
+        "package.json scripts"
+      ],
+      "acceptance_criteria": [
+        "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+        "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+          "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+          "created_by": "T1.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque",
+          "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+          "created_by": "T1.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable",
+          "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+          "created_by": "T1.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run cuentas:test-rutas",
+          "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+          "created_by": "T1.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run test-cotizacion-unica",
+          "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+          "created_by": "T1.11",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run taller:test-estatico",
+          "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+          "created_by": "T1.11",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R2"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-1"
     },
     {
       "id": "T94",

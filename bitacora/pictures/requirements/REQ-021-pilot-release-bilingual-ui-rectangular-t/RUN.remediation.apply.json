@@ -1,7 +1,19 @@
 {
  "audit": "T1.8",
  "plan": {
-  "composition_gates": [],
+  "composition_gates": [
+   {
+    "criteria": [
+     "On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites an Entusiasta person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs."
+    ],
+    "id": "CG-1",
+    "subplans": [
+     "SP-1",
+     "SP-2"
+    ],
+    "task": "T91"
+   }
+  ],
   "interfaces": [],
   "milestones": [
    {
@@ -20,12 +32,13 @@
    "R16",
    "R17"
   ],
-  "revision": 2,
+  "revision": 4,
   "schema_version": "1.3.0",
   "spec_ref": "SPEC.md",
   "stage": {
    "subplans": [
-    "SP-1"
+    "SP-1",
+    "SP-2"
    ],
    "version": 1
   },
@@ -91,6 +104,69 @@
      }
     ],
     "title": "Accounts, sessions and server-side permissions"
+   },
+   {
+    "acceptance_criteria": [
+     "Generating a new invitation or reset link for an account invalidates every older unused link of the same kind for that account, and a custom role with no permission is refused with ROL_SIN_PERMISOS.",
+     "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data.",
+     "On /login a person signs in with email and password; a wrong password, an unknown email, a deactivated account and a locked email all show the same message, which always adds that after several failures one must wait fifteen minutes, and success returns to the requested page or the first area the role allows, or Mi cuenta when the role has none of them.",
+     "Opening an invitation link shows the invited name and email, asks for a password of at least eight characters twice and shows the data notice in the browser language with an accept checkbox, activation is impossible without accepting, and after activating the person lands signed in on the first tool their role allows; a used or expired link shows a message to ask the administrator for a new one.",
+     "When the notice version changes, a signed-in person must accept the new version before any other page opens.",
+     "Every signed-in page shows an account menu with the person's name and role, Mi cuenta and sign out, and Mi cuenta changes the password by asking for the current one.",
+     "An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message.",
+     "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
+     "An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the six system roles (Usuario \u00b7 Entusiasta, Usuario \u00b7 Designer, Usuario \u00b7 Designer Plus, Usuario \u00b7 Master Designer, Empleado interno and Administrador) read-only with their permissions, and cannot delete a role that still has accounts.",
+     "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
+     "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
+     "On a production build against the REQ-021 test database, an administrator invites a Designer Plus person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Master Designer their next request opens the Taller.",
+     "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
+     "An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding.",
+     "The role picker of the invitation and account screens offers the four access plans with the names of the plan catalogue in plan order, then Empleado interno, Administrador and the custom roles."
+    ],
+    "audit_task": "T2.8",
+    "consumes": [
+     {
+      "contract": "account-service",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     },
+     {
+      "contract": "session-guard",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     },
+     {
+      "contract": "permission-map",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     },
+     {
+      "contract": "plan-catalogue",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     }
+    ],
+    "covers": [
+     "R1",
+     "R3",
+     "R16",
+     "R17"
+    ],
+    "id": "SP-2",
+    "integration_test_task": "T2.6",
+    "milestone_id": "M1",
+    "outcome": "A person signs in with email and password, activates an invitation link and accepts the data notice; an administrator invites people, assigns one of the four access plans or another role, creates roles by choosing permissions, and deactivates or deletes accounts.",
+    "title": "Sign-in, invitation and administration screens",
+    "ui": {
+     "contract": "cuentas-admin",
+     "design_task": "T2.1",
+     "version": 1,
+     "visual_review_task": "T2.7"
+    }
    }
   ],
   "tasks": [
@@ -985,7 +1061,8 @@
     ],
     "after": [
      "T1.7",
-     "T1.10"
+     "T1.10",
+     "T1.11"
     ],
     "classification_evidence": {
      "complexity": {
@@ -1548,13 +1625,1125 @@
       "value": "npm run cuentas:test-servicio -- --test-name-pattern=sembrar"
      }
     ]
+   },
+   {
+    "acceptance_criteria": [
+     "The owner-approved cuentas-admin@v1 contract is copied byte for byte into design/contracts/cuentas-admin@v1.md."
+    ],
+    "after": [
+     "T1.4"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T2.3"
+      ],
+      "justification": "Copying an already approved file byte for byte needs no design decisions."
+     },
+     "confidence": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T2.6"
+      ],
+      "justification": "The flow copies the plan-pinned draft, a fully known step with no open questions."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T2.3",
+       "task:T2.5"
+      ],
+      "justification": "Every UI task of SP-2 reads this contract, so they wait for it."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind design -> status unknown, no comparable samples",
+       "task:T2.5"
+      ],
+      "justification": "Ten minutes to copy and compare the hash."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T2.3"
+      ],
+      "justification": "A wrong copy only blocks UI tasks through the hash gate, which is easy to redo."
+     },
+     "scope": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T2.4"
+      ],
+      "justification": "One markdown file added under design/contracts."
+     }
+    },
+    "complexity": "low",
+    "confidence": "high",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R3",
+     "R16"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 10 to copy the pinned file and check its hash; the design itself is done during planning.",
+    "estimated_minutes": 10,
+    "expected_paths": [
+     "design/contracts/cuentas-admin@v1.md"
+    ],
+    "id": "T2.1",
+    "kind": "design",
+    "milestone_id": "M1",
+    "objective": "The repository holds the exact owner-approved visual contract for the sign-in, activation, account and administration screens before any of them is built.",
+    "repository": "pictures",
+    "risk": "low",
+    "scope": "isolated_fix",
+    "shared_resources": [
+     "design:cuentas-admin@v1"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Copy the owner-approved cuentas-admin@v1 contract into the repository",
+    "ui": false,
+    "verification": [
+     {
+      "category": "static",
+      "purpose": "The owner-approved cuentas-admin@v1 contract is copied byte for byte into design/contracts/cuentas-admin@v1.md.",
+      "type": "command",
+      "value": "test -s design/contracts/cuentas-admin@v1.md"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "The activation, reset and notice-acceptance APIs accept only a valid unused token or a signed-in session, validate every body, answer a used or expired link with LINK_INVALIDO without saying which, and a successful activation opens a session at once.",
+     "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
+     "Generating a new invitation or reset link for an account invalidates every older unused link of the same kind for that account, and a custom role with no permission is refused with ROL_SIN_PERMISOS.",
+     "Changing one's own password requires the current password, ends every session of that account and signs the requesting browser in again with a new session.",
+     "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
+     "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data."
+    ],
+    "after": [
+     "T1.4"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/lib/auth/request.ts",
+       "task:T1.3"
+      ],
+      "justification": "Thin routes over the SP-1 service, but tokens, same-origin checks and permission splits must be exact."
+     },
+     "confidence": {
+      "evidence": [
+       "file:src/app/api/login/route.ts",
+       "task:T1.3"
+      ],
+      "justification": "Existing route patterns were read and the service API is fixed by T1.3, though zod schemas are new."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.4",
+       "task:T2.5"
+      ],
+      "justification": "Consumes contract:account-service and contract:session-guard from SP-1 and feeds every screen of SP-2."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "task:T1.3"
+      ],
+      "justification": "Fifteen notice, thirty-five holder APIs, forty admin APIs and thirty tests make one hundred twenty minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#constraints",
+       "task:T1.4"
+      ],
+      "justification": "These routes create administrators and set passwords; a gap gives control of the pilot to anyone."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/app/api/login/route.ts",
+       "task:T1.2"
+      ],
+      "justification": "Eight route files, the notice module, map entries and one test file."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "high",
+    "covers": [
+     "R1",
+     "R3",
+     "R16"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 notice module + 35 holder APIs + 40 admin APIs + 30 tests = 120.",
+    "estimated_minutes": 120,
+    "expected_paths": [
+     "src/lib/cuentas/aviso-datos.ts",
+     "src/app/api/cuentas/activar/route.ts",
+     "src/app/api/cuentas/restablecer/route.ts",
+     "src/app/api/cuentas/aviso/route.ts",
+     "src/app/api/cuentas/mi-cuenta/route.ts",
+     "src/app/api/admin/cuentas/route.ts",
+     "src/app/api/admin/cuentas/[id]/route.ts",
+     "src/app/api/admin/roles/route.ts",
+     "src/app/api/admin/roles/[id]/route.ts",
+     "src/lib/cuentas/dependientes.ts",
+     "src/lib/cuentas/regenerar-enlace.ts",
+     "src/lib/cuentas/mapa-rutas.ts",
+     "scripts/test/test-cuentas-api.ts"
+    ],
+    "id": "T2.2",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "Server routes expose activation, reset, notice acceptance and own-password change to their holders, and account and role administration only to administrators, all on top of the SP-1 service.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "large_change",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:account-service",
+     "contract:session-guard"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles",
+    "ui": false,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "The activation, reset and notice-acceptance APIs accept only a valid unused token or a signed-in session, validate every body, answer a used or expired link with LINK_INVALIDO without saying which, and a successful activation opens a session at once.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=enlaces"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "The account and role administration APIs refuse anyone without the users or roles permission with 403 and accept only same-origin requests with validated bodies.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=admin"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "Generating a new invitation or reset link for an account invalidates every older unused link of the same kind for that account, and a custom role with no permission is refused with ROL_SIN_PERMISOS.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=regenerar"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "Changing one's own password requires the current password, ends every session of that account and signs the requesting browser in again with a new session.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=mi-cuenta"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "The data notice exists in Spanish and English with a version number, its bracketed placeholders are still marked for legal review, and accepting stores the version and date on the account.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=aviso"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.2",
+      "purpose": "Deleting an account that owns any row of a table registered as account work is refused with CUENTA_CON_TRABAJO and changes nothing, while deleting an account without saved work removes it and keeps its AI spend rows without personal data.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-api -- --test-name-pattern=borrar"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "On /login a person signs in with email and password; a wrong password, an unknown email, a deactivated account and a locked email all show the same message, which always adds that after several failures one must wait fifteen minutes, and success returns to the requested page or the first area the role allows, or Mi cuenta when the role has none of them.",
+     "Opening an invitation link shows the invited name and email, asks for a password of at least eight characters twice and shows the data notice in the browser language with an accept checkbox, activation is impossible without accepting, and after activating the person lands signed in on the first tool their role allows; a used or expired link shows a message to ask the administrator for a new one.",
+     "Opening a reset link lets the person set a new password and then sign in; a used or expired link shows the same message as an invalid invitation.",
+     "When the notice version changes, a signed-in person must accept the new version before any other page opens."
+    ],
+    "after": [
+     "T2.1",
+     "T2.2"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "file:src/proxy.ts"
+      ],
+      "justification": "Four screens with error, locked, expired and loading states and a proxy redirect for re-acceptance."
+     },
+     "confidence": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "assumption:the contract keeps the current centred card layout"
+      ],
+      "justification": "The current login page was read; the contract states are not drafted yet."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.4",
+       "task:T2.4"
+      ],
+      "justification": "Edits src/proxy.ts after T1.4 and shares contract:session-guard with the other UI tasks."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "file:src/app/login/page.tsx"
+      ],
+      "justification": "Thirty, forty-five, twenty, twenty and thirty-five minutes add to one hundred fifty."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T2.6"
+      ],
+      "justification": "A broken sign-in or activation locks every pilot user out on day one."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "task:T2.2"
+      ],
+      "justification": "Four pages, three shared components and one proxy rule, verifiable end to end."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 30 sign-in + 45 activation with notice + 20 reset + 20 re-acceptance redirect + 35 render tests = 150.",
+    "estimated_minutes": 150,
+    "expected_paths": [
+     "src/app/login/page.tsx",
+     "src/app/login/LoginForm.tsx",
+     "src/app/activar/[token]/page.tsx",
+     "src/app/restablecer/[token]/page.tsx",
+     "src/app/aviso-datos/page.tsx",
+     "src/components/cuentas/FormularioContrasena.tsx",
+     "src/components/cuentas/AvisoDatos.tsx",
+     "src/components/cuentas/textos-acceso.ts",
+     "src/proxy.ts",
+     "scripts/test/test-ui-acceso.ts"
+    ],
+    "id": "T2.3",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "A person signs in, activates an invitation accepting the data notice, resets a password from an administrator's link and re-accepts a new notice version, with the states the contract defines.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "full_feature",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:session-guard"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Sign-in, invitation activation, password reset and notice re-acceptance screens",
+    "ui": true,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T2.3",
+      "purpose": "On /login a person signs in with email and password; a wrong password, an unknown email, a deactivated account and a locked email all show the same message, which always adds that after several failures one must wait fifteen minutes, and success returns to the requested page or the first area the role allows, or Mi cuenta when the role has none of them.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-acceso -- --solo ingreso"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.3",
+      "purpose": "Opening an invitation link shows the invited name and email, asks for a password of at least eight characters twice and shows the data notice in the browser language with an accept checkbox, activation is impossible without accepting, and after activating the person lands signed in on the first tool their role allows; a used or expired link shows a message to ask the administrator for a new one.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-acceso -- --solo activacion"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.3",
+      "purpose": "Opening a reset link lets the person set a new password and then sign in; a used or expired link shows the same message as an invalid invitation.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-acceso -- --solo restablecer"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.3",
+      "purpose": "When the notice version changes, a signed-in person must accept the new version before any other page opens.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-acceso -- --solo aviso"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "Every signed-in page shows an account menu with the person's name and role, Mi cuenta and sign out, and Mi cuenta changes the password by asking for the current one."
+    ],
+    "after": [
+     "T2.1",
+     "T2.2"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/app/layout.tsx",
+       "file:src/app/page.tsx"
+      ],
+      "justification": "The app has no shared navigation, so the menu must fit pages as different as the chat and the Taller."
+     },
+     "confidence": {
+      "evidence": [
+       "file:src/app/layout.tsx",
+       "assumption:the contract places the menu as a corner control like the theme switch"
+      ],
+      "justification": "The root layout was read; where the contract places the menu is not drafted yet."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.4",
+       "task:T2.3"
+      ],
+      "justification": "Shares the root layout with later language work and reads contract:session-guard."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "file:src/app/layout.tsx"
+      ],
+      "justification": "Thirty for the menu, twenty-five for the page and twenty for tests, seventy-five minutes."
+     },
+     "risk": {
+      "evidence": [
+       "file:src/app/layout.tsx",
+       "spec:SPEC.md#ui--design-contract-optional"
+      ],
+      "justification": "A layout change can overlap the Taller toolbar or the chat composer on phones."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/app/layout.tsx",
+       "task:T2.2"
+      ],
+      "justification": "One menu component in the root layout, one page and a test."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 30 menu in the root layout + 25 Mi cuenta + 20 tests = 75.",
+    "estimated_minutes": 75,
+    "expected_paths": [
+     "src/components/cuentas/MenuCuenta.tsx",
+     "src/app/layout.tsx",
+     "src/app/cuenta/page.tsx",
+     "src/components/cuentas/textos-cuenta.ts",
+     "scripts/test/test-ui-mi-cuenta.ts"
+    ],
+    "id": "T2.4",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "Every signed-in person sees who they are and their role, signs out, and changes their own password from Mi cuenta.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:session-guard"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Account menu on every signed-in page and the Mi cuenta page",
+    "ui": true,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T2.4",
+      "purpose": "Every signed-in page shows an account menu with the person's name and role, Mi cuenta and sign out, and Mi cuenta changes the password by asking for the current one.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-mi-cuenta"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "An administrator sees all accounts with name, email, company, role, state and last access, searches by name or email and filters by role and state.",
+     "An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message.",
+     "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
+     "An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the six system roles (Usuario \u00b7 Entusiasta, Usuario \u00b7 Designer, Usuario \u00b7 Designer Plus, Usuario \u00b7 Master Designer, Empleado interno and Administrador) read-only with their permissions, and cannot delete a role that still has accounts.",
+     "The role picker of the invitation and account screens offers the four access plans with the names of the plan catalogue in plan order, then Empleado interno, Administrador and the custom roles."
+    ],
+    "after": [
+     "T2.1",
+     "T2.2"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/components/admin/AdminTabs.tsx",
+       "task:T2.2"
+      ],
+      "justification": "Several dialogs with confirmation, refusal reasons and a link shown once need careful state handling."
+     },
+     "confidence": {
+      "evidence": [
+       "file:src/components/admin/AdminTabs.tsx",
+       "assumption:the contract reuses the existing tabs and dialog components"
+      ],
+      "justification": "The existing admin tabs were read; list density and dialogs depend on the contract."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.2",
+       "task:T2.2"
+      ],
+      "justification": "Reads contract:permission-map for the permission checkboxes and calls the T2.2 APIs."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "file:src/components/admin/AdminTabs.tsx"
+      ],
+      "justification": "Sixty, thirty-five, thirty-five, thirty and twenty minutes make one hundred eighty."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T2.2"
+      ],
+      "justification": "A wrong action button deletes a real user's account or changes their access."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/components/admin/AdminTabs.tsx",
+       "task:T2.2"
+      ],
+      "justification": "Two pages and five components with their test, a full end-to-end feature."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R3",
+     "R16",
+     "R17"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 60 accounts list with search and filters + 35 invite dialog + 35 account actions + 30 role editor + 20 tests = 180.",
+    "estimated_minutes": 180,
+    "expected_paths": [
+     "src/app/admin/cuentas/page.tsx",
+     "src/app/admin/roles/page.tsx",
+     "src/components/admin/cuentas/ListaCuentas.tsx",
+     "src/components/admin/cuentas/DialogoInvitar.tsx",
+     "src/components/admin/cuentas/AccionesCuenta.tsx",
+     "src/components/admin/cuentas/EditorRol.tsx",
+     "src/components/admin/cuentas/textos-admin-cuentas.ts",
+     "src/components/admin/AdminTabs.tsx",
+     "scripts/test/test-ui-admin-cuentas.ts"
+    ],
+    "id": "T2.5",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "An administrator manages every account and custom role from two screens that show exactly what each action will do and why one is refused.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "full_feature",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:permission-map",
+     "contract:plan-catalogue"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Administration screens: accounts list, invitations, account actions and the role editor",
+    "ui": true,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T2.5",
+      "purpose": "An administrator sees all accounts with name, email, company, role, state and last access, searches by name or email and filters by role and state.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-admin -- --solo lista"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.5",
+      "purpose": "An administrator invites a person by name, email, optional company and role, and gets the single-use link once with a copy button; an email already registered is refused with a clear message.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-admin -- --solo invitar"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.5",
+      "purpose": "An administrator changes an account's role, deactivates and reactivates it, generates a reset link and deletes an account without saved work after typing its email, and the screen explains why the last administrator or an account with saved work cannot be deleted.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-admin -- --solo acciones"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.5",
+      "purpose": "An administrator creates and edits a custom role by name and permission checkboxes grouped by tool, sees the six system roles (Usuario \u00b7 Entusiasta, Usuario \u00b7 Designer, Usuario \u00b7 Designer Plus, Usuario \u00b7 Master Designer, Empleado interno and Administrador) read-only with their permissions, and cannot delete a role that still has accounts.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-admin -- --solo roles"
+     },
+     {
+      "category": "functional",
+      "created_by": "T2.5",
+      "purpose": "The role picker of the invitation and account screens offers the four access plans with the names of the plan catalogue in plan order, then Empleado interno, Administrador and the custom roles.",
+      "type": "command",
+      "value": "npm run cuentas:test-ui-admin -- --solo planes"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "On a production build against the REQ-021 test database, an administrator invites a Designer Plus person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Master Designer their next request opens the Taller."
+    ],
+    "after": [
+     "T2.3",
+     "T2.4",
+     "T2.5"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:scripts/e2e/humo/configuracion.ts",
+       "task:T2.5"
+      ],
+      "justification": "Two browser contexts, a copied link and a role change between requests need careful sequencing."
+     },
+     "confidence": {
+      "evidence": [
+       "file:package.json",
+       "assumption:next build finishes within the sandbox time limit"
+      ],
+      "justification": "Playwright is already a dependency and the smoke shows its use; build time is not measured."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T2.3",
+       "task:T2.5"
+      ],
+      "justification": "Exercises every SP-2 task and the SP-1 contracts together."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+       "file:package.json"
+      ],
+      "justification": "Fifteen build, fifty flow and twenty-five evidence add to ninety minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T2.8"
+      ],
+      "justification": "Last barrier before the audit for the screens real users meet first."
+     },
+     "scope": {
+      "evidence": [
+       "file:scripts/e2e/humo/configuracion.ts",
+       "task:T2.3"
+      ],
+      "justification": "One Playwright script and its evidence file."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R3",
+     "R16"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 build + 50 two-context Playwright flow + 25 evidence and teardown = 90.",
+    "estimated_minutes": 90,
+    "expected_paths": [
+     "scripts/test/test-integracion-cuentas-ui.ts",
+     ".evidence/REQ-021/SP-2.integration.json"
+    ],
+    "id": "T2.6",
+    "kind": "test",
+    "milestone_id": "M1",
+    "objective": "Two real browsers against next start prove the full invitation-to-access flow and that a plan change takes effect on the next request.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts"
+    ],
+    "subplan_id": "SP-2",
+    "title": "Browser end-to-end: invite, activate, sign in and change plan on a production build",
+    "verification": [
+     {
+      "category": "integration",
+      "created_by": "T2.6",
+      "purpose": "On a production build against the REQ-021 test database, an administrator invites a Designer Plus person through the screens, the person activates the link in a separate browser, accepts the notice, signs in and reaches the chat and the costs tool but not the Taller 3D, and after the administrator moves them to Master Designer their next request opens the Taller.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-integracion-ui"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger."
+    ],
+    "after": [
+     "T2.6"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T2.1",
+       "task:T2.6"
+      ],
+      "justification": "Comparing rendered states with a written contract needs judgement but no new design."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T2.6",
+       "task:T2.1"
+      ],
+      "justification": "The screens and contract are bounded, so the estimate rests on known tasks."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T2.4",
+       "task:T2.5"
+      ],
+      "justification": "Its ledger:SP-2-visual can send T2.3 to T2.5 back."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+       "task:T2.3"
+      ],
+      "justification": "Forty for screenshots and comparison and twenty for the ledger, sixty minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T2.3"
+      ],
+      "justification": "A missed mismatch reaches pilot users as a confusing first screen."
+     },
+     "scope": {
+      "evidence": [
+       "task:T2.6",
+       "spec:SPEC.md#ui--design-contract-optional"
+      ],
+      "justification": "Writes only a report and its ledger."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R3"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 40 screenshots and comparison of five screens at three widths + 20 ledger = 60.",
+    "estimated_minutes": 60,
+    "expected_paths": [
+     ".evidence/REQ-021/SP-2.visual.md",
+     ".evidence/REQ-021/SP-2.visual.findings.json"
+    ],
+    "id": "T2.7",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "objective": "A fresh reviewer compares the rendered screens with the approved contract at three widths and records every mismatch with the task to redo.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "ledger:SP-2-visual"
+    ],
+    "subplan_id": "SP-2",
+    "title": "SP-2 visual review against the cuentas-admin@v1 contract",
+    "verification": [
+     {
+      "category": "static",
+      "created_by": "T2.7",
+      "purpose": "The rendered sign-in, activation, account and administration screens match the approved cuentas-admin@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-2 visual ledger.",
+      "type": "command",
+      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-2.visual.findings.json"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding."
+    ],
+    "after": [
+     "T2.7"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T2.2",
+       "spec:SPEC.md#constraints"
+      ],
+      "justification": "Checking that every admin action is permission-checked and that links never leak needs security reading."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T2.6",
+       "task:T2.7"
+      ],
+      "justification": "Bounded by one API task and three screens with tests."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T2.2",
+       "task:T2.5"
+      ],
+      "justification": "Its ledger:SP-2 can send T2.2 to T2.5 back."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+       "task:T2.2"
+      ],
+      "justification": "Thirty, twenty-five and twenty minutes make seventy-five."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#constraints",
+       "task:T2.2"
+      ],
+      "justification": "A missed defect lets a non-administrator manage accounts of real users."
+     },
+     "scope": {
+      "evidence": [
+       "task:T2.7",
+       "spec:SPEC.md#requirements"
+      ],
+      "justification": "The audit writes only its report and ledger."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R3",
+     "R16"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 30 admin API permissions and tokens + 25 screens against acceptance + 20 ledger = 75.",
+    "estimated_minutes": 75,
+    "expected_paths": [
+     ".evidence/REQ-021/SP-2.audit.md",
+     ".evidence/REQ-021/SP-2.findings.json"
+    ],
+    "id": "T2.8",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "objective": "An independent read-only review confirms SP-2 against R1, R3 and R16 and records each confirmed defect with the task to redo in a blocking findings ledger.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "small_change",
+    "shared_resources": [
+     "ledger:SP-2"
+    ],
+    "subplan_id": "SP-2",
+    "title": "SP-2 audit: account screens, administration APIs and the data notice",
+    "verification": [
+     {
+      "category": "static",
+      "created_by": "T2.8",
+      "purpose": "An independent audit of SP-2 records every confirmed defect with the task that must redo it in the SP-2 findings ledger, and the ledger has no open critical or high finding.",
+      "type": "command",
+      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-2.findings.json"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites an Entusiasta person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs."
+    ],
+    "after": [
+     "T1.8",
+     "T2.8",
+     "T1.8b"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T1.7",
+       "task:T2.6"
+      ],
+      "justification": "Chains a terminal command, two browsers and permission checks across both subplans."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T1.7",
+       "task:T2.6"
+      ],
+      "justification": "The composition test reuses the integration helpers both subplans already wrote."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.4",
+       "task:T2.3"
+      ],
+      "justification": "Composes contract:session-guard and the SP-2 screens built on it."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+       "task:T1.7"
+      ],
+      "justification": "Fifteen build, thirty flow and fifteen evidence make sixty minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#clarifications",
+       "task:T2.8"
+      ],
+      "justification": "It is the barrier before M1 reaches main and the live site."
+     },
+     "scope": {
+      "evidence": [
+       "task:T2.6",
+       "spec:SPEC.md#requirements"
+      ],
+      "justification": "One test script and its evidence file on the integrated tree."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R1",
+     "R2",
+     "R16"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 build + 30 flow from the command to the restricted session + 15 evidence = 60.",
+    "estimated_minutes": 60,
+    "expected_paths": [
+     "scripts/test/test-composicion-m1.ts",
+     ".evidence/REQ-021/CG-1.integration.json"
+    ],
+    "id": "T91",
+    "kind": "test",
+    "milestone_id": "M1",
+    "objective": "The accounts core and the account screens work together on the integrated M1 tree, from the one-time command to a restricted Entusiasta session.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts"
+    ],
+    "title": "M1 composition check: first administrator to an Entusiasta user on the integrated tree",
+    "verification": [
+     {
+      "category": "integration",
+      "created_by": "T91",
+      "purpose": "On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites an Entusiasta person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run m1:test-composicion"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+     "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes."
+    ],
+    "after": [
+     "T1.7",
+     "T1.10"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Defects in T1.5, T1.6, found by an independent audit"
+     },
+     "confidence": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "The audit states the symptom; the cause is found while fixing"
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Touches what several accepted tasks share"
+     },
+     "duration": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "40 minutes per finding, regression tests included"
+     },
+     "risk": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Changes code that other accepted tasks were built on"
+     },
+     "scope": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "2 finding(s) with known symptoms and owners"
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "high",
+    "covers": [
+     "R2"
+    ],
+    "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+    "estimated_minutes": 80,
+    "expected_paths": [
+     "src/lib/cuentas/modo-local.ts",
+     "src/instrumentation.ts",
+     "next.config.ts",
+     "services/ai-api/app/main.py",
+     "scripts/test/test-modo-local.ts",
+     "services/ai-api/tests/test_modo_local.py",
+     "src/app/api/**/route.ts",
+     "src/lib/feedback-ia/acceso.ts",
+     "src/lib/guiada-motor/manejadores.ts",
+     "src/lib/happie/panel-prueba.ts",
+     "src/lib/shared-quotes/dependencies.server.ts",
+     "src/lib/taller/cotizacion-taller.ts",
+     "src/lib/asesor/voice.ts",
+     "scripts/test/lib/sesion-prueba.ts",
+     "scripts/test/test-guardias-rutas.ts",
+     "scripts/test/*.ts",
+     "scripts/e2e/humo/configuracion.ts",
+     "scripts/e2e/humo/pasos-asistente.ts",
+     "scripts/e2e/humo/navegacion.ts",
+     "scripts/eval/eval-chat-jerga.ts"
+    ],
+    "id": "T1.11",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "Fix these confirmed audit findings of T1.8 (remediation round 2) on the tree already integrated, without rewriting the tasks that built it:\n- F16 (high; owned by T1.5): Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration. Evidence from the audit: Probe A exited 0: actual NextNodeServer.attachRequestMeta and NextRequestAdapter transformed a request with peer 203.0.113.8 and Host 192.0.2.10 into http://localhost:3000/api/admin/ordenes when server fetchHostname=127.0.0.1. With the flag=1, actual sesionAdministradorLocal granted administrador and actual handleProxyRequest admitted the admin route. modo-local.ts:23-38 ignores peer identity. This is an adapter/resolver reproduction, not an actual remote TCP or deployed-proxy test; it applies when a remote caller reaches a dev server through a loopback internal URL. F2's old header-injection \n- F17 (high; owned by T1.6): The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes. Evidence from the audit: Probe D exited 0: anonymous POST /api/shopify/sync passed actual handleProxyRequest without invoking its session resolver; actual POST handler then called its doubled synchronization boundary and returned HTTP 200. mapa-rutas.ts:107 declares own_auth; proxy.ts:22-23 exempts it; api/shopify/sync/route.ts:13-16 calls synchronization unconditionally. The real sincronizar.ts:25 persists the shared catalogue. Provider/persistence boundaries were doubled; no real sync, network fetch or database write occurred.\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "large_change",
+    "shared_resources": [
+     "contract:permission-map",
+     "contract:session-guard",
+     "package.json scripts"
+    ],
+    "subplan_id": "SP-1",
+    "title": "Remediate T1.8 findings F16, F17",
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+      "type": "command",
+      "value": "npm run cuentas:test-rutas"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+      "type": "command",
+      "value": "npm run test-cotizacion-unica"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.11",
+      "purpose": "F17 (high) is fixed: The Shopify synchronization endpoint is exempted as own_auth but has no authentication or permission check, allowing anonymous shared-catalogue writes.",
+      "type": "command",
+      "value": "npm run taller:test-estatico"
+     }
+    ]
    }
   ]
  },
- "request_id": "2d3020994765dcf6ad6683aa19ede94aa268f95deab2dccc1c7ec4d559191f84",
- "revision": 2,
- "round": 1,
+ "request_id": "e1fe5aae92a441ac355561e3fee2aa6b4da1da37c260093240b6ac2fdb59e820",
+ "revision": 4,
+ "round": 2,
  "schema": "remediation-apply/1",
- "sha256": "74116074188ebce9925744bb548bb27d4563f08aecbc198984e3795db112eaff",
+ "sha256": "765881a006ff9363324ca086d55ea1b3d45423d482d5615ad70918ddd48a3168",
  "stage": "committed"
 }

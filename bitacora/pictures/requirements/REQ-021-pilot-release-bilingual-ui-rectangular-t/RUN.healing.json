@@ -1,6 +1,10 @@
 {
- "actions": 3,
+ "actions": 5,
  "analyst_stops": {
+  "T1.8:817470444b2ef612bd4ae5fc7b11f406d2be2e5d0d01f67b8b889164a9e57055": {
+   "attempt": "att-0028",
+   "task": "T1.8"
+  },
   "T1.8:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4": {
    "attempt": "att-0022",
    "task": "T1.8"
@@ -8,8 +12,8 @@
  },
  "cases": {
   "412dfd2e86c898cb": {
-   "applied": 1,
-   "at": 1793143593.965,
+   "applied": 2,
+   "at": 1793143828.938,
    "class": "transient",
    "evidence": [
     "transient signature: cancelled",
@@ -21,12 +25,54 @@
      "at": 1793143593.965,
      "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
      "result": "failed"
+    },
+    {
+     "at": 1793143828.938,
+     "repair": "retry (transient)",
+     "result": "fixed"
     }
    ],
    "id": "412dfd2e86c898cb",
-   "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
-   "status": "failed",
+   "repair": "retry (transient)",
+   "status": "applied",
    "task": "T1.8"
+  },
+  "68594766a62ed6e7": {
+   "applied": 1,
+   "at": 1793143651.212,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 4 failures: T1.8 cannot pass by re-running the audit alone. Its acceptance needs the SP-1 ledger (`.evidence/REQ-021/SP-1.findings.json`) to have no open critical/high finding, but the audit's own high findings ("
+   ],
+   "first_at": 1793143639.879,
+   "history": [
+    {
+     "at": 1793143640.06,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793143640.509,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793143645.873,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793143651.212,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    }
+   ],
+   "id": "68594766a62ed6e7",
+   "invalid": 3,
+   "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "the same failure came back after its repair"
   },
   "7fba542ef5969161": {
    "applied": 1,
