@@ -293,79 +293,79 @@ Objetivo: **WCAG 2.2 AA**, pendiente de verificación del producto renderizado; 
 
 ## 11. Criterios de aceptación visual
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| UI-AC-01 | 320–639px | V1 ready | Correo and Contraseña labels and Entrar fit without horizontal scroll. |
-| UI-AC-02 | ≥320px | V1 error | Unknown email, wrong password, deactivated account and locked email display the same generic refusal including the neutral fifteen-minute wait hint. |
-| UI-AC-03 | ≥320px | V1 pending | Entrar becomes Ingresando… and repeat submission is disabled. |
-| UI-AC-04 | ≥320px | V1 ready | The invitation-only guidance is visible and there is no signup action. |
-| UI-AC-05 | ≥320px | V2 ready | Recipient, assigned role and full data notice precede the activation action. |
-| UI-AC-06 | ≥320px | V2 validation | Unaccepted notice is identified beside the unchecked checkbox. |
-| UI-AC-07 | ≥320px | V2 notice_pending | Legal placeholders carry a pending-content warning and activation is disabled. |
-| UI-AC-08 | ≥320px | V2/V3 expired/used/invalid | The password form is replaced by recovery guidance and a sign-in action. |
-| UI-AC-09 | ≥320px | V3 success | The page confirms the password change and offers sign-in rather than showing another password form. |
-| UI-AC-10 | ≥1024px | V5 ready | A single role choice and its exact permission preview are simultaneously visible in two columns. |
-| UI-AC-11 | 320–1023px | V5 ready | The same access preview stacks before submit without removing permissions. |
-| UI-AC-12 | ≥320px | V5 ready | Plan 1/2/3 previews show respectively 3/5/6 named permissions and no price or payment control. |
-| UI-AC-13 | ≥320px | V5 success | Recipient, seven-day/server expiry, selectable link and manual-sharing instructions appear together. |
-| UI-AC-14 | ≥320px | V7 empty | Five read-only system roles remain visible when there are no custom roles. |
-| UI-AC-15 | ≥320px | V8 ready | Checking one permission updates the exact summary without selecting other permissions. |
-| UI-AC-16 | ≥320px | V8 fixed | A system role has a read-only label and no save/delete control. |
-| UI-AC-17 | ≥320px | V8 role_in_use | Delete is disabled beside the assigned-account count and reassignment guidance. |
-| UI-AC-18 | ≥320px | V6 ready/reset_link | The reset dialog states 24-hour validity and session closure only after password change. |
-| UI-AC-19 | ≥320px | V6 last_admin | Role change, deactivate and delete are disabled beside the last-admin explanation. |
-| UI-AC-20 | 320–639px | V4 ready | Each account card retains name, email, company, role, status and Ver cuenta. |
-| UI-AC-21 | 640–1023px / ≥1024px | V4 ready | Table headers identify person, company, role, status, last access and action; long email wraps. |
-| UI-AC-22 | ≥320px | V4 no_results | Limpiar filtros restores the unfiltered list without creating an account. |
-| UI-AC-23 | ≥320px | V8 ready/edit_role | The custom-role save confirmation states that assigned accounts change on next request. |
-| UI-AC-24 | ≥320px | V4/V6–V8 stale | A stale-data warning includes a last-update time and mutations are disabled. |
-| UI-AC-25 | ≥320px | V1–V8, V10–V11 offline | No mutation is offered as queued or successful; retry requires a deliberate action. |
-| UI-AC-26 | ≥320px | V6 ready/delete_account | Delete confirmation requires typing the shown email and retains a visible Cancel action. |
-| UI-AC-27 | ≥320px | V6 disabled | The generic disabled account fixture explains that an unchanged role has no save action; saved-work guards use UI-AC-39/40. |
-| UI-AC-28 | ≥320px | V4–V8 denied | Only the access-denied explanation and safe exits remain; restricted data is absent. |
-| UI-AC-29 | 320 / 639 / 640 / 1023 / 1024 / 1440px | all reachable states | The document has no horizontal overflow. |
-| UI-AC-30 | ≥320px | all interactive states | Keyboard focus remains visible on every actionable control in both themes. |
-| UI-AC-31 | ≥320px | dialogs confirm/error | Escape closes the dialog and restores focus to its trigger. |
-| UI-AC-32 | ≥320px | dialogs pending | Dialog confirmation is disabled and no duplicate action is possible. |
-| UI-AC-33 | ≥320px | ready/error/success | Status messages use text labels and measured foreground/background pairs meet AA contrast. |
-| UI-AC-34 | ≥320px | all mockup states | The Mockup/draft label and view/state selectors remain visible and usable. |
-| UI-AC-35 | ≥320px | C1 open | The panel shows account name, role, Mi cuenta and Cerrar sesión, with denied administration destinations absent. |
-| UI-AC-36 | 320–639px | V10 ready | Current, new and confirmation password labels fit in one column without horizontal scroll. |
-| UI-AC-37 | ≥320px | V10 current_incorrect | Only the current-password field carries the incorrect-password message and receives focus. |
-| UI-AC-38 | ≥320px | V10 success | Password fields are absent and the success message says other sessions closed while this browser stays signed in. |
-| UI-AC-39 | ≥320px | V6 has_work | Delete is disabled with the saved-work reason and deactivation is available. |
-| UI-AC-40 | ≥320px | V6 eligibility_unknown | Delete is disabled and Comprobar de nuevo is offered without claiming there is no saved work. |
-| UI-AC-41 | ≥320px | V11 ready | The full current notice, version and unchecked consent appear with no route to another page before acceptance. |
-| UI-AC-42 | ≥320px | V11 conflict | Acceptance is disabled until the newer version is loaded and the checkbox is cleared. |
-| UI-AC-43 | ≥320px | V11 pending | Aceptando… replaces the primary label and repeat submission is disabled. |
-| UI-AC-44 | ≥320px | V2/V11 ready | Switching notice language displays the supplied ES or EN text verbatim with the matching lang attribute. |
-| UI-AC-45 | ≥320px | V1 error | The sole refusal fixture shows “Si has tenido varios intentos fallidos, espera 15 minutos antes de volver a intentarlo.” and the state selector has no locked fixture. |
-| UI-AC-46 | ≥320px | V1 session_expired | The expired-session explanation appears above the sign-in form. |
-| UI-AC-47 | ≥320px | C1 open | Escape closes the panel and returns focus to Cuenta. |
-| UI-AC-48 | ≥320px | V5/V6 success | The created link warns that it will not be shown again after leaving the result. |
-| UI-AC-49 | ≥320px | V6 invited/replace_invite | The invited-account action reads “Generar enlace nuevo” and its confirmation explains that older unused invitation links stop working; the new link lasts seven days. |
-| UI-AC-50 | ≥320px | V6 ready/reset_link | The reset confirmation states that old unused reset links will stop working. |
-| UI-AC-51 | ≥320px | V8 validation | Saving a role with no checked permission shows Selecciona al menos un permiso beside the permission group. |
-| UI-AC-52 | ≥320px | V2 success | Activation confirms the new session and offers Continuar without requiring another sign-in. |
-| UI-AC-53 | ≥320px | V1/V2 success · accounts-only/roles-only fixture | Continuar opens Mi cuenta when the assigned role allows none of Taller 3D, chat or catalogue. |
-| UI-AC-54 | ≥320px | V6 ready/reset_link | Reset copy says all sessions end when the recipient changes the password; no automatic re-sign-in is promised. |
-| UI-AC-55 | ≥320px | V6 ready | Guardar rol is disabled with the unchanged-role explanation until a different role is selected. |
-| UI-AC-56 | ≥320px | V10 validation | An empty current-password field says Escribe tu contraseña actual; only current_incorrect claims the password is incorrect. |
-| UI-AC-57 | ≥320px | V6/V8 conflict | Save and mutation actions are disabled until Actualizar datos reloads the authoritative record. |
-| UI-AC-58 | ≥320px | V8 ready/fixed | The Proyectos de todas las cuentas helper states that foreign originals are read-only and an owned copy requires Taller 3D. |
-| UI-AC-59 | ≥320px | V4–V8 ready | Active navigation and secondary controls use neutral surfaces/text; accent is confined to the brand mark, focus and the single primary action. |
-| UI-AC-60 | ≥320px | all ready views | Working surfaces have no decorative shadow, nested cards, uppercase tracked eyebrow or Unicode icon; shadows appear only on floating elements. |
-| UI-AC-61 | 640–1023px / ≥1024px | V4 ready | The table has row separators without a header fill or zebra striping; last-access dates align right with tabular figures. |
-| UI-AC-62 | ≥1024px | V7 ready/empty | System and custom role headings and their first row or empty instruction appear together in peer columns; role counts align right with tabular figures and zero stays grey. |
-| UI-AC-63 | ≥1200px | V6 ready | Identity, role access, recovery and the separately ruled state/deletion section occupy adjacent regions without stacked card containers. |
-| UI-AC-64 | ≥320px | V8 ready/pending/disabled/fixed | There is exactly one Save primary action in the title row for custom roles, with the pending label/disabled reason as applicable, and none for a system role. |
-| UI-AC-65 | ≥320px | V1–V11 ready | The Pictures mark, specific tool names, invitation-only copy and product-specific recovery/empty instructions replace generic dashboard decoration. |
+| UI-AC-01 | 320–639px | V1 listo | Las etiquetas Correo y Contraseña y el botón Entrar caben sin desplazamiento horizontal. |
+| UI-AC-02 | ≥320px | V1 error | El correo desconocido, la contraseña incorrecta, la cuenta desactivada y el correo bloqueado muestran el mismo rechazo genérico, incluida la indicación neutral de esperar quince minutos. |
+| UI-AC-03 | ≥320px | V1 pendiente | Entrar cambia a Ingresando… y se deshabilita el envío repetido. |
+| UI-AC-04 | ≥320px | V1 listo | La indicación de acceso solo por invitación está visible y no hay ninguna acción para registrarse. |
+| UI-AC-05 | ≥320px | V2 listo | El destinatario, el rol asignado y el aviso completo sobre los datos aparecen antes de la acción de activación. |
+| UI-AC-06 | ≥320px | V2 validación | La falta de aceptación se indica junto a la casilla sin marcar. |
+| UI-AC-07 | ≥320px | V2 aviso_pendiente | Los textos legales provisionales incluyen una advertencia de contenido pendiente y la activación está deshabilitada. |
+| UI-AC-08 | ≥320px | V2/V3 expirado/usado/inválido | El formulario de contraseña se reemplaza por indicaciones de recuperación y una acción para iniciar sesión. |
+| UI-AC-09 | ≥320px | V3 éxito | La página confirma el cambio de contraseña y ofrece iniciar sesión, en lugar de mostrar otro formulario de contraseña. |
+| UI-AC-10 | ≥1024px | V5 listo | Una única opción de rol y su vista previa exacta de permisos están visibles simultáneamente en dos columnas. |
+| UI-AC-11 | 320–1023px | V5 listo | La misma vista previa de acceso aparece apilada antes del envío, sin quitar permisos. |
+| UI-AC-12 | ≥320px | V5 listo | Las vistas previas de Plan 1/2/3 muestran respectivamente 3/5/6 permisos con nombre, sin precio ni controles de pago. |
+| UI-AC-13 | ≥320px | V5 éxito | El destinatario, el vencimiento de siete días en el servidor, el enlace seleccionable y las instrucciones para compartirlo manualmente aparecen juntos. |
+| UI-AC-14 | ≥320px | V7 vacío | Los cinco roles de sistema de solo lectura siguen visibles cuando no hay roles personalizados. |
+| UI-AC-15 | ≥320px | V8 listo | Marcar un permiso actualiza el resumen exacto sin seleccionar otros permisos. |
+| UI-AC-16 | ≥320px | V8 fijo | Un rol de sistema tiene una etiqueta de solo lectura y no muestra controles para guardar ni eliminar. |
+| UI-AC-17 | ≥320px | V8 rol_en_uso | Eliminar está deshabilitado junto al recuento de cuentas asignadas y las indicaciones para reasignarlas. |
+| UI-AC-18 | ≥320px | V6 listo/enlace_reinicio | El diálogo de restablecimiento indica la validez de 24 horas y que las sesiones se cierran solo después del cambio de contraseña. |
+| UI-AC-19 | ≥320px | V6 último_administrador | Cambiar el rol, desactivar y eliminar están deshabilitados junto a la explicación de que es el último administrador. |
+| UI-AC-20 | 320–639px | V4 listo | Cada tarjeta de cuenta conserva nombre, correo, empresa, rol, estado y Ver cuenta. |
+| UI-AC-21 | 640–1023px / ≥1024px | V4 listo | Los encabezados de la tabla identifican persona, empresa, rol, estado, último acceso y acción; los correos largos se ajustan a varias líneas. |
+| UI-AC-22 | ≥320px | V4 sin_resultados | Limpiar filtros restaura la lista sin filtrar sin crear una cuenta. |
+| UI-AC-23 | ≥320px | V8 listo/editar_rol | La confirmación para guardar un rol personalizado indica que las cuentas asignadas cambiarán en la siguiente solicitud. |
+| UI-AC-24 | ≥320px | V4/V6–V8 desactualizado | La advertencia de datos desactualizados incluye la hora de la última actualización y las modificaciones están deshabilitadas. |
+| UI-AC-25 | ≥320px | V1–V8, V10–V11 sin conexión | Ninguna modificación se presenta como en cola o exitosa; para reintentar se requiere una acción deliberada. |
+| UI-AC-26 | ≥320px | V6 listo/eliminar_cuenta | La confirmación de eliminación requiere escribir el correo mostrado y conserva visible la acción Cancelar. |
+| UI-AC-27 | ≥320px | V6 deshabilitado | El caso de ejemplo genérico de cuenta deshabilitada explica que un rol sin cambios no ofrece una acción para guardar; las protecciones de trabajo guardado usan UI-AC-39/40. |
+| UI-AC-28 | ≥320px | V4–V8 acceso_denegado | Solo permanecen la explicación de acceso denegado y las salidas seguras; no aparecen datos restringidos. |
+| UI-AC-29 | 320 / 639 / 640 / 1023 / 1024 / 1440px | todos los estados alcanzables | El documento no tiene desbordamiento horizontal. |
+| UI-AC-30 | ≥320px | todos los estados interactivos | El foco del teclado permanece visible en cada control accionable en ambos temas. |
+| UI-AC-31 | ≥320px | diálogos confirmar/error | Escape cierra el diálogo y devuelve el foco al control que lo abrió. |
+| UI-AC-32 | ≥320px | diálogos pendiente | La confirmación del diálogo está deshabilitada y no es posible duplicar la acción. |
+| UI-AC-33 | ≥320px | listo/error/éxito | Los mensajes de estado usan etiquetas de texto y las combinaciones medidas de primer plano y fondo cumplen el contraste AA. |
+| UI-AC-34 | ≥320px | todos los estados de maqueta | La etiqueta Maqueta/borrador y los selectores de vista/estado permanecen visibles y utilizables. |
+| UI-AC-35 | ≥320px | C1 abierto | El panel muestra el nombre de la cuenta, el rol, Mi cuenta y Cerrar sesión; no aparecen destinos de administración denegados. |
+| UI-AC-36 | 320–639px | V10 listo | Las etiquetas de contraseña actual, nueva y de confirmación caben en una columna sin desplazamiento horizontal. |
+| UI-AC-37 | ≥320px | V10 actual_incorrecta | Solo el campo de contraseña actual muestra el mensaje de contraseña incorrecta y recibe el foco. |
+| UI-AC-38 | ≥320px | V10 éxito | Los campos de contraseña no aparecen y el mensaje de éxito indica que las demás sesiones se cerraron mientras esta sesión del navegador sigue activa. |
+| UI-AC-39 | ≥320px | V6 tiene_trabajo | Eliminar está deshabilitado con el motivo relacionado con el trabajo guardado y la desactivación está disponible. |
+| UI-AC-40 | ≥320px | V6 elegibilidad_desconocida | Eliminar está deshabilitado y se ofrece Comprobar de nuevo sin afirmar que no hay trabajo guardado. |
+| UI-AC-41 | ≥320px | V11 listo | El aviso vigente completo, la versión y el consentimiento sin marcar aparecen sin una ruta a otra página antes de aceptar. |
+| UI-AC-42 | ≥320px | V11 conflicto | La aceptación está deshabilitada hasta que se cargue la versión más reciente y se desmarque la casilla. |
+| UI-AC-43 | ≥320px | V11 pendiente | Aceptando… reemplaza la etiqueta principal y se deshabilita el envío repetido. |
+| UI-AC-44 | ≥320px | V2/V11 listo | Al cambiar el idioma del aviso, se muestra literalmente el texto ES o EN proporcionado, con el atributo lang correspondiente. |
+| UI-AC-45 | ≥320px | V1 error | El único caso de ejemplo de rechazo muestra “Si has tenido varios intentos fallidos, espera 15 minutos antes de volver a intentarlo.” y el selector de estado no tiene un caso de ejemplo de bloqueo. |
+| UI-AC-46 | ≥320px | V1 sesión_expirada | La explicación de sesión expirada aparece encima del formulario de inicio de sesión. |
+| UI-AC-47 | ≥320px | C1 abierto | Escape cierra el panel y devuelve el foco a Cuenta. |
+| UI-AC-48 | ≥320px | V5/V6 éxito | El enlace creado advierte que no volverá a mostrarse después de salir del resultado. |
+| UI-AC-49 | ≥320px | V6 invitado/reemplazar_invitación | La acción para la cuenta invitada dice “Generar enlace nuevo” y la confirmación explica que los enlaces de invitación anteriores que no se hayan usado dejarán de funcionar; el nuevo enlace dura siete días. |
+| UI-AC-50 | ≥320px | V6 listo/enlace_reinicio | La confirmación del restablecimiento indica que los enlaces de restablecimiento anteriores que no se hayan usado dejarán de funcionar. |
+| UI-AC-51 | ≥320px | V8 validación | Al guardar un rol sin permisos marcados, se muestra Selecciona al menos un permiso junto al grupo de permisos. |
+| UI-AC-52 | ≥320px | V2 éxito | La activación confirma la nueva sesión y ofrece Continuar sin requerir otro inicio de sesión. |
+| UI-AC-53 | ≥320px | V1/V2 éxito · caso_de_ejemplo_solo_cuentas/solo_roles | Continuar abre Mi cuenta cuando el rol asignado no permite Taller 3D, chat ni catálogo. |
+| UI-AC-54 | ≥320px | V6 listo/enlace_reinicio | El texto del restablecimiento indica que todas las sesiones finalizarán cuando el destinatario cambie la contraseña; no promete un inicio de sesión automático. |
+| UI-AC-55 | ≥320px | V6 listo | Guardar rol está deshabilitado con la explicación de que el rol no ha cambiado hasta que se seleccione otro. |
+| UI-AC-56 | ≥320px | V10 validación | Un campo de contraseña actual vacío muestra Escribe tu contraseña actual; solo actual_incorrecta indica que la contraseña es incorrecta. |
+| UI-AC-57 | ≥320px | V6/V8 conflicto | Las acciones de guardado y modificación están deshabilitadas hasta que Actualizar datos vuelva a cargar el registro autoritativo. |
+| UI-AC-58 | ≥320px | V8 listo/fijo | La ayuda Proyectos de todas las cuentas indica que los originales de otras cuentas son de solo lectura y que se necesita Taller 3D para obtener una copia propia. |
+| UI-AC-59 | ≥320px | V4–V8 listo | La navegación activa y los controles secundarios usan superficies y texto neutros; el acento se limita a la marca, el foco y la única acción principal. |
+| UI-AC-60 | ≥320px | todas las vistas listas | Las superficies de trabajo no tienen sombras decorativas, tarjetas anidadas, textos guía en mayúsculas con espaciado ampliado ni iconos Unicode; las sombras aparecen solo en elementos flotantes. |
+| UI-AC-61 | 640–1023px / ≥1024px | V4 listo | La tabla tiene separadores de filas sin fondo en el encabezado ni franjas alternas; las fechas de último acceso se alinean a la derecha con cifras tabulares. |
+| UI-AC-62 | ≥1024px | V7 listo/vacío | Los encabezados de roles de sistema y personalizados y su primera fila o instrucción de lista vacía aparecen juntos en columnas equivalentes; los recuentos de roles se alinean a la derecha con cifras tabulares y el cero permanece gris. |
+| UI-AC-63 | ≥1200px | V6 listo | La identidad, el acceso por rol, la recuperación y la sección independiente de estado/eliminación ocupan regiones contiguas sin contenedores de tarjetas apiladas. |
+| UI-AC-64 | ≥320px | V8 listo/pendiente/deshabilitado/fijo | Hay exactamente una acción principal Guardar en la fila del título para los roles personalizados, con la etiqueta de espera o el motivo de deshabilitación cuando corresponda; no hay ninguna para un rol de sistema. |
+| UI-AC-65 | ≥320px | V1–V11 listo | La marca Pictures, los nombres específicos de las herramientas, el texto de acceso solo por invitación y las instrucciones de recuperación y de listas vacías específicas del producto sustituyen la decoración genérica del panel. |
 
-| UI-AC-66 | ≥320px | V1–V3/V9/V11 ready/error/success | Brand, Card and footer share the same horizontal centre; all form content inside CardContent aligns left. |
-| UI-AC-67 | ≥320px | V1 ready/error | Password recovery stays in the password-label row and expands guidance below the same field. |
-| UI-AC-68 | ≥320px | all controls, light/dark | Inputs/selects/unchecked checkboxes have measured edges ≥3:1; checked boxes use kit Checkbox styling, with no native white-square fallback. |
-| UI-AC-69 | ≥320px | all form views ready/error | CardContent has 24px side padding (20px at ≤640px); field groups use kit Stack/Field gaps rather than touching labels or box edges. |
-| UI-AC-70 | 320–767px / ≥768px | V4–V8 ready | The same permitted Cuentas/Roles destinations are visible in compact navigation / Sidebar, with no inaccessible administration destination. |
+| UI-AC-66 | ≥320px | V1–V3/V9/V11 listo/error/éxito | La marca, la tarjeta y el pie de página comparten el mismo centro horizontal; todo el contenido del formulario dentro de CardContent se alinea a la izquierda. |
+| UI-AC-67 | ≥320px | V1 listo/error | La recuperación de contraseña permanece en la fila de la etiqueta de contraseña y expande las indicaciones debajo del mismo campo. |
+| UI-AC-68 | ≥320px | todos los controles, claro/oscuro | Los bordes de entradas, selectores y casillas sin marcar tienen una relación de contraste medida ≥3:1; las casillas marcadas usan el estilo Checkbox del kit, sin recurrir a un cuadro blanco nativo. |
+| UI-AC-69 | ≥320px | todas las vistas de formulario listas/error | CardContent tiene un relleno lateral de 24px (20px en ≤640px); los grupos de campos usan los espacios Stack/Field del kit, en lugar de etiquetas o bordes de campos pegados entre sí. |
+| UI-AC-70 | 320–767px / ≥768px | V4–V8 listo | Los mismos destinos permitidos Cuentas/Roles están visibles en la navegación compacta o en Sidebar, sin destinos de administración inaccesibles. |
 
 ## 12. Preguntas abiertas y supuestos
 
