@@ -71,6 +71,7 @@ class QualityPolicy:
     max_checks: int = MAX_CHECKS
     max_command_seconds: int = 3000  # REQ-029 T6 harness drives the real CLI and needs more than 1500 s with several runs competing
     max_total_seconds: int = 5400
+    max_idle_seconds: int = 600  # a check with no output and no CPU for this long is hung and FAILS (0 = off); REQ-021 T1.10 sat 39 min on a deadlocked test
     max_cpu_seconds: int = 3600
     max_output_bytes: int = 262_144
     max_snapshot_bytes: int = 536_870_912
@@ -176,7 +177,7 @@ def _validate_policy_controls(policy: QualityPolicy) -> None:
     for name in ("defer_expensive", "mixed_evidence", "cache_ignores_outputs"):
         if not isinstance(getattr(policy, name), bool):
             raise TypeError(f"{name} must be boolean")
-    for name in ("cache_seconds", "expensive_check_seconds"):
+    for name in ("cache_seconds", "expensive_check_seconds", "max_idle_seconds"):
         value = getattr(policy, name)
         if not isinstance(value, int) or isinstance(value, bool) or value < 0:
             raise ValueError(f"{name} must be zero or positive")

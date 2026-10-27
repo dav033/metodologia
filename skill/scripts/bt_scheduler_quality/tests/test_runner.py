@@ -270,6 +270,41 @@ class SandboxRunnerTests(unittest.TestCase):
         self.assertEqual(result.status, "unknown")
         self.assertFalse(_process_has_argument(marker))
 
+    def test_a_silent_idle_command_is_a_hang_that_fails_the_code_not_the_infrastructure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "hang.py").write_text("import time\ntime.sleep(60)\n", encoding="utf-8")
+            policy = QualityPolicy(max_idle_seconds=3)
+            started = time.monotonic()
+
+            result = SandboxRunner(policy).run(_check("hang.py"), root)
+
+        self.assertLess(time.monotonic() - started, 30)
+        self.assertEqual(result.status, "fail")
+        self.assertIsNone(result.issue_code)
+        self.assertIn(b"CHECK_HUNG", result.stderr)
+
+    def test_a_silent_command_that_uses_cpu_is_never_mistaken_for_a_hang(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "busy.py").write_text(
+                "import time\nend = time.time() + 7\nwhile time.time() < end:\n    pass\n", encoding="utf-8")
+            policy = QualityPolicy(max_idle_seconds=3)
+
+            result = SandboxRunner(policy).run(_check("busy.py"), root)
+
+        self.assertEqual(result.status, "pass")
+        self.assertNotIn(b"CHECK_HUNG", result.stderr)
+
+    def test_the_idle_limit_can_be_switched_off(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "quiet.py").write_text("import time\ntime.sleep(5)\n", encoding="utf-8")
+
+            result = SandboxRunner(QualityPolicy(max_idle_seconds=0)).run(_check("quiet.py"), root)
+
+        self.assertEqual(result.status, "pass")
+
     def test_nonzero_exit_is_a_real_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

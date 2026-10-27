@@ -27,6 +27,8 @@ class _Collection:
     namespaces: tuple[tuple[str, int], ...] = ()
     handshake: bool = False
     timed_out: bool = False
+    hung: bool = False                       # no output and no CPU for `max_idle_seconds`: the command waits for something that never happens
+    hung_note: bytes = b""
     output_exceeded: bool = False
     output_cut: bool = False                 # more was printed than is kept: the head and the tail are kept, the middle is not
     total_output: int = 0
@@ -97,12 +99,19 @@ class SandboxExecution:
         state = _Collection()
         deadline = started + timeout
         setup_deadline = min(deadline, time.monotonic() + 5)
+        idle = _IdleWatch(session.process.pid, self.policy.max_idle_seconds)
         while session.selector.get_map():
             if self._deadline_reached(session, state, deadline, setup_deadline):
                 break
             events = self._wait_for_events(
                 session.selector, state, deadline, setup_deadline
             )
+            if events:
+                idle.active()
+            elif state.handshake and (note := idle.hung()):
+                state.hung, state.hung_note = True, note
+                _terminate(session.process)
+                break
             for key, _ in events:
                 self._consume_event(session, state, key)
                 if state.sandbox_failed or state.output_exceeded:
@@ -289,6 +298,12 @@ class SandboxExecution:
                 state.output_exceeded,
                 state.namespaces,
             )
+        if state.hung:
+            # a failure of the code or of its test, not of the infrastructure: the builder is sent back with what was waiting
+            return self.make_outcome(
+                "fail", state.return_code, started, state.stdout, state.stderr + state.hung_note, None, True,
+                state.output_cut, state.namespaces,
+            )
         if state.output_exceeded:
             return self.make_outcome(
                 "unknown",
@@ -340,6 +355,75 @@ class SandboxExecution:
             state.output_cut,
             state.namespaces,
         )
+
+
+CLOCK_TICKS = os.sysconf("SC_CLK_TCK") if hasattr(os, "sysconf") else 100
+IDLE_SAMPLE_SECONDS = 2.0
+BUSY_CPU_SHARE = 0.05                      # a process tree that uses more than 5% of one core is working, whatever it prints
+
+
+def _process_table() -> dict[int, tuple[int, int, str]] | None:
+    """pid -> (parent, cpu ticks, command name) from /proc, or None where /proc cannot be read."""
+    table: dict[int, tuple[int, int, str]] = {}
+    try:
+        names = os.listdir("/proc")
+    except OSError:
+        return None
+    for name in names:
+        if not name.isdigit():
+            continue
+        try:
+            with open(f"/proc/{name}/stat", "rb") as handle:
+                raw = handle.read().decode("utf-8", "replace")
+            comm, rest = raw[raw.index("(") + 1:raw.rindex(")")], raw[raw.rindex(")") + 2:].split()
+            table[int(name)] = (int(rest[1]), int(rest[11]) + int(rest[12]), comm)
+        except (OSError, ValueError, IndexError):
+            continue
+    return table
+
+
+def _tree(table: dict[int, tuple[int, int, str]], root: int) -> list[int]:
+    found, queue = [], [root]
+    while queue:
+        pid = queue.pop()
+        if pid in table:
+            found.append(pid)
+        queue.extend(child for child, (parent, _, _) in table.items() if parent == pid)
+    return found
+
+
+class _IdleWatch:
+    """Tell a hung command from a quiet one: no output AND no CPU in its whole process tree for `limit` seconds.
+    A build that prints nothing for ten minutes still uses CPU, so it is never mistaken for a hang."""
+
+    def __init__(self, root: int, limit: int):
+        self.root, self.limit = root, limit
+        self.last_active = self.last_sample = time.monotonic()
+        self.ticks: int | None = None
+
+    def active(self) -> None:
+        self.last_active = time.monotonic()
+
+    def hung(self) -> bytes:
+        """The note for the builder when the command has been idle for the limit, else b""."""
+        now = time.monotonic()
+        if self.limit <= 0 or now - self.last_sample < IDLE_SAMPLE_SECONDS:
+            return b""
+        table = _process_table()
+        if table is None:
+            return b""
+        tree = _tree(table, self.root)
+        ticks = sum(table[pid][1] for pid in tree)
+        if self.ticks is not None and ticks - self.ticks > BUSY_CPU_SHARE * (now - self.last_sample) * CLOCK_TICKS:
+            self.last_active = now
+        self.ticks, self.last_sample = ticks, now
+        if now - self.last_active < self.limit:
+            return b""
+        names = ", ".join(dict.fromkeys(table[pid][2] for pid in tree if pid != self.root))[:300]
+        return (f"\n[M6] CHECK_HUNG: killed after {int(now - self.last_active)} s with no output and no CPU use "
+                f"(processes: {names}). The command was waiting for something that never happens, for example a database "
+                "connection pool with no free connection, a lock, or a promise nobody resolves. This is a defect of the code "
+                "or of its test, not of the infrastructure: find what it waits for and give that wait a deadline.\n").encode()
 
 
 def _validate_namespaces(value: object, shared_network: bool = False) -> tuple[tuple[str, int], ...]:

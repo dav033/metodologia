@@ -51,7 +51,11 @@ DEFAULTS: dict = {
                  "cache_ignores_outputs": True,
                  # the verifier's private workspace (a tmpfs the checked tree and its build output share); a build that needs
                  # more says "No space left on device" and the card names this key
-                 "max_workspace_mb": 2048},
+                 "max_workspace_mb": 2048,
+                 # a check with no output AND no CPU in its whole process tree for this long is hung (a deadlocked test, a pool
+                 # with no free connection) and FAILS as a defect of the code, instead of waiting max_command_seconds (3000 s) and
+                 # being retried as an infrastructure timeout. 0 = off
+                 "max_idle_seconds": 600},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start

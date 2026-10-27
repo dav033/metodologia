@@ -131,7 +131,7 @@ class CheckExecutor:
 
     def _rerun_if_flaky(self, spec, snapshot_root, outcome, remaining, mounts, started):
         for _ in range(self.policy.rerun_failed_checks):
-            if outcome.status != "fail":
+            if outcome.status != "fail" or b"CHECK_HUNG" in outcome.stderr:      # a hang would only hang again
                 break
             remaining = self.policy.max_total_seconds - int(time.monotonic() - started)
             if remaining <= 0:
