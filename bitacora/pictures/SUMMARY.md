@@ -1,5 +1,7 @@
 # pictures — Summary
 
+- 2026-10-26 REQ-021 planning: owner round 9 settled SP-3/SP-4 behavior; 8/10 tasks, scoped inputs and owner test rows defined. Backing is Taller-only; portable Blender LTS authorized for future setup. Projects use first named save then autosave, complete scene/name only, foreign originals read-only with owned copies. Both Designers are reconciling; focus remains SP-2, 1/13 confirmed, no launch or product changes.
+
 - 2026-10-26 REQ-021 SP-3 design: taller-esenciales@v1 contract and standalone mockup delivered as draft (7 views, 28 visual criteria, 7 canonical Backing props); 756 Chromium layout cases and scoped interactions/bridge/focus checks PASS. T3.1–T3.8 consumers documented; round 9 q1–q4, owner approval and real Blender/product acceptance remain pending. No product code or deployment changed.
 - 2026-10-26 REQ-021 SP-2 design: revised cuentas-admin@v1 contract and standalone mockup remain draft (11 views, 54 criteria). Owner feedback and Planner Q6–Q8 are incorporated (D-074); no open design questions. Chromium 1260 view/state renders, 12 interaction groups, 288 dialog cases, 96 menu layouts and 18 contrast pairs PASS. Exact consumers T2.1–T2.8 are documented. Plan approval, legal fields/review (P-206), implementation and product acceptance remain pending; no product code or deployment changed.
 

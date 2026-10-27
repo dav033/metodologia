@@ -3,8 +3,8 @@
   "cuentas-admin@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "00042b2b56a09728d30e4244562a9bcb5025ebc1313dc9aafe78fe04c79128b3",
-   "delegation": "D-20261026-161124-264b",
+   "before": "bfb34009a7cf5cbebd11ac6609f745706a714ea8abdd17f0415c6094d166ec66",
+   "delegation": "D-20261026-191118-1fd8",
    "digest": "abde9480c2f8d545",
    "error": "",
    "failures": 0,
@@ -48,22 +48,22 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T16:11:24-05:00",
+   "queued": "2026-10-26T19:11:14-05:00",
    "reason": "requested",
    "report": "claimed",
    "revision": 4,
    "sha256": "bfb34009a7cf5cbebd11ac6609f745706a714ea8abdd17f0415c6094d166ec66",
-   "started": "2026-10-26T16:11:24-05:00",
-   "status": "ready",
+   "started": "2026-10-26T19:11:18-05:00",
+   "status": "drafting",
    "subplan_id": "SP-2",
    "summary": "Revalidated and revised cuentas-admin@v1 and its standalone mockup against the unchanged SP-2 planning snapshot, preserving the previous design. Corrected unchanged-role saving and empty current-password feedback, and added acceptance criteria and verification evidence. Both planning artifacts remain draft pending owner approval of the plan."
   },
   "proyectos@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "f1e0a98b3a8094161825745784a0890e3abcc7f6356c91aaed1ad00ca012c905",
-   "delegation": "D-20261026-183544-981e",
-   "digest": "a42c1e2e6b088dc6",
+   "before": "1bc3168ddfd3f1b534d85d197aa3e66cc51cd33f8cd2e05be386330edd7a4d8b",
+   "delegation": "D-20261026-191119-8350",
+   "digest": "749be52ec4afc053",
    "error": "",
    "failures": 0,
    "feedback": [
@@ -72,9 +72,15 @@
      "text": "Planner drafted T4.1–T4.9 plus T4.31 early storage/API checkpoint, and SP-4 Pruebas. Round 9 q5–q7 remains OPEN: proposed first named save then autosave; scene/name only excluding local conversation/images; foreign staff/admin read-only + Save copy. Do not treat recommendations as owner answers. Cover conflict (stop autosave, preserve draft, reload or owned copy), pending/offline save, stale response/project switch, account-scoped drafts and consent-based legacy import preserving raw original. Custom staff role with proyectos.ver_todos but without taller.usar needs a read-only project view. Read SPEC Draft behavior/current PLAN; report material questions, no focus/confirmation changes.",
      "via": "cli",
      "when": "2026-10-26T17:26:41-05:00"
+    },
+    {
+     "consumed": "D-20261026-185315-2539",
+     "text": "Owner round 9 answers: q5=a first explicit named save then autosave with visible status; 500ms remains Planner technical default; q6=a name plus complete scene incl room/environment/salon/materials/scene-node relationships, AI conversation/generated images remain local, no local erasure or dropped valid scene fields; q7=a foreign originals read-only for staff/admin, Save copy into own account only with taller.usar. Resolve Q1–Q3. Planner resolves Q4: global authorized server search/filter before cursor pagination, not just loaded page. T4.3 now specifies q name search (literal, trimmed <=120), scope mine|all, ownerId UUID only for authorized all scope, 50 rows max updatedAt/id descending, cursor bound to normalized filters, mismatch 400, owner choices restricted to authorized project metadata. T4.4 resets cursor on filter change/ignores stale responses/preserves rows on page failure; T4.6 tests >50 rows. SPEC/PLAN/Pruebas updated. Revise contract/mockup retaining unaffected design; no further owner question needed on Q4. Behavior settled, design/subplan unapproved; SP-2 remains focus.",
+     "via": "cli",
+     "when": "2026-10-26T18:53:15-05:00"
     }
    ],
-   "finished": "2026-10-26T18:48:32-05:00",
+   "finished": "2026-10-26T19:11:10-05:00",
    "history": [
     {
      "at": "2026-10-26T18:35:35-05:00",
@@ -85,32 +91,32 @@
      "at": "2026-10-26T18:48:32-05:00",
      "rev": 2,
      "summary": "Revised proyectos@v1 in place as a planning draft and updated its self-contained mockup. Preserved the established design while clarifying conflict, pending/offline, late-response, account-scoped recovery/import and custom read-only-role behavior. Approval remains with the owner and the plan."
+    },
+    {
+     "at": "2026-10-26T19:11:10-05:00",
+     "rev": 3,
+     "summary": "Revised proyectos@v1 contract and self-contained mockup for the settled round 9 save/content/copy decisions and global authorized search. Q1–Q4 are resolved; unchanged visual design is retained. Contract remains draft pending owner plan approval; SP-2 remains the planning focus."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
-   "questions": [
-    "Round 9 q5 — Confirm first explicit named save followed by autosave plus Save now, or manual saving throughout? The 500 ms debounce is a technical proposal, not an owner answer.",
-    "Round 9 q7 — May staff/admin edit another owner’s original, or only read it and save a personally owned copy when taller.usar is granted?",
-    "Round 9 q6 — Persist/import only the name and complete scene (including room, environment, salon and attachments), excluding separately stored AI conversation/generated images, or include those too?",
-    "Should project-name search and owner filtering cover the entire authorized server library? The draft proposes server-wide filtering; T4.3 currently defines cursor pagination without those query parameters."
-   ],
-   "queued": "2026-10-26T18:35:40-05:00",
-   "reason": "plan changed",
+   "questions": [],
+   "queued": "2026-10-26T19:11:19-05:00",
+   "reason": "requested",
    "report": "claimed",
-   "revision": 2,
-   "sha256": "67f5d0bd484b06aa3578c4932f554ed9fd9a67b9f13f097d0e13f1f4b9ff9f2d",
-   "started": "2026-10-26T18:35:44-05:00",
-   "status": "ready",
+   "revision": 3,
+   "sha256": "1bc3168ddfd3f1b534d85d197aa3e66cc51cd33f8cd2e05be386330edd7a4d8b",
+   "started": "2026-10-26T19:11:20-05:00",
+   "status": "drafting",
    "subplan_id": "SP-4",
-   "summary": "Revised proyectos@v1 in place as a planning draft and updated its self-contained mockup. Preserved the established design while clarifying conflict, pending/offline, late-response, account-scoped recovery/import and custom read-only-role behavior. Approval remains with the owner and the plan."
+   "summary": "Revised proyectos@v1 contract and self-contained mockup for the settled round 9 save/content/copy decisions and global authorized search. Q1–Q4 are resolved; unchanged visual design is retained. Contract remains draft pending owner plan approval; SP-2 remains the planning focus."
   },
   "taller-esenciales@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "d499807f006cb09a506c429a7997db6e46836e6dc991909b352f9fdfdc9513b5",
-   "delegation": "D-20261026-173732-8772",
-   "digest": "eb386ad571b4f36a",
+   "before": "f24728bcbc7a8c3c491b732b968d1b04c9ded6bd49564837eab047cbfa0592ba",
+   "delegation": "D-20261026-191119-918c",
+   "digest": "f3f2ed19d4dc6d0a",
    "error": "",
    "failures": 0,
    "feedback": [
@@ -119,9 +125,15 @@
      "text": "Planner drafted T3.1–T3.8 and SP-3 Pruebas, preserving SP-2/focus. Round 9 q1–q4 remains OPEN: table creation cards versus pre-create form; no rental price versus owner prices; seven-ID Backing group in Taller versus aliases/other place; Blender acquisition. These are recommendations, not approved decisions. Read SPEC Draft behavior and the current PLAN; preserve original IDs/ASIGNACION_FONDOS. Current code GrupoCatalogo must not be changed merely for presentation. Please distinguish pending choices in the draft and report material new questions.",
      "via": "cli",
      "when": "2026-10-26T17:26:41-05:00"
+    },
+    {
+     "consumed": "D-20261026-185315-a345",
+     "text": "Owner answered round 9 via web: q1=a type cards, default size then existing inspector; q2=a actual quantities/dimensions without rental prices; q3=a seven cards move out of old visual groups into one Backing group in Taller Fondos y muebles, no duplicated card aliases and no Shopify /catalogo Backing; canonical IDs, semantic GrupoCatalogo, ASIGNACION_FONDOS and original-name/AI/photo discovery remain stable; q4=a official portable Blender LTS under ~/.local/opt/blender (no pacman), automated real import plus owner manual opening. SPEC R11 and SP-3 outcome/tasks/Pruebas now reconciled. Resolve your Q1–Q4, remove provisional/conditional catalogue behavior and obsolete alternatives from final draft/mockup, retain unaffected design. Round answers settle behavior only; contract/subplan remain unapproved, SP-2 stays focus. Please finish against this updated SP-3 snapshot and report only genuinely new unresolved questions.",
+     "via": "cli",
+     "when": "2026-10-26T18:53:15-05:00"
     }
    ],
-   "finished": "2026-10-26T18:35:35-05:00",
+   "finished": "2026-10-26T19:11:10-05:00",
    "history": [
     {
      "at": "2026-10-26T17:37:32-05:00",
@@ -132,25 +144,25 @@
      "at": "2026-10-26T18:35:35-05:00",
      "rev": 2,
      "summary": "Revised taller-esenciales@v1 and its self-contained mockup, retaining draft status and the existing views, states, tokens and breakpoints. Distinguished all four pending round 9 choices, preserved canonical Backing identity/group/repository invariants, and marked the Shopify catalogue view as conditional. Approval remains with the owner and plan."
+    },
+    {
+     "at": "2026-10-26T19:11:10-05:00",
+     "rev": 3,
+     "summary": "Revised taller-esenciales@v1 and its self-contained mockup against the updated SP-3 snapshot and all four round-9 owner decisions. Removed provisional Shopify Backing behavior and obsolete alternatives; retained unaffected design. Both artifacts remain draft pending owner plan approval, with no new unresolved questions."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
-   "questions": [
-    "Q1 (ronda 9 q1): ¿Tarjeta por tipo y edición posterior (propuesta ilustrada), o formulario antes de crear?",
-    "Q2 (ronda 9 q2): ¿Cantidades y medidas sin precio (propuesta ilustrada), o precios de alquiler aportados por el propietario?",
-    "Q3 (ronda 9 q3): ¿Se confirman los siete IDs en Backing del Taller, moviendo sus tarjetas o conservando alias; o se elige otro lugar, incluido /catalogo, que requiere ajustar T3.3 y el texto de R11?",
-    "Q4 (ronda 9 q4): ¿Blender portable con importación automática más apertura manual, o pruebas del GLB más apertura manual del propietario, ajustando la aceptación de T3.5/T3.6?"
-   ],
-   "queued": "2026-10-26T17:37:32-05:00",
-   "reason": "plan changed",
+   "questions": [],
+   "queued": "2026-10-26T19:11:19-05:00",
+   "reason": "requested",
    "report": "claimed",
-   "revision": 2,
-   "sha256": "e6a4762f735ccc2b28144f8aab4130d81a5ce1e9d48fe103a2093eed623d982d",
-   "started": "2026-10-26T17:37:32-05:00",
-   "status": "ready",
+   "revision": 3,
+   "sha256": "f24728bcbc7a8c3c491b732b968d1b04c9ded6bd49564837eab047cbfa0592ba",
+   "started": "2026-10-26T19:11:19-05:00",
+   "status": "drafting",
    "subplan_id": "SP-3",
-   "summary": "Revised taller-esenciales@v1 and its self-contained mockup, retaining draft status and the existing views, states, tokens and breakpoints. Distinguished all four pending round 9 choices, preserved canonical Backing identity/group/repository invariants, and marked the Shopify catalogue view as conditional. Approval remains with the owner and plan."
+   "summary": "Revised taller-esenciales@v1 and its self-contained mockup against the updated SP-3 snapshot and all four round-9 owner decisions. Removed provisional Shopify Backing behavior and obsolete alternatives; retained unaffected design. Both artifacts remain draft pending owner plan approval, with no new unresolved questions."
   }
  },
  "schema_version": 1

@@ -1946,11 +1946,11 @@
      ]
     },
     "confidence": {
-     "justification": "Copy the approved Taller essentials design contract: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Copy the approved Taller essentials design contract: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/FondosYMuebles.tsx",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T1.8"
      ]
     }
@@ -2042,11 +2042,11 @@
      ]
     },
     "confidence": {
-     "justification": "Add rectangular tables through the existing table editor: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Add rectangular tables through the existing table editor: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/FondosYMuebles.tsx",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.1"
      ]
     }
@@ -2064,7 +2064,8 @@
    ],
    "acceptance_criteria": [
     "Adding a rectangular table exposes length, depth and chair count, selects it in the inspector and updates the real shopping list with placed chairs, including capacity warnings and undo.",
-    "The existing agregar_mesas, cambiar_mesas and cambiar_sillas tools produce the same table dimensions and actual chair counts as manual editing without a paid AI call."
+    "The existing agregar_mesas, cambiar_mesas and cambiar_sillas tools produce the same table dimensions and actual chair counts as manual editing without a paid AI call.",
+    "Each existing parametric table type has a creation card that adds its default-sized table and opens the inspector; rectangular tables use 240 × 90 × 75 cm by default and the shopping list contains quantities and dimensions without rental prices."
    ],
    "verification": [
     {
@@ -2078,6 +2079,13 @@
      "type": "command",
      "value": "npx tsx scripts/test/test-taller-mesas-piloto.ts",
      "purpose": "The existing agregar_mesas, cambiar_mesas and cambiar_sillas tools produce the same table dimensions and actual chair counts as manual editing without a paid AI call.",
+     "category": "functional",
+     "created_by": "T3.2"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-taller-mesas-piloto.ts",
+     "purpose": "Each existing parametric table type has a creation card that adds its default-sized table and opens the inspector; rectangular tables use 240 × 90 × 75 cm by default and the shopping list contains quantities and dimensions without rental prices.",
      "category": "functional",
      "created_by": "T3.2"
     }
@@ -2148,11 +2156,11 @@
      ]
     },
     "confidence": {
-     "justification": "Group existing party props under Backing without changing their identities: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Group existing party props under Backing without changing their identities: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/lib/catalogo/asignacion-fondos.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.2"
      ]
     }
@@ -2168,13 +2176,21 @@
     "taller:scene"
    ],
    "acceptance_criteria": [
-    "Backing lists panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal and arco_metalico, each addable; existing IDs, saved scenes, repository ownership, search and AI/photo discovery remain compatible."
+    "Backing lists panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal and arco_metalico, each addable; existing IDs, saved scenes, repository ownership, search and AI/photo discovery remain compatible.",
+    "The seven Backing cards appear once in the new Taller group and no longer in their previous visual groups; Shopify /catalogo is unchanged and the original names and AI/photo discovery still resolve the same IDs."
    ],
    "verification": [
     {
      "type": "command",
      "value": "npx tsx scripts/test/test-backing-piloto.ts",
      "purpose": "Backing lists panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal and arco_metalico, each addable; existing IDs, saved scenes, repository ownership, search and AI/photo discovery remain compatible.",
+     "category": "functional",
+     "created_by": "T3.3"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-backing-piloto.ts",
+     "purpose": "The seven Backing cards appear once in the new Taller group and no longer in their previous visual groups; Shopify /catalogo is unchanged and the original names and AI/photo discovery still resolve the same IDs.",
      "category": "functional",
      "created_by": "T3.3"
     }
@@ -2245,11 +2261,11 @@
      ]
     },
     "confidence": {
-     "justification": "Verify and repair the GLB geometry and material export: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Verify and repair the GLB geometry and material export: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/exportar-escena-glb.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.3"
      ]
     }
@@ -2343,11 +2359,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement the Taller browser and Blender verification harness: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement the Taller browser and Blender verification harness: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:scripts/test/test-exportadores-escena-taller.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.4"
      ]
     }
@@ -2364,13 +2380,21 @@
     "taller:scene"
    ],
    "acceptance_criteria": [
-    "The harness starts a real next start build, drives table and Backing operations in Chromium, downloads the actual GLB and compares Blender-imported positions, metre dimensions and base colours against the fixture; missing Blender is reported as blocked."
+    "The harness starts a real next start build, drives table and Backing operations in Chromium, downloads the actual GLB and compares Blender-imported positions, metre dimensions and base colours against the fixture; missing Blender is reported as blocked.",
+    "An explicit setup step provisions a checksum-verified official portable Blender LTS under ~/.local/opt/blender without system-package changes, records its version and executable, and the real import harness never treats a missing executable as a pass."
    ],
    "verification": [
     {
      "type": "command",
      "value": "npm run taller:test-harness-esenciales",
      "purpose": "The harness starts a real next start build, drives table and Backing operations in Chromium, downloads the actual GLB and compares Blender-imported positions, metre dimensions and base colours against the fixture; missing Blender is reported as blocked.",
+     "category": "functional",
+     "created_by": "T3.5"
+    },
+    {
+     "type": "command",
+     "value": "npm run taller:test-harness-esenciales",
+     "purpose": "An explicit setup step provisions a checksum-verified official portable Blender LTS under ~/.local/opt/blender without system-package changes, records its version and executable, and the real import harness never treats a missing executable as a pass.",
      "category": "functional",
      "created_by": "T3.5"
     }
@@ -2388,7 +2412,7 @@
    "id": "T3.6",
    "milestone_id": "M1",
    "title": "Run the real Taller essentials integration scenario",
-   "objective": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+   "objective": "A user adds a rectangular table from its type card, edits size and chairs and sees actual quantities and dimensions without rental prices in the shopping list; Taller Fondos y muebles has one Backing group containing the seven existing props moved from their former visual groups, with saved IDs and AI/photo discovery preserved; the exported GLB opens in portable Blender LTS with the same layout, sizes in metres and base colours.",
    "repository": "pictures",
    "after": [
     "T3.5"
@@ -2443,11 +2467,11 @@
      ]
     },
     "confidence": {
-     "justification": "Run the real Taller essentials integration scenario: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Run the real Taller essentials integration scenario: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/FondosYMuebles.tsx",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.5"
      ]
     }
@@ -2459,14 +2483,14 @@
     "taller:scene"
    ],
    "acceptance_criteria": [
-    "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+    "A user adds a rectangular table from its type card, edits size and chairs and sees actual quantities and dimensions without rental prices in the shopping list; Taller Fondos y muebles has one Backing group containing the seven existing props moved from their former visual groups, with saved IDs and AI/photo discovery preserved; the exported GLB opens in portable Blender LTS with the same layout, sizes in metres and base colours.",
     "A production build on loopback completes the real table-to-Backing-to-GLB flow, recording Blender import evidence or an explicit external block; no unexecuted check is reported as passed."
    ],
    "verification": [
     {
      "type": "command",
      "value": "npm run taller:test-integracion-esenciales",
-     "purpose": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+     "purpose": "A user adds a rectangular table from its type card, edits size and chairs and sees actual quantities and dimensions without rental prices in the shopping list; Taller Fondos y muebles has one Backing group containing the seven existing props moved from their former visual groups, with saved IDs and AI/photo discovery preserved; the exported GLB opens in portable Blender LTS with the same layout, sizes in metres and base colours.",
      "category": "integration",
      "created_by": "T3.5",
      "requires": [
@@ -2552,11 +2576,11 @@
      ]
     },
     "confidence": {
-     "justification": "Review rendered Taller essentials against the design: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Review rendered Taller essentials against the design: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/FondosYMuebles.tsx",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.6"
      ]
     }
@@ -2648,11 +2672,11 @@
      ]
     },
     "confidence": {
-     "justification": "Audit Taller essentials and export compatibility: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Audit Taller essentials and export compatibility: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T3.7"
      ]
     }
@@ -2743,11 +2767,11 @@
      ]
     },
     "confidence": {
-     "justification": "Copy the approved saved-projects design contract: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Copy the approved saved-projects design contract: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T92"
      ]
     }
@@ -2838,11 +2862,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement versioned project storage and scene validation: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement versioned project storage and scene validation: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.1"
      ]
     }
@@ -2953,11 +2977,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement project APIs with per-resource authorization: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement project APIs with per-resource authorization: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/app/api/login/route.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.2"
      ]
     }
@@ -2976,13 +3000,24 @@
     "proyectos:document"
    ],
    "acceptance_criteria": [
-    "Project APIs list and read only owned projects unless proyectos.ver_todos is granted, refuse unauthorized writes and cross-origin mutations, and return stable version conflicts without leaking another owner document."
+    "Project APIs list and read only owned projects unless proyectos.ver_todos is granted, refuse unauthorized writes and cross-origin mutations, and return stable version conflicts without leaking another owner document.",
+    "Project-name search and authorized owner filters apply to the whole server collection before pagination; filter-bound cursors, literal name matching and per-account authorization prevent skipped later-page matches and metadata disclosure."
    ],
    "verification": [
     {
      "type": "command",
      "value": "npm run proyectos:test-api",
      "purpose": "Project APIs list and read only owned projects unless proyectos.ver_todos is granted, refuse unauthorized writes and cross-origin mutations, and return stable version conflicts without leaking another owner document.",
+     "category": "functional",
+     "created_by": "T4.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run proyectos:test-api",
+     "purpose": "Project-name search and authorized owner filters apply to the whole server collection before pagination; filter-bound cursors, literal name matching and per-account authorization prevent skipped later-page matches and metadata disclosure.",
      "category": "functional",
      "created_by": "T4.3",
      "requires": [
@@ -3058,11 +3093,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement the project list and conflict-safe Taller saving: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement the project list and conflict-safe Taller saving: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/Taller3D.tsx",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.31"
      ]
     }
@@ -3085,7 +3120,8 @@
    ],
    "acceptance_criteria": [
     "The user names, saves, lists and reopens projects with their complete scene unchanged across browsers; pending edits are never labelled saved by an obsolete response.",
-    "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; foreign projects follow the owner-approved editing rule."
+    "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; staff/admin read foreign originals without write access and may save an owned copy only with taller.usar.",
+    "The first named save is explicit and later edits autosave; a project list search finds authorized matches beyond the first loaded page, filter changes reset pagination and obsolete query responses cannot replace current results."
    ],
    "verification": [
     {
@@ -3098,7 +3134,14 @@
     {
      "type": "command",
      "value": "npx tsx scripts/test/test-proyectos-cliente.ts",
-     "purpose": "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; foreign projects follow the owner-approved editing rule.",
+     "purpose": "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; staff/admin read foreign originals without write access and may save an owned copy only with taller.usar.",
+     "category": "functional",
+     "created_by": "T4.4"
+    },
+    {
+     "type": "command",
+     "value": "npx tsx scripts/test/test-proyectos-cliente.ts",
+     "purpose": "The first named save is explicit and later edits autosave; a project list search finds authorized matches beyond the first loaded page, filter changes reset pagination and obsolete query responses cannot replace current results.",
      "category": "functional",
      "created_by": "T4.4"
     }
@@ -3170,11 +3213,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement a lossless and idempotent legacy-scene import: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement a lossless and idempotent legacy-scene import: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.4"
      ]
     }
@@ -3269,11 +3312,11 @@
      ]
     },
     "confidence": {
-     "justification": "Implement the multi-browser saved-project integration harness: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Implement the multi-browser saved-project integration harness: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:scripts/e2e/humo/configuracion.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.5"
      ]
     }
@@ -3288,13 +3331,24 @@
     "proyectos:document"
    ],
    "acceptance_criteria": [
-    "The project harness starts real Next entrypoints against an isolated test schema and drives independent authenticated browser contexts through persistence, access denial, conflicts and legacy import."
+    "The project harness starts real Next entrypoints against an isolated test schema and drives independent authenticated browser contexts through persistence, access denial, conflicts and legacy import.",
+    "The browser harness seeds more than fifty projects and verifies a matching project beyond the first page, authorized owner filtering, next-page retry and stale search-response rejection without leaking foreign metadata."
    ],
    "verification": [
     {
      "type": "command",
      "value": "npm run proyectos:test-harness",
      "purpose": "The project harness starts real Next entrypoints against an isolated test schema and drives independent authenticated browser contexts through persistence, access denial, conflicts and legacy import.",
+     "category": "functional",
+     "created_by": "T4.6",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run proyectos:test-harness",
+     "purpose": "The browser harness seeds more than fifty projects and verifies a matching project beyond the first page, authorized owner filtering, next-page retry and stale search-response rejection without leaking foreign metadata.",
      "category": "functional",
      "created_by": "T4.6",
      "requires": [
@@ -3369,11 +3423,11 @@
      ]
     },
     "confidence": {
-     "justification": "Run the cross-browser project and import integration scenario: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Run the cross-browser project and import integration scenario: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.6"
      ]
     }
@@ -3477,11 +3531,11 @@
      ]
     },
     "confidence": {
-     "justification": "Review the rendered project and import interfaces: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Review the rendered project and import interfaces: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.7"
      ]
     }
@@ -3572,11 +3626,11 @@
      ]
     },
     "confidence": {
-     "justification": "Audit project isolation, concurrency and import preservation: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Audit project isolation, concurrency and import preservation: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.8"
      ]
     }
@@ -3667,11 +3721,11 @@
      ]
     },
     "confidence": {
-     "justification": "Run the project storage and authorization checkpoint: Existing source was inspected; round 9 decisions and the evolving Designer contract remain explicit assumptions.",
+     "justification": "Run the project storage and authorization checkpoint: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending.",
      "evidence": [
       "file:src/components/tres-d/guardado-escena.ts",
       "spec:SPEC.md#requirements",
-      "assumption:round 9 recommendations are draft alternatives, not owner decisions",
+      "spec:SPEC.md#clarifications",
       "task:T4.3"
      ]
     }
@@ -4095,7 +4149,7 @@
    "id": "SP-3",
    "milestone_id": "M1",
    "title": "Taller essentials: rectangular tables, Backing and Blender export",
-   "outcome": "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+   "outcome": "A user adds a rectangular table from its type card, edits size and chairs and sees actual quantities and dimensions without rental prices in the shopping list; Taller Fondos y muebles has one Backing group containing the seven existing props moved from their former visual groups, with saved IDs and AI/photo discovery preserved; the exported GLB opens in portable Blender LTS with the same layout, sizes in metres and base colours.",
    "covers": [
     "R9",
     "R10",
@@ -4105,10 +4159,13 @@
     "The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact.",
     "Adding a rectangular table exposes length, depth and chair count, selects it in the inspector and updates the real shopping list with placed chairs, including capacity warnings and undo.",
     "The existing agregar_mesas, cambiar_mesas and cambiar_sillas tools produce the same table dimensions and actual chair counts as manual editing without a paid AI call.",
+    "Each existing parametric table type has a creation card that adds its default-sized table and opens the inspector; rectangular tables use 240 × 90 × 75 cm by default and the shopping list contains quantities and dimensions without rental prices.",
     "Backing lists panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal and arco_metalico, each addable; existing IDs, saved scenes, repository ownership, search and AI/photo discovery remain compatible.",
+    "The seven Backing cards appear once in the new Taller group and no longer in their previous visual groups; Shopify /catalogo is unchanged and the original names and AI/photo discovery still resolve the same IDs.",
     "The exported GLB preserves actual scene world transforms, dimensions in metres, visible instances and base colours without mutating the editor or calling the network; export failure is visible and retryable.",
     "The harness starts a real next start build, drives table and Backing operations in Chromium, downloads the actual GLB and compares Blender-imported positions, metre dimensions and base colours against the fixture; missing Blender is reported as blocked.",
-    "A user adds and edits a rectangular table with its size and chairs and the shopping list reflects it; the catalogue and the Taller show one Backing category with every existing party prop; the exported GLB opens in Blender with the same layout, sizes in metres and colours.",
+    "An explicit setup step provisions a checksum-verified official portable Blender LTS under ~/.local/opt/blender without system-package changes, records its version and executable, and the real import harness never treats a missing executable as a pass.",
+    "A user adds a rectangular table from its type card, edits size and chairs and sees actual quantities and dimensions without rental prices in the shopping list; Taller Fondos y muebles has one Backing group containing the seven existing props moved from their former visual groups, with saved IDs and AI/photo discovery preserved; the exported GLB opens in portable Blender LTS with the same layout, sizes in metres and base colours.",
     "A production build on loopback completes the real table-to-Backing-to-GLB flow, recording Blender import evidence or an explicit external block; no unexecuted check is reported as passed.",
     "Phone, tablet and desktop renderings of table creation/editing, Backing and export states match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks.",
     "An independent SP-3 spec and standards audit has no open critical or high findings, maps each defect to its introducing task and distinguishes GLB structural evidence from real Blender and owner evidence."
@@ -4151,15 +4208,18 @@
     "A project is stored in Postgres under the session account with a versioned complete scene document; conditional updates atomically increment revision and reject stale writes without changing stored data.",
     "Account deletion is refused when projects exist, including a project-save/account-delete race; malformed or oversized documents, duplicate node IDs, nonfinite dimensions and broken or cyclic parent links are refused without writes.",
     "Project APIs list and read only owned projects unless proyectos.ver_todos is granted, refuse unauthorized writes and cross-origin mutations, and return stable version conflicts without leaking another owner document.",
-    "Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race.",
+    "Project-name search and authorized owner filters apply to the whole server collection before pagination; filter-bound cursors, literal name matching and per-account authorization prevent skipped later-page matches and metadata disclosure.",
     "The user names, saves, lists and reopens projects with their complete scene unchanged across browsers; pending edits are never labelled saved by an obsolete response.",
-    "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; foreign projects follow the owner-approved editing rule.",
+    "Two open copies cannot silently overwrite each other: a 409 stops autosaving, keeps the unsent local scene and offers loading the server version or saving a new owned copy; staff/admin read foreign originals without write access and may save an owned copy only with taller.usar.",
+    "The first named save is explicit and later edits autosave; a project list search finds authorized matches beyond the first loaded page, filter changes reset pagination and obsolete query responses cannot replace current results.",
     "A signed-in account with a legacy browser scene is offered an explicit import; acceptance creates exactly one owned project even after retry, refusal or validation failure preserves raw local data, and no account receives a legacy scene automatically.",
     "The project harness starts real Next entrypoints against an isolated test schema and drives independent authenticated browser contexts through persistence, access denial, conflicts and legacy import.",
+    "The browser harness seeds more than fifty projects and verifies a matching project beyond the first page, authorized owner filtering, next-page retry and stale search-response rejection without leaking foreign metadata.",
     "A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss.",
     "A real production build passes persistence across fresh browser contexts, per-account denial, staff read/copy, competing-save conflict, import retry and account-switch isolation checks on the REQ-021 database.",
     "Project list, saving/offline/conflict states, foreign read-only view and import prompt match approved proyectos@v1 at phone, tablet and desktop widths with keyboard and focus behavior verified.",
-    "An independent SP-4 spec and standards audit has no open critical or high findings and verifies ownership, atomic version control, import idempotency and preservation, deletion registration and account-switch isolation."
+    "An independent SP-4 spec and standards audit has no open critical or high findings and verifies ownership, atomic version control, import idempotency and preservation, deletion registration and account-switch isolation.",
+    "Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race."
    ],
    "ui": {
     "contract": "proyectos",

@@ -74,3 +74,17 @@
 {"at": "2026-10-26T18:37:17-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 12 secciones traducidas", "diff": ""}
 {"at": "2026-10-26T18:48:32-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · borrador 2 listo", "diff": ""}
 {"at": "2026-10-26T18:49:48-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 7 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T18:52:54-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (resultado, criterios)", "diff": "+ Each existing parametric table type has a creation card that adds its default-sized table and opens the inspector; rectangular tables use 240 × 90 × 75 cm by default and the shopping list contains quantities and dimensions without rental prices."}
+{"at": "2026-10-26T18:52:54-05:00", "who": "Planner", "kind": "plan", "sp": "SP-4", "text": "Actualizó SP-4 (criterios)", "diff": "+ Project-name search and authorized owner filters apply to the whole server collection before pagination; filter-bound cursors, literal name matching and per-account authorization prevent skipped later-page matches and metadata disclosure."}
+{"at": "2026-10-26T18:52:54-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and Taller essentials», «M2 — Saved work, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-26T18:53:15-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-3", "text": "taller-esenciales@v1: Owner answered round 9 via web: q1=a type cards, default size then existing inspector; q2=a actual quantities/dimensions without rental prices; q3=a seven cards move out of old visual groups into one ", "diff": ""}
+{"at": "2026-10-26T18:53:15-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "Empezó taller-esenciales@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T18:53:15-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-4", "text": "proyectos@v1: Owner round 9 answers: q5=a first explicit named save then autosave with visible status; 500ms remains Planner technical default; q6=a name plus complete scene incl room/environment/salon/materials/sc", "diff": ""}
+{"at": "2026-10-26T18:53:15-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "Empezó proyectos@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T18:55:53-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 23 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:01:22-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 26 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:11:10-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · borrador 3 listo", "diff": ""}
+{"at": "2026-10-26T19:11:10-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1 · borrador 3 listo", "diff": ""}
+{"at": "2026-10-26T19:11:18-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1", "diff": ""}
+{"at": "2026-10-26T19:11:19-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "Empezó taller-esenciales@v1", "diff": ""}
+{"at": "2026-10-26T19:11:20-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "Empezó proyectos@v1", "diff": ""}
