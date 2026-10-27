@@ -37,6 +37,14 @@ class Due(Base):
         self.assertEqual(analyst.due(self.rdir, "T1", doc_with(2)), 0)
         self.assertEqual(analyst.due(self.rdir, "T1", doc_with(3)), 3)
 
+    def test_cancelled_attempts_are_not_failures_and_never_ask_for_an_analysis(self):
+        doc = doc_with(2)
+        for n in range(3):                                   # a rebase, an engine reload and the analyst's own stop
+            doc["attempts"][f"att-c{n}"] = {"state": "cancelled"}
+            doc["tasks"]["T1"]["attempts"].append(f"att-c{n}")
+        self.assertEqual(analyst.failures(self.rdir, "T1", doc), 2)
+        self.assertEqual(analyst.due(self.rdir, "T1", doc), 0)
+
     def test_an_analysis_is_not_repeated_until_two_more_failures_and_never_while_one_runs(self):
         analyst._save(self.rdir, "T1", {"state": "done", "failures": 3, "cause": "c", "solution": "s"})
         self.assertEqual(analyst.due(self.rdir, "T1", doc_with(4)), 0)

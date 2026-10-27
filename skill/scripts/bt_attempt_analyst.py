@@ -78,7 +78,10 @@ def _save(rdir: Path | str, task: str, data: dict[str, Any]) -> None:
 def failures(rdir: Path | str, task: str, doc: dict) -> int:
     import bt_attempt_history
 
-    return sum(1 for h in bt_attempt_history.entries(Path(rdir), task, doc) if h["outcome"] != "accepted")
+    # A cancelled attempt is not a failure of the task: the remediation rebase, an engine reload, the operator or this analyst's own stop
+    # cancel attempts that never got to run. Counting them let the analyst's stops feed new analyses that stopped the next attempt
+    # (REQ-021 T1.8: an audit was cancelled after 16 s and 38 s and could never judge the remediation).
+    return sum(1 for h in bt_attempt_history.entries(Path(rdir), task, doc) if h["outcome"] not in ("accepted", "cancelled"))
 
 
 def enabled() -> bool:
