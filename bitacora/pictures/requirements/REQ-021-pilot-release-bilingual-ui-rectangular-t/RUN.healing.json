@@ -1,5 +1,5 @@
 {
- "actions": 2,
+ "actions": 3,
  "analyst_stops": {
   "T1.8:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4": {
    "attempt": "att-0022",
@@ -7,6 +7,27 @@
   }
  },
  "cases": {
+  "412dfd2e86c898cb": {
+   "applied": 1,
+   "at": 1793143593.965,
+   "class": "transient",
+   "evidence": [
+    "transient signature: cancelled",
+    "reason code: analyst_not_the_task:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4"
+   ],
+   "first_at": 1793143593.915,
+   "history": [
+    {
+     "at": 1793143593.965,
+     "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+     "result": "failed"
+    }
+   ],
+   "id": "412dfd2e86c898cb",
+   "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+   "status": "failed",
+   "task": "T1.8"
+  },
   "7fba542ef5969161": {
    "applied": 1,
    "at": 1793140568.738,

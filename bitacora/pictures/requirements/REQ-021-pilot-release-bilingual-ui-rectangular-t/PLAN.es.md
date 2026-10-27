@@ -3,26 +3,26 @@ req: REQ-021
 status: draft
 created: 2026-10-26
 ---
-# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto de IA, elementos esenciales de Taller, inglés, módulos y chat
+# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto en IA, elementos esenciales de Taller, inglés, módulos y chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 12/67 · generado: 2026-10-27T17:56:45-05:00
+> Bloque generado, no editar a mano. Plan: borrador · ejecución: en curso · hitos 0/5 · tareas 14/67 · generado: 2026-10-27T18:24:15-05:00
 
-**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 12/27
+**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 14/27
 
 **SP-1 — Cuentas, sesiones y permisos del lado del servidor**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T1.1 | Esquema de cuentas: migración 037 y helper para el esquema de pruebas aislado | media | completada | gpt-6-luna | codex-1 | 2 |
+| T1.1 | Esquema de cuentas: migración 037 y helper de esquema de pruebas aislado | media | completada | gpt-6-luna | codex-1 | 2 |
 | T1.2 | Catálogo de permisos, catálogo de planes, los seis roles del sistema y el mapa de permisos de rutas | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.3 | Servicio de cuentas: invitaciones, activación, inicio de sesión con bloqueo, enlaces de restablecimiento, roles y comandos de un solo uso | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T1.4 | Sesiones del servidor y control de permisos en el proxy y la API de inicio de sesión, en sustitución de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Modo local sin restricciones que se niega a iniciarse fuera de next dev en loopback | media | completada | gpt-6-luna | codex-luis | 1 |
-| T1.6 | Aplicar el control de permisos a cada controlador de API y migrar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | Verificación de extremo a extremo de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 3 |
+| T1.4 | Sesiones del servidor y protección de permisos en el proxy y la API de inicio de sesión, en sustitución de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T1.5 | Modo local sin restricciones que se niega a iniciar fuera de next dev en loopback | media | completada | gpt-6-luna | codex-luis | 1 |
+| T1.6 | Aplicar la protección de permisos a cada controlador de API y trasladar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T1.7 | Verificación integral de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 3 |
 | T1.8 | Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | bloqueada | gpt-6.1-sol | codex-2 | 4 |
-| T1.8b | Auditoría de verificación cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | pendiente | — | — | 0 |
+| T1.8b | Auditoría cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | pendiente | — | — | 0 |
 | T1.9 | Corregir los hallazgos F1, F2, F3, F4 de T1.8 | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.10 | Corregir los hallazgos F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
 
@@ -33,33 +33,33 @@ created: 2026-10-26
 | T2.1 | Copiar al repositorio el contrato cuentas-admin@v1 aprobado por el propietario | baja | completada | gpt-6.1-sol | codex-2 | 2 |
 | T2.2 | API de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | completada | gpt-6-luna | codex-2 | 2 |
 | T2.3 | Pantallas de inicio de sesión, activación de invitación, restablecimiento de contraseña y nueva aceptación del aviso | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | en curso | gpt-6-luna | codex-2 | 1 |
-| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | lista | — | — | 0 |
-| T2.6 | Prueba de extremo a extremo en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | pendiente | — | — | 0 |
-| T2.7 | Revisión visual de SP-2 con respecto al contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
-| T2.8 | Auditoría de SP-2: pantallas de cuenta, API de administración y aviso de datos | media | pendiente | — | — | 0 |
+| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | completada | gpt-6-luna | codex-2 | 1 |
+| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | completada | gpt-6-luna | codex-2 | 1 |
+| T2.6 | Prueba integral en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | en curso | gpt-6-luna | codex-luis | 1 |
+| T2.7 | Revisión visual de SP-2 según el contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
+| T2.8 | Auditoría de SP-2: pantallas de cuentas, API de administración y aviso de datos | media | pendiente | — | — | 0 |
 
-**SP-14 — Sección de planes: los cuatro planes de acceso, pública e informativa**
+**SP-14 — Sección de planes: los cuatro planes de acceso, públicos e informativos**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T14.1 | Copiar al repositorio el contrato planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
 | T14.2 | Página pública de planes: los cuatro planes del catálogo de planes, precios por idioma | media | pendiente | — | — | 0 |
 | T14.3 | Enlaces a los planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
-| T14.4 | Prueba de extremo a extremo en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
-| T14.5 | Revisión visual de SP-14 con respecto al contrato planes@v1 | media | pendiente | — | — | 0 |
+| T14.4 | Prueba integral en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
+| T14.5 | Revisión visual de SP-14 según el contrato planes@v1 | media | pendiente | — | — | 0 |
 | T14.6 | Auditoría de SP-14: uso del catálogo, ruta pública y textos | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T91 | Verificación de composición de M1: desde el primer administrador hasta un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
+| T91 | Verificación de composición de M1: del primer administrador a un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
 | T94 | Verificación de composición CG-4: planes de acceso desde la sección de planes hasta la pantalla de cuentas | media | pendiente | — | — | 0 |
 
-**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas de chat** · dificultad alta · 0/40
+**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas del chat** · dificultad alta · 0/40
 
-**SP-3 — Elementos esenciales de Taller: Backing y tipos de mesa investigados y modelados, tarjetas de tipo y exportación a Blender para todos los tipos**
+**SP-3 — Elementos esenciales de Taller: Backing y tipos de tabla investigados y modelados, tarjetas de tipo y exportación a Blender de todos los tipos**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|

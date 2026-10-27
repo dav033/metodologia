@@ -1,28 +1,23 @@
 {
  "attention": [
   {
-   "kind": "blocked_task",
-   "reason": "analyst_not_the_task:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4",
-   "task_id": "T1.8"
-  },
-  {
    "kind": "composition_waiting",
    "reason": "unpublished_subplan_version:SP-1;unpublished_subplan_version:SP-2",
    "task_id": "T91"
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-27T23:17:04+00:00",
+ "heartbeat_at": "2026-10-27T23:27:08+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
   "revision": 3,
   "sha256": "7549d22d665c24882a3b61e337708c4e2b69681b7cd4449d0931d0a46ec43a9a"
  },
- "projected_at": "2026-10-27T23:17:04+00:00",
+ "projected_at": "2026-10-27T23:27:08+00:00",
  "projection": true,
  "req": "REQ-021",
  "scheduler_status": "running",
- "sessions": 26,
+ "sessions": 28,
  "stage": {
   "complete": false,
   "joining": null,
@@ -52,7 +47,7 @@
    "commit": null,
    "id": "SP-1",
    "manifest_sha256": null,
-   "status": "blocked",
+   "status": "open",
    "version": null
   },
   {
@@ -302,37 +297,37 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T1.7",
     "T1.10"
    ],
-   "attempts": 4,
+   "attempts": 5,
    "attempts_used": 1,
    "complexity": "high",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:085bfaf5d72d6c2c02e87baef5fbf60eaecb4f8c753adbd3ee6595cab5b02a44:5a930d9bd470f1afd5ffd603008016dd115db022a9cd36492d43669e2bc30d12",
+   "executor": "route:m2:v1:02e01b812bfb453a2f21ac526381dda0e1113aac68cdc4aaf29f9ca3ed76d0bd:d3691edee91832af25756fc61d25f8808aa0ec0e7c6ea43bef6361d5dd1d25fa",
    "id": "T1.8",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793140537.1243305",
+   "quota_observed_at": "1793143442.4923954",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "55.0",
-   "quota_valid_until": "1793147737.1243305",
-   "reason": "analyst_not_the_task:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4",
+   "quota_used_percent": "63.0",
+   "quota_valid_until": "1793150642.4923954",
+   "reason": "",
    "repo": "pictures",
    "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "blocked",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
-   "status": "blocked",
+   "scheduler_state": "active",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "in_progress",
    "title": "SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands",
    "unreachable": false
   },
@@ -368,7 +363,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
@@ -587,7 +582,7 @@
    "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "",
+   "evidence": "m6://result/ba6c28e332df5d3be41ec96e2177bad28a4cc6970fd3c32c46ac8f056477ed74",
    "executor": "route:m2:v1:22edbd5c2d7306c7c9797a389099e76d92339f2b1d3f1d4ea09993a89e16104a:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T2.5",
    "max_attempts": 3,
@@ -606,45 +601,45 @@
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "done",
    "title": "Administration screens: accounts list, invitations, account actions and the role editor",
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T2.3",
     "T2.4",
     "T2.5"
    ],
-   "attempts": 0,
-   "attempts_used": 0,
+   "attempts": 1,
+   "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
    "evidence": "",
-   "executor": "",
+   "executor": "route:m2:v1:4fed9778e9699b51d75fd7ac030704b1bfd0ec09d10f6aab2e9498e9dc3125a1:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T2.6",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793138971.1557376",
-   "quota_reason": "quota_fresh",
+   "quota_observed_at": "1793143442.4923954",
+   "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "55.0",
-   "quota_valid_until": "1793146171.1557376",
+   "quota_used_percent": "63.0",
+   "quota_valid_until": "1793150642.4923954",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 3,
+   "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
-   "route_status": "recommended",
-   "scheduler_state": "pending",
-   "selection_reason": "route_policy_preferred",
-   "status": "todo",
+   "route_status": "assigned",
+   "scheduler_state": "active",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
+   "status": "in_progress",
    "title": "Browser end-to-end: invite, activate, sign in and change plan on a production build",
    "unreachable": false
   },
@@ -750,7 +745,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "M1 composition check: first administrator to an Entusiasta user on the integrated tree",
-   "unreachable": true
+   "unreachable": false
   }
  ]
 }

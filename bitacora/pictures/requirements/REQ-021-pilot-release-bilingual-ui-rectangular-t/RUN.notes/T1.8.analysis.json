@@ -1,17 +1,6 @@
 {
- "at": "2026-10-27T15:49:53",
- "cause": "Not an implementation bug in the audit itself: T1.8 asks for a ledger with no open critical/high finding, but the audit correctly finds 5 open high defects (F1, F2, F3, F4, F6) in the unchanged code, and nothing in this run can close them. The only check named, `bitacora.py audit-ledger check` (bitacora_platform/cli_audit_ledger.py:11-31 -> bt_audit_gate.validate_ledger), validates schema only and does not judge open findings, so it can pass while the acceptance fails. The gate that rejects is bt_audit_gate.evaluate (blocking = critical/high + open), which fails attempts att-0012 and att-0013. Also, SP-1.audit.md cites audited snapshot 490d2a8, while the sealed source is f85c7384 and the att-0013 observation records snapshot_sha f85c7384, so the report may be judging a stale snapshot.",
- "confidence": "media",
- "failures": 3,
- "model": "haiku",
- "not_the_task": true,
- "profile": "claude",
- "seconds": 42.6,
- "solution": "1. Do not edit SP-1.findings.json to mark findings fixed or accepted: no evidence exists, and only the owner can accept (bt_audit_gate.py:161-162).\n2. Owner restarts the REQ-021 owner process so the planner fix (SECURITY_GATE, subplan_id on remediation tasks, D-137) loads; confirm remediation tasks T1.9/T1.10 exist.\n3. Remediation implementers redo the producer tasks named in the ledger: T1.5 (F1, F2, F10), T1.2/T1.6 (F3, F4, F5, F11), T1.3 (F6 with a real PostgreSQL concurrency test, F7, F12, F13, F14), T1.4 (F8, F9), T1.7 (F15), each with its own evidence.\n4. Re-run the security audit on the sealed snapshot f85c7384 (not 490d2a8) so SP-1.audit.md's snapshot_sha matches, and update the ledger statuses only with evidence from the re-audit.\n5. Gate on bt_audit_gate.evaluate (or the scheduler's audit gate) for T1.8, not on audit-ledger check alone; retry with `scheduler-op REQ-021 decide T1.8:1 retry` only after step 3.",
- "source_attempt": "att-0013",
- "source_available": true,
- "source_directory": "/tmp/bt-analyst-6q_tf4yp/source",
- "source_snapshot": "f85c7384ff560aa6f2ed1fd00b8bc9fea6f4798c",
- "state": "done",
+ "failures": 4,
+ "started": 1793143599.5589218,
+ "state": "running",
  "task": "T1.8"
 }
