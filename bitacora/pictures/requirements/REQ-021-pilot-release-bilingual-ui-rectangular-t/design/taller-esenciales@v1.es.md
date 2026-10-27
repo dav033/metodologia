@@ -67,59 +67,59 @@ Conservar la estructura existente del taller: título/acciones → navegación d
 
 **Revisión visual rectora — comentarios del propietario 2026-10-26T21:01.** Componer cada vista modificada con el kit de sustitución de david-ui. El HTML parte de `kit/templates/mockup.html`, conserva sus selectores nativos etiquetados y la etiqueta Mockup, e inserta el kit actual con `kit/inline.py`. Las clases, estructura, espaciado, foco y variantes de componentes provienen de fragmentos revisados, no de una hoja de estilos paralela. La paleta fuente y los datos fuente siguen siendo los de Pictures. Esto sustituye las clases visuales personalizadas del borrador anterior, pero conserva sus flujos funcionales.
 
-### Project role mapping
+### Mapeo de roles del proyecto
 
-Values come from `src/app/globals.css` in both inspected worktrees. Offline typography uses the kit's system sans fallback for production Geist Sans; no font download. Source `--taller-primario` is still #6d3fe0 light / #7a55ec dark, but the dark role `--primary` deliberately uses the existing `--taller-acento` and `--taller-sobre-acento` pair: it can serve both a readable text link and an accessible filled control in the kit. This is a proposed semantic-role mapping for SP-3, not an edit to production globals or a new palette.
+Los valores provienen de `src/app/globals.css` en ambos árboles de trabajo inspeccionados. La tipografía sin conexión usa la alternativa sans del sistema del kit para Geist Sans en producción; no se descargan fuentes. La fuente `--taller-primario` sigue siendo #6d3fe0 en tema claro / #7a55ec en tema oscuro, pero el rol oscuro `--primary` usa deliberadamente el par existente `--taller-acento` y `--taller-sobre-acento`: puede servir tanto para un enlace de texto legible como para un control relleno accesible en el kit. Este es un mapeo propuesto de roles semánticos para SP-3, no una edición de los estilos globales de producción ni una paleta nueva.
 
-| Kit roles | Existing Pictures source | Light | Dark |
+| Roles del kit | Fuente existente de Pictures | Claro | Oscuro |
 |---|---|---|---|
 | `--background` | `--taller-panel` | #faf9fc | #16131d |
-| `--foreground`, card/popover/secondary/accent foreground | `--taller-texto` | #1c1425 | #f2eff7 |
+| `--foreground`, primer plano de card/popover/secondary/accent | `--taller-texto` | #1c1425 | #f2eff7 |
 | `--card`, `--popover` | `--taller-tarjeta` | #ffffff | #1d1926 |
-| `--primary` | `--taller-primario` light / `--taller-acento` dark | #6d3fe0 | #b9a4ff |
-| `--primary-foreground` | `--taller-sobre-primario` light / `--taller-sobre-acento` dark | #ffffff | #120b24 |
-| `--primary-hover` | `--taller-acento` light / `--taller-texto-2` dark | #5530b8 | #ddd8e6 |
+| `--primary` | `--taller-primario` claro / `--taller-acento` oscuro | #6d3fe0 | #b9a4ff |
+| `--primary-foreground` | `--taller-sobre-primario` claro / `--taller-sobre-acento` oscuro | #ffffff | #120b24 |
+| `--primary-hover` | `--taller-acento` claro / `--taller-texto-2` oscuro | #5530b8 | #ddd8e6 |
 | `--secondary`, `--muted`, `--accent` | `--taller-encima` | #f3eefb | #231e2e |
 | `--muted-foreground`, `--input` | `--taller-medio` | #5a5168 | #a59db5 |
-| `--border` | `--taller-borde`, decorative separators only | #ddd3ea | #2d2838 |
+| `--border` | `--taller-borde`, solo separadores decorativos | #ddd3ea | #2d2838 |
 | `--ring`, `--sidebar-ring` | `--taller-resalte` | #6d3fe0 | #8f6ef5 |
 | `--sidebar` | `--taller-barra` | #ffffff | #121018 |
-| `--sidebar-accent` | `--taller-panel` light / `--taller-tarjeta` dark | #faf9fc | #1d1926 |
+| `--sidebar-accent` | `--taller-panel` claro / `--taller-tarjeta` oscuro | #faf9fc | #1d1926 |
 | `--destructive` | `--taller-peligro` | #a8323d | #f08a94 |
 | `--success` | `--taller-valido` | #1a6a4a | #5fd3a0 |
-| `--warning` | `--taller-medio` (neutral capacity/status notice) | #5a5168 | #a59db5 |
+| `--warning` | `--taller-medio` (aviso neutral de capacidad/estado) | #5a5168 | #a59db5 |
 | `--info` | `--taller-acento` | #5530b8 | #b9a4ff |
-| `--scene-background` (proposal alias) | `--taller-visor` | #ebe7f1 | #1a1722 |
+| `--scene-background` (alias propuesto) | `--taller-visor` | #ebe7f1 | #1a1722 |
 
-Status soft roles use existing neutral panel/card surfaces; destructive foreground uses the same contrasting source pair as primary foreground; sidebar foreground/primary/border roles mirror the matching roles above. Retain the kit's unused chart and overlay defaults. No raw UI colours outside this one mapping block. SVG prop/material colours are scene data, not chrome.
+Los roles de estado suaves usan superficies neutras existentes de panel/tarjeta; el primer plano destructivo usa el mismo par de fuentes contrastantes que el primer plano primario; los roles de primer plano/primario/borde de la barra lateral reflejan los roles correspondientes anteriores. Se conservan los valores predeterminados sin uso del kit para gráficos y superposiciones. No se usan colores de interfaz sin asignar fuera de este bloque de mapeo. Los colores de propiedades/materiales SVG son datos de la escena, no elementos de la interfaz.
 
-### Components and snippet provenance
+### Componentes y procedencia de fragmentos
 
-| Composition | Contract name / variant / states | Vetted snippet |
+| Composición | Nombre del contrato / variante / estados | Fragmento validado |
 |---|---|---|
-| App rail | Sidebar · state=collapsed · current/hover/focus | `kit/components/sidebar.html#collapsed` |
-| Type and Backing cards | Card · size=sm · parts=content/header/title/description/footer | `kit/components/card.html#actions`, small variant from `#stats` |
-| Actions | Button · variant=default/outline/ghost · state=default/hover/focus-visible/disabled/loading | `kit/components/button.html#variants`, `#sizes`, `#states` |
-| Numeric fields | Field · orientation=vertical · state=default/error; Input · type=text/number · state=default/error | `kit/components/field.html#vertical`, `kit/components/input.html#types` |
-| Chair/material choices | Select · native · state=default/focus-visible/disabled | `kit/components/select.html#native` |
-| Prompt | Textarea · state=default/error/disabled | `kit/components/textarea.html#states` |
-| Persistent feedback, including inline empty states | Alert · variant=default/success/destructive · action | `kit/components/alert.html#variants` |
-| Loading | Skeleton · rows · state=loading | `kit/components/skeleton.html#card` (neutral placeholder parts) |
-| Count/status label | Badge · variant=secondary | `kit/components/badge.html#variants` |
-| Legacy details | Accordion · type=multiple · state=closed/open | `kit/components/accordion.html#default` |
-| Shopping D2 | Dialog · size=lg · header/title/description/footer/close; Table · numeric alignment=end | `kit/components/dialog.html#open`, table anatomy from `kit/components/data-table.html#ready` |
-| Export D1 | Popover · align=end (nonmodal role=group to preserve existing export semantics) | `kit/components/popover.html#open` |
-| Transient local acknowledgement | Toast · type=info · state=visible | `kit/components/toast.html#stack` |
+| Barra de la aplicación | Sidebar · state=collapsed · current/hover/focus | `kit/components/sidebar.html#collapsed` |
+| Tarjetas Type y Backing | Card · size=sm · parts=content/header/title/description/footer | `kit/components/card.html#actions`, variante pequeña de `#stats` |
+| Acciones | Button · variant=default/outline/ghost · state=default/hover/focus-visible/disabled/loading | `kit/components/button.html#variants`, `#sizes`, `#states` |
+| Campos numéricos | Field · orientation=vertical · state=default/error; Input · type=text/number · state=default/error | `kit/components/field.html#vertical`, `kit/components/input.html#types` |
+| Opciones de sillas/materiales | Select · native · state=default/focus-visible/disabled | `kit/components/select.html#native` |
+| Instrucción | Textarea · state=default/error/disabled | `kit/components/textarea.html#states` |
+| Comentarios persistentes, incluidos los estados vacíos en línea | Alert · variant=default/success/destructive · action | `kit/components/alert.html#variants` |
+| Carga | Skeleton · rows · state=loading | `kit/components/skeleton.html#card` (partes de marcador de posición neutral) |
+| Etiqueta de cantidad/estado | Badge · variant=secondary | `kit/components/badge.html#variants` |
+| Detalles heredados | Accordion · type=multiple · state=closed/open | `kit/components/accordion.html#default` |
+| Compras D2 | Dialog · size=lg · header/title/description/footer/close; Table · numeric alignment=end | `kit/components/dialog.html#open`, estructura de tabla de `kit/components/data-table.html#ready` |
+| Exportación D1 | Popover · align=end (rol no modal=group para conservar la semántica de exportación existente) | `kit/components/popover.html#open` |
+| Confirmación local transitoria | Toast · type=info · state=visible | `kit/components/toast.html#stack` |
 
-Checkbox/Radio/Switch controls are not needed in these six flows. Do not add a checkbox as a substitute for chair quantity or a new export setting. Any such control introduced by an approved later change must use the kit's `.checkbox`, `.radio` or `.switch`; browser-native white squares are unacceptable in the dark theme.
+Los controles Checkbox/Radio/Switch no se necesitan en estos seis flujos. No agregues una casilla como sustituto de la cantidad de sillas ni como nueva configuración de exportación. Todo control de este tipo que se introduzca en un cambio posterior aprobado debe usar `.checkbox`, `.radio` o `.switch` del kit; los cuadros blancos nativos del navegador no son aceptables en el tema oscuro.
 
-**Layout proposals outside the kit:** workshop split panes (`workshop-grid`, `workshop-pane`, `scene-pane`), scene illustration frame, equal object-card grid, compact dimension grid, native-dialog host and responsive export anchoring. They use role tokens and 4 px spacing multiples and compose kit components without changing their visual classes. The kit has no 3D editor or canvas: the static SVG scene is explicitly a proposal/schematic, not a new rendering engine. A custom script is necessary for shared table data, validation/history, applicable state options, and modal state/focus behavior that visibility attributes alone cannot express.
+**Propuestas de diseño fuera del kit:** paneles divididos del taller (`workshop-grid`, `workshop-pane`, `scene-pane`), marco de ilustración de escena, cuadrícula de tarjetas de objetos con ancho uniforme, cuadrícula compacta de dimensiones, contenedor de diálogo nativo y anclaje adaptable de exportación. Usan tokens de rol y múltiplos de espaciado de 4 px, y combinan componentes del kit sin cambiar sus clases visuales. El kit no tiene un editor 3D ni un lienzo: la escena SVG estática es explícitamente una propuesta/esquema, no un motor de renderizado nuevo. Se necesita un script personalizado para los datos compartidos de la tabla, la validación/historial, las opciones de estado aplicables y el comportamiento de estado/foco modal, que no se puede expresar solo con atributos de visibilidad.
 
-Use `.app` + `.sidebar` + `.app-main` + `.app-header`; stacks/rows provide all internal gaps. The tools row wraps inside one padded content frame. No centred form with a footer on another axis: inspector labels/help/actions share the same left edge; Card header/content/footer use the same component inset; Dialog header/body/footer belong to one box. Inline empty states use left-aligned Alert anatomy to keep the workshop axis.
+Usa `.app` + `.sidebar` + `.app-main` + `.app-header`; las pilas/filas proporcionan todos los espacios internos. La fila de herramientas se ajusta dentro de un único marco de contenido con relleno. No uses un formulario centrado con el pie en otro eje: las etiquetas, la ayuda y las acciones del inspector comparten el mismo borde izquierdo; el encabezado/contenido/pie de Card usan el mismo margen interno del componente; el encabezado/cuerpo/pie de Dialog pertenecen a una sola caja. Los estados vacíos en línea usan la estructura de Alert alineada a la izquierda para mantener el eje del taller.
 
-Typography: body/labels 14 px, metadata 12 px, headings 16/20/24 px from kit roles; numeric inputs and quantities right-aligned with tabular figures. Source icons are consistent inline SVG, not emoji. Default cards use kit 24 px padding (20 px on phones); these peer cards deliberately select **size=sm**, the kit's 16 px inset, not bespoke cramped padding. Default controls are 36 px, phone controls 40 px; default controls never use an 8 px card inset. Panel inset 24 px desktop / 16 px narrow. Standard gaps 8/12/16/24 px. Kit radii and visible 2 px focus ring are retained. Phone controls meet 24 px minimum and prefer 40–44 px touch area; layout allows wrapping instead of shrinking labels.
+Tipografía: cuerpo/etiquetas de 14 px, metadatos de 12 px, encabezados de 16/20/24 px según los roles del kit; las entradas numéricas y cantidades se alinean a la derecha con cifras tabulares. Los iconos de origen son SVG en línea coherentes, no emojis. Las tarjetas predeterminadas usan el relleno de 24 px del kit (20 px en teléfonos); estas tarjetas pares seleccionan deliberadamente **size=sm**, el margen interno de 16 px del kit, no un relleno personalizado demasiado estrecho. Los controles predeterminados miden 36 px y los controles para teléfonos, 40 px; los controles predeterminados nunca usan un margen interno de tarjeta de 8 px. Margen interno del panel: 24 px en escritorio / 16 px en pantallas estrechas. Separaciones estándar de 8/12/16/24 px. Se conservan los radios del kit y el anillo de foco visible de 2 px. Los controles para teléfonos cumplen el mínimo de 24 px y prefieren un área táctil de 40–44 px; el diseño permite ajustar el contenido en varias líneas en vez de reducir las etiquetas.
 
-One primary action maximum on the visible surface. V1 gives rectangular creation the primary action; V2 uses list access; V3's peer add actions remain outline; V6 uses Send or Apply, never both primary; V7 uses open-export or GLB, never both primary. An open D1/D2 removes background primary emphasis. Navigation is neutral with explicit current/pressed semantics. Flat fixed surfaces; shadows only on floating Popover/Dialog/Toast. Preserve the template's Sutil/Natural/Expresivo motion selector; reduced-motion disables meaningful displacement, and loading skeletons remain static. Component motion is functional and comes from the kit.
+Como máximo, una acción primaria en la superficie visible. V1 asigna la acción primaria a la creación rectangular; V2 usa el acceso a la lista; las acciones pares de agregar de V3 siguen siendo de contorno; V6 usa Enviar o Aplicar, nunca ambas como primarias; V7 usa abrir exportación o GLB, nunca ambas como primarias. Un D1/D2 abierto quita el énfasis primario del fondo. La navegación es neutral y tiene semántica explícita de elemento actual/presionado. Superficies planas y fijas; las sombras solo se usan en Popover/Dialog/Toast flotantes. Se conserva el selector de movimiento Sutil/Natural/Expresivo de la plantilla; el movimiento reducido desactiva los desplazamientos significativos y los esqueletos de carga permanecen estáticos. El movimiento de los componentes es funcional y proviene del kit.
 
 ## 5. Navegación y modelo de interacción
 
@@ -153,18 +153,18 @@ Membresía canónica / invariantes de F3 (todas siguen en `ASIGNACION_FONDOS →
 
 **F5 — IA de escena (US-5).** Abre la pestaña IA existente. Ejemplo: “Añade una mesa rectangular de 2,40 × 0,90 m con 8 sillas Tiffany”. Mientras espera, conserva la escena confirmada, indica que la operación está pendiente y no ofrece un envío duplicado. Usa el comportamiento existente de propuesta y aceptación; muestra las dimensiones reales y las cantidades solicitadas/colocadas, sin crear una nueva arquitectura de chat. Aplicar un resultado válido actualiza el mismo modelo de mesa y la lista de compras. Si ocurre un error recuperable, conserva la instrucción y la escena anterior. El mockup solo representa una respuesta de prueba; no se invoca ninguna IA.
 
-## 7. View specifications
+## 7. Especificaciones de vista
 
-| ID / mock `view` | Structure / copy / actions | Responsive / states / flow |
+| ID / `view` de maqueta | Estructura / texto / acciones | Adaptabilidad / estados / flujo |
 |---|---|---|
-| V1 `tables` | Card · size=sm (`card.html#actions/#stats`); Button · default/outline (`button.html#variants`); Field/Input · search (`field.html#vertical`). Add title; Mobiliario selected; search; “Mesa rectangular”, source default dimensions; cards for the other seven existing types; rectangular-card action “Añadir” (accessible name “Añadir Mesa rectangular”); equal-width type cards; scene; compact selected-piece summary | Desktop three panes, narrow active sheet; S1–S5,S7,S9–S10; F1 |
-| V2 `table-editor` | Field/Input · default/error (`field.html#vertical`, `input.html#types`); Select · native (`select.html#native`); Alert · capacity (`alert.html#variants`); Accordion · closed/open (`accordion.html#default`). “Mesa rectangular 01”; length, width, tabletop height numeric fields + source ranges; chair requested/placed/capacity, type, distribution; existing cloth/colour controls; actual-count note; “Ver lista de compra” | One inspector column; fields never side-scroll; S1,S2,S3,S4,S5,S6,S7,S8,S9,S10; F1/F2 |
-| V3 `backing` | Card · size=sm (`card.html#actions/#stats`); Button · outline; Badge · secondary; Field/Input · search. Add → Backing; “Aros, pedestales y paneles”; search; two-column peer cards with transparent illustrated thumbnails and canonical names, dimensions when known, “Añadir…” accessible names; preserve original-name/AI/photo discovery; no duplicate cards in previous groups | Cards wrap; no stock/price invented; S1–S5,S7,S9,S10; F3 |
-| V5 `shopping` / D2 | Dialog · size=lg (`dialog.html#open`); Table · numeric alignment=end (`data-table.html#ready`); Button · default. Dialog title “Lista de compra”; ruled Mobiliario and Escenografía sections; right-aligned tabular “Cantidad” column; e.g. 1 × rectangular table (2.40 × 0.90 × 0.75 m), 8 × Tiffany chair, 1 × round panel, 1 × pedestal set; “No son productos de la tienda”; no invented currency total; close to prior scene | Kit Dialog size=lg, max 672 px, viewport inset 16 px narrow; S1–S5,S7,S9,S10; F1/F2 |
-| V6 `ai` | Textarea · default/error/disabled (`textarea.html#states`); Alert · default/success/destructive; Button · default/outline. Existing scene IA inspector; one mock conversation; text prompt; “Enviar”; pending response; result “1 mesa rectangular · 8 sillas colocadas”; existing proposal/apply interaction and manual-edit link | Input below conversation, expands above mobile keyboard; S1–S5,S6,S7,S8,S9,S10,S11; F5 |
-| V7 `export` / D1 | Popover · align=end (`popover.html#open`); Button · default/outline/loading; Alert · default/destructive/success. Workshop with export group open; PNG sibling, primary “Descargar modelo GLB · Blender”; scene name, metre scale, import instruction; prepare/error/started feedback next to trigger | Popover max 340 px, fits viewport; accessible in compact narrow header; S1–S5,S7,S8,S9,S10,S11; F4 |
+| V1 `tables` | Card · size=sm (`card.html#actions/#stats`); Button · default/outline (`button.html#variants`); Field/Input · búsqueda (`field.html#vertical`). Agregar título; Mobiliario seleccionado; búsqueda; “Mesa rectangular”, dimensiones predeterminadas de origen; tarjetas para los otros siete tipos existentes; acción de la tarjeta rectangular “Añadir” (nombre accesible “Añadir Mesa rectangular”); tarjetas de tipos de igual ancho; escena; resumen compacto de la pieza seleccionada | Tres paneles en escritorio, hoja activa en pantallas estrechas; S1–S5,S7,S9–S10; F1 |
+| V2 `table-editor` | Field/Input · default/error (`field.html#vertical`, `input.html#types`); Select · native (`select.html#native`); Alert · capacidad (`alert.html#variants`); Accordion · closed/open (`accordion.html#default`). “Mesa rectangular 01”; campos numéricos de largo, ancho y altura de la superficie + rangos de origen; cantidad solicitada/colocada/capacidad de sillas, tipo y distribución; controles existentes de tela/color; nota sobre la cantidad real; “Ver lista de compra” | Una columna de inspector; los campos nunca tienen desplazamiento lateral; S1,S2,S3,S4,S5,S6,S7,S8,S9,S10; F1/F2 |
+| V3 `backing` | Card · size=sm (`card.html#actions/#stats`); Button · outline; Badge · secondary; Field/Input · búsqueda. Agregar → Backing; “Aros, pedestales y paneles”; búsqueda; tarjetas pares en dos columnas con miniaturas ilustradas transparentes y nombres canónicos, dimensiones cuando se conozcan, nombres accesibles “Añadir…”; conservar el descubrimiento por nombre original/IA/foto; sin tarjetas duplicadas en grupos anteriores | Las tarjetas se ajustan; no se inventan existencias ni precios; S1–S5,S7,S9,S10; F3 |
+| V5 `shopping` / D2 | Dialog · size=lg (`dialog.html#open`); Table · numeric alignment=end (`data-table.html#ready`); Button · default. Título del diálogo “Lista de compra”; secciones delimitadas de Mobiliario y Escenografía; columna “Cantidad” alineada a la derecha con cifras tabulares; por ejemplo, 1 × mesa rectangular (2.40 × 0.90 × 0.75 m), 8 × silla Tiffany, 1 × panel redondo, 1 × juego de pedestales; “No son productos de la tienda”; no se inventa un total monetario; cerrar para volver a la escena anterior | Dialog del kit size=lg, máximo 672 px, margen de 16 px respecto al borde de la ventana en pantallas estrechas; S1–S5,S7,S9,S10; F1/F2 |
+| V6 `ai` | Textarea · default/error/disabled (`textarea.html#states`); Alert · default/success/destructive; Button · default/outline. Inspector de IA existente de la escena; una conversación de muestra; instrucción de texto; “Enviar”; respuesta pendiente; resultado “1 mesa rectangular · 8 sillas colocadas”; interacción existente de propuesta/aplicación y enlace de edición manual | Entrada debajo de la conversación, se expande por encima del teclado móvil; S1–S5,S6,S7,S8,S9,S10,S11; F5 |
+| V7 `export` / D1 | Popover · align=end (`popover.html#open`); Button · default/outline/loading; Alert · default/destructive/success. Taller con el grupo de exportación abierto; PNG como opción paralela, acción primaria “Descargar modelo GLB · Blender”; nombre de escena, escala en metros, instrucción de importación; comentarios de preparación/error/inicio junto al activador | Popover de máximo 340 px, cabe en la ventana; accesible en el encabezado compacto y estrecho; S1–S5,S7,S8,S9,S10,S11; F4 |
 
-Visible product copy is Spanish for this draft. Semantic strings are translation-ready; bilingual rollout belongs to the language subplan (R12), not an implicit SP-3 implementation. Backing and GLB retain those names in both locales. No new language switch is introduced. Test translated labels with 40% expansion; only project name may truncate with an accessible full name. The dark/light mock selector represents both existing product themes.
+El texto visible del producto está en español en este borrador. Las cadenas semánticas están listas para traducirse; el despliegue bilingüe corresponde al subplan de idioma (R12), no a una implementación implícita de SP-3. Backing y GLB conservan esos nombres en ambos idiomas. No se introduce un selector de idioma nuevo. Prueba las etiquetas traducidas con una expansión del 40 %; solo el nombre del proyecto puede truncarse y debe tener un nombre completo accesible. El selector de maqueta claro/oscuro representa ambos temas existentes del producto.
 
 ## 8. States
 
