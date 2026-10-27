@@ -149,3 +149,12 @@ remote/docs/audit.md:generic-api-key:132
 remote/docs/audit.md:generic-api-key:590
 remote/docs/audit.md:generic-api-key:652
 remote/docs/audit.md:generic-api-key:669
+# Verified false positives: REQ-021 translation cache keyed by SHA-256 hashes; Spanish text mentioning API or APP_PASSWORD.
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:185
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:245
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:606
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:628
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:811
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1089
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1160
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:1581
