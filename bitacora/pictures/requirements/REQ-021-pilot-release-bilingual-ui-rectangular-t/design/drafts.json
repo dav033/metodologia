@@ -22,7 +22,7 @@
      "when": "2026-10-26T16:02:48-05:00"
     }
    ],
-   "finished": "2026-10-26T16:15:25-05:00",
+   "finished": "2026-10-26T19:16:14-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
@@ -43,6 +43,11 @@
      "at": "2026-10-26T16:15:25-05:00",
      "rev": 4,
      "summary": "Revalidated and revised cuentas-admin@v1 and its standalone mockup against the unchanged SP-2 planning snapshot, preserving the previous design. Corrected unchanged-role saving and empty current-password feedback, and added acceptance criteria and verification evidence. Both planning artifacts remain draft pending owner approval of the plan."
+    },
+    {
+     "at": "2026-10-26T19:16:14-05:00",
+     "rev": 5,
+     "summary": "Revised the cuentas-admin@v1 planning draft and standalone mockup, preserving the existing SP-2 design. Clarified round-9 read-only foreign-project access and corrected account/role conflict states to block mutations until refresh. Owner plan approval remains pending."
     }
    ],
    "mockup": true,
@@ -51,12 +56,12 @@
    "queued": "2026-10-26T19:11:14-05:00",
    "reason": "requested",
    "report": "claimed",
-   "revision": 4,
-   "sha256": "bfb34009a7cf5cbebd11ac6609f745706a714ea8abdd17f0415c6094d166ec66",
+   "revision": 5,
+   "sha256": "195cc08c4e3a8b6a1d9980cefbb2a447fbc1afd19b997e30e1b2d1153906f10a",
    "started": "2026-10-26T19:11:18-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-2",
-   "summary": "Revalidated and revised cuentas-admin@v1 and its standalone mockup against the unchanged SP-2 planning snapshot, preserving the previous design. Corrected unchanged-role saving and empty current-password feedback, and added acceptance criteria and verification evidence. Both planning artifacts remain draft pending owner approval of the plan."
+   "summary": "Revised the cuentas-admin@v1 planning draft and standalone mockup, preserving the existing SP-2 design. Clarified round-9 read-only foreign-project access and corrected account/role conflict states to block mutations until refresh. Owner plan approval remains pending."
   },
   "proyectos@v1": {
    "agent": "codex",

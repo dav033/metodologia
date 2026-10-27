@@ -147,7 +147,7 @@ function render(){let content;
 function setView(v,focus=false){invalidateQuery();if(modal.open)closeDialog();controls.view.value=v;controls.state.value='ready';controls.scene.value='none';dirty=false;render();if(focus)document.querySelector('main h1')?.focus();}
 function hasUnconfirmedWork(){return dirty||['pending','pending-newer','unknown'].includes(controls.state.value);}
 function requestNavigation(v,nextProject=null){if(hasUnconfirmedWork()){departure={view:v,project:nextProject};openDialog('leave');return;}if(nextProject){selected=nextProject;isNew=false;}setView(v,true);}
-function closeDialog(){departure=null;if(modal.open)modal.close();controls.scene.value='none';if(returnFocus?.isConnected&&!modal.contains(returnFocus))returnFocus.focus();else (document.querySelector('[data-action="conflict"]')||document.querySelector('main h1')||controls.scene).focus();}
+function closeDialog(){departure=null;if(modal.open)modal.close();controls.scene.value='none';if(returnFocus?.isConnected&&returnFocus!==document.body&&!modal.contains(returnFocus))returnFocus.focus();else (document.querySelector('[data-action="conflict"]')||document.querySelector('main h1')||controls.scene).focus();}
 function openDialog(kind){if(!modal.open)returnFocus=document.activeElement;controls.scene.value=kind;drawDialog(kind);if(!modal.open)modal.showModal();const first=['save','copy'].includes(kind)?$('project-name'):kind==='conflict'?$('modal-title'):$('stay');first?.focus();}
 function drawDialog(kind){const s=controls.state.value;let title,description,content;
  if(kind==='save'||kind==='copy'){

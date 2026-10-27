@@ -240,7 +240,6 @@ All new clickable targets ≥44×44 CSS px; existing narrow Taller controls are 
 | UI-AC-49 | 320–1440px | ready / V1 | After loading page two, changing the name filter resets pagination to at most 50 matching rows. |
 | UI-AC-50 | 320–1440px | ready / V5 | Import explains that the complete scene is saved and separately stored AI conversation/images remain in this browser. |
 | UI-AC-51 | 320–1440px | cursor-invalid / V1/V2 | “Recargar lista” restarts the first page while preserving the visible name/owner filters. |
-
 | UI-AC-52 | 320–1440px | pending / unknown / V3 | Choosing “Nuevo proyecto” opens D3 and retains the current title until departure is resolved. |
 | UI-AC-53 | 320–1440px | stale / D2 → D1 or D3 | Cancelling the second dialog restores focus to the original page trigger or the current conflict-resolution control. |
 

@@ -23,7 +23,7 @@ Source snapshot (2026-10-26): `PLAN.json` revision 1, SHA-256 `7a2c833a7e711508d
 | R10 / US-6 | GLB with matching transforms, metre scale and colours, then Blender verification | V7, D1 / F4 / UI-AC-10–14, 21 |
 | R11 / US-7 | One Backing group in Taller Fondos y muebles; move seven cards without duplicates, preserve original-name/AI/photo discovery and identities; Shopify `/catalogo` unchanged | V3 / F3 / UI-AC-07–09, 19, 29–30, 33 |
 
-Draft revision / impact record (2026-10-26, owner feedback 18:53; kept here because this brief authorizes no changelog file): draft; revise the same unapproved v1. Compatibility is **breaking relative to the previous draft**: remove provisional V4/Shopify navigation, duplicate-card alternatives, the generic creation entry and pre-creation-form alternative; confirm per-type default creation plus existing inspector, quantities/dimensions without rental prices, the seven-card move and portable Blender LTS verification. Affected consumers: **T3.2** (V1/V2/V5/V6, F1/F2/F5), **T3.3** (V3/F3; remove V4), **T3.4** (V7/D1/F4 copy and feedback retained), **T3.5/T3.6** (confirmed automated real import plus separate owner opening), **T3.7/T3.8** (revised review scope). No accepted implementation exists to establish shipped conformity. Six active views retain their existing layout, tokens and applicable states. No other subplan contract changes; SP-1/2 own access, SP-8 owns translation and SP-4 owns server saves. Required action: owner plan/contract approval, then T3.1 exact copy, T3.2–T3.4 implementation, T3.5/T3.6 verification and T3.7/T3.8 independent review. An approved version is immutable; subsequent changes require v2 and impact analysis.
+Draft revision / impact record (2026-10-26, owner feedback 18:53; kept here because this brief authorizes no changelog file): draft; revise the same unapproved v1. Compatibility is **breaking relative to the previous draft**: remove provisional V4/Shopify navigation, duplicate-card alternatives, the generic creation entry and pre-creation-form alternative; confirm per-type default creation plus existing inspector, quantities/dimensions without rental prices, the seven-card move and portable Blender LTS verification. Affected consumers: **T3.2** (V1/V2/V5/V6, F1/F2/F5), **T3.3** (V3/F3; remove V4), **T3.4** (V7/D1/F4 copy and feedback retained), **T3.5/T3.6** (confirmed automated real import plus separate owner opening), **T3.7/T3.8** (revised review scope). No accepted implementation exists to establish shipped conformity. Delegation D-20261026-191119-918c rechecked the same source snapshot; its mockup corrections are compatible with this owner-answer draft: the capacity warning now follows the entered request, validation can recover to the last valid value, and offline recovery is reachable. Production flows, tokens, views and task ownership are unchanged; T3.2 and T3.7 gain the explicit regression criteria UI-AC-34–35 below. Six active views retain their existing layout, tokens and applicable states. No other subplan contract changes; SP-1/2 own access, SP-8 owns translation and SP-4 owns server saves. Required action: owner plan/contract approval, then T3.1 exact copy, T3.2–T3.4 implementation, T3.5/T3.6 verification and T3.7/T3.8 independent review. An approved version is immutable; subsequent changes require v2 and impact analysis.
 
 Read-only product evidence (pictures is the implementation repository; t12 is the compatibility reference, not an additional implementation target):
 - `t12` HEAD `fb872bce`: `src/app/globals.css`, `src/components/tres-d/ui-taller.ts`, `Taller3D.tsx`, `HojaMovil.tsx`, `EditorConjuntoMesa.tsx`, `FondosYMuebles.tsx`, `ListaEscenografia.tsx`; `src/lib/globos3d/mobiliario-conjunto-tipos.ts`, `fondos-escenografia.ts`, `mobiliario-tipos.ts`; `src/lib/catalogo/asignacion-fondos.ts`; `src/app/catalogo/page.tsx`, `src/components/catalogo/Facetas.tsx`.
@@ -85,7 +85,7 @@ Ninguna acción depende exclusivamente de arrastrar. Los botones para añadir Ba
 
 **F1 — Add and edit manually (R9).** 1. Open Add / Mobiliario. 2. Activate “Mesa rectangular”. Insert one editable group with current source defaults: 2.40 × 0.90 × 0.75 m; chair defaults remain the engine's current defaults (8 requested in the existing entry), not a second UI rule. 3. Select the new table and open dimensions. 4. Change length/width/height and chair quantity/type/distribution. 5. Engine recomputes geometry/capacity and actual placed chairs. 6. Announce “Mesa actualizada: …; … sillas colocadas”. 7. Open shopping list and see the same actual quantities. Undo restores the previous group and counts.
 
-**F2 — Capacity / validation recovery (R9).** Accept rectangular ranges from `LIMITES_MESA`: length 1–6 m, width 0.40–1.50 m, height 0.40–1.10 m. Existing sliders use 0.05 m steps; numeric input must not silently round a typed invalid value. Integer chairs 0–40 requested, actual capacity from `repartirSillas`; do not use 40 as the physical capacity. Show “Pedidas 12 · Colocadas 8” when the engine fits fewer, with the existing capacity explanation. Shopping/export use placed chairs only. On invalid text, show field error and keep last valid geometry; allow correction or “Restablecer valores”. If resizing reduces capacity, show the result visibly, never report the requested count as placed. Scene AI uses the same validation and counts. Old fixed groups offer the existing “Hacerla editable”; room-generated tables retain their current “ajustar el salón” instruction, not an independent conflicting editor.
+**F2 — Capacity / validation recovery (R9).** Accept rectangular ranges from `LIMITES_MESA`: length 1–6 m, width 0.40–1.50 m, height 0.40–1.10 m. Existing sliders use 0.05 m steps; numeric input must not silently round a typed invalid value. Correcting an invalid field back to its previous valid value clears the error without creating a redundant undo entry. Integer chairs 0–40 requested, actual capacity from `repartirSillas`; do not use 40 as the physical capacity. Show “Pedidas 12 · Colocadas 8” when the engine fits fewer, with the existing capacity explanation. Shopping/export use placed chairs only. On invalid text, show field error and keep last valid geometry; allow correction or “Restablecer valores”. If resizing reduces capacity, show the result visibly, never report the requested count as placed. Scene AI uses the same validation and counts. Old fixed groups offer the existing “Hacerla editable”; room-generated tables retain their current “ajustar el salón” instruction, not an independent conflicting editor.
 
 **F3 — Find Backing (R11).** Open Add → Fondos y muebles → Backing. Browse/search names and descriptions. The confirmed canonical set contains `panel_redondo`, `media_luna`, `arcos_chiara`, `pedestales`, `aro_metalico`, `aro_hexagonal`, `arco_metalico`. All seven appear in the mock, with original names and identity. Add a permitted piece by button or existing drag path; select it and announce its name. Return to old search: it remains findable by the same identity. The seven cards leave Fondos y tapetes / Decorado de pie visually; they are not duplicated there. Old-name search, repository filtering, AI/photo discovery and saved-scene identities remain compatible. Cancel/exit returns to the existing scene without adding a second piece. Existing dimensions/material options stay in the selected-piece inspector. Shopify `/catalogo` gets no Backing UI or catalogue behavior change.
 
@@ -162,47 +162,49 @@ Objetivo: WCAG 2.2 AA para la interfaz modificada. Una descripción de diseño n
 - Se prefieren objetivos táctiles de 44 px; el mínimo WCAG para el tamaño de objetivo es 24 CSS px o un espaciado conforme para controles compactos de escritorio. El texto al 200%/zoom al 400% se redistribuye sin acciones recortadas a 320 CSS px. Ninguna información esencial depende solo del desplazamiento del puntero, el movimiento, la perspectiva o el lienzo.
 - Respetar `prefers-reduced-motion`; no animar los esqueletos del mockup. Nombres de botones estables; el estado pendiente también establece la semántica de ocupado. La usabilidad real de Blender y una interfaz completa de autoría 3D no visual están fuera del alcance de este artefacto de diseño; la edición de texto, el resumen de escena y los controles modificados sí están incluidos.
 
-## 11. Criterios de aceptación visual
+## 11. Visual acceptance criteria
 
-| ID | Punto de interrupción | Estado | Expectativa observable |
+| ID | Breakpoint | State | Observable expectation |
 |---|---|---|---|
-| UI-AC-01 | ≥1024 px | listo | V1 tiene una entrada visible «Mesa rectangular» dentro de Mobiliario. |
-| UI-AC-02 | 320–1023 px | listo | Al activar Añadir, se muestran controles de mesa en una hoja activa legible, sin desplazamiento horizontal de la página. |
-| UI-AC-03 | Todos | listo | V2 muestra campos separados para largo, ancho y altura de la superficie, con unidades en metros. |
-| UI-AC-04 | Todos | validación | Un largo fuera del rango muestra un error vinculado al campo, mientras la escena conserva su última geometría válida. |
-| UI-AC-05 | Todos | parcial | V2 muestra las cantidades de sillas solicitadas y colocadas cuando difieren. |
-| UI-AC-06 | Todos | éxito | Después de una edición, V5 muestra la misma cantidad de sillas colocadas que V2. |
-| UI-AC-07 | Todos | listo | V3 muestra un grupo de visualización de Backing con nombre dentro de Fondos y muebles. |
-| UI-AC-08 | Todos | listo | V3 enumera una vez cada uno de los siete elementos canónicos de Backing dentro del grupo. |
-| UI-AC-09 | 320–1023 px | vacío | V3 muestra «Limpiar búsqueda» sin desbordamiento horizontal. |
-| UI-AC-10 | Todos | listo | D1 etiqueta la acción GLB con Blender y muestra la escala en metros. |
-| UI-AC-11 | Todos | pendiente | V7 muestra «Preparando GLB…» e impide iniciar otra exportación. |
-| UI-AC-12 | Todos | error | V7 ofrece reintentar y mantiene visible la escena confirmada. |
-| UI-AC-13 | Todos | éxito | V7 indica «Descarga GLB iniciada.» sin afirmar que se guardó localmente ni que se verificó en Blender. |
-| UI-AC-14 | Todos | vacío | V7 deshabilita GLB y explica que la escena necesita una pieza. |
-| UI-AC-15 | 360,768,1024,1440 px | listo | Ambos temas usan los tokens compartidos de superficie y acento de Taller indicados. |
-| UI-AC-16 | Todos | permiso denegado | El contenido del taller denegado no contiene detalles de la escena ni del proyecto. |
-| UI-AC-17 | Todos | listo | Al cerrar D2 con Escape, el foco vuelve al activador de la lista. |
-| UI-AC-18 | Todos | listo | V6 ofrece una opción de edición manual después de aplicar la propuesta de mesa. |
-| UI-AC-19 | Todos | listo | Las piezas de Backing que no provienen de la tienda no tienen precios ni afirmaciones de existencias inventados. |
-| UI-AC-20 | <1024 px, altura ≤540 px | listo | El panel activo está junto a la vista previa y sus controles permiten desplazamiento vertical. |
-| UI-AC-21 | Todos | parcial | La exportación se bloquea con un motivo explícito relacionado con una pieza sin resolver. |
-| UI-AC-22 | Todos | cargando | El contenido del catálogo se carga manteniendo la estructura y bloqueando las acciones para añadir. |
-| UI-AC-23 | Todos | sin conexión | El aviso distingue el estado sin conexión de la disponibilidad de la escena local conservada. |
-| UI-AC-24 | Todos | listo | El foco del teclado es visible en todos los controles modificados. |
-| UI-AC-25 | Todos | listo | El HTML expone listas desplegables nativas etiquetadas con los ids view, state, scene y theme. |
-| UI-AC-26 | 320 px / equivalente a zoom del 400 % | listo | El contenido del diálogo y las acciones principales se redistribuyen sin desplazamiento horizontal de la página. |
-| UI-AC-27 | Todos | deshabilitado | Cada acción principal deshabilitada tiene una explicación visible adyacente. |
-| UI-AC-28 | Todos | listo | Después de editar una mesa, deshacer restaura las dimensiones anteriores y la cantidad de sillas colocadas en el inspector y la lista de compras. |
-| UI-AC-29 | Todos | listo | Al buscar «Backing» en V3, se muestran las siete tarjetas canónicas y una cantidad de resultados filtrados coincidente. |
-| UI-AC-30 | Todos | listo | La maqueta tiene seis vistas activas y no incluye una vista de Backing de Shopify ni transferencia al catálogo. |
-| UI-AC-31 | Todos | listo | Al activar una tarjeta de tipo de mesa, se inserta su grupo con el tamaño predeterminado y se abre el inspector existente sin un formulario intermedio. |
-| UI-AC-32 | Todos | listo | V5 muestra las cantidades y dimensiones del mobiliario sin precios de alquiler. |
-| UI-AC-33 | Todos | listo | Las siete tarjetas de Backing no aparecen en Fondos y tapetes ni en Decorado de pie. |
+| UI-AC-01 | ≥1024 px | ready | V1 has a visible “Mesa rectangular” entry inside Mobiliario. |
+| UI-AC-02 | 320–1023 px | ready | Activating Add shows table controls in a readable active sheet without horizontal page scrolling. |
+| UI-AC-03 | All | ready | V2 displays separate length, width and tabletop height fields with metre units. |
+| UI-AC-04 | All | validation | An out-of-range length shows a linked field error while the scene retains its last valid geometry. |
+| UI-AC-05 | All | partial | V2 shows both requested and placed chair counts when they differ. |
+| UI-AC-06 | All | success | V5 displays the same placed chair count as V2 after an edit. |
+| UI-AC-07 | All | ready | V3 exposes one named Backing display group inside Fondos y muebles. |
+| UI-AC-08 | All | ready | V3 lists each of the seven canonical Backing members once within the group. |
+| UI-AC-09 | 320–1023 px | empty | V3 shows “Limpiar búsqueda” without horizontal overflow. |
+| UI-AC-10 | All | ready | D1 labels the GLB action with Blender and displays metre scale. |
+| UI-AC-11 | All | pending | V7 shows “Preparando GLB…” and cannot start another export. |
+| UI-AC-12 | All | error | V7 offers retry while leaving the committed scene visible. |
+| UI-AC-13 | All | success | V7 says “Descarga GLB iniciada.” without claiming local save or Blender verification. |
+| UI-AC-14 | All | empty | V7 disables GLB and explains that the scene needs a piece. |
+| UI-AC-15 | 360,768,1024,1440 px | ready | Both themes use the stated shared Taller surface and accent tokens. |
+| UI-AC-16 | All | permission-denied | Denied workshop content contains no scene or project details. |
+| UI-AC-17 | All | ready | Closing D2 with Escape restores focus to the list trigger. |
+| UI-AC-18 | All | ready | V6 exposes a manual-edit path after the table proposal is applied. |
+| UI-AC-19 | All | ready | Non-store Backing pieces have no invented price or stock claim. |
+| UI-AC-20 | <1024 px, height ≤540 px | ready | Active panel is beside the preview and its controls can scroll vertically. |
+| UI-AC-21 | All | partial | Export is blocked with an explicit unresolved-piece reason. |
+| UI-AC-22 | All | loading | Loading catalogue content retains the shell and blocks add actions. |
+| UI-AC-23 | All | offline | The banner distinguishes offline status from retained local scene availability. |
+| UI-AC-24 | All | ready | Keyboard focus is visible on every changed control. |
+| UI-AC-25 | All | ready | The HTML exposes labelled native selects with ids view, state, scene and theme. |
+| UI-AC-26 | 320 px / 400% zoom equivalent | ready | Dialog content and primary actions reflow without page-level horizontal scrolling. |
+| UI-AC-27 | All | disabled | Every disabled primary action has an adjacent visible explanation. |
+| UI-AC-28 | All | ready | Undo after a table edit restores the preceding dimensions and placed chair count in the inspector and shopping list. |
+| UI-AC-29 | All | ready | Searching “Backing” in V3 displays the seven canonical cards and a matching filtered result count. |
+| UI-AC-30 | All | ready | The mockup has six active views and no Shopify Backing view or catalogue handoff. |
+| UI-AC-31 | All | ready | Activating a table-type card inserts its default-sized group and opens the existing inspector without an intermediate form. |
+| UI-AC-32 | All | ready | V5 shows furniture quantities and dimensions without rental prices. |
+| UI-AC-33 | All | ready | The seven Backing cards do not appear in Fondos y tapetes or Decorado de pie. |
+| UI-AC-34 | All | partial | After requesting 20 chairs with the eight-chair mock fixture, the warning and input both say 20 requested and the placed count remains 8. |
+| UI-AC-35 | All | validation → ready | Correcting an invalid dimension or chair quantity back to its previous valid value removes the field error. |
 
-La ronda 9 q1–q4 define estos comportamientos; el contrato aún requiere la aprobación del propietario. Las siete tarjetas pasan a Backing y salen de sus grupos visuales anteriores, que conservan sus demás piezas. Se mantiene la búsqueda por nombre original; no se crean alias de tarjetas duplicados. La identidad, `GrupoCatalogo`, `ASIGNACION_FONDOS`, la compatibilidad con IA/fotos y la ausencia de las siete tarjetas en los grupos anteriores requieren verificaciones de origen/funcionales en T3.3/T3.8; la agrupación representada no permite demostrarlas.
+Round 9 q1–q4 settle these behaviors; the contract itself still requires owner approval. The seven cards move into Backing and leave their former visual groups, which retain their other pieces. Original-name search remains; no duplicate card aliases are created. Identity, `GrupoCatalogo`, `ASIGNACION_FONDOS`, AI/photo compatibility and absence of the seven cards from former groups require source/functional checks in T3.3/T3.8; a rendered grouping cannot prove them.
 
-La paridad del motor, la distribución, la escala y el color, así como la búsqueda por nombre original y el descubrimiento mediante IA/fotos, requieren pruebas funcionales y la importación documentada en Blender; la revisión de capturas de pantalla por sí sola no puede aceptar R9–R11. El HTML representa geometría esquemática y simula interacciones; no genera un GLB, una cotización, una cantidad real del catálogo ni una respuesta de IA en vivo.
+Engine/layout/scale/colour parity and original-name/AI/photo discovery need functional tests plus the documented Blender import; screenshot review cannot accept R9–R11 alone. HTML renders schematic geometry and simulates interactions; it does not produce a GLB, quote, actual catalogue count or live AI response.
 
 ## 12. Preguntas abiertas y supuestos
 
@@ -243,7 +245,7 @@ Chromium local mediante la dependencia existente de Playwright: 63 combinaciones
 - Se inspeccionaron visualmente capturas de Chromium en memoria: Backing oscuro de escritorio a 1440×980 y el estado completo de mesa/capacidad móvil en tema claro a 360×900. No se guardó ninguna captura ni archivo adicional de vista previa. Los tokens y puntos de interrupción existentes permanecen sin cambios.
 - Estas verificaciones cubren solo la maqueta estática. La geometría real de la escena, la paridad con proveedores de pago, la validez del GLB descargable, la importación en Blender y la conformidad de accesibilidad en producción quedan pendientes para T3.2–T3.8, tras la aprobación del propietario. No se instaló ni se ejecutó Blender.
 
-### Current revision verification — owner-answer reconciliation (2026-10-26)
+### Previous revision verification — owner-answer reconciliation (2026-10-26)
 
 - Read the updated SPEC, PLAN.md and PLAN.json SP-3/T3.1–T3.8 plus the supplied repositories read-only; the source hashes recorded in section 1 match at handoff. Shared table-default, assignment and Taller-class files match between t12 and pictures. Only the two named design artifacts and the required delegation RESULT.json were written; no repository, SPEC, PLAN, changelog or project-preview edits, commits, launches or Blender installation.
 - Static checks passed: twelve numbered sections, 33 unique acceptance criteria, `status: draft`, four visibly labelled native selectors, inline JavaScript parsed by Node `vm.Script`, no external resource references and no obsolete catalogue route or pending Q1–Q4 mock branch. CSP continues to prohibit network requests.
@@ -252,3 +254,15 @@ Chromium local mediante la dependencia existente de Playwright: 63 combinaciones
 - **24 keyboard checks passed** across the same viewport/theme pairs: shopping Tab/Shift+Tab cycles within the modal and Escape returns focus; export Escape returns focus. Final interaction run observed zero JavaScript page errors and zero HTTP requests.
 - Visually inspected in-memory Chromium captures: 1440×980 dark Backing and 360×900 full-page light table/capacity state. No screenshot or extra preview file was written. Tokens, responsive boundaries, rectangular illustration and unaffected flows remain intact; other type cards now demonstrate their source-default inspector handoff with schematic type artwork.
 - Earlier verification records include the removed V4 and are historical only. This revision validates a static planning artifact: production engine geometry, deterministic AI-tool parity, saved-scene/AI/photo compatibility, actual GLB validity, automated Blender import, owner manual opening and full accessibility conformance remain for the planned implementation/verification cycle after owner approval.
+
+
+### Current delegation verification — D-20261026-191119-918c (2026-10-26)
+
+- Re-read SPEC, PLAN and SP-3/T3.1–T3.8 in PLAN.json; their SHA-256 values still match section 1. The exact UI consumer remains SP-3, `taller-esenciales@v1`, design-copy task T3.1, implementation tasks T3.2/T3.3/T3.4 and independent visual task T3.7. No additional owner questions or scope changes were found. Status remains **draft**, pending plan approval.
+- Preserved the six existing views, confirmed round 9 decisions, source tokens, responsive layouts and export scope. Fixed two reproduced mock fidelity defects: hard-coded requested-chair feedback and errors persisting after restoring a previous valid value. Added the missing visible offline retry action. No production engine behavior is implemented by these corrections.
+- Node `vm.Script` parsed the inline JavaScript. Static structure checks verified twelve numbered sections, draft status, unique acceptance-criteria ids, six view ids, four labelled native selects and no external resource links. The final contract has **35** visual acceptance criteria.
+- Headless Chromium using the existing repository Playwright installation passed **660 view/state/viewport/theme layout checks** and **144 dialog layout checks**. Sizes: 320×800, 360×800, 768×1024, 1024×850, 1440×980 and 844×390 landscape; both themes. No horizontal document/dialog overflow, horizontally clipped controls, JavaScript page errors or HTTP requests occurred. Native select value/change events exercise the plan bridge interface; the external bridge itself was not rerun in this delegation.
+- **34 interaction assertions passed**, including default creation and inspector handoff for all eight table types, numeric edits, last-valid geometry, undo/redo, 20 requested versus 8 placed, list counts, same-value dimension/chair validation recovery, seven unique Backing identities, hexagonal alias discovery, add feedback, offline retry, export failure/retry visibility, duplicate-export blocking, honest simulated completion and AI validation/apply. An initial test used an ambiguous retry locator because both desktop panels exposed retry; scoped it to the active catalogue panel and the full interaction run passed. No product behavior was weakened to satisfy that test.
+- **24 keyboard checks passed** across the same viewport/theme pairs: shopping modal Tab/Shift+Tab containment and Escape focus return; export Escape focus return.
+- Visually inspected in-memory renders of all six desktop views at 1440×980 and full-height 320 px light renders of table/capacity (20 requested) and export error/retry, in addition to the earlier dark narrow view. The corrections preserve the existing composition and readable wrapping. No screenshot or other artifact file was written. These are scoped mock checks, not a full accessibility conformance claim.
+- Only the two authorized design artifacts and the required delegation RESULT.json are written. Repositories remain read-only; no SPEC/PLAN, changelog, project preview, other bitácora file, commit, installation or deployment is part of this task. Application lint/types/build, real engine/AI-tool parity, actual GLB export, Blender import and owner opening remain unexecuted here and belong to T3.2–T3.8 after approval.
