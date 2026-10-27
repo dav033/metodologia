@@ -28,7 +28,7 @@
      "when": "2026-10-26T19:35:58-05:00"
     }
    ],
-   "finished": "2026-10-26T19:16:14-05:00",
+   "finished": "2026-10-26T19:47:28-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
@@ -54,6 +54,11 @@
      "at": "2026-10-26T19:16:14-05:00",
      "rev": 5,
      "summary": "Revised the cuentas-admin@v1 planning draft and standalone mockup, preserving the existing SP-2 design. Clarified round-9 read-only foreign-project access and corrected account/role conflict states to block mutations until refresh. Owner plan approval remains pending."
+    },
+    {
+     "at": "2026-10-26T19:47:28-05:00",
+     "rev": 6,
+     "summary": "Rebuilt the complete cuentas-admin@v1 visual layer using Pictures tokens, flat neutral working surfaces, precise access summaries and right-aligned tabular figures. Preserved all eleven views, state/dialog vocabularies, flows and the original 58 acceptance criteria, adding seven visual criteria and recording consumer impact. The contract remains draft for owner approval with the plan."
     }
    ],
    "mockup": true,
@@ -62,12 +67,12 @@
    "queued": "2026-10-26T19:35:59-05:00",
    "reason": "feedback",
    "report": "claimed",
-   "revision": 5,
-   "sha256": "195cc08c4e3a8b6a1d9980cefbb2a447fbc1afd19b997e30e1b2d1153906f10a",
+   "revision": 6,
+   "sha256": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
    "started": "2026-10-26T19:36:02-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-2",
-   "summary": "Revised the cuentas-admin@v1 planning draft and standalone mockup, preserving the existing SP-2 design. Clarified round-9 read-only foreign-project access and corrected account/role conflict states to block mutations until refresh. Owner plan approval remains pending."
+   "summary": "Rebuilt the complete cuentas-admin@v1 visual layer using Pictures tokens, flat neutral working surfaces, precise access summaries and right-aligned tabular figures. Preserved all eleven views, state/dialog vocabularies, flows and the original 58 acceptance criteria, adding seven visual criteria and recording consumer impact. The contract remains draft for owner approval with the plan."
   },
   "proyectos@v1": {
    "agent": "codex",
