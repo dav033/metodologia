@@ -138,7 +138,7 @@
      "when": "2026-10-26T18:53:15-05:00"
     }
    ],
-   "finished": "2026-10-26T19:11:10-05:00",
+   "finished": "2026-10-26T19:18:38-05:00",
    "history": [
     {
      "at": "2026-10-26T17:37:32-05:00",
@@ -154,6 +154,11 @@
      "at": "2026-10-26T19:11:10-05:00",
      "rev": 3,
      "summary": "Revised taller-esenciales@v1 and its self-contained mockup against the updated SP-3 snapshot and all four round-9 owner decisions. Removed provisional Shopify Backing behavior and obsolete alternatives; retained unaffected design. Both artifacts remain draft pending owner plan approval, with no new unresolved questions."
+    },
+    {
+     "at": "2026-10-26T19:18:38-05:00",
+     "rev": 4,
+     "summary": "Reconciled taller-esenciales@v1 against the unchanged SP-3 plan and confirmed round 9 decisions, preserving the existing draft design. Corrected capacity feedback, same-value validation recovery and offline retry in the static mockup; the contract remains draft pending owner plan approval."
     }
    ],
    "mockup": true,
@@ -162,12 +167,12 @@
    "queued": "2026-10-26T19:11:19-05:00",
    "reason": "requested",
    "report": "claimed",
-   "revision": 3,
-   "sha256": "f24728bcbc7a8c3c491b732b968d1b04c9ded6bd49564837eab047cbfa0592ba",
+   "revision": 4,
+   "sha256": "ad39a9333a8ed96def3022c11a746a482a429ea58927ad6ac7ddb21b6334d764",
    "started": "2026-10-26T19:11:19-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-3",
-   "summary": "Revised taller-esenciales@v1 and its self-contained mockup against the updated SP-3 snapshot and all four round-9 owner decisions. Removed provisional Shopify Backing behavior and obsolete alternatives; retained unaffected design. Both artifacts remain draft pending owner plan approval, with no new unresolved questions."
+   "summary": "Reconciled taller-esenciales@v1 against the unchanged SP-3 plan and confirmed round 9 decisions, preserving the existing draft design. Corrected capacity feedback, same-value validation recovery and offline retry in the static mockup; the contract remains draft pending owner plan approval."
   }
  },
  "schema_version": 1
