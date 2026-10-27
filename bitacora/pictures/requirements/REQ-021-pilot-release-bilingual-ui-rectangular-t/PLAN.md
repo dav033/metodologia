@@ -6,7 +6,7 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 14/68 · generado: 2026-10-27T18:39:39-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 14/68 · generado: 2026-10-27T18:48:38-05:00
 
 **M1 — Accounts, access plans and the plans section** · dificultad alta · 14/28
 
@@ -140,7 +140,7 @@ created: 2026-10-26
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 - Contrato de diseño SP-2: `cuentas-admin@v1` · aprobación aprobado
-- Contrato de diseño SP-14: `planes@v1` · aprobación pendiente
+- Contrato de diseño SP-14: `planes@v1` · aprobación aprobado
 - Contrato de diseño SP-3: `taller-esenciales@v1` · aprobación pendiente
 - Contrato de diseño SP-4: `proyectos@v1` · aprobación pendiente
 - Contrato de diseño SP-5: `decoraciones@v1` · aprobación pendiente

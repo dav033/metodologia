@@ -7,20 +7,20 @@
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-27T23:48:33+00:00",
+ "heartbeat_at": "2026-10-27T23:48:38+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
   "revision": 4,
   "sha256": "765881a006ff9363324ca086d55ea1b3d45423d482d5615ad70918ddd48a3168"
  },
- "projected_at": "2026-10-27T23:48:33+00:00",
+ "projected_at": "2026-10-27T23:48:38+00:00",
  "projection": true,
  "req": "REQ-021",
  "scheduler_status": "running",
  "sessions": 31,
  "stage": {
   "complete": false,
-  "joining": null,
+  "joining": 5,
   "outside": [
    "SP-14",
    "SP-3",
