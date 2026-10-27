@@ -209,3 +209,4 @@ _None_
 <!-- 2026-10-18: D-074 isolated M3 smoke complete, no new pending item. Automatic patch integration and full fault matrix were not part of this smoke; existing P-118 remains open. -->
 <!-- 2026-10-27: D-137 implemented (security gate, oracle independence, remediation fixes); retry of REQ-021 T1.8 awaits owner OK. No new P-item. -->
 <!-- 2026-10-27: SP-3 contract removal relayed to the Planner; verify it landed (plan-json check) -->
+<!-- 2026-10-27: metodologia commits 89e2c76ed + 2ab5f7946 made; bitácora commit + push to main pending (gitleaks scan) -->
