@@ -303,6 +303,7 @@ for(const id of ['view','state','scene','theme']) selectors[id].addEventListener
  model.notice='';
  if(id==='view'){changeView(currentView());return;}
  if(id==='theme')document.documentElement.dataset.theme=selectors.theme.value;
+ if(id==='state'&&currentView()==='shopping'&&currentState()!=='permission-denied')selectors.scene.value='shopping';
  if(id==='state'&&currentView()==='table-editor'&&currentState()==='partial'&&model.requested<=model.placed){model.requested=12;model.placed=8;}
  if(id==='scene'&&selectors.scene.value!=='none')lastInvoker=document.activeElement;
  render({focusExport:id==='scene'&&selectors.scene.value==='export'});

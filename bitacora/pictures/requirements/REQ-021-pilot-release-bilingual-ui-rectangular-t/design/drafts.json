@@ -102,7 +102,7 @@
      "when": "2026-10-26T19:36:03-05:00"
     }
    ],
-   "finished": "2026-10-26T19:20:14-05:00",
+   "finished": "2026-10-26T19:49:07-05:00",
    "history": [
     {
      "at": "2026-10-26T18:35:35-05:00",
@@ -123,6 +123,11 @@
      "at": "2026-10-26T19:20:14-05:00",
      "rev": 4,
      "summary": "Revised proyectos@v1 and its self-contained planning mockup while preserving the existing round-9 design. Corrected pending-save departure protection, focus restoration between dialogs, disabled-state explanations and Markdown table continuity. The contract remains draft for owner approval with the plan; no owner questions remain open."
+    },
+    {
+     "at": "2026-10-26T19:49:07-05:00",
+     "rev": 5,
+     "summary": "Rebuilt the saved-projects mockup visual layer to address the owner’s 19:36 feedback while preserving all views, states, flows and existing criteria. Updated the twelve-section proyectos@v1 draft with screen questions, visual decisions, consumer impact and ten additional visual criteria. The draft awaits owner approval with the plan."
     }
    ],
    "mockup": true,
@@ -131,12 +136,12 @@
    "queued": "2026-10-26T19:36:03-05:00",
    "reason": "feedback",
    "report": "claimed",
-   "revision": 4,
-   "sha256": "ae59e69f8ceebbebd7616c05bb6ad9f77e47f86cf7b999c6f92a4beea4e4a5c3",
+   "revision": 5,
+   "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
    "started": "2026-10-26T19:36:03-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-4",
-   "summary": "Revised proyectos@v1 and its self-contained planning mockup while preserving the existing round-9 design. Corrected pending-save departure protection, focus restoration between dialogs, disabled-state explanations and Markdown table continuity. The contract remains draft for owner approval with the plan; no owner questions remain open."
+   "summary": "Rebuilt the saved-projects mockup visual layer to address the owner’s 19:36 feedback while preserving all views, states, flows and existing criteria. Updated the twelve-section proyectos@v1 draft with screen questions, visual decisions, consumer impact and ten additional visual criteria. The draft awaits owner approval with the plan."
   },
   "taller-esenciales@v1": {
    "agent": "codex",
