@@ -2,9 +2,9 @@
  "drafts": {
   "cuentas-admin@v1": {
    "agent": "codex",
-   "auto_runs": 1,
+   "auto_runs": 2,
    "before": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
-   "delegation": "D-20261026-210139-c6dc",
+   "delegation": "D-20261026-213506-095a",
    "digest": "abde9480c2f8d545",
    "error": "",
    "failures": 1,
@@ -28,6 +28,7 @@
      "when": "2026-10-26T19:35:58-05:00"
     },
     {
+     "consumed": "D-20261026-213506-095a",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:39-05:00"
@@ -74,18 +75,18 @@
    "report": "claimed",
    "revision": 6,
    "sha256": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
-   "started": "2026-10-26T21:01:39-05:00",
-   "status": "queued",
+   "started": "2026-10-26T21:35:06-05:00",
+   "status": "drafting",
    "subplan_id": "SP-2",
    "summary": "signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: "
   },
   "proyectos@v1": {
    "agent": "codex",
-   "auto_runs": 1,
+   "auto_runs": 2,
    "before": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
-   "delegation": "D-20261026-210140-99d5",
+   "delegation": "D-20261026-213506-0460",
    "digest": "749be52ec4afc053",
-   "error": "failed: \",\n  \"ui\": false\n}\n  \"id\": \"T4.31\",\n  \"milestone_id\": \"M2\",\n  \"title\": \"Run the project storage and authorization checkpoint\",\n  \"objective\": \"Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race.\",\n  \"repository\": \"pictures\",\n  \"after\": [\n    \"T4.3\"\n  ],\n  \"complexity\": ",
+   "error": "",
    "failures": 1,
    "feedback": [
     {
@@ -107,6 +108,7 @@
      "when": "2026-10-26T19:36:03-05:00"
     },
     {
+     "consumed": "D-20261026-213506-0460",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:40-05:00"
@@ -143,23 +145,23 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T21:01:40-05:00",
-   "reason": "feedback",
+   "queued": "2026-10-26T21:35:06-05:00",
+   "reason": "plan changed",
    "report": "claimed",
    "revision": 5,
    "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
-   "started": "2026-10-26T21:01:40-05:00",
-   "status": "failed",
+   "started": "2026-10-26T21:35:06-05:00",
+   "status": "drafting",
    "subplan_id": "SP-4",
    "summary": "\",\n  \"ui\": false\n}\n  \"id\": \"T4.31\",\n  \"milestone_id\": \"M2\",\n  \"title\": \"Run the project storage and authorization checkpoint\",\n  \"objective\": \"Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race.\",\n  \"repository\": \"pictures\",\n  \"after\": [\n    \"T4.3\"\n  ],\n  \"complexity\": "
   },
   "taller-esenciales@v1": {
    "agent": "codex",
-   "auto_runs": 1,
+   "auto_runs": 2,
    "before": "46e758f7d1e6ca585761dc10c6e52e895bdf358126c1a440f6dca5fe16a669ff",
-   "delegation": "D-20261026-210140-4802",
+   "delegation": "D-20261026-213506-5754",
    "digest": "f3f2ed19d4dc6d0a",
-   "error": "failed: 5)); } }\n@keyframes kit-pulse { 50% { opacity: .55; } }\n@keyframes kit-indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }\n  .skeleton { ani",
+   "error": "",
    "failures": 1,
    "feedback": [
     {
@@ -181,6 +183,7 @@
      "when": "2026-10-26T19:36:02-05:00"
     },
     {
+     "consumed": "D-20261026-213506-5754",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:40-05:00"
@@ -217,13 +220,13 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T21:01:40-05:00",
-   "reason": "feedback",
+   "queued": "2026-10-26T21:35:06-05:00",
+   "reason": "plan changed",
    "report": "claimed",
    "revision": 5,
    "sha256": "46e758f7d1e6ca585761dc10c6e52e895bdf358126c1a440f6dca5fe16a669ff",
-   "started": "2026-10-26T21:01:40-05:00",
-   "status": "failed",
+   "started": "2026-10-26T21:35:06-05:00",
+   "status": "drafting",
    "subplan_id": "SP-3",
    "summary": "5)); } }\n@keyframes kit-pulse { 50% { opacity: .55; } }\n@keyframes kit-indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }\n  .skeleton { ani"
   }
