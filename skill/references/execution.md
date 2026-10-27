@@ -57,7 +57,14 @@ the default way out of planning; the manual review above is what happens when it
 
 **The scheduler is the only way an approved plan runs in the background.** `launch` and `handoff` (and the web approval)
 start `scheduler-run`, which composes the scheduler core (state machine and `SCHEDULER.db`), the router (M2), the executor
-(M3) and the independent verifier/audits. Prerequisites: PLAN.md `status: approved` and a frozen `PLAN.json`
+(M3) and the independent verifier/audits. For partial approval (D-134), use
+`bitacora.py --project <project> stage run <REQ> SP-1[,SP-2]` or «Ejecutar subplan» in the Plan tab. Confirm the
+skeleton and the subplan first (tasks, criteria, resolved inputs, `## Pruebas` rows and ready design). This freezes
+only the cumulative approved scope and starts/joins the same Scheduler run; the rest remains editable. `stage status
+<REQ>` shows approved stages. Resume binds to the run's own revision; newer approvals join when live attempts and
+streams have drained, preserving accepted unchanged work. Large rework requires `scheduler-op <REQ> revise --confirm`.
+A completed partial stage cannot close the plan; all scope and D-131 owner verification are still required.
+ Prerequisites for whole-plan launch: PLAN.md `status: approved` and a frozen `PLAN.json`
 (`plan-json init` -> `check` -> `freeze`); a plan without one is refused with `PLAN_NOT_FROZEN` and nothing is started.
 Keep the **loop** (or Codex goal) for a plan of a few hours done inside the current session. Rule of thumb: more than ~8
 tasks or "this will run overnight" -> `launch`/`handoff`. Design: `references/modules.md` §Scheduler core.
@@ -227,6 +234,13 @@ bitácora explicitly (the Stop hook won't remind you).
 - Log significant decisions to DECISIONS.md *when they are made*, not at the end.
 
 ## 3. Git (solo developer)
+
+**Executor copy retention (D-129).** On David's machine `bt-workspace-retention.timer` runs hourly and retires
+captured terminal M3 worktrees after 72 hours. It preserves post-capture edits, staged content, submodules, unknown
+ignored data and busy/in-use copies. Branches, snapshot refs, handoffs, ledgers and audits are not deleted. Do not
+replace this process with `rm -rf`, force-release helpers or branch pruning. Preview/manual invocation and recovery
+are documented in `scripts/bt_scheduler_executor/README.md` §Three-day worktree retention. A copy retained for a
+specific safety reason needs reconciliation, not a weaker guard. Btrfs backup retention is a separate policy.
 
 - If the repo is on `main`/`master`, create a short-lived branch per feature (`feat/<req-slug>`); in a repo
   with other active work, a worktree.

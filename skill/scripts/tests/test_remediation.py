@@ -86,6 +86,16 @@ class Build(unittest.TestCase):
         self.assertEqual(plans.plan_errors(revised), [])
         self.assertEqual(BASE["revision"], 1)                                          # the input plan is not changed
 
+    def test_remediation_tasks_join_the_subplan_of_the_audit_when_the_plan_has_subplans(self):
+        by_id = {t["id"]: t for t in BASE["tasks"]}
+        audit = {**by_id["T4"], "subplan_id": "SP-1"}
+        args = ("T4.1", audit, [finding("F1", ["T1"])], by_id, ["T3"], 1, "SPEC.md")
+        commands = [[{"command": "pytest src/t1.py"}]]
+        flat = rem._task(*args, BASE, commands=commands)
+        nested = rem._task(*args, {**BASE, "subplans": [{"id": "SP-1", "audit_task": "T4"}]}, commands=commands)
+        self.assertNotIn("subplan_id", flat)
+        self.assertEqual(nested["subplan_id"], "SP-1")
+
     def test_each_criterion_is_checked_by_the_command_of_the_task_that_owns_the_finding(self):
         spec = plan(task("T1", command="python -m unittest a/a.py", paths=["a/a.py"]),
                     task("T2", ["T1"], kind="test", category="integration", command="python -m unittest b/b.py",
@@ -161,6 +171,39 @@ class Files(unittest.TestCase):
         self.assertEqual(json.loads((self.rdir / "PLAN.json").read_text())["revision"], 2)
         self.assertEqual(rem.rounds_used(self.rdir, "T4"), 1)
         self.assertIsNone(rem.apply(self.rdir))                                              # nothing left to apply
+
+    def test_the_apply_keeps_the_owners_confirmation_of_subplans_that_held(self):
+        ask = rem.hook(self.rdir, self.policy)
+        ask("T4", "att-0001", [finding("F1", ["T1"])])
+        state = {"subplans": {"SP-1": {"state": "confirmed"}, "SP-2": {"state": "changed"}, "SP-3": {"state": "pending"}}}
+        with patch("bt_planning_flow.active", return_value=True), patch("bt_planning_flow.state", return_value=state), \
+                patch("bt_planning_flow.keep_confirmed") as keep:
+            rem.apply(self.rdir)
+        keep.assert_called_once_with(self.rdir, ["SP-1"], "auto remediation of T4")
+
+    def test_the_apply_writes_the_new_tasks_into_plan_md_so_a_later_stage_can_be_approved(self):
+        from bt_planner import sync
+
+        lines = ["# Plan", "", "### M1 — Base"]
+        for t in BASE["tasks"]:
+            lines.append(f"- [ ] {t['id']} — {t['title']} · repo: app · after: {', '.join(t['after'])} · files: {', '.join(t['expected_paths'])}")
+        (self.rdir / "PLAN.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+        ask = rem.hook(self.rdir, self.policy)
+        ask("T4", "att-0001", [finding("F1", ["T1"])])
+        rem.apply(self.rdir)
+        text = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
+        self.assertIn("- [ ] T4.1 — Remediate T4 findings F1", text)
+        self.assertLess(text.index("T4.1 —"), text.index("- [ ] T4 —"))                      # before the audit it gates
+        self.assertRegex(text, r"- \[ \] T4 — .*after: T3, T4\.1")
+        plan_json = json.loads((self.rdir / "PLAN.json").read_text())
+        mentioned = [p for p in sync.consistency(self.rdir, plan_json, plan_id=plan_json["plan_id"]) if p.startswith(("T4.1", "T4."))]
+        self.assertEqual([p for p in mentioned if "missing from PLAN.md" in p or ".after" in p], [])
+
+    def test_a_planning_flow_that_is_off_or_fails_never_blocks_the_remediation(self):
+        ask = rem.hook(self.rdir, self.policy)
+        ask("T4", "att-0001", [finding("F1", ["T1"])])
+        with patch("bt_planning_flow.active", side_effect=RuntimeError("boom")):
+            self.assertEqual(rem.apply(self.rdir)["revision"], 2)
 
     def test_an_audit_that_used_its_rounds_or_cannot_be_built_falls_back_to_sending_tasks_back(self):
         policy = bt_audit_gate.Policy(remediation_rounds=1)

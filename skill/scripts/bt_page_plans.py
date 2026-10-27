@@ -194,7 +194,14 @@ def detail_fragment(s: dict) -> str:
             f'{level_badge(summ["difficulty"])}</div>{unclassified_banner(s)}{bar(summ["tasks_done"], summ["tasks_total"])}'
             f'<div class="meta">{summ["tasks_done"]}/{summ["tasks_total"]} tareas · '
             f'{summ["milestones_done"]}/{summ["milestones_total"]} hitos</div>{_plan_tab_link(s)}</div>')
-    parts = [head, _timeline(s)]
+    parts = [head]
+    try:
+        import bt_page_verification
+        from bt_core import ROOT, find_req
+        parts.append(bt_page_verification.run_card(s["project"], s["req_id"], find_req(ROOT / s["project"], s["req_id"])))
+    except Exception:  # noqa: BLE001 - the plan detail must render even when the verification card cannot
+        pass
+    parts.append(_timeline(s))
     asks = {r["task"]: r for r in s.get("decisions") or [] if r.get("task")}
     for m in s["milestones"]:
         parts.append(f'<div class="ms">{_milestone_head(m)}{_subplans(s, m)}{"".join(_task(t, asks) for t in m["tasks"])}</div>')

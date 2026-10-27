@@ -1,0 +1,27 @@
+<!-- example: actions | Con encabezado y acciones -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Plan de acceso</h3>
+    <p class="card-description">Quién puede usar cada herramienta del piloto.</p>
+    <div class="card-action"><button class="button" data-variant="outline" data-size="sm" type="button">Editar</button></div>
+  </div>
+  <div class="card-content"><p>Tres roles activos, doce permisos posibles. Los cambios aplican en la próxima solicitud de cada persona.</p></div>
+  <div class="card-footer" data-justify="between"><span class="text-muted text-xs">Actualizado el 26 oct 2026</span><button class="button" data-size="sm" type="button">Ver roles</button></div>
+</div>
+
+<!-- example: stats | Cifras -->
+<div class="grid" data-cols="3">
+  <div class="card" data-size="sm"><div class="stat"><span class="stat-label">Cuentas activas</span><span class="stat-value">42</span><span class="stat-delta" data-trend="good">+6 desde el 1 oct</span></div></div>
+  <div class="card" data-size="sm"><div class="stat"><span class="stat-label">Invitaciones pendientes</span><span class="stat-value">5</span><span class="stat-delta">2 vencen esta semana</span></div></div>
+  <div class="card" data-size="sm"><div class="stat"><span class="stat-label">Gasto de IA, octubre</span><span class="stat-value">US$ 18,40</span><span class="stat-delta" data-trend="bad">+12 % frente a septiembre</span></div></div>
+</div>
+
+<!-- example: sections | Con secciones -->
+<div class="card" data-border-sections>
+  <div class="card-header"><h3 class="card-title">Datos de la empresa</h3><p class="card-description">Aparecen en las cotizaciones.</p></div>
+  <div class="card-content stack">
+    <div class="field"><label class="label" for="card-company">Nombre comercial</label><input class="input" id="card-company" value="Estudio Nube"></div>
+    <div class="field"><label class="label" for="card-city">Ciudad</label><input class="input" id="card-city" value="Bogotá"></div>
+  </div>
+  <div class="card-footer" data-justify="end"><button class="button" data-variant="outline" type="button">Descartar</button><button class="button" type="button">Guardar</button></div>
+</div>

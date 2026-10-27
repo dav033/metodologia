@@ -265,6 +265,29 @@ class ReviewPolicyTests(unittest.TestCase):
         self.assertIn("Do NOT run the antagonist per commit", rule)
         self.assertNotIn("EVERY commit", rule)
 
+    def test_a_high_risk_security_surface_keeps_one_security_pass_under_audit_coverage(self):
+        login = task("T1", risk="high", kind="implement", title="Server sessions and the permission guard")
+        rule = bt_review_policy.commit_review_rule(self.audited(), [login])
+        self.assertIn("SECURITY-SENSITIVE", rule)
+        self.assertIn("ONE security-only antagonist pass", rule)
+        self.assertIn("Do NOT run the general antagonist per commit", rule)
+        self.assertNotIn("EVERY commit", rule)
+        for other in (task("T1", risk="medium", kind="implement", title="Server sessions"),        # not high risk
+                      task("T1", risk="high", kind="audit", title="Sessions audit"),               # reviews, does not open
+                      task("T1", risk="high", kind="implement", title="Plans page")):              # no security surface
+            self.assertNotIn("SECURITY-SENSITIVE", bt_review_policy.commit_review_rule(self.audited(), [other]))
+
+    def test_the_security_pass_reads_the_full_task_text_from_the_frozen_plan(self):
+        frozen = {"schema_version": "1.3.0", "plan_id": "P", "revision": 1,
+                  "tasks": [{"id": "T1", "kind": "implement", "risk": "high", "subplan_id": "SP-1",
+                             "title": "Local mode", "objective": "Loopback detection must not trust forwarded headers"},
+                            {"id": "A1", "kind": "audit", "subplan_id": "SP-1"}],
+                  "subplans": [{"id": "SP-1", "audit_task": "A1"}]}
+        state = {"plan_id": "P", "revision": 1, "frozen_plan": frozen, "tasks": [task("A1", kind="audit", status="todo")]}
+        self.assertIn("SECURITY-SENSITIVE", bt_review_policy.commit_review_rule(state, [{"id": "T1"}]))
+        state["tasks"][0]["status"] = "done"                                                      # no audit left: full gate
+        self.assertIn("EVERY commit", bt_review_policy.commit_review_rule(state, [{"id": "T1"}]))
+
     def test_only_the_units_own_milestone_audit_lifts_the_gate(self):
         state = self.audited()
         self.assertTrue(bt_review_policy.milestone_audit_active(state, [task("T1")]))

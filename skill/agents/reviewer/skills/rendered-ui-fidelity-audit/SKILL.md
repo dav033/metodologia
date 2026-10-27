@@ -30,6 +30,9 @@ declared breakpoints and states, and browser capture commands it authorizes. Nev
    deviation as `contract_violation`, `unspecified`, `accessibility`, or `regression`. A visual difference on an
    unspecified detail is not a contract violation; do not report aesthetic preference without an approved criterion.
    Distinguish the deviation classification from finding severity and from M6 ledger status.
+   Also check, as `unspecified` or `regression`: the changed screen keeps the existing shell, navigation, header,
+   tokens and font families; no invented names, dates, slogans, hero headlines or marketing copy appear that are
+   absent from the requirements and the existing UI (this is a checklist item, not automated by the kit).
 7. For each actionable finding provide `semantic_fingerprint`, `severity` (`critical|high|medium|low|info`),
    finding `classification` (`defect`, `plausible_risk`, `external_block`, or `product_decision`), deviation class,
    criterion reference (or state that none exists), contract `id@version`, candidate revision, screenshot evidence ID,

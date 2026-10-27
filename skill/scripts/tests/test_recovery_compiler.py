@@ -234,6 +234,27 @@ class RecoveryCompilerTests(unittest.TestCase):
             coverage_checks(plan, ["T1"], ["web/page.tsx"], "regression")
         self.assertEqual(raised.exception.code, "MISSING_OWNER_CHECK")
 
+    def test_package_script_checks_cover_their_owners_own_paths(self):
+        plan = copy.deepcopy(self.plan)
+        owner = plan["tasks"][2]
+        owner["expected_paths"] = ["src/lib/cuentas/modo-local.ts"]
+        owner["verification"] = [{"type": "command", "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback",
+                                  "purpose": "Local mode", "category": "functional"}]
+        checks = coverage_checks(plan, ["T3"], ["src/lib/cuentas/modo-local.ts"], "regression")
+        self.assertEqual([row["command"] for row in checks], [owner["verification"][0]["value"]])
+
+    def test_a_script_that_names_other_paths_or_belongs_to_another_owner_does_not_cover(self):
+        plan = copy.deepcopy(self.plan)
+        owner = plan["tasks"][2]
+        owner["expected_paths"] = ["src/lib/cuentas/modo-local.ts"]
+        owner["verification"] = [{"type": "command", "value": "node --test tests/otro.test.js", "purpose": "Other", "category": "functional"}]
+        with self.assertRaises(RecoveryCompilationError) as raised:
+            coverage_checks(plan, ["T3"], ["src/lib/cuentas/modo-local.ts"], "regression")
+        self.assertEqual(raised.exception.code, "MISSING_OWNER_CHECK")
+        owner["verification"] = [{"type": "command", "value": "npm run test -- tests/otro.test.js", "purpose": "Other", "category": "functional"}]
+        with self.assertRaises(RecoveryCompilationError):
+            coverage_checks(plan, ["T3"], ["src/lib/cuentas/modo-local.ts"], "regression")
+
     def test_adds_cross_check_only_when_owner_policy_requires_it(self):
         with patch("bt_recovery_compiler.second_auditor_required", return_value=True):
             result = compile_recovery_revision(self.plan, self.evidence, self.proposal)

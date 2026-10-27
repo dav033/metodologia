@@ -18,7 +18,9 @@ references retain the conditional triggers and exclusions. An unavailable or unv
 | `jakubkrehel/skills` | `skills/better-writing/SKILL.md`, `skills/better-layout/SKILL.md`, `skills/better-accessibility/SKILL.md`, `skills/better-colors/SKILL.md`, `skills/state-machine/SKILL.md` | `4c66b1fa86e9ab70187b43d7da9b6fdb29f2ef63` | MIT (`LICENSE`) | Designer: copy, hierarchy, accessibility, colors/tokens and reachable states. `build-design` excluded. |
 | `wshobson/agents` | `plugins/ui-design/skills/design-system-patterns/SKILL.md`, `plugins/ui-design/skills/responsive-design/SKILL.md` | `0874a27b17a22e2b7c2e2bcd725768e0803cad06` | MIT (`LICENSE`) | Designer: token hierarchy and responsive specifications; no plugin or implementation workflow. |
 | `mae616/design-skills` | `skills/ui-designer/SKILL.md` | `79e3398bee27664de70c7b97a30dd928f6fe7976` | MIT (`LICENSE`) | Designer: information architecture, hierarchy and states as specifications. |
-| `anthropics/skills` | `skills/frontend-design/SKILL.md` | `dbd4588f9e1033efb41dad4bef2f7947c8993d44` | Apache-2.0 (`skills/frontend-design/LICENSE.txt`) | Designer: conditional aesthetic direction only; no production-code authority. |
+| `anthropics/skills` | `skills/frontend-design/SKILL.md` | `dbd4588f9e1033efb41dad4bef2f7947c8993d44` | Apache-2.0 (`skills/frontend-design/LICENSE.txt`) | Designer: aesthetic direction and plan-before-build (`public-design-techniques.md` conditionally, `mockup-craft.md` for every planning mockup); no production-code authority. |
+| `Leonxlnx/taste-skill` | `skills/taste-skill/references/app-screens.md` | `12af471f627f866411b4bd785b19646d3672784c` | MIT (`LICENSE`) | Designer: app-screen mockup craft (`agents/designer/references/mockup-craft.md`); scripts excluded. |
+| `pbakaus/impeccable` | `skill/reference/operate.md`, `skill/reference/craft-floor.md` | `414603bf14c7a344edb466bb1f85690c77ce8b7d` | Apache-2.0 (`LICENSE`) | Designer: Operate-mode rules and refuse list (`mockup-craft.md`); CLI, hooks, commands and agents excluded. |
 | `akkie76/code-review-skills` | `dist/codex/evidence-code-review/SKILL.md` | `ca7b11c91906c60cc8aed611d5acb191d0335723` | MIT (`LICENSE`) | Reviewer: frozen scope, coverage, verifiable evidence and false-positive checks. |
 | `JUNERDD/skills` | `skills/code-review/SKILL.md` | `f76dec9eacbcea858e1d469710067020bd3fec6a` | MIT (`LICENSE`) | Reviewer: semantic finding identity and lineage; no delegation or report automation. |
 | `trailofbits/skills` | `plugins/differential-review/skills/differential-review/SKILL.md` | `196a9073ab10d35bacf111f945e02c00b2c6883a` | CC BY-SA 4.0 (`LICENSE`) | Reference to general risk-scoped review principles only. No source text copied or adapted. |
@@ -423,3 +425,23 @@ Apache License
    limitations under the License.
 ```
 
+## Designer david-ui stand-in kit
+
+`agents/designer/skills/david-ui-kit/kit/` is written from scratch for this project. It follows the public naming of
+shadcn/ui (MIT): component names, token role names (`--background`, `--primary`, `--muted-foreground`, …) and component
+anatomy, as listed in the owner's david-ui source inventory; no shadcn/ui source file is copied. Colour values come from the
+Catppuccin Latte and Mocha palettes (MIT), deepened where WCAG AA needs it. No Animate UI, React Bits or Bencho UI code or
+text is used; the icons are simple geometric paths drawn for the kit.
+## Designer direction and motion guidance (2026-10-26)
+
+Locally rewritten techniques, pinned source table and adoption limits are in
+`agents/designer/skills/david-ui-kit/directions.md`. New primary sources: huashu-design
+`4fc7bfdbd5ec3fa2d43ce7a6433de60976a5e4b1` (MIT), emilkowalski/skills
+`2d228630ba1446365f614a108cb8252f1feda202` (MIT), oil-ui `c60d91d0ebdcfb96cac6f3988823291549ea6190`
+(MIT), LottieFiles motion-design-skill `f9a8a041b85185ee4881b3471d3415e939aac772` (MIT), design-dna
+`593e39bc9e3652734653bd75544a333d7d43615e` (MIT), Gesso-Build/skills
+`1c3908b7efb56ec24624436dea5c32a371eb487c` (MIT), hallmark
+`7ec868225c6caa040558c321ee0fefa0e73f83a8` (MIT), anti-slop
+`5ca57fe37c60670064abf3beae775e3dad6687a1` (MIT). No upstream runtime, brand marks, CLI or source text is bundled.
+The pre-existing frontend-design/taste/impeccable notices still apply. The private local component workspace
+keeps real installed third-party code and its lockfile outside the public repository.

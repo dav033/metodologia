@@ -54,7 +54,11 @@ def safe_path(base: Path, rel: str) -> Path | None:
         return None
     return p if p.is_file() else None
 
-class Handler(BaseHTTPRequestHandler):
+from bt_server_planning import PlanningActions
+from bt_server_plans import PlanListActions
+
+
+class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
     strict_host = True          # the local panel answers only to its own loopback names (the remote handler has its own login)
 
     def log_message(self, *args):  # quiet
@@ -136,7 +140,8 @@ class Handler(BaseHTTPRequestHandler):
         if parts == ["now"]:
             import bt_live_api as live
             import bt_page_now
-            return self.send(bt_page_now.now_page(live.now_items(ROOT), live.sessions(ROOT)))
+            return self.send(bt_page_now.now_page(live.now_items(ROOT), live.sessions(ROOT), live.verify_items(ROOT),
+                                                  live.health_items(ROOT)))
         if parts == ["api", "now"]:
             import bt_live_api as live
             return self.send(json.dumps({"items": live.now_items(ROOT), "sessions": live.sessions(ROOT)}), 200, "application/json; charset=utf-8")
@@ -157,6 +162,10 @@ class Handler(BaseHTTPRequestHandler):
             import bt_live_api as live
             return self.send(json.dumps({"runs": live.run_summaries(ROOT, q.get("scope", "global"))}), 200,
                              "application/json; charset=utf-8")
+        if parts[0] == "components":                       # Designer kit gallery; previews come back sandboxed
+            import bt_page_components
+            status, body, ctype, sandbox = bt_page_components.route(parts[1:], q)
+            return self.send(body, status, ctype, sandbox=sandbox)
         if parts and parts[0] in ("plans", "events", "api"):
             return self.plans_get(parts, q)
         if parts[0] == "static" and len(parts) >= 2:            # nested for vendored libraries (static/vendor/<lib>/…)
@@ -231,6 +240,9 @@ class Handler(BaseHTTPRequestHandler):
             base = pages.purl(project, "req", rid)
             if action == "answer":
                 msg = self.answer(project, rid, rdir, form)
+                sp = form.get("back_sp", "")
+                if form.get("back") == "plan" and re.fullmatch(r"[A-Za-z0-9_.-]{0,40}", sp):
+                    return self.redirect(f"{base}?tab=plan&mode=subplans&view=design&sp={quote(sp)}&msg={quote(msg)}")
                 return self.redirect(f"{base}?tab=rounds&msg={quote(msg)}")
             if action == "review":
                 msg = self.review(project, rid, rdir, form)
@@ -241,8 +253,16 @@ class Handler(BaseHTTPRequestHandler):
             if action == "plan":
                 msg = self.decide(project, rid, rdir, form)
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
-            if action in ("design-draft", "design-feedback", "planning-outline", "planning-focus", "planning-confirm"):
+            if action in ("design-draft", "design-feedback", "design-answer", "design-choose", "design-iterate", "design-amend", "planning-outline", "planning-focus", "planning-confirm"):
                 return self.redirect(self.planning_post(project, rdir, action, form, base))
+            if action in ("verify-open", "verify-close", "verify-approve", "verify-reject"):
+                return self.redirect(self.verify_post(project, rid, rdir, action, form, base))
+            if action in ("agent-say", "agent-start", "agent-restart"):
+                return self.redirect(self.agent_post(project, rid, rdir, action, form, base))
+            if action in ("session-start", "session-finish"):
+                return self.redirect(self.session_post(project, rid, rdir, action, form, base))
+            if action == "stage-run":
+                return self.redirect(self.stage_post(project, rid, rdir, form, base))
             if action == "design":
                 import bt_design_web
                 msg = bt_design_web.decide(ROOT, project, rid, rdir, form,
@@ -252,65 +272,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(pages.layout("Error", f"<p>{pages.e(str(exc))}</p>"), 400)
         self.send("Not found", 404, "text/plain")
 
-    def planning_get(self, project: str, req: str, what: str, q: dict) -> None:
-        """Live fragment of the plan tab (and a nudge for the Designer and translator), or a sandboxed mockup."""
-        import bt_design_drafts as drafts
-        import bt_page_planning as planning
-        rdir = find_req(ROOT / project, req)
-        if what == "mockup":
-            ref = q.get("contract", "")
-            if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}", ref):
-                return self.send("Not found", 404, "text/plain")
-            rev = int(q["rev"]) if planning._number(q.get("rev", "")) else None
-            mockup = drafts.revision_file(rdir, ref, rev, ".html")
-            return self.file(mockup if mockup.is_file() else None)
-        opts = planning.options(rdir, q)
-        planning.follow(project, rdir, opts["lang"])
-        html = planning.fragment(project, req_id(rdir), rdir, planning.plan_status(rdir), token(),
-                                 opts)
-        return self.send(json.dumps({"html": html}, ensure_ascii=False), 200, "application/json; charset=utf-8")
 
-    def planning_post(self, project: str, rdir: Path, action: str, form: dict, base: str) -> str:
-        import bt_design_drafts as drafts
-        import bt_planning_flow as flow
-        ref, comments = form.get("contract", ""), form.get("comments", "").strip()
-        sid = form.get("anchor", "")
-        if action == "planning-outline":
-            msg = flow.confirm_outline(project, rdir, "owner")
-        elif action == "planning-focus":
-            msg = flow.focus(project, rdir, sid, "owner")
-        elif action == "planning-confirm":
-            msg = flow.confirm(project, rdir, sid, "owner")
-        elif action == "design-feedback" or comments:
-            msg = drafts.add_feedback(project, rdir, ref, comments, "web")
-        else:
-            started = drafts.request(project, rdir, [ref] if ref else None, force=bool(ref), reason="web")
-            msg = f"Designer iniciado para {', '.join(started)}." if started else "No había diseños que iniciar."
-        commit(ROOT, f"{project}: {req_id(rdir)} planning ({action}, web)", push=False)
-        sp = form.get("anchor", "") if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", form.get("anchor", "")) else ""
-        return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sp)}&msg={quote(msg)}"
-
-    def simulate(self, q: dict) -> None:
-        """A demonstration run of one plan on the core's doubles (read-only: nothing is created or executed)."""
-        import bt_flow_bus
-        import bt_plans_api as api
-        import bt_scheduler_adapter as scheduler_adapter
-        try:
-            rdir = api.req_dir(ROOT, q.get("project", ""), q.get("req", ""))
-            plan = rdir / "PLAN.json"
-            if not plan.exists():
-                raise api.PlanError("Ese requerimiento no tiene PLAN.json.")
-            if plan.stat().st_size > SIMULATE_MAX_BYTES:
-                raise api.PlanError("El PLAN.json es demasiado grande para simularlo.")
-            tasks = [t["id"] for t in json.loads(plan.read_text(encoding="utf-8")).get("tasks", [])]
-            if len(tasks) > SIMULATE_MAX_TASKS:
-                raise api.PlanError("El plan tiene demasiadas tareas para simularlo.")
-        except (api.PlanError, ValueError) as exc:
-            return self.send(str(exc), 404, "text/plain; charset=utf-8")
-        script = {"fail": {tasks[1]: 1} if len(tasks) > 1 else {}, "reject": {tasks[2]: 1} if len(tasks) > 2 else {}}
-        audit = scheduler_adapter.simulate_audit(plan, **script)
-        events = bt_flow_bus.simulated(f"simulación/{q.get('project', '')}/{rdir.name}", audit)
-        return self.send(json.dumps({"events": events, "script": script}), 200, "application/json; charset=utf-8")
 
     def go(self, parts: list[str]) -> None:
         import bt_go
@@ -324,60 +286,6 @@ class Handler(BaseHTTPRequestHandler):
                                                          f'<ul>{links}</ul>'))
         self.send(pages.layout("No encontrado", f'<h1>No encontrado</h1><p>{pages.e(found["error"])}</p>'), 404)
 
-    def plans_get(self, parts: list[str], q: dict) -> None:
-        import bt_page_plans as pp
-        import bt_plans_api as api
-        try:
-            if parts == ["plans"]:
-                filt = "active" if q.get("filter") == "active" else "all"
-                return self.send(pp.index_page(api.plans_payload(ROOT), filt, api.all_trash(ROOT), token(),
-                                               q.get("msg", "")))
-            if len(parts) == 3 and parts[0] == "plans":
-                return self.send(pp.detail_page(api.status_of(ROOT, parts[1], parts[2]), token(), q.get("msg", "")))
-            if parts == ["events"]:
-                plan = tuple(q["plan"].split("/", 1)) if "/" in q.get("plan", "") else None
-                return api.stream(self, ROOT, plan, "active" if q.get("filter") == "active" else "all")
-            if parts == ["api", "plans"]:
-                filt = "active" if q.get("filter") == "active" else "all"
-                rows = api.plans_payload(ROOT, filt)
-                data = {"plans": rows, **({"html": pp.index_fragment(rows, filt)} if q.get("html") else {})}
-                return self.send(json.dumps(data), 200, "application/json; charset=utf-8")
-            if len(parts) == 4 and parts[:2] == ["api", "plans"]:
-                status = api.status_of(ROOT, parts[2], parts[3])
-                data = {**status, **({"html": pp.detail_fragment(status)} if q.get("html") else {})}
-                return self.send(json.dumps(data), 200, "application/json; charset=utf-8")
-        except api.PlanError as exc:
-            return self.send(str(exc), 404, "text/plain; charset=utf-8")
-        self.send("Not found", 404, "text/plain")
-
-    def plans_post(self, parts: list[str], form: dict) -> None:
-        import bt_plans_api as api
-        actions = {"run": lambda p, r: self.run_plan(api, p, r, form.get("expected", "")),
-                   "decide": lambda p, r: api.decide(ROOT, p, r, form.get("request", ""), form.get("option", ""),
-                                                     form.get("reason", "")),
-                   "diagnose": lambda p, r: api.diagnose(ROOT, p, r, form.get("request", "")),
-                   "recovery": lambda p, r: api.recovery_control(ROOT, p, r, form.get("action", ""), form.get("preview", ""),
-                                                                 form.get("stop_generation", "")),
-                   "heal": lambda p, r: api.heal_control(ROOT, p, r, form.get("action", ""), form.get("case", "")),
-                   "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
-                   "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
-        try:
-            if len(parts) == 3 and parts[2] == "restore":
-                msg = api.restore_plan(ROOT, parts[1], form.get("entry", ""))
-                return self.redirect(f"/plans?msg={quote(msg)}")
-            if len(parts) == 4 and parts[3] in actions:
-                msg = actions[parts[3]](parts[1], parts[2])
-                dest = "/plans" if parts[3] == "delete" else f"/plans/{quote(parts[1])}/{quote(parts[2])}"
-                return self.redirect(f"{dest}?msg={quote(msg)}")
-        except api.PlanError as exc:
-            back = f"/plans/{quote(parts[1])}/{quote(parts[2])}" if len(parts) == 4 else "/plans"
-            return self.redirect(f"{back}?msg={quote(str(exc))}")
-        self.send("Not found", 404, "text/plain")
-
-    def run_plan(self, api, project: str, rid: str, expected: str) -> str:
-        msg = api.run_plan(ROOT, project, rid, expected)
-        commit(ROOT, f"{project}: {rid} run from the plan page (web)")
-        return msg
 
     def answer(self, project: str, rid: str, rdir: Path, form: dict) -> str:
         f = rounds.rounds_dir(rdir) / form.get("round", "")
@@ -394,6 +302,8 @@ class Handler(BaseHTTPRequestHandler):
                 answers[qn["id"]] = {"text": form.get(qn["id"], "")}
         rounds.answer_round(f, answers, "web")
         commit(ROOT, f"{project}: {rid} answers to {f.stem} (web)")
+        self.tell_planner(project, rid, f"The owner answered round {data.get('round')} of {rid} on the web. Read the answers "
+                          f"with `bitacora.py --project {project} round show {rid}` and carry on.")
         return "Respuestas guardadas. El agente las toma desde el archivo de la ronda."
 
     def decide(self, project: str, rid: str, rdir: Path, form: dict) -> str:

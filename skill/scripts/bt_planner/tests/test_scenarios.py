@@ -157,9 +157,7 @@ class Scenarios(unittest.TestCase):
                 edited = copy.deepcopy(good)
                 edited["tasks"][0]["estimated_minutes"] += 10
                 (rdir / "PLAN.json").write_text(pc.dumps(edited), encoding="utf-8")
-                self.assertTrue(any("frozen and PLAN.json differs" in e for e in sync.check(rdir).errors))
-                edited["revision"] = 2
-                (rdir / "PLAN.json").write_text(pc.dumps(edited), encoding="utf-8")
+                self.assertTrue(sync.check(rdir).ok)          # D-134: the working PLAN.json is a draft
                 with self.assertRaises(pc.PlanContractError) as ctx:
                     sync.bind_approved(rdir)
                 self.assertEqual(ctx.exception.code, "PLAN_DRIFT")

@@ -1,0 +1,2400 @@
+{
+ "kit": "david-ui real libraries",
+ "version": "1.0.0",
+ "source": "david-ui SOURCE-INVENTORY.md v4: 93 entries (42 shadcn + 7 Animate UI + 12 Bencho + 32 React Bits Free) and 22 Animate UI enhancements",
+ "sources": {
+  "shadcn": {
+   "label": "shadcn/ui",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "home": "https://ui.shadcn.com/docs/components"
+  },
+  "animate-ui": {
+   "label": "Animate UI",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "home": "https://animate-ui.com/docs"
+  },
+  "bencho": {
+   "label": "Bencho UI",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "home": "https://bencho.dev"
+  },
+  "react-bits": {
+   "label": "React Bits",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "home": "https://reactbits.dev"
+  }
+ },
+ "statuses": {
+  "done": "installed from its official source, demo built and rendered in the gallery",
+  "gap": "not usable yet; the reason says why"
+ },
+ "categories": [
+  {
+   "id": "estructura",
+   "title": "Estructura visual"
+  },
+  {
+   "id": "formularios",
+   "title": "Formularios y entradas"
+  },
+  {
+   "id": "navegacion",
+   "title": "Navegación"
+  },
+  {
+   "id": "ventanas",
+   "title": "Ventanas e interacciones"
+  },
+  {
+   "id": "feedback",
+   "title": "Feedback y estados"
+  },
+  {
+   "id": "datos",
+   "title": "Visualización de datos"
+  },
+  {
+   "id": "movimiento",
+   "title": "Movimiento y utilidades"
+  },
+  {
+   "id": "tipografia",
+   "title": "Tipografía animada"
+  },
+  {
+   "id": "galerias",
+   "title": "Interfaz y galerías"
+  },
+  {
+   "id": "efectos",
+   "title": "Efectos de interacción"
+  },
+  {
+   "id": "fondos",
+   "title": "Fondos"
+  }
+ ],
+ "entries": [
+  {
+   "id": "button",
+   "name": "Button",
+   "source": "shadcn",
+   "category": "estructura",
+   "priority": "P1",
+   "type": "base",
+   "description": "Acciones: una principal por vista; secundarias en outline o ghost; destructivas confirmadas en un Alert Dialog.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "button"
+   },
+   "import": "import { Button } from \"@/components/ui/button\"",
+   "contract": "shadcn:button",
+   "demo": "demos/shadcn/button.tsx"
+  },
+  {
+   "id": "card",
+   "name": "Card",
+   "source": "shadcn",
+   "category": "estructura",
+   "priority": "P1",
+   "type": "base",
+   "description": "Contenedor de un objeto o módulo. Borde o sombra, nunca ambos; nada de tarjetas dentro de tarjetas.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "card"
+   },
+   "import": "import { Card } from \"@/components/ui/card\"",
+   "contract": "shadcn:card",
+   "demo": "demos/shadcn/card.tsx"
+  },
+  {
+   "id": "badge",
+   "name": "Badge",
+   "source": "shadcn",
+   "category": "estructura",
+   "priority": "P1",
+   "type": "base",
+   "description": "Estado o categoría corta. El color significa algo (bien, aviso, error); lo neutro va en secondary.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "badge"
+   },
+   "import": "import { Badge } from \"@/components/ui/badge\"",
+   "contract": "shadcn:badge",
+   "demo": "demos/shadcn/badge.tsx"
+  },
+  {
+   "id": "avatar",
+   "name": "Avatar",
+   "source": "shadcn",
+   "category": "estructura",
+   "priority": "P1",
+   "type": "base",
+   "description": "Identidad de una persona: iniciales sobre el tono de acento, o neutras para cuentas sin nombre.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "avatar"
+   },
+   "import": "import { Avatar } from \"@/components/ui/avatar\"",
+   "contract": "shadcn:avatar",
+   "demo": "demos/shadcn/avatar.tsx"
+  },
+  {
+   "id": "field",
+   "name": "Field",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Etiqueta, control, descripción y error en una columna de 8 px. El error dice qué pasó y cómo seguir.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "field"
+   },
+   "import": "import { Field } from \"@/components/ui/field\"",
+   "contract": "shadcn:field",
+   "demo": "demos/shadcn/field.tsx"
+  },
+  {
+   "id": "input",
+   "name": "Input",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Texto de una línea. Borde de control con 3:1, foco con anillo, error con borde destructivo.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "input"
+   },
+   "import": "import { Input } from \"@/components/ui/input\"",
+   "contract": "shadcn:input",
+   "demo": "demos/shadcn/input.tsx"
+  },
+  {
+   "id": "textarea",
+   "name": "Textarea",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Texto de varias líneas, con contador cuando hay límite.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "textarea"
+   },
+   "import": "import { Textarea } from \"@/components/ui/textarea\"",
+   "contract": "shadcn:textarea",
+   "demo": "demos/shadcn/textarea.tsx"
+  },
+  {
+   "id": "select",
+   "name": "Select",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Una opción de una lista corta. Nativo para formularios simples; popup propio cuando hace falta mostrar la lista abierta.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "select"
+   },
+   "import": "import { Select } from \"@/components/ui/select\"",
+   "contract": "shadcn:select",
+   "demo": "demos/shadcn/select.tsx"
+  },
+  {
+   "id": "checkbox",
+   "name": "Checkbox",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Selección booleana o múltiple, dibujada por el kit para que se vea igual en claro y oscuro.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "checkbox"
+   },
+   "import": "import { Checkbox } from \"@/components/ui/checkbox\"",
+   "contract": "shadcn:checkbox",
+   "demo": "demos/shadcn/checkbox.tsx"
+  },
+  {
+   "id": "switch",
+   "name": "Switch",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Activa o desactiva un ajuste que aplica al instante, sin botón de guardar.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "switch"
+   },
+   "import": "import { Switch } from \"@/components/ui/switch\"",
+   "contract": "shadcn:switch",
+   "demo": "demos/shadcn/switch.tsx"
+  },
+  {
+   "id": "combobox",
+   "name": "Combobox",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "base",
+   "description": "Buscar y elegir en una lista larga; muestra «Sin resultados» con una salida.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "combobox"
+   },
+   "import": "import { Combobox } from \"@/components/ui/combobox\"",
+   "contract": "shadcn:combobox",
+   "demo": "demos/shadcn/combobox.tsx"
+  },
+  {
+   "id": "sidebar",
+   "name": "Sidebar",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "base",
+   "description": "Navegación lateral de la app: grupos con etiqueta, ítem actual marcado con fondo y peso, sin barra de color.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "sidebar"
+   },
+   "import": "import { Sidebar } from \"@/components/ui/sidebar\"",
+   "contract": "shadcn:sidebar",
+   "demo": "demos/shadcn/sidebar.tsx"
+  },
+  {
+   "id": "tabs",
+   "name": "Tabs",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "base",
+   "description": "Paneles hermanos dentro de una vista. «line» para navegar secciones de una página.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "tabs"
+   },
+   "import": "import { Tabs } from \"@/components/ui/tabs\"",
+   "contract": "shadcn:tabs",
+   "demo": "demos/shadcn/tabs.tsx"
+  },
+  {
+   "id": "dropdown-menu",
+   "name": "Dropdown Menu",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "base",
+   "description": "Acciones de un objeto. La destructiva va al final, separada y en rojo.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "dropdown-menu"
+   },
+   "import": "import { DropdownMenu } from \"@/components/ui/dropdown-menu\"",
+   "contract": "shadcn:dropdown-menu",
+   "demo": "demos/shadcn/dropdown-menu.tsx"
+  },
+  {
+   "id": "breadcrumb",
+   "name": "Breadcrumb",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "base",
+   "description": "Dónde está la persona dentro de una jerarquía; la página actual no es enlace.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "breadcrumb"
+   },
+   "import": "import { Breadcrumb } from \"@/components/ui/breadcrumb\"",
+   "contract": "shadcn:breadcrumb",
+   "demo": "demos/shadcn/breadcrumb.tsx"
+  },
+  {
+   "id": "pagination",
+   "name": "Pagination",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "base",
+   "description": "Páginas de una lista larga, con resumen de rango; anterior deshabilitado en la primera.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "pagination"
+   },
+   "import": "import { Pagination } from \"@/components/ui/pagination\"",
+   "contract": "shadcn:pagination",
+   "demo": "demos/shadcn/pagination.tsx"
+  },
+  {
+   "id": "dialog",
+   "name": "Dialog",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Tarea corta que interrumpe la vista: título, descripción, campos y pie con la acción a la derecha.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "dialog"
+   },
+   "import": "import { Dialog } from \"@/components/ui/dialog\"",
+   "contract": "shadcn:dialog",
+   "demo": "demos/shadcn/dialog.tsx"
+  },
+  {
+   "id": "alert-dialog",
+   "name": "Alert Dialog",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Confirmar algo importante o irreversible. Sin cierre por fuera; la acción nombra lo que pasa.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "alert-dialog"
+   },
+   "import": "import { AlertDialog } from \"@/components/ui/alert-dialog\"",
+   "contract": "shadcn:alert-dialog",
+   "demo": "demos/shadcn/alert-dialog.tsx"
+  },
+  {
+   "id": "sheet",
+   "name": "Sheet",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Panel lateral para filtros o detalle sin salir de la lista; abajo en móvil.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "sheet"
+   },
+   "import": "import { Sheet } from \"@/components/ui/sheet\"",
+   "contract": "shadcn:sheet",
+   "demo": "demos/shadcn/sheet.tsx"
+  },
+  {
+   "id": "popover",
+   "name": "Popover",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Contenido contextual con controles, anclado a su disparador.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "popover"
+   },
+   "import": "import { Popover } from \"@/components/ui/popover\"",
+   "contract": "shadcn:popover",
+   "demo": "demos/shadcn/popover.tsx"
+  },
+  {
+   "id": "tooltip",
+   "name": "Tooltip",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Nombre o ayuda breve de un control sin texto; nunca información necesaria para completar la tarea.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "tooltip"
+   },
+   "import": "import { Tooltip } from \"@/components/ui/tooltip\"",
+   "contract": "shadcn:tooltip",
+   "demo": "demos/shadcn/tooltip.tsx"
+  },
+  {
+   "id": "accordion",
+   "name": "Accordion",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P1",
+   "type": "base",
+   "description": "Secciones plegables con <details>; funciona sin JavaScript.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "accordion"
+   },
+   "import": "import { Accordion } from \"@/components/ui/accordion\"",
+   "contract": "shadcn:accordion",
+   "demo": "demos/shadcn/accordion.tsx"
+  },
+  {
+   "id": "alert",
+   "name": "Alert",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P1",
+   "type": "base",
+   "description": "Aviso persistente dentro de la página: qué pasó y qué hacer. Toast para lo pasajero.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "alert"
+   },
+   "import": "import { Alert } from \"@/components/ui/alert\"",
+   "contract": "shadcn:alert",
+   "demo": "demos/shadcn/alert.tsx"
+  },
+  {
+   "id": "toast",
+   "name": "Toast",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P1",
+   "type": "base",
+   "description": "Confirmación pasajera de una acción (estilo Sonner): el título repite el nombre de la acción.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "sonner"
+   },
+   "import": "import { Toaster } from \"@/components/ui/sonner\"\nimport { toast } from \"sonner\"",
+   "contract": "shadcn:toast",
+   "demo": "demos/shadcn/toast.tsx"
+  },
+  {
+   "id": "skeleton",
+   "name": "Skeleton",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P1",
+   "type": "base",
+   "description": "Carga con la forma del contenido final, no un spinner centrado.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "skeleton"
+   },
+   "import": "import { Skeleton } from \"@/components/ui/skeleton\"",
+   "contract": "shadcn:skeleton",
+   "demo": "demos/shadcn/skeleton.tsx"
+  },
+  {
+   "id": "spinner",
+   "name": "Spinner",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P1",
+   "type": "base",
+   "description": "Procesando algo breve dentro de un botón, un toast o una línea de estado.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "spinner"
+   },
+   "import": "import { Spinner } from \"@/components/ui/spinner\"",
+   "contract": "shadcn:spinner",
+   "demo": "demos/shadcn/spinner.tsx"
+  },
+  {
+   "id": "empty",
+   "name": "Empty",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P1",
+   "type": "base",
+   "description": "Estado vacío o sin resultados: qué falta y la siguiente acción.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "empty"
+   },
+   "import": "import { Empty } from \"@/components/ui/empty\"",
+   "contract": "shadcn:empty",
+   "demo": "demos/shadcn/empty.tsx"
+  },
+  {
+   "id": "table",
+   "name": "Table",
+   "source": "shadcn",
+   "category": "datos",
+   "priority": "P1",
+   "type": "base",
+   "description": "Filas con reglas, sin cebra ni banda de cabecera; números y fechas a la derecha; en móvil cada fila se apila.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "table"
+   },
+   "import": "import { Table } from \"@/components/ui/table\"",
+   "contract": "shadcn:table",
+   "demo": "demos/shadcn/table.tsx"
+  },
+  {
+   "id": "data-table",
+   "name": "Data Table",
+   "source": "shadcn",
+   "category": "datos",
+   "priority": "P1",
+   "type": "base",
+   "description": "Patrón de lista administrable: barra de búsqueda y filtros, selección, orden, acciones por fila, pie con rango y páginas.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "table"
+   },
+   "import": "import { Table } from \"@/components/ui/table\"\nimport { useReactTable, getCoreRowModel } from \"@tanstack/react-table\"",
+   "contract": "shadcn:data-table",
+   "demo": "demos/shadcn/data-table.tsx"
+  },
+  {
+   "id": "chart",
+   "name": "Chart",
+   "source": "shadcn",
+   "category": "datos",
+   "priority": "P1",
+   "type": "base",
+   "description": "Una pregunta por gráfico, un tono por serie, valores y ejes legibles; la cifra clave también en texto.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P1",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "chart"
+   },
+   "import": "import { Chart } from \"@/components/ui/chart\"",
+   "contract": "shadcn:chart",
+   "demo": "demos/shadcn/chart.tsx"
+  },
+  {
+   "id": "calendar",
+   "name": "Calendar",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "base",
+   "description": "Calendarios interactivos.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "calendar"
+   },
+   "import": "import { Calendar } from \"@/components/ui/calendar\"",
+   "contract": "shadcn:calendar",
+   "demo": "demos/shadcn/calendar.tsx"
+  },
+  {
+   "id": "date-picker",
+   "name": "Date Picker",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "base",
+   "description": "Selección de fechas; el calendario vive en un Popover.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "calendar"
+   },
+   "import": "import { Calendar } from \"@/components/ui/calendar\"\nimport { Popover, PopoverTrigger, PopoverContent } from \"@/components/ui/popover\"",
+   "contract": "shadcn:date-picker",
+   "demo": "demos/shadcn/date-picker.tsx"
+  },
+  {
+   "id": "input-group",
+   "name": "Input Group",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "base",
+   "description": "Entrada con prefijo, sufijo, icono o botón dentro del mismo borde.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "input-group"
+   },
+   "import": "import { InputGroup } from \"@/components/ui/input-group\"",
+   "contract": "shadcn:input-group",
+   "demo": "demos/shadcn/input-group.tsx"
+  },
+  {
+   "id": "radio-group",
+   "name": "Radio Group",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "base",
+   "description": "Opciones excluyentes visibles a la vez; la variante de tarjetas para decisiones con explicación.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "radio-group"
+   },
+   "import": "import { RadioGroup } from \"@/components/ui/radio-group\"",
+   "contract": "shadcn:radio-group",
+   "demo": "demos/shadcn/radio-group.tsx"
+  },
+  {
+   "id": "command",
+   "name": "Command",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P2",
+   "type": "base",
+   "description": "Paleta de comandos y búsqueda contextual.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "command"
+   },
+   "import": "import { Command } from \"@/components/ui/command\"",
+   "contract": "shadcn:command",
+   "demo": "demos/shadcn/command.tsx"
+  },
+  {
+   "id": "navigation-menu",
+   "name": "Navigation Menu",
+   "source": "shadcn",
+   "category": "navegacion",
+   "priority": "P2",
+   "type": "base",
+   "description": "Menús de navegación complejos.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "navigation-menu"
+   },
+   "import": "import { NavigationMenu } from \"@/components/ui/navigation-menu\"",
+   "contract": "shadcn:navigation-menu",
+   "demo": "demos/shadcn/navigation-menu.tsx"
+  },
+  {
+   "id": "drawer",
+   "name": "Drawer",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P2",
+   "type": "base",
+   "description": "Paneles deslizantes, sobre todo en móvil.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "drawer"
+   },
+   "import": "import { Drawer } from \"@/components/ui/drawer\"",
+   "contract": "shadcn:drawer",
+   "demo": "demos/shadcn/drawer.tsx"
+  },
+  {
+   "id": "collapsible",
+   "name": "Collapsible",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P2",
+   "type": "base",
+   "description": "Mostrar u ocultar contenido.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "collapsible"
+   },
+   "import": "import { Collapsible } from \"@/components/ui/collapsible\"",
+   "contract": "shadcn:collapsible",
+   "demo": "demos/shadcn/collapsible.tsx"
+  },
+  {
+   "id": "scroll-area",
+   "name": "Scroll Area",
+   "source": "shadcn",
+   "category": "estructura",
+   "priority": "P2",
+   "type": "base",
+   "description": "Desplazamiento de contenido con barra propia.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "scroll-area"
+   },
+   "import": "import { ScrollArea } from \"@/components/ui/scroll-area\"",
+   "contract": "shadcn:scroll-area",
+   "demo": "demos/shadcn/scroll-area.tsx"
+  },
+  {
+   "id": "progress",
+   "name": "Progress",
+   "source": "shadcn",
+   "category": "feedback",
+   "priority": "P2",
+   "type": "base",
+   "description": "Avance medible de un proceso, con su cifra.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "progress"
+   },
+   "import": "import { Progress } from \"@/components/ui/progress\"",
+   "contract": "shadcn:progress",
+   "demo": "demos/shadcn/progress.tsx"
+  },
+  {
+   "id": "slider",
+   "name": "Slider",
+   "source": "shadcn",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "base",
+   "description": "Control numérico por arrastre.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "slider"
+   },
+   "import": "import { Slider } from \"@/components/ui/slider\"",
+   "contract": "shadcn:slider",
+   "demo": "demos/shadcn/slider.tsx"
+  },
+  {
+   "id": "hover-card",
+   "name": "Hover Card",
+   "source": "shadcn",
+   "category": "ventanas",
+   "priority": "P2",
+   "type": "base",
+   "description": "Información ampliada en hover o foco.",
+   "upstream": "https://ui.shadcn.com/docs/components",
+   "raw_priority": "P2",
+   "version": "shadcn 4.22.1 · base-nova · Base UI",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn",
+    "item": "hover-card"
+   },
+   "import": "import { HoverCard } from \"@/components/ui/hover-card\"",
+   "contract": "shadcn:hover-card",
+   "demo": "demos/shadcn/hover-card.tsx"
+  },
+  {
+   "id": "animated-button",
+   "name": "Animated Button",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P1",
+   "type": "capability",
+   "description": "Feedback de pulsación con escala/resorte.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Alta",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "package",
+    "item": "@animate-ui/react"
+   },
+   "import": "import { Button } from \"@animate-ui/react/primitives/buttons/button\"",
+   "contract": "animate-ui:animated-button",
+   "demo": "demos/animate-ui/animated-button.tsx"
+  },
+  {
+   "id": "copy-button",
+   "name": "Copy Button",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P1",
+   "type": "capability",
+   "description": "Copiar al portapapeles con confirmación visual.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Alta",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "package",
+    "item": "@animate-ui/react"
+   },
+   "import": "import { CopyButton } from \"@animate-ui/react/primitives/buttons/copy\"",
+   "contract": "animate-ui:copy-button",
+   "demo": "demos/animate-ui/copy-button.tsx"
+  },
+  {
+   "id": "animated-icons",
+   "name": "Animated Icons",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P2",
+   "type": "capability",
+   "description": "Iconos que responden a interacción o estado.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Media",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn-extra",
+    "items": [
+     "@animate-ui/icons-lucide-bell",
+     "@animate-ui/icons-lucide-check",
+     "@animate-ui/icons-lucide-settings",
+     "@animate-ui/icons-lucide-heart",
+     "@animate-ui/icons-lucide-trash-2",
+     "@animate-ui/icons-lucide-search"
+    ]
+   },
+   "import": "import { Bell } from \"@/components/animate-ui/icons/bell\"\nimport { AnimateIcon } from \"@animate-ui/react/icons\"",
+   "contract": "animate-ui:animated-icons",
+   "demo": "demos/animate-ui/animated-icons.tsx"
+  },
+  {
+   "id": "counting-number",
+   "name": "Counting Number",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P1",
+   "type": "capability",
+   "description": "Transiciones numéricas para KPIs y estadísticas (pasivo, no editable).",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Alta",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "package",
+    "item": "@animate-ui/react"
+   },
+   "import": "import { CountingNumber } from \"@animate-ui/react/primitives/texts/counting-number\"",
+   "contract": "animate-ui:counting-number",
+   "demo": "demos/animate-ui/counting-number.tsx"
+  },
+  {
+   "id": "auto-height",
+   "name": "Auto Height",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P1",
+   "type": "capability",
+   "description": "Transición fluida entre alturas de contenido.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Alta",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "package",
+    "item": "@animate-ui/react"
+   },
+   "import": "import { AutoHeight } from \"@animate-ui/react/primitives/effects/auto-height\"",
+   "contract": "animate-ui:auto-height",
+   "demo": "demos/animate-ui/auto-height.tsx"
+  },
+  {
+   "id": "scroll-fade",
+   "name": "Scroll Fade",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P2",
+   "type": "capability",
+   "description": "Desvanecimiento en los bordes de contenedores desplazables.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Media",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "package",
+    "item": "@animate-ui/react"
+   },
+   "import": "import { ScrollFade } from \"@animate-ui/react/primitives/effects/scroll-fade\"",
+   "contract": "animate-ui:scroll-fade",
+   "demo": "demos/animate-ui/scroll-fade.tsx"
+  },
+  {
+   "id": "page-transition",
+   "name": "Page Transition",
+   "source": "animate-ui",
+   "category": "movimiento",
+   "priority": "P2",
+   "type": "capability",
+   "description": "Transición entre vistas o rutas; depende del router.",
+   "upstream": "https://animate-ui.com/docs",
+   "raw_priority": "Media",
+   "version": "@animate-ui/react 2.3.0",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "shadcn-extra",
+    "items": [
+     "@animate-ui/components-page-transition"
+    ]
+   },
+   "import": "import { PageTransition } from \"@/components/animate-ui/components/page-transition\"",
+   "contract": "animate-ui:page-transition",
+   "demo": "demos/animate-ui/page-transition.tsx"
+  },
+  {
+   "id": "rolling-number-input",
+   "name": "Rolling Counter",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Número estilo odómetro editable: tocar, mantener, arrastrar y lanzar.",
+   "upstream": "https://bencho.dev/blocks/rolling-counter",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "rolling-counter"
+   },
+   "import": "import { Counter } from \"@/components/bencho/rolling-counter/Counter\"",
+   "contract": "bencho:rolling-number-input",
+   "demo": "demos/bencho/rolling-number-input.tsx"
+  },
+  {
+   "id": "toast-stack",
+   "name": "Toast Stack",
+   "source": "bencho",
+   "category": "feedback",
+   "priority": "P2",
+   "type": "variant",
+   "description": "Avisos apilados que se separan con hover; presentación sobre el único motor de toasts.",
+   "upstream": "https://bencho.dev/blocks/toast-stack",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "toast-stack"
+   },
+   "import": "import { ToastStack } from \"@/components/bencho/toast-stack/ToastStack\"",
+   "contract": "bencho:toast-stack",
+   "demo": "demos/bencho/toast-stack.tsx"
+  },
+  {
+   "id": "voice-note",
+   "name": "Voice Note",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Mantener para grabar, deslizar para descartar, soltar y reproducir.",
+   "upstream": "https://bencho.dev/blocks/voice-note",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "voice-note"
+   },
+   "import": "import { VoiceNote } from \"@/components/bencho/voice-note/VoiceNote\"",
+   "contract": "bencho:voice-note",
+   "demo": "demos/bencho/voice-note.tsx"
+  },
+  {
+   "id": "upload-dropzone",
+   "name": "Upload Dropzone",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Arrastrar archivos al área de subida; rechazo por tamaño.",
+   "upstream": "https://bencho.dev/blocks/upload-dropzone",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "upload-dropzone"
+   },
+   "import": "import { Upload } from \"@/components/bencho/upload-dropzone/Upload\"",
+   "contract": "bencho:upload-dropzone",
+   "demo": "demos/bencho/upload-dropzone.tsx"
+  },
+  {
+   "id": "slide-to-confirm",
+   "name": "Slide to Confirm",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Deslizar hasta un umbral para confirmar, con alternativa de teclado.",
+   "upstream": "https://bencho.dev/blocks/slide-confirm",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "slide-confirm"
+   },
+   "import": "import { SlideConfirm } from \"@/components/bencho/slide-confirm/SlideConfirm\"",
+   "contract": "bencho:slide-to-confirm",
+   "demo": "demos/bencho/slide-to-confirm.tsx"
+  },
+  {
+   "id": "picker-wheel",
+   "name": "Picker Wheel",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "variant",
+   "description": "El inventario pide una rueda con inercia; el bloque publicado permite escoger asignados y se muestra como referencia real.",
+   "upstream": "https://bencho.dev/blocks/picker",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "gap",
+   "reason": "El bloque Picker publicado por Bencho selecciona asignados; no implementa la rueda con inercia del inventario. Está instalado y su demo se puede explorar, pero no cubre ese contrato.",
+   "install": {
+    "via": "bencho",
+    "item": "picker"
+   },
+   "import": "import { Picker } from \"@/components/bencho/picker/Picker\"",
+   "contract": "bencho:picker-wheel",
+   "demo": "demos/bencho/picker-wheel.tsx"
+  },
+  {
+   "id": "checklist",
+   "name": "Checklist",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "variant",
+   "description": "Tareas con relleno, check dibujado y texto tachado; modelo de Checkbox.",
+   "upstream": "https://bencho.dev/blocks/checklist",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "checklist"
+   },
+   "import": "import { Checklist } from \"@/components/bencho/checklist/Checklist\"",
+   "contract": "bencho:checklist",
+   "demo": "demos/bencho/checklist.tsx"
+  },
+  {
+   "id": "magnifying-dock",
+   "name": "Magnifying Dock",
+   "source": "bencho",
+   "category": "navegacion",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Iconos que crecen por proximidad del cursor; también por foco y tacto.",
+   "upstream": "https://bencho.dev/blocks/dock",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "dock"
+   },
+   "import": "import { GlassDock } from \"@/components/bencho/dock/GlassDock\"",
+   "contract": "bencho:magnifying-dock",
+   "demo": "demos/bencho/magnifying-dock.tsx"
+  },
+  {
+   "id": "pull-to-refresh",
+   "name": "Pull to Refresh",
+   "source": "bencho",
+   "category": "feedback",
+   "priority": "P2",
+   "type": "new-capability",
+   "description": "Tirar del contenido para actualizar, con botón alternativo.",
+   "upstream": "https://bencho.dev/blocks/pull",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "pull"
+   },
+   "import": "import { Balance } from \"@/components/bencho/pull/Balance\"",
+   "contract": "bencho:pull-to-refresh",
+   "demo": "demos/bencho/pull-to-refresh.tsx"
+  },
+  {
+   "id": "create-menu",
+   "name": "Create Menu",
+   "source": "bencho",
+   "category": "navegacion",
+   "priority": "P2",
+   "type": "variant",
+   "description": "Pastilla de acción que se transforma en menú de creación.",
+   "upstream": "https://bencho.dev/blocks/liq-create",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "liq-create"
+   },
+   "import": "import { Create } from \"@/components/bencho/liq-create/Create\"",
+   "contract": "bencho:create-menu",
+   "demo": "demos/bencho/create-menu.tsx"
+  },
+  {
+   "id": "expanding-search",
+   "name": "Search",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "variant",
+   "description": "Icono de búsqueda que se expande hasta convertirse en campo.",
+   "upstream": "https://bencho.dev/blocks/seek",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "seek"
+   },
+   "import": "import { Seek } from \"@/components/bencho/seek/Seek\"",
+   "contract": "bencho:expanding-search",
+   "demo": "demos/bencho/expanding-search.tsx"
+  },
+  {
+   "id": "slosh-slider",
+   "name": "Slosh Slider",
+   "source": "bencho",
+   "category": "formularios",
+   "priority": "P2",
+   "type": "variant",
+   "description": "Relleno con peso que sobrepasa al arrastrar rápido; mismo valor que Slider.",
+   "upstream": "https://bencho.dev/blocks/slosh",
+   "raw_priority": "Bencho",
+   "version": "cabralorenzo/bencho @30ab35a5",
+   "licence": "MIT",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "bencho",
+    "item": "slosh"
+   },
+   "import": "import { Slosh } from \"@/components/bencho/slosh/Slosh\"",
+   "contract": "bencho:slosh-slider",
+   "demo": "demos/bencho/slosh-slider.tsx"
+  },
+  {
+   "id": "blur-text",
+   "name": "Blur Text",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Revelado progresivo de texto desde desenfoque.",
+   "upstream": "https://reactbits.dev/text-animations/blur-text",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "BlurText-TS-TW"
+   },
+   "import": "import BlurText from \"@/components/react-bits/BlurText\"",
+   "contract": "react-bits:blur-text",
+   "demo": "demos/react-bits/blur-text.tsx"
+  },
+  {
+   "id": "decrypted-text",
+   "name": "Decrypted Text",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Caracteres cifrados que se vuelven texto legible.",
+   "upstream": "https://reactbits.dev/text-animations/decrypted-text",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "DecryptedText-TS-TW"
+   },
+   "import": "import DecryptedText from \"@/components/react-bits/DecryptedText\"",
+   "contract": "react-bits:decrypted-text",
+   "demo": "demos/react-bits/decrypted-text.tsx"
+  },
+  {
+   "id": "text-type",
+   "name": "Text Type",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Escritura con cursor y cadencia configurable.",
+   "upstream": "https://reactbits.dev/text-animations/text-type",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "TextType-TS-TW"
+   },
+   "import": "import TextType from \"@/components/react-bits/TextType\"",
+   "contract": "react-bits:text-type",
+   "demo": "demos/react-bits/text-type.tsx"
+  },
+  {
+   "id": "shuffle",
+   "name": "Shuffle",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Caracteres que se mezclan antes de asentarse.",
+   "upstream": "https://reactbits.dev/text-animations/shuffle",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Shuffle-TS-TW"
+   },
+   "import": "import Shuffle from \"@/components/react-bits/Shuffle\"",
+   "contract": "react-bits:shuffle",
+   "demo": "demos/react-bits/shuffle.tsx"
+  },
+  {
+   "id": "true-focus",
+   "name": "True Focus",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Nitidez que pasa de palabra en palabra.",
+   "upstream": "https://reactbits.dev/text-animations/true-focus",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "TrueFocus-TS-TW"
+   },
+   "import": "import TrueFocus from \"@/components/react-bits/TrueFocus\"",
+   "contract": "react-bits:true-focus",
+   "demo": "demos/react-bits/true-focus.tsx"
+  },
+  {
+   "id": "text-pressure",
+   "name": "Text Pressure",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Tipografía que se deforma según el puntero.",
+   "upstream": "https://reactbits.dev/text-animations/text-pressure",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "TextPressure-TS-TW"
+   },
+   "import": "import TextPressure from \"@/components/react-bits/TextPressure\"",
+   "contract": "react-bits:text-pressure",
+   "demo": "demos/react-bits/text-pressure.tsx"
+  },
+  {
+   "id": "variable-proximity",
+   "name": "Variable Proximity",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Letras que cambian de rasgos según la cercanía del cursor.",
+   "upstream": "https://reactbits.dev/text-animations/variable-proximity",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "VariableProximity-TS-TW"
+   },
+   "import": "import VariableProximity from \"@/components/react-bits/VariableProximity\"",
+   "contract": "react-bits:variable-proximity",
+   "demo": "demos/react-bits/variable-proximity.tsx"
+  },
+  {
+   "id": "scroll-velocity",
+   "name": "Scroll Velocity",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Marquesina cuya velocidad reacciona al scroll.",
+   "upstream": "https://reactbits.dev/text-animations/scroll-velocity",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "ScrollVelocity-TS-TW"
+   },
+   "import": "import ScrollVelocity from \"@/components/react-bits/ScrollVelocity\"",
+   "contract": "react-bits:scroll-velocity",
+   "demo": "demos/react-bits/scroll-velocity.tsx"
+  },
+  {
+   "id": "split-text",
+   "name": "Split Text",
+   "source": "react-bits",
+   "category": "tipografia",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Revela caracteres o palabras por grupos escalonados.",
+   "upstream": "https://reactbits.dev/text-animations/split-text",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "SplitText-TS-TW"
+   },
+   "import": "import SplitText from \"@/components/react-bits/SplitText\"",
+   "contract": "react-bits:split-text",
+   "demo": "demos/react-bits/split-text.tsx"
+  },
+  {
+   "id": "animated-list",
+   "name": "Animated List",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Lista con entrada animada y navegación por teclado.",
+   "upstream": "https://reactbits.dev/components/animated-list",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "AnimatedList-TS-TW"
+   },
+   "import": "import AnimatedList from \"@/components/react-bits/AnimatedList\"",
+   "contract": "react-bits:animated-list",
+   "demo": "demos/react-bits/animated-list.tsx"
+  },
+  {
+   "id": "scroll-stack",
+   "name": "Scroll Stack",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Tarjetas que se fijan y apilan durante el scroll.",
+   "upstream": "https://reactbits.dev/components/scroll-stack",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "ScrollStack-TS-TW"
+   },
+   "import": "import ScrollStack from \"@/components/react-bits/ScrollStack\"",
+   "contract": "react-bits:scroll-stack",
+   "demo": "demos/react-bits/scroll-stack.tsx"
+  },
+  {
+   "id": "magic-bento",
+   "name": "Magic Bento",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Cuadrícula de tarjetas con luz y feedback al cursor.",
+   "upstream": "https://reactbits.dev/components/magic-bento",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "MagicBento-TS-TW"
+   },
+   "import": "import MagicBento from \"@/components/react-bits/MagicBento\"",
+   "contract": "react-bits:magic-bento",
+   "demo": "demos/react-bits/magic-bento.tsx"
+  },
+  {
+   "id": "circular-gallery",
+   "name": "Circular Gallery",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Galería curva con arrastre, scroll, teclado y expansión.",
+   "upstream": "https://reactbits.dev/components/circular-gallery",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "CircularGallery-TS-TW"
+   },
+   "import": "import CircularGallery from \"@/components/react-bits/CircularGallery\"",
+   "contract": "react-bits:circular-gallery",
+   "demo": "demos/react-bits/circular-gallery.tsx"
+  },
+  {
+   "id": "masonry",
+   "name": "Masonry",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Galería masonry con reorganización animada y lightbox.",
+   "upstream": "https://reactbits.dev/components/masonry",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Masonry-TS-TW"
+   },
+   "import": "import Masonry from \"@/components/react-bits/Masonry\"",
+   "contract": "react-bits:masonry",
+   "demo": "demos/react-bits/masonry.tsx"
+  },
+  {
+   "id": "tilted-card",
+   "name": "Tilted Card",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Tarjeta 3D con inclinación, brillo, sombra y reverso.",
+   "upstream": "https://reactbits.dev/components/tilted-card",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "TiltedCard-TS-TW"
+   },
+   "import": "import TiltedCard from \"@/components/react-bits/TiltedCard\"",
+   "contract": "react-bits:tilted-card",
+   "demo": "demos/react-bits/tilted-card.tsx"
+  },
+  {
+   "id": "spotlight-card",
+   "name": "Spotlight Card",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Tarjeta con iluminación que sigue al cursor.",
+   "upstream": "https://reactbits.dev/components/spotlight-card",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "SpotlightCard-TS-TW"
+   },
+   "import": "import SpotlightCard from \"@/components/react-bits/SpotlightCard\"",
+   "contract": "react-bits:spotlight-card",
+   "demo": "demos/react-bits/spotlight-card.tsx"
+  },
+  {
+   "id": "card-swap",
+   "name": "Card Swap",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Pila de tarjetas 3D que rota con tiempo o gesto.",
+   "upstream": "https://reactbits.dev/components/card-swap",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "CardSwap-TS-TW"
+   },
+   "import": "import CardSwap from \"@/components/react-bits/CardSwap\"",
+   "contract": "react-bits:card-swap",
+   "demo": "demos/react-bits/card-swap.tsx"
+  },
+  {
+   "id": "stack",
+   "name": "Stack",
+   "source": "react-bits",
+   "category": "galerias",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Pila de tarjetas que se arrastran o lanzan.",
+   "upstream": "https://reactbits.dev/components/stack",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Stack-TS-TW"
+   },
+   "import": "import Stack from \"@/components/react-bits/Stack\"",
+   "contract": "react-bits:stack",
+   "demo": "demos/react-bits/stack.tsx"
+  },
+  {
+   "id": "gooey-nav",
+   "name": "Gooey Nav",
+   "source": "react-bits",
+   "category": "navegacion",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Navegación con indicador líquido entre destinos.",
+   "upstream": "https://reactbits.dev/components/gooey-nav",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "GooeyNav-TS-TW"
+   },
+   "import": "import GooeyNav from \"@/components/react-bits/GooeyNav\"",
+   "contract": "react-bits:gooey-nav",
+   "demo": "demos/react-bits/gooey-nav.tsx"
+  },
+  {
+   "id": "staggered-menu",
+   "name": "Staggered Menu",
+   "source": "react-bits",
+   "category": "navegacion",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Menú desplegable con entrada escalonada.",
+   "upstream": "https://reactbits.dev/components/staggered-menu",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "StaggeredMenu-TS-TW"
+   },
+   "import": "import StaggeredMenu from \"@/components/react-bits/StaggeredMenu\"",
+   "contract": "react-bits:staggered-menu",
+   "demo": "demos/react-bits/staggered-menu.tsx"
+  },
+  {
+   "id": "stepper",
+   "name": "Stepper",
+   "source": "react-bits",
+   "category": "formularios",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Flujo por pasos con indicador y transiciones.",
+   "upstream": "https://reactbits.dev/components/stepper",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Stepper-TS-TW"
+   },
+   "import": "import Stepper from \"@/components/react-bits/Stepper\"",
+   "contract": "react-bits:stepper",
+   "demo": "demos/react-bits/stepper.tsx"
+  },
+  {
+   "id": "pixel-transition",
+   "name": "Pixel Transition",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Reemplaza contenido por disolución de píxeles.",
+   "upstream": "https://reactbits.dev/animations/pixel-transition",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "PixelTransition-TS-TW"
+   },
+   "import": "import PixelTransition from \"@/components/react-bits/PixelTransition\"",
+   "contract": "react-bits:pixel-transition",
+   "demo": "demos/react-bits/pixel-transition.tsx"
+  },
+  {
+   "id": "electric-border",
+   "name": "Electric Border",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Borde eléctrico que reacciona a la proximidad del cursor.",
+   "upstream": "https://reactbits.dev/animations/electric-border",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "ElectricBorder-TS-TW"
+   },
+   "import": "import ElectricBorder from \"@/components/react-bits/ElectricBorder\"",
+   "contract": "react-bits:electric-border",
+   "demo": "demos/react-bits/electric-border.tsx"
+  },
+  {
+   "id": "animated-content",
+   "name": "Animated Content",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Revelado de contenido al entrar en pantalla.",
+   "upstream": "https://reactbits.dev/animations/animated-content",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "AnimatedContent-TS-TW"
+   },
+   "import": "import AnimatedContent from \"@/components/react-bits/AnimatedContent\"",
+   "contract": "react-bits:animated-content",
+   "demo": "demos/react-bits/animated-content.tsx"
+  },
+  {
+   "id": "magnet",
+   "name": "Magnet",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Atracción magnética al puntero con retorno elástico.",
+   "upstream": "https://reactbits.dev/animations/magnet",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Magnet-TS-TW"
+   },
+   "import": "import Magnet from \"@/components/react-bits/Magnet\"",
+   "contract": "react-bits:magnet",
+   "demo": "demos/react-bits/magnet.tsx"
+  },
+  {
+   "id": "click-spark",
+   "name": "Click Spark",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Partículas de feedback al hacer clic.",
+   "upstream": "https://reactbits.dev/animations/click-spark",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "ClickSpark-TS-TW"
+   },
+   "import": "import ClickSpark from \"@/components/react-bits/ClickSpark\"",
+   "contract": "react-bits:click-spark",
+   "demo": "demos/react-bits/click-spark.tsx"
+  },
+  {
+   "id": "glare-hover",
+   "name": "Glare Hover",
+   "source": "react-bits",
+   "category": "efectos",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Reflejo que cruza la superficie siguiendo al cursor.",
+   "upstream": "https://reactbits.dev/animations/glare-hover",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "GlareHover-TS-TW"
+   },
+   "import": "import GlareHover from \"@/components/react-bits/GlareHover\"",
+   "contract": "react-bits:glare-hover",
+   "demo": "demos/react-bits/glare-hover.tsx"
+  },
+  {
+   "id": "aurora",
+   "name": "Aurora",
+   "source": "react-bits",
+   "category": "fondos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Fondo aurora suave que responde al cursor.",
+   "upstream": "https://reactbits.dev/backgrounds/aurora",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Aurora-TS-TW"
+   },
+   "import": "import Aurora from \"@/components/react-bits/Aurora\"",
+   "contract": "react-bits:aurora",
+   "demo": "demos/react-bits/aurora.tsx"
+  },
+  {
+   "id": "dot-grid",
+   "name": "Dot Grid",
+   "source": "react-bits",
+   "category": "fondos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Rejilla de puntos elástica con feedback al cursor y clic.",
+   "upstream": "https://reactbits.dev/backgrounds/dot-grid",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "DotGrid-TS-TW"
+   },
+   "import": "import DotGrid from \"@/components/react-bits/DotGrid\"",
+   "contract": "react-bits:dot-grid",
+   "demo": "demos/react-bits/dot-grid.tsx"
+  },
+  {
+   "id": "orb",
+   "name": "Orb",
+   "source": "react-bits",
+   "category": "fondos",
+   "priority": "P1",
+   "type": "presentation",
+   "description": "Orbe luminoso que reacciona a la proximidad.",
+   "upstream": "https://reactbits.dev/backgrounds/orb",
+   "raw_priority": "Alta",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Orb-TS-TW"
+   },
+   "import": "import Orb from \"@/components/react-bits/Orb\"",
+   "contract": "react-bits:orb",
+   "demo": "demos/react-bits/orb.tsx"
+  },
+  {
+   "id": "silk",
+   "name": "Silk",
+   "source": "react-bits",
+   "category": "fondos",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Ondas satinadas que giran con el puntero.",
+   "upstream": "https://reactbits.dev/backgrounds/silk",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Silk-TS-TW"
+   },
+   "import": "import Silk from \"@/components/react-bits/Silk\"",
+   "contract": "react-bits:silk",
+   "demo": "demos/react-bits/silk.tsx"
+  },
+  {
+   "id": "iridescence",
+   "name": "Iridescence",
+   "source": "react-bits",
+   "category": "fondos",
+   "priority": "P2",
+   "type": "presentation",
+   "description": "Superficie iridiscente líquida e interactiva.",
+   "upstream": "https://reactbits.dev/backgrounds/iridescence",
+   "raw_priority": "Media",
+   "version": "reactbits.dev registry (2026-10-26)",
+   "licence": "MIT + Commons Clause",
+   "status": "done",
+   "reason": "",
+   "install": {
+    "via": "react-bits",
+    "item": "Iridescence-TS-TW"
+   },
+   "import": "import Iridescence from \"@/components/react-bits/Iridescence\"",
+   "contract": "react-bits:iridescence",
+   "demo": "demos/react-bits/iridescence.tsx"
+  }
+ ],
+ "enhancements": [
+  {
+   "id": "select-motion",
+   "base": "select",
+   "name": "Apertura y cierre animados e indicador de opción seleccionada",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/select.tsx"
+  },
+  {
+   "id": "checkbox-motion",
+   "base": "checkbox",
+   "name": "Transición del check, dibujo o efecto de aparición",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/checkbox.tsx"
+  },
+  {
+   "id": "switch-motion",
+   "base": "switch",
+   "name": "Transición fluida entre activado y desactivado",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/switch.tsx"
+  },
+  {
+   "id": "combobox-motion",
+   "base": "combobox",
+   "name": "Aparición animada de resultados y feedback de selección",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/combobox.tsx"
+  },
+  {
+   "id": "radio-group-motion",
+   "base": "radio-group",
+   "name": "Indicador animado al cambiar de opción",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/radio-group.tsx"
+  },
+  {
+   "id": "slider-motion",
+   "base": "slider",
+   "name": "Movimiento y respuesta visual del control",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/slider.tsx"
+  },
+  {
+   "id": "progress-motion",
+   "base": "progress",
+   "name": "Transición animada de progreso o valor",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/progress.tsx"
+  },
+  {
+   "id": "tabs-motion",
+   "base": "tabs",
+   "name": "Indicador deslizante y transiciones de paneles",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/tabs.tsx"
+  },
+  {
+   "id": "dropdown-menu-motion",
+   "base": "dropdown-menu",
+   "name": "Apertura y cierre fluidos y estados de selección",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/dropdown-menu.tsx"
+  },
+  {
+   "id": "navigation-menu-motion",
+   "base": "navigation-menu",
+   "name": "Transición entre vistas y submenús",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/navigation-menu.tsx"
+  },
+  {
+   "id": "pagination-motion",
+   "base": "pagination",
+   "name": "Cambio visual animado del indicador de página",
+   "decision": "integración manual",
+   "status": "gap",
+   "reason": "Animate UI has a Pagination primitive but no drop-in for shadcn's Pagination (inventory: manual integration); the shadcn component is installed without motion.",
+   "how": ""
+  },
+  {
+   "id": "sidebar-motion",
+   "base": "sidebar",
+   "name": "Expansión, colapso y resaltado de navegación",
+   "decision": "integración manual",
+   "status": "gap",
+   "reason": "Animate UI's Sidebar primitive is a different component, not a primitive swap for shadcn's Sidebar (inventory: manual integration); shadcn's Sidebar is installed without it.",
+   "how": ""
+  },
+  {
+   "id": "dialog-motion",
+   "base": "dialog",
+   "name": "Escala, desplazamiento, entrada/salida y overlay",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/dialog.tsx"
+  },
+  {
+   "id": "alert-dialog-motion",
+   "base": "alert-dialog",
+   "name": "Animación de diálogos de confirmación",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/alert-dialog.tsx"
+  },
+  {
+   "id": "sheet-motion",
+   "base": "sheet",
+   "name": "Entrada y salida de paneles laterales",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/sheet.tsx"
+  },
+  {
+   "id": "drawer-motion",
+   "base": "drawer",
+   "name": "Entrada y salida de paneles deslizantes",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/drawer.tsx"
+  },
+  {
+   "id": "popover-motion",
+   "base": "popover",
+   "name": "Transiciones de contenido contextual",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/popover.tsx"
+  },
+  {
+   "id": "tooltip-motion",
+   "base": "tooltip",
+   "name": "Entrada suave, escala y otros efectos contextuales",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/tooltip.tsx"
+  },
+  {
+   "id": "hover-card-motion",
+   "base": "hover-card",
+   "name": "Aparición y desaparición de la tarjeta contextual",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/hover-card.tsx"
+  },
+  {
+   "id": "accordion-motion",
+   "base": "accordion",
+   "name": "Expansión y contracción del contenido",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/accordion.tsx"
+  },
+  {
+   "id": "collapsible-motion",
+   "base": "collapsible",
+   "name": "Apertura y cierre fluidos",
+   "decision": "integrar",
+   "status": "done",
+   "reason": "",
+   "how": "@animate-ui/cli animate: @base-ui/react → @animate-ui/react/primitives/base-ui in components/ui/collapsible.tsx"
+  },
+  {
+   "id": "toast-motion",
+   "base": "toast",
+   "name": "Entrada/salida, apilamiento y transición de estados",
+   "decision": "integrar, sujeto a validación con el motor de notificaciones",
+   "status": "gap",
+   "reason": "shadcn's toast is Sonner, which has its own motion; Animate UI animates Base UI's Toast primitive, which shadcn does not use. Sonner kept (one notification engine).",
+   "how": ""
+  }
+ ],
+ "gaps": [
+  {
+   "name": "Comparison Slider",
+   "kind": "brecha documentada",
+   "reason": "Sin equivalente en las cuatro fuentes elegidas (inventario §11.5); se implementa aparte cuando un proyecto lo necesite."
+  },
+  {
+   "name": "Device",
+   "kind": "brecha documentada",
+   "reason": "Mockup 3D especializado no seleccionado (§11.5)."
+  },
+  {
+   "name": "Modal Cards",
+   "kind": "brecha documentada",
+   "reason": "Composición propia pendiente (Dialog + Animate UI + Tilted Card), no un componente gratuito 1:1 (§11.5); fuera de alcance por ahora."
+  },
+  {
+   "name": "Hover Preview",
+   "kind": "brecha documentada",
+   "reason": "Composición propia pendiente (Hover Card + Spotlight Card) (§11.5); fuera de alcance por ahora."
+  },
+  {
+   "name": "AI Blob (estados de voz/IA)",
+   "kind": "brecha documentada",
+   "reason": "Orb cubre solo el visual; los estados escuchar/pensar/hablar se implementan aparte (§11.5)."
+  },
+  {
+   "name": "Dock (React Bits)",
+   "kind": "no seleccionado",
+   "reason": "Se usa Magnifying Dock de Bencho para no mantener dos docks parecidos (§11.6.2)."
+  },
+  {
+   "name": "Count Up / Counter (React Bits)",
+   "kind": "no seleccionado",
+   "reason": "Redundante con Counting Number (Animate UI) y Rolling Counter (Bencho) (§11.6.1)."
+  },
+  {
+   "name": "Aspect Ratio, Carousel, Menubar, Resizable, Toggle Group, Input OTP, Context Menu, Kbd (shadcn)",
+   "kind": "fuera de la primera selección",
+   "reason": "No están entre los 42 (§3.8); pueden entrar si un proyecto los necesita."
+  }
+ ],
+ "references": [
+  {
+   "id": "acceso",
+   "title": "Acceso",
+   "file": "reference/acceso.tsx",
+   "description": "Iniciar sesión, activar cuenta y restablecer contraseña, con estados de carga y error."
+  },
+  {
+   "id": "cuentas",
+   "title": "Cuentas",
+   "file": "reference/cuentas.tsx",
+   "description": "Administración: sidebar, encabezado, tabla de datos con filtros, menú de acciones y confirmación."
+  },
+  {
+   "id": "invitar",
+   "title": "Invitar persona",
+   "file": "reference/invitar.tsx",
+   "description": "Formulario con validación, diálogo de confirmación y toast de resultado."
+  }
+ ]
+}

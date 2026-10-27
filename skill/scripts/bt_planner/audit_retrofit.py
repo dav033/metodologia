@@ -52,12 +52,13 @@ def _cross_check_of(task: dict, new_id: str) -> dict:
     return clone
 
 
-def retrofit_audit(directory: Path, cross_check: bool, read_plan: Callable) -> list[str]:
+def retrofit_audit(directory: Path, cross_check: bool, read_plan: Callable, target: str | None = None) -> list[str]:
     """Bring a plan written before the audit gate in line, as a new working revision: each `kind: audit` task that does
     not list exactly one findings ledger gets `<its first .md report>` with the ledger suffix (else `<task>.findings.json`
     in its first directory), in PLAN.json and on its PLAN.md line. Nothing else changes and nothing is frozen: review the
     diff, then `freeze`. It never invents an end-to-end test; if the plan lacks one `check` still says so. Returns what
-    it changed (empty when the plan already complies)."""
+    it changed (empty when the plan already complies). With `target` only that audit is upgraded and cross-checked,
+    whatever the plan's other audits: a stage whose projection holds one audit gets its second auditor (D-134)."""
     directory = Path(directory)
     plan, report = read_plan(directory)
     if not isinstance(plan, dict) or not isinstance(plan.get("tasks"), list):
@@ -67,7 +68,7 @@ def retrofit_audit(directory: Path, cross_check: bool, read_plan: Callable) -> l
     md_path = directory / PLAN_MD
     md_text = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
     for task in plan["tasks"]:
-        if not isinstance(task, dict) or task.get("kind") != "audit":
+        if not isinstance(task, dict) or task.get("kind") != "audit" or target not in (None, task.get("id")):
             continue
         paths = task.get("expected_paths") if isinstance(task.get("expected_paths"), list) else []
         if sum(1 for p in paths if isinstance(p, str) and p.endswith(quality.LEDGER_SUFFIX)) == 1:
@@ -82,12 +83,24 @@ def retrofit_audit(directory: Path, cross_check: bool, read_plan: Callable) -> l
         line = re.compile(rf"^(- \[.\] {re.escape(str(task.get('id')))} .*?· files: )([^·\n]*?)(\s*(?:·|$))", re.M)
         md_text, count = line.subn(lambda m: f"{m.group(1)}{m.group(2).rstrip()}, {ledger}{m.group(3)}", md_text, count=1)
         changed.append(f"{task['id']}: declares {ledger}" + ("" if count else " (PLAN.md line has no `files:`; add it by hand)"))
-    audits = [t for t in plan["tasks"] if isinstance(t, dict) and t.get("kind") == "audit"]
+    audits = [t for t in plan["tasks"] if isinstance(t, dict) and t.get("kind") == "audit"
+              and target in (None, t.get("id"))]
+    if target is not None and not audits:
+        raise pc.PlanContractError("PLAN_INVALID", [f"{target} is not an audit task of the plan"])
     if cross_check and len(audits) == 1:
         original = audits[0]
         taken = {t.get("id") for t in plan["tasks"] if isinstance(t, dict)}
         new_id = _next_id({i for i in taken if isinstance(i, str)}, original["id"])
         clone = _cross_check_of(original, new_id)
+        owner = next((sp for sp in plan.get("subplans") or [] if isinstance(sp, dict)
+                      and sp.get("audit_task") == original["id"]), None)
+        if owner is not None:      # a subplan's audit must follow every own task: the cross-check closes it now
+            clone["after"] = [original["id"]]
+            owner["audit_task"] = new_id
+            members = sum(1 for t in plan["tasks"] if isinstance(t, dict) and t.get("subplan_id") == owner.get("id"))
+            if members + 1 > 8 and not owner.get("checkpoints") and owner.get("integration_test_task"):
+                owner["checkpoints"] = [{"task": owner["integration_test_task"], "purpose": (
+                    "Integration evidence the two independent audits start from (added with the cross-check audit).")}]
         plan["tasks"].insert(plan["tasks"].index(original) + 1, clone)
         for task in plan["tasks"]:                       # whatever waited for the audit waits for its cross-check too
             if isinstance(task, dict) and original["id"] in task.get("after", []) and task is not clone:
@@ -99,6 +112,9 @@ def retrofit_audit(directory: Path, cross_check: bool, read_plan: Callable) -> l
             row = line.group(1).replace(f"{original['id']} —", f"{new_id} —", 1)
             row = re.sub(r"(?<=— )(.*?)(?= ·)", lambda m: f"Cross-check audit of {original['id']}: {m.group(1)}", row, count=1)
             row = re.sub(r"files: [^·\n]*", "files: " + ", ".join(clone["expected_paths"]) + " ", row, count=1)
+            row = re.sub(r" · resources: [^·\n]*?(?= ·|$)", "", row, count=1)       # the clone claims no resources
+            if owner is not None:
+                row = re.sub(r"after: [^·\n]*?(?= ·|$)", f"after: {original['id']}", row, count=1)
             row = re.sub(r"verify: `[^`]*`", f"verify: `{clone['verification'][0]['value']}`", row, count=1) \
                 if clone.get("verification") else row
             md_text = md_text[:line.end()] + "\n" + row + md_text[line.end():]

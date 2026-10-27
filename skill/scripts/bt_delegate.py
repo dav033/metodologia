@@ -414,9 +414,23 @@ def summary(did: str) -> dict:
             result["contract"] = None
         return result
     if (d / "TASK.json").exists():
+        if _claimant_died(d):
+            return {"id": did, "status": "failed", "summary": "the delegation's process died before writing an outcome "
+                    "(killed, for instance by restarting the service that started it)", "log": (d / "session.log").as_posix(),
+                    "contract": None}
         return {"id": did, "status": "running_or_pending", "log": (d / "session.log").as_posix(),
                 "contract": None}
     raise SystemExit(f"Unknown delegation: {did}")
+
+
+def _claimant_died(d: Path) -> bool:
+    """The delegation was claimed by a process that no longer exists and left no outcome: nothing will ever finish it."""
+    from bt_runutil import pid_alive
+    try:
+        owner = int((d / "CLAIMED").read_text().strip() or 0)
+    except (OSError, ValueError):
+        return False                      # never claimed yet (still queued) or unreadable: keep waiting
+    return bool(owner) and not pid_alive(owner)
 
 
 def listing(limit: int = 20) -> list[dict]:

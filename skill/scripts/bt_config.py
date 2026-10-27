@@ -35,12 +35,15 @@ DEFAULTS: dict = {
     # deploy/migrate-style commands; off, they need operator review.
     # `env_file`: a dotenv file kept outside the repositories whose variables the checks receive (a database URL, an API
     # key; `{project}` in the path is replaced by the project name); the sandbox otherwise starts with an empty environment. Values are redacted from every output.
+    # `secret_files`: the owner's other dotenv files; a variable a check of the frozen plan declares in `requires` and the
+    # env_file lacks is taken from them (only declared names, never the whole file), so a check never fails for a copy
     # diagnosis: when a run stops, a cheap model reads the evidence and tells the owner what failed, where it comes from
     # and what to press (bt_block_agent); `auto` asks it as soon as a decision request appears
     "analyst": {"auto": True},
     "reviewer": {"auto": True},
     "diagnosis": {"auto": True, "profile": "claude", "model": "haiku", "effort": "", "timeout_seconds": 180},
     "verifier": {"network": True, "allow_production_actions": True, "env_file": "",
+                 "secret_files": ["~/.config/flow/secrets.env"],
                  # times a check that failed is run again; a pass on the rerun counts and is noted in its output (0 = never)
                  "rerun_failed_checks": 1,
                  # the pass cache leaves out the report files a test/audit task itself writes (they change every attempt and the

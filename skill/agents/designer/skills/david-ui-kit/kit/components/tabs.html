@@ -1,0 +1,24 @@
+<!-- example: default | Segmentadas -->
+<div class="tabs">
+  <div class="tabs-list" role="tablist" aria-label="Detalle de la cuenta">
+    <button class="tabs-trigger" role="tab" aria-selected="true" aria-controls="tb-1">Perfil</button>
+    <button class="tabs-trigger" role="tab" aria-selected="false" aria-controls="tb-2">Acceso</button>
+    <button class="tabs-trigger" role="tab" aria-selected="false" aria-controls="tb-3">Actividad</button>
+    <button class="tabs-trigger" role="tab" aria-selected="false" disabled>Facturación</button>
+  </div>
+  <div class="tabs-content" role="tabpanel" id="tb-1"><p>Nombre, correo y empresa de Ana Martínez.</p></div>
+  <div class="tabs-content" role="tabpanel" id="tb-2" hidden><p>Rol Usuario · Plan 3, activo desde el 2 oct 2026.</p></div>
+  <div class="tabs-content" role="tabpanel" id="tb-3" hidden><p>Último acceso el 26 oct 2026 a las 14:32.</p></div>
+</div>
+
+<!-- example: line | Línea -->
+<div class="tabs">
+  <div class="tabs-list" data-variant="line" role="tablist" aria-label="Administración">
+    <button class="tabs-trigger" role="tab" aria-selected="false" aria-controls="tl-1">Resumen</button>
+    <button class="tabs-trigger" role="tab" aria-selected="true" aria-controls="tl-2">Cuentas</button>
+    <button class="tabs-trigger" role="tab" aria-selected="false" aria-controls="tl-3">Roles y permisos</button>
+  </div>
+  <div class="tabs-content" role="tabpanel" id="tl-1" hidden><p>Resumen del piloto.</p></div>
+  <div class="tabs-content" role="tabpanel" id="tl-2"><p>Cinco cuentas en el piloto.</p></div>
+  <div class="tabs-content" role="tabpanel" id="tl-3" hidden><p>Tres roles configurados.</p></div>
+</div>

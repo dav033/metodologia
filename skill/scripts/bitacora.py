@@ -51,6 +51,9 @@ import bt_cli_planner
 import bt_cli_knowledge
 import bt_cli_design
 import bt_cli_planning
+import bt_cli_sessions
+import bt_cli_stage
+import bt_cli_verify
 
 # ---------------------------------------------------------------- CLI
 
@@ -116,6 +119,9 @@ def main() -> None:
     bt_cli_knowledge.add_parser(sub)
     bt_cli_design.register(sub)
     bt_cli_planning.register(sub)
+    bt_cli_verify.register(sub)
+    bt_cli_sessions.register(sub)
+    bt_cli_stage.register(sub)
     bt_cli_planner.register(sub)
     bt_cli_delegate.register(sub)
     bt_cli_review.register(sub)
@@ -142,6 +148,15 @@ def main() -> None:
     p_graph.add_argument("--no-open", action="store_true")
     p_web = sub.add_parser("web", help="start the web server if needed, open the browser, print the URL")
     p_web.add_argument("--no-open", action="store_true")
+    p_comp = sub.add_parser("components", help="the Designer's real component libraries: open the gallery (/components), "
+                            "install the workspace, build the gallery, build a mockup, status")
+    p_comp.add_argument("action", nargs="?", default="open", choices=["open", "install", "build", "status", "mockup"])
+    p_comp.add_argument("rest", nargs="*", help="mockup: build ENTRY.tsx")
+    p_comp.add_argument("--no-open", action="store_true")
+    p_comp.add_argument("--force", action="store_true", help="install: redo every step")
+    p_comp.add_argument("--only", help="build: comma-separated entry ids")
+    p_comp.add_argument("--out", help="mockup build: output .html (design/<ref>@vN.html)")
+    p_comp.add_argument("--title", default="", help="mockup build: page title")
     sub.add_parser("secrets", help="install the gitleaks pre-commit hook in every workspace repo on this machine")
     p_pd = sub.add_parser("pending", help="sort PENDING.md by urgency then complexity (all projects with --all)")
     p_pd.add_argument("--all", action="store_true")
@@ -206,6 +221,21 @@ def main() -> None:
         if a.cmd == "serve-remote":
             return serve_remote(a.port or REMOTE_PORT)
         return serve(a.port or DEFAULT_PORT)
+    if a.cmd == "components" and a.action != "open":
+        import bt_kit_workspace
+        if a.action == "mockup":
+            if a.rest[:1] != ["build"] or len(a.rest) != 2 or not a.out:
+                ap.error("usage: components mockup build ENTRY.tsx --out design/<ref>@vN.html")
+            sys.exit(bt_kit_workspace.mockup_build(a.rest[1], a.out, a.title))
+        argv = [a.action] + (["--force"] if a.force else []) + (["--only", a.only] if a.only else [])
+        sys.exit(bt_kit_workspace.main(argv))
+    if a.cmd == "components":
+        import webbrowser
+        from bt_server import ensure_server
+        target = ensure_server() + "/components"
+        if not a.no_open:
+            webbrowser.open(target)
+        return print(target)
     if a.cmd in ("web", "graph"):
         import webbrowser
         from bt_server import ensure_server
@@ -343,6 +373,12 @@ def main() -> None:
         sys.exit(bt_cli_design.dispatch(a, ROOT, project))
     if a.cmd == "planning":
         sys.exit(bt_cli_planning.dispatch(a, ROOT, project))
+    if a.cmd == "verify":
+        sys.exit(bt_cli_verify.dispatch(a, ROOT, project))
+    if a.cmd == "sessions":
+        sys.exit(bt_cli_sessions.dispatch(a, ROOT, project))
+    if a.cmd == "stage":
+        sys.exit(bt_cli_stage.dispatch(a, ROOT, project))
     if a.cmd == "knowledge":
         sys.exit(bt_cli_knowledge.dispatch(a, project, ROOT))
     pdir, created = ensure_project(project)

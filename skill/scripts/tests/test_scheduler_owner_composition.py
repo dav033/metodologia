@@ -154,6 +154,19 @@ class OwnerCompositionRuntimeTests(unittest.TestCase):
             self.assertEqual(marker["plan_id"], "REQ-1")
             owner.close()
 
+    def test_a_bitacora_root_reached_through_a_symlink_keeps_the_workspace_inside_the_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            repo = self._repo(root / "repo")
+            (root / "real-bitacora" / "p" / "requirements" / "REQ-1-name").mkdir(parents=True)
+            (root / "bitacora").symlink_to(root / "real-bitacora")          # ~/bitacora -> ~/dev/metodologia/bitacora
+            rdir = root / "bitacora" / "p" / "requirements" / "REQ-1-name"
+            owner = OwnerCompositionRuntime.create(rdir=rdir, project="p", req="REQ-1", plan=self._plan(),
+                                                   repositories={"main": repo}, verifier_id="m6")
+            self.assertTrue((root / "real-bitacora" / ".state" / "composition" / "workspaces" / "p-REQ-1"
+                             / ".owner.json").is_file())
+            owner.close()
+
     def test_owner_marker_update_is_atomic_when_replace_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             marker = Path(directory) / ".owner.json"

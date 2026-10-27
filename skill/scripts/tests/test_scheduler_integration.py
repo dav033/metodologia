@@ -229,9 +229,9 @@ class Authority(Case):
         freeze(self.rdir, plan_text(1))
         adapter.open_scheduler(self.rdir).step()
         freeze(self.rdir, plan_text(2), 2)
-        with self.assertRaises(sc.SchedulerError) as cm:
-            adapter.open_scheduler(self.rdir)
-        self.assertEqual(cm.exception.code, "PLAN_MISMATCH")
+        reopened = adapter.open_scheduler(self.rdir)          # D-134: the run stays on its own approved revision ...
+        self.assertEqual(reopened.plan.revision, 1)
+        self.assertEqual(adapter.join_target(self.rdir, reopened.plan.revision), 2)   # ... and joins r2 by rebase
 
 
 class Projection(Case):

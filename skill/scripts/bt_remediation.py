@@ -263,7 +263,9 @@ def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, di
     ref = f"task:{named[0]}"
     minutes = min(MAX_MINUTES, MINUTES_PER_FINDING * len(chunk))
     evidence = lambda text: {"evidence": [ref, f"spec:{spec_ref}"], "justification": text}  # noqa: E731
+    in_subplan = {"subplan_id": audit_spec["subplan_id"]} if plan.get("subplans") and audit_spec.get("subplan_id") else {}
     return {
+        **in_subplan,
         "id": task_id, "milestone_id": audit_spec["milestone_id"],
         "title": f"Remediate {audit_spec['id']} findings {ids}"[:120], "objective": objective,
         "repository": repository, "after": after, "complexity": complexity,
@@ -360,6 +362,66 @@ def hook(rdir: Path, policy):
     return remediate
 
 
+def sync_markdown(rdir: Path, revised: dict, added: list[str], audit: str) -> bool:
+    """Write the remediation tasks into PLAN.md the way the Planner does: one task line each before the audit's line, and
+    the audit's `after:` extended. A stage can only be approved while PLAN.md and PLAN.json agree, so without this every
+    «Ejecutar subplan» after a remediation is refused with «in PLAN.json but missing from PLAN.md» (REQ-021). Returns
+    False when PLAN.md is absent or has no line for the audit (nothing is guessed)."""
+    path = Path(rdir) / "PLAN.md"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    by_id = {t["id"]: t for t in revised["tasks"] if isinstance(t, dict) and isinstance(t.get("id"), str)}
+    anchor = re.search(rf"^- \[.\] {re.escape(audit)} .*$", text, re.M)
+    if anchor is None or audit not in by_id:
+        return False
+    lines = []
+    for task_id in added:
+        task = by_id[task_id]
+        command = next((v["value"] for v in task.get("verification") or () if isinstance(v, dict) and v.get("type") == "command"), "")
+        parts = [f"- [ ] {task_id} — {task['title']}", f"repo: {task.get('repository')}", f"after: {', '.join(task.get('after') or ())}"]
+        if command:
+            parts.append(f"verify: `{command}`")
+        parts.append(f"files: {', '.join(task.get('expected_paths') or ())}")
+        if task.get("shared_resources"):
+            parts.append(f"resources: {', '.join(task['shared_resources'])}")
+        if task.get("covers"):
+            parts.append(f"covers: {', '.join(task['covers'])}")
+        parts.append(f"kind: {task.get('kind')}")
+        if task.get("subplan_id"):
+            parts.append(f"subplan: {task['subplan_id']}")
+        lines.append(" · ".join(parts))
+    audit_line = re.sub(r"after: [^·\n]*?(?= ·|$)", f"after: {', '.join(by_id[audit].get('after') or ())}", anchor.group(0), count=1)
+    path.write_text(text[:anchor.start()] + "\n".join([*lines, audit_line]) + text[anchor.end():], encoding="utf-8")
+    return True
+
+
+def _confirmed_subplans(rdir: Path) -> list[str]:
+    """Subplans the owner confirmed and that are unchanged right now (none when the collaborative planning flow is off)."""
+    import bt_planning_flow as flow
+
+    try:
+        if not flow.active(rdir):
+            return []
+        return [sid for sid, item in flow.state(rdir)["subplans"].items() if item["state"] == "confirmed"]
+    except Exception:  # noqa: BLE001 - the confirmation is a convenience, never a reason to lose the remediation
+        return []
+
+
+def _keep_confirmed(rdir: Path, confirmed: list[str], audit: str) -> None:
+    """The remediation tasks are the system's own edit of the subplan, not a product change: keep the owner's confirmation
+    so «Ejecutar» of a later subplan does not ask him to confirm a running one again (REQ-021: SP-2 was refused because
+    SP-1 showed as changed)."""
+    import bt_planning_flow as flow
+
+    if confirmed:
+        try:
+            flow.keep_confirmed(rdir, confirmed, f"auto remediation of {audit}")
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def apply(rdir: Path, hold_token: str | None = None) -> dict | None:
     """Turn the pending request into the next frozen plan revision and clear it. Returns {audit, round, tasks, revision} or
     None when there was nothing to apply or the revision cannot be built (the request is then dropped: the next rejection
@@ -414,7 +476,10 @@ def apply(rdir: Path, hold_token: str | None = None) -> dict | None:
         raise RuntimeError("remediation base plan is unavailable")
     if plan.get("revision") >= revised["revision"]:
         plan = bt_plan_adapter.planner_revisions.load_revision(rdir, revised["revision"] - 1)
+    confirmed = _confirmed_subplans(rdir)
     frozen = bt_plan_adapter.freeze_revision(rdir, revised, "remediation")
+    sync_markdown(rdir, revised, [t["id"] for t in revised["tasks"] if t["id"] not in {x["id"] for x in plan["tasks"]}], audit)
+    _keep_confirmed(rdir, confirmed, audit)
     journal.update(stage="frozen", revision=frozen["revision"], sha256=frozen["sha256"])
     _atomic_json(journal_path, journal)
     old = {t["id"] for t in plan["tasks"]}

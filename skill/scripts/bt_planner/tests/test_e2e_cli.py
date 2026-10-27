@@ -71,12 +71,11 @@ class EndToEnd(unittest.TestCase):
         self.assertEqual(first.returncode, 0, first.stdout)
         self.assertEqual(self.cli("freeze", str(self.work)).stdout, first.stdout)
         self.assertIn("r1@", self.cli("show", str(self.work)).stdout)
-        # 4. editing a frozen revision is refused until the revision is bumped
+        # 4. an edit is a draft: binding refuses it until its approval freezes revision 2
         plan["tasks"][0]["estimated_minutes"] = 99
         (self.work / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
-        self.assertEqual(self.cli("check", str(self.work)).returncode, 2)
-        plan["revision"] = 2
-        (self.work / "PLAN.json").write_text(json.dumps(plan), encoding="utf-8")
+        self.assertEqual(self.cli("check", str(self.work)).returncode, 0)
+        self.assertIn("PLAN_DRIFT", self.cli("bind", str(self.work)).stdout)
         self.assertEqual(self.cli("freeze", str(self.work)).returncode, 0)
         self.assertIn("r2@", self.cli("show", str(self.work)).stdout)
         # 5. PLAN.md drifting from PLAN.json is caught

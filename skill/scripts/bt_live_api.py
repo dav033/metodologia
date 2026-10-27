@@ -97,6 +97,7 @@ def now_items(root: Path | None = None) -> list[dict[str, Any]]:
         if not status["run"]["active"]:
             continue
         progress = {"done": status["summary"]["tasks_done"], "total": status["summary"]["tasks_total"]}
+        stage = _stage_of(rdir)
         for milestone in status["milestones"]:
             for task in milestone["tasks"]:
                 live = [a for a in task["history"] if a.get("live")]
@@ -105,9 +106,43 @@ def now_items(root: Path | None = None) -> list[dict[str, Any]]:
                 items.append({"project": project, "req_id": status["req_id"], "req_title": status["title"],
                               "task": task["id"], "task_title": task["title"], "complexity": task["complexity"],
                               "state": task["state"], "attempt": live[-1], "route": task.get("route"),
-                              "progress": progress, "run_status": status["run"]["status"]})
+                              "progress": progress, "run_status": status["run"]["status"], "stage": stage})
     items.sort(key=lambda i: i["attempt"].get("started_at") or "", reverse=True)
     return items
+
+
+def _stage_of(rdir: Path) -> dict[str, Any] | None:
+    """The run projection's `stage` (D-134), or None."""
+    try:
+        import bt_scheduler_adapter
+        stage = (bt_scheduler_adapter.read_projection(rdir) or {}).get("stage")
+    except Exception:  # noqa: BLE001 - only a label depends on it
+        return None
+    return stage if isinstance(stage, dict) else None
+
+
+def verify_items(root: Path | None = None) -> list[dict[str, Any]]:
+    """Runs with subplans waiting for the owner to try them: `[{project, req, subplans: [ids], states}]`."""
+    import bt_verification
+    out = []
+    for project, rdir in runs(root):
+        try:
+            st = bt_verification.state(rdir)
+        except Exception:  # noqa: BLE001 - one damaged requirement must not hide the others
+            continue
+        if not st["applies"]:
+            continue
+        left = [r for r in st["subplans"] if r["state"] in ("to_test", "outdated", "rejected")]
+        if left:
+            out.append({"project": project, "req": bt_verification._req(rdir), "subplans": [r["id"] for r in left],
+                        "approved": st["approved"], "total": st["total"]})
+    return out
+
+
+def health_items(root: Path | None = None) -> list[dict[str, Any]]:
+    """Agents that died, went quiet or failed (`bt_agent_health`): what the owner would otherwise discover by waiting."""
+    import bt_agent_health
+    return bt_agent_health.problems()
 
 
 def sessions(root: Path | None = None) -> list[dict[str, Any]]:
@@ -270,6 +305,15 @@ def agent_activity(root: Path | None, run: str) -> dict[str, dict[str, Any]]:
     return {}
 
 
+def _stage_subplans(rdir: Path) -> list[str] | None:
+    """Subplans of the latest approved stage (D-134), or None when the run is not staged (the whole plan runs)."""
+    try:
+        import bt_stages
+        return bt_stages.approved(rdir) or None
+    except Exception:  # noqa: BLE001 - an unreadable stage store must not blank the map
+        return None
+
+
 def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
     """Each run of the scope as the plan sees it (`bt_planstatus`, the authority on task state), newest change first."""
     out = []
@@ -279,16 +323,20 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
         except Exception:                               # one unreadable plan must not blank the whole map
             continue
         tasks = [{"id": t["id"], "title": t["title"], "objective": (t.get("detail") or {}).get("objective"),
-                  "milestone_id": t.get("milestone_id"), "state": t["state"],
+                  "milestone_id": t.get("milestone_id"), "subplan_id": t.get("subplan_id"), "state": t["state"],
                   "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
                   "attempts_used": t.get("attempts_used"), "max_attempts": t.get("max_attempts"),
                   "retries_remaining": t.get("retries_remaining"),
                   "retry_exhausted": t.get("retry_exhausted"), "reason": t.get("reason"),
                   "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
+        held = _stage_subplans(rdir)
+        subplans = [{"id": sp["id"], "title": sp.get("title") or "", "milestone_id": sp.get("milestone_id"),
+                     "in_stage": held is None or sp["id"] in held} for sp in status.get("subplans") or []]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],
                     "title": status["title"], "status": status["run"].get("status"), "active": status["run"].get("active"),
-                    "updated_at": status["run"].get("updated_at"), "summary": status["summary"], "tasks": tasks})
+                    "updated_at": status["run"].get("updated_at"), "summary": status["summary"], "tasks": tasks,
+                    "subplans": subplans, "stage": held})
     out.sort(key=lambda r: r["updated_at"] or "", reverse=True)
     out.sort(key=lambda r: not r["active"])            # live runs first, each group newest first
     return out
@@ -306,7 +354,8 @@ def now_frame_data(root: Path | None) -> dict[str, Any]:
     with _now_lock:
         at, payload = _now_data_cache.get(base, (0.0, {}))
         if time.monotonic() - at > NOW_TTL:
-            payload = {"items": now_items(root), "sessions": sessions(root)}
+            payload = {"items": now_items(root), "sessions": sessions(root), "verify": verify_items(root),
+                       "health": health_items(root)}
             _now_data_cache[base] = (time.monotonic(), payload)
         return payload
 
@@ -320,7 +369,8 @@ def _now_frame(root: Path | None) -> bytes:
         frame_at, frame = _now_cache.get(base, (0.0, b""))
         if frame and frame_at == at:
             return frame
-        data = {**payload, "html": bt_page_now.fragments(payload["items"], payload["sessions"])}
+        data = {**payload, "html": bt_page_now.fragments(payload["items"], payload["sessions"], payload.get("verify", ()),
+                                                                   payload.get("health", ()))}
         frame = _frame("now", data)
         _now_cache[base] = (at, frame)
         return frame

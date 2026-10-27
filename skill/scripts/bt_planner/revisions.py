@@ -159,13 +159,13 @@ def _write_revision(folder: Path, target: Path, text: str) -> None:
             raise
 
 
-def freeze(directory: Path, plan: dict, source: str = "approval", narrative: str | None = None,
-           ledger_command: str = "engine audit-ledger check") -> dict:
+def freeze(directory: Path, plan: dict, source: str = "approval", ledger_command: str = "engine audit-ledger check",
+           extra: dict | None = None) -> dict:
     """Freeze a validated plan as its revision. Idempotent for identical content; a different content under an already
     frozen revision number is refused (create revision N+1 instead); gaps are refused. Serialised by a lock; a file
     left by an interrupted freeze is adopted when its content is identical and refused otherwise. `source` is recorded in
-    the manifest (not hashed): `approval` (the approval act froze it) or `launch-forced` (the owner's explicit
-    --force of a plan that was never approved)."""
+    the manifest (not hashed): `approval` (an owner approved a stage, see `stages`) or the scheduler's own revisions (`healing`,
+    `remediation`, `recovery`). `extra` adds approval-time facts to the manifest entry (not hashed)."""
     report = pc.validate(plan, strict_publication=True, ledger_command=ledger_command)
     if not report.ok:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
@@ -218,8 +218,7 @@ def freeze(directory: Path, plan: dict, source: str = "approval", narrative: str
                 target_created = True
             entry = {"revision": number, "sha256": sha256(text),
                      "frozen_at": dt.datetime.now().isoformat(timespec="seconds"), "source": source}
-            if narrative:
-                entry["plan_md_sha256"] = narrative  # not part of the revision hash: prose may carry log lines
+            entry.update(extra or {})
             data = _manifest(directory)
             data["revisions"].append(entry)
             _write_manifest(folder, data)

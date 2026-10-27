@@ -48,8 +48,8 @@ ports, ingests events idempotently and reconciles after a restart. **No AI insid
 (`PlanRoutingPort`, `AssignmentPort`, `ExecutionPort`, `RecoveryPort`, `VerificationPort`, `StateRepository`; contract in its README) and may
 be simulated with `bt_scheduler_core.simulators`.
 
-- Adapter: `skill/scripts/bt_scheduler_adapter.py` (only file that imports it). It hands the core the latest frozen plan
-  revision (through `bt_plan_adapter`, hash from the planner's manifest — approval is the caller-supplied sha256, no hash,
+- Adapter: `skill/scripts/bt_scheduler_adapter.py` (only file that imports it). It hands the core the run's own frozen plan
+  revision on resume (latest approval for a new run) (through `bt_plan_adapter`, hash from the planner's manifest — approval is the caller-supplied sha256, no hash,
   no run), opens the run database at `<bitácora root>/.state/scheduler/<project>-<REQ>.db` (local, untracked; outside that
   layout `<requirement>/SCHEDULER.db`), and can write a `RUN.json`-shaped read model marked `authority: "scheduler"` as
   `<requirement>/RUN.projection.json`. For schema 1.3.0 plans with subplans, read-only subplan/composition specs and
@@ -100,6 +100,16 @@ same verification attempt without spending a code attempt.
   `bitacora.py --project <project> scheduler-run <REQ> --resume` reopens the same M1 run identity and lets M3
   reconcile its captured process state;
   it does not approve a plan or silently create a replacement run.
+- D-134: `stage run REQ SP-n` / «Ejecutar subplan» approves a cumulative projection while the remainder stays a draft.
+  `bt_stages` checks owner confirmations; `bt_plan_adapter` is the sole Planner boundary. There is one projection
+  drift gate for launch/join. Resume uses the M1 database's bound revision, never a mutable draft or an assumed latest
+  revision. Newer approved revisions join through `bt_scheduler_run.join` at a quiet point: pause dispatch, drain
+  attempts/streams, rebase in the same run, rebind runtime, release only the join's pause. Accepted work, integration
+  lines and unaffected published subplan versions carry over. Rework over `gates.rework_confirm_over` requires explicit
+  confirmation. Healing/recovery revisions splice their approved changes into the draft instead of overwriting it.
+  PLAN.md/SPEC.md readiness fingerprints are waived for execution because approved scope has its own pins; other
+  readiness evidence remains required. Partial completion is shown as a stage and cannot pass final merge (D-131).
+  This is the normal execution model, with no old-plan compatibility guarantee; no M1 state-machine change.
 - On a new Scheduler run, M1 sends the full frozen DAG to M2 through `PlanRoutingPort` before executor reconciliation
   or dispatch. M2 records a non-reserving route recommendation for every task; the owner projection joins that map
   with the plan's complexity. Each READY task is routed again against current eligibility when it is dispatched.
@@ -369,7 +379,7 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   current code (`tests/fixtures/recovery-scenarios-v1.json`); its results per version are in `recovery-benchmark-results.json` and
   a test fails when a version is worse than the previous one (v0, the night: 10 human interventions, 1,086 minutes waiting;
   v1: 2 interventions, 76 minutes; v2: 0 interventions, 8 minutes);
-- **remediation** (`gates.audit_remediation`, default on; REQ-028, `bt_remediation`): a rejected audit does not reopen the tasks its blocking findings name. The gate records the findings (`RUN.remediation.json`), the owner exits, and the watcher turns them into the next plan revision: remediation tasks (`T18.1`, `T18.2`, ...; `T18.1b` for a second auditor) are appended on the tree the run already integrated, findings that share a task or overlapping paths are grouped and chained (up to 4 per task), independent groups run side by side, each finding is checked by the command of the task that owns it, and the audit is moved after them. The run is rebased (accepted work is kept) and the audit runs again from scratch. Each finding is still charged to the tasks that own it in the attempt log. An audit gets `gates.remediation_rounds` (default 2) rounds; with none left, or when a task cannot be built soundly (a finding names no task of the plan with a command), the named tasks are sent back as before. `scheduler-op REQ remediate` applies a pending request by hand. A task that is accepted clears the notes earlier rounds left for it;
+- **remediation** (`gates.audit_remediation`, default on; REQ-028, `bt_remediation`): a rejected audit does not reopen the tasks its blocking findings name. The gate records the findings (`RUN.remediation.json`), the owner exits, and the watcher turns them into the next plan revision: remediation tasks (`T18.1`, `T18.2`, ...; `T18.1b` for a second auditor) are appended on the tree the run already integrated, findings that share a task or overlapping paths are grouped and chained (up to 4 per task), independent groups run side by side, each finding is checked by the command of the task that owns it, and the audit is moved after them. The run is rebased (accepted work is kept) and the audit runs again from scratch. Each finding is still charged to the tasks that own it in the attempt log. Two gaps were closed after REQ-021 SP-1, where the audit fell back to sending six accepted tasks back because remediation could not be built: a package-script check (`npm run <script> …`, `make <target>`, naming no path) now counts as the check of the paths its own owner declared (`bt_recovery_compiler_verification._opaque_script`), and remediation tasks carry the audit's `subplan_id` in schema 1.3.0 plans. An audit gets `gates.remediation_rounds` (default 2) rounds; with none left, or when a task cannot be built soundly (a finding names no task of the plan with a command), the named tasks are sent back as before. `scheduler-op REQ remediate` applies a pending request by hand. A task that is accepted clears the notes earlier rounds left for it;
 - the reworked tasks read the findings in their next prompt (`RUN.notes/<task>.audit.md`, a dependent reads why it was
   reset); the redo must prove each fix with a test over the real entry point;
 - an audit is **read-only**: the adapter compares the snapshot with its base (`git diff`, exact) and rejects the audit if it changed any file other than the ones it declares (report, ledger; `gates.audit_read_only`, default true). An auditor that patches source hides the builder's defect from the router and, beside a second auditor, hands every later task an `INTEGRATION_CONFLICT` between the two patches (REQ-027, T18 vs T18b). It records the defect as an open finding naming the task that owns it, and the system sends that task back;

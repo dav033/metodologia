@@ -45,6 +45,11 @@ approval fingerprint. Treat a path/version match without verified approval or ma
 Use `bt_review_policy.py` as the gate source: run per-commit only when no pending independent milestone audit
 covers this work. With coverage, the milestone audit reviews the consolidated diff; security checks always apply.
 
+When the brief says **security gate**, review only security, once, on the task's whole diff, using the checklist in
+`references/subagents.md` §The security gate (trust of client/proxy values, per-action authorization and default deny,
+CSRF and redirects, credential handling, races, input limits). Name the forged request or racing pair that breaks each
+finding; skip architecture and style, the audit covers them.
+
 Attack, hard and concretely:
 - **Architecture:** responsibilities mixed, wrong layer (business rules in UI/controllers, infra in domain), hidden
   coupling, a seam that will hurt, an abstraction that is speculative or one that is missing, files growing toward

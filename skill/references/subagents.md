@@ -178,10 +178,46 @@ Hard stops against loops: one pass per commit when the per-commit gate applies; 
 edit; do not run another pass for deferred items. If it times out or errors, commit anyway and note "antagonist skipped".
 
 An independent pending milestone audit covers the unit's own milestone only; work without such coverage keeps the
-per-commit gate. High risk or architecture level does not override audit coverage. The supervisor's prompts take
+per-commit gate. High risk or architecture level does not override audit coverage of the *general* antagonist pass; a
+security-sensitive task still gets the security gate below. The supervisor's prompts take
 this rule from `bt_review_policy.commit_review_rule`. For frozen 1.3.0 plans, coverage also applies when the current
 unit belongs to a subplan whose declared audit is still pending or in progress; the unit and audit identity must match
 the frozen plan. Consult `bt_review_policy.py` for the exact check. Composition gates remain distinct from subplan audits.
+
+## The security gate (security-sensitive tasks under audit coverage)
+
+Audit coverage replaces the per-commit antagonist, not the review of a security surface. A task is
+**security-sensitive** (`bt_planner.quality.security_sensitive`) when it is an `implement` task with `risk: high` whose
+title, objective, criteria, shared resources or paths name sign-in, sessions, permissions, secrets, tokens, cookies,
+CSRF, redirects, forwarded headers, uploads, webhooks, rate limits, roles or similar. `commit_review_rule` then returns
+`SECURITY_GATE` instead of `WITH_AUDIT`.
+
+Why: in REQ-021 SP-1 the audit found five high defects in five accepted tasks (forged `X-Forwarded-For` giving the local
+administrator, login CSRF, open redirect, reset racing a sign-in, write handlers reusing read permissions). Every task
+had passed only its own happy-path tests, and the rework would have sent six accepted tasks back. One cheap pass per
+task, while the context is fresh, replaces that.
+
+How, once per task and before it is reported finished (not per commit):
+
+1. Brief ONE `antagonist` on the task's whole diff with the SPEC requirement text and this checklist, security only:
+   - **Trust:** values from the client or a proxy (`X-Forwarded-*`, `Host`, `Origin`, cookies, JSON bodies, redirect
+     targets) are never what decides identity, privilege or where to redirect; a "local only" or "dev only" mode is
+     enforced at startup AND per request, in the production build too (standalone/`next start`), not only in dev.
+   - **Authorization:** a permission per action, not per resource: reading a thing does not allow writing it; every
+     handler and method is covered (GET/POST/PUT/PATCH/DELETE), including routes added later (default deny).
+   - **State-changing requests:** same-origin or CSRF protection on every cookie-authenticated POST, login and logout
+     included; redirects after sign-in accept only same-origin paths (`/\x`, `//x`, `\\x`, absolute URLs refused).
+   - **Credentials:** hashing parameters, maximum length on every password path (create, reset, change, sign-in), generic
+     errors, lockout measured from the last failure, tokens single-use and expiring, no secret in logs or URLs.
+   - **Concurrency:** two requests racing (sign-in vs password reset, double submit, revoke vs use) leave a consistent
+     state: transactions or compare-and-set, not read-then-write.
+   - **Input limits and failure:** malformed, oversized, empty and repeated input; what a 405/5xx/timeout reveals or allows.
+2. Triage like any antagonist finding. Every confirmed high/critical gets a fix with a regression test that exercises the
+   real entry point (the forged header, the cross-origin POST, the racing pair), never a test of the helper alone.
+3. Note `security gate: N fixed, M deferred (P-0xx)` in the task notes. If it times out, finish the task and say
+   "security gate skipped" so the audit knows; the audit still runs.
+
+The pass is security-only and one-shot: no second pass, no architecture review (the audit does that).
 
 ## Where they plug into the flow
 

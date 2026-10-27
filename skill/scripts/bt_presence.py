@@ -19,6 +19,8 @@ from typing import Any
 IDLE_AFTER_S = 15 * 60        # a "working" session with no event for this long is shown as quiet
 FORGET_AFTER_S = 6 * 3600     # and one with none for this long is not listed at all
 MAX_EVENTS = 2000
+MAX_STEPS = 30                # what a session was doing lately, kept per session for the "Ahora" cards
+SHOWN_STEPS = 8
 _REQ_FILE = re.compile(r"/requirements/(REQ-\d+)[^/]*/(SPEC\.md|PLAN\.md|PLAN\.json|PLAN\.amendments\.jsonl|rounds/|"
                        r"PLAN-REVIEW|plan-revisions/)")
 _STAGE = {"SPEC.md": "especificación", "PLAN.md": "plan", "PLAN.json": "plan", "PLAN.amendments.jsonl": "enmienda",
@@ -48,7 +50,8 @@ def planning_target(file_path: str) -> dict[str, str] | None:
     return {"req": found.group(1), "stage": _STAGE.get(found.group(2), "plan")}
 
 
-_PLAN_CMD = re.compile(r"(plan-json\s+(?:init|check|freeze|report|amend)|planner\s+invoke|\bgo\b|\bhandoff\b)")
+_PLAN_CMD = re.compile(r"(plan-json\s+(?:init|check|freeze|report|amend)|planner\s+invoke|\bgo\b|\bhandoff\b|"
+                       r"planning\s+(?:start|status|focus|confirm|outline-confirm)|design\s+(?:draft|sync|feedback))")
 
 
 def _planned_req(payload: dict) -> str | None:
@@ -78,6 +81,48 @@ def _file_of(payload: dict) -> str:
     return ""
 
 
+_SECRET = re.compile(r"(?i)\b([A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASS(?:WORD)?|AUTH)[A-Z0-9_]*)=\S+|(bearer\s+)\S+")
+_VERBS = {"Read": "Leyó", "Edit": "Editó", "MultiEdit": "Editó", "Write": "Escribió", "NotebookEdit": "Editó"}
+
+
+def _short(path: str) -> str:
+    parts = [p for p in path.replace("\\", "/").split("/") if p]
+    return "/".join(parts[-3:]) if len(parts) > 3 else path
+
+
+def _clip(text: str, n: int = 110) -> str:
+    text = " ".join(text.split())
+    return text if len(text) <= n else text[: n - 1] + "…"
+
+
+def step_text(tool: str, tool_input: object) -> str:
+    """One line saying what a tool call does, for people: paths and commands only, secrets masked, never prompt text."""
+    data = tool_input if isinstance(tool_input, dict) else {}
+    if tool in _VERBS and _file_of({"tool_input": data}):
+        return f"{_VERBS[tool]} {_short(_file_of({'tool_input': data}))}"
+    if tool == "Bash":
+        said = data.get("description")
+        command = data.get("command") if isinstance(data.get("command"), str) else ""
+        masked = _SECRET.sub(lambda m: f"{m.group(1)}=•••" if m.group(1) else f"{m.group(2)}•••", command)
+        return _clip(said if isinstance(said, str) and said.strip() else f"$ {masked}")
+    if tool in ("Grep", "Glob") and isinstance(data.get("pattern"), str):
+        return f"{'Buscó' if tool == 'Grep' else 'Listó'} {_clip(data['pattern'], 70)}"
+    if tool in ("Agent", "Task"):
+        who = data.get("subagent_type") or "agente"
+        return f"Lanzó el subagente {who}: {_clip(str(data.get('description') or ''), 80)}".rstrip(": ")
+    if tool == "WebSearch" and isinstance(data.get("query"), str):
+        return f"Buscó en la web: {_clip(data['query'], 80)}"
+    if tool == "WebFetch" and isinstance(data.get("url"), str):
+        return f"Abrió {_clip(data['url'], 90)}"
+    return tool
+
+
+def _note_step(doc: dict, now: float, tool: str, text: str) -> None:
+    steps = doc.get("steps") if isinstance(doc.get("steps"), list) else []
+    steps.append({"at": now, "tool": tool, "text": text})
+    doc["steps"] = steps[-MAX_STEPS:]
+
+
 def record(root: Path, payload: dict, project: str | None, agent: str = "", now: float | None = None) -> None:
     """Note one hook event. Raises nothing the caller must handle beyond OSError."""
     sid = str(payload.get("session_id") or "")
@@ -103,18 +148,24 @@ def record(root: Path, payload: dict, project: str | None, agent: str = "", now:
                 doc.get("agent") or "", "cwd": str(payload.get("cwd") or doc.get("cwd") or ""), "last_event_at": now})
     if event == "UserPromptSubmit":
         doc.pop("activity", None)
+        _note_step(doc, now, "", "Recibió un mensaje")
+    elif event == "Stop":
+        _note_step(doc, now, "", "Terminó su turno y espera")
     tool = payload.get("tool_name")
     if isinstance(tool, str) and event == "PostToolUse":
         doc["last_tool"] = tool
+        _note_step(doc, now, tool, step_text(tool, payload.get("tool_input")))
         target = planning_target(_file_of(payload))
         asked = _planned_req(payload) if tool == "Bash" else None
         if asked:
             doc["planned"] = sorted({*(doc.get("planned") or []), asked})
+            doc["activity"] = {"kind": "planning", "req": asked.rsplit(":", 1)[-1], "stage": "plan", "at": now,
+                               "project": asked.rsplit(":", 1)[0] if ":" in asked else ""}
         if target:
             owner = _path_project(_file_of(payload))     # the project of the file, not of the session: a session bound to one
             entry = f"{owner}:{target['req']}" if owner else target["req"]            # project can plan another's requirement
             doc["planned"] = sorted({*(doc.get("planned") or []), entry})
-            doc["activity"] = {"kind": "planning", **target, "at": now}
+            doc["activity"] = {"kind": "planning", **target, "at": now, "project": owner}
             _append_event(root, {"at": now, "session": sid, "project": doc["project"], "req": target["req"],
                                  "stage": target["stage"]})
         elif _file_of(payload) and tool in ("Edit", "Write", "MultiEdit"):
@@ -168,9 +219,18 @@ def sessions(root: Path, now: float | None = None) -> list[dict[str, Any]]:
                     "agent": doc.get("agent") or "", "state": "working" if working else "idle",
                     "quiet": working and age > IDLE_AFTER_S, "since": doc.get("since") if working else None,
                     "last_event_at": doc["last_event_at"], "last_tool": doc.get("last_tool"),
-                    "activity": act.get("kind"), "req": act.get("req"), "stage": act.get("stage")})
+                    "activity": act.get("kind"), "req": act.get("req"), "stage": act.get("stage"),
+                    "req_project": act.get("project") or doc.get("project") or "",
+                    "steps": _recent_steps(doc)})
     out.sort(key=lambda s: (s["state"] != "working", -s["last_event_at"]))
     return out
+
+
+def _recent_steps(doc: dict) -> list[dict[str, Any]]:
+    """Newest first, at most SHOWN_STEPS, only well-formed entries."""
+    steps = doc.get("steps") if isinstance(doc.get("steps"), list) else []
+    good = [s for s in steps if isinstance(s, dict) and isinstance(s.get("at"), (int, float)) and isinstance(s.get("text"), str)]
+    return [{"at": s["at"], "text": s["text"]} for s in reversed(good[-SHOWN_STEPS:])]
 
 
 def planning_events(root: Path, after: int = 0, limit: int = 500) -> list[dict[str, Any]]:

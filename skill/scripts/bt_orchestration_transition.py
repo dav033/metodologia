@@ -76,7 +76,7 @@ def launch(project: str, req: str, *, dry_run: bool = False, profile: str | None
         raise terminal.TerminalError('FOREGROUND_WORKSPACE_REQUIRED')
     import bt_scheduler_adapter
     problem = plan_adapter.launch_problem(
-        rdir, freeze=not dry_run,
+        rdir,
         compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
     )  # same gate as every other launch path
     if problem:
@@ -131,7 +131,7 @@ def main() -> int:
         require_new_plan(rdir)
         import bt_scheduler_adapter
         problem = plan_adapter.launch_problem(
-            rdir, freeze=False,
+            rdir,
             compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
         )  # the plan must still be the approved revision
         if problem:

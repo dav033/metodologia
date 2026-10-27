@@ -353,6 +353,9 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         report.warnings.extend(generated.advice(plan, quality.ancestors(plan)))
         report.warnings.extend(quality.dominant_shared_resources(plan))
         report.warnings.extend(quality.repeated_whole_suite(plan))
+        if schema_13:                  # new rules never change how a pre-1.3 plan validates (test_plan_schema_13_compat)
+            report.warnings.extend(quality.oracle_independence(plan))
+            report.warnings.extend(quality.security_abuse_cases(plan))
         report.warnings.extend(quality.unconsumed_results(plan))
         report.warnings.extend(quality.redundant_edges(plan))
         report.warnings.extend(quality.file_hotspots(plan))
@@ -386,6 +389,9 @@ def validate(plan: object, file_exists: ev.FileExists | None = None, ref_exists:
         extra_errors, extra_warnings = schema13.check(plan)
         report.errors.extend(extra_errors)
         report.warnings.extend(extra_warnings)
+    if "stage" in plan:
+        from . import stages
+        report.errors.extend(stages.field_errors(plan))
     command_errors, command_warnings = command_checks.input_findings(plan, ignored_path)
     report.errors.extend(command_errors)
     report.warnings.extend(command_warnings)

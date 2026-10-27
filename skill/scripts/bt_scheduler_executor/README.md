@@ -33,6 +33,7 @@ A clean exit is the event `execution_finished` = "the agent stopped". There is n
 | `settle.py`, `recovery.py` | closing an attempt (outcome → handoff → terminal event); putting unfinished attempts back under supervision after a restart |
 | `shim.py`, `procinfo.py` | the detached per-attempt supervisor; process identity and signalling |
 | `workspace.py`, `handoff.py`, `gitutil.py` | attempt, reconstructable subplan and candidate integration workspaces; the recoverable snapshot of the work; one safe way to run git |
+| `retention.py`, `retention_cli.py` | opt-in schema-1 three-day retirement of verified captured terminal worktrees, preserving refs and evidence |
 | `classify.py`, `prompt.py`, `artifacts.py` | outcome → cause class; the agent prompt; the artefact directory |
 | `simulators.py`, `cli.py` | provider-free doubles of the ports; `python -m bt_scheduler_executor` |
 
@@ -147,7 +148,33 @@ refs and therefore cannot consume patch-only handoffs. The default remains `hand
 `<root>/ledger.db`, `<root>/executor.lock`, `<root>/executor.log`, `<root>/ws/` (worktrees, intent manifests, `journal.jsonl`),
 `<root>/attempts/<dirname>/` (0700; files 0600): `order.json`, `route.json`, `brief.json` (the full brief), `prompt.txt` (0600), `output.log`, `output.tail`,
 `shim.json`, `descendants.json`, `exit.json`, `report.json` (if the agent wrote one), `handoff/`. History is never deleted; worktree cleanup is an
-explicit operator action (`GitWorkspaces.release`).
+explicit operator action (`GitWorkspaces.release`) or the opt-in schema-1 retention command below.
+
+### Three-day worktree retention (D-129)
+
+From `skill/scripts`, preview with:
+
+```
+python -m bt_scheduler_executor.retention_cli --root /path/to/executor
+```
+
+Add `--apply` to remove eligible copies. Retention starts at the ledger's terminal `ended_at`, not directory creation:
+only attempts finished, failed, cancelled or rejected at least 72 hours ago qualify. The command takes the same
+nonblocking `executor.lock` as the live executor; busy roots are left alone. It verifies allocation/ledger identities,
+registered unlocked Git worktree ownership, the preserved `refs/m3/handoff` snapshot, unchanged HEAD and an exact
+current-content match using a temporary Git index. Staged changes and submodules are preserved. It also checks
+owner-process cwd/argv for live users. When a privileged user process hides cwd, a bounded read-only
+`sudo -n readlink /proc/<pid>/cwd` probe is attempted; if it cannot verify a live process, cleanup fails closed.
+Automatic cleanup therefore requires that probe to be available on machines with protected user processes.
+
+Unknown ignored data (including `.env`) or content changed after capture prevents removal. Only recognized ignored
+dependency/build caches may be discarded with a captured checkout. Branches, snapshot refs, manifests, ledger,
+handoff artefacts and audit logs are kept, so the code can be reconstructed. Patch-only/missing handoffs fail closed.
+The command prints one JSON result per attempt and a summary; applied actions additionally append schema-1
+`retention.jsonl` under each root. No implicit branch deletion, Git GC, snapshot pruning or original-checkout cleanup.
+The CLI defaults to preview and is idempotent after removal. On David's machine an hourly user timer invokes `--apply`;
+disable it with `systemctl --user disable --now bt-workspace-retention.timer` to stop future cleanup. Retired directories
+can be reconstructed with `git worktree add --detach /new/path <snapshot_sha>`; the snapshot ref remains preserved.
 
 ## Configuration (`Config`, all explicit)
 

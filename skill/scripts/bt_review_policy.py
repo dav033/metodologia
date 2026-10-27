@@ -4,9 +4,13 @@ With the independent milestone audit active, that audit is the milestone's adver
 passes would repeat it at the price of an extra top-tier session per commit. Tests, linters, the task's `verify` and
 the security rules stay mandatory either way. Without a milestone audit the per-commit gate is the only review left and
 stays on. Both prompt builders (legacy `_rules` and the orchestrator package) take their wording from here, so the two
-paths cannot drift apart. Reference: references/subagents.md §The antagonist gate.
+paths cannot drift apart. Audit coverage never removes review from a high-risk security surface: those tasks get one
+security-only pass before they are accepted, because a defect the audit finds later sends accepted tasks back (REQ-021
+SP-1: six). Reference: references/subagents.md §The antagonist gate and §The security gate.
 """
 from __future__ import annotations
+
+from bt_planner.quality import security_sensitive
 
 GATE = ("Follow references/engineering.md of the `metodologia` skill and run the antagonist review "
         "(references/subagents.md) before EVERY commit.")
@@ -15,6 +19,22 @@ WITH_AUDIT = ("Follow references/engineering.md of the `metodologia` skill. Run 
               "the consolidated milestone diff at the end. Invoking the antagonist subagent (Opus / Codex High) "
               "on individual commits is forbidden while this audit covers the work, including high-risk and "
               "architecture tasks. Keep all security checks mandatory.")
+SECURITY_GATE = ("Follow references/engineering.md of the `metodologia` skill. Run the task's verify, tests and linters "
+                 "before every commit. Do NOT run the general antagonist per commit: the independent audit reviews the "
+                 "consolidated diff at the end. This task is SECURITY-SENSITIVE (risk high; sign-in, sessions, permissions, "
+                 "secrets, network input or concurrency), so before you report it finished run ONE security-only antagonist "
+                 "pass on the task's whole diff (references/subagents.md §The security gate: brief it with the checklist and the "
+                 "SPEC's requirement text, not your own summary). Fix each confirmed high/critical finding with a regression "
+                 "test that exercises the real entry point, and note `security gate: N fixed, M deferred` in the task notes. "
+                 "A defect found later by the audit sends accepted tasks back, so this pass is not optional.")
+
+
+def _security_unit(state: dict | None, unit: list[dict] | None) -> bool:
+    """Any task of the unit is security-sensitive, reading its full text from the frozen plan when the run row is slim."""
+    frozen = (state or {}).get("frozen_plan")
+    full = {t["id"]: t for t in frozen.get("tasks", []) if isinstance(t, dict) and isinstance(t.get("id"), str)} \
+        if isinstance(frozen, dict) and isinstance(frozen.get("tasks"), list) else {}
+    return any(security_sensitive({**full.get(t.get("id"), {}), **t}) for t in unit or () if isinstance(t, dict))
 
 
 def milestone_audit_active(state: dict | None, unit: list[dict] | None = None) -> bool:
@@ -95,4 +115,6 @@ def commit_review_rule(state: dict | None, unit: list[dict] | None = None) -> st
         covered = milestone_audit_active(state, unit if unit else None)
     if not covered:
         return GATE
+    if _security_unit(state, unit):
+        return SECURITY_GATE
     return WITH_AUDIT

@@ -1,0 +1,16 @@
+<!-- example: vertical | Con descripción y error -->
+<div class="demo-grid" data-layout="grid">
+  <figure class="demo-cell"><div class="field"><label class="label" for="f-email">Correo</label><input class="input" id="f-email" type="email" placeholder="nombre@empresa.com"><p class="field-description">Le enviaremos la invitación a este correo.</p></div><figcaption>default</figcaption></figure>
+  <figure class="demo-cell"><div class="field"><label class="label" for="f-email-2">Correo</label><input class="input" id="f-email-2" type="email" value="ana.martinez@" aria-invalid="true" aria-describedby="f-email-2-err"><p class="field-error" id="f-email-2-err"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>Escribe un correo completo, por ejemplo ana@empresa.com.</p></div><figcaption>error</figcaption></figure>
+  <figure class="demo-cell"><div class="field" data-disabled><label class="label" for="f-email-3">Correo</label><input class="input" id="f-email-3" value="ana.martinez@example.com" disabled><p class="field-description">El correo no se puede cambiar después de activar la cuenta.</p></div><figcaption>disabled</figcaption></figure>
+</div>
+
+<!-- example: horizontal | Horizontal y agrupado -->
+<fieldset class="field-set">
+  <legend class="field-legend">Notificaciones</legend>
+  <p class="field-description">Elige qué avisos recibe esta persona por correo.</p>
+  <div class="field-group">
+    <label class="field" data-orientation="horizontal"><input class="checkbox" type="checkbox" checked><span class="field-text"><span class="label">Invitaciones aceptadas</span><span class="field-description">Cuando alguien activa su cuenta.</span></span></label>
+    <label class="field" data-orientation="horizontal"><input class="checkbox" type="checkbox"><span class="field-text"><span class="label">Resumen semanal</span><span class="field-description">Cada lunes a las 8:00.</span></span></label>
+  </div>
+</fieldset>

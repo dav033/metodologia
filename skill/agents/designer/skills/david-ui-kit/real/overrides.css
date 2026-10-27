@@ -1,0 +1,31 @@
+/* AA corrections on top of the installed shadcn/ui (base-nova) defaults, found by kit/audit_mockup.py on the reference
+   mockups. Keyed by shadcn's data-slot attributes, so a reinstall keeps them. Every mockup and the gallery load this
+   after theme.css. Remove a rule only when the audit passes without it. */
+
+/* focus: shadcn draws a 3 px ring at 50 % alpha (under 3:1 on light surfaces) and an invalid field keeps its red halo on
+   focus (no visible change); one solid ring colour outline on every keyboard stop fixes both */
+:where(a[href], button, input, textarea, select, summary, [tabindex]:not([tabindex="-1"]), [role="combobox"], [role="tab"],
+  [role="checkbox"], [role="switch"], [role="radio"], [role="menuitem"], [role="option"], [role="slider"]):focus-visible {
+  outline: 2px solid var(--ring) !important; outline-offset: 2px;
+}
+
+/* dark fields: shadcn fills controls with --input at 30 % (a light wash that lowers text contrast) and draws the invalid
+   edge at 50 %; use the surface colour and the full destructive edge */
+:is(.dark, [data-theme="dark"]) :is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"],
+  [data-slot="input-group"], [data-slot="combobox-input"]) {
+  background-color: var(--background);
+}
+:is([data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="input-group"],
+  [data-slot="checkbox"], [data-slot="radio-group-item"])[aria-invalid="true"] {
+  border-color: var(--destructive) !important;
+}
+
+/* tables: shadcn cells pad 8 px, which puts the first column on the card's edge; 16 px at the table's outer edges */
+[data-slot="table"] :is(th, td):first-child { padding-inline-start: 1rem; }
+[data-slot="table"] :is(th, td):last-child { padding-inline-end: 1rem; }
+
+/* destructive soft fills (badge, button variant=destructive): shadcn mixes 10–20 % red into the surface, under 4.5:1 for
+   the red label in dark; use the checked soft role pair instead (the variant has no data attribute: its text class marks it) */
+:is([data-slot="badge"], [data-slot="button"], [data-slot="alert-dialog-action"], [data-slot="alert-dialog-cancel"]).text-destructive {
+  background-color: var(--destructive-soft); color: var(--destructive);
+}

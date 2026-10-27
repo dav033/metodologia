@@ -10,9 +10,11 @@ from bt_core import find_req
 
 def register(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("planning", help="collaborative planning: skeleton, subplan focus and confirmations")
-    parser.add_argument("action", choices=("start", "status", "outline-confirm", "focus", "confirm"))
+    parser.add_argument("action", choices=("start", "status", "resume", "note", "outline-confirm", "focus", "confirm"))
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("subplan", nargs="?", help="SP-n (focus, confirm)")
+    parser.add_argument("--kind", default="finding", help="note: finding, decision, question, todo or handoff")
+    parser.add_argument("--text", help="note: what to remember (findings with file paths, decisions with their reason)")
     parser.add_argument("--by", choices=("owner", "planner"),
                         help="who decided (required to confirm): an agent passes `owner` only to relay the owner's "
                              "explicit words in the conversation, never on its own judgment")
@@ -23,6 +25,12 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     rdir = find_req(root / project, args.req)
     if args.action == "start":
         print("Collaborative planning on." if flow.start(rdir) else "Collaborative planning was already on.")
+    elif args.action == "note":
+        import bt_planning_notes as notes
+        print(notes.add(rdir, args.text or "", args.kind))
+    elif args.action == "resume":
+        import bt_planning_resume as resume
+        print(resume.briefing(project, rdir))
     elif args.action == "status":
         st = flow.state(rdir)
         st["inputs"] = [row for row in st["inputs"] if row["pending"]]

@@ -35,3 +35,10 @@
 .tscroll { overflow-x: auto; }
 .mchip { font: 500 12px var(--mono); color: var(--accent); }
 .nowbar .nlabel { display: inline-flex; align-items: center; gap: 8px; }
+.nsteps { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; font: 400 12px var(--mono); color: var(--muted); }
+.nsteps li { display: flex; gap: 10px; min-width: 0; }
+.nsteps li > span:last-child { overflow-wrap: anywhere; }
+.nsteps .nago { flex: none; min-width: 72px; opacity: .7; }
+.nsteps li:first-child { color: var(--text); }
+.ncard.health .muted { margin: 2px 0 0; font-size: 12px; }
+.dot.bad { background: var(--bad, #d20f39); }

@@ -21,6 +21,8 @@ import bt_scheduler_adapter as adapter
 import bt_scheduler_executor_adapter as executor_runtime
 import bt_scheduler_m4_wiring as m4_runtime
 
+from bt_scheduler_stage_join import _JOIN_NOTED, _join_marker, _join_ready, _join_refusal
+
 HEARTBEAT_SECONDS = 5.0
 M4_PENDING_NOTICE_SECONDS = 30.0
 M4_STREAM_POLL_SECONDS = 0.1
@@ -90,7 +92,7 @@ def _wire(project: str, rdir: Path):
     db_path = adapter.run_db_path(rdir)
     ledger = bt_run_stores.m2_ledger(db_path, run_id)
     stores = _required_module_stores(db_path, run_id)
-    plan = adapter.approved_plan(rdir)
+    plan = adapter.run_plan(rdir)
     repos = bt_workspace.repos(bt_core.ROOT, project, False)
     import bt_plan_adapter
     assignment = adapter.DecisionAssignmentPort(project, ledger, laya_root=bt_core.ROOT / ".state" / "laya")
@@ -209,7 +211,7 @@ def _secure_store_file(path: Path) -> None:
 
 def _runtime_binding(rdir: Path, *, resume: bool) -> str:
     """Keep a run-scoped local M2 ledger namespace without opening a second M1 core."""
-    plan = adapter.approved_plan(rdir)
+    plan = adapter.run_plan(rdir)
     db = adapter.run_db_path(rdir)
     marker = bt_run_stores.runtime_marker(db)
     if resume:
@@ -236,7 +238,7 @@ def _runtime_binding(rdir: Path, *, resume: bool) -> str:
 
 def rebind_runtime(rdir: Path) -> None:
     """After a rebase the run keeps its runtime id (M2 ledger and module stores) but follows the new plan revision."""
-    plan = adapter.approved_plan(rdir)
+    plan = adapter.run_plan(rdir)
     marker = bt_run_stores.runtime_marker(adapter.run_db_path(rdir))
     try:
         data = json.loads(marker.read_text(encoding="utf-8"))
@@ -267,9 +269,37 @@ def _notification_generation(scheduler) -> int:
     return 0
 
 
+
+
+def join(rdir: Path) -> str:
+    from bt_scheduler_stage_join import join as join_stage
+    return join_stage(rdir, rebind_runtime)
+
+
+def _join_waiting(rdir: Path) -> bool:
+    try:
+        identity = adapter.run_identity(rdir)
+    except adapter.core.SchedulerError:
+        return False
+    return identity is not None and adapter.join_target(rdir, identity["revision"]) is not None
+
+
+def _stage_note(rdir: Path) -> str:
+    """' (etapa: …; faltan …)' when the approved revision is a stage short of the whole draft; '' otherwise."""
+    try:
+        import bt_plan_adapter
+        held, draft = bt_plan_adapter.stage_subplans(rdir), bt_plan_adapter.draft_subplans(rdir)
+    except Exception:  # noqa: BLE001 - only the wording of a notification depends on it
+        return ""
+    missing = [sid for sid in draft or [] if sid not in held]
+    return f" (etapa {', '.join(held)}; faltan {len(missing)} subplanes por aprobar)" if missing else ""
+
+
 def _notify_terminal(rdir: Path, req: str, status: str, run_id: str, generation: int) -> None:
     if status not in {"blocked", "completed", "cancelled"}:
         return
+    if status == "completed" and _join_waiting(rdir):
+        return                                            # finished a stage while the next one is already approved
     state = adapter.run_db_path(rdir).with_name(adapter.run_db_path(rdir).stem + "-notifications.json")
     try:
         previous = json.loads(state.read_text(encoding="utf-8"))
@@ -313,7 +343,8 @@ def _notify_terminal(rdir: Path, req: str, status: str, run_id: str, generation:
         print(f"Scheduler notification deduplication unavailable; skipping notification: {exc}", file=sys.stderr)
         return
     try:
-        bt_notify.notify(f"Bitácora · {req}", f"Ejecución Scheduler {status}: {req}")
+        note = _stage_note(rdir) if status == "completed" else ""
+        bt_notify.notify(f"Bitácora · {req}", f"Ejecución Scheduler {status}: {req}{note}")
     except Exception as exc:  # noqa: BLE001 - notification delivery is best-effort
         print(f"Scheduler notification delivery failed: {exc}", file=sys.stderr)
 
@@ -338,9 +369,9 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
         import bt_scheduler_ops as ops
         if ops.on_hold(rdir):
             raise RuntimeErrorCode("OWNER_HELD", "an operator hold is active; release it with scheduler-op resume")
-        from bt_requirements_gate import require_ready
+        from bt_requirements_gate import PLANNING_FILES, require_ready
 
-        require_ready(rdir)
+        require_ready(rdir, waive=PLANNING_FILES)      # D-134: the run executes a frozen revision; planning goes on
         authority = adapter.authority(rdir)
         if (rdir / adapter.RUN_JSON).exists():
             raise RuntimeErrorCode("AUTHORITY_CONFLICT", f"{req} already has legacy RUN.json state")
@@ -398,6 +429,9 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
                     last_m4_pending_notice = now
                 snap = scheduler.snapshot()
                 _notify_design_completions(project, req, rdir, snap)
+                if _join_ready(rdir, wiring, scheduler, snap):
+                    adapter.write_projection(rdir, scheduler)      # a newer approved revision joins: dispatch() rebases
+                    return 0
                 if now - last_heartbeat >= HEARTBEAT_SECONDS or steps == 1:
                     adapter.write_projection(rdir, scheduler)
                     bt_attempt_log.sync(project, req, rdir)
@@ -428,8 +462,18 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
 
 
 def dispatch(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool = False) -> int:
+    """Run the owner; whenever a newer approved revision is waiting (D-134), join it and keep going in this process."""
     try:
-        return run(project, req, rdir, resume=resume, no_autostart=no_autostart)
+        while True:
+            if resume:
+                with contextlib.suppress(adapter.core.SchedulerError):    # a live attempt: the owner joins later
+                    if (moved := join(rdir)):
+                        print(f"joined {moved}", file=sys.stderr)
+            code = run(project, req, rdir, resume=resume, no_autostart=no_autostart)
+            if code != 0 or not _join_waiting(rdir) or not _join_marker(rdir).exists():
+                return code
+            print(f"joined {join(rdir)}", file=sys.stderr)
+            resume = True
     except RuntimeErrorCode as exc:
         print(f"{exc.code}: {exc}", file=sys.stderr)
         return 2

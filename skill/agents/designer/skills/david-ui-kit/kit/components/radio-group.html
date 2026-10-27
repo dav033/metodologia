@@ -1,0 +1,22 @@
+<!-- example: default | Lista -->
+<fieldset class="field-set">
+  <legend class="label">Idioma del aviso de privacidad</legend>
+  <div class="radio-group" role="radiogroup">
+    <label class="choice"><input class="radio" type="radio" name="rg-1" checked><span>Español</span></label>
+    <label class="choice"><input class="radio" type="radio" name="rg-1"><span>English</span></label>
+    <label class="choice"><input class="radio" type="radio" name="rg-1" disabled><span>Português (próximamente)</span></label>
+  </div>
+</fieldset>
+
+<!-- example: cards | Tarjetas -->
+<div class="radio-group" data-variant="cards" role="radiogroup" aria-label="Qué hacer con la cuenta">
+  <label class="choice"><input class="radio" type="radio" name="rg-2" checked><span><span class="font-medium">Desactivar</span><span>La persona no puede entrar; su trabajo se conserva.</span></span></label>
+  <label class="choice"><input class="radio" type="radio" name="rg-2"><span><span class="font-medium">Eliminar</span><span>Solo para cuentas sin proyectos ni decoraciones guardadas.</span></span></label>
+</div>
+
+<!-- example: states | Estados -->
+<div class="demo-grid">
+  <figure class="demo-cell"><input class="radio" type="radio" aria-label="Con foco" data-demo="focus" checked><figcaption>focus-visible</figcaption></figure>
+  <figure class="demo-cell"><input class="radio" type="radio" aria-label="Obligatoria" aria-invalid="true"><figcaption>error</figcaption></figure>
+  <figure class="demo-cell"><input class="radio" type="radio" aria-label="Deshabilitada" disabled><figcaption>disabled</figcaption></figure>
+</div>

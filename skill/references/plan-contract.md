@@ -89,6 +89,15 @@ Every `ui: true` implementation follows the design task, visual review follows a
 follows visual review. The contract is required for UI work. A preview is optional and configured per project; it is
 not a PLAN.json field. `UI_WORK_UNDECLARED` catches UI-like expected paths without an explicit `ui` declaration.
 
+A UI subplan should also carry the Planner's design hand-off `ui_brief` (schema 1.3.0, optional for validation,
+expected by the Planner role): `flows` (strings or `{name, steps[]}`), `screens_states`, `existing_surface`
+(`routes`, `paths`, `components`, `screenshots` lists and `notes`), `must_not_change`, `copy_rules` and `criteria`
+(replaces the derived product criteria). Anything else, or a `ui_brief` without `ui`, is `UI_BRIEF_INVALID`. It is
+part of the UI brief, so editing it makes planning drafts stale; a chosen design is then amended with the delta,
+not regenerated (requirements.md §Planning designs). Fields outside the UI brief never make a draft stale. `bt_design_ui_brief.py` turns it, the outcome,
+covered requirement texts, product criteria and UI tasks into the Designer's `behavior.md`; `ui: false` tasks,
+verification, expected paths, shared resources, digests and engineering-only criteria are left out.
+
 Verification entries may declare `environment` (`sandbox`, `external_authorized`, `production`, or `human_attestation`;
 absent means `sandbox`), `requires` (resource names only, never secret values), and `authorization_needed` for production.
 `EXTERNAL_ONLY_IMPLEMENT` rejects implementation tasks whose command checks all require non-sandbox environments;
@@ -174,6 +183,8 @@ ledger path (next to its `.md` report) in PLAN.json (a new working revision) and
 policy requires a pair). It never
 invents the integration test; `check` keeps saying so until the plan has one.
 
+**Security surfaces get abuse cases and independent oracles.** `plan-json check` warns for a high-risk implementation task that names a security surface (`security_sensitive`: sign-in, sessions, permissions, secrets, cookies, redirects, uploads, roles…) and states no abuse case in its criteria (`security_abuse_cases`: forged or malformed input, cross-origin request, concurrency, expiry, a denied role), and for a `test` task that depends on such a task (or sits in its subplan) and does not say that expected values come from the SPEC, assert a denied case and, for HTTP, exercise a writing method (`oracle_independence`). Add one criterion with a focused negative test per applicable item of the checklist in `subagents.md` §The security gate. These are warnings: an approved plan is not re-gated, but the warning is the Planner's cue to fix the task before approval, because the same defects otherwise surface at the subplan audit.
+
 **Whole suites belong to audits.** `plan-json check` warns when one whole-repository command (`npm run gate`, `unittest discover`, `pytest`, `cargo test`) is a check of half or more of the work tasks (at least four): every attempt of each pays for it (REQ-020: ~10 min of `npm run gate` in nearly every task). Give each task the focused tests of what it changes and keep the whole suite on milestone audits and the final acceptance.
 
 ## Where the methodology touches the module
@@ -183,21 +194,41 @@ Only `bt_plan_adapter.py` imports `bt_planner` (enforced by `tests/test_plan_int
 - `bt_cli_plan.py` → `adapter.run_cli` : the `plan-json` command (requirement folder → plan directory, approved words,
   repository roots of the project so `file:` evidence is verified).
 - `bt_handoff.assess` → `adapter.handoff_problems` : an invalid `PLAN.json` is a problem, so `handoff` refuses it.
-- `bt_rounds.plan_decide` (approve) → `adapter.publishable_problem` before, `adapter.freeze_approved` after: an invalid
-  PLAN.json cannot be approved and the approved bytes are frozen as that revision.
-- **The launch gate** `adapter.launch_problem` / `freeze_on_launch` (planner `bind_approved`): valid, consistent with
-  PLAN.md and exactly the latest frozen revision. Every path that starts work goes through it:
-  `bt_launch.launch` (standard, web approve-and-launch, handoff; a dry run verifies without writing), `bt_orchestration_transition.launch` and its successor helper (foreground),
-  and `scheduler-run` for any NEW run. A resumed run is never touched by the gate, and it refuses to go on when PLAN.json is no longer
-  the latest approved revision, its prose changed, or the run was started under an older revision than the approved
-  one (`resume_problem`: `PLAN_REF_STALE` = start a new run). The gate fails closed: an unexpected error is `PLAN_CHECK_FAILED`.
-- The scheduler records `plan_ref {plan_id, revision, sha256}` for NEW runs only; existing legacy `RUN.json` files are never touched.
+- `bt_rounds.plan_decide` checks publication before approving and freezes the complete stage afterwards.
+- **Every approval freezes a stage (D-134).** The working PLAN.json stays a draft. A stage is its projection onto
+  a cumulative set of approved subplans: `stage: {"version": 1, "subplans": ["SP-1"]}` in a schema 1.3.0 frozen
+  revision. Plans without subplans form one complete stage. Approval of the whole plan requires every subplan/task.
+  There is no opt-in or compatibility promise for old plans, frozen revisions or RUN.json files.
+- The projection keeps the selected subplans' tasks and unassigned prerequisite tasks; unassigned downstream tasks
+  enter when all their subplan ancestors are included. It retains used milestones, covered requirements and eligible
+  composition gates/interfaces. A missing prerequisite is `STAGE_NOT_CLOSED`. The normal publication validator
+  checks the projection, including UI gates, audits, mapped checks and SPEC coverage restricted to a partial stage;
+  complete approval must cover every requirement in SPEC.
+- **The launch/join gate** (`adapter.launch_problem`, planner `bind_approved`) compares the draft projected onto the
+  approved subplans with the hash-checked frozen revision, ignoring the draft's revision number (`PLAN_DRIFT`).
+  PLAN.md task lines/milestone titles and covered SPEC requirement items are pinned at approval
+  (`PLAN_PROSE_DRIFT`, `PLAN_REQUIREMENTS_DRIFT`). Edits outside approved scope are allowed; unreadable files fail closed.
+  Standard/foreground launch and every new Scheduler run use this gate. Resume verifies the run's OWN frozen
+  revision and sha256; it does not require that revision to be the latest approval.
+- `bt_stages` owns eligibility and the owner action: confirmed skeleton, confirmed/unchanged subplans with tasks and
+  SPEC `## Pruebas` rows, resolved inputs and ready UI drafts. Only stage designs are pinned.
+  `bitacora.py --project P stage run REQ-NNN SP-1[,SP-2]` approves/freezes and starts or joins the Scheduler;
+  `stage freeze REQ-NNN SP-1` only approves/freezes; `stage status REQ-NNN` lists approvals.
+  The web Plan tab exposes «Ejecutar subplan». These approvals require the owner's instruction, like `planning confirm`.
+  PLAN.md remains in planning until the complete plan is approved. Publication uses the same captured plan checked
+  for eligibility; changed approval documents are refused (`STAGE_APPROVAL_CHANGED`). Identical JSON with changed
+  covered prose/SPEC pins needs a new approval revision.
+- A newer approval joins the same run at a quiet point: pause dispatch, finish live attempts/streams, rebase and
+  resume. A durable join marker reconciles runtime binding and pause ownership even after an interrupted rebase.
+  Accepted unchanged work and unaffected publication versions survive. Rework above
+  `gates.rework_confirm_over` requires `scheduler-op REQ-NNN revise --confirm`. A manually paused run stays paused.
+  Each run records `plan_ref {plan_id, revision, sha256}` and uses that revision for executors and owner composition.
+- Completion of a partial stage is not completion of the plan. Merge refuses `STAGE_INCOMPLETE` while draft scope
+  remains outside the stage, and D-131 still requires owner verification of every subplan. Autonomous sessions have
+  been replaced by stages (`SESSION_AUTO_SUPERSEDED`); interactive hands-on sessions remain available.
 
-Outcomes: `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_MISSING` (PLAN.json removed after a freeze), `PLAN_NOT_FROZEN`,
-`PLAN_DRIFT` (an edit or an unapproved new revision: approve it with `plan approve` or `plan-json freeze`; a launch
-never freezes an unreviewed edit) and `PLAN_PROSE_DRIFT` (PLAN.md prose changed after approval; front matter, dated
-log lines and checkbox ticks are ignored). A plan approved by hand and never frozen has no approval record and is refused (`PLAN_NOT_FROZEN`). A test
-(`LaunchPaths`) fails if a new module creates run state around the gate.
+Outcomes also include `PLAN_NOT_APPROVED`, `PLAN_INVALID`, `PLAN_MISSING`, `PLAN_NOT_FROZEN`,
+`STAGE_SUBPLAN_UNCONFIRMED` and `STAGE_NOT_CUMULATIVE`. A launch never approves an unreviewed edit.
 
 ## A plan that evolves while it runs
 
@@ -211,7 +242,7 @@ An approved revision is immutable, but the work reveals things. Two mechanisms, 
   an attempt already running keeps its route. M1 notes it in the audit (`amendment_applied`, an observation: no state
   changes). Amendments bind to the revision they were written for and do not carry to N+1.
 - **Scope** (add, remove or split tasks, change criteria or verification): always a new revision (`plan-json freeze`,
-  owner-approved). The run then continues on it with `scheduler-run REQ-NNN --rebase`: M1's `rebase_run` keeps accepted
+  owner-approved). The owner joins it at a quiet point (or explicitly with `scheduler-run REQ-NNN --rebase`): M1's `rebase_run` keeps accepted
   tasks whose fingerprint (id, prerequisites, repository, criteria, verification) is unchanged and whose prerequisites were
   kept, returns everything else to `pending` with a fresh attempt budget, adds new tasks and drops removed ones. Refused
   while an owner process holds the run or any attempt is alive. Audited as `run_rebased {from_rev, to_rev, kept, reset,
@@ -226,7 +257,7 @@ methodology suite `python3 -m unittest discover -s tests` from `skill/scripts`.
 
 ## Recovery revisions (REQ-029, REQ-030)
 A revision made by recovery or by the scheduler's self-healing (`source` `recovery`, `remediation`, `healing`) is an ordinary frozen
-revision: it only adds tasks (`T7.1`, `kind: implement`, built from evidence, verified by the owners' own checks) and prerequisites, or
+revision, spliced into the working draft while preserving unfinished subplans: it only adds tasks (`T7.1`, `kind: implement`, built from evidence, verified by the owners' own checks) and prerequisites, or
 renames a check's `purpose` to its criterion's exact text; it never lowers a check or drops a criterion. `scheduler-op REQ heal revert CASE`
 freezes the next revision without the added task. Rebasing onto it keeps every accepted task whose own content is unchanged
 (`gates.rebase_cascade: content`).

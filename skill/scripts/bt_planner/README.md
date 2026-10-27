@@ -45,11 +45,12 @@ All actions: `python -m bt_planner <action> [directory|file] [--plan-id ID] [--f
   references, no cycles, no dependency on a later milestone, no orphan milestone, classification evidence, unordered
   tasks that share a path or resource, PLAN.md ↔ PLAN.json agreement (below) and frozen-revision integrity. With `--repo`
   the `file:` evidence is verified against the checkout; without it the report says it was not verified.
-- `python -m bt_planner freeze <dir>` freezes the checked PLAN.json as the next revision (the approval act).
-  `PLAN.md` front matter `status:` must be one of `approved, launched, done, merged` (override with
-  `--approved-states`).
-- `python -m bt_planner bind <dir>` is the launch gate, read-only: PLAN.json is valid and **is exactly** the latest
-  frozen (approved) revision. `python -m bt_planner report <dir>` prints the quality summary (critical path in minutes,
+- `python -m bt_planner freeze <dir>` approves the whole plan: it freezes the stage that holds the whole draft as the
+  next revision. `PLAN.md` front matter `status:` must be one of `approved, launched, done, merged` (override with
+  `--approved-states`). `freeze <dir> --stage SP-1,SP-2` freezes the next *stage* instead (the subplans already
+  approved plus these) while the rest of the plan stays a draft; see «Stages».
+- `python -m bt_planner bind <dir>` is the launch gate, read-only: the draft projected onto the latest approved stage
+  **is exactly** that revision. `python -m bt_planner report <dir>` prints the quality summary (critical path in minutes,
   widest level, distributions, tasks without a machine-checked verification, evidence coverage and collisions). Schema
   1.2.0 adds `coverage`, declared `interfaces`, `verification_categories` and `criteria_without_command`; 1.0.0/1.1.0
   report shapes stay unchanged.
@@ -73,7 +74,8 @@ fields = planner.run_reference(directory)              # {"plan_ref": {...}} | {
 ```
 
 ```python
-entry = planner.bind_approved(directory, plan_id, states, repo_roots=roots)   # the gate every launch passes
+entry = planner.freeze_stage(directory, ["SP-1"], plan_id, roots)     # approve a stage while the rest is a draft
+entry = planner.bind_approved(directory, plan_id, states)                # the gate every launch and join passes
 ```
 
 Files that exist before the module is used: `PLAN.md` (the narrative; grammar below), `SPEC.md` (target of `spec_ref`).
@@ -223,50 +225,58 @@ reference that is verifiably absent is always an error. Enforced as errors for `
 The textual rules cannot judge truth; they remove the cheap ways of asserting without arguing, and `file:`/`spec:`/
 `task:` references are checked against what exists.
 
+## Stages (D-134)
+
+The working PLAN.json is always a **draft**; only frozen revisions are approved. Every approval freezes a *stage*: the
+projection of the draft onto a cumulative set of subplans S (`stages.project`). It keeps the tasks of S; tasks without a
+subplan that are ancestors of a task of S, or whose subplan ancestors are all in S (at least one), or every task when S
+is every subplan; the milestones those tasks use; the requirements they and the subplans of S cover (plan order); the
+composition gates whose subplans are all in S and whose tasks are kept; the interfaces whose producer is kept
+(consumers filtered); every other top-level key as it is. The revision carries `stage: {"version": 1, "subplans": [...]}`.
+A kept task whose prerequisite is not kept is `STAGE_NOT_CLOSED` (the subplan it needs must be approved first); a stage
+only grows (`STAGE_NOT_CUMULATIVE`). Approving the whole plan is the stage holding every subplan and task
+(`STAGE_INCOMPLETE` otherwise). A plan without subplans is one stage with no `stage` field, and a revision without the
+field reads as the complete stage of its own content.
+
+`check_stage` is a stage's publication gate: the full validator on the projection, with SPEC requirement ids restricted
+to the stage's (each must still exist in SPEC), PLAN.md agreement for the stage's own tasks and milestones (all of
+PLAN.md when the stage is the whole draft), and evidence. Nothing outside the stage is judged. The manifest entry of an
+approval records `stage: {subplans, pending_subplans, complete, requirements_sha256, plan_md_sha256}` (not hashed).
+
 ## The launch gate
 
-`bind_approved` is what every path that starts work goes through (standard launch, web approve-and-launch, handoff,
-foreground transition and the new-run entry itself): the plan must be valid, consistent with PLAN.md and **exactly the
-approved revision**. The approved revision is the latest frozen one; the approval act (`plan approve`, web approval, or
-`freeze`) is what freezes it. At launch:
+`bind_approved` is what every path that starts or joins work goes through. The approved revision is the latest frozen
+one; only an approval (`freeze`, `freeze --stage`, or the methodology's equivalents) creates it. At launch:
 
-- no PLAN.json and nothing ever frozen → legacy plan, nothing to bind;
-- PLAN.json removed after a freeze → `PLAN_MISSING`;
-- not approved (and not an explicit `--force`) → `PLAN_NOT_APPROVED`; invalid or contradicting PLAN.md → `PLAN_INVALID`;
-- equal to the latest frozen revision → bound, nothing written; the PLAN.md prose is compared too (digest recorded in
-  the manifest at approval, ignoring front matter, dated log lines and checkbox marks): changed prose is
-  `PLAN_PROSE_DRIFT`;
-- different (an edit after approval, or a new revision number nobody approved) → `PLAN_DRIFT`; a launch never turns
-  an unreviewed edit into a revision;
-- a run that is only being RESUMED keeps its RUN.json untouched but, if the plan has frozen revisions or the run
-  carries `plan_ref`, PLAN.json must still exist, be valid and be the latest approved revision (`resume_problem`; file evidence is not
-  re-verified there, the run's own work may have moved those files);
-- nothing ever frozen (approved by editing `status:` by hand) → `PLAN_NOT_FROZEN`: there is no record of what was
-  approved and **a launch never creates it**. Approve with `plan approve` (or run `plan-json freeze` once the owner
-  accepted exactly that PLAN.json). An explicit `--force` is the owner's own approval and is the only launch that
-  freezes (`source: launch-forced`).
-
-The manifest records how each revision was frozen (`source`: `approval` or `launch-forced`; shown by `show`).
+- no PLAN.json and nothing ever frozen → nothing to bind;
+- PLAN.json removed after a freeze → `PLAN_MISSING`; unreadable → `PLAN_INVALID`;
+- PLAN.md not approved → `PLAN_NOT_APPROVED`, unless `forced` (a stage runs while the plan is still being planned);
+- the draft projected onto the latest stage's subplans must equal that revision (revision number aside) → otherwise
+  `PLAN_DRIFT`, naming what changed. Edits to tasks and subplans outside the stage never matter;
+- the PLAN.md task lines and milestone headings of the approved tasks (ignoring checkbox marks) must be the approved ones
+  → `PLAN_PROSE_DRIFT`; free prose may change;
+- the SPEC `Requirements` items the stage covers must be the approved ones → `PLAN_REQUIREMENTS_DRIFT`;
+- nothing ever frozen → `PLAN_NOT_FROZEN`: a launch never creates an approval record.
 
 ## Revisions
 
-Serialisation is canonical (fixed key order, UTF-8, trailing newline). Schema 1.1.0 also sorts nested keys; schema
-1.2.0 adds its fields after legacy contract fields. A 1.0.0 document keeps byte for byte the text it was frozen with,
-so the hash of a revision frozen before 1.1.0 never moves
-(verified against the previous implementation).
+Serialisation is canonical (fixed key order, UTF-8, trailing newline, nested keys sorted).
 
 `freeze` writes `plan-revisions/PLAN.r<N>.json` (canonical text, read-only, created exclusively) and appends to
-`plan-revisions/MANIFEST.json` under a lock. A frozen revision never changes: editing PLAN.json afterwards makes `check`
-fail until `revision` is bumped to N+1. An orphan revision file left by an interrupted freeze is adopted when identical
-and refused otherwise. `run_reference` gives an executor the three fields it should remember (`plan_id`, `revision`,
-`sha256`) instead of copying the plan.
+`plan-revisions/MANIFEST.json` under a lock. The store numbers revisions (the draft's `revision` field is not used);
+a frozen revision never changes. An orphan revision file left by an interrupted freeze is adopted when identical and
+refused otherwise. `run_reference` gives an executor the three fields it should remember (`plan_id`, `revision`,
+`sha256`) instead of copying the plan. `stages.splice` carries a revision the scheduler made from a stage (healing,
+remediation, recovery) back into the draft, so the draft never contradicts what runs.
 
 ## Error codes
 
 `PlanContractError.code` is stable; `issues` are actionable lines naming the task and field.
 Reading: `PLAN_NOT_FOUND`, `PLAN_UNREADABLE`, `PLAN_NOT_JSON` (also NaN/Infinity and absurd nesting), `PLAN_TOO_LARGE`,
 `PLAN_NOT_SERIALISABLE`, `PLAN_INVALID` (e.g. `T3.risk: 'critical' is not one of low, medium, high`).
-Launch gate: `PLAN_MISSING`, `PLAN_DRIFT`, `PLAN_PROSE_DRIFT`, `PLAN_NOT_FROZEN` (and `PLAN_NOT_APPROVED`, `PLAN_INVALID` above).
+Launch gate: `PLAN_MISSING`, `PLAN_DRIFT`, `PLAN_PROSE_DRIFT`, `PLAN_REQUIREMENTS_DRIFT`, `PLAN_NOT_FROZEN` (and
+`PLAN_NOT_APPROVED`, `PLAN_INVALID` above). Stages: `STAGE_INVALID`, `STAGE_NOT_CLOSED`, `STAGE_NOT_CUMULATIVE`,
+`STAGE_INCOMPLETE`.
 Revisions: `REVISION_UNKNOWN`, `REVISION_TAMPERED`, `REVISION_FROZEN`, `REVISION_ORDER`, `REVISION_STORE_DAMAGED`,
 `REVISION_STORE_UNREADABLE`, `REVISION_STORE_UNSAFE` (symlinked directory), `REVISION_STORE_UNWRITABLE`,
 `REVISION_STORE_BUSY`. CLI-side refusals: `PLAN_EXISTS`, `PLAN_MD_EMPTY`, `PLAN_MD_AMBIGUOUS`, `PLAN_NOT_APPROVED`.

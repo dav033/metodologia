@@ -111,6 +111,7 @@ def actions(ctx: dict, s: dict) -> str:
         buttons.append(_form(ctx, "planning-focus", "Definir ahora", sp=s["id"], cls="outline"))
     if state != "confirmed":
         buttons.append(_form(ctx, "planning-confirm", "Confirmar subplan", sp=s["id"], disabled=bool(missing)))
+    run = _run_button(ctx, s)
     note = ""
     if state == "confirmed":
         where = " en la conversación" if item.get("via") == "conversation" else " en la web" if item.get("via") else ""
@@ -121,7 +122,38 @@ def actions(ctx: dict, s: dict) -> str:
     else:
         note = "Todo listo: revisa diseño, tareas, criterios y entradas, y confírmalo."
     return (f'<div class="pp-flow {e(state)}"><span class="pp-state {e(DOT[state])}">{e(STATE_ES[state])}</span>'
-            f'<span class="pp-meta grow">{note}</span>{"".join(buttons)}</div>')
+            f'<span class="pp-meta grow">{note}</span>{run}{"".join(buttons)}</div>')
+
+
+def stage_info(ctx: dict) -> dict:
+    """The approved stages (D-134), computed once per fragment."""
+    if "stages" not in ctx:
+        import bt_stages
+        ctx["stages"] = bt_stages.info(ctx["rdir"])
+    return ctx["stages"]
+
+
+def _run_button(ctx: dict, s: dict) -> str:
+    """«Ejecutar subplan» next to the confirmation (D-134): the Scheduler runs this confirmed subplan as part of the
+    approved stage while the rest of the plan is still being defined; once it is in a stage, a link to the run."""
+    import bt_subplan_sessions as sessions
+    import bt_page_planning as planning
+    live = sessions.active(ctx["rdir"], s["id"])
+    if live:
+        return (f'<a class="pp-chip info" data-nav href="{e(planning.link(ctx["project"], ctx["rid"], ctx["opts"], view="session"))}">'
+                "Sesión abierta → ver</a>")
+    info = stage_info(ctx)
+    if s["id"] in info["held"]:
+        return (f'<a class="pp-chip ok" href="{e(purl(ctx["project"], "req", ctx["rid"]))}?tab=run" '
+                f'title="El Scheduler la ejecuta en la etapa r{info["revision"]}">En ejecución · etapa r{info["revision"]} → ver</a>')
+    item = ctx["flow"]["subplans"].get(s["id"]) or {}
+    if item.get("state") != "confirmed" or not s.get("tasks"):
+        return ""
+    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], "stage-run")}" class="pp-inline">'
+            f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(s["id"])}">'
+            f'<input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}"><button type="submit" class="outline" '
+            'title="Aprueba este subplan como etapa y el Scheduler lo ejecuta (auditorías, verificación, estado durable) '
+            'mientras sigues definiendo el resto">Ejecutar subplan</button></form>')
 
 
 def inputs_panel(ctx: dict, s: dict) -> str:

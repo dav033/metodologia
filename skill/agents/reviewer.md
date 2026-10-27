@@ -36,6 +36,11 @@ risk scope, apply a narrowly selected, read-only differential security check: in
 validation, persistence, access paths, reachable consumers, and relevant prior behavior. Do not copy CC BY-SA text or
 broaden scope without evidence.
 
+For a `test` or integration task over permissions, identity, money or isolation, the standards axis also checks **oracle
+independence**: expected values come from the SPEC or an approved table, not from the implementation's own map; every
+role × method (including POST/PUT/PATCH/DELETE) is exercised; denied cases assert the exact 401/403 and a 405, redirect
+or 5xx is never counted as refused. Report a test that could not fail on a wrong implementation as a finding.
+
 **Axis "visual":** use when the subplan contains UI work or the brief names its `visual_review_task`. Read the
 approved Designer contract at `design/contracts/<id>@v<N>.md` in the project repository and inspect the rendered
 application. Load `agents/reviewer/skills/rendered-ui-fidelity-audit/SKILL.md`. Use Runner's screenshot evidence

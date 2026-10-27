@@ -64,6 +64,41 @@ class Presence(unittest.TestCase):
         self.assertIn("Agentes en sesión", now_page.now_page([], agents))
         self.assertEqual(now_page.fragments([], [])["bar"], "")
 
+    def test_steps_say_what_the_session_does_newest_first_and_mask_secrets(self):
+        def tool(name, **inp):
+            return {"session_id": SID, "hook_event_name": "PostToolUse", "tool_name": name, "tool_input": inp}
+        presence.record(self.root, {"session_id": SID, "hook_event_name": "UserPromptSubmit", "prompt": "secret text"}, "p", "claude", 1.0)
+        presence.record(self.root, tool("Read", file_path="/home/x/dev/app/src/a/b/c.ts"), "p", "claude", 2.0)
+        presence.record(self.root, tool("Bash", command="curl -H 'Authorization: Bearer abc123' x; API_TOKEN=zzz run"), "p", "claude", 3.0)
+        presence.record(self.root, tool("Agent", subagent_type="designer", description="Draft SP-2"), "p", "claude", 4.0)
+        (s,) = presence.sessions(self.root, 5.0)
+        texts = [x["text"] for x in s["steps"]]
+        self.assertEqual(texts[0], "Lanzó el subagente designer: Draft SP-2")
+        self.assertEqual(texts[-1], "Recibió un mensaje")
+        self.assertIn("Leyó a/b/c.ts", texts)
+        joined = " ".join(texts)
+        self.assertNotIn("abc123", joined)
+        self.assertNotIn("zzz", joined)
+        self.assertNotIn("secret text", joined)
+        card = now_page.agents_html(presence.sessions(self.root, 5.0))
+        self.assertIn("Lanzó el subagente designer", card)
+
+    def test_steps_are_capped(self):
+        for n in range(presence.MAX_STEPS + 20):
+            presence.record(self.root, {"session_id": SID, "hook_event_name": "PostToolUse", "tool_name": "Grep",
+                                        "tool_input": {"pattern": f"p{n}"}}, "p", "claude", float(n))
+        (s,) = presence.sessions(self.root, 100.0)
+        self.assertEqual(len(s["steps"]), presence.SHOWN_STEPS)
+        self.assertEqual(s["steps"][0]["text"], f"Buscó p{presence.MAX_STEPS + 19}")
+
+    def test_a_planning_command_marks_the_session_as_planning_with_the_reqs_project(self):
+        presence.record(self.root, {"session_id": SID, "hook_event_name": "PostToolUse", "tool_name": "Bash",
+                                    "tool_input": {"command": "python bitacora.py --project david-ui planning status REQ-001"}},
+                        "metodologia", "claude", 1.0)
+        (s,) = presence.sessions(self.root, 2.0)
+        self.assertEqual((s["activity"], s["req"], s["req_project"]), ("planning", "REQ-001", "david-ui"))
+        self.assertIn("/go/david-ui/REQ-001", now_page.agents_html([s]))
+
 
 if __name__ == "__main__":
     unittest.main()

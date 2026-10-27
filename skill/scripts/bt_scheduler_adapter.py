@@ -301,6 +301,74 @@ def approved_plan(rdir: Path) -> core.Plan:
     return core.load_plan_file(path, approved_sha256=ref["sha256"], plan_id=ref["plan_id"], revision=ref["revision"])
 
 
+def run_identity(rdir: Path) -> dict[str, Any] | None:
+    """The plan identity the requirement's Scheduler run is bound to ({plan_id, revision, plan_sha256}); None when no
+    run has state yet. An unreadable run database raises (callers fail closed)."""
+    db = run_db_path(rdir)
+    if not db.is_file():
+        return None
+    try:
+        conn = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=1)
+        try:
+            row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
+        finally:
+            conn.close()
+        doc = json.loads(row[0]) if row else None
+    except sqlite3.OperationalError as exc:
+        if "no such table" in str(exc):
+            return None
+        raise core.SchedulerError("STATE_UNREADABLE", f"cannot read the run of {Path(rdir).name}") from exc
+    except (sqlite3.Error, TypeError, ValueError) as exc:
+        raise core.SchedulerError("STATE_UNREADABLE", f"cannot read the run of {Path(rdir).name}") from exc
+    if doc is None:
+        return None
+    if not (isinstance(doc, dict) and isinstance(doc.get("plan_id"), str) and type(doc.get("revision")) is int
+            and isinstance(doc.get("plan_sha256"), str) and _PLAN_SHA256.fullmatch(doc["plan_sha256"])):
+        raise core.SchedulerError("STATE_UNREADABLE", f"the run of {Path(rdir).name} has no valid plan identity")
+    return {"plan_id": doc["plan_id"], "revision": doc["revision"], "plan_sha256": doc["plan_sha256"]}
+
+
+def run_plan(rdir: Path) -> core.Plan:
+    """The plan the requirement's run executes (D-134): the approved revision it is bound to, even when a newer stage
+    is approved (that one joins at a quiet point, `join_target`); the latest approved revision for a new run. The
+    bound revision must still be in the approval manifest with the same hash."""
+    rdir = Path(rdir)
+    identity = run_identity(rdir)
+    if identity is None:
+        return approved_plan(rdir)
+    entry = next((item for item in plan_adapter.revisions(rdir) if item["revision"] == identity["revision"]), None)
+    if entry is None or entry["sha256"] != identity["plan_sha256"]:
+        raise core.SchedulerError("PLAN_MISMATCH", f"{rdir.name}: the run is bound to r{identity['revision']}, which is "
+                                  "not an approved revision with that hash")
+    path = rdir / REVISIONS / f"PLAN.r{identity['revision']}.json"
+    if problem := plan_consumer_problem(rdir, plan_path=path):
+        raise core.SchedulerError("PLAN_CONSUMER_INCOMPATIBLE", problem)
+    return core.load_plan_file(path, approved_sha256=identity["plan_sha256"], plan_id=identity["plan_id"],
+                               revision=identity["revision"])
+
+
+def join_target(rdir: Path, bound_revision: int) -> int | None:
+    """The newest approved revision when it is ahead of the run's (a stage, the whole plan or a scheduler revision
+    waiting to join); None otherwise or when nothing can be read (a run never joins what it cannot verify)."""
+    try:
+        last = plan_adapter.revisions(rdir)[-1:]
+    except (IndexError, TypeError):
+        return None
+    return last[0]["revision"] if last and last[0]["revision"] > bound_revision else None
+
+
+def join_cost(rdir: Path, scheduler: core.SchedulerCore | None = None) -> tuple[str, ...]:
+    """Accepted tasks that moving the run onto the newest approved revision would redo (nothing is written). Without a
+    live `scheduler` the run database is inspected read-only."""
+    latest = approved_plan(rdir)
+    if scheduler is None:
+        scheduler = core.SchedulerCore(run_plan(rdir), core.SqliteRepository(run_db_path(rdir), create=False))
+        scheduler.inspect()
+    would = scheduler.read(lambda ctx: core.plan_rebase(ctx.state, scheduler.plan, latest, cascade=rebase_cascade()))
+    return scheduler.read(lambda ctx: tuple(t for t in would.reset
+                                            if ctx.state.tasks.get(t) and ctx.state.tasks[t].state == "completed"))
+
+
 def open_scheduler(rdir: Path, *, ports: core.Ports | None = None, config: core.Config | None = None,
                    clock: Callable[[], float] | None = None) -> core.SchedulerCore:
     """A core bound to this requirement's approved plan and its own run database (created on first use).
@@ -310,7 +378,7 @@ def open_scheduler(rdir: Path, *, ports: core.Ports | None = None, config: core.
     if authority(rdir) == "legacy":
         raise core.SchedulerError("NOT_ALLOWED", f"{rdir.name} already has a legacy run ({RUN_JSON}); "
                                   "its history is not migrated or shared")
-    plan = approved_plan(rdir)
+    plan = run_plan(rdir)
     kwargs: dict[str, Any] = {"ports": ports, "config": config}
     if clock is not None:
         kwargs["clock"] = clock
@@ -486,7 +554,8 @@ def resolve_m2_route(ledger_path: str | Path, reference: str) -> dict[str, str] 
 
 
 def project(snapshot: core.Snapshot, plan: core.Plan,
-            task_budgets: dict[str, dict[str, int | bool | str]] | None = None) -> dict[str, Any]:
+            task_budgets: dict[str, dict[str, int | bool | str]] | None = None,
+            subplans: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """A RUN.json-shaped read model of a scheduler run, for the tools that already read RUN.json (watch, web page).
 
     Derived on demand from the core's snapshot; it carries `authority: "scheduler"` so nothing mistakes it for a legacy
@@ -518,11 +587,30 @@ def project(snapshot: core.Snapshot, plan: core.Plan,
             row.update(task_budgets[spec.id])
         tasks.append(row)
     heartbeat = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
-    return {"req": snapshot.plan_id, "authority": AUTHORITY, "projection": True,
-            "status": RUN_STATUS[snapshot.status], "scheduler_status": snapshot.status,
-            "plan_ref": {"plan_id": snapshot.plan_id, "revision": snapshot.revision, "sha256": snapshot.plan_sha256},
-            "sessions": sum(v["attempts"] for v in snapshot.tasks.values()), "tasks": tasks,
-            "attention": list(snapshot.attention), "heartbeat_at": heartbeat, "projected_at": heartbeat}
+    out = {"req": snapshot.plan_id, "authority": AUTHORITY, "projection": True,
+           "status": RUN_STATUS[snapshot.status], "scheduler_status": snapshot.status,
+           "plan_ref": {"plan_id": snapshot.plan_id, "revision": snapshot.revision, "sha256": snapshot.plan_sha256},
+           "sessions": sum(v["attempts"] for v in snapshot.tasks.values()), "tasks": tasks,
+           "attention": list(snapshot.attention), "heartbeat_at": heartbeat, "projected_at": heartbeat}
+    if subplans is not None:                      # only plans that declare subplans: the owner verifies each one (REQ per-subplan)
+        out["subplans"] = subplans
+    return out
+
+
+def subplan_rows(scheduler: core.SchedulerCore) -> list[dict[str, Any]] | None:
+    """Each declared subplan with the engine's lifecycle and, once published, its immutable version; None without subplans."""
+    if not getattr(scheduler.plan, "subplans", ()):
+        return None
+    try:
+        status, facts = subplan_status(scheduler), subplan_publication_facts(scheduler)
+    except Exception:  # noqa: BLE001 - a projection must still be written when subplan facts cannot be read
+        return None
+    rows = []
+    for item in scheduler.plan.subplans:
+        fact = facts.get(item.id) or {}
+        rows.append({"id": item.id, "status": status.get(item.id, "pending"), "version": fact.get("version"),
+                     "commit": fact.get("commit"), "manifest_sha256": fact.get("manifest_sha256")})
+    return rows
 
 
 def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
@@ -533,7 +621,10 @@ def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
     import bt_scheduler_projection
 
     task_budgets = bt_scheduler_projection.attempt_budgets(scheduler)
-    body = json.dumps(project(scheduler.snapshot(), scheduler.plan, task_budgets), indent=1, sort_keys=True) + "\n"
+    model = project(scheduler.snapshot(), scheduler.plan, task_budgets, subplan_rows(scheduler))
+    if (stage := stage_view(rdir, scheduler.plan.revision)) is not None:
+        model["stage"] = stage
+    body = json.dumps(model, indent=1, sort_keys=True) + "\n"
     fd, tmp = tempfile.mkstemp(dir=rdir, prefix=".RUN.projection.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
@@ -546,7 +637,32 @@ def write_projection(rdir: Path, scheduler: core.SchedulerCore) -> Path:
         Path(tmp).unlink(missing_ok=True)
         raise
     _refresh_plan_block(rdir)
+    _announce_subplans(rdir)
     return target
+
+
+def stage_view(rdir: Path, revision: int) -> dict[str, Any] | None:
+    """What the run's revision holds of the plan (D-134): its subplans, the draft subplans still outside it and whether
+    a newer approved stage waits to join. None for plans without subplans or when it cannot be read (best effort)."""
+    try:
+        held = plan_adapter.stage_subplans(rdir, revision)
+        draft = plan_adapter.draft_subplans(rdir)
+        if not held:
+            return None
+        outside = [sid for sid in draft or [] if sid not in held]
+        return {"revision": revision, "subplans": held, "outside": outside, "complete": draft is not None and not outside,
+                "joining": join_target(rdir, revision)}
+    except Exception:  # noqa: BLE001 - a projection must still be written
+        return None
+
+
+def _announce_subplans(rdir: Path) -> None:
+    """Tell the owner when a subplan version is newly published and ready to try; best-effort, never raises."""
+    try:
+        import bt_verification
+        bt_verification.on_projection(rdir)
+    except Exception:  # noqa: BLE001 - the projection is already written
+        pass
 
 
 def _refresh_plan_block(rdir: Path) -> None:
@@ -689,18 +805,7 @@ def rebase_to_latest(rdir: Path) -> Any:
         raise core.SchedulerError("NOT_ALLOWED", f"{rdir.name} has no Scheduler run to rebase")
     new = approved_plan(rdir)
     db = run_db_path(rdir)
-    try:
-        conn = sqlite3.connect(f"{db.resolve().as_uri()}?mode=ro", uri=True, timeout=1)
-        try:
-            row = conn.execute("SELECT doc FROM state WHERE id = 1").fetchone()
-        finally:
-            conn.close()
-        doc = json.loads(row[0])
-    except (sqlite3.Error, TypeError, ValueError) as exc:
-        raise core.SchedulerError("STATE_UNREADABLE", f"cannot read the run of {rdir.name}") from exc
-    old_path = rdir / REVISIONS / f"PLAN.r{doc['revision']}.json"
-    old = core.load_plan_file(old_path, approved_sha256=doc["plan_sha256"], plan_id=doc["plan_id"],
-                              revision=doc["revision"])
+    old = run_plan(rdir)
     with owner_lock(rdir):
         return core.rebase_run(core.SqliteRepository(db), old, new, cascade=rebase_cascade())
 

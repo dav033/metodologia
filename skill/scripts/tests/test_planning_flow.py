@@ -35,6 +35,13 @@ status: ready
 |---|---|---|---|---|
 | Repository path | all | ~/dev/shop | owner | available |
 | Stripe test key | SP-2 | env STRIPE_KEY in ~/.config/shop/.env | owner | {status} |
+
+## Pruebas
+
+| Subplan | Dónde | Cómo | Qué debes ver |
+|---|---|---|---|
+| SP-1 | Local | `npm run dev` | Los pedidos se guardan |
+| SP-2 | Local | abre /checkout | El comprador paga |
 """
 
 
@@ -50,6 +57,13 @@ class FlowTests(unittest.TestCase):
     def page(self, **q) -> str:
         return bt_page_planning.fragment("demo", "REQ-001", self.rdir, _front(self.rdir / "PLAN.md", "status"), "tok",
                                          bt_page_planning.options(self.rdir, {"lang": "en", **q}))
+
+    def test_render_reuses_the_same_flow_and_design_snapshot(self):
+        flow.start(self.rdir)
+        with patch.object(flow, "state", wraps=flow.state) as state, patch.object(drafts, "rows", wraps=drafts.rows) as rows:
+            self.page(sp="SP-2", view="design")
+        self.assertEqual(state.call_count, 1)
+        self.assertEqual(rows.call_count, 1)
 
     def approve(self):
         with patch("bt_scheduler_adapter.plan_compatibility_report", return_value=None), \
@@ -107,6 +121,7 @@ class FlowTests(unittest.TestCase):
         self.assertEqual(flow.state(self.rdir)["subplans"]["SP-2"]["state"], "confirmed")  # pinning keeps it
 
     def test_a_change_after_confirmation_reopens_the_subplan_and_blocks_approval(self):
+        self.spec("location given")
         self.write_plan(PLAN)
         flow.start(self.rdir)
         flow.confirm_outline("demo", self.rdir)
@@ -130,6 +145,12 @@ class FlowTests(unittest.TestCase):
         self.assertIn("Definir ahora", html)
         self.assertIn("Entradas · faltan 1", html)
         self.assertIn('value="approve" disabled', html)
+        self.assertNotIn("stage-run", html)                      # D-134: only a confirmed subplan can run
+        flow.confirm("demo", self.rdir, "SP-1")
+        self.assertIn("stage-run", self.page(sp="SP-1"))           # «Ejecutar subplan» sits next to the confirmation
+        self.assertIn("Ejecutar subplan", self.page(sp="SP-1"))
+        self.assertIn("view=session", html)                       # the hands-on «Sesión» tab is reachable from any subplan
+        self.assertIn("session-start", self.page(sp="SP-2", view="session"))
         inputs = self.page(sp="SP-2", view="inputs")
         self.assertIn("Stripe test key", inputs)
         self.assertIn("todo el plan", inputs)
@@ -181,6 +202,7 @@ class FlowTests(unittest.TestCase):
         self.assertIn("hay entradas para subplanes que no existen: SP-9", flow.approval_problems(self.rdir))
 
     def test_a_reopened_subplan_becomes_the_focus_and_its_design_follows(self):
+        self.spec("location given")
         self.write_plan(PLAN)
         flow.start(self.rdir)
         flow.confirm_outline("demo", self.rdir)
@@ -213,3 +235,122 @@ class FlowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TasksPanel(unittest.TestCase):
+    def test_each_task_shows_its_complexity_and_classification(self):
+        import bt_page_planning_views as views
+        ctx = {"opts": {"lang": "en"}}
+        task = {"id": "T1", "title": "Build it", "kind": "implement", "complexity": "high", "risk": "low",
+                "coupling": "medium", "confidence": "low", "scope": "large_change", "estimated_minutes": 30,
+                "after": ["T0"], "acceptance_criteria": ["a", "b"], "ui": True}
+        html = views.tasks_panel(ctx, {"tasks": [task, {"id": "T2", "title": "Bare", "kind": "docs"}]})
+        for expected in ("Complejidad alta", "<dt>Riesgo</dt><dd class=\"lv ok\">bajo", "<dt>Acoplamiento</dt><dd class=\"lv mid\">medio",
+                         "<dt>Confianza</dt><dd class=\"lv warn\">baja", "cambio grande", "~30 min", "después de T0",
+                         "2 criterios", "implement · UI", "0 criterios"):
+            self.assertIn(expected, html)
+        self.assertEqual(html.count(">Complejidad "), 1)    # a task without complexity shows none rather than a blank
+
+    def test_each_task_shows_everything_the_executor_receives(self):
+        import bt_page_planning_views as views
+        ctx = {"opts": {"lang": "en"}}
+        task = {"id": "T1", "title": "Build it", "kind": "implement", "objective": "Ship <the> guard",
+                "acceptance_criteria": ["first criterion"], "expected_paths": ["src/a.ts"], "repository": "pictures",
+                "covers": ["R1", "R2"], "estimate_rationale": "30 + 30",
+                "verification": [{"type": "command", "value": "npm test", "purpose": "proves it",
+                                  "category": "behavior", "created_by": "T1"},
+                                 {"type": "manual", "value": "owner looks", "purpose": "approved",
+                                  "expected": "named ids", "environment": "human_attestation"}],
+                "classification_evidence": {"risk": {"justification": "exposes tools", "evidence": ["file:src/p.ts"]}}}
+        html = views.tasks_panel(ctx, {"tasks": [task]})
+        for expected in ("Ship &lt;the&gt; guard", "<li>first criterion</li>", "<code>npm test</code>", "proves it",
+                         "la crea T1", "Manual</span> owner looks", "Esperado: named ids", "<code>src/a.ts</code>",
+                         "<dd>R1, R2</dd>", "30 + 30", "Por qué esta clasificación", "exposes tools",
+                         "<code>file:src/p.ts</code>", 'id="t-T1"'):
+            self.assertIn(expected, html)
+        self.assertIn('<details class="pp-tdet"><summary>', html)    # folded by default: the cards stay scannable
+        bare = views.tasks_panel(ctx, {"tasks": [{"id": "T2", "title": "Bare", "kind": "docs"}]})
+        self.assertNotIn("pp-tdet", bare)
+
+    def test_the_complexity_pill_lists_the_policy_models_for_the_task(self):
+        import bt_page_planning_views as views
+        ctx = {"opts": {"lang": "en"}}
+        def panel(kind, cx):
+            return views.tasks_panel(ctx, {"tasks": [{"id": "T1", "title": "x", "kind": kind, "complexity": cx}]})
+        impl = panel("implement", "high")
+        self.assertIn("Modelos recomendados", impl)
+        self.assertIn("Implementador", impl)
+        self.assertLess(impl.index("Sonnet 5.5"), impl.index("GPT-6 Luna"))        # preferred first, then the alternative
+        self.assertIn("no cambia la preferencia", impl)
+        self.assertIn("<em>Preferido</em>", impl)
+        audit = panel("audit", "high")
+        self.assertLess(audit.index("GPT-6.1 Sol"), audit.index("Sonnet 5.5"))
+        self.assertIn("esfuerzo alto", audit)                                     # the high-complexity reviewer pair
+        self.assertIn("rol fijo", panel("docs", "low"))
+
+
+class PruebasGate(unittest.TestCase):
+    setUp = base.DraftTests.setUp
+    write_plan = base.DraftTests.write_plan
+    create = base.DraftTests.create
+    finish = base.DraftTests.finish
+
+    def test_a_subplan_cannot_be_confirmed_without_how_to_try_it_and_changing_it_reopens_the_subplan(self):
+        plan = {"milestones": PLAN["milestones"], "subplans": PLAN["subplans"][:1], "tasks": PLAN["tasks"][:1]}
+        self.write_plan(plan)
+        flow.start(self.rdir)
+        flow.confirm_outline("demo", self.rdir)
+        spec = SPEC.split("## Pruebas")[0].format(status="location given")
+        (self.rdir / "SPEC.md").write_text(spec, encoding="utf-8")
+        self.assertIn("falta cómo probarlo", flow.confirm("demo", self.rdir, "SP-1"))
+        (self.rdir / "SPEC.md").write_text(spec + "## Pruebas\n| Subplan | Where | How | Expect |\n|---|---|---|---|\n"
+                                           "| SP-1 | Local | run it | it works |\n", encoding="utf-8")
+        self.assertIn("SP-1 confirmado", flow.confirm("demo", self.rdir, "SP-1"))
+        self.assertEqual(flow.state(self.rdir)["subplans"]["SP-1"]["state"], "confirmed")
+        (self.rdir / "SPEC.md").write_text(spec + "## Pruebas\n| Subplan | Where | How | Expect |\n|---|---|---|---|\n"
+                                           "| SP-1 | Local | run it twice | it works |\n", encoding="utf-8")
+        self.assertEqual(flow.state(self.rdir)["subplans"]["SP-1"]["state"], "changed")
+
+    def test_confirmations_made_before_pruebas_existed_keep_their_digest(self):
+        plan = {"milestones": PLAN["milestones"], "subplans": PLAN["subplans"][:1], "tasks": PLAN["tasks"][:1]}
+        self.write_plan(plan)
+        sp = flow._plan_order(self.rdir)[0]
+        no_tests = flow._digest(self.rdir, flow.drafts._plan(self.rdir), sp, [])
+        (self.rdir / "SPEC.md").write_text("## Pruebas\n| Subplan | Where | How | Expect |\n|---|---|---|---|\n| SP-1 | Local | go | ok |\n")
+        self.assertNotEqual(flow._digest(self.rdir, flow.drafts._plan(self.rdir), sp, []), no_tests)
+        (self.rdir / "SPEC.md").write_text("# nothing about tests\n")
+        self.assertEqual(flow._digest(self.rdir, flow.drafts._plan(self.rdir), sp, []), no_tests)
+
+
+class ResumeBriefing(unittest.TestCase):
+    setUp = base.DraftTests.setUp
+    write_plan = base.DraftTests.write_plan
+    create = base.DraftTests.create
+    finish = base.DraftTests.finish
+
+    def brief(self) -> str:
+        import bt_planning_resume as resume
+        return resume.briefing("demo", self.rdir)
+
+    def test_a_new_session_is_told_to_start_then_to_wait_for_an_open_round(self):
+        self.write_plan(PLAN)
+        self.assertIn("NEXT: Collaborative planning is not on", self.brief())
+        flow.start(self.rdir)
+        self.assertIn("No skeleton yet" if flow.state(self.rdir)["phase"] == "interview" else "skeleton", self.brief())
+        f = bt_rounds.new_round(self.rdir, {"title": "Scope", "questions": [{"text": "Who uses it?", "options": [
+            {"key": "a", "label": "staff"}], "type": "choice"}]})
+        self.assertIn("Round 1 is open", self.brief())
+        bt_rounds.answer_round(f, {"q1": {"choice": "a", "note": "only staff"}}, "terminal")
+        text = self.brief()
+        self.assertIn("only staff", text)
+        self.assertNotIn("is open", text)
+
+    def test_it_lists_subplans_without_a_pruebas_row_and_the_focus_work(self):
+        self.write_plan(PLAN)
+        flow.start(self.rdir)
+        flow.confirm_outline("demo", self.rdir)
+        (self.rdir / "SPEC.md").write_text("# Shop\n", encoding="utf-8")
+        text = self.brief()
+        self.assertIn("Without a `## Pruebas` row", text)
+        self.assertIn("SP-1", text.split("Without a `## Pruebas` row")[1].splitlines()[0])
+        self.assertIn("Define the focus subplan SP-1", text)

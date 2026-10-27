@@ -84,7 +84,8 @@ def rounds_panel(project: str, rid: str, rdir: Path, token: str) -> str:
     return "".join(parts)
 
 
-def round_form(project: str, rid: str, f: Path, data: dict, token: str) -> str:
+def round_form(project: str, rid: str, f: Path, data: dict, token: str, back: str = "") -> str:
+    """`back` = hidden fields that bring the owner back to where he answered from (the Plan tab), not to the rounds tab."""
     qs = []
     intro = f'<p>{e(data["intro"])}</p>' if data.get("intro") else ""
     cov = f'<p class="muted">Cobertura: {e(str(data["coverage"]))}</p>' if data.get("coverage") else ""
@@ -104,7 +105,7 @@ def round_form(project: str, rid: str, f: Path, data: dict, token: str) -> str:
         qs.append(f'<div class="question"><strong>{i}. {e(q["text"])}</strong>{why}<div style="margin-top:8px">'
                   f'{field}</div></div>')
     return (f'{intro}{cov}<form class="q" method="post" action="{purl(project, "req", rid, "answer")}">'
-            f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="round" value="{e(f.name)}">'
+            f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="round" value="{e(f.name)}">{back}'
             f'{"".join(qs)}<div class="actions"><button type="submit">Enviar respuestas</button>'
             f'<span class="muted">Las recomendadas vienen marcadas; cambia solo lo que no te convenza.</span></div></form>')
 

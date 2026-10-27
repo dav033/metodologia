@@ -45,7 +45,7 @@ class SchedulerLaunchBoundaries(unittest.TestCase):
                         self.assertRaisesRegex(terminal.TerminalError, 'FOREGROUND_RUN_EXISTS'):
                     transition.require_new_plan(rdir)
 
-    def test_standard_launch_refuses_existing_authority_before_freeze_or_script(self):
+    def test_standard_launch_joins_scheduler_authority_or_refuses_legacy(self):
         with tempfile.TemporaryDirectory() as directory:
             rdir = Path(directory)
             (rdir / 'PLAN.md').write_text('---\nstatus: approved\n---\n')
@@ -57,10 +57,15 @@ class SchedulerLaunchBoundaries(unittest.TestCase):
                         patch.object(bt_launch.ws, 'repos', return_value={'main': rdir}), \
                         patch.object(bt_scheduler_adapter, 'authority', return_value=owner), \
                         patch('bt_plan_adapter.freeze_on_launch') as freeze, \
+                        patch('bt_stages.start_or_join', return_value='joined') as join, \
                         patch.object(bt_launch, 'scheduler_script') as script:
-                    with self.assertRaisesRegex(SystemExit, 'SCHEDULER_RUN_EXISTS'):
-                        bt_launch.launch('demo', 'REQ-001', dry_run=True)
-                    freeze.assert_not_called()
+                    if owner == 'legacy':
+                        with self.assertRaisesRegex(SystemExit, 'AUTHORITY_CONFLICT'):
+                            bt_launch.launch('demo', 'REQ-001', dry_run=True)
+                    else:
+                        self.assertIn('joined', bt_launch.launch('demo', 'REQ-001', dry_run=True))
+                    freeze.assert_called_once()
+                    join.assert_not_called()  # a dry run never starts or rebases the owner
                     script.assert_not_called()
 
     def test_review_changes_preserves_completed_status_and_does_not_launch(self):

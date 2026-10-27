@@ -94,14 +94,25 @@ def documents(rdir: Path) -> list[tuple[Path, Path]]:
 
 
 def plan_strings(rdir: Path) -> list[str]:
-    """Short texts of PLAN.json the web shows per subplan: titles, outcomes, criteria and task titles."""
+    """Short texts of PLAN.json the web shows per subplan: titles, outcomes, criteria, and each task's title and full
+    detail (objective, criteria, verification, estimate and classification reasons)."""
     import bt_design_drafts
-    out: list[str] = [m.get("title") or "" for m in bt_design_drafts._plan(rdir).get("milestones") or []
-                      if isinstance(m, dict)]
+    plan = bt_design_drafts._plan(rdir)
+    out: list[str] = [m.get("title") or "" for m in plan.get("milestones") or [] if isinstance(m, dict)]
+    out += [i.get("title") or "" for i in plan.get("interfaces") or [] if isinstance(i, dict)]
     for item in bt_design_drafts.subplans(rdir):
         out += [item["title"], item["outcome"], *[c for c in item["criteria"] if isinstance(c, str)]]
-        out += [t.get("title") or "" for t in item["tasks"]]
-    return [s for s in dict.fromkeys(out) if s and s.strip()]
+        for t in item["tasks"]:
+            out += [t.get("title") or "", t.get("objective") or "", t.get("estimate_rationale") or ""]
+            out += [c for c in t.get("acceptance_criteria") or [] if isinstance(c, str)]
+            for c in t.get("verification") or []:
+                if isinstance(c, dict):
+                    out += [c.get("purpose") or "", c.get("expected") or ""]
+                    out += [c.get("value") or ""] if c.get("type") != "command" else []
+            evidence = t.get("classification_evidence")
+            out += [v.get("justification") or "" for v in (evidence or {}).values() if isinstance(v, dict)] \
+                if isinstance(evidence, dict) else []
+    return [s for s in dict.fromkeys(out) if isinstance(s, str) and s.strip()]
 
 
 def pending(rdir: Path) -> list[str]:

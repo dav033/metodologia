@@ -10,7 +10,8 @@
 
 State lives in `.planning/flow.json`; a requirement follows this flow once `start()` created it. Inputs come from the
 `## Inputs` table of SPEC.md (columns Item, Subplan, Where, Who, Status; an empty Subplan or `all` is plan-wide). A
-confirmation records a digest of the subplan, its tasks, its inputs and its draft: any later change reopens it.
+confirmation records a digest of the subplan, its tasks, its inputs, its `## Pruebas` rows (where to try it once it is
+built, see `bt_verification`) and its draft: any later change reopens it.
 """
 from __future__ import annotations
 
@@ -164,9 +165,12 @@ def _digest(rdir: Path, plan: dict, sp: dict, rows: list[dict]) -> str:
     and mockup content, not their status: approval pins them unchanged). Plan-wide inputs gate approval instead."""
     item = next((s for s in plan.get("subplans") or [] if isinstance(s, dict) and s.get("id") == sp["id"]), {})
     mockup = drafts.paths(rdir, sp["ref"])[1] if sp["ref"] else None
+    import bt_verification
     payload = {"subplan": item, "tasks": sp["tasks"], "inputs": [r for r in rows if sp["id"] in r["subplans"]],
                "design": _draft_sha(rdir, sp["ref"]),
                "mockup": hashlib.sha256(mockup.read_bytes()).hexdigest() if mockup and mockup.is_file() else None}
+    if (tests := bt_verification.tests_for(rdir, sp["id"])):   # absent when there are none: earlier confirmations keep their digest
+        payload["tests"] = tests
     return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:16]
 
 
@@ -187,6 +191,9 @@ def problems(rdir: Path, sp: dict, design_rows: dict | None = None, input_rows: 
         out.append("todavía no tiene tareas")
     elif any(not (t.get("acceptance_criteria") or []) for t in sp["tasks"]):
         out.append("hay tareas sin criterios de aceptación")
+    import bt_verification
+    if bt_verification.missing(rdir, sp["id"]):
+        out.append("falta cómo probarlo: una fila para este subplan en SPEC `## Pruebas` (dónde, cómo y qué debes ver)")
     pending = [r["item"] for r in inputs_for(rdir, sp["id"], input_rows) if r["pending"]]
     if pending:
         out.append("faltan entradas: " + ", ".join(pending[:4]) + (f" y {len(pending) - 4} más" if len(pending) > 4 else ""))
@@ -195,8 +202,11 @@ def problems(rdir: Path, sp: dict, design_rows: dict | None = None, input_rows: 
         row = design_rows.get(sp["ref"])
         if row is None or row["status"] == "none":
             out.append("el Designer todavía no empezó su diseño (empieza cuando el subplan está en foco)")
+        elif row.get("amend") and row["status"] not in drafts.ACTIVE:
+            out.append("el plan cambió después del diseño elegido: actualízalo con lo que ya está («Actualizar diseño»)")
         elif row["stale"] and row["status"] not in drafts.ACTIVE:
-            out.append("el diseño quedó desactualizado; se rehace con el subplan en foco")
+            out.append("el diseño quedó desactualizado y aún no hay dirección elegida: el Designer prepara direcciones "
+                       "nuevas con el subplan en foco")
         else:
             out += [p.split(": ", 1)[-1] for p in drafts._problems([row])]
     return out
@@ -234,6 +244,8 @@ def state(rdir: Path, subplans: list[dict] | None = None, design_rows: dict | No
                 "confirmed": 0, "total": 0, "outline": data.get("outline"), "inputs": input_rows,
                 "unknown": unknown, "editing": True}
     done = _done(data, rdir, plan, subplans, input_rows) if data.get("outline") else set()
+    if design_rows is None and any(sp["ref"] and sp["id"] not in done for sp in subplans):
+        design_rows = {row["ref"]: row for row in drafts.rows(rdir)}
     focus = _focus(data, subplans, done) if data.get("outline") else ""
     per = {}
     for sp in subplans:
@@ -257,11 +269,27 @@ def state(rdir: Path, subplans: list[dict] | None = None, design_rows: dict | No
             "editing": False}
 
 
-def approval_problems(rdir: Path) -> list[str]:
+def keep_confirmed(rdir: Path, sids: list[str], note: str) -> list[str]:
+    """Re-pin the confirmation of `sids` after a mechanical edit the owner's own action made (a stage's automatic
+    cross-check audit), so it does not undo them. The caller passes only subplans that were confirmed and unchanged
+    right before that edit. Returns the re-pinned ids."""
+    plan, subplans, rows = drafts._plan(rdir), _plan_order(rdir), inputs(rdir)
+    by_id = {sp["id"]: sp for sp in subplans}
+    kept = []
+    with _locked(rdir) as data:
+        for sid in sids:
+            record = data["subplans"].get(sid)
+            if record and sid in by_id:
+                record.update(digest=_digest(rdir, plan, by_id[sid], rows), repinned=f"{_now()} {note}")
+                kept.append(sid)
+    return kept
+
+
+def approval_problems(rdir: Path, snapshot: dict | None = None) -> list[str]:
     """Why the plan cannot be approved under this flow (empty when the flow is off or every subplan is confirmed)."""
     if not active(rdir):
         return []
-    st = state(rdir)
+    st = snapshot if snapshot is not None else state(rdir)
     if st["editing"]:
         return ["PLAN.json se está editando (no se puede leer)"]
     if st["phase"] == "interview":

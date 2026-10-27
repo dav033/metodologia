@@ -184,6 +184,13 @@ there to give confidence to change code, not to hit a number.
 - **Mock only what you don't own** (third-party APIs, email, payments). For your own DB prefer a real test
   database or a local stand-in.
 - Never weaken, skip or delete a test to make it pass. If a test is wrong, say so and fix it deliberately.
+- **Test oracles** (REQ-021 T1.7: a permission matrix whose expected values were read from the implementation's own route
+  map, sending only GET and counting 405/5xx as allowed, so it could not fail on the defects the audit then found):
+  the expected value of a test over permissions, money, identity or isolation comes from the SPEC or a table the
+  owner approved, never from the code under test. Such a matrix covers every role × every method (GET and the writing
+  methods) and asserts the denied cases explicitly with the exact status (401/403); a 405, a redirect or a 5xx is a
+  failure, not "access refused". The Reviewer checks this on `test` tasks; `plan-json check` warns when a test task
+  over a security-sensitive task does not state it.
 
 ## 6. Verification & self-review
 

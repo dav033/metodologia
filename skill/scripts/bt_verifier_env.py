@@ -56,3 +56,39 @@ def load(path: str | Path | None) -> tuple[tuple[tuple[str, str], ...], tuple[st
     secrets = tuple(dict.fromkeys(value for key, value in environment.items()
                                   if SENSITIVE_ENV.search(key) or _CREDENTIAL_URL.search(value)))
     return tuple(environment.items()), secrets
+
+
+def declared(rdir: str | Path | None) -> set[str]:
+    """Variable names the checks of the run's latest frozen revision declare in `requires` (a `service:` probe is not a
+    variable); empty when there is no frozen revision."""
+    if not rdir:
+        return set()
+    from bt_planner import revisions as rev
+    try:
+        last = rev.latest(Path(rdir))
+        plan = rev.load_revision(Path(rdir), last["revision"]) if last else {}
+    except Exception:  # noqa: BLE001 - an unreadable store adds nothing; the frozen-plan gates report it
+        return set()
+    return {name for task in plan.get("tasks") or [] if isinstance(task, dict)
+            for check in task.get("verification") or [] if isinstance(check, dict)
+            for name in check.get("requires") or []
+            if isinstance(name, str) and ENV_NAME.fullmatch(name)}
+
+
+def for_run(project: str, rdir: str | Path | None = None) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]]:
+    """What the checks of a run receive: the project's `verifier.env_file`, plus each variable a check of the frozen plan
+    declares in `requires` that is missing there, taken from the owner's secret files (`verifier.secret_files`). Only
+    declared names are copied, so a check never sees the rest of those files; nothing is written anywhere."""
+    import bt_config
+    environment, _ = load(path_for(bt_config.get("verifier.env_file", ""), project))
+    merged = dict(environment)
+    wanted = declared(rdir) - set(merged)
+    for source in bt_config.get("verifier.secret_files", []) or []:
+        if not wanted:
+            break
+        found = {key: value for key, value in load(path_for(source, project))[0] if key in wanted}
+        merged.update(found)
+        wanted -= set(found)
+    secrets = tuple(dict.fromkeys(value for key, value in merged.items()
+                                  if SENSITIVE_ENV.search(key) or _CREDENTIAL_URL.search(value)))
+    return tuple(merged.items()), secrets

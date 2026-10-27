@@ -322,7 +322,7 @@ class AuditRegressions(PlanDir):
             rev.freeze(self.rdir, plan)
         self.assertFalse((self.rdir / "plan-revisions").exists() and any((self.rdir / "plan-revisions").glob("PLAN.r*.json")))
 
-    def test_prose_changed_after_approval_is_refused_but_log_lines_and_ticks_are_not(self):
+    def test_approved_task_lines_changed_after_approval_are_refused_but_other_prose_is_not(self):
         self.good()
         self.sync.approve_freeze(self.rdir, "REQ-042")
         md = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
@@ -331,8 +331,12 @@ class AuditRegressions(PlanDir):
         (self.rdir / "PLAN.md").write_text((self.rdir / "PLAN.md").read_text(encoding="utf-8").replace("[ ] T1", "[x] T1"),
                                            encoding="utf-8")
         self.assertEqual(self.sync.bind_approved(self.rdir, "REQ-042")["revision"], 1)
-        with (self.rdir / "PLAN.md").open("a", encoding="utf-8") as fh:
-            fh.write("\nT1 execution detail: accept every expired session.\n")
+        with (self.rdir / "PLAN.md").open("a", encoding="utf-8") as fh:   # D-134: free prose is the planners' draft
+            fh.write("\nNotes for later subplans: ask about exports.\n")
+        self.assertEqual(self.sync.bind_approved(self.rdir, "REQ-042")["revision"], 1)
+        md = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
+        (self.rdir / "PLAN.md").write_text(md.replace("[x] T1 — Fix validation", "[x] T1 — Accept every expired session"),
+                                           encoding="utf-8")
         with self.assertRaises(pc.PlanContractError) as ctx:
             self.sync.bind_approved(self.rdir, "REQ-042")
         self.assertEqual(ctx.exception.code, "PLAN_PROSE_DRIFT")
@@ -562,22 +566,15 @@ class PublicationAndEvidenceScope(PlanDir):
         (repo / "src" / "auth").mkdir(parents=True)
         (repo / "src" / "auth" / "session.py").write_text("x = 1\n")
         entry = self.sync.approve_freeze(self.rdir, "REQ-042", repo_roots={"backend": repo}, verify_files=True)
-        self.assertEqual(self.sync.bind_approved(self.rdir, "REQ-042", repo_roots={"backend": repo},
-                                                 verify_files=True), entry)
-        with self.assertRaises(pc.PlanContractError):  # a launch on a machine without the checkout is refused
-            self.sync.bind_approved(self.rdir, "REQ-042", verify_files=True)
+        self.assertEqual(self.sync.bind_approved(self.rdir, "REQ-042"), entry)   # verified once, at approval
 
-    def test_new_revisions_must_use_the_evidence_schema_but_a_frozen_one_stays_valid(self):
-        plan = self.good()
-        old = copy.deepcopy(plan)
+    def test_new_revisions_must_use_the_evidence_schema(self):
+        old = copy.deepcopy(self.good())
         old["schema_version"] = "1.0.0"
         for t in old["tasks"]:
             del t["classification_evidence"]
         self.write(old)
         self.assertIn("predates classification evidence", self.errors())
-        # a 1.0.0 revision frozen before the evidence existed (written to the store as it was) keeps passing
-        rev.freeze(self.rdir, old)
-        self.assertEqual(self.errors(), "")
 
 
 class LaunchGate(PlanDir):
@@ -600,31 +597,31 @@ class LaunchGate(PlanDir):
 
     def test_not_approved_is_refused_unless_forced(self):
         self.good()
+        entry = self.approve()
         self.md("review")
         self.assertEqual(self.code(), "PLAN_NOT_APPROVED")
-        self.assertEqual(self.bind(forced=True)["source"], "launch-forced")
+        self.assertEqual(self.bind(forced=True), entry)        # a stage runs while the plan is still being planned
 
-    def test_invalid_plan_is_never_bound_even_when_forced(self):
-        plan = self.good()
-        del plan["tasks"][0]["risk"]
-        self.write(plan)
+    def test_unreadable_draft_is_never_bound_even_when_forced(self):
+        self.good()
+        self.approve()
+        (self.rdir / "PLAN.json").write_text("{", encoding="utf-8")
         self.assertEqual(self.code(forced=True), "PLAN_INVALID")
-        self.assertFalse((self.rdir / "plan-revisions").exists())
 
     def test_a_launch_never_creates_the_approval_record(self):
         self.good()
         self.assertEqual(self.code(), "PLAN_NOT_FROZEN")  # approved by hand: no record of what was approved
-        self.assertEqual(self.code(freeze=False), "PLAN_NOT_FROZEN")
+        self.assertEqual(self.code(forced=True), "PLAN_NOT_FROZEN")
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
     def test_the_approval_act_freezes_exactly_what_the_launch_then_binds(self):
         plan = self.good()
         entry = self.approve()
         self.assertEqual(entry["source"], "approval")
+        self.assertTrue(entry["stage"]["complete"])
         self.assertEqual(entry["sha256"], rev.sha256(pc.dumps(plan)))
         self.assertEqual(rev.load_revision(self.rdir, 1), json.loads(pc.dumps(plan)))
         self.assertEqual(self.bind(), entry)  # idempotent, nothing written
-        self.assertEqual(self.bind(freeze=False), entry)
         self.assertEqual([r["revision"] for r in rev.list_revisions(self.rdir)], [1])
 
     def test_edit_after_approval_is_drift_not_a_new_revision(self):
@@ -632,16 +629,12 @@ class LaunchGate(PlanDir):
         self.approve()
         plan["tasks"][0]["estimated_minutes"] = 45
         self.write(plan)
-        self.assertEqual(self.code(), "PLAN_INVALID")  # same revision number, different bytes
-        plan["revision"] = 2
-        self.write(plan)
         self.assertEqual(self.code(), "PLAN_DRIFT")  # a new revision is a new approval, never frozen by a launch
         self.assertEqual([r["revision"] for r in rev.list_revisions(self.rdir)], [1])
 
     def test_approving_the_new_revision_makes_it_launchable(self):
         plan = self.good()
         self.approve()
-        plan["revision"] = 2
         plan["tasks"][0]["estimated_minutes"] = 45
         self.assertEqual(self.approve(plan)["revision"], 2)
         self.assertEqual(self.bind()["revision"], 2)
@@ -657,23 +650,14 @@ class LaunchGate(PlanDir):
         self.approve()
         plan["tasks"][0]["title"] = "A different title"
         self.write(plan)
-        self.assertEqual(self.code(), "PLAN_INVALID")
+        self.assertEqual(self.code(), "PLAN_DRIFT")
 
     def test_the_manifest_records_how_each_revision_was_frozen(self):
         plan = self.good()
         self.approve()
-        plan["revision"] = 2
         plan["tasks"][0]["estimated_minutes"] = 45
         self.approve(plan)
         self.assertEqual([r["source"] for r in rev.list_revisions(self.rdir)], ["approval", "approval"])
-
-    def test_a_forced_launch_of_an_unapproved_plan_is_recorded_as_forced(self):
-        self.good()
-        self.md("review")
-        self.assertEqual(self.bind(forced=True, freeze=False)["frozen_at"], None)
-        self.assertFalse((self.rdir / "plan-revisions").exists())
-        self.assertEqual(self.bind(forced=True)["source"], "launch-forced")
-        self.assertEqual([r["source"] for r in rev.list_revisions(self.rdir)], ["launch-forced"])
 
 
 if __name__ == "__main__":

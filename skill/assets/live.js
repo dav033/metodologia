@@ -43,6 +43,10 @@
     if (cards && typeof html.cards === 'string') cards.innerHTML = html.cards;
     var agents = document.getElementById('now-agents');
     if (agents && typeof html.agents === 'string') agents.innerHTML = html.agents;
+    var health = document.getElementById('now-health');
+    if (health && typeof html.health === 'string') health.innerHTML = html.health;
+    var verify = document.getElementById('now-verify');
+    if (verify && typeof html.verify === 'string') verify.innerHTML = html.verify;
     document.dispatchEvent(new CustomEvent('now-frame', { detail: JSON.parse(ev.data) }));
     tick();
   }

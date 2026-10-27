@@ -122,7 +122,9 @@
   }
   function progress(r) {
     if (!r || !r.summary || !r.summary.tasks_total) return '';
-    var pct = Math.round(100 * r.summary.tasks_done / r.summary.tasks_total);
+    var staged = r.stage && r.stage.length && r.tasks ? r.tasks.filter(function (x) { return r.stage.indexOf(x.subplan_id) >= 0; }) : null;
+    var pct = staged && staged.length ? Math.round(100 * staged.filter(function (x) { return C.taskState(x.state) === 'done'; }).length / staged.length)
+      : Math.round(100 * r.summary.tasks_done / r.summary.tasks_total);   // a staged run: progress of the approved stage
     return '<span class="fl-prog" role="progressbar" aria-label="Avance" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct +
       '"><i style="width:' + pct + '%"></i></span>';
   }
@@ -157,7 +159,11 @@
         (a.started_at ? ', empezó ' + ago(epoch(a.started_at)) : '');
     }).join('; ') + '. ';
     else h += r.active ? 'Nada se ejecuta en este momento (' + esc(statusText(r.status)) + '). ' : 'La ejecución está ' + esc(statusText(r.status)) + '. ';
-    h += '<b>' + r.summary.tasks_done + ' de ' + r.summary.tasks_total + '</b> ' + link(planHref(S.run), 'tareas aceptadas');
+    var staged = r.stage && r.stage.length ? t.filter(function (x) { return r.stage.indexOf(x.subplan_id) >= 0; }) : null;
+    if (staged) h += '<b>' + staged.filter(function (x) { return C.taskState(x.state) === 'done'; }).length + ' de ' + staged.length +
+      '</b> ' + link(planHref(S.run), 'tareas aceptadas') + ' en la etapa aprobada (' + esc(r.stage.join(', ')) + '; el plan tiene ' +
+      r.summary.tasks_total + ')';
+    else h += '<b>' + r.summary.tasks_done + ' de ' + r.summary.tasks_total + '</b> ' + link(planHref(S.run), 'tareas aceptadas');
     var ids = function (list) { return list.map(function (id) { return taskLink(S.run, id); }).join(', '); };
     if (nRejected) h += '; M6 rechazó ' + nRejected + ' intento' + (nRejected > 1 ? 's' : '') + ' (' + ids(rejected) + ')';
     if (nFailed) h += '; ' + nFailed + ' intento' + (nFailed > 1 ? 's' : '') + ' fallaron al ejecutar (' + ids(failed) + ')';
@@ -170,11 +176,32 @@
     var r = runInfo(S.run), box = $('fl-tasks-box');
     box.hidden = !(r && r.tasks && r.tasks.length);
     if (box.hidden) return;
-    $('fl-tasks').innerHTML = r.tasks.map(function (t) {
+    var chip = function (t) {
       var st = C.taskState(t.state), tries = t.attempts > 1 ? t.attempts + ' intentos' : t.attempts ? '1 intento' : '—';
       return '<button type="button" class="fl-task s-' + st + ' ' + C.TASK_CLASS[st] + '" data-task="' + esc(t.id) + '" aria-pressed="' + (S.task === t.id) +
         '" title="' + esc(t.id + ' · ' + t.title + (route(t.attempt) ? ' · ' + route(t.attempt) : '')) + '"><span>' + esc(t.id) + '</span><span class="fl-bar"></span>' +
         '<span class="fl-tr">' + tries + '</span></button>';
+    };
+    if (!r.subplans || !r.subplans.length) { $('fl-tasks').innerHTML = r.tasks.map(chip).join(''); return; }
+    // one group per subplan in plan order (then the composition checks); the one working now stands out, the ones
+    // outside the approved stage step back
+    var groups = r.subplans.map(function (sp) { return { sp: sp, tasks: [] }; }), rest = { sp: null, tasks: [] };
+    r.tasks.forEach(function (t) {
+      var g = groups.filter(function (x) { return x.sp.id === t.subplan_id; })[0] || rest;
+      g.tasks.push(t);
+    });
+    if (rest.tasks.length) groups.push(rest);
+    $('fl-tasks').innerHTML = groups.filter(function (g) { return g.tasks.length; }).map(function (g) {
+      var states = g.tasks.map(function (t) { return C.taskState(t.state); });
+      var done = states.filter(function (x) { return x === 'done'; }).length;
+      var live = states.some(function (x) { return x === 'running' || x === 'retry'; });
+      var out = g.sp ? !g.sp.in_stage : !r.subplans.every(function (x) { return x.in_stage; });
+      var cls = live ? ' on' : out ? ' out' : '';
+      var badge = live ? '<span class="fl-sp-badge on">activo</span>' : out ? '<span class="fl-sp-badge">fuera de la etapa</span>' :
+        done === g.tasks.length ? '<span class="fl-sp-badge ok">terminado</span>' : '<span class="fl-sp-badge">en la etapa</span>';
+      var head = g.sp ? '<b>' + esc(g.sp.id) + '</b> ' + esc(g.sp.title) : '<b>Comprobaciones de integración</b>';
+      return '<section class="fl-sp' + cls + '"><header>' + head + badge + '<span class="fl-sp-n">' + done + ' / ' + g.tasks.length +
+        '</span></header><div class="fl-sp-chips">' + g.tasks.map(chip).join('') + '</div></section>';
     }).join('');
   }
 

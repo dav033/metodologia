@@ -50,9 +50,57 @@ def review_state(project: str, rdir: Path) -> dict[str, dict]:
     return {role: repo_state(path, branch) for role, path in ws.repos(ROOT, project, discover=False).items()}
 
 
+def stage_gap(rdir: Path) -> str:
+    """Why the approved plan is not the whole draft yet ('' when it is, or when the requirement has no PLAN.json);
+    fail closed: a store or draft that cannot be read is a gap."""
+    import bt_plan_adapter
+    if not (Path(rdir) / "PLAN.json").exists():
+        try:
+            if bt_plan_adapter.stage_subplans(rdir) or bt_plan_adapter.latest_plan(rdir) is not None:
+                return "PLAN_MISSING: falta PLAN.json de un plan aprobado"
+        except Exception as exc:  # noqa: BLE001 - missing draft cannot bypass a damaged approval store
+            return f"no pude leer las revisiones aprobadas ({type(exc).__name__})"
+        return ""
+    try:
+        summary, draft = bt_plan_adapter.stage_summary(rdir), bt_plan_adapter.draft_subplans(rdir)
+        held = bt_plan_adapter.stage_subplans(rdir)
+    except Exception as exc:  # noqa: BLE001 - fail closed
+        return f"no pude leer las revisiones aprobadas ({type(exc).__name__})"
+    if draft is None:
+        return "PLAN.json no se puede leer; reintenta en unos segundos"
+    missing = [sid for sid in draft if sid not in held]
+    if missing or (summary["stages"] and not summary["complete"]):
+        return ("la última etapa aprobada no contiene todo el plan" +
+                (f" (faltan {', '.join(missing[:8])})" if missing else "") + "; apruébalo completo antes de fusionar")
+    import bt_scheduler_adapter
+    if problem := bt_plan_adapter.launch_problem(
+            rdir, forced=True, compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir)):
+        return problem
+    try:
+        latest = bt_plan_adapter.revisions(rdir)[-1]
+        identity = bt_scheduler_adapter.run_identity(rdir)
+        if identity is None or (identity["revision"], identity["plan_sha256"]) != (latest["revision"], latest["sha256"]):
+            return f"la etapa r{latest['revision']} todavía no está ejecutada en este run"
+        import bt_scheduler_ops
+        states = bt_scheduler_ops.status(rdir.parent.parent.name, bt_plan_adapter.plan_id(rdir), rdir)["task_states"]
+        plan = bt_plan_adapter.latest_plan(rdir)
+        pending = [t["id"] for t in plan["tasks"] if states.get(t["id"]) != "completed"]
+        if pending:
+            return "faltan tareas de la etapa aprobada por terminar: " + ", ".join(pending[:8])
+    except Exception as exc:  # noqa: BLE001 - stale or unreadable runtime state cannot authorize a merge
+        return f"no pude comprobar la ejecución de la etapa ({type(exc).__name__})"
+    return ""
+
+
 def merge(project: str, rdir: Path, push: bool) -> list[str]:
     """Merge the feature branch into the default branch of every repo that has it. All-or-nothing pre-checks:
     nothing is merged if any repo is dirty."""
+    import bt_verification
+    if (waiting := bt_verification.gate(rdir)):          # every subplan must be tried and approved before the work is merged
+        return ["No fusioné nada: faltan subplanes por aprobar tras probarlos (" + "; ".join(waiting[:6]) +
+                "). Pruébalos y apruébalos en Plan → Probar."]
+    if (short := stage_gap(rdir)):                       # D-134: only the stage holding the whole plan can be closed
+        return [f"No fusioné nada: STAGE_INCOMPLETE: {short}"]
     branch = feature_branch(rdir)
     targets = {r: (p, s) for r, (p, s) in
                {role: (path, repo_state(path, branch)) for role, path in ws.repos(ROOT, project).items()}.items()

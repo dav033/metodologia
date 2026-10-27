@@ -161,7 +161,7 @@ class ContractNeutrality(Isolated):
         planner.approve_freeze(self.rdir, adapter.plan_id(self.rdir), adapter.APPROVED_STATES)
 
     def gate(self):
-        return adapter.launch_problem(self.rdir, freeze=False, compatibility_report=self.compatibility_report())
+        return adapter.launch_problem(self.rdir, compatibility_report=self.compatibility_report())
 
     def check(self):
         out = io.StringIO()
@@ -198,7 +198,11 @@ class ContractNeutrality(Isolated):
         self.approve()
         pb.refresh_plan_block("sample", self.rdir)
         plan = self.rdir / "PLAN.md"
-        plan.write_text(plan.read_text(encoding="utf-8") + "\nNew unapproved instruction.\n", encoding="utf-8")
+        text = plan.read_text(encoding="utf-8")
+        approved_line = "- [ ] T1 — Reject expired sessions"
+        self.assertIn(approved_line, text)
+        text = text.replace(approved_line, "- [ ] T1 — Allow expired sessions", 1)
+        plan.write_text(text, encoding="utf-8")
         self.assertIn("PLAN_PROSE_DRIFT", self.gate() or "")
 
     def test_an_unfrozen_plan_stays_not_frozen_with_a_block(self):

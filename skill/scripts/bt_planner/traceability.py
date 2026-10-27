@@ -13,8 +13,15 @@ _SPEC_FENCE_CLOSE = re.compile(r"^[ \t]{0,3}(`{3,}|~{3,})[ \t]*$")
 
 def requirements_from_spec(text: str) -> set[str] | None:
     """Read IDs at the start of list items in a SPEC Requirements section; None means no such heading."""
+    items = requirement_items_from_spec(text)
+    return set(items) if items is not None else None
+
+
+def requirement_items_from_spec(text: str) -> dict[str, str] | None:
+    """Shared SPEC grammar for coverage and approval pins, including Markdown fences and closed headings."""
     heading_level: int | None = None
-    requirement_ids: set[str] = set()
+    items: dict[str, list[str]] = {}
+    current: str | None = None
     fence_char: str | None = None
     fence_length = 0
     for line in text.splitlines():
@@ -36,15 +43,21 @@ def requirements_from_spec(text: str) -> set[str] | None:
             level = len(heading.group(1))
             title = re.sub(r"[ \t]+#+[ \t]*$", "", heading.group(2)).strip()
             if heading_level is not None and level <= heading_level:
-                return requirement_ids
+                break
             if heading_level is None and title.casefold() == "requirements":
                 heading_level = level
+            current = None
             continue
         if heading_level is not None:
             match = _SPEC_REQUIREMENT_ID.match(line)
             if match:
-                requirement_ids.add(match.group(1))
-    return requirement_ids if heading_level is not None else None
+                current = match.group(1)
+                items.setdefault(current, []).append(line.strip())
+            elif current and line[:1] in (" ", "\t") and line.strip():
+                items[current].append(line.strip())
+            elif line.strip():
+                current = None
+    return {key: "\n".join(lines) for key, lines in items.items()} if heading_level is not None else None
 
 
 def read_spec_ids(directory: Path, spec_ref: object) -> set[str] | None:

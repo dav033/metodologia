@@ -91,7 +91,7 @@ class LaunchPaths(Isolated):
                 broken, forced=True,
                 compatibility_report=bt_scheduler_adapter.plan_compatibility_report(broken),
             )
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
+        self.assertIn("PLAN_NOT_FROZEN", str(ctx.exception))         # a launch never approves anything
         self.assertFalse((broken / "plan-revisions").exists())
 
     def test_dry_run_validates_without_writing(self):
@@ -103,15 +103,17 @@ class LaunchPaths(Isolated):
         (self.rdir / "PLAN.json").write_text(json.dumps(data), encoding="utf-8")
         with self.assertRaises(SystemExit) as ctx:
             self.standard_launch(dry_run=True)
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
+        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+        self.assertEqual(self.revisions(), [1])
 
-    def test_contradiction_between_plan_md_and_plan_json_blocks_launch(self):
+    def test_an_edit_of_approved_scope_blocks_launch_and_names_the_task(self):
         plan = self.approved()
         plan["tasks"][1]["after"] = []
         (self.rdir / "PLAN.json").write_text(planner.dumps(plan), encoding="utf-8")
         with self.assertRaises(SystemExit) as ctx:
             self.standard_launch()
-        self.assertIn("T2.after", str(ctx.exception))
+        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+        self.assertIn("T2: changed", str(ctx.exception))
 
     # -- foreground transition ---------------------------------------------------------------------------------
     def test_foreground_launch_freezes_the_same_revision(self):
@@ -133,7 +135,7 @@ class LaunchPaths(Isolated):
         planner.write_skeleton(self.rdir)
         self.set_status("approved")
         import bt_orchestration_terminal as terminal
-        with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_INVALID"):
+        with self.assertRaisesRegex(terminal.TerminalError, "FOREGROUND_PLAN_REFUSED: PLAN_NOT_FROZEN"):
             self.foreground_launch()
         self.assertFalse((self.rdir / "plan-revisions").exists())
 
@@ -176,21 +178,26 @@ class LaunchPaths(Isolated):
         before = json.dumps(existing, sort_keys=True)
         self.assertIs(self.resume(existing), existing)  # still the approved revision: resumes
         self.assertEqual(json.dumps(existing, sort_keys=True), before)
-        self.revise(plan, 80)  # an unreviewed new revision appears on disk
-        with self.assertRaises(SystemExit) as ctx:
-            self.resume(existing)
-        self.assertIn("PLAN_DRIFT", str(ctx.exception))
+        self.revise(plan, 80)  # D-134: the draft is edited; the run keeps executing its approved revision
+        self.assertIs(self.resume(existing), existing)
         self.assertEqual(json.dumps(existing, sort_keys=True), before)
+        with self.assertRaises(SystemExit) as ctx:  # but never content with a hash nobody approved
+            self.resume({**existing, "plan_ref": {**existing["plan_ref"], "sha256": "0" * 64}})
+        self.assertIn("PLAN_REF_MISMATCH", str(ctx.exception))
 
-    def test_resume_refuses_when_plan_json_was_deleted_after_a_freeze(self):
+    def test_resume_runs_the_frozen_revision_even_without_the_draft_but_never_an_unknown_hash(self):
         self.approved()
         self.open_run()
         (self.rdir / "PLAN.json").unlink()
-        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
-                    "plan_ref": {"plan_id": "REQ-001", "revision": 1, "sha256": "x"}}
+        ref = {"plan_id": "REQ-001", "revision": 1, "sha256": planner.list_revisions(self.rdir)[0]["sha256"]}
+        existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": []}
+        self.assertIsNone(adapter.resume_problem(self.rdir, {**existing, "plan_ref": ref},
+                                                 compatibility_report=self.compatibility_report()))
         with self.assertRaises(SystemExit) as ctx:
-            self.resume(existing)
-        self.assertIn("PLAN_MISSING", str(ctx.exception))
+            self.resume({**existing, "plan_ref": {**ref, "sha256": "x"}})
+        self.assertIn("PLAN_REF_MISMATCH", str(ctx.exception))
+        with self.assertRaises(SystemExit):                    # and a new launch needs the draft
+            self.standard_launch()
 
     def test_resume_does_not_need_the_checkouts_that_launch_needed(self):
         plan = self.good_plan()
@@ -203,9 +210,7 @@ class LaunchPaths(Isolated):
                                  "sha256": planner.list_revisions(self.rdir)[0]["sha256"]}}
         report = self.compatibility_report()
         self.assertIsNone(adapter.resume_problem(self.rdir, existing, compatibility_report=report))
-        self.assertIsNotNone(adapter.launch_problem(
-            self.rdir, freeze=False, compatibility_report=report
-        ))  # a NEW run still demands the evidence
+        self.assertIsNone(adapter.launch_problem(self.rdir, compatibility_report=report))  # evidence is judged at approval
 
     def test_foreground_freezes_nothing_when_the_workspace_is_unusable(self):
         import bt_orchestration_terminal as terminal
@@ -219,7 +224,7 @@ class LaunchPaths(Isolated):
                 transition.launch("sample", "REQ-001")
         self.assertEqual(self.revisions(), [1])  # nothing beyond the approval record
 
-    def test_a_run_started_under_r1_does_not_resume_when_r2_is_approved(self):
+    def test_a_run_started_under_r1_resumes_on_r1_when_r2_is_approved_and_joins_it_later(self):
         plan = self.approved()
         self.open_run()
         existing = {"req": "REQ-001", "status": "paused", "sessions": 1, "tasks": [], "limits": {}, "log": [],
@@ -230,13 +235,12 @@ class LaunchPaths(Isolated):
         self.set_status("review")
         import bt_rounds
         bt_rounds.plan_decide(self.rdir, True, "", "test")  # approve r2
-        problem = adapter.resume_problem(self.rdir, existing, compatibility_report=report)
-        self.assertIn("PLAN_REF_STALE", problem or "")
+        self.assertIsNone(adapter.resume_problem(self.rdir, existing, compatibility_report=report))  # D-134
         self.assertIsNone(adapter.resume_problem(self.rdir, {**existing, "plan_ref": {"plan_id": "REQ-001",
                           "revision": 2, "sha256": planner.list_revisions(self.rdir)[-1]["sha256"]}},
                           compatibility_report=self.compatibility_report()))
 
-    def test_prose_added_to_plan_md_after_approval_blocks_the_launch(self):
+    def test_approved_task_lines_changed_in_plan_md_block_the_launch_but_other_prose_does_not(self):
         self.approved()
         self.assertEqual(self.standard_launch(), "passed the gate")
         with (self.rdir / "PLAN.md").open("a", encoding="utf-8") as fh:
@@ -246,7 +250,11 @@ class LaunchPaths(Isolated):
         (self.rdir / "PLAN.md").write_text(text, encoding="utf-8")  # a tick is progress, not new instructions
         self.assertEqual(self.standard_launch(), "passed the gate")
         with (self.rdir / "PLAN.md").open("a", encoding="utf-8") as fh:
-            fh.write("\nT1 execution detail: accept every expired session.\n")
+            fh.write("\nNotes for a later stage: ask about exports.\n")      # free prose is the planners' draft
+        self.assertEqual(self.standard_launch(), "passed the gate")
+        text = (self.rdir / "PLAN.md").read_text(encoding="utf-8")
+        line = next(l for l in text.splitlines() if " T1 " in l and l.lstrip().startswith("- ["))
+        (self.rdir / "PLAN.md").write_text(text.replace(line, line + " · risk: high"), encoding="utf-8")
         with self.assertRaises(SystemExit) as ctx:
             self.standard_launch()
         self.assertIn("PLAN_PROSE_DRIFT", str(ctx.exception))

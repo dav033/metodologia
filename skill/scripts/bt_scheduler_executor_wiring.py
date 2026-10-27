@@ -189,14 +189,14 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
             configured["rerun_failed_checks"] = rerun
         import bt_verifier_env
 
-        environment, secrets = bt_verifier_env.load(bt_verifier_env.path_for(bt_config.get("verifier.env_file", ""), project))
+        environment, secrets = bt_verifier_env.for_run(project, rdir)
         quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
                                                   **({"environment": environment, "secret_values": secrets}
                                                      if environment else {}),
                                                   **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
-    plan = api.sched.approved_plan(rdir)
+    plan = api.sched.run_plan(rdir)
     repo_of = api.repositories(project, repos)
     import bt_design_approval
 

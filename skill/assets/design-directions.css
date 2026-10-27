@@ -1,0 +1,8 @@
+.pp-direction-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:32px}
+.pp-direction{min-width:0;padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.pp-direction .pp-frame{height:auto;overflow:hidden}
+.pp-direction .pp-frame iframe{height:min(80vh,820px)}
+.pp-direction table{width:100%;font-size:13px;border-collapse:collapse}
+.pp-direction th,.pp-direction td{padding:8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}
+.pp-directions{margin-block:20px}
+.pp-direction[hidden]{display:none}

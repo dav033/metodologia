@@ -179,31 +179,29 @@ class Revisions(Base):
         self.assertEqual(target.stat().st_mode & 0o222, 0)
         self.assertEqual([r["revision"] for r in rev.list_revisions(self.rdir)], [1])
 
-    def test_changing_a_frozen_revision_is_an_error_until_the_revision_is_bumped(self):  # AC-10
+    def test_an_edit_after_approval_is_a_draft_and_its_approval_is_the_next_revision(self):  # AC-10, D-134
         plan = self.good()
         sync.approve_freeze(self.rdir)
         plan["tasks"][0]["estimated_minutes"] = 90
         self.write_json(plan)
-        report = sync.check(self.rdir)
-        self.assertTrue(any("r1 is frozen" in e for e in report.errors))
+        self.assertTrue(sync.check(self.rdir).ok)                  # the working PLAN.json is a draft, not a revision
         with self.assertRaises(pc.PlanContractError) as ctx:
-            sync.approve_freeze(self.rdir)
-        self.assertIn(ctx.exception.code, ("PLAN_INVALID", "REVISION_FROZEN"))
-        plan["revision"] = 2
-        self.write_json(plan)
-        self.assertTrue(sync.check(self.rdir).ok)
-        sync.approve_freeze(self.rdir)
+            sync.bind_approved(self.rdir)
+        self.assertEqual(ctx.exception.code, "PLAN_DRIFT")
+        sync.approve_freeze(self.rdir)                             # the store numbers it: the draft's field is not used
         self.assertEqual([r["revision"] for r in rev.list_revisions(self.rdir)], [1, 2])
         self.assertEqual(rev.load_revision(self.rdir, 1)["tasks"][0]["estimated_minutes"], 30)  # history recoverable
         self.assertEqual(rev.load_revision(self.rdir, 2)["tasks"][0]["estimated_minutes"], 90)
 
-    def test_revision_gaps_are_refused(self):
+    def test_the_store_numbers_revisions_whatever_the_draft_says(self):
         plan = self.good()
         plan["revision"] = 3
         self.write_json(plan)
-        self.assertTrue(any("next revision is 1" in e for e in sync.check(self.rdir).errors))
-        with self.assertRaises(pc.PlanContractError):
-            sync.approve_freeze(self.rdir)
+        self.assertEqual(sync.approve_freeze(self.rdir)["revision"], 1)
+        self.assertEqual(rev.load_revision(self.rdir, 1)["revision"], 1)
+        with self.assertRaises(pc.PlanContractError) as ctx:          # the store itself still refuses a gap
+            rev.freeze(self.rdir, {**plan, "revision": 3})
+        self.assertEqual(ctx.exception.code, "REVISION_ORDER")
 
     def test_tampering_with_a_frozen_file_is_detected(self):
         self.good()

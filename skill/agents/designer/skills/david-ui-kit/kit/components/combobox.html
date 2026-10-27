@@ -1,0 +1,30 @@
+<!-- example: open | Abierto con resultados -->
+<div class="field">
+  <label class="label" for="cb-1">Empresa</label>
+  <div class="combobox anchored">
+    <input class="input" id="cb-1" role="combobox" aria-expanded="true" aria-controls="cb-1-list" aria-autocomplete="list" value="ta">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="listbox" id="cb-1-list" role="listbox">
+      <div class="listbox-item" role="option" aria-selected="true" data-highlighted>Taller de eventos</div>
+      <div class="listbox-item" role="option" aria-selected="false">Montajes Santa Ana</div>
+      <div class="listbox-item" role="option" aria-selected="false">Estudio Tablero</div>
+      <div class="listbox-empty" hidden>Sin resultados. Escribe otro nombre.</div>
+    </div>
+  </div>
+</div>
+
+<!-- example: empty | Sin resultados -->
+<div class="field">
+  <label class="label" for="cb-2">Empresa</label>
+  <div class="combobox anchored">
+    <input class="input" id="cb-2" role="combobox" aria-expanded="true" aria-controls="cb-2-list" aria-autocomplete="list" value="zzz">
+    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    <div class="listbox" id="cb-2-list" role="listbox"><div class="listbox-empty">Sin resultados para «zzz». Revisa el nombre o crea la empresa.</div></div>
+  </div>
+</div>
+
+<!-- example: closed | Cerrado y deshabilitado -->
+<div class="demo-grid" data-layout="grid">
+  <figure class="demo-cell"><div class="combobox"><input class="input" role="combobox" aria-expanded="false" aria-label="Empresa" placeholder="Busca una empresa"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><figcaption>closed</figcaption></figure>
+  <figure class="demo-cell"><div class="combobox"><input class="input" role="combobox" aria-expanded="false" aria-label="Empresa" value="Estudio Nube" disabled><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><figcaption>disabled</figcaption></figure>
+</div>

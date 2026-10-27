@@ -1,0 +1,67 @@
+/* Workspace around a mockup: toolbar + rail of live thumbnails (assets/mockup-nav.js) */
+.pp-mocknav { padding: 8px 10px; border: 1px solid var(--pp-line); border-radius: 12px 12px 0 0; border-bottom: 0; background: var(--pp-c1); }
+.pp-mocknav + .pp-frame { border-top-left-radius: 0; border-top-right-radius: 0; }
+.pp-mtool { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pp-mtitle { display: flex; align-items: baseline; gap: 8px; min-width: 0; flex: 0 1 auto; padding: 0 4px; }
+.pp-mtitle strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-mnum { font: 600 11px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.pp-mright { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.pp.pp button.pp-mstep { width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid var(--pp-ctl); background: var(--surface); color: var(--text); font-size: 18px; line-height: 1; cursor: pointer; }
+.pp.pp button.pp-mstep:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.pp.pp button.pp-mtheme { height: 30px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--pp-ctl); background: var(--surface); color: var(--text); font-size: 12px; font-weight: 600; cursor: pointer; }
+.pp-mdrop { position: relative; }
+.pp-mdrop > summary { list-style: none; display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border: 1px solid var(--pp-ctl); border-radius: 99px; background: var(--surface); cursor: pointer; font-size: 12px; white-space: nowrap; }
+.pp-mdrop > summary::-webkit-details-marker { display: none; }
+.pp-mdrop > summary::after { content: "▾"; color: var(--muted); font-size: 11px; }
+.pp-mdrop[open] > summary { border-color: var(--accent); }
+.pp-mkey { color: var(--muted); font-weight: 600; }
+.pp-mmenu { position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; min-width: 230px; max-height: 340px; overflow: auto; padding: 6px; border: 1px solid var(--pp-line); border-radius: 12px; background: var(--surface); box-shadow: 0 14px 34px rgba(0,0,0,.2); display: grid; gap: 2px; }
+.pp-mright .pp-mmenu { left: auto; right: 0; }
+.pp.pp button.pp-mopt { display: flex; align-items: center; gap: 9px; width: 100%; height: auto; min-height: 32px; padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text); font-size: 13px; text-align: left; cursor: pointer; }
+.pp.pp button.pp-mopt:hover { background: var(--accent-soft); }
+.pp.pp button.pp-mopt.on { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.pp-mdot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+.pp-mdot.bad { background: var(--bad, #d20f39); } .pp-mdot.warn { background: var(--warn); } .pp-mdot.info { background: var(--info); }
+/* review screen: rail on the left, the mockup and its toolbar on the right */
+.pp-rmain.has-rail { display: grid; grid-template-columns: 208px minmax(0, 1fr); grid-template-rows: auto auto 1fr; column-gap: 14px; align-items: start; }
+.pp-rmain.has-rail > .pp-vrail { grid-column: 1; grid-row: 1 / span 3; }
+.pp-rmain.has-rail > :not(.pp-vrail) { grid-column: 2; }
+.pp-vrail { position: sticky; top: 64px; max-height: calc(100vh - 90px); overflow-y: auto; display: grid; gap: 10px; padding: 4px 2px 12px 0; align-content: start; scrollbar-width: thin; }
+.pp-vhead { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.pp.pp button.pp-vcard { display: grid; gap: 6px; width: 100%; height: auto; padding: 6px; border: 1.5px solid var(--pp-line); border-radius: 12px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+.pp.pp button.pp-vcard:hover { border-color: var(--pp-ctl); }
+.pp.pp button.pp-vcard.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pp-vthumb { display: block; position: relative; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; border-radius: 8px; background: var(--pp-c1); }
+.pp-thumb-frame { position: absolute; top: 0; left: 0; width: 1200px; height: 800px; border: 0; transform: scale(.1633); transform-origin: 0 0; pointer-events: none; background: #fff; }
+.pp-vmeta { display: flex; align-items: baseline; gap: 8px; padding: 0 2px 2px; min-width: 0; }
+.pp-vnum { font: 700 11px var(--mono); color: var(--accent); }
+.pp-vname { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 600; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 1180px) { .pp-rmain.has-rail { grid-template-columns: minmax(0, 1fr); } .pp-rmain.has-rail > .pp-vrail { grid-column: 1; grid-row: auto; position: static; max-height: none; display: flex; overflow-x: auto; } .pp-vrail .pp-vcard { flex: 0 0 170px; } .pp-vhead { display: none; } .pp-rmain.has-rail > :not(.pp-vrail) { grid-column: 1; } }
+
+/* Full-screen preview of a mockup, with controls that appear on hover (assets/mockup-nav.js) */
+.pp.pp button.pp-mfull { height: 30px; padding: 0 12px; border-radius: 99px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+.pp-full { position: fixed; inset: 0; z-index: 2000; background: #11111b; color: #cdd6f4; }
+.pp-fullstage { position: absolute; inset: 0; display: grid; place-items: center; }
+.pp-full-frame { width: 100%; height: 100%; border: 0; background: #fff; }
+.pp-full-frame.narrow { height: calc(100% - 24px); border-radius: 14px; box-shadow: 0 0 0 1px rgba(255,255,255,.12), 0 20px 60px rgba(0,0,0,.5); }
+.pp-fullpill { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3; height: 24px; padding: 0 16px; border: 0; border-radius: 0 0 12px 12px; background: rgba(24,24,37,.72); color: #cdd6f4; font: 600 12px var(--sans, system-ui); cursor: pointer; opacity: .55; transition: opacity .15s; }
+.pp-full.open .pp-fullpill { opacity: 0; pointer-events: none; }
+.pp-fullpill:hover { opacity: 1; }
+.pp-fullbar { position: absolute; top: 0; left: 0; right: 0; z-index: 4; display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding: 10px 14px; background: rgba(24,24,37,.94); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,.1); transform: translateY(-110%); transition: transform .18s ease; }
+.pp-full.open .pp-fullbar { transform: none; }
+.pp-fullbar .pp-mocknav { flex: 1 1 520px; padding: 0; border: 0; background: transparent; }
+.pp-fullbar .pp-mkey, .pp-fullbar .pp-mnum { color: #a6adc8; }
+.pp-fullbar .pp-mtitle strong { color: #cdd6f4; }
+.pp-fullbar .pp-mdrop > summary, .pp.pp .pp-fullbar button.pp-mstep, .pp.pp .pp-fullbar button.pp-mtheme { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.22); color: #cdd6f4; }
+.pp-fullbar .pp-mmenu { background: #1e1e2e; border-color: rgba(255,255,255,.14); }
+.pp-fullbar .pp.pp button.pp-mopt, .pp-fullbar button.pp-mopt { color: #cdd6f4; }
+.pp-fullwidths { display: flex; gap: 6px; }
+.pp-fullbar button.pp-mchip, .pp-fullbar .pp-fullpin, .pp-fullbar .pp-fullclose { height: 30px; padding: 0 12px; border-radius: 99px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.06); color: #cdd6f4; font-size: 12px; font-weight: 600; cursor: pointer; }
+.pp-fullbar button.pp-mchip.on, .pp-fullbar .pp-fullpin.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.pp-fullbar .pp-fullclose { background: rgba(243,139,168,.18); border-color: rgba(243,139,168,.5); }
+
+/* shortcuts to the mockup in the subplan header */
+.pp-dbtns { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; }
+.pp-dbtn { font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: var(--accent); color: #fff; }
+.pp-dbtn:hover { text-decoration: none; filter: brightness(1.08); }
+.pp-dbtns .outline.sm { border-radius: 999px; font-weight: 700; }

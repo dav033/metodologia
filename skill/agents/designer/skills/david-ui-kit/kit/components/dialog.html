@@ -1,0 +1,32 @@
+<!-- example: open | Abierto -->
+<div class="demo-stage" data-size="lg"><div class="dialog-overlay">
+  <div class="dialog-content" role="dialog" aria-modal="true" aria-labelledby="dg-1-title" aria-describedby="dg-1-desc">
+    <div class="dialog-header">
+      <h2 class="dialog-title" id="dg-1-title">Invitar persona</h2>
+      <p class="dialog-description" id="dg-1-desc">Le enviaremos un enlace de activación válido por 7 días.</p>
+    </div>
+    <div class="stack">
+      <div class="field"><label class="label" for="dg-1-email">Correo</label><input class="input" id="dg-1-email" type="email" placeholder="nombre@empresa.com"></div>
+      <div class="field"><label class="label" for="dg-1-role">Rol</label><span class="select-wrap"><select class="select" id="dg-1-role"><option>Usuario · Plan 2</option><option>Empleado interno</option><option>Administrador</option></select></span></div>
+    </div>
+    <div class="dialog-footer"><button class="button" data-variant="outline" type="button" data-kit-close>Cancelar</button><button class="button" type="button">Enviar invitación</button></div>
+    <button class="button dialog-close" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Cerrar" data-kit-close><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+</div></div>
+
+<!-- example: live | Interactivo -->
+<button class="button" type="button" data-kit-open="dg-live">Invitar persona</button>
+<div class="dialog-overlay" id="dg-live" data-kit-layer hidden>
+  <div class="dialog-content" role="dialog" aria-modal="true" aria-labelledby="dg-2-title" aria-describedby="dg-2-desc">
+    <div class="dialog-header">
+      <h2 class="dialog-title" id="dg-2-title">Invitar persona</h2>
+      <p class="dialog-description" id="dg-2-desc">Le enviaremos un enlace de activación válido por 7 días.</p>
+    </div>
+    <div class="stack">
+      <div class="field"><label class="label" for="dg-2-email">Correo</label><input class="input" id="dg-2-email" type="email" placeholder="nombre@empresa.com"></div>
+      <div class="field"><label class="label" for="dg-2-role">Rol</label><span class="select-wrap"><select class="select" id="dg-2-role"><option>Usuario · Plan 2</option><option>Empleado interno</option><option>Administrador</option></select></span></div>
+    </div>
+    <div class="dialog-footer"><button class="button" data-variant="outline" type="button" data-kit-close>Cancelar</button><button class="button" type="button">Enviar invitación</button></div>
+    <button class="button dialog-close" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Cerrar" data-kit-close><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+</div>

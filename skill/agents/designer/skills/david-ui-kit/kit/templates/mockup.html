@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es" data-theme="light" data-motion="natural">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><contrato>@v1 · mockup</title>
+<!-- kit:css -->
+</head>
+<body>
+<header class="mockup-bar">
+  <div class="mockup-id"><span class="mockup-tag">Mockup</span><strong>&lt;contrato&gt;@v1</strong><span>Borrador · datos ficticios</span></div>
+  <div class="mockup-controls">
+    <div class="mockup-control"><label for="view">Vista</label><span class="select-wrap"><select class="select" id="view"><option value="lista">Lista</option><option value="detalle">Detalle</option></select></span></div>
+    <div class="mockup-control"><label for="state">Estado</label><span class="select-wrap"><select class="select" id="state"><option value="ready">Normal</option><option value="loading">Cargando</option><option value="empty">Vacío</option><option value="error">Error</option></select></span></div>
+    <div class="mockup-control"><label for="scene">Diálogo</label><span class="select-wrap"><select class="select" id="scene"><option value="">Ninguno</option><option value="confirm">Confirmar</option></select></span></div>
+    <div class="mockup-control"><label for="theme">Tema</label><span class="select-wrap"><select class="select" id="theme"><option value="light">Claro</option><option value="dark">Oscuro</option></select></span></div>
+    <div class="mockup-control"><label for="motion">Movimiento</label><span class="select-wrap"><select class="select" id="motion"><option value="subtle">Sutil</option><option value="natural" selected>Natural</option><option value="expressive">Expresivo</option></select></span></div>
+  </div>
+</header>
+<!-- One <main id="app"> holds the product. Show parts per view/state/scene with data-show-view, data-show-state,
+     data-hide-state and data-show-scene (kit.js). Compose ONLY from kit/components/*.html snippets. -->
+<main id="app">
+  <section class="page" data-show-view="lista">
+    <div class="page-header"><div><h1>Título de la vista</h1><p>Qué resuelve esta pantalla, en palabras del producto.</p></div>
+      <div class="row"><button class="button" type="button">Acción principal</button></div></div>
+    <div data-show-state="ready">Contenido con datos.</div>
+    <div data-show-state="loading">Skeleton con la forma del contenido.</div>
+    <div data-show-state="empty">Empty con la siguiente acción.</div>
+    <div data-show-state="error">Alert destructive con «Reintentar».</div>
+  </section>
+  <section class="page" data-show-view="detalle">…</section>
+  <div class="dialog-overlay" data-show-scene="confirm">…Alert Dialog…</div>
+</main>
+<!-- kit:js -->
+</body>
+</html>

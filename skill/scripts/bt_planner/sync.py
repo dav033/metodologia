@@ -11,7 +11,7 @@ states differently is an error. Nothing here invents classification values; the 
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from .command_checks import IgnoredPath
@@ -19,6 +19,7 @@ from . import contract as pc
 from . import evidence as ev
 from . import markdown as md
 from . import audit_retrofit
+from . import stages
 from . import revisions as rev
 from . import traceability
 
@@ -36,24 +37,6 @@ def default_plan_id(directory: Path) -> str:
     name = Path(directory).resolve().name
     found = re.match(r"[A-Za-z][A-Za-z0-9]*-[0-9]+", name)
     return found.group(0) if found else name
-
-
-def narrative_digest(directory: Path) -> str | None:
-    """Digest of what a reader of PLAN.md is told, ignoring what legitimately changes after approval: the front
-    matter (status), dated log lines and the checkbox marks. Whoever consumes the live PLAN.md later reads it as if
-    it had been approved, so prose changed after approval must not pass unnoticed."""
-    try:
-        text = (Path(directory) / PLAN_MD).read_text(encoding="utf-8")
-    except (OSError, UnicodeError):
-        return None
-    text = re.sub(r"\A---\n.*?\n---\n", "", text, count=1, flags=re.S)
-    text = _STATUS_REGION.sub("", text)
-    lines = []
-    for line in text.splitlines():
-        if re.match(r"^\s*-\s+\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}\b", line):
-            continue
-        lines.append(re.sub(r"\[[xX]\]", "[ ]", line).strip())
-    return rev.sha256("\n".join(l for l in lines if l))
 
 
 def plan_status(directory: Path) -> str:
@@ -130,13 +113,24 @@ def md_problems(directory: Path) -> list[str]:
     return md.read_document(Path(directory) / PLAN_MD)["problems"]
 
 
-def consistency(directory: Path, plan: dict, plan_id: str | None = None) -> list[str]:
+def _mentions(line: str, ids: set[str]) -> bool:
+    return any(re.search(rf"(?<![\w.-]){re.escape(i)}(?![\w.-])", line) for i in ids)
+
+
+def consistency(directory: Path, plan: dict, plan_id: str | None = None, only: set[str] | None = None) -> list[str]:
     """Differences between PLAN.md and PLAN.json (empty list = consistent): ids defined once on each side, milestone
     membership and titles, task titles, repo, `after`, stated verify command, and a legacy risk on the same scale.
     Schema 1.2.0 also compares explicitly stated `covers` and `kind`; schema 1.3.0 compares `subplan` and `ui`.
-    Legacy plans keep their prior interpretation."""
+    `only` (a stage: its task ids) compares just those tasks, their milestones and the PLAN.md problems naming them;
+    the rest of PLAN.md is a draft."""
     doc = md.read_document(Path(directory) / PLAN_MD)
     parsed, stones = doc["tasks"], doc["milestones"]
+    if only is not None:
+        scope = set(only) | {t.get("milestone_id") for t in _dicts(plan.get("tasks")) if isinstance(t.get("milestone_id"), str)}
+        parsed = [t for t in parsed if t["id"] in only]
+        stones = [m for m in stones if set(m["tasks"]) & set(only)]
+        doc = {**doc, "problems": [p for p in doc["problems"] if _mentions(p, scope)],
+               "annotation_problems": [p for p in doc["annotation_problems"] if _mentions(p, scope)]}
     problems: list[str] = list(doc["problems"])
     md_tasks = {t["id"]: t for t in parsed}
     if not md_tasks:
@@ -361,14 +355,7 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
             if expected in rev.orphans(directory):
                 report.warnings.append(f"PLAN.r{expected}.json exists but is not in the manifest (freeze in progress or "
                                        "interrupted); `freeze` adopts it if identical, rejects it otherwise")
-            frozen = next((r for r in rev.list_revisions(directory) if r["revision"] == plan.get("revision")), None)
-            same = bool(frozen) and rev.sha256(pc.dumps(plan)) == frozen["sha256"]
-            if frozen and not same:
-                report.errors.append(f"plan.revision: r{frozen['revision']} is frozen and PLAN.json differs from it; "
-                                     f"set revision to {frozen['revision'] + 1} for the change")
-            if isinstance(plan.get("revision"), int) and plan["revision"] > expected:
-                report.errors.append(f"plan.revision: next revision is {expected}, got {plan['revision']}")
-            if pc.schema_tuple(plan) < pc.EVIDENCE_SINCE and not same:
+            if pc.schema_tuple(plan) < pc.EVIDENCE_SINCE:
                 report.errors.append(f"plan.schema_version: {plan.get('schema_version')!r} predates classification "
                                      f"evidence; publish new revisions with {pc.SCHEMA_VERSION} and justify each "
                                      "classification (a revision frozen earlier stays valid as it is)")
@@ -377,28 +364,76 @@ def check(directory: Path, plan: object | None = None, plan_id: str | None = Non
     return report
 
 
+def check_stage(directory: Path, projection: dict, draft: dict, plan_id: str | None = None,
+                repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
+                ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
+                ledger_command: str = "engine audit-ledger check") -> pc.Report:
+    """Publication gate of a stage: the projection is a complete plan (schema, graph, subplans, gates, audits, mapped
+    checks) against the SPEC requirements it covers, agrees with PLAN.md on its own tasks (on everything when it is the
+    whole draft), and its evidence is verified. The rest of the draft is not judged."""
+    report = pc.Report()
+    spec_ids = traceability.read_spec_ids(directory, projection.get("spec_ref") or DEFAULT_SPEC_REF) \
+        if pc.schema_tuple(projection) >= pc.EXTENSIONS_SINCE else None
+    whole = stages.complete(draft, projection)
+    restricted, missing = (spec_ids, []) if whole else stages.spec_ids_for(projection, spec_ids)
+    inner = pc.validate(projection, _file_resolver(repo_roots) if repo_roots is not None else None, ref_exists,
+                        spec_ids=restricted, ignored_path=ignored_path, strict_publication=True,
+                        ledger_command=ledger_command)
+    report.errors += inner.errors + missing
+    report.warnings += inner.warnings
+    report.errors += consistency(directory, projection, plan_id,
+                                 None if whole else {t["id"] for t in _dicts(projection.get("tasks"))})
+    scoped = _evidence_scope_problems(directory, projection, repo_roots, verify_files)
+    report.errors += scoped[0]
+    report.warnings += scoped[1]
+    try:
+        last = rev.latest(directory)
+        report.errors += rev.verify_store(directory, tolerate=last["revision"] + 1 if last else 1)
+    except pc.PlanContractError as exc:
+        report.errors += exc.issues
+    return report
+
+
+def freeze_stage(directory: Path, subplans: list[str], plan_id: str | None = None,
+                 repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
+                 ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
+                 ledger_command: str = "engine audit-ledger check", *, require_complete: bool = False,
+                 draft: object = None, before_freeze: Callable[[], None] | None = None) -> dict:
+    """Freeze the next stage (the approved subplans plus `subplans`) from the working draft (read once here unless the
+    caller passes the object it already read); see `stages.freeze`."""
+    rev.list_revisions(directory)  # the revision store's own error codes come first
+    report = pc.Report()
+    if draft is None:
+        draft, report = read_plan(directory)
+    if not isinstance(draft, dict):
+        raise pc.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json: top level must be an object"])
+    return stages.freeze(directory, subplans, draft,
+                         lambda projection: check_stage(directory, projection, draft, plan_id, repo_roots, verify_files,
+                                                        ref_exists, ignored_path, ledger_command),
+                         require_complete=require_complete, ledger_command=ledger_command, before_freeze=before_freeze)
+
+
 def approve_freeze(directory: Path, plan_id: str | None = None,
                    approved_states: tuple[str, ...] = APPROVED_STATES,
                    repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
                    ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
                    ledger_command: str = "engine audit-ledger check") -> dict:
-    """Freeze the current PLAN.json as an immutable revision. Requires an approved PLAN.md status and a clean check."""
+    """Approve the whole plan: freeze the stage that holds every subplan and task of the draft. Requires an approved
+    PLAN.md status; idempotent when that stage is already the latest revision."""
     status = plan_status(directory)
     if status not in approved_states:
         raise pc.PlanContractError("PLAN_NOT_APPROVED", [f"PLAN.md status is {status or 'missing'!r}; freeze after approval"])
-    rev.list_revisions(directory)  # preserve the revision store's stable error code at the approval boundary
-    plan, report = read_plan(directory)
-    if plan is not None:
-        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path,
-                       ledger_command=ledger_command)  # the very object frozen below
-    if not report.ok:
-        raise pc.PlanContractError("PLAN_INVALID", report.errors)
-    return rev.freeze(directory, plan, narrative=narrative_digest(directory), ledger_command=ledger_command)
+    rev.list_revisions(directory)
+    draft, report = read_plan(directory)
+    if not isinstance(draft, dict):
+        raise pc.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json: top level must be an object"])
+    return freeze_stage(directory, stages.declared_subplans(draft), plan_id, repo_roots, verify_files, ref_exists,
+                        ignored_path, ledger_command, require_complete=True, draft=draft)
 
 
-def retrofit_audit(directory: Path, cross_check: bool = False) -> list[str]:
-    """Upgrade audit declarations in the working revision without freezing it."""
-    return audit_retrofit.retrofit_audit(directory, cross_check, read_plan)
+def retrofit_audit(directory: Path, cross_check: bool = False, target: str | None = None) -> list[str]:
+    """Upgrade audit declarations in the working revision without freezing it (only `target` when given)."""
+    return audit_retrofit.retrofit_audit(directory, cross_check, read_plan, target)
 
 
 def freeze_if_present(directory: Path, plan_id: str | None = None,
@@ -406,9 +441,8 @@ def freeze_if_present(directory: Path, plan_id: str | None = None,
                       repo_roots: Mapping[str, Path] | None = None, verify_files: bool = False,
                       ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None,
                       ledger_command: str = "engine audit-ledger check") -> dict | None:
-    """Opt-in contract, approval side. No PLAN.json -> None (legacy plan). With one and an approved PLAN.md, freeze it
-    (idempotent; a new revision number is a new approval) or raise PlanContractError; a not-yet-approved plan is left
-    alone. Launch paths use `bind_approved`, which never turns an unreviewed edit into a revision."""
+    """Approval side: no PLAN.json -> None; with one and an approved PLAN.md, freeze the whole-plan stage; a plan not yet
+    approved is left alone. Launch paths use `bind_approved`, which never turns an unreviewed edit into a revision."""
     if not (Path(directory) / PLAN_JSON).exists() or plan_status(directory) not in approved_states:
         return None
     return approve_freeze(directory, plan_id, approved_states, repo_roots, verify_files, ref_exists, ignored_path,
@@ -416,19 +450,14 @@ def freeze_if_present(directory: Path, plan_id: str | None = None,
 
 
 def bind_approved(directory: Path, plan_id: str | None = None, approved_states: tuple[str, ...] = APPROVED_STATES, *,
-                  repo_roots: Mapping[str, Path] | None = None, freeze: bool = True, forced: bool = False,
-                  verify_files: bool = False, ref_exists: ev.RefExists | None = None, ignored_path: IgnoredPath | None = None) -> dict | None:
-    """The gate every launch passes: returns the entry (revision, sha256, frozen_at) of the revision a new run will
-    execute, or None for a legacy plan (no PLAN.json and nothing ever frozen).
+                  forced: bool = False) -> dict | None:
+    """The gate every launch and join passes: returns the manifest entry of the latest approved stage, which the run
+    executes. The draft projected onto that stage's subplans must be exactly it (`stages.bind`): edits to approved
+    scope are PLAN_DRIFT / PLAN_PROSE_DRIFT / PLAN_REQUIREMENTS_DRIFT, edits elsewhere never matter. A launch never
+    freezes. `forced` skips the PLAN.md status check (a stage runs while the rest of the plan is still a draft).
 
-    The approved revision is the latest frozen one. PLAN.json must be exactly that (same canonical bytes); an edit made
-    after approval is refused with PLAN_DRIFT instead of being frozen on the way in, so a launch cannot run content
-    nobody approved. A plan that was never frozen has no approval record and is refused (`PLAN_NOT_FROZEN`): only
-    the approval act (`plan approve`, `freeze`) creates the record, a launch never does. `freeze=False` verifies
-    without writing (dry runs, re-checks); `forced=True` is the owner's explicit launch, taken as the approval, and
-    is the only way a launch freezes (`source: launch-forced`).
-
-    Codes: PLAN_MISSING, PLAN_NOT_APPROVED, PLAN_INVALID, PLAN_DRIFT, PLAN_NOT_FROZEN, plus the revision-store codes."""
+    Codes: PLAN_MISSING, PLAN_NOT_APPROVED, PLAN_INVALID, PLAN_NOT_FROZEN, PLAN_DRIFT, PLAN_PROSE_DRIFT,
+    PLAN_REQUIREMENTS_DRIFT, plus the revision-store codes. None: no PLAN.json and nothing frozen."""
     directory = Path(directory)
     last = rev.latest(directory)
     if not (directory / PLAN_JSON).exists():
@@ -439,34 +468,11 @@ def bind_approved(directory: Path, plan_id: str | None = None, approved_states: 
     status = plan_status(directory)
     if status not in approved_states and not forced:
         raise pc.PlanContractError("PLAN_NOT_APPROVED", [
-            f"PLAN.md status is {status or 'missing'!r}; approve the plan before launching it"])
+            f"PLAN.md status is {status or 'missing'!r}; approve the plan (or run approved subplans as a stage)"])
     plan, report = read_plan(directory)
-    if plan is not None:
-        report = check(directory, plan, plan_id, repo_roots, verify_files, ref_exists, ignored_path,
-                       strict_publication=False)
-    if not report.ok:
+    if plan is None:
         raise pc.PlanContractError("PLAN_INVALID", report.errors)
-    digest = rev.sha256(pc.dumps(plan))
-    if last:
-        if plan.get("revision") == last["revision"] and digest == last["sha256"]:
-            approved_prose = last.get("plan_md_sha256")
-            if approved_prose and narrative_digest(directory) != approved_prose:
-                raise pc.PlanContractError("PLAN_PROSE_DRIFT", [
-                    "PLAN.md prose changed after the plan was approved (readers take the live file as approved); "
-                    "re-approve it with `plan approve`/`plan-json freeze` so what is run is what was approved"])
-            return last
-        approved = f"r{last['revision']}"
-        message = (f"PLAN.json (revision {plan.get('revision')}) is not the approved revision {approved}; approve it "
-                   f"(`plan approve`, or `plan-json freeze` once the owner accepts it) before launching, or restore "
-                   f"{approved} from plan-revisions/")
-        raise pc.PlanContractError("PLAN_DRIFT", [message])
-    if not forced:
-        raise pc.PlanContractError("PLAN_NOT_FROZEN", [
-            "nothing was frozen at approval, so there is no record of what was approved; approve it with "
-            "`plan approve` (or run `plan-json freeze` once the owner accepted exactly this PLAN.json) and launch again"])
-    if not freeze:  # an explicit --force is the owner's own approval of this content
-        return {"revision": plan["revision"], "sha256": digest, "frozen_at": None, "source": "launch-forced"}
-    return rev.freeze(directory, plan, "launch-forced", narrative=narrative_digest(directory))
+    return stages.bind(directory, plan)
 
 
 def compat(directory: Path, plan_id: str | None = None) -> dict:

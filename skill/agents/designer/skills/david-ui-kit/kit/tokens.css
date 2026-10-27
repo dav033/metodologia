@@ -1,0 +1,72 @@
+/* david-ui stand-in tokens. THE file to swap when @dav033/david-ui ships its theme.css (P-207): keep the role names, take
+   the values from the package. Names follow shadcn/ui (what a Tailwind 4 + shadcn theme.css carries); names marked
+   "extension" are proposals for david-ui. Values: Catppuccin Latte (light) / Mocha (dark), mauve accent, deepened only where
+   WCAG AA needs it. Every pair is checked by contrast.py. Components read these roles only, never a raw colour. */
+:root, [data-theme="light"] {
+  --background: #eff1f5; --foreground: #4c4f69;
+  --card: #ffffff; --card-foreground: #4c4f69;
+  --popover: #ffffff; --popover-foreground: #4c4f69;
+  --primary: #7a2ee0; --primary-foreground: #ffffff;
+  --secondary: #e6e9ef; --secondary-foreground: #4c4f69;
+  --muted: #e6e9ef; --muted-foreground: #5c5f77;
+  --accent: #dce0e8; --accent-foreground: #4c4f69;
+  --destructive: #c0173b; --destructive-foreground: #ffffff;
+  --border: #ccd0da; --input: #7c7f93; --ring: #7a2ee0;
+  --chart-1: #7a2ee0; --chart-2: #1858d8; --chart-3: #13777d; --chart-4: #c2410c; --chart-5: #b4237f;
+  --sidebar: #e6e9ef; --sidebar-foreground: #4c4f69; --sidebar-primary: #7a2ee0; --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #dce0e8; --sidebar-accent-foreground: #4c4f69; --sidebar-border: #ccd0da; --sidebar-ring: #7a2ee0;
+  /* extension: hover fills, soft status fills and status text, modal overlay */
+  --primary-hover: #6a22c9; --destructive-hover: #a8102f; --primary-soft: #ece3fb; --destructive-soft: #fbe1e7;
+  --success: #26691a; --success-soft: #e3f3df; --warning: #8a5608; --warning-soft: #fbf0d8;
+  --info: #1858d8; --info-soft: #e1eafe; --overlay: rgb(76 79 105 / .45);
+  --shadow-xs: 0 1px 2px rgb(76 79 105 / .08); --shadow-sm: 0 1px 3px rgb(76 79 105 / .12), 0 1px 2px rgb(76 79 105 / .08);
+  --shadow-md: 0 6px 16px rgb(76 79 105 / .14); --shadow-lg: 0 16px 40px rgb(76 79 105 / .2);
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --background: #1e1e2e; --foreground: #cdd6f4;
+  --card: #262637; --card-foreground: #cdd6f4;
+  --popover: #2a2b3d; --popover-foreground: #cdd6f4;
+  --primary: #cba6f7; --primary-foreground: #11111b;
+  --secondary: #313244; --secondary-foreground: #cdd6f4;
+  --muted: #313244; --muted-foreground: #a6adc8;
+  --accent: #383a4f; --accent-foreground: #cdd6f4;
+  --destructive: #f38ba8; --destructive-foreground: #11111b;
+  --border: #45475a; --input: #8a8fa8; --ring: #cba6f7;
+  --chart-1: #cba6f7; --chart-2: #89b4fa; --chart-3: #94e2d5; --chart-4: #fab387; --chart-5: #f5c2e7;
+  --sidebar: #181825; --sidebar-foreground: #cdd6f4; --sidebar-primary: #cba6f7; --sidebar-primary-foreground: #11111b;
+  --sidebar-accent: #313244; --sidebar-accent-foreground: #cdd6f4; --sidebar-border: #313244; --sidebar-ring: #cba6f7;
+  --primary-hover: #d9bdf9; --destructive-hover: #f6a3bb; --primary-soft: #3a3250; --destructive-soft: #432a3a;
+  --success: #a6e3a1; --success-soft: #2a3a31; --warning: #f9e2af; --warning-soft: #3b3528;
+  --info: #89b4fa; --info-soft: #2a3550; --overlay: rgb(17 17 27 / .7);
+  --shadow-xs: 0 1px 2px rgb(0 0 0 / .3); --shadow-sm: 0 1px 3px rgb(0 0 0 / .4);
+  --shadow-md: 0 8px 20px rgb(0 0 0 / .45); --shadow-lg: 0 18px 48px rgb(0 0 0 / .55);
+  color-scheme: dark;
+}
+:root {
+  /* type: one system family (no network fonts in mockups), Tailwind scale; body copy of working screens is text-sm */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-base: 1rem; --text-lg: 1.125rem; --text-xl: 1.25rem;
+  --text-2xl: 1.5rem; --text-3xl: 1.875rem;
+  /* spacing: Tailwind 4's single unit; every gap and padding is a multiple of it (4 px) */
+  --spacing: 0.25rem;
+  /* radii: shadcn derives every radius from one */
+  --radius: 0.625rem; --radius-sm: calc(var(--radius) - 4px); --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 4px);
+  /* extension: control heights (shadcn h-8 / h-9 / h-10), raised to a 40 px touch target on small screens */
+  --control-h-sm: 2rem; --control-h: 2.25rem; --control-h-lg: 2.5rem;
+  /* motion (SPEC R8): natural is the default profile */
+  --duration-fast: 140ms; --duration-normal: 200ms; --duration-slow: 280ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1); --ease-emphasis: cubic-bezier(.2, .8, .2, 1);
+  --motion-distance: 8px; --motion-scale: .97;
+}
+[data-motion="subtle"] { --duration-fast: 90ms; --duration-normal: 140ms; --duration-slow: 200ms; --motion-distance: 4px; --motion-scale: .99; }
+[data-motion="expressive"] {
+  --duration-fast: 180ms; --duration-normal: 280ms; --duration-slow: 420ms; --motion-distance: 16px; --motion-scale: .92;
+  --ease-emphasis: cubic-bezier(.34, 1.4, .64, 1);
+}
+@media (max-width: 640px) { :root { --control-h: 2.5rem; --control-h-sm: 2.25rem; } }
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-motion] { --duration-fast: 1ms; --duration-normal: 1ms; --duration-slow: 1ms; --motion-distance: 0px; --motion-scale: 1; }
+}

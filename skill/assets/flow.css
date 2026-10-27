@@ -18,6 +18,20 @@
 @keyframes fl-sheen { to { transform: translateX(100%); } }
 
 /* task chips: the colour bar says the state, motion says who needs attention */
+/* task chips grouped by subplan: the working one stands out, the ones outside the approved stage step back */
+#fl-tasks:has(.fl-sp) { display: flex; flex-direction: column; gap: 12px; }
+.fl-sp { border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px 12px; background: var(--surface); min-width: 0; }
+.fl-sp > header { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 10px; margin-bottom: 8px; font-size: 13px; }
+.fl-sp > header b { font-family: var(--mono); }
+.fl-sp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.fl-sp-n { margin-left: auto; font: 12px var(--mono); color: var(--muted); }
+.fl-sp-badge { font-size: 11px; font-weight: 700; border-radius: 99px; padding: 1px 8px; background: var(--mantle); color: var(--muted); }
+.fl-sp-badge.on { background: var(--accent); color: var(--on-accent); }
+.fl-sp-badge.ok { background: color-mix(in srgb, var(--k-verify) 18%, var(--mantle)); color: var(--text); }
+.fl-sp.on { border: 2px solid var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
+.fl-sp.out { opacity: .55; border-style: dashed; }
+.fl-sp.out:hover, .fl-sp.out:focus-within { opacity: 1; }
 .fl-task { min-height: 44px; transition: transform .15s, border-color .15s; }
 .fl-task:hover { transform: translateY(-2px); background: var(--accent-soft); }
 .fl-task .fl-bar { height: 3px; }

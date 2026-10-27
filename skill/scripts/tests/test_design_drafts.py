@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import bt_delegate
 import bt_design_approval as approval
+import bt_design_directions as directions
 import bt_design_drafts as drafts
 import bt_page_planning
 import bt_rounds
@@ -26,6 +27,7 @@ PLAN = {"subplans": [
 
 
 CONTRACT = "# Checkout contract\n" + "".join(f"## {i}. Section\nText {i}.\n" for i in range(1, 13))
+REAL_SUMMARY = bt_delegate.summary
 
 
 class DraftTests(unittest.TestCase):
@@ -40,10 +42,13 @@ class DraftTests(unittest.TestCase):
         self.orders: list[dict] = []
         self.outcomes: dict[str, dict] = {}
         patches = [patch.object(bt_delegate, "create", side_effect=self.create),
+                   # Canonical contract lifecycle, with exploration/owner choice isolated in test_design_directions.
+                   patch.object(directions, "start", side_effect=lambda project, rdir, ref, reason, fresh, count:
+                                drafts.launch(project, rdir, ref, reason, fresh=fresh)),
                    patch.object(bt_delegate, "start_background", return_value=1),
                    patch.object(bt_delegate, "summary", side_effect=lambda did: self.outcomes.get(
                        did, {"id": did, "status": "running_or_pending"})),
-                   patch.object(drafts, "_brief", side_effect=lambda project, rdir, row, feedback:
+                   patch.object(drafts, "_brief", side_effect=lambda project, rdir, row, feedback, **kwargs:
                                 json.dumps([f["text"] for f in feedback]))]
         for item in patches:
             item.start()
@@ -92,6 +97,19 @@ class DraftTests(unittest.TestCase):
         row = drafts.rows(self.rdir)[0]
         self.assertEqual(row["status"], "failed")
         self.assertIn("no account", row["error"])
+
+    def test_dead_claimant_becomes_failed_and_can_be_relaunched(self):
+        drafts.request("demo", self.rdir)
+        registry = Path(self.tmp.name) / "delegations"
+        order = registry / "D-1"
+        order.mkdir(parents=True)
+        (order / "TASK.json").write_text("{}")
+        (order / "CLAIMED").write_text("999999999")
+        with patch.object(bt_delegate, "DIR", registry), patch.object(bt_delegate, "summary", REAL_SUMMARY), \
+                patch("bt_runutil.pid_alive", return_value=False):
+            self.assertEqual(drafts.rows(self.rdir)[0]["status"], "failed")
+        self.assertEqual(drafts.request("demo", self.rdir, force=True), ["checkout@v1"])
+        self.assertEqual(len(self.orders), 2)
 
     def test_feedback_waits_for_running_draft_then_sync_redrafts_with_it(self):
         drafts.request("demo", self.rdir)

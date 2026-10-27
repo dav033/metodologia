@@ -54,8 +54,8 @@ def launch(project: str, req: str, agent: str | None = None, repo: str | None = 
             raise SystemExit(str(exc)) from exc
     pdir = ROOT / project
     rdir = find_req(pdir, req)
-    from bt_requirements_gate import require_ready
-    require_ready(rdir)
+    from bt_requirements_gate import PLANNING_FILES, require_ready
+    require_ready(rdir, waive=PLANNING_FILES)      # approved scope of PLAN.md/SPEC.md is pinned by the plan gate
     plan = rdir / "PLAN.md"
     if not plan.exists():
         raise SystemExit(f"No PLAN.md for {req}. Plan first: bitacora.py req plan {req}")
@@ -78,12 +78,25 @@ def launch(project: str, req: str, agent: str | None = None, repo: str | None = 
                          f"`bitacora.py --project {project} workspace add <role> <path>`.")
     import bt_plan_adapter  # the PLAN.json is validated and bound to its approved, frozen revision before anything runs
     import bt_scheduler_adapter
-    if bt_scheduler_adapter.authority(rdir) != "none":
-        raise SystemExit("SCHEDULER_RUN_EXISTS: inspect the existing run; use scheduler-run --resume for Scheduler state")
     bt_plan_adapter.freeze_on_launch(
         rdir, dry_run=dry_run, forced=False,
         compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir),
     )
+    if bt_scheduler_adapter.authority(rdir) == "legacy":
+        raise SystemExit("AUTHORITY_CONFLICT: this requirement has a legacy RUN.json run")
+    if bt_scheduler_adapter.authority(rdir) != "none":     # D-134: earlier stages already run; the whole plan joins
+        if dry_run:
+            return {"project": project, "req": req_id(rdir), "joined": "(dry run: the existing run would join)"}
+        import bt_stages
+        try:
+            joined = bt_stages.start_or_join(project, rdir)
+        except bt_stages.StageError as exc:
+            raise SystemExit(str(exc)) from exc
+        set_front(plan, "status", "launched")
+        from bt_vcs import commit
+        commit(ROOT, f"{project}: launch {req_id(rdir)} (joins the Scheduler run)")
+        return {"project": project, "req": req_id(rdir), "workdir": (ws.workdir(ROOT, project) or Path(".")).as_posix(),
+                "joined": joined, "repos": {r: p.as_posix() for r, p in repos.items()}, "handoff": None}
     workdir = ws.workdir(ROOT, project) or next(iter(repos.values()))
     repo_path = workdir
     rid = req_id(rdir)

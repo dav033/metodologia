@@ -2,8 +2,9 @@
 
     init <dir>      derive PLAN.json skeleton from <dir>/PLAN.md (classification stays absent, reported as gaps)
     check <dir>     publication gate: schema, graph, PLAN.md consistency, frozen-revision integrity
-    freeze <dir>    freeze the checked PLAN.json as an immutable revision (PLAN.md status must be approved)
-    bind <dir>      launch gate, read-only: PLAN.json is valid and is exactly the approved (frozen) revision
+    freeze <dir>    approve the whole plan: freeze the stage holding the whole draft (PLAN.md status must be approved);
+                    with --stage SP-1,SP-2 freeze the next stage (approved subplans plus these) while the rest is a draft
+    bind <dir>      launch gate, read-only: the draft projected onto the latest approved stage is exactly that revision
     report <dir>    quality summary of PLAN.json: critical path, distributions, evidence and verification coverage
     show <dir>      list frozen revisions
     compat <dir>    read-only report for a plan written before the contract
@@ -42,7 +43,7 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
         as_json: bool = False, approved_states: tuple[str, ...] | None = None,
         repo_roots: dict[str, Path] | None = None, ref_exists=None, amend: dict | None = None,
         cross_check: bool = False, ignored_path: IgnoredPath | None = None,
-        ledger_command: str = "engine audit-ledger check",
+        ledger_command: str = "engine audit-ledger check", stage: list[str] | None = None,
         emit: Callable[[str], None] = print) -> int:
     """Execute one action and return the exit code. `target` is a plan directory (a file for `validate`).
     `repo_roots` maps repository roles to paths so that `file:` evidence is verified, not just accepted; `ref_exists`
@@ -91,12 +92,11 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
             _report(report, as_json, emit)
             return 0 if report.ok else 2
         if action == "bind":
-            entry = sync.bind_approved(target, plan_id, states, repo_roots=repo_roots, freeze=False, ref_exists=ref_exists, ignored_path=ignored_path)
+            entry = sync.bind_approved(target, plan_id, states, forced=stage is not None)
             if entry is None:
-                emit("legacy plan: no PLAN.json and nothing frozen; nothing to bind")
+                emit("no PLAN.json and nothing frozen; nothing to bind")
             else:
-                emit(f"bound: PLAN.json is revision {entry['revision']} sha256 {entry['sha256'][:12]}"
-                     + (" (frozen)" if entry["frozen_at"] else " (not frozen yet: freeze on approval or launch)"))
+                emit(f"bound: the draft matches approved revision {entry['revision']} sha256 {entry['sha256'][:12]}")
             return 0
         if action == "report":
             plan, report = sync.read_plan(target)
@@ -115,10 +115,14 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
             emit(json.dumps(summary, indent=1, ensure_ascii=False))
             return 0
         if action == "freeze":
-            entry = sync.approve_freeze(target, plan_id, states, repo_roots, ref_exists=ref_exists, ignored_path=ignored_path,
-                                        ledger_command=ledger_command)
-            emit(f"frozen {plan_id or sync.default_plan_id(target)} revision {entry['revision']} "
-                 f"sha256 {entry['sha256'][:12]}")
+            if stage is not None:
+                entry = sync.freeze_stage(target, stage, plan_id, repo_roots, ref_exists=ref_exists,
+                                          ignored_path=ignored_path, ledger_command=ledger_command)
+            else:
+                entry = sync.approve_freeze(target, plan_id, states, repo_roots, ref_exists=ref_exists,
+                                            ignored_path=ignored_path, ledger_command=ledger_command)
+            emit(f"frozen {plan_id or sync.default_plan_id(target)} "
+                 f"revision {entry['revision']} sha256 {entry['sha256'][:12]}")
             return 0
         if action == "retrofit-audit":
             changed = sync.retrofit_audit(target, cross_check=cross_check)
@@ -130,7 +134,9 @@ def run(action: str, target: str | Path | None = None, *, plan_id: str | None = 
         if action == "show":
             found = rev.list_revisions(target)
             emit(f"{plan_id or sync.default_plan_id(target)} frozen revisions: " +
-                 (", ".join(f"r{r['revision']}@{r['sha256'][:8]}({r.get('source', 'approval')})" for r in found) or "none"))
+                 (", ".join(f"r{r['revision']}@{r['sha256'][:8]}({r.get('source', 'approval')}"
+                            + (f": {','.join(r['stage']['subplans']) or 'whole plan'}" if isinstance(r.get('stage'), dict) else "")
+                            + ")" for r in found) or "none"))
             return 0
         if action == "compat":
             emit(json.dumps(sync.compat(target, plan_id), indent=1, ensure_ascii=False))
@@ -162,6 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("target", nargs="?", help="plan directory (file for `validate`)")
     parser.add_argument("--plan-id", help="override the plan id (default: REQ-042 from a directory named REQ-042-slug)")
     parser.add_argument("--force", action="store_true", help="init: overwrite an existing PLAN.json")
+    parser.add_argument("--stage", help="freeze: comma-separated subplans to add to the approved stage (SP-1,SP-2)")
     parser.add_argument("--json", action="store_true", help="check/validate: machine-readable output")
     parser.add_argument("--repo", action="append", default=[], metavar="ROLE=PATH",
                         help="repository role and its checkout, repeatable; makes check/freeze verify `file:` evidence")
@@ -183,8 +190,9 @@ def main(argv: list[str] | None = None) -> int:
                       "evidence": args.evidence, "by": args.by, "proposed_by": args.proposed_by}
     roots = {role.strip(): Path(path) for role, _, path in (item.partition("=") for item in args.repo)
              if role.strip() and path}
+    stage = [item.strip() for item in args.stage.split(",") if item.strip()] if args.stage else None
     return run(args.action, args.target, plan_id=args.plan_id, force=args.force, as_json=args.json,
-               approved_states=states, repo_roots=roots or None, amend=amend_args)
+               approved_states=states, repo_roots=roots or None, amend=amend_args, stage=stage)
 
 
 if __name__ == "__main__":

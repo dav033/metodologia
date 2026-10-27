@@ -178,7 +178,8 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
                     f'Reconstruye la vista con <code>{e(command)}</code>.</div>')
         return '<p class="muted">Este requerimiento no tiene ejecución registrada.</p>'
     if run.get("authority") == scheduler_.AUTHORITY:
-        return _scheduler_run_panel(project, rid, run, token)
+        import bt_page_verification
+        return bt_page_verification.run_card(project, rid, rdir) + _scheduler_run_panel(project, rid, run, token)
     done, total = progress(run)
     hb = run.get("heartbeat") or {}
     age = age_minutes(hb.get("at"))
@@ -201,6 +202,19 @@ def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
             f'<h2>Últimas sesiones</h2>{_log_rows(run)}')
 
 
+def _stage_kpi(run: dict) -> str:
+    """D-134: the subplans this run holds and how many the plan still has outside it."""
+    stage = run.get("stage") if isinstance(run.get("stage"), dict) else None
+    if not stage:
+        return ""
+    held = ", ".join(str(x) for x in stage.get("subplans") or [])
+    outside = len(stage.get("outside") or [])
+    text = f"etapa {held}" + (f" · faltan {outside} subplanes" if outside else " · plan completo")
+    if stage.get("joining"):
+        text += f" · se une r{stage['joining']}"
+    return f'<span class="kpi" title="Subplanes aprobados que ejecuta el Scheduler">{e(text)}</span>'
+
+
 def _scheduler_run_panel(project: str, rid: str, run: dict, token: str) -> str:
     done, total = progress(run)
     hb = run.get("heartbeat") or {}
@@ -210,7 +224,7 @@ def _scheduler_run_panel(project: str, rid: str, run: dict, token: str) -> str:
     plan = run.get("plan_ref") or {}
     kpis = (f'<span class="kpi">autoridad Scheduler M1</span><span class="kpi">estado {badge(status)}</span>'
             f'<span class="kpi">progreso {done}/{total}</span><span class="kpi">latido {fmt_age(age)}</span>'
-            f'<span class="kpi">plan r{e(str(plan.get("revision", "?")))}</span>')
+            f'<span class="kpi">plan r{e(str(plan.get("revision", "?")))}</span>' + _stage_kpi(run))
     notes = ""
     if stale:
         command = f"bitacora.py --project {project} scheduler-run {rid} --resume"

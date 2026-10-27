@@ -133,7 +133,18 @@ def _command_covers(path: str, command: str) -> bool:
     low = command.lower()
     if _is_web(path):
         return f"{top}/" in low or any(token in low for token in ("typecheck", "tsc --noemit", "npm run lint", "npm run build", "pnpm build", "yarn build"))
-    return f"{top}/" in low or path.lower() in low or path.rsplit("/", 1)[-1].lower() in low
+    return f"{top}/" in low or path.lower() in low or path.rsplit("/", 1)[-1].lower() in low or _opaque_script(command)
+
+
+_SCRIPT_RUNNER = re.compile(r"(npm|pnpm|yarn|bun)\s+(run(-script)?\s+)?[\w:.-]+|make\s+[\w:.-]+")
+
+
+def _opaque_script(command: str) -> bool:
+    """A package script (`npm run cuentas:test-permisos -- --test-name-pattern=cobertura`) hides which files it runs, so
+    it can never name a path. The owner declared it as the check of its own paths, and this is only asked about paths the
+    owner declared, so it covers them; a command that names any path itself keeps the textual test above."""
+    low = command.strip().lower()
+    return _SCRIPT_RUNNER.match(low) is not None and not any("/" in token for token in low.split())
 
 
 def replan_verification(plan: Mapping[str, Any], verification_map: object, actual_paths: object) -> list[dict[str, Any]]:

@@ -27,7 +27,7 @@ def layout(title: str, body: str, crumbs: list[tuple[str, str]] | None = None) -
 <script type="module" src="{SHOELACE}/shoelace-autoloader.js"></script></head><body>
 <a class="skip" href="#main">Saltar al contenido</a>
 <header class="top"><a class="brand" href="/">Bitácora</a><nav>{nav}</nav>
-<nav class="mainnav" aria-label="Secciones"><a href="/plans">Planes</a><a href="/now">Ahora</a><a href="/flow">Flujo</a><a href="/metrics">Métricas</a></nav></header>
+<nav class="mainnav" aria-label="Secciones"><a href="/plans">Planes</a><a href="/now">Ahora</a><a href="/flow">Flujo</a><a href="/metrics">Métricas</a><a href="/components">Componentes</a></nav></header>
 <div class="nowbar" id="nowbar" hidden></div>
 <main id="main" tabindex="-1">{body}</main>
 <script src="/static/marked.min.js"></script><script src="/static/app.js"></script><script src="/static/enhance.js"></script>

@@ -1,0 +1,28 @@
+<!-- example: native | Nativo -->
+<div class="demo-grid" data-layout="grid">
+  <figure class="demo-cell"><div class="field"><label class="label" for="s-1">Rol</label><span class="select-wrap"><select class="select" id="s-1"><option>Usuario · Plan 2</option><option>Empleado interno</option><option>Administrador</option></select></span></div><figcaption>default</figcaption></figure>
+  <figure class="demo-cell"><div class="field"><label class="label" for="s-2">Rol</label><span class="select-wrap"><select class="select" id="s-2" aria-invalid="true" aria-describedby="s-2-err"><option value="">Elige un rol</option><option>Administrador</option></select></span><p class="field-error" id="s-2-err"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg>Elige un rol para enviar la invitación.</p></div><figcaption>error</figcaption></figure>
+  <figure class="demo-cell"><div class="field" data-disabled><label class="label" for="s-3">Rol</label><span class="select-wrap"><select class="select" id="s-3" disabled><option>Administrador</option></select></span></div><figcaption>disabled</figcaption></figure>
+</div>
+
+<!-- example: popup | Popup abierto -->
+<div class="field">
+  <span class="label" id="s-4-label">Plan</span>
+  <div class="select-root anchored">
+    <button class="select-trigger" type="button" aria-haspopup="listbox" aria-expanded="true" aria-labelledby="s-4-label"><span>Plan 2</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="listbox" role="listbox" aria-labelledby="s-4-label">
+      <div class="listbox-label">Planes de usuario</div>
+      <div class="listbox-item" role="option" aria-selected="false">Plan 1</div>
+      <div class="listbox-item" role="option" aria-selected="true" data-highlighted>Plan 2</div>
+      <div class="listbox-item" role="option" aria-selected="false">Plan 3</div>
+      <div class="listbox-separator"></div>
+      <div class="listbox-item" role="option" aria-selected="false" aria-disabled="true">Plan empresa (próximamente)</div>
+    </div>
+  </div>
+</div>
+
+<!-- example: trigger | Disparador cerrado -->
+<div class="demo-grid" data-layout="grid">
+  <figure class="demo-cell"><button class="select-trigger" type="button" data-placeholder aria-haspopup="listbox" aria-expanded="false" aria-label="Plan"><span>Elige un plan</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><figcaption>placeholder</figcaption></figure>
+  <figure class="demo-cell"><button class="select-trigger" type="button" data-placeholder aria-invalid="true" aria-haspopup="listbox" aria-expanded="false" aria-label="Plan"><span>Elige un plan</span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><figcaption>error</figcaption></figure>
+</div>

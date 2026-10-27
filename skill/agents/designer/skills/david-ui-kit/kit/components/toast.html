@@ -1,0 +1,12 @@
+<!-- example: stack | Pila -->
+<div class="demo-stage">
+  <section class="toaster" aria-label="Notificaciones">
+    <div class="toast" data-type="success" role="status"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg><p class="toast-title">Invitación enviada</p><p class="toast-description">Luis Rojas recibirá el enlace por correo.</p><button class="button toast-action" data-variant="outline" data-size="sm" type="button">Deshacer</button></div>
+    <div class="toast" data-type="error" role="alert"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg><p class="toast-title">No se guardó el rol</p><p class="toast-description">Otra persona lo cambió. Recarga y vuelve a intentarlo.</p></div>
+    <div class="toast" data-type="info" role="status"><span class="spinner" aria-hidden="true"></span><p class="toast-title">Exportando 42 cuentas…</p></div>
+  </section>
+</div>
+
+<!-- example: live | Interactivo -->
+<button class="button" data-variant="outline" type="button" data-kit-toast="toast-tpl">Guardar rol</button>
+<template id="toast-tpl"><div class="toast" data-type="success" role="status"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 3 3 5-6"/></svg><p class="toast-title">Rol guardado</p><p class="toast-description">Los cambios aplican en la próxima solicitud.</p><button class="button toast-action" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Cerrar" data-kit-dismiss><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></template>

@@ -183,7 +183,7 @@ class Launch(Isolated):
                 patch("bt_requirements_gate.require_ready", return_value={"status": "ready"}):
             with self.assertRaises(SystemExit) as ctx:
                 bt_launch.launch("sample", "REQ-001")
-        self.assertIn("PLAN_INVALID", str(ctx.exception))
+        self.assertIn("PLAN_NOT_FROZEN", str(ctx.exception))          # D-134: only an approval freezes; launch never
         self.assertEqual(planner.list_revisions(self.rdir), [])
 
     def test_a_plan_without_plan_json_is_refused_and_never_runs(self):

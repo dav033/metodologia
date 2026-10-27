@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 
 import bt_planner as planner
@@ -14,36 +15,26 @@ from bt_planner import contract as planner_contract
 from bt_planner import quality as planner_quality
 from bt_planner import revisions as planner_revisions
 
+from bt_plan_consumers import (
+    PLAN_SCHEMA_CONSUMER_GATE_SINCE,
+    _SCHEMA_VERSION_RE,
+    _schema_version,
+    plan_schema_version,
+    second_auditor_required,
+    plan_schema_version_details,
+    second_auditor_problem,
+    second_auditor_lines,
+    plan_consumer_problem,
+    _consumer_problem,
+    _schema_version_value,
+    _compat_consumer_supported,
+    plan_id,
+)
+
+
 # What the methodology calls an approved plan; the module itself only has a default for these words.
 APPROVED_STATES = ("approved", "launched", "done", "merged")
 LEDGER_COMMAND = "bitacora.py audit-ledger check"
-PLAN_SCHEMA_CONSUMER_GATE_SINCE = (1, 2, 0)
-_SCHEMA_VERSION_RE = re.compile(r"([0-9]{1,6})\.([0-9]{1,6})\.([0-9]{1,6})")
-
-
-def _schema_version(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
-    """Read only the version marker; the Planner contract validates the whole document at every action gate."""
-    try:
-        plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, ValueError, RecursionError):
-        return None
-    if not isinstance(plan, dict):
-        return None
-    value = plan.get("schema_version")
-    match = _SCHEMA_VERSION_RE.fullmatch(value) if isinstance(value, str) else None
-    if match is None:
-        return None
-    try:
-        version = tuple(int(match.group(index)) for index in (1, 2, 3))
-    except ValueError:
-        return None
-    return value, version
-
-
-def plan_schema_version(plan_path: Path) -> str | None:
-    """Return a syntactically valid version marker; the Planner owns full contract validation."""
-    version = _schema_version(plan_path)
-    return version[0] if version is not None else None
 
 
 def validate_candidate(plan: object) -> tuple[str, ...]:
@@ -53,113 +44,6 @@ def validate_candidate(plan: object) -> tuple[str, ...]:
 
 def validate_owner_composition(subplans, gates, tasks) -> tuple[str, ...]:
     return planner.validate_owner_composition(subplans, gates, tasks)  # Planner rules over the owner's plan view
-
-def second_auditor_required(plan: object) -> bool:
-    """Expose the owner cross-check gate to pure plan transformations."""
-    if not isinstance(plan, dict) or not isinstance(plan.get("schema_version"), str):
-        return False
-    match = _SCHEMA_VERSION_RE.fullmatch(plan["schema_version"])
-    if match is None or tuple(int(match.group(index)) for index in (1, 2, 3)) < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
-        return False
-    import bt_config
-    return bool(bt_config.get("gates.second_auditor", True))
-
-
-def plan_schema_version_details(plan_path: Path) -> tuple[str, tuple[int, int, int]] | None:
-    """Return the syntactically valid version and parsed components for downstream compatibility checks."""
-    return _schema_version(plan_path)
-
-
-def second_auditor_problem(plan_path: Path) -> str | None:
-    """Owner policy `gates.second_auditor` (default on): a plan with an audit needs an independent cross-check audit, so
-    one auditor's omissions cannot decide the outcome. Schema 1.2.0 plans only; the planner only warns, the policy is
-    configuration, so it lives here."""
-    version = _schema_version(plan_path)
-    if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
-        return None
-    try:
-        import bt_config
-        if not bt_config.get("gates.second_auditor", True):
-            return None
-        plan = json.loads(plan_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    tasks = plan.get("tasks") if isinstance(plan, dict) else None
-    audits = [t.get("id") for t in tasks if isinstance(t, dict) and t.get("kind") == "audit"] if isinstance(tasks, list) else []
-    if len(audits) == 1:
-        return (f"SECOND_AUDITOR_MISSING: {audits[0]} is the only audit; gates.second_auditor is on, so add an independent "
-                "cross-check audit task (own report and findings ledger) — `plan-json retrofit-audit REQ --cross-check` "
-                "adds it — or turn the policy off with `bitacora.py config set gates.second_auditor false`")
-    return None
-
-
-def plan_consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
-                          plan_path: Path | None = None) -> str | None:
-    """Apply downstream capability and owner policy gates."""
-    return _consumer_problem(rdir, compatibility_report=compatibility_report, plan_path=plan_path) or \
-        second_auditor_problem(plan_path or (Path(rdir) / planner.PLAN_JSON))
-
-
-def _consumer_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
-                      plan_path: Path | None = None) -> str | None:
-    """Evaluate a caller-supplied capability report without importing downstream consumers."""
-    version = _schema_version(plan_path or (Path(rdir) / planner.PLAN_JSON))
-    if version is None or version[1] < PLAN_SCHEMA_CONSUMER_GATE_SINCE:
-        return None
-    compatibility = compatibility_report if isinstance(compatibility_report, dict) else {}
-    consumers = compatibility.get("consumers") if isinstance(compatibility.get("consumers"), dict) else {}
-    unavailable, supported = [], []
-    if compatibility.get("required_schema_version") != version[0]:
-        reported = compatibility.get("required_schema_version")
-        shown = reported if isinstance(reported, str) and _schema_version_value(reported) else "unknown"
-        unavailable.append(f"capability report (schema {shown})")
-    required_consumers = ("M1", "M2", "M6") + (("M3",) if version[1] >= (1, 3, 0) else ())
-    for name in required_consumers:
-        consumer = consumers.get(name)
-        status = consumer.get("status") if isinstance(consumer, dict) else "unknown"
-        versions = consumer.get("supported_schema_versions") if isinstance(consumer, dict) else None
-        valid = isinstance(versions, list) and all(_schema_version_value(item) for item in versions)
-        if not valid or (status == "supported" and version[0] not in versions):
-            status = "malformed"
-        if status not in ("supported", "unsupported", "unknown"):
-            status = "malformed"
-        supported.append(status == "supported")
-        if status != "supported": unavailable.append(f"{name} ({status})")
-    planner_info = compatibility.get("planner")
-    planner_status = planner_info.get("status") if isinstance(planner_info, dict) else "unknown"
-    planner_version = _schema_version_value(planner_info.get("schema_version")) if isinstance(planner_info, dict) else None
-    if planner_version is None or (planner_status == "supported" and (planner_version[0] != version[1][0]
-                                                                        or planner_version < version[1])):
-        planner_status = "malformed"
-    if planner_status not in ("supported", "unsupported", "unknown"):
-        planner_status = "malformed"
-    if planner_status != "supported":
-        unavailable.insert(0, f"Planner ({planner_status})")
-    if type(compatibility.get("supported")) is not bool or compatibility["supported"] != (planner_status == "supported" and all(supported)):
-        unavailable.append("capability report (malformed or inconsistent summary)")
-    if not unavailable:
-        return None
-    return (f"PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE: PLAN.json schema {version[0]} requires compatible M1/M2/M6 consumers; "
-            f"unsupported or unknown: {', '.join(unavailable)}. Check `bitacora.py plan-json compat "
-            f"{plan_id(rdir)}` before approval or execution")
-
-
-def _schema_version_value(value: object) -> tuple[int, int, int] | None:
-    match = _SCHEMA_VERSION_RE.fullmatch(value) if isinstance(value, str) else None
-    return tuple(int(part) for part in match.groups()) if match else None
-
-
-def _compat_consumer_supported(rdir: Path, compatibility_report: dict[str, object] | None) -> bool:
-    """Compat's publication-readiness answer; plans without a PLAN.json remain legacy-compatible."""
-    path = Path(rdir) / planner.PLAN_JSON
-    return not path.exists() or (_schema_version(path) is not None and
-                                 _consumer_problem(rdir, compatibility_report=compatibility_report, plan_path=path) is None)
-
-
-def plan_id(rdir: Path) -> str:
-    """`REQ-009-some-slug` -> `REQ-009` (the methodology's requirement id)."""
-    return "-".join(Path(rdir).name.split("-")[:2])
-
 
 def repo_roots(rdir: Path) -> dict[str, Path] | None:
     """{repository role: checkout} of the project that owns this requirement folder, so the planner can verify that the
@@ -294,18 +178,16 @@ def _unchanged_frozen(rdir: Path) -> bool:
         return False
 
 
-def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False,
+def launch_problem(rdir: Path, *, forced: bool = False,
                    compatibility_report: dict[str, object] | None = None) -> str | None:
-    """The gate every launch path passes (standard, foreground, web, handoff, and a new run itself): None when the
-    plan may run, otherwise one line saying why not. The plan must be valid, consistent with PLAN.md and exactly the
-    approved (frozen) revision. A launch never creates the approval record: a plan that was never frozen is refused
-    (`PLAN_NOT_FROZEN`); only an explicit `forced` launch is taken as the owner's approval and frozen (`freeze` False
-    verifies without writing). A legacy plan (no PLAN.json, nothing frozen) always passes."""
+    """The gate every launch and join passes (standard, foreground, web, handoff, a stage): None when the latest approved
+    stage may run, otherwise one line saying why not. The draft projected onto that stage must be exactly it (D-134):
+    edits to approved scope are refused, edits elsewhere are the planners' draft. A launch never creates an approval
+    record (`PLAN_NOT_FROZEN`). `forced` skips the PLAN.md status check: a stage runs while the plan is still planned."""
     if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
         return problem
     try:
-        planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=repo_roots(rdir), freeze=freeze,
-                              forced=forced, verify_files=True, ignored_path=ignore_resolver(repo_roots(rdir)), ref_exists=ref_verifier(rdir))
+        planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, forced=forced)
     except planner.PlanContractError as exc:
         more = f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else ""
         return (f"{exc.code}: PLAN.json cannot be launched: " + "; ".join(exc.issues[:5]) + more +
@@ -319,51 +201,43 @@ def launch_problem(rdir: Path, *, freeze: bool = True, forced: bool = False,
 def freeze_on_launch(rdir: Path, *, dry_run: bool = False, forced: bool = False,
                      compatibility_report: dict[str, object] | None = None) -> None:
     """Standard/web launch: refuse (SystemExit with the cause) unless the run would execute exactly the approved,
-    frozen revision. A dry run verifies and writes nothing."""
-    problem = launch_problem(rdir, freeze=not dry_run, forced=forced, compatibility_report=compatibility_report)
+    frozen revision. Nothing is written (a launch never freezes); `dry_run` is accepted for the callers' symmetry."""
+    problem = launch_problem(rdir, forced=forced, compatibility_report=compatibility_report)
     if problem:
         raise SystemExit(problem)
 
 
 def resume_problem(rdir: Path, state: dict, *, compatibility_report: dict[str, object] | None = None) -> str | None:
-    """A RESUMED run must not go on executing content nobody approved. When the run carries a `plan_ref` (or the plan
-    has frozen revisions): PLAN.json must still exist, be valid and be the latest approved revision, the PLAN.md prose
-    must be the approved one, and the run's own `plan_ref` must point at that same revision (a run started under r1
-    while r2 was approved keeps r1's verification commands: start a new run instead). The gate never writes RUN.json.
-    File evidence is not re-verified (the run's own work may have moved those files). Plans without the contract are
-    never gated."""
+    """A RESUMED run executes the revision it is bound to (D-134: a newer approved stage joins it at a quiet point), so
+    resuming only needs that revision to be one the owner approved: the run's `plan_ref` names a frozen revision of this
+    requirement with the same hash. The draft is not judged here."""
     if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
         return problem
     raw_ref = state.get("plan_ref") if isinstance(state, dict) else None
     ref = raw_ref if isinstance(raw_ref, dict) else None
     try:
         frozen = planner.list_revisions(rdir)
-        if not (ref or frozen):
-            return None
-        if frozen and not ref:
-            return ("PLAN_REF_MISSING: this run has no plan_ref for the approved revision; "
-                    "start a new run so its approved plan identity and hash are recorded")
-        entry = planner.bind_approved(rdir, plan_id(rdir), APPROVED_STATES, repo_roots=None, freeze=False,
-                                      forced=True, verify_files=False)
     except planner.PlanContractError as exc:
-        more = f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else ""
-        return (f"{exc.code}: this run cannot resume on PLAN.json: " + "; ".join(exc.issues[:5]) + more +
-                f" (bitacora.py plan-json check {plan_id(rdir)})")
+        return f"{exc.code}: this run cannot resume: " + "; ".join(exc.issues[:5])
     except Exception as exc:  # noqa: BLE001 - fail closed
-        return (f"PLAN_CHECK_FAILED: PLAN.json could not be checked ({type(exc).__name__}); "
+        return (f"PLAN_CHECK_FAILED: the revision store could not be read ({type(exc).__name__}); "
                 f"run `bitacora.py plan-json check {plan_id(rdir)}`")
-    if ref and entry:
-        if ref.get("plan_id") != plan_id(rdir):
-            return (f"PLAN_REF_MISMATCH: the run's plan_ref names {ref.get('plan_id')!r}, but this requirement is "
-                    f"{plan_id(rdir)}")
-        revision = ref.get("revision")
-        if not (isinstance(revision, int) and not isinstance(revision, bool)) or revision != entry["revision"]:
-            return (f"PLAN_REF_STALE: this run was started under revision {ref.get('revision')} but revision "
-                    f"{entry['revision']} is the approved one; resuming would keep running the old plan values. "
-                    "Start a new run for the approved revision")
-        if not isinstance(ref.get("sha256"), str) or ref["sha256"] != entry["sha256"]:
-            return (f"PLAN_REF_MISMATCH: the run's plan_ref hash does not match approved revision "
-                    f"{entry['revision']}; the run state or the revision store was altered")
+    if not (ref or frozen):
+        return None
+    if not ref:
+        return ("PLAN_REF_MISSING: this run has no plan_ref for an approved revision; "
+                "start a new run so its approved plan identity and hash are recorded")
+    if ref.get("plan_id") != plan_id(rdir):
+        return (f"PLAN_REF_MISMATCH: the run's plan_ref names {ref.get('plan_id')!r}, but this requirement is "
+                f"{plan_id(rdir)}")
+    entry = next((item for item in frozen if item["revision"] == ref.get("revision")), None)
+    if entry is None or ref.get("sha256") != entry["sha256"]:
+        return (f"PLAN_REF_MISMATCH: the run's plan_ref (revision {ref.get('revision')}) is not an approved revision "
+                "with that hash; the run state or the revision store was altered")
+    try:
+        planner.load_revision(rdir, entry["revision"])        # the bytes the run executes are the approved ones
+    except planner.PlanContractError as exc:
+        return f"{exc.code}: this run cannot resume: " + "; ".join(exc.issues[:5])
     return None
 
 
@@ -423,6 +297,90 @@ def freeze_approved(rdir: Path, *, compatibility_report: dict[str, object] | Non
                                   ledger_command=LEDGER_COMMAND)
     except planner.PlanContractError as exc:
         raise SystemExit(f"{exc.code}: approved PLAN.json could not be frozen: " + "; ".join(exc.issues[:5])) from exc
+
+
+def stage_problem(rdir: Path, subplans: list[str], *, compatibility_report: dict[str, object] | None = None,
+                  allow_unmapped: bool = False, draft: dict | None = None) -> str | None:
+    """Publication gate of the next stage (D-134) without writing: the engine supports the plan, the projection passes
+    `check_stage` and, under `planner.require_mapped_checks`, every check maps to a criterion."""
+    if problem := plan_consumer_problem(rdir, compatibility_report=compatibility_report):
+        return problem
+    try:
+        projection, draft = _next_stage(rdir, subplans, draft=draft)
+        report = planner.check_stage(rdir, projection, draft, plan_id(rdir), repo_roots(rdir), True,
+                                     ref_verifier(rdir), ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND)
+    except planner.PlanContractError as exc:
+        return f"{exc.code}: " + "; ".join(exc.issues[:5]) + (f" (+{len(exc.issues) - 5} more)" if len(exc.issues) > 5 else "")
+    except Exception as exc:  # noqa: BLE001 - fail closed
+        return f"PLAN_CHECK_FAILED: the stage could not be checked ({type(exc).__name__})"
+    if not report.ok:
+        more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
+        return "PLAN_INVALID: the stage cannot be approved: " + "; ".join(report.errors[:5]) + more
+    if (problem := second_auditor_lines(projection)):       # what the run would refuse, refused at approval
+        return problem
+    return None if allow_unmapped else _mapping_lines(projection, plan_id(rdir))
+
+
+def _next_stage(rdir: Path, subplans: list[str], *, draft: dict | None = None) -> tuple[dict, dict]:
+    """(projection, draft), including unchanged approvals so publication is always revalidated."""
+    if draft is None:
+        draft, report = planner.sync.read_plan(rdir)
+    if not isinstance(draft, dict):
+        raise planner.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json: top level must be an object"])
+    found = planner.stages.latest(rdir)
+    previous = planner.stages.subplans_in(found[1]) if found else []
+    projection = planner.stages.project(draft, [*previous, *subplans])
+    revision = (found[0]["revision"] + 1) if found else 1
+    if (found and planner_contract.dumps({**projection, "revision": found[0]["revision"]}) == planner_contract.dumps(found[1])
+            and found[0].get("stage") == planner.stages.approval_pins(rdir, draft, projection)):
+        revision = found[0]["revision"]
+    return {**projection, "revision": revision}, draft
+
+
+def _mapping_lines(plan: dict, req: str) -> str | None:
+    import bt_config
+
+    if bt_config.get("planner.require_mapped_checks", False) is not True:
+        return None
+    lines = [f"{c['task_id']}.verification[{c['verification_index']}] «{str(c['purpose'])[:60]}»" for c in planner_quality.unmapped_checks(plan)]
+    lines += [f"{c['task_id']}: criterion «{str(c['criterion'])[:60]}» has no check with its exact text"
+              for c in planner_quality.criteria_without_command(plan) if c["reason"] in ("purpose_not_found", "whitespace_mismatch")]
+    if not lines:
+        return None
+    more = f" (+{len(lines) - 4} more)" if len(lines) > 4 else ""
+    return ("PLAN_CHECKS_UNMAPPED: the verifier maps evidence to criteria by exact text, so these would stop the run for a person: "
+            + "; ".join(lines[:4]) + more + f" (bitacora.py plan-json check {req} lists them; `purpose` = the criterion's text)")
+
+
+def freeze_stage(rdir: Path, subplans: list[str], *, compatibility_report: dict[str, object] | None = None,
+                 draft: dict | None = None, before_freeze: Callable[[], None] | None = None) -> dict:
+    """Approve the next stage: the subplans already approved plus `subplans` (D-134). Raises PlanContractError."""
+    if problem := stage_problem(rdir, subplans, compatibility_report=compatibility_report, draft=draft):
+        raise planner.PlanContractError(problem.split(":", 1)[0], [problem.split(":", 1)[-1].strip()])
+    return planner.freeze_stage(rdir, subplans, plan_id(rdir), repo_roots(rdir), True, ref_verifier(rdir),
+                                ignore_resolver(repo_roots(rdir)), LEDGER_COMMAND, draft=draft, before_freeze=before_freeze)
+
+
+def stage_summary(rdir: Path) -> dict:
+    """Approved stages for people (pages, CLI); empty when nothing is frozen or the store cannot be read."""
+    try:
+        return planner.stages.summary(rdir)
+    except (planner.PlanContractError, OSError, ValueError):
+        return {"stages": [], "complete": False}
+
+
+def stage_subplans(rdir: Path, revision: int | None = None) -> list[str]:
+    """Subplans of a frozen revision (the latest by default); [] when none. Raises on store damage (fail closed)."""
+    if revision is None:
+        found = planner.stages.latest(rdir)
+        return planner.stages.subplans_in(found[1]) if found else []
+    return planner.stages.subplans_in(planner_revisions.load_revision(rdir, revision))
+
+
+def draft_subplans(rdir: Path) -> list[str] | None:
+    """Subplans the working draft declares; None when PLAN.json cannot be read."""
+    draft, _ = planner.sync.read_plan(rdir)
+    return planner.stages.declared_subplans(draft) if isinstance(draft, dict) else None
 
 
 def run_state_fields(rdir: Path) -> dict:
@@ -490,9 +448,20 @@ def plan_errors(plan: dict, *, roots: dict[str, Path] | None = None) -> list[str
 
 
 def freeze_revision(rdir: Path, plan: dict, source: str) -> dict:
-    """Freeze `plan` as the next revision and write it as the working PLAN.json."""
+    """Freeze a revision the scheduler made itself (healing, remediation, recovery) from the latest one, and carry it
+    into the working draft (`stages.splice`) so the draft never contradicts what runs while the rest of it is still
+    being planned. Without a draft the revision becomes it; nothing is frozen when an existing draft cannot be read (it
+    may be being written): the caller retries."""
+    path = Path(rdir) / planner.PLAN_JSON
+    draft, report = planner.sync.read_plan(rdir) if path.exists() else (None, None)
+    if path.exists() and not isinstance(draft, dict):
+        raise planner.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json is not an object"])
+    base = latest_plan(rdir)
+    spliced = planner.stages.splice(draft, base, plan) if base and draft is not None else plan
     frozen = planner_revisions.freeze(rdir, plan, source, ledger_command=LEDGER_COMMAND)
-    (Path(rdir) / planner.PLAN_JSON).write_text(planner_contract.dumps(plan), encoding="utf-8")
+    tmp = path.with_name(f".{path.name}.splice.tmp")
+    tmp.write_text(planner_contract.dumps(spliced), encoding="utf-8")
+    tmp.replace(path)
     return frozen
 
 

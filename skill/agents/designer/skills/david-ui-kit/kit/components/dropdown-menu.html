@@ -1,0 +1,23 @@
+<!-- example: open | Abierto -->
+<div class="menu-root anchored">
+  <button class="button" data-variant="outline" type="button" aria-haspopup="menu" aria-expanded="true">Acciones<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <div class="dropdown-menu-content" role="menu">
+    <div class="dropdown-menu-label">Ana Martínez</div>
+    <button class="dropdown-menu-item" role="menuitem" type="button" data-highlighted><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Cambiar rol</button>
+    <button class="dropdown-menu-item" role="menuitem" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>Generar enlace nuevo<span class="dropdown-menu-shortcut">⌘E</span></button>
+    <button class="dropdown-menu-item" role="menuitem" type="button" aria-disabled="true"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Restablecer contraseña</button>
+    <div class="dropdown-menu-separator" role="separator"></div>
+    <button class="dropdown-menu-item" role="menuitem" type="button" data-variant="destructive"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>Desactivar cuenta</button>
+  </div>
+</div>
+
+<!-- example: trigger | Disparadores -->
+<div class="row">
+  <div class="menu-root"><button class="button" data-variant="outline" type="button" aria-haspopup="menu" aria-expanded="false" data-kit-open="dm-live">Cuenta<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="dropdown-menu-content" id="dm-live" role="menu" data-kit-layer hidden>
+      <button class="dropdown-menu-item" role="menuitem" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-3.5 3.8-5 7-5s6 1.5 7 5"/></svg>Mi perfil</button>
+      <button class="dropdown-menu-item" role="menuitem" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg>Cerrar sesión</button>
+    </div>
+  </div>
+  <button class="button" data-variant="ghost" data-size="icon" type="button" aria-label="Más acciones" aria-haspopup="menu" aria-expanded="false"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+</div>

@@ -93,8 +93,8 @@ class PlanAdapterEvidence(unittest.TestCase):
         state = {"plan_ref": {"plan_id": "REQ-001", "revision": 1,
                                "sha256": rev.list_revisions(self.rdir)[0]["sha256"]}}
         report = self.compatibility_report()
-        self.assertTrue((adapter.resume_problem(self.rdir, state, compatibility_report=report) or "").startswith("PLAN_INVALID"))
-        self.assertTrue((adapter.launch_problem(self.rdir, compatibility_report=report) or "").startswith("PLAN_INVALID"))
+        self.assertTrue((adapter.resume_problem(self.rdir, state, compatibility_report=report) or "").startswith("REVISION_"))
+        self.assertTrue((adapter.launch_problem(self.rdir, compatibility_report=report) or "").startswith("REVISION_"))
 
     def test_malformed_manifest_is_returned_as_a_resume_problem(self):
         folder = self.rdir / "plan-revisions"

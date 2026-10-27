@@ -1,8 +1,8 @@
 """Planning-time design drafts: the Designer works on each UI subplan while the owner and the Planner talk.
 
 Drafts live in the requirement folder, never in a project repository: `design/<contract>@v<N>.md` (the contract) and
-`design/<contract>@v<N>.html` (a static mockup), with their state in `design/drafts.json`. A draft is redone when
-its subplan changes, when the owner leaves feedback, or on request. Approving the plan approves every ready draft
+`design/<contract>@v<N>.html` (a static mockup), with their state in `design/drafts.json`. A plan change reaching the
+UI brief amends an owner-chosen design (bt_design_amend); directions are regenerated only before a choice or on request. Approving the plan approves every ready draft
 (bt_design_approval pins its SHA-256), and the execution-time `design` task copies it byte for byte into the
 repository, so the M3 gate finds the approved blob and UI work does not pause.
 """
@@ -15,7 +15,7 @@ import os
 import re
 import tempfile
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 DIR = "design"
@@ -29,7 +29,10 @@ MAX_AUTO_RUNS = 8         # redesigns `sync` may start per contract on its own; 
 MAX_FAILURES = 3          # consecutive failures after which only an explicit request starts the Designer again
 MIN_SECTIONS = 10         # a contract has twelve `##` sections; fewer means the Designer did not finish it
 PLANNING = ("draft", "clarifying", "ready", "planned", "review", "changes-requested", "?")
-ACTIVE = ("queued", "drafting")
+SKILL_ROOT = Path(__file__).resolve().parent.parent
+KIT = SKILL_ROOT / "agents/designer/skills/david-ui-kit/kit"   # the Designer's david-ui stand-in kit (D-135)
+ACTIVE = ("queued", "drafting", "amending")
+DEFAULT_DIRECTIONS = 3
 _REF = re.compile(r"[a-z0-9][a-z0-9-]{0,63}@v[1-9][0-9]{0,5}\Z")
 
 
@@ -58,10 +61,21 @@ def subplans(rdir: Path) -> list[dict]:
         ref = (f"{ui['contract']}@v{ui['version']}" if ui and isinstance(ui.get("contract"), str)
                and type(ui.get("version")) is int else None)
         ref = ref if ref and _REF.match(ref) else None  # the ref names files: never a path outside design/
-        out.append({"id": item["id"], "title": item.get("title") or "", "outcome": item.get("outcome") or "",
-                    "covers": item.get("covers") or [], "criteria": item.get("acceptance_criteria") or [],
-                    "ui": ui, "ref": ref, "tasks": own, "digest": _digest(item, own)})
+        row = {"id": item["id"], "title": item.get("title") or "", "outcome": item.get("outcome") or "",
+               "covers": item.get("covers") or [], "criteria": item.get("acceptance_criteria") or [],
+               "ui": ui, "ref": ref, "tasks": own, "digest": _digest(item, own),
+               "ui_brief": item.get("ui_brief") if isinstance(item.get("ui_brief"), dict) else None}
+        row["ui_digest"] = __import__("bt_design_ui_brief").digest(rdir, row) if ref else None
+        out.append(row)
     return out
+
+
+def behind(entry: dict, row: dict) -> bool:
+    """The draft was built from another UI brief than the current one; entries recorded before `ui_digest` existed
+    compare the whole-subplan `digest` as they always did."""
+    if entry.get("ui_digest"):
+        return entry["ui_digest"] != row.get("ui_digest")
+    return entry.get("digest") != row.get("digest")
 
 
 def _digest(subplan: dict, tasks: list[dict]) -> str:
@@ -145,6 +159,12 @@ def _age(stamp: str | None) -> float:
 
 def _settle(rdir: Path, ref: str, entry: dict) -> None:
     """Fold a finished delegation into its draft entry (lazy: called whenever drafts are read)."""
+    if entry.get("status") == "amending":
+        import bt_design_amend
+        return bt_design_amend.settle(rdir, ref, entry)
+    if entry.get("phase"):
+        import bt_design_directions
+        return bt_design_directions.settle(rdir, ref, entry)
     import bt_delegate
     did = entry.get("delegation")
     if entry.get("status") == "queued" and _age(entry.get("queued")) > QUEUED_TTL_SEC:
@@ -240,55 +260,27 @@ def _rows(rdir: Path, data: dict) -> list[dict]:
     for ref, entry in data["drafts"].items():
         _settle(rdir, ref, entry)
     drafts = json.loads(json.dumps(data["drafts"]))
+    import bt_design_amend
     out = []
     for s in ui:
         entry = drafts.get(s["ref"], {})
         feedback = entry.get("feedback") or []
-        out.append({**s, **{k: v for k, v in entry.items() if k not in ("feedback", "digest")},
+        late = bool(entry) and behind(entry, s)
+        out.append({**s, **{k: v for k, v in entry.items() if k not in ("feedback", "digest", "ui_digest", "amend")},
                     "status": entry.get("status", "none"), "feedback": feedback,
                     "pending_feedback": sum(1 for f in feedback if not f.get("consumed")),
-                    "stale": entry.get("status") in ("ready", "approved") and entry.get("digest") != s["digest"]})
+                    "stale": entry.get("status") in ("ready", "approved", "choosing") and late,
+                    "amend": bt_design_amend.mode(rdir, s["ref"], entry) if late else None})
     return out
 
 
-def _brief(project: str, rdir: Path, row: dict, feedback: list[dict]) -> str:
-    import bt_workspace
-    from bt_core import ROOT
-    md, html = paths(rdir, row["ref"])
-    repos = "\n".join(f"  - {role}: {path}" for role, path in bt_workspace.repos(ROOT, project, discover=False).items()
-                      if Path(path).exists()) or "  - (none cloned on this machine)"
-    previous = ("A previous draft exists at those paths: revise it, keeping everything the feedback and the plan "
-                "changes do not touch." if md.is_file() else "There is no previous draft.")
-    asks = "\n".join(f"  - ({f['when'][:16]}) {f['text']}" for f in feedback) or "  - none"
-    return f"""Planning-time UI/UX design for subplan {row['id']} — {row['title']}.
-
-The owner and the Planner are still discussing this plan. Design the best version for the plan as it stands now;
-record open decisions as questions in the contract instead of stopping. This draft becomes the approved contract
-`{row['ref']}` when the owner approves the plan.
-
-Read: {Path(rdir) / 'SPEC.md'}, {Path(rdir) / 'PLAN.md'} and {Path(rdir) / 'PLAN.json'} (subplan {row['id']}, its
-tasks and the requirement ids it covers). Project repositories, read-only, for the existing design system, tokens
-and components:
-{repos}
-
-Write exactly these two files and nothing else (no SPEC, PLAN, repository or other bitácora file):
-1. {md} — the contract `{row['ref']}` with status `draft`, following the ui-ux-contract-authoring skill (all twelve
-   sections, visual acceptance criteria table included).
-2. {html} — a self-contained static mockup of that contract: inline CSS and JS only, no network request, no external
-   font or image (use CSS or data: URIs), realistic mock data, every view of the subplan, a visible switch for each
-   declared state (loading, empty, error, …) and layouts that reflow at the contract's breakpoints. Reuse the
-   project's design tokens when the repository has them. Show a small "Mockup" label so nobody takes it for the
-   product.
-
-{previous}
-Owner feedback to address (oldest first):
-{asks}
-
-In your report put one line per open question for the owner in "notes", each starting with "Q:".
-"""
+def _brief(project: str, rdir: Path, row: dict, feedback: list[dict], *, fresh: bool = False,
+           behavior: Path | None = None) -> str:
+    from bt_design_brief import _brief as build
+    return build(project, rdir, row, feedback, fresh=fresh, behavior=behavior)
 
 
-def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
+def launch(project: str, rdir: Path, ref: str, reason: str, *, fresh: bool = False) -> dict:
     """Start one Designer session in the background for `ref`; the caller holds no lock."""
     import bt_delegate
     row = next((r for r in subplans(rdir) if r["ref"] == ref), None)
@@ -303,7 +295,7 @@ def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
                       "before": _sha(paths(rdir, ref)[0])})
     order = None
     try:
-        order = bt_delegate.create(project, _brief(project, rdir, row, pending), None, None, Path(rdir), [], None,
+        order = bt_delegate.create(project, _brief(project, rdir, row, pending, fresh=fresh), None, None, Path(rdir), [], None,
                                    TIMEOUT_MIN, None, None, kind="design", role="designer")
         bt_delegate.start_background(order["id"])
     except (SystemExit, Exception) as exc:  # noqa: BLE001 - no account, usage limits: shown, retried after a backoff
@@ -316,7 +308,8 @@ def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
         for item in entry.get("feedback", []):
             if not item.get("consumed") and item in pending:
                 item["consumed"] = order["id"]
-        entry.update({"status": "drafting", "delegation": order["id"], "digest": row["digest"], "started": _now(),
+        entry.update({"status": "drafting", "delegation": order["id"], "digest": row["digest"],
+                      "ui_digest": row["ui_digest"], "started": _now(),
                       "agent": order.get("agent"), "model": order.get("model")})
         if reason == "plan changed":
             entry["auto_runs"] = int(entry.get("auto_runs") or 0) + 1
@@ -326,9 +319,12 @@ def launch(project: str, rdir: Path, ref: str, reason: str) -> dict:
 
 
 def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: bool = False,
-            reason: str = "requested") -> list[str]:
+            reason: str = "requested", fresh: bool = False, directions: int | None = None) -> list[str]:
     """Draft the named UI subplans (all of them by default) that need it; returns the refs started."""
     started = []
+    directions = DEFAULT_DIRECTIONS if directions is None else directions
+    if type(directions) is not int or not 1 <= directions <= 3:
+        raise SystemExit("El número de direcciones debe estar entre 1 y 3.")
     if not planning(rdir):
         return started
     for row in rows(rdir) if active(rdir) else [{**s, "status": "none", "stale": False, "pending_feedback": 0}
@@ -337,11 +333,26 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
             continue
         if row["status"] in ACTIVE or row["status"] == "approved":
             continue
-        due = force or row["status"] == "none" or row["stale"] or row["pending_feedback"]
+        if any(e.get("status") in ACTIVE for e in _load(rdir)["drafts"].values()):
+            break  # one exploration batch per requirement: never multiply N by the number of UI subplans
+        due = force or fresh or row["status"] in ("none", "failed") or row["stale"] or row["pending_feedback"]
         if due and reason != "plan changed" and row.get("failures"):
             with _locked(rdir) as data:  # an explicit request is the owner's retry: the failure count starts over
                 data["drafts"].get(row["ref"], {})["failures"] = 0
-        if due and launch(project, rdir, row["ref"], reason).get("status") == "drafting":
+        if due and not fresh and row.get("amend"):
+            import bt_design_amend  # chosen work is extended with the plan delta, never regenerated
+            with suppress(SystemExit):
+                bt_design_amend.start(project, rdir, row["ref"], "", reason, auto=reason == "plan changed")
+                started.append(row["ref"])
+            continue
+        if due:
+            import bt_design_directions
+            # A deliberate redo releases the previous choice; revision files remain untouched.
+            if row["status"] == "choosing":
+                with _locked(rdir) as data:
+                    data["drafts"][row["ref"]]["status"] = "failed"
+            result = bt_design_directions.start(project, rdir, row["ref"], reason, fresh, directions)
+        if due and result.get("status") == "drafting":
             started.append(row["ref"])
     known = {s["ref"] for s in subplans(rdir) if s["ref"]}
     if not active(rdir) and known and (not refs or set(refs) & known):
@@ -350,53 +361,15 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
     return started
 
 
-def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str) -> str:
-    text = " ".join(text.split())
-    if not text:
-        return "Escribe qué debe cambiar en el diseño."
-    if not planning(rdir):
-        return "El plan ya no está en planificación: los cambios de diseño van en una versión nueva del contrato."
-    if ref not in {s["ref"] for s in subplans(rdir) if s["ref"]}:
-        return f"{ref or 'Ese contrato'} no es un subplan con interfaz de este plan."
-    with _locked(rdir) as data:
-        entry = data["drafts"].setdefault(ref, {"feedback": [], "status": "none"})
-        _settle(rdir, ref, entry)
-        if entry.get("status") == "approved":
-            return f"{ref} ya fue aprobado con el plan; los cambios van en una versión nueva del contrato."
-        entry.setdefault("feedback", []).append({"when": _now(), "text": text[:4000], "via": via})
-        _event(rdir, "Tú → Designer", f"{ref}: {text[:200]}", entry, kind="feedback")
-        busy = entry.get("status") in ACTIVE
-    if busy:
-        return f"Comentario guardado. El Designer lo tomará al terminar la versión en curso de {ref}."
-    started = request(project, rdir, [ref], reason="feedback")
-    return (f"Comentario enviado al Designer; rediseñando {ref}." if started else
-            f"Comentario guardado para {ref}; no se pudo iniciar el Designer (revisa el estado).")
+def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str, *, direction: str | None = None) -> str:
+    from bt_design_iterate import add_feedback as add
+    return add(project, rdir, ref, text, via, direction=direction)
 
 
 def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
-    """Follow the conversation: draft new UI subplans, pending feedback, and subplans that changed and settled."""
-    if not active(rdir) or not planning(rdir):
-        return []
-    now = time.time() if now is None else now
-    try:
-        settled = now - (Path(rdir) / "PLAN.json").stat().st_mtime >= DEBOUNCE_SEC
-    except OSError:
-        return []
-    import bt_planning_flow
-    scope = bt_planning_flow.design_scope(rdir)  # collaborative flow: only the subplan in focus, unless asked
-    due = []
-    for r in rows(rdir):
-        if r["status"] in ACTIVE or r["status"] == "approved":
-            continue
-        if scope is not None and r["ref"] not in scope and not r["pending_feedback"]:
-            continue
-        if r["status"] == "failed" and (_age(r.get("finished")) < FAIL_BACKOFF_SEC or
-                                        int(r.get("failures") or 0) >= MAX_FAILURES):
-            continue  # do not relaunch a failing Designer on every page poll; after N failures only on request
-        changed = settled and (r["status"] == "none" or r["stale"]) and int(r.get("auto_runs") or 0) < MAX_AUTO_RUNS
-        if r["pending_feedback"] or changed:
-            due.append(r["ref"])
-    return request(project, rdir, due, reason="plan changed") if due else []
+    """Follow planning changes and owner feedback."""
+    from bt_design_follow import sync as follow
+    return follow(project, rdir, now=now)
 
 
 def planning(rdir: Path) -> bool:
@@ -416,26 +389,39 @@ def _problems(rows_: list[dict]) -> list[str]:
         label = f"{row['id']} ({row['ref']})"
         if row["status"] == "approved":
             continue
+        if row.get("continuation_choice"):
+            if row["status"] in ACTIVE:
+                problems.append(f"{label}: el Designer sigue trabajando")
+            elif row["status"] == "choosing":
+                problems.append(f"{label}: la revisión del diseño elegido está pendiente de finalizarse")
+            else:
+                problems.append(f"{label}: no se pudo finalizar la revisión ({row.get('error') or row['status']})")
+            continue
+        if row.get("directions") and not row.get("chosen"):
+            problems.append(f"{label}: elige una dirección de diseño antes de confirmar o aprobar")
+            continue
         if row["status"] in ACTIVE:
             problems.append(f"{label}: el Designer sigue trabajando")
         elif row["status"] != "ready":
             problems.append(f"{label}: no hay un diseño listo ({row.get('error') or row['status']})")
+        elif row.get("amend"):
+            problems.append(f"{label}: el plan cambió después del diseño; actualízalo con «Actualizar diseño»")
         elif row["stale"]:
-            problems.append(f"{label}: el subplan cambió después del diseño; se está rehaciendo")
+            problems.append(f"{label}: el subplan cambió después del diseño; hay que rehacerlo")
         elif row["pending_feedback"]:
             problems.append(f"{label}: hay comentarios sin aplicar")
     return problems
 
 
-def pin_for_plan(rdir: Path) -> list[str]:
-    """Approve every planning draft with the plan, atomically with respect to the Designer: under the drafts lock,
+def pin_for_plan(rdir: Path, refs: list[str] | None = None) -> list[str]:
+    """Approve the planning drafts with the plan, atomically with respect to the Designer: under the drafts lock,
     refuse unless every draft is ready and unchanged, then pin each one (SHA-256, `via: plan`). Called before the
-    plan is marked approved, so a refusal leaves the plan in review and nothing half-approved."""
+    plan (or a stage, D-134: `refs` = the stage's UI contracts) is approved, so a refusal leaves nothing half-approved."""
     import bt_design_approval as approval
     if not active(rdir):
         return []
     with _locked(rdir) as data:
-        current = _rows(rdir, data)
+        current = [r for r in _rows(rdir, data) if refs is None or r["ref"] in refs]
         problems = _problems(current)
         ready, prior = [r for r in current if r["status"] == "ready"], approval.approvals(rdir)
         blobs = {}

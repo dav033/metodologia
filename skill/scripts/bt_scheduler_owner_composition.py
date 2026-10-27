@@ -160,7 +160,8 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
     def _secure_workspace_location(self) -> None:
         state_root = self.store_path.parent.parent.resolve()
         workspace = self.workspace_root
-        if workspace != state_root and state_root not in workspace.parents:
+        resolved = workspace.resolve()   # both sides resolved: a bitácora root reached through a symlink is still inside
+        if resolved != state_root and state_root not in resolved.parents:
             raise CompositionRuntimeError("OWNER_COMPOSITION_WORKSPACE_OUTSIDE_STATE")
         workspace.mkdir(mode=0o700, parents=True, exist_ok=True)
         info = workspace.lstat()

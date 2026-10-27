@@ -265,6 +265,26 @@ class PlatformTests(unittest.TestCase):
         self.assertFalse(clean)
         self.assertIn("TimeoutExpired", report)
 
+    @unittest.skipUnless(bt_secrets.find_gitleaks(), "gitleaks not installed")
+    def test_secret_scan_skips_generated_mockups_but_still_catches_real_leaks(self):
+        def git(*args):
+            subprocess.run(["git", *args], cwd=self.root, check=True, capture_output=True)
+        git("init", "-q")
+        (self.root / "design").mkdir()
+        fake = 'aws_access_key_id = "AKIA' + 'ABCDEFGHIJKLMNOP"\n'  # split so this file is not itself a finding
+        (self.root / "design" / "mock.html").write_text(fake)
+        git("add", "-A")
+        self.assertEqual(bt_secrets.scan_staged(self.root), (True, ""))  # generated artifact: not scanned
+        (self.root / "notes.md").write_text(fake)
+        git("add", "-A")
+        clean, report = bt_secrets.scan_staged(self.root)
+        self.assertFalse(clean)
+        self.assertIn("notes.md", report)
+        self.assertNotIn("ABCDEFGHIJKLMNOP", report)  # reports stay redacted
+        (self.root / ".gitleaksignore").write_text("notes.md:aws-access-token:1\n")
+        git("add", "-A")
+        self.assertTrue(bt_secrets.scan_staged(self.root)[0])
+
     @unittest.skipIf(os.name == "nt", "POSIX process groups")
     def test_cancel_kills_descendant_processes(self):
         marker = self.root / "child-survived"

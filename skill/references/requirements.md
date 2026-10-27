@@ -265,25 +265,45 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
 3. **Subplanes, one at a time.** The focus starts on the first subplan. With the owner, define its behavior, edge
    cases, design decisions, inputs (credentials, keys, hosts, paths, accounts: SPEC `## Inputs` with its `Subplan`
    column, locations only, never values) and then its tasks with acceptance criteria. When the subplan has a UI, the
-   Designer drafts it in the background as soon as it is in focus, and only then (`design_scope`): relay its
+   Designer drafts it in the background as soon as it is in focus, and only then (`design_scope`), from the
+   subplan's UI brief (write its `ui_brief`: flows, screens/states, existing surface to change, must-not-change;
+   `plan-contract.md`): relay its
    questions, fold the answers into the plan, send owner comments with `design feedback`. The owner confirms the
    subplan («Confirmar subplan», or `planning confirm REQ-NNN SP-n --by owner` only when they say so in the chat);
    confirmation is refused while it has no tasks, a task without criteria, a pending input or a design that is not
    ready. The focus then moves to the next subplan and its Designer starts. `planning focus REQ-NNN SP-n` (or
    «Definir ahora») jumps. Any later change to a confirmed subplan (its PLAN.json part, tasks, inputs or design)
    reopens it.
+   Each subplan also needs its `## Pruebas` rows in SPEC (where to try it when built: local, production and every external
+   place; how; what to see); confirmation is refused without them and any later change to them reopens the subplan.
+   **Run a confirmed subplan (D-134).** The owner can press «Ejecutar subplan» or authorize
+   `bitacora.py --project P stage run REQ-NNN SP-n[,SP-m]`. The Scheduler executes a frozen cumulative stage
+   while the Planner continues the remaining draft. Keep approved scope fixed; changing it requires owner
+   re-confirmation and another approval. Later stages join the same run after live attempts drain, preserving accepted
+   unchanged work. `stage freeze` approves without starting; `stage status` lists stages. Tasks and `## Pruebas`
+   rows are mandatory for eligibility. Autonomous sessions are superseded by stages; hands-on sessions remain.
 4. **Aprobación.** When the last subplan is confirmed the plan goes to `review`; approval refuses anything not
    confirmed or changed since, pins the designs and launches.
 
-`planning status REQ-NNN` prints the phase, the focus and what each subplan still lacks. The tab also shows the
+`planning status REQ-NNN` prints the phase, the focus and what each subplan still lacks. A subplan that is better built with the owner at the keyboard gets a hands-on session (D-132): the «Sesión» tab of the subplan, or `bitacora.py sessions start|status|finish REQ-NNN SP-n [--model sonnet|opus]`, starts an interactive Claude Code agent (in a tmux session the web can read and type into, D-133) in a worktree outside the repos (`~/.local/share/bitacora-sessions/`) on a branch `session/<req>-<sp>` created from `origin/main`, with the subplan's outcome, criteria and the SPEC lines it covers as the first message. It never pushes, merges or deploys; `finish` records the branch head and the Planner plans the subplan's tasks around it. `planning resume REQ-NNN` is for a session that takes over (a new Planner after the old one stopped or was replaced): it prints where the flow stands, the Planner's saved notes (`planning note`, kept in `.planning/notes.jsonl`), the latest answered round in the owner's words, the subplans without a `## Pruebas` row, recent activity and one NEXT line. The state is all files, so any session can continue; only the previous session's reasoning is lost, so re-read the code. Close the old Planner before opening a new one. The Plan tab can open the dedicated Planner itself (it pins the conversation id in `.planning/planner.json`, so opening or restarting it resumes the same conversation; a lost transcript falls back to a fresh one that relies on the notes) and lets the owner type to it and see its screen (`tmux -L bitacora attach -t bit-<project>-<REQ>-planner` to attach by hand). The tab also shows the
 selected subplan (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios;
 Entradas), "lo que cambió en la conversación" (`.planning/activity.jsonl`), a design review per subplan, the whole plan
 in English, Spanish or both, and the approval dialog; it updates itself while you edit SPEC/PLAN. The Stop hook keeps
 the Designer and the Spanish translation (`bitacora.py translate REQ-NNN`) following the conversation with no page
 open.
 
+**Verification after each subplan (D-131).** The run does not stop when a subplan ends. The engine publishes each
+accepted subplan as an immutable version (commit of the integrated tree at that boundary); the owner is notified (desktop
+notice, the «Ahora» strip, the run card) and tries it on its own from the Plan tab → *Probar*: the `## Pruebas` rows say
+where, `bitacora.py verify open REQ SP-n` (or the button) opens exactly that commit in a worktree outside the repos, and
+the owner approves or rejects it (`verify approve|reject REQ SP-n --by owner [--note ...]` only when the owner said so).
+A decision is pinned to the version it saw: a newer version makes it outdated. The requirement is not finished while any
+subplan is not approved: the review merge refuses (`bt_verification.gate`). Revert is shown as a command with the subplans
+that depend on it; nothing reverts automatically. Only runs that follow the collaborative flow (or whose SPEC has `## Pruebas`) and whose projection reports `subplans` are gated; once seen, the gate is persisted so it cannot fail open. Every subplan needs its own row (an `all` row only supplements; `none` needs a reason).
+
 Requirements not started on this flow keep planning-time design as before: `design draft REQ-NNN` drafts every UI
-subplan at once and `design sync REQ-NNN` redoes the changed ones; `design drafts REQ-NNN` lists state and questions.
+subplan at once and `design sync REQ-NNN` follows the changed ones (amending chosen designs, below); `design drafts
+REQ-NNN` lists state and questions.
 Drafts live in the requirement folder (`design/<contract>@vN.md` contract + `.html` mockup), never in a repository.
 
 Approving the plan approves its designs: approval is refused while a draft is missing, running, failed, outdated or
@@ -308,3 +328,34 @@ friction in this skill, investigate and make the smallest validated persistent i
 source as part of the approved scope. Record speculative ideas as proposals. If a user-controlled rule blocks the
 requested behavior, pause that behavior and ask whether the user wants a one-time exception or a permanent change;
 follow [`self-improvement.md`](self-improvement.md) for source boundaries and higher-priority rules.
+### Planning designs: three directions and owner choice
+
+The planning Designer uses real installed libraries and an offline self-contained builder. A draft request
+explores three independent directions by default (`design draft REQ-NNN ref@v1 --fresh --directions 3`).
+Each produces two candidate thumbnails then one full direction; all share the same UI brief (`behavior.md`).
+Directions are changes to the existing product surface: they reuse its shell, navigation, tokens, fonts and
+components (and those of sibling subplans' chosen contracts) and differ in layout, hierarchy, density, component
+arrangement and motion, never in palette, font families or brand.
+The Plan and review pages show live previews, eight-axis notes and rendered distinctness measurements.
+The owner uses «Elegir esta dirección»; the selected Designer finalizes the single contract. Similar/unchecked
+directions cannot be chosen, and UI subplans cannot be confirmed/approved without a choice and ready contract.
+Unchosen explorations remain revision-specific files. Feedback that targets one direction iterates it
+(`design iterate REQ-NNN ref@v1 --direction a --comments "…"`, «Iterar esta dirección»): one Designer revises that
+direction into a new revision, keeping its composition and motion, and the owner iterates again or chooses it.
+Untargeted feedback and «Rehacer diseño» use fresh mode: requirements and unresolved feedback are inputs; previous
+visuals/history are preserved.
+
+**A plan change amends chosen work; it never restarts it.** A draft is outdated only when its UI brief changes
+(`ui_digest`, the hash of `bt_design_ui_brief.build` without the omitted-fields footer): estimates, non-UI tasks and
+other engineering fields never make a design stale. When the brief changes after the owner chose a direction, the
+design is amended (`bt_design_amend.py`): `design amend REQ-NNN ref@vN [--comments "…"]`, the Plan tab banner «El plan
+cambió: actualizar el diseño con lo que ya está» → «Actualizar diseño», or `design sync`/`design draft` on their own.
+For a finalised contract (`ready` with `chosen`) one Designer receives the previous and the new UI brief plus their
+mechanical diff, revises the canonical contract and mockup (starting from the chosen direction's `.tsx`) into
+`design/<ref>.amend-<N>.*`, keeps composition, navigation, motion and every decision the delta does not touch, and
+on success the result becomes the next revision, `ready` again with the new digest. A failed amendment keeps the
+previous files and the choice; retry it or ask for `--fresh`. A `choosing` entry whose single direction is an
+iteration of the chosen one is amended through iterate with the same delta. Only a requirement with no choice yet
+(several unchosen directions, no draft, a failed first draft) regenerates directions; `--fresh` and «Rehacer diseño»
+regenerate on explicit request. Automatic amendments respect `.planning/designers.paused`; explicit ones do not;
+one Designer batch per requirement still applies.

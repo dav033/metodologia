@@ -41,5 +41,34 @@ class Load(unittest.TestCase):
         self.assertEqual(venv.load(binary), ((), ()))
 
 
+class ForRun(unittest.TestCase):
+    """A variable a check declares in `requires` comes from the owner's secret files when the env file lacks it."""
+
+    def test_only_declared_names_are_taken_from_the_secret_files(self):
+        from unittest.mock import patch
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root / "verifier.env").write_text("MODE=test\n", encoding="utf-8")
+        (root / "secrets.env").write_text("DB_URL=postgres://u:pw@localhost:55433/db\nBOT_TOKEN=t0ken\nMODE=prod\n",
+                                          encoding="utf-8")
+        config = {"verifier.env_file": str(root / "verifier.env"), "verifier.secret_files": [str(root / "secrets.env")]}
+        with patch("bt_config.get", side_effect=lambda key, default=None: config.get(key, default)), \
+                patch.object(venv, "declared", return_value={"DB_URL", "MODE", "service:db"}):
+            environment, secrets = venv.for_run("p", root)
+        self.assertEqual(dict(environment), {"MODE": "test", "DB_URL": "postgres://u:pw@localhost:55433/db"})
+        self.assertEqual(secrets, ("postgres://u:pw@localhost:55433/db",))   # redacted from every output
+        with patch("bt_config.get", side_effect=lambda key, default=None: config.get(key, default)):
+            self.assertEqual(dict(venv.for_run("p", None)[0]), {"MODE": "test"})   # no frozen plan: nothing declared
+
+    def test_declared_reads_the_requires_of_the_latest_frozen_revision(self):
+        from unittest.mock import patch
+        plan = {"tasks": [{"verification": [{"requires": ["DB_URL", "service:x", "bad name"]}]}, {"verification": []}]}
+        with patch("bt_planner.revisions.latest", return_value={"revision": 1}), \
+                patch("bt_planner.revisions.load_revision", return_value=plan):
+            self.assertEqual(venv.declared("/r"), {"DB_URL"})
+        self.assertEqual(venv.declared(None), set())
+
+
 if __name__ == "__main__":
     unittest.main()

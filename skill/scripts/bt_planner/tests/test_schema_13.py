@@ -307,6 +307,27 @@ class Schema13Tests(unittest.TestCase):
                                        "design_task": "T1", "visual_review_task": "T3"}
         self.assertCode(plan, "UI_REVIEW_ORDER")
 
+    def test_optional_ui_brief_validates_its_shape(self):
+        plan = base_plan()
+        plan["subplans"][0]["ui"] = {"contract": "session-ui", "version": 1, "design_task": "T1",
+                                       "visual_review_task": "T3"}
+        brief = {"flows": ["Sign in", {"name": "Expired", "steps": ["Open", "See the error"]}],
+                 "screens_states": ["Sign-in form: error"], "must_not_change": ["Header"], "copy_rules": ["Spanish"],
+                 "criteria": ["Expired sessions are rejected"],
+                 "existing_surface": {"routes": ["/login"], "paths": ["src/app/login/page.tsx"], "notes": "Keep"}}
+        plan["subplans"][0]["ui_brief"] = brief
+        self.assertFalse(any(e.startswith("UI_BRIEF_INVALID:") for e in pc.validate(plan).errors))
+        self.assertEqual(pc.canonicalize(plan)["subplans"][0]["ui_brief"]["flows"][1]["steps"], ["Open", "See the error"])
+        for bad in ({"colors": ["mauve"]}, {"flows": [{"name": "x", "steps": []}]}, {"screens_states": "one"},
+                    {"existing_surface": {"repo": ["x"]}}, []):
+            plan["subplans"][0]["ui_brief"] = bad
+            self.assertCode(plan, "UI_BRIEF_INVALID")
+        del plan["subplans"][0]["ui"]
+        plan["subplans"][0]["ui_brief"] = brief
+        self.assertCode(plan, "UI_BRIEF_INVALID")
+        schema = json.loads((Path(__file__).parents[1] / "data" / "plan.schema.json").read_text())
+        self.assertIn("ui_brief", schema["$defs"]["subplan"]["properties"])
+
     def test_verification_environment_resources_and_implementation_sandbox(self):
         plan = base_plan()
         check = plan["tasks"][0]["verification"][0]

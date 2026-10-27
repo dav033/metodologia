@@ -179,8 +179,13 @@ def record(rdir: Path, review: object) -> dict:
     return snapshot
 
 
-def check(rdir: Path) -> dict:
-    """Reread authority every time; invalid/missing/drifted evidence fails closed."""
+PLANNING_FILES = ("PLAN.md", "SPEC.md")   # D-134: edited while stages run; approved scope is pinned by the plan gate
+
+
+def check(rdir: Path, waive: tuple[str, ...] = ()) -> dict:
+    """Reread authority every time; invalid/missing/drifted evidence fails closed. `waive` names fingerprinted files
+    whose drift a caller judges itself (the Scheduler: PLAN.md and SPEC.md, whose approved parts the plan gate pins);
+    every other evidence file, DECISIONS.md and unresolved items still block."""
     snapshot = None
     try:
         contract = _contract(rdir)
@@ -195,7 +200,8 @@ def check(rdir: Path) -> dict:
             raise ValueError("Requirements snapshot exceeds 65536 bytes")
         snapshot = _validate(json.loads(path.read_text(encoding="utf-8")), stored=True)
         current = _fingerprints(rdir, list(snapshot["fingerprints"]))
-        changed = [name for name, digest in current.items() if snapshot["fingerprints"].get(name) != digest]
+        changed = [name for name, digest in current.items()
+                   if snapshot["fingerprints"].get(name) != digest and name not in waive]
         decisions = rdir.parent.parent / "DECISIONS.md"
         if "../../DECISIONS.md" in changed and _only_appended(decisions, snapshot["fingerprints"].get("../../DECISIONS.md", "")):
             changed.remove("../../DECISIONS.md")        # new decisions were added after the approved text; nothing was edited
@@ -208,9 +214,9 @@ def check(rdir: Path) -> dict:
                 "snapshot": None}
 
 
-def require_ready(rdir: Path) -> dict:
+def require_ready(rdir: Path, waive: tuple[str, ...] = ()) -> dict:
     """Legacy is allowed during bootstrap; --force never bypasses new-mode validation."""
-    result = check(rdir)
+    result = check(rdir, waive)
     if result["status"] == "needs_revalidation":
         raise SystemExit("REQUIREMENTS_REVALIDATION_REQUIRED: " + "; ".join(result["reasons"]))
     return result

@@ -412,6 +412,91 @@ def unmapped_checks(plan: dict) -> list[dict[str, object]]:
     return found
 
 
+# Words that make a high-risk task a security surface. Matched on the task's own text, not on its path names alone, so a
+# plan needs no extra field and an old plan gets the gate too.
+_SECURITY_TEXT = re.compile(
+    r"\b(auth\w*|sign[- ]?in|log[- ]?in|log[- ]?out|session\w*|password\w*|credential\w*|token\w*|secret\w*|cookie\w*|csrf|cors|"
+    r"permission\w*|role\w*|invitation\w*|lockout|oauth|sso|jwt|encrypt\w*|hash\w*|forwarded|loopback|redirect\w*|"
+    r"webhook\w*|upload\w*|sanitiz\w*|injection|xss|rate[- ]limit\w*|access[- ]control)\b", re.IGNORECASE)
+
+
+def security_sensitive(task: dict | None) -> bool:
+    """A high-risk implementation task whose own text names a security surface. Audits, tests, docs and research never are:
+    they review or exercise the surface, they do not open it."""
+    if not isinstance(task, dict) or task.get("risk") != "high" or task.get("kind") not in (None, "implement"):
+        return False
+    parts = [str(task.get(key) or "") for key in ("title", "objective")]
+    for key in ("acceptance_criteria", "shared_resources", "expected_paths"):
+        value = task.get(key)
+        if isinstance(value, list):
+            parts.extend(item for item in value if isinstance(item, str))
+    return _SECURITY_TEXT.search("\n".join(parts)) is not None
+
+
+
+
+_SPEC_SOURCE = re.compile(r"\b(spec(ification)?|SPEC\.md|requirements?|R\d+)\b", re.IGNORECASE)
+_DENIAL = re.compile(r"\b(denied|denies|deny|forbidden|rejected?|refus\w*|unauthori[sz]ed|40[0-9]|blocked)\b", re.IGNORECASE)
+_WRITE_METHOD = re.compile(r"\b(POST|PUT|PATCH|DELETE)\b")
+_HTTP_SURFACE = re.compile(r"\b(api|route\w*|endpoint\w*|http|handler\w*|request\w*)\b", re.IGNORECASE)
+_FROM_IMPLEMENTATION = re.compile(
+    r"\b(deriv|generat|read|tak|built|build|comput|copi)\w*\s+(it\s+)?from\s+(the\s+)?(implementation|route\s+map|permission\s+map|"
+    r"source(\s+code)?|code|handlers?)\b", re.IGNORECASE)
+_ABUSE_CASE = re.compile(
+    r"\b(forg\w*|spoof\w*|cross-origin|csrf|concurren\w*|race|replay\w*|malformed|oversize\w*|too long|maximum|denied|forbidden|"
+    r"reject\w*|refus\w*|expire\w*|brute|enumerat\w*|open redirect|unauthori[sz]ed|invalid|attacker|tamper\w*)\b", re.IGNORECASE)
+
+
+def _text(task: dict, *keys: str) -> str:
+    parts = [str(task.get(key) or "") for key in keys if not isinstance(task.get(key), list)]
+    for key in keys:
+        parts.extend(_strs(task.get(key)))
+    return "\n".join(parts)
+
+
+def oracle_independence(plan: dict) -> list[str]:
+    """REQ-021 T1.7 was the last barrier before the SP-1 audit and could not fail: its expected permission came from the
+    implementation's own route map, it sent only GET and counted 405 and 5xx as allowed. A test over a security surface
+    must take its expectations from the SPEC, include a denied case and, for HTTP, the writing methods. Warn per test task
+    that depends directly on a security-sensitive task (or sits in its subplan) and does not say so in its criteria."""
+    tasks = dict(_plan_tasks(plan))
+    upstream = ancestors(plan) if tasks else {}
+    warnings: list[str] = []
+    for task_id, task in tasks.items():
+        if task.get("kind") != "test":
+            continue
+        near = set(_after(task)) | {t for t in upstream.get(task_id, ())
+                                    if task.get("subplan_id") and tasks[t].get("subplan_id") == task.get("subplan_id")}
+        surface = [t for t in sorted(near) if security_sensitive(tasks.get(t))]
+        if not surface:
+            continue
+        criteria = _text(task, "title", "objective", "acceptance_criteria")
+        missing = []
+        if _FROM_IMPLEMENTATION.search(criteria):
+            missing.append("its expected values are taken from the implementation, so a wrong implementation passes: take them from the SPEC")
+        elif not _SPEC_SOURCE.search(criteria):
+            missing.append("no criterion says the expected values come from the SPEC, not from the implementation")
+        if not _DENIAL.search(criteria):
+            missing.append("no criterion asserts a denied case (the status that proves access is refused, per role)")
+        if _HTTP_SURFACE.search(criteria + " " + _text(task, "expected_paths")) and not _WRITE_METHOD.search(criteria):
+            missing.append("no criterion exercises a writing method (POST, PUT, PATCH or DELETE): a GET-only matrix misses write permissions")
+        if missing:
+            warnings.append(f"{task_id}: oracle independence: this test task checks the security surface of {', '.join(surface[:4])} "
+                            f"but {'; '.join(missing)} (references/engineering.md §Test oracles)")
+    return warnings
+
+
+def security_abuse_cases(plan: dict) -> list[str]:
+    """A security-sensitive implementation task whose criteria only describe the happy path. The audit finds the abuse cases
+    later (REQ-021 SP-1: forged forwarded header, login CSRF, open redirect, reset racing a sign-in), at the price of sending
+    accepted tasks back, so the task states at least one per applicable item of the security checklist."""
+    return [f"{task_id}: security checklist: this high-risk task touches a security surface but no acceptance criterion states an "
+            "abuse case (forged or malformed input, cross-origin request, concurrency, expiry, a denied role); add one criterion with a "
+            "focused negative test per applicable item of references/subagents.md §The security gate"
+            for task_id, task in _plan_tasks(plan)
+            if security_sensitive(task) and not _ABUSE_CASE.search(_text(task, "acceptance_criteria"))]
+
+
 def dominant_shared_resources(plan: dict, share: float = 0.6, minimum: int = 4) -> list[str]:
     """A shared resource is always exclusive: two tasks that claim the same one never run side by side. One that most of a plan claims
     (REQ-029: nearly every task) makes the plan a chain whatever its graph says. Warn with the count, so the author declares it only on

@@ -1,0 +1,34 @@
+<!-- example: open | Abierto a la derecha -->
+<div class="demo-stage" data-size="lg">
+  <div class="sheet-overlay"></div>
+  <div class="sheet-content" role="dialog" aria-modal="true" aria-labelledby="sh-1-title">
+    <div class="sheet-header"><h2 class="dialog-title" id="sh-1-title">Filtros</h2><p class="dialog-description">Acota la lista de cuentas.</p></div>
+    <div class="sheet-body">
+      <div class="field"><label class="label" for="sh-1-status">Estado</label><span class="select-wrap"><select class="select" id="sh-1-status"><option>Todos los estados</option><option>Activas</option><option>Invitadas</option><option>Desactivadas</option></select></span></div>
+      <fieldset class="field-set"><legend class="label">Roles</legend>
+        <label class="choice"><input class="checkbox" type="checkbox" checked><span>Administrador</span></label>
+        <label class="choice"><input class="checkbox" type="checkbox" checked><span>Usuario</span></label>
+        <label class="choice"><input class="checkbox" type="checkbox"><span>Empleado interno</span></label>
+      </fieldset>
+    </div>
+    <div class="sheet-footer"><button class="button" data-variant="outline" type="button" data-kit-close>Limpiar</button><button class="button" type="button" data-kit-close>Aplicar filtros</button></div>
+    <button class="button dialog-close" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Cerrar" data-kit-close><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+</div>
+
+<!-- example: live | Interactivo -->
+<button class="button" data-variant="outline" type="button" data-kit-open="sh-live">Filtros</button>
+<div class="sheet-overlay" data-kit-pair="sh-live" hidden></div>
+  <div class="sheet-content" role="dialog" aria-modal="true" aria-labelledby="sh-2-title" id="sh-live" data-kit-layer hidden>
+    <div class="sheet-header"><h2 class="dialog-title" id="sh-2-title">Filtros</h2><p class="dialog-description">Acota la lista de cuentas.</p></div>
+    <div class="sheet-body">
+      <div class="field"><label class="label" for="sh-2-status">Estado</label><span class="select-wrap"><select class="select" id="sh-2-status"><option>Todos los estados</option><option>Activas</option><option>Invitadas</option><option>Desactivadas</option></select></span></div>
+      <fieldset class="field-set"><legend class="label">Roles</legend>
+        <label class="choice"><input class="checkbox" type="checkbox" checked><span>Administrador</span></label>
+        <label class="choice"><input class="checkbox" type="checkbox" checked><span>Usuario</span></label>
+        <label class="choice"><input class="checkbox" type="checkbox"><span>Empleado interno</span></label>
+      </fieldset>
+    </div>
+    <div class="sheet-footer"><button class="button" data-variant="outline" type="button" data-kit-close>Limpiar</button><button class="button" type="button" data-kit-close>Aplicar filtros</button></div>
+    <button class="button dialog-close" data-variant="ghost" data-size="icon-sm" type="button" aria-label="Cerrar" data-kit-close><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>

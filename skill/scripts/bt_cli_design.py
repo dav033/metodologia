@@ -11,11 +11,15 @@ from bt_core import find_req
 
 def register(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser("design", help="planning-time design drafts and approval of UI design contracts")
-    parser.add_argument("action", choices=("list", "show", "approve", "changes", "draft", "drafts", "feedback", "sync"))
+    parser.add_argument("action", choices=("list", "show", "approve", "changes", "draft", "drafts", "feedback", "sync", "choose", "iterate", "amend"))
     parser.add_argument("req", help="REQ-NNN")
     parser.add_argument("contract", nargs="?", help="<contract>@vN")
     parser.add_argument("--comments", default="")
     parser.add_argument("--force", action="store_true", help="draft: redo the design even when it is current")
+    parser.add_argument("--fresh", action="store_true", help="compose from requirements, preserving previous revisions "
+                        "(the only way to regenerate directions over a chosen design)")
+    parser.add_argument("--directions", type=int, choices=range(1, 4), default=3, help="number of creative directions (1–3)")
+    parser.add_argument("--direction", help="direction id to choose, iterate or comment on")
     translate = subparsers.add_parser("translate", help="translate SPEC, PLAN and design drafts to Spanish")
     translate.add_argument("req", help="REQ-NNN")
     translate.add_argument("--status", action="store_true", help="only report what is pending")
@@ -25,7 +29,7 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     rdir = find_req(root / project, args.req)
     if args.cmd == "translate":
         return _translate(args, project, rdir)
-    if args.action in ("draft", "drafts", "feedback", "sync"):
+    if args.action in ("draft", "drafts", "feedback", "sync", "choose", "iterate", "amend"):
         return _drafts(args, project, rdir)
     rows = approval.ui_contracts(rdir, project)
     if args.action in ("list", "show"):
@@ -74,13 +78,31 @@ def _drafts(args: argparse.Namespace, project: str, rdir: Path) -> int:
     import bt_design_drafts as drafts
     refs = [args.contract] if args.contract else None
     if args.action == "draft":
-        started = drafts.request(project, rdir, refs, force=args.force, reason="requested")
+        started = drafts.request(project, rdir, refs, force=args.force, fresh=args.fresh,
+                                 directions=args.directions, reason="requested")
         print(f"Designer started for: {', '.join(started)}" if started else "Nothing to draft: every design is current, "
               "in progress or approved (use --force to redo one).")
+    elif args.action == "choose":
+        import bt_design_directions
+        print(bt_design_directions.choose(project, rdir, args.contract or "", args.direction or "", "cli"))
+    elif args.action == "iterate":
+        import bt_design_iterate
+        if not args.contract or not args.direction or not args.comments.strip():
+            raise SystemExit("design iterate needs <contract>@vN, --direction and --comments")
+        print(bt_design_iterate.iterate(project, rdir, args.contract, args.direction, args.comments, "cli"))
+    elif args.action == "amend":
+        import bt_design_amend
+        if not args.contract:
+            raise SystemExit("design amend needs <contract>@vN")
+        try:
+            print(bt_design_amend.start(project, rdir, args.contract, args.comments, "cli"))
+        except SystemExit as exc:
+            print(exc)
+            return 1
     elif args.action == "feedback":
         if not args.contract or not args.comments.strip():
             raise SystemExit("design feedback needs <contract>@vN and --comments")
-        print(drafts.add_feedback(project, rdir, args.contract, args.comments, "cli"))
+        print(drafts.add_feedback(project, rdir, args.contract, args.comments, "cli", direction=args.direction))
     elif args.action == "sync":
         import bt_translate
         started = drafts.sync(project, rdir)

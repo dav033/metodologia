@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import glob
 import os
+import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 
 import bt_nowindow  # noqa: F401  (no console windows on Windows)
@@ -48,14 +50,44 @@ def find_gitleaks() -> str | None:
     return None
 
 
+# Generated artifacts that gitleaks cannot scan within the hook's time limit: self-contained design mockups embed
+# base64 fonts in single huge lines (one revision is ~6 MB) and the translation cache is keyed by long hashes that
+# the generic-api-key rule mistakes for tokens. Scanning them took minutes, so every bitácora commit timed out.
+GENERATED = (re.compile(r"(^|/)design/[^/]+\.(?:html|tsx)$"), re.compile(r"(^|/)\.translations/cache\.json$"))
+SCAN_TIMEOUT_SEC = 120
+
+
+def _git_out(repo: Path, *args: str, stdin: bytes | None = None) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", *args], cwd=repo, input=stdin, capture_output=True, timeout=SCAN_TIMEOUT_SEC, check=False)
+
+
 def scan_staged(repo: Path) -> tuple[bool, str]:
-    """(clean, redacted report). Clean when gitleaks is missing — scanning is best-effort."""
+    """(clean, redacted report). Clean when gitleaks is missing — scanning is best-effort.
+
+    Scans the STAGED content of every added/changed file except `GENERATED`, exported to a temporary directory laid
+    out like the repository (checkout-index keeps repo-root paths), so finding fingerprints keep matching `.gitleaksignore`.
+    """
     exe = find_gitleaks()
     if not exe:
         return True, ""
     try:
-        res = subprocess.run([exe, "git", "--pre-commit", "--staged", "--redact", "--no-banner", "--no-color", "-v"], cwd=repo,
-                             capture_output=True, text=True, timeout=60, encoding="utf-8", errors="replace")
+        listed = _git_out(repo, "diff", "--cached", "--name-only", "--relative", "--diff-filter=ACMR", "-z", "--", ".")
+        if listed.returncode:
+            return False, "gitleaks could not complete: git diff failed"
+        names = [n for n in listed.stdout.decode("utf-8", "replace").split("\0") if n and not any(g.search(n) for g in GENERATED)]
+        if not names:
+            return True, ""
+        with tempfile.TemporaryDirectory(prefix="bitacora-scan-") as tmp:
+            exported = _git_out(repo, "checkout-index", f"--prefix={Path(tmp).as_posix()}/", "-z", "--stdin",
+                                stdin=("\0".join(names) + "\0").encode())
+            if exported.returncode:
+                return False, "gitleaks could not complete: staged files could not be exported"
+            cmd = [exe, "dir", ".", "--redact", "--no-banner", "--no-color", "-v"]
+            for flag, name in (("-i", ".gitleaksignore"), ("-c", ".gitleaks.toml")):
+                if (Path(repo) / name).is_file():
+                    cmd += [flag, str(Path(repo) / name)]
+            res = subprocess.run(cmd, cwd=tmp, capture_output=True, text=True, timeout=SCAN_TIMEOUT_SEC,
+                                 encoding="utf-8", errors="replace", check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         return False, f"gitleaks could not complete: {type(exc).__name__}"
     if res.returncode == 0:

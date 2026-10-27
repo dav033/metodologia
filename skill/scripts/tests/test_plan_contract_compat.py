@@ -197,7 +197,7 @@ class PlanContractCompatibility(Isolated):
                 adapter.freeze_approved(self.rdir, compatibility_report=compatibility)
             self.assertEqual(planner.list_revisions(self.rdir), [])
             self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.launch_problem(
-                self.rdir, freeze=True, forced=True, compatibility_report=compatibility
+                self.rdir, forced=True, compatibility_report=compatibility
             ) or "")
             self.assertEqual(planner.list_revisions(self.rdir), [])
             self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.resume_problem(
@@ -244,13 +244,13 @@ class PlanContractCompatibility(Isolated):
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", frozenset()):
             compatibility = scheduler_adapter.plan_compatibility_report(self.rdir)
             self.assertIn("PLAN_SCHEMA_UNSUPPORTED_BY_ENGINE", adapter.launch_problem(
-                self.rdir, freeze=False, compatibility_report=compatibility
+                self.rdir, compatibility_report=compatibility
             ) or "")
 
         (self.rdir / "PLAN.json").write_bytes(legacy_bytes)
         with patch.object(m6_contracts, "PLAN_SCHEMA_CAPABILITIES", frozenset()):
             self.assertIsNone(adapter.launch_problem(
-                self.rdir, freeze=False, compatibility_report=scheduler_adapter.plan_compatibility_report(self.rdir)
+                self.rdir, compatibility_report=scheduler_adapter.plan_compatibility_report(self.rdir)
             ))
 
         self.assertEqual((self.rdir / "PLAN.json").read_bytes(), legacy_bytes)

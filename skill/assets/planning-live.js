@@ -56,7 +56,8 @@
       o.replaceWith(n);
       Array.prototype.forEach.call(n.querySelectorAll('details'), function (d, j) { if (keep[j]) d.open = true; });
       render(n);
-      if (n.dataset.k !== 'bar') flash(n);
+      // live status blocks (the agent strip, its text box, the Designer's progress card) change every few seconds: no flash
+      if (['bar', 'agent', 'agent-say'].indexOf(n.dataset.k) < 0 && !n.querySelector('.pp-dprog')) flash(n);
     });
   }
   function load(force) {
@@ -83,6 +84,17 @@
     });
   }
   root.addEventListener('click', function (ev) {
+    var direction = ev.target.closest('[data-direction-show]');
+    if (direction) {
+      var chooser = direction.closest('.pp-directions');
+      chooser.querySelectorAll('[data-direction-card]').forEach(function (card) {
+        card.hidden = direction.dataset.directionShow !== 'all' && card.dataset.directionCard !== direction.dataset.directionShow;
+      });
+      chooser.querySelectorAll('[data-direction-show]').forEach(function (button) {
+        button.setAttribute('aria-pressed', button === direction ? 'true' : 'false');
+      });
+      return;
+    }
     var nav = ev.target.closest('a[data-nav]');
     if (nav && root.contains(nav) && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && ev.button === 0) {
       ev.preventDefault();
@@ -112,6 +124,12 @@
       }
     }
   });
+  // the model popover of a task's complexity closes on an outside click or Escape
+  function closePops(except) {
+    Array.prototype.forEach.call(document.querySelectorAll('.pp-cxpop[open]'), function (d) { if (d !== except) d.removeAttribute('open'); });
+  }
+  document.addEventListener('click', function (ev) { closePops(ev.target.closest && ev.target.closest('.pp-cxpop')); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closePops(null); });
   window.addEventListener('popstate', function () { go(location.href, false); });
   render(root);
   setInterval(function () { if (!document.hidden) load(false); }, 4000);

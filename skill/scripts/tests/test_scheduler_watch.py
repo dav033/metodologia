@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import signal
-import json
 import sys
 import tempfile
 import unittest
@@ -83,35 +82,12 @@ class WatchTests(unittest.TestCase):
             self.watch(heal=broken)._wait_owner_gone()
         self.assertTrue(any("healing failed while the owner waits (RuntimeError" in line for line in self.logged))
 
-    def freeze(self, source="healing", plan_revision=10, run_revision=9):
-        (self.rdir / "plan-revisions").mkdir(exist_ok=True)
-        (self.rdir / "plan-revisions" / "MANIFEST.json").write_text(json.dumps({"schema": 1, "revisions": [{"revision": plan_revision, "source": source}]}))
-        (self.rdir / "PLAN.json").write_text(json.dumps({"revision": plan_revision}))
-        return patch.object(ops, "status", return_value={"revision": run_revision})
-
-    def test_a_healing_revision_frozen_but_never_applied_is_applied_when_the_owner_refuses_it_and_the_watch_goes_on(self):
-        self.codes = [2, 0]                                          # PLAN_MISMATCH, then the owner runs and ends
-        applied = []
-        with self.freeze(), patch.object(ops, "apply", side_effect=lambda *a: applied.append(a) or ["rebased"]):
-            self.assertEqual(self.watch().run(), 0)
-        self.assertEqual(len(applied), 1)
-        self.assertIn("revise", applied[0])
-        self.assertEqual(self.spawned, [True, True])                 # the owner was started again
-
-    def test_the_watch_still_gives_up_when_the_refusal_is_not_a_frozen_healing_revision(self):
-        for source, plan_rev, run_rev in (("operator", 10, 9), ("healing", 9, 9), ("healing", 8, 9)):
-            self.spawned.clear()
-            self.codes = [2, 0]
-            with self.freeze(source, plan_rev, run_rev), patch.object(ops, "apply") as apply:
-                self.assertEqual(self.watch().run(), 2, (source, plan_rev, run_rev))
-            apply.assert_not_called()
-
-    def test_a_revision_is_applied_once_and_an_apply_that_fails_ends_the_watch_as_before(self):
-        self.codes = [2, 2]
-        with self.freeze(), patch.object(ops, "apply", side_effect=RuntimeError("busy")) as apply:
+    def test_refusal_does_not_rebase_outside_the_owner_stage_join(self):
+        self.codes = [2]
+        with patch.object(ops, "apply") as apply:
             self.assertEqual(self.watch().run(), 2)
-        self.assertEqual(apply.call_count, 1)
-        self.assertTrue(any("could not be applied (RuntimeError" in line for line in self.logged))
+        apply.assert_not_called()
+        self.assertEqual(self.spawned, [True])
 
     def test_a_finished_run_saves_its_replica_and_says_so(self):
         self.codes = [0]

@@ -174,8 +174,39 @@ def _validate_contracts(errors: list[str], warnings: list[str], sid: str, sp: di
             errors.append(_err("SUBPLAN_CONTRACT", f"{where}.verified_by", "must name own consumer-side test tasks"))
 
 
+_UI_BRIEF_LISTS = ("screens_states", "must_not_change", "copy_rules", "criteria")
+_SURFACE_LISTS = ("routes", "paths", "components", "screenshots")
+
+
+def _texts(value: object) -> bool:
+    return isinstance(value, list) and all(isinstance(v, str) and v.strip() for v in value)
+
+
+def _validate_ui_brief(errors: list[str], sid: str, sp: dict) -> None:
+    """Optional Planner-authored design hand-off for a UI subplan (flows, screens, existing surface)."""
+    if "ui_brief" not in sp:
+        return
+    brief, where = sp["ui_brief"], f"{sid}.ui_brief"
+    if not isinstance(brief, dict) or not isinstance(sp.get("ui"), dict):
+        errors.append(_err("UI_BRIEF_INVALID", where, "must be an object on a subplan with a ui contract")); return
+    unknown = set(brief) - {"flows", "existing_surface", *_UI_BRIEF_LISTS}
+    flows = brief.get("flows", [])
+    surface = brief.get("existing_surface", {})
+    if (unknown or any(k in brief and not _texts(brief[k]) for k in _UI_BRIEF_LISTS)
+            or not isinstance(flows, list) or not all(
+                (isinstance(f, str) and f.strip()) or (isinstance(f, dict) and set(f) <= {"name", "steps"}
+                 and isinstance(f.get("name"), str) and f["name"].strip() and _texts(f.get("steps")) and f["steps"])
+                for f in flows)
+            or not isinstance(surface, dict) or set(surface) - {"notes", *_SURFACE_LISTS}
+            or any(k in surface and not _texts(surface[k]) for k in _SURFACE_LISTS)
+            or ("notes" in surface and not isinstance(surface["notes"], str))):
+        errors.append(_err("UI_BRIEF_INVALID", where, "flows, screens_states, existing_surface{routes, paths, "
+                           "components, screenshots, notes}, must_not_change, copy_rules and criteria only, as texts"))
+
+
 def _validate_ui(errors: list[str], sid: str, sp: dict, members: set[str], tasks: dict[str, dict],
                  ancestors: dict[str, set[str]]) -> None:
+    _validate_ui_brief(errors, sid, sp)
     ui = sp.get("ui")
     ui_tasks = {tid for tid in members if tasks[tid].get("ui") is True}
     if ui_tasks and not isinstance(ui, dict):
