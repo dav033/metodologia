@@ -3,8 +3,8 @@
   "cuentas-admin@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "bfb34009a7cf5cbebd11ac6609f745706a714ea8abdd17f0415c6094d166ec66",
-   "delegation": "D-20261026-191118-1fd8",
+   "before": "195cc08c4e3a8b6a1d9980cefbb2a447fbc1afd19b997e30e1b2d1153906f10a",
+   "delegation": "D-20261026-193602-3454",
    "digest": "abde9480c2f8d545",
    "error": "",
    "failures": 0,
@@ -20,6 +20,12 @@
      "text": "Planner rulings on Q6-Q8 (plan updated): Q6 no distinct locked message: one generic refusal for wrong password, unknown email, deactivated and locked; every failure message adds the neutral hint that after several failures one must wait fifteen minutes; remove the locked-state fixture. Q7 own-password change keeps the requesting browser signed in (the service ends all sessions and the route opens a new one), other browsers are signed out; say so in the success message; admin resets end all sessions. Q8 post-login fallback: /cuenta when the role has none of Taller 3D, chat or catalogue. Q1: the bracketed notice fields are a pending owner input tracked in SPEC Inputs; keep them as visible placeholders and do not ask again.",
      "via": "cli",
      "when": "2026-10-26T16:02:48-05:00"
+    },
+    {
+     "consumed": "D-20261026-193602-3454",
+     "text": "Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the earlier pass only patched details). Per screen: name its one question and main job first, colour on data and the one primary action only, flat neutral surfaces, no generator tells, right-aligned tabular figures, product words in labels and empty states. The project's real design tokens win. Render and look at it before reporting.",
+     "via": "cli",
+     "when": "2026-10-26T19:35:58-05:00"
     }
    ],
    "finished": "2026-10-26T19:16:14-05:00",
@@ -53,21 +59,21 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T19:11:14-05:00",
-   "reason": "requested",
+   "queued": "2026-10-26T19:35:59-05:00",
+   "reason": "feedback",
    "report": "claimed",
    "revision": 5,
    "sha256": "195cc08c4e3a8b6a1d9980cefbb2a447fbc1afd19b997e30e1b2d1153906f10a",
-   "started": "2026-10-26T19:11:18-05:00",
-   "status": "ready",
+   "started": "2026-10-26T19:36:02-05:00",
+   "status": "drafting",
    "subplan_id": "SP-2",
    "summary": "Revised the cuentas-admin@v1 planning draft and standalone mockup, preserving the existing SP-2 design. Clarified round-9 read-only foreign-project access and corrected account/role conflict states to block mutations until refresh. Owner plan approval remains pending."
   },
   "proyectos@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "1bc3168ddfd3f1b534d85d197aa3e66cc51cd33f8cd2e05be386330edd7a4d8b",
-   "delegation": "D-20261026-191119-8350",
+   "before": "ae59e69f8ceebbebd7616c05bb6ad9f77e47f86cf7b999c6f92a4beea4e4a5c3",
+   "delegation": "D-20261026-193603-5e91",
    "digest": "749be52ec4afc053",
    "error": "",
    "failures": 0,
@@ -83,9 +89,15 @@
      "text": "Owner round 9 answers: q5=a first explicit named save then autosave with visible status; 500ms remains Planner technical default; q6=a name plus complete scene incl room/environment/salon/materials/scene-node relationships, AI conversation/generated images remain local, no local erasure or dropped valid scene fields; q7=a foreign originals read-only for staff/admin, Save copy into own account only with taller.usar. Resolve Q1–Q3. Planner resolves Q4: global authorized server search/filter before cursor pagination, not just loaded page. T4.3 now specifies q name search (literal, trimmed <=120), scope mine|all, ownerId UUID only for authorized all scope, 50 rows max updatedAt/id descending, cursor bound to normalized filters, mismatch 400, owner choices restricted to authorized project metadata. T4.4 resets cursor on filter change/ignores stale responses/preserves rows on page failure; T4.6 tests >50 rows. SPEC/PLAN/Pruebas updated. Revise contract/mockup retaining unaffected design; no further owner question needed on Q4. Behavior settled, design/subplan unapproved; SP-2 remains focus.",
      "via": "cli",
      "when": "2026-10-26T18:53:15-05:00"
+    },
+    {
+     "consumed": "D-20261026-193603-5e91",
+     "text": "Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the earlier pass only patched details). Per screen: name its one question and main job first, colour on data and the one primary action only, flat neutral surfaces, no generator tells, right-aligned tabular figures, product words in labels and empty states. The project's real design tokens win. Render and look at it before reporting.",
+     "via": "cli",
+     "when": "2026-10-26T19:36:03-05:00"
     }
    ],
-   "finished": "2026-10-26T19:11:10-05:00",
+   "finished": "2026-10-26T19:20:14-05:00",
    "history": [
     {
      "at": "2026-10-26T18:35:35-05:00",
@@ -101,26 +113,31 @@
      "at": "2026-10-26T19:11:10-05:00",
      "rev": 3,
      "summary": "Revised proyectos@v1 contract and self-contained mockup for the settled round 9 save/content/copy decisions and global authorized search. Q1–Q4 are resolved; unchanged visual design is retained. Contract remains draft pending owner plan approval; SP-2 remains the planning focus."
+    },
+    {
+     "at": "2026-10-26T19:20:14-05:00",
+     "rev": 4,
+     "summary": "Revised proyectos@v1 and its self-contained planning mockup while preserving the existing round-9 design. Corrected pending-save departure protection, focus restoration between dialogs, disabled-state explanations and Markdown table continuity. The contract remains draft for owner approval with the plan; no owner questions remain open."
     }
    ],
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T19:11:19-05:00",
-   "reason": "requested",
+   "queued": "2026-10-26T19:36:03-05:00",
+   "reason": "feedback",
    "report": "claimed",
-   "revision": 3,
-   "sha256": "1bc3168ddfd3f1b534d85d197aa3e66cc51cd33f8cd2e05be386330edd7a4d8b",
-   "started": "2026-10-26T19:11:20-05:00",
+   "revision": 4,
+   "sha256": "ae59e69f8ceebbebd7616c05bb6ad9f77e47f86cf7b999c6f92a4beea4e4a5c3",
+   "started": "2026-10-26T19:36:03-05:00",
    "status": "drafting",
    "subplan_id": "SP-4",
-   "summary": "Revised proyectos@v1 contract and self-contained mockup for the settled round 9 save/content/copy decisions and global authorized search. Q1–Q4 are resolved; unchanged visual design is retained. Contract remains draft pending owner plan approval; SP-2 remains the planning focus."
+   "summary": "Revised proyectos@v1 and its self-contained planning mockup while preserving the existing round-9 design. Corrected pending-save departure protection, focus restoration between dialogs, disabled-state explanations and Markdown table continuity. The contract remains draft for owner approval with the plan; no owner questions remain open."
   },
   "taller-esenciales@v1": {
    "agent": "codex",
    "auto_runs": 1,
-   "before": "f24728bcbc7a8c3c491b732b968d1b04c9ded6bd49564837eab047cbfa0592ba",
-   "delegation": "D-20261026-191119-918c",
+   "before": "ad39a9333a8ed96def3022c11a746a482a429ea58927ad6ac7ddb21b6334d764",
+   "delegation": "D-20261026-193603-299b",
    "digest": "f3f2ed19d4dc6d0a",
    "error": "",
    "failures": 0,
@@ -136,6 +153,12 @@
      "text": "Owner answered round 9 via web: q1=a type cards, default size then existing inspector; q2=a actual quantities/dimensions without rental prices; q3=a seven cards move out of old visual groups into one Backing group in Taller Fondos y muebles, no duplicated card aliases and no Shopify /catalogo Backing; canonical IDs, semantic GrupoCatalogo, ASIGNACION_FONDOS and original-name/AI/photo discovery remain stable; q4=a official portable Blender LTS under ~/.local/opt/blender (no pacman), automated real import plus owner manual opening. SPEC R11 and SP-3 outcome/tasks/Pruebas now reconciled. Resolve your Q1–Q4, remove provisional/conditional catalogue behavior and obsolete alternatives from final draft/mockup, retain unaffected design. Round answers settle behavior only; contract/subplan remain unapproved, SP-2 stays focus. Please finish against this updated SP-3 snapshot and report only genuinely new unresolved questions.",
      "via": "cli",
      "when": "2026-10-26T18:53:15-05:00"
+    },
+    {
+     "consumed": "D-20261026-193603-299b",
+     "text": "Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the earlier pass only patched details). Per screen: name its one question and main job first, colour on data and the one primary action only, flat neutral surfaces, no generator tells, right-aligned tabular figures, product words in labels and empty states. The project's real design tokens win. Render and look at it before reporting.",
+     "via": "cli",
+     "when": "2026-10-26T19:36:02-05:00"
     }
    ],
    "finished": "2026-10-26T19:18:38-05:00",
@@ -164,13 +187,13 @@
    "mockup": true,
    "model": "gpt-6.1-sol",
    "questions": [],
-   "queued": "2026-10-26T19:11:19-05:00",
-   "reason": "requested",
+   "queued": "2026-10-26T19:36:02-05:00",
+   "reason": "feedback",
    "report": "claimed",
    "revision": 4,
    "sha256": "ad39a9333a8ed96def3022c11a746a482a429ea58927ad6ac7ddb21b6334d764",
-   "started": "2026-10-26T19:11:19-05:00",
-   "status": "ready",
+   "started": "2026-10-26T19:36:03-05:00",
+   "status": "drafting",
    "subplan_id": "SP-3",
    "summary": "Reconciled taller-esenciales@v1 against the unchanged SP-3 plan and confirmed round 9 decisions, preserving the existing draft design. Corrected capacity feedback, same-value validation recovery and offline retry in the static mockup; the contract remains draft pending owner plan approval."
   }

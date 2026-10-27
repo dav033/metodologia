@@ -23,7 +23,9 @@ Source snapshot (2026-10-26): `PLAN.json` revision 1, SHA-256 `7a2c833a7e711508d
 | R10 / US-6 | GLB with matching transforms, metre scale and colours, then Blender verification | V7, D1 / F4 / UI-AC-10–14, 21 |
 | R11 / US-7 | One Backing group in Taller Fondos y muebles; move seven cards without duplicates, preserve original-name/AI/photo discovery and identities; Shopify `/catalogo` unchanged | V3 / F3 / UI-AC-07–09, 19, 29–30, 33 |
 
-Draft revision / impact record (2026-10-26, owner feedback 18:53; kept here because this brief authorizes no changelog file): draft; revise the same unapproved v1. Compatibility is **breaking relative to the previous draft**: remove provisional V4/Shopify navigation, duplicate-card alternatives, the generic creation entry and pre-creation-form alternative; confirm per-type default creation plus existing inspector, quantities/dimensions without rental prices, the seven-card move and portable Blender LTS verification. Affected consumers: **T3.2** (V1/V2/V5/V6, F1/F2/F5), **T3.3** (V3/F3; remove V4), **T3.4** (V7/D1/F4 copy and feedback retained), **T3.5/T3.6** (confirmed automated real import plus separate owner opening), **T3.7/T3.8** (revised review scope). No accepted implementation exists to establish shipped conformity. Delegation D-20261026-191119-918c rechecked the same source snapshot; its mockup corrections are compatible with this owner-answer draft: the capacity warning now follows the entered request, validation can recover to the last valid value, and offline recovery is reachable. Production flows, tokens, views and task ownership are unchanged; T3.2 and T3.7 gain the explicit regression criteria UI-AC-34–35 below. Six active views retain their existing layout, tokens and applicable states. No other subplan contract changes; SP-1/2 own access, SP-8 owns translation and SP-4 owns server saves. Required action: owner plan/contract approval, then T3.1 exact copy, T3.2–T3.4 implementation, T3.5/T3.6 verification and T3.7/T3.8 independent review. An approved version is immutable; subsequent changes require v2 and impact analysis.
+Draft revision / impact record (2026-10-26, owner feedback 18:53; kept here because this brief authorizes no changelog file): draft; revise the same unapproved v1. Compatibility is **breaking relative to the previous draft**: remove provisional V4/Shopify navigation, duplicate-card alternatives, the generic creation entry and pre-creation-form alternative; confirm per-type default creation plus existing inspector, quantities/dimensions without rental prices, the seven-card move and portable Blender LTS verification. Affected consumers: **T3.2** (V1/V2/V5/V6, F1/F2/F5), **T3.3** (V3/F3; remove V4), **T3.4** (V7/D1/F4 copy and feedback retained), **T3.5/T3.6** (confirmed automated real import plus separate owner opening), **T3.7/T3.8** (revised review scope). No accepted implementation exists to establish shipped conformity. Delegation D-20261026-191119-918c rechecked the same source snapshot; its mockup corrections are compatible with this owner-answer draft: the capacity warning now follows the entered request, validation can recover to the last valid value, and offline recovery is reachable. Production flows, tokens, views and task ownership are unchanged; T3.2 and T3.7 gain the explicit regression criteria UI-AC-34–35 below. Six active views retain their tokens and applicable states; the visual composition is superseded by the owner-requested revision below. No other subplan contract changes; SP-1/2 own access, SP-8 owns translation and SP-4 owns server saves. Required action: owner plan/contract approval, then T3.1 exact copy, T3.2–T3.4 implementation, T3.5/T3.6 verification and T3.7/T3.8 independent review. An approved version is immutable; subsequent changes require v2 and impact analysis.
+
+**Visual revision — owner feedback 2026-10-26T19:36, delegation D-20261026-193603-299b.** Rebuild the visual layer across all six views and both dialogs, following `agents/designer/references/mockup-craft.md`: neutral token-based navigation/surfaces, one foreground primary action, equal peer-object cards, compact ruled inspector sections, plain conversation entries, file handoff without tinted containers, right-aligned tabular quantities, and consistent inline SVG icons. Keep every flow, state, breakpoint, canonical identity and the original UI-AC-01–35. This is **breaking visual compatibility relative to the previous draft** because hierarchy and component composition change; functional behavior and data contracts remain compatible. T3.2 consumes the V1/V2/V5/V6 composition, T3.3 the V3 cards and T3.4 the V7/D1 export presentation; T3.1 copies the resulting exact artifact and T3.7 must re-render all affected views/dialogs. T3.5/T3.6/T3.8 retain their functional scope and use the revised visual criteria where applicable. SP-1/2/4/8 contracts are unchanged. There is no approved implementation to migrate. This record replaces a separate changelog only because the delegated boundary authorizes exactly two design artifacts plus RESULT.json. The contract remains `draft` and requires owner approval with the plan.
 
 Read-only product evidence (pictures is the implementation repository; t12 is the compatibility reference, not an additional implementation target):
 - `t12` HEAD `fb872bce`: `src/app/globals.css`, `src/components/tres-d/ui-taller.ts`, `Taller3D.tsx`, `HojaMovil.tsx`, `EditorConjuntoMesa.tsx`, `FondosYMuebles.tsx`, `ListaEscenografia.tsx`; `src/lib/globos3d/mobiliario-conjunto-tipos.ts`, `fondos-escenografia.ts`, `mobiliario-tipos.ts`; `src/lib/catalogo/asignacion-fondos.ts`; `src/app/catalogo/page.tsx`, `src/components/catalogo/Facetas.tsx`.
@@ -35,6 +37,19 @@ Read-only product evidence (pictures is the implementation repository; t12 is th
 External accounts with `taller.usar` (initial Plan 3), employees and administrators build event scenes; they need a discoverable rectangular table, editable seating and reusable Backing. These views require Taller access; Shopify `/catalogo` and its independent `catalogo.ver` access remain outside this subplan. Success: the user can locate a prop, insert it once, see the actual table/chair counts, and start a GLB download without losing scene work. Blender parity is a separately verified export outcome, never inferred from a success toast.
 
 V1 finds the table; V2 adjusts it; V3 finds scene Backing; V5 checks actual materials; V6 requests the same table through existing scene AI; V7 hands the scene to Blender. No account administration, new room editing, Illustrator, module editing or save-project redesign is included.
+
+Each screen has one question and one main job; these are design intent, not additional production banners. The mockup displays them above the product shell for review.
+
+| View | One question | Main job / observable success |
+|---|---|---|
+| V1 Tables | ¿Qué mesa necesita esta escena? | Add the intended type at its default size and reach the existing inspector. |
+| V2 Table editor | ¿Qué medidas y cuántas sillas caben? | Edit dimensions and see the requested versus actually placed chairs. |
+| V3 Backing | ¿Qué piezas completan el Backing? | Find and add a canonical panel, hoop or pedestal once. |
+| V5 Shopping | ¿Qué piezas tengo que preparar? | Read actual quantities and dimensions with no rental-price claim. |
+| V6 Scene AI | ¿Cómo añado esta mesa con la IA? | Describe, review and apply the same editable table. |
+| V7 Export | ¿Cómo llevo esta escena a Blender? | Initiate a GLB download in metres and read its Blender import destination. |
+
+Product inventory: Pictures / Taller 3D; project “Cumpleaños · lavanda”; rectangular table, Tiffany chairs, round panel, pedestal set and the seven canonical Backing pieces. These concrete scene objects replace generic dashboard panels or invented account metrics. The scene is the single visually expressive area; surrounding controls are restrained working surfaces.
 
 ## 3. Information architecture and hierarchy
 
@@ -48,7 +63,7 @@ Keep the existing workshop shell: title/actions → panel rail → Add panel →
 
 ## 4. Design system and visual language
 
-Reuse `globals.css` tokens and classes `BTN`, `BTN_PRI`, `BTN_ICO`, `RIEL`, `RIEL_ON`, `CHIP`, `TARJETA`, `DATO`, `ROTULO`, `FLOTANTE` from `ui-taller.ts`. No new brand palette. Native controls use the same surface/text tokens. Project tokens take precedence over global desktop font/palette preferences: this product uses Geist Sans/Geist Mono, not JetBrains Mono. Offline mockup uses `system-ui` and `ui-monospace` fallbacks because no external fonts are allowed.
+Reuse `globals.css` token values and the established sizing/shape of `BTN`, `BTN_PRI`, `BTN_ICO`, `RIEL`, `TARJETA` and numeric controls in `ui-taller.ts`. No new brand palette. This draft intentionally proposes neutral variants for `RIEL_ON`, `CHIP`, `DATO`, `ROTULO` and flat surfaces instead of copying their tinted selection, uppercase labels or floating effects; use existing surface/text tokens, a neutral text underline and pressed semantics. Owner feedback explicitly requests that visual change; it does not alter navigation or state behavior. Native controls use the same surface/text tokens. Project tokens take precedence over global desktop font/palette preferences: this product uses Geist Sans/Geist Mono, not JetBrains Mono. Offline mockup uses `system-ui` and `ui-monospace` fallbacks because no external fonts are allowed.
 
 | Semantic token | Light | Dark | Use |
 |---|---|---|---|
@@ -57,21 +72,30 @@ Reuse `globals.css` tokens and classes `BTN`, `BTN_PRI`, `BTN_ICO`, `RIEL`, `RIE
 | `--taller-visor` | #ebe7f1 | #1a1722 | Scene background |
 | `--taller-tarjeta` | #ffffff | #1d1926 | Cards / input surfaces |
 | `--taller-boton` | #ffffff | #1b1724 | Secondary controls |
-| `--taller-encima` | #f3eefb | #231e2e | Hover / thumbnails |
-| `--taller-elegido` | #ece3fb | #2a2140 | Selected chips / rows |
+| `--taller-encima` | #f3eefb | #231e2e | Existing scene illustration shading; no tinted thumbnail container |
+| `--taller-elegido` | #ece3fb | #2a2140 | Retained system token; no persistent tinted chrome in these views |
 | `--taller-borde` | #ddd3ea | #2d2838 | Existing soft separators |
 | `--taller-texto` | #1c1425 | #f2eff7 | Main copy |
 | `--taller-texto-2` | #3a3146 | #ddd8e6 | Supporting copy |
 | `--taller-medio` | #5a5168 | #a59db5 | Readable secondary labels |
 | `--taller-primario` | #6d3fe0 | #7a55ec | Primary button with `--taller-sobre-primario` #ffffff |
 | `--taller-resalte` | #6d3fe0 | #8f6ef5 | Focus / selection |
-| `--taller-acento` | #5530b8 | #b9a4ff | Accent text |
+| `--taller-acento` | #5530b8 | #b9a4ff | Scene dimension annotation; no coloured navigation label |
 | `--taller-peligro` | #a8323d | #f08a94 | Errors with text/icon |
 | `--taller-valido` | #1a6a4a | #5fd3a0 | Success with text/icon |
 
 Existing soft borders are not sufficient as the only interactive boundary: use `--taller-medio` for input outlines and selected labels, with a text/check indication. No new semantic token is needed. Decorative mock geometry uses source prop colours; these are scene materials, not UI tokens.
 
-Spacing follows existing Tailwind 4 px scale: 8 px control gaps, 12 px card gaps, 16 px section padding, 24 px between groups. Header 56 px, desktop rail 60 px, Add panel up to 340 px, inspector up to 320 px. Radius 10 px buttons/inputs, 12 px cards, 20 px mobile sheet. Body 13–14 px, labels 12 px, headings 16–20 px; amounts use tabular figures. Existing desktop controls at least 36 px high; touch actions 44 px. Focus: 2 px `--taller-resalte` outline with 3 px offset, never clipped. No decorative motion; any sheet transition ≤180 ms with reduced-motion instant equivalent.
+Compact token plan (all existing; no proposed colour values): six roles are **chrome** (`--taller-barra`/`--taller-panel`), **scene** (`--taller-visor`), **content** (`--taller-texto`/`--taller-medio`), **boundaries** (`--taller-borde` decorative, `--taller-medio` interactive), **action** (`--taller-primario`/`--taller-sobre-primario`) and **feedback** (`--taller-peligro`/`--taller-valido`). The product's mildly violet neutral surfaces stay intact in both themes; no unrelated grey palette or desktop theme is substituted. Source material colours belong to scene data, not UI chrome.
+
+- Colour appears on the scene/material swatches, meaningful success/error text, keyboard focus and at most **one foreground primary action**. V1: rectangular-table add; V2: shopping-list access; V3: equally ranked neutral per-piece add actions, no arbitrary preferred Backing piece; V5/D2: return to scene; V6: Send, or Apply proposal while a proposal is pending; V7: open export options, replaced by GLB in D1. An open dialog/popover removes the background panel's primary emphasis. Navigation uses neutral text/surface and an underline or pressed label, never a coloured left strip.
+- Tables are eight equal-width peer-object cards, rectangular first. Their real object artwork carries the colour; thumbnail backgrounds are transparent. Dimensions have intentional two-line measurement/height formatting, aligned right. Backing cards follow the same peer-object treatment. No nested cards or tinted rectangular hero.
+- Inspector groups use plain rules: dimensions; requested/placed chairs with paired fields; materials. The placed quantity is a text value, not a coloured KPI tile. Shopping rows show description first and a fixed right quantity column with a sentence-case “Cantidad” label. Quantities, dimensions and numeric inputs use tabular figures and right alignment; text stays left aligned.
+- Scene AI uses two ruled conversation entries (“Tu petición”, “Propuesta de mesa · ejemplo”), not tinted speech-bubble cards. Export uses a neutral file row and import instructions, without a decorative file tile. Loading uses static neutral skeletons; empty/error copy names the missing piece or failed task and offers its next action. Notices are plain ruled text; colour distinguishes error/success only.
+- One font family; production Geist Sans and mockup system fallback. Body/data 14 px; control labels 12–13 px; supporting copy at least 11 px; panel titles 18–20 px, not hero typography. Geist Mono is an existing source option, but this mock uses the same sans family with tabular figures. No uppercase tracked eyebrow, decorative slogan or invented logo. Header uses the product wordmark “Pictures” as text. UI icons are inline SVG on a 24 px grid, 1.75 px stroke, normally 18 px; no emoji or Unicode icon substitutes. Arrows in the Blender menu path are punctuation.
+- Spacing follows the existing Tailwind 4 px base: 8 px control gaps, 12 px peer gaps, 16 px panel padding, 16–24 px between sections. Header 56 px, desktop rail 60 px, Add panel 300–320 px, inspector 300–320 px. Radius 10 px controls, 12 px cards/dialog, 20 px narrow sheet, as existing. Borders separate fixed panels; shadows occur only on floating export/shopping surfaces. No gradients, blur, glow or decorative animation. Desktop controls ≥36 px; narrow touch actions ≥44 px. Focus is 2 px `--taller-resalte` with 3 px offset, never clipped. Transitions, if implemented, ≤180 ms and instant with reduced motion.
+
+The meaningful departure from the former draft is composition, not a token substitution: peer cards replace the singled-out tinted table block, compact paired editing fields replace stacked KPI containers, and shopping quantities move to a single aligned column. Existing views, state selectors and interactions remain.
 
 ## 5. Navigation and interaction model
 
@@ -109,10 +133,10 @@ Canonical membership / invariants for F3 (all remain `ASIGNACION_FONDOS → esce
 
 | ID / mock `view` | Structure / copy / actions | Responsive / states / flow |
 |---|---|---|
-| V1 `tables` | Add title; Mobiliario selected; search; “Mesa rectangular / A medida · con sillas”; cards for the other seven existing types; primary “Añadir mesa rectangular”; scene; compact selected-piece summary | Desktop three panes, narrow active sheet; S1–S5,S7,S9–S10; F1 |
+| V1 `tables` | Add title; Mobiliario selected; search; “Mesa rectangular / A medida · con sillas”; cards for the other seven existing types; rectangular-card action “Añadir” (accessible name “Añadir Mesa rectangular”); equal-width type cards; scene; compact selected-piece summary | Desktop three panes, narrow active sheet; S1–S5,S7,S9–S10; F1 |
 | V2 `table-editor` | “Mesa rectangular 01”; length, width, tabletop height numeric fields + source ranges; chair requested/placed/capacity, type, distribution; existing cloth/colour controls; actual-count note; “Ver lista de compra” | One inspector column; fields never side-scroll; S1,S2,S3,S4,S5,S6,S7,S8,S9,S10; F1/F2 |
-| V3 `backing` | Add → Backing; “Aros, pedestales y paneles”; search; two-column illustrated cards with canonical names, dimensions when known, “Añadir…” accessible names; preserve original-name/AI/photo discovery; no duplicate cards in previous groups | Cards wrap; no stock/price invented; S1–S5,S7,S9,S10; F3 |
-| V5 `shopping` / D2 | Dialog title “Lista de compra”; Mobiliario and Escenografía; e.g. 1 × rectangular table (2.40 × 0.90 × 0.75 m), 8 × Tiffany chair, 1 × round panel, 1 × pedestal set; “No son productos de la tienda”; no invented currency total; close to prior scene | Max 640 px modal, nearly full viewport narrow; S1–S5,S7,S9,S10; F1/F2 |
+| V3 `backing` | Add → Backing; “Aros, pedestales y paneles”; search; two-column peer cards with transparent illustrated thumbnails and canonical names, dimensions when known, “Añadir…” accessible names; preserve original-name/AI/photo discovery; no duplicate cards in previous groups | Cards wrap; no stock/price invented; S1–S5,S7,S9,S10; F3 |
+| V5 `shopping` / D2 | Dialog title “Lista de compra”; ruled Mobiliario and Escenografía sections; right-aligned tabular “Cantidad” column; e.g. 1 × rectangular table (2.40 × 0.90 × 0.75 m), 8 × Tiffany chair, 1 × round panel, 1 × pedestal set; “No son productos de la tienda”; no invented currency total; close to prior scene | Max 640 px modal, nearly full viewport narrow; S1–S5,S7,S9,S10; F1/F2 |
 | V6 `ai` | Existing scene IA inspector; one mock conversation; text prompt; “Enviar”; pending response; result “1 mesa rectangular · 8 sillas colocadas”; existing proposal/apply interaction and manual-edit link | Input below conversation, expands above mobile keyboard; S1–S5,S6,S7,S8,S9,S10,S11; F5 |
 | V7 `export` / D1 | Workshop with export group open; PNG sibling, primary “Descargar modelo GLB · Blender”; scene name, metre scale, import instruction; prepare/error/started feedback next to trigger | Popover max 320 px, fits viewport; accessible in compact narrow header; S1–S5,S7,S8,S9,S10,S11; F4 |
 
@@ -201,6 +225,14 @@ Target WCAG 2.2 AA for changed UI. A design description does not establish confo
 | UI-AC-33 | All | ready | The seven Backing cards do not appear in Fondos y tapetes or Decorado de pie. |
 | UI-AC-34 | All | partial | After requesting 20 chairs with the eight-chair mock fixture, the warning and input both say 20 requested and the placed count remains 8. |
 | UI-AC-35 | All | validation → ready | Correcting an invalid dimension or chair quantity back to its previous valid value removes the field error. |
+| UI-AC-36 | All | ready | Active rail, category tabs and mobile navigation have neutral text/surface selection, without a purple strip or tinted banner. |
+| UI-AC-37 | All | ready / partial | At most one foreground action uses the primary fill, including when export or shopping is open. |
+| UI-AC-38 | All | ready | V1 uses eight peer cards of equal column width; rectangular has no tinted enclosing hero. |
+| UI-AC-39 | All | ready | V5 quantities share a right-aligned column and use tabular figures. |
+| UI-AC-40 | All | ready | V2 numeric input values and type-card dimensions are right aligned with tabular figures. |
+| UI-AC-41 | All | ready | Fixed panels and notices have flat token surfaces with no shadow, gradient, blur or glow. |
+| UI-AC-42 | All | ready | Navigation, export and add icons are inline SVG; supporting UI text is at least 11 CSS px. |
+| UI-AC-43 | 1440×980 px | ready | V2 shows the dimensions and chairs groups plus the Materials heading and its first control in the initial desktop inspector viewport. |
 
 Round 9 q1–q4 settle these behaviors; the contract itself still requires owner approval. The seven cards move into Backing and leave their former visual groups, which retain their other pieces. Original-name search remains; no duplicate card aliases are created. Identity, `GrupoCatalogo`, `ASIGNACION_FONDOS`, AI/photo compatibility and absence of the seven cards from former groups require source/functional checks in T3.3/T3.8; a rendered grouping cannot prove them.
 
@@ -256,7 +288,7 @@ Local Chromium via the existing Playwright dependency: 63 view/state combination
 - Earlier verification records include the removed V4 and are historical only. This revision validates a static planning artifact: production engine geometry, deterministic AI-tool parity, saved-scene/AI/photo compatibility, actual GLB validity, automated Blender import, owner manual opening and full accessibility conformance remain for the planned implementation/verification cycle after owner approval.
 
 
-### Current delegation verification — D-20261026-191119-918c (2026-10-26)
+### Previous delegation verification — D-20261026-191119-918c (2026-10-26)
 
 - Re-read SPEC, PLAN and SP-3/T3.1–T3.8 in PLAN.json; their SHA-256 values still match section 1. The exact UI consumer remains SP-3, `taller-esenciales@v1`, design-copy task T3.1, implementation tasks T3.2/T3.3/T3.4 and independent visual task T3.7. No additional owner questions or scope changes were found. Status remains **draft**, pending plan approval.
 - Preserved the six existing views, confirmed round 9 decisions, source tokens, responsive layouts and export scope. Fixed two reproduced mock fidelity defects: hard-coded requested-chair feedback and errors persisting after restoring a previous valid value. Added the missing visible offline retry action. No production engine behavior is implemented by these corrections.

@@ -91,3 +91,12 @@
 {"at": "2026-10-26T19:16:14-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "cuentas-admin@v1 · borrador 5 listo", "diff": ""}
 {"at": "2026-10-26T19:18:38-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1 · borrador 4 listo", "diff": ""}
 {"at": "2026-10-26T19:19:06-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:20:14-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · borrador 4 listo", "diff": ""}
+{"at": "2026-10-26T19:22:50-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 11 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:23:29-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 2 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:35:58-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the", "diff": ""}
+{"at": "2026-10-26T19:36:02-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T19:36:02-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-3", "text": "taller-esenciales@v1: Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the", "diff": ""}
+{"at": "2026-10-26T19:36:03-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "Empezó taller-esenciales@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T19:36:03-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-4", "text": "proyectos@v1: Visual redesign requested by the owner: keep the contract's behavior, views, states and criteria, but rebuild the mockup's visual layer applying agents/designer/references/mockup-craft.md in full (the", "diff": ""}
+{"at": "2026-10-26T19:36:03-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "Empezó proyectos@v1 con tus comentarios", "diff": ""}
