@@ -121,6 +121,7 @@ Vetted component inventory and exact snippet examples:
 | Button · variant=default\|outline\|ghost\|link\|destructive · state=normal\|hover\|focus-visible\|disabled\|loading | `kit/components/button.html#variants`, `#states` | One default primary per view, secondary navigation, destructive confirmations |
 | Card · parts=header\|content\|footer | `kit/components/card.html#sections` | Public auth card; peer compact account cards; no nested cards |
 | Input · type=text\|email\|password\|search · state=default\|error\|disabled\|readonly | `kit/components/input.html#types`, `#states` | Labelled fields in all forms |
+| Field · orientation=vertical · description/error | `kit/components/field.html#vertical` | Permission choice and full-width associated helper; name/form groups |
 | InputGroup · addon=button | `kit/components/input-group.html#addons` | Password input and Show/Hide button |
 | Select · native · state=default\|error\|disabled | `kit/components/select.html#native` | Role/status filters, one-role choice and mock selectors |
 | Checkbox · state=unchecked\|checked\|error\|disabled | `kit/components/checkbox.html#list`, `#states` | Explicit notice consent and independent permission matrix |
