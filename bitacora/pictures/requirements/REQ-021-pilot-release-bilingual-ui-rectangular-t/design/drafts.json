@@ -6,8 +6,8 @@
    "before": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
    "delegation": "D-20261026-210139-c6dc",
    "digest": "abde9480c2f8d545",
-   "error": "",
-   "failures": 0,
+   "error": "failed: signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: ",
+   "failures": 1,
    "feedback": [
     {
      "consumed": "D-20261026-160248-b311",
@@ -28,13 +28,12 @@
      "when": "2026-10-26T19:35:58-05:00"
     },
     {
-     "consumed": "D-20261026-210139-c6dc",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:39-05:00"
     }
    ],
-   "finished": "2026-10-26T19:47:28-05:00",
+   "finished": "2026-10-26T21:08:05-05:00",
    "history": [
     {
      "at": "2026-10-26T15:49:44-05:00",
@@ -76,9 +75,9 @@
    "revision": 6,
    "sha256": "e9493f68971051c3efefada0a9c1601422d93bd06f290627089a44d69508bf10",
    "started": "2026-10-26T21:01:39-05:00",
-   "status": "drafting",
+   "status": "failed",
    "subplan_id": "SP-2",
-   "summary": "Rebuilt the complete cuentas-admin@v1 visual layer using Pictures tokens, flat neutral working surfaces, precise access summaries and right-aligned tabular figures. Preserved all eleven views, state/dialog vocabularies, flows and the original 58 acceptance criteria, adding seven visual criteria and recording consumer impact. The contract remains draft for owner approval with the plan."
+   "summary": "signed-in page and the Mi cuenta page · repo: pictures · after: T2.1, T2.2 · verify: `npm run cuentas:test-ui-mi-cuenta` · files: src/components/cuentas/MenuCuenta.tsx, src/app/layout.tsx, src/app/cuenta/page.tsx, src/components/cuentas/textos-cuenta.ts, scripts/test/test-ui-mi-cuenta.ts · resources: package.json scripts, contract:session-guard · covers: R1 · kind: implement · subplan: SP-2 · ui: "
   },
   "proyectos@v1": {
    "agent": "codex",
@@ -160,8 +159,8 @@
    "before": "46e758f7d1e6ca585761dc10c6e52e895bdf358126c1a440f6dca5fe16a669ff",
    "delegation": "D-20261026-210140-4802",
    "digest": "f3f2ed19d4dc6d0a",
-   "error": "",
-   "failures": 0,
+   "error": "failed: 5)); } }\n@keyframes kit-pulse { 50% { opacity: .55; } }\n@keyframes kit-indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }\n  .skeleton { ani",
+   "failures": 1,
    "feedback": [
     {
      "consumed": "D-20261026-173732-8772",
@@ -182,13 +181,12 @@
      "when": "2026-10-26T19:36:02-05:00"
     },
     {
-     "consumed": "D-20261026-210140-4802",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:40-05:00"
     }
    ],
-   "finished": "2026-10-26T19:53:02-05:00",
+   "finished": "2026-10-26T21:08:05-05:00",
    "history": [
     {
      "at": "2026-10-26T17:37:32-05:00",
@@ -225,9 +223,9 @@
    "revision": 5,
    "sha256": "46e758f7d1e6ca585761dc10c6e52e895bdf358126c1a440f6dca5fe16a669ff",
    "started": "2026-10-26T21:01:40-05:00",
-   "status": "drafting",
+   "status": "failed",
    "subplan_id": "SP-3",
-   "summary": "Rebuilt the visual layer of all six Taller views and both dialogs with source tokens, neutral working surfaces, peer cards, aligned quantities and one foreground primary action. Preserved flows, states and the original 35 criteria; the draft now contains 43 criteria and a per-view question/job. Both requested design artifacts are complete; owner approval remains pending with the plan."
+   "summary": "5)); } }\n@keyframes kit-pulse { 50% { opacity: .55; } }\n@keyframes kit-indeterminate { from { transform: translateX(-100%); } to { transform: translateX(250%); } }\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }\n  .skeleton { ani"
   }
  },
  "schema_version": 1
