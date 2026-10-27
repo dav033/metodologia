@@ -104,3 +104,11 @@
 {"at": "2026-10-26T19:49:07-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1 · borrador 5 listo", "diff": ""}
 {"at": "2026-10-26T19:50:09-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 20 secciones traducidas", "diff": ""}
 {"at": "2026-10-26T19:51:53-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 5 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:52:54-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-26T19:53:02-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "taller-esenciales@v1 · borrador 5 listo", "diff": ""}
+{"at": "2026-10-26T21:01:39-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-2", "text": "cuentas-admin@v1: Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the k", "diff": ""}
+{"at": "2026-10-26T21:01:39-05:00", "who": "Designer", "kind": "design", "sp": "SP-2", "text": "Empezó cuentas-admin@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T21:01:40-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-3", "text": "taller-esenciales@v1: Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the k", "diff": ""}
+{"at": "2026-10-26T21:01:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-3", "text": "Empezó taller-esenciales@v1 con tus comentarios", "diff": ""}
+{"at": "2026-10-26T21:01:40-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-4", "text": "proyectos@v1: Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the k", "diff": ""}
+{"at": "2026-10-26T21:01:40-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "Empezó proyectos@v1 con tus comentarios", "diff": ""}
