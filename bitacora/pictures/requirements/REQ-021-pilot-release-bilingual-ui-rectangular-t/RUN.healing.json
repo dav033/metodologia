@@ -1,7 +1,70 @@
 {
- "actions": 0,
- "analyst_stops": {},
+ "actions": 2,
+ "analyst_stops": {
+  "T1.8:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4": {
+   "attempt": "att-0022",
+   "task": "T1.8"
+  }
+ },
  "cases": {
+  "7fba542ef5969161": {
+   "applied": 1,
+   "at": 1793140568.738,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: Not an implementation bug in the audit itself: T1.8 asks for a ledger with no open critical/high finding, but the audit correctly finds 5 open high defects (F1, F2, F3, F4, F6) in the unchanged code, "
+   ],
+   "first_at": 1793140557.795,
+   "history": [
+    {
+     "at": 1793140557.935,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793140558.201,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793140563.481,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    },
+    {
+     "at": 1793140568.738,
+     "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+     "result": "failed"
+    }
+   ],
+   "id": "7fba542ef5969161",
+   "invalid": 3,
+   "repair": "revision invalid: EXTERNAL_ONLY_IMPLEMENT: T1.11: implement tasks need a sandbox command verification",
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "the same failure came back after its repair"
+  },
+  "8323550dd5b5f9a3": {
+   "applied": 1,
+   "at": 1793139073.388,
+   "class": "transient",
+   "evidence": [
+    "transient signature: cancelled",
+    "reason code: m5_stale_or_cancelled"
+   ],
+   "first_at": 1793139073.35,
+   "history": [
+    {
+     "at": 1793139073.388,
+     "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+     "result": "failed"
+    }
+   ],
+   "id": "8323550dd5b5f9a3",
+   "repair": "transient: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+   "status": "failed",
+   "task": "T1.10"
+  },
   "b3881870b07f9253": {
    "applied": 0,
    "blocker": "producer_remediation_required",

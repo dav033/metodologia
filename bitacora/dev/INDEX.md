@@ -1,6 +1,6 @@
 # Index — dev
 
-_Generated 2026-10-27 16:11 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-27 18:17 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/dev) · [graph](http://127.0.0.1:8765/p/dev/graph)  

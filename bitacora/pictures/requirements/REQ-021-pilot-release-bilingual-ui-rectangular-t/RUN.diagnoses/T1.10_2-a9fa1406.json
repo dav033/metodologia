@@ -1,0 +1,22 @@
+{
+ "request": "T1.10:2",
+ "state": "done",
+ "kind": "cancelled",
+ "label": "Cancelado",
+ "tone": "muted",
+ "headline": "T1.10 quedó cancelada a mano tras dos intentos cancelados por el ejecutor; no falló el código.",
+ "origin": "Los dos intentos (att-0016 y att-0017) terminaron como cancelled_by_executor. El último lo cerró el operador con la nota \"cancelled by operator: restart T1.10 so it reads the owner note with the hang diagnosis\". La tarea se colgó antes en el test \"ingreso concurrente: el restablecimiento espera la validación y revoca la sesión que se emite\" (scripts/test/test-cuentas-servicio.ts), porque el pool de scripts/test/lib/base-prueba.ts tiene max: 2 y el sondeo de bloqueo usa pool.query sin conexión libre ni timeout. La regla de «cancelado» aplica aquí; el código no falla por sí mismo. Reintentar sin la nota no corrige el colgado.",
+ "steps": [
+  "Ejecuta «Reintentar» (retry) para que T1.10 vuelva a arrancar y lea la nota del propietario con el diagnóstico del colgado.",
+  "Antes de cerrar, verifica en local con timeout cada comando de la tarea: `timeout 300 npm run cuentas:test-servicio -- --test-name-pattern=ingreso` (y los demás patrones).",
+  "Si el intento vuelve a colgarse, revisa que el sondeo de bloqueo use un Client dedicado o un pool con max >= 4 y connectionTimeoutMillis en scripts/test/lib/base-prueba.ts."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-27T17:10:42",
+ "seconds": 9.9
+}

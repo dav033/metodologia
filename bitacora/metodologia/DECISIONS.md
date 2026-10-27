@@ -1327,3 +1327,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Addendum (2026-10-27, same session):** the first real remediation in a staged 1.3.0 plan exposed two more gaps, now fixed in `bt_remediation.apply`: it marked the audited subplan "changed" (owner had to reconfirm a running subplan) and left new tasks out of PLAN.md (stage approval refused). `apply` now re-pins confirmations that held (`keep_confirmed`) and writes the task lines (`sync_markdown`). Tests in `test_remediation`.
 - **Addendum 2 (2026-10-27):** `bt_design_directions.choosable` — one direction whose mockup lacks its declared traits no longer hides the sound ones (the aggregate comparison used to block every choice). Owner ruling: SP-3 drops its design contract because its UI is only cards and a group inside the existing Fondos y muebles panel.
 
+## D-138 — A check with no output and no CPU is a hang and fails the code
+
+- **Date:** 2026-10-27 · **Status:** Accepted
+- **Context:** REQ-021 T1.10's verification sat 39 min in a test deadlocked on a 2-connection test pool. The verifier cut checks only at `max_command_seconds` (3000 s), kept its heartbeat alive, and `CHECK_TIMEOUT` is classified as transient infrastructure, so healing retried the same hang and the owner had to diagnose it by hand.
+- **Decision:** `verifier.max_idle_seconds` (default 600, 0 = off): a check whose whole process tree prints nothing and uses under 5% of a core for that long is killed and FAILS as a code defect, with `[M6] CHECK_HUNG` naming the processes; it is never rerun.
+- **Consequences:** + a hang costs 10 min instead of 39-100 and the builder is sent back with the cause; − a legitimately silent, CPU-free wait longer than 10 min (rare) would be failed: raise the key for that project.
+- **Rollback:** `verifier.max_idle_seconds = 0`.
+- **Evidence:** `bt_scheduler_quality/tests/test_runner.py` (hang fails, busy silent passes, off switch), 98 quality tests; commit `9e3c81a73`.
+
