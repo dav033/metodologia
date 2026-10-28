@@ -29,7 +29,7 @@ from bt_pages import purl
 
 LANGS = (("en", "EN"), ("es", "ES"), ("both", "EN + ES"))
 MODES = (("subplans", "Subplanes"), ("doc", "Plan completo"))
-VIEWS = ("design", "tasks", "criteria", "inputs", "verify", "session", "notes", "asks")
+VIEWS = ("design", "tasks", "criteria", "inputs", "verify", "session", "notes", "asks", "run")
 STATES = {"none": "sin diseño", "queued": "diseño en cola", "drafting": "diseñando…", "ready": "diseño listo",
           "amending": "actualizando el diseño…",
           "choosing": "elige una dirección",
@@ -106,7 +106,8 @@ def follow(project: str, rdir: Path, lang: str = "en") -> None:
 def plan_tab(project: str, rid: str, rdir: Path, status: str | None, token: str, q: dict) -> str:
     opts = options(rdir, q)
     api = purl(project, "req", rid, "planning")
-    return (f'<div class="pp" id="planning" data-api="{e(api)}">{fragment(project, rid, rdir, status, token, opts)}'
+    return (f'<link rel="stylesheet" href="/static/plans.css"><div class="pp" id="planning" data-api="{e(api)}">'
+            f'{fragment(project, rid, rdir, status, token, opts)}'
             '</div><script src="/static/planning-live.js"></script><script src="/static/mockup-nav.js"></script>')
 
 
@@ -279,6 +280,9 @@ def _list(ctx: dict) -> str:
             import bt_page_planning_flow as flow_view
             cls, label = flow_view.label(ctx, s["id"])
             meta = f"{label} · " + meta
+        import bt_page_planning_run as run_chip
+        if (ran := run_chip.chip(ctx, s["id"])):
+            meta += " · " + ran
         if verified.get(s["id"]) and verified[s["id"]] != "waiting":
             meta += " · " + verification.STATES_ES[verified[s["id"]]]
         items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans"))}"'
@@ -317,6 +321,9 @@ def _detail(ctx: dict) -> str:
                       if row["pending"])
         tabs.append(("inputs", f"Entradas{f' · faltan {pending}' if pending else ''}"))
         flow_actions = flow_view.actions(ctx, s)
+    import bt_page_planning_run as run_view
+    if run_view.counts(ctx).get(s["id"]):
+        tabs.append(("run", run_view.tab_label(ctx, s["id"])))
     import bt_page_verification as verify_view
     tabs.append(("verify", verify_view.tab_label(ctx["rdir"])))
     import bt_page_sessions as session_view
@@ -327,6 +334,8 @@ def _detail(ctx: dict) -> str:
                   f'{" class=on aria-current=true" if opts["view"] == k else ""}>{e(name)}</a>' for k, name in tabs)
     if opts["view"] == "inputs" and ctx["flow"]:
         body = flow_view.inputs_panel(ctx, s)
+    elif opts["view"] == "run":
+        body = run_view.panel(ctx, s)
     elif opts["view"] == "verify":
         body = verify_view.panel(ctx, s)
     elif opts["view"] == "session":

@@ -152,6 +152,43 @@ def heal_control(root: Path, project: str, req: str, action: str, case: str = ""
     raise PlanError("Acción de autocuración desconocida.")
 
 
+def rework(root: Path, project: str, req: str, tasks: list[str], reason: str, confirm: bool = False) -> str:
+    """Send accepted tasks back from the page (`scheduler-op REQ rework T1,T2 --only`): they alone are redone, what depends on
+    them keeps its accepted result. Past `gates.rework_confirm_over` tasks it needs the owner's explicit confirmation."""
+    import bt_scheduler_ops as ops
+    rdir = req_dir(root, project, req)
+    tasks = [t for t in dict.fromkeys(tasks) if re.fullmatch(r"T[0-9]+(?:\.[0-9]+)?[a-z]?", t)]
+    if not tasks:
+        raise PlanError("Elige al menos una tarea para devolver.")
+    if not reason.strip():
+        raise PlanError("Escribe por qué se devuelve: la tarea lo lee en su siguiente intento.")
+    try:
+        lines = ops.apply(project, req, rdir, "rework", ",".join(tasks), reason.strip(), only=True, confirm=confirm)
+    except ValueError as exc:
+        raise PlanError(str(exc)) from exc
+    except scheduler_.core.SchedulerError as exc:
+        raise PlanError(str(exc)) from exc
+    return f"Devueltas {', '.join(tasks)}: " + "; ".join(lines)
+
+
+def retry_task(root: Path, project: str, req: str, task: str, reason: str = "") -> str:
+    """Retry one task from the page (cancel its live attempt and reopen it), the same move as `scheduler-op REQ retry`."""
+    import bt_scheduler_ops as ops
+    rdir = req_dir(root, project, req)
+    if not re.fullmatch(r"T[0-9]+(?:\.[0-9]+)?[a-z]?", task or ""):
+        raise PlanError("Tarea no válida.")
+    try:
+        lines = ops.retry(project, req, rdir, task, reason.strip() or "retry from the plan page")
+    except (ValueError, scheduler_.core.SchedulerError) as exc:
+        raise PlanError(str(exc)) from exc
+    return f"{task}: " + "; ".join(lines)
+
+
+def exec_status(root: Path, project: str, req: str) -> dict[str, Any]:
+    """`status_of`, shared for a few seconds between the plan tab's pollers (the status reads the whole run)."""
+    return _shared_value(("exec", str(root), project, req), lambda: status_of(root, project, req), 3.0)
+
+
 def open_decisions(rdir: Path) -> list[dict[str, Any]]:
     """What the run asks its owner now (D-020); a plan without a readable scheduler run asks nothing."""
     if not (rdir / scheduler_.PROJECTION).is_file():

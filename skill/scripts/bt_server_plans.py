@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 from urllib.parse import quote
 
 from bt_core import *
@@ -77,6 +78,9 @@ class PlanListActions:
                    "recovery": lambda p, r: api.recovery_control(ROOT, p, r, form.get("action", ""), form.get("preview", ""),
                                                                  form.get("stop_generation", "")),
                    "heal": lambda p, r: api.heal_control(ROOT, p, r, form.get("action", ""), form.get("case", "")),
+                   "rework": lambda p, r: api.rework(ROOT, p, r, form.get("tasks", "").replace(",", " ").split(), form.get("reason", ""),
+                                                     form.get("confirm_cost") == "1"),
+                   "retry-task": lambda p, r: api.retry_task(ROOT, p, r, form.get("task", ""), form.get("reason", "")),
                    "cancel": lambda p, r: api.cancel_plan(ROOT, p, r, form.get("confirm", "")),
                    "delete": lambda p, r: api.delete_plan(ROOT, p, r, form.get("confirm", ""))}
         try:
@@ -86,11 +90,20 @@ class PlanListActions:
             if len(parts) == 4 and parts[3] in actions:
                 msg = actions[parts[3]](parts[1], parts[2])
                 dest = "/plans" if parts[3] == "delete" else f"/plans/{quote(parts[1])}/{quote(parts[2])}"
-                return self.redirect(f"{dest}?msg={quote(msg)}")
+                return self.redirect(self._back(form, dest, msg))
         except api.PlanError as exc:
             back = f"/plans/{quote(parts[1])}/{quote(parts[2])}" if len(parts) == 4 else "/plans"
-            return self.redirect(f"{back}?msg={quote(str(exc))}")
+            return self.redirect(self._back(form, back, str(exc)))
         self.send("Not found", 404, "text/plain")
+
+    @staticmethod
+    def _back(form: dict, default: str, msg: str) -> str:
+        """Where an action returns: the Plan tab view it was pressed in (`back`, a local /p/ path only), else the plans page."""
+        back = str(form.get("back") or "")
+        if back.startswith("/p/") and not back.startswith("//") and "\n" not in back and "\\" not in back:
+            base = re.sub(r"([?&])msg=[^&]*&?", r"\1", back).rstrip("?&")
+            return f"{base}{'&' if '?' in base else '?'}msg={quote(msg)}"
+        return f"{default}?msg={quote(msg)}"
 
     def run_plan(self, api, project: str, rid: str, expected: str) -> str:
         from bt_server import (
