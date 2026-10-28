@@ -1,0 +1,17 @@
+{
+ "at": "2026-10-28T13:23:49",
+ "cause": "El fallo está en scripts/test/test-taller-registros-completos.ts:43, una aserción obsoleta. Espera `Object.keys(FORMAS_ESCENOGRAFIA)` igual a [\"caja\",\"cilindro\",\"panel\"], pero src/lib/globos3d/escenografia.ts:63 ya define `arco_apuntado: true` (forma aprobada en docs/req021/aprobacion-backing-mesas.json, con panel_arco_apuntado). El propio scripts/test/test-formas-escenografia-nuevas.ts:33 ya espera las cuatro formas, así que la nueva forma es intencional y la aserción de T3.3 no se actualizó. Ningún intento anterior tocó esa línea; el checkpoint de T3.8 solo la ejecuta y no puede corregirla.",
+ "confidence": "alta",
+ "failures": 3,
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 27.6,
+ "solution": "1. Confirmar en docs/req021/aprobacion-backing-mesas.json y scripts/test/test-formas-escenografia-nuevas.ts:33 que `arco_apuntado` es una forma aprobada.\n2. Dueño de T3.3: cambiar scripts/test/test-taller-registros-completos.ts:43 a `[\"arco_apuntado\",\"caja\",\"cilindro\",\"panel\"]`; no tocar escenografia.ts ni los tests de T3.5/T3.6/T3.7.\n3. Ejecutar `npx tsx --conditions=react-server scripts/test/test-taller-registros-completos.ts` y confirmar exit 0.\n4. Con el árbol ya corregido, ejecutar en T3.8 los 8 comandos de verificación (tsc y las 7 suites) sin reparaciones y escribir .evidence/REQ-021/SP-3.checkpoint.json con exit status y resumen de cada uno.\n5. Si alguna otra suite falla, devolver solo la tarea dueña de esa suite.",
+ "source_attempt": "att-0083",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-cpbkm5m3/source",
+ "source_snapshot": "69f3412144b03c4c3a155e360f2890ff114d4918",
+ "state": "done",
+ "task": "T3.8"
+}

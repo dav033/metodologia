@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:19",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T2.6 bloqueada: el mismo fallo se repitió y la prueba de UI no pasa en la sandbox",
+ "origin": "La verificación sale con exit code 1 y muestra \"ℹ fail 0\", así que ninguna prueba falló y el proceso cayó antes o después de ellas. Según las notas del dueño, el origen está en scripts/test/test-integracion-cuentas-ui.ts: buildEnv no incluye HOME, lo que provoca uv_os_homedir ENOENT, y el script lee la configuración de auth desde variables del shell (PICTURES_REQ02…) que la sandbox no recibe, porque solo pasa las variables de verifier.env_file. El texto uv_os_homedir no aparece en la evidencia visible, y T1.8 (predecesor) fue devuelta por la auditoría y no está confirmada como resuelta.",
+ "steps": [
+  "Corrige scripts/test/test-integracion-cuentas-ui.ts: buildEnv debe incluir HOME apuntando a un directorio temporal aislado y escribible, usado por el build hijo y por next start, y limpiarlo al terminar.",
+  "Lee la configuración de auth del servidor de producción desde verifier.env_file (por ejemplo ~/.config/metodologia/verifier-pictures.env) o desde el propio script, no desde el entorno del shell; conserva la allowlist sin secretos.",
+  "Añade una prueba de regresión del entorno del proceso hijo: HOME presente y ninguna variable fuera de la allowlist.",
+  "Confirma que T1.8 pasa npm run cuentas:test-integracion-ui de extremo a extremo y después reintenta T2.6 sin cambiar criterios ni el comando."
+ ],
+ "option": "retry_with_note",
+ "note": "Fix scripts/test/test-integracion-cuentas-ui.ts. (1) buildEnv must set HOME to a fresh, isolated, writable temp directory (mkdtemp) and pass it to the child next build and to next start; clean it up after the run. (2) Read the production server's auth configuration from verifier.env_file or from the test script itself, not from shell env; keep the secret-free allowlist. (3) Add a regression test asserting the child env has HOME and no variables outside the allowlist. Do not change the acceptance criteria or the verification command. Make sure predecessor T1.8 passes npm run cuentas:test-integracion-ui end to end before running T2.6.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T12:35:21",
+ "seconds": 22.0
+}

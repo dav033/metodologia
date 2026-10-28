@@ -3,135 +3,135 @@ req: REQ-021
 status: draft
 created: 2026-10-26
 ---
-# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto en IA, elementos esenciales de Taller, inglés, módulos y chat
+# Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: borrador · ejecución: en curso · hitos 0/5 · tareas 19/90 · generado: 2026-10-28T10:42:34-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 20/90 · generado: 2026-10-28T12:16:28-05:00
 
-**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 18/29
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
 
-**SP-1 — Cuentas, sesiones y permisos del lado del servidor**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T1.1 | Esquema de cuentas: migración 037 y helper para el esquema de pruebas aislado | media | completada | gpt-6-luna | codex-1 | 2 |
-| T1.2 | Catálogo de permisos, catálogo de planes, los seis roles del sistema y mapa de permisos de rutas | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.3 | Servicio de cuentas: invitaciones, activación, inicio de sesión con bloqueo, enlaces de restablecimiento, roles y comandos de un solo uso | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T1.4 | Sesiones del servidor y protección de permisos en el proxy y la API de inicio de sesión, en reemplazo de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Modo local sin restricciones que impide el inicio fuera de next dev en loopback | media | completada | gpt-6-luna | codex-1 | 3 |
-| T1.6 | Aplicar la protección de permisos a cada handler de API y trasladar las suites existentes a una sesión de pruebas compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | Verificación integral de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 6 |
-| T1.8 | Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 12 |
-| T1.8b | Verificación cruzada de la auditoría de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 1 |
-| T1.9 | Corregir hallazgos F1, F2, F3, F4 de T1.8 | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.10 | Corregir hallazgos F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T1.11 | Corregir hallazgos F16, F17 de T1.8 | media | completada | gpt-6-luna | codex-2 | 2 |
-| T1.12 | Corregir hallazgos F19, F20 de T1.8 | media | completada | gpt-6-luna | codex-luis | 1 |
-
-**SP-2 — Pantallas de inicio de sesión, invitación y administración**
+**SP-1 — Accounts, sessions and server-side permissions**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T2.1 | Copiar al repositorio el contrato cuentas-admin@v1 aprobado por el propietario | baja | completada | gpt-6.1-sol | codex-2 | 2 |
-| T2.2 | API de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | completada | gpt-6-luna | codex-1 | 4 |
-| T2.3 | Pantallas de inicio de sesión, activación de invitación, restablecimiento de contraseña y nueva aceptación del aviso | media | completada | gpt-6-luna | codex-1 | 3 |
-| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | completada | gpt-6-luna | codex-2 | 2 |
-| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | completada | gpt-6-luna | codex-luis | 2 |
-| T2.6 | Prueba integral en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | bloqueada | gpt-6-luna | codex-luis | 16 |
-| T2.7 | Revisión visual de SP-2 según el contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
-| T2.8 | Auditoría de SP-2: pantallas de cuentas, API de administración y aviso sobre datos | media | pendiente | — | — | 0 |
+| T1.1 | Accounts schema: migration 037 and the isolated test-schema helper | media | completada | gpt-6-luna | codex-1 | 2 |
+| T1.2 | Permission catalogue, the plan catalogue, the six system roles and the route permission map | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.3 | Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-1 | 3 |
+| T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-2 | 6 |
+| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 12 |
+| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 1 |
+| T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
+| T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 2 |
+| T1.12 | Remediate T1.8 findings F19, F20 | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**SP-14 — Sección de planes: los cuatro planes de acceso, pública e informativa**
+**SP-2 — Sign-in, invitation and administration screens**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14.1 | Copiar al repositorio el contrato planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
-| T14.2 | Página pública de planes: los cuatro planes del catálogo de planes, precios según el idioma | media | pendiente | — | — | 0 |
-| T14.3 | Enlaces a los planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
-| T14.4 | Prueba integral en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
-| T14.5 | Revisión visual de SP-14 según el contrato planes@v1 | media | pendiente | — | — | 0 |
-| T14.6 | Auditoría de SP-14: uso del catálogo, ruta pública y textos | media | pendiente | — | — | 0 |
+| T2.1 | Copy the owner-approved cuentas-admin@v1 contract into the repository | baja | completada | gpt-6.1-sol | codex-2 | 2 |
+| T2.2 | Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles | media | completada | gpt-6-luna | codex-1 | 4 |
+| T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-1 | 3 |
+| T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 2 |
+| T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-luis | 2 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | en curso | gpt-6-luna | codex-luis | 18 |
+| T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
+| T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
+
+**SP-14 — Plans section: the four access plans, public and informative**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T14.1 | Copy the owner-approved planes@v1 contract into the repository | baja | pendiente | — | — | 0 |
+| T14.2 | Public plans page: the four plans from the plan catalogue, prices by language | media | pendiente | — | — | 0 |
+| T14.3 | Plans links on the sign-in screen and in the account menu | baja | pendiente | — | — | 0 |
+| T14.4 | Browser end-to-end of the plans section on a production build | media | pendiente | — | — | 0 |
+| T14.5 | SP-14 visual review against the planes@v1 contract | media | pendiente | — | — | 0 |
+| T14.6 | SP-14 audit: catalogue use, public route and copy | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T91 | Verificación de composición de M1: del primer administrador a un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
-| T94 | Verificación de composición CG-4: planes de acceso desde la sección de planes hasta la pantalla de cuentas | media | pendiente | — | — | 0 |
+| T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
+| T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas del chat** · dificultad alta · 1/52
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 2/52
 
-**SP-3 — Elementos esenciales de Taller: investigación y modelado de tipos de Backing y mesas, tarjetas de tipo y exportación a Blender de todos los tipos**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T3.2 | Investigar nuevas estructuras Backing y tipos de mesa, redactar la propuesta validada y obtener la aprobación del propietario | media | verificando | gpt-6-luna | codex-luis | 2 |
-| T3.3 | Hacer exhaustivos los registros de mesas, piezas y Backing, y agregar los puntos de extensión de Backing | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T3.4 | Registrar en el repositorio la lista de nuevos Backings y tipos de mesa aprobados por el propietario | baja | pendiente | — | — | 0 |
-| T3.5 | Modelar los nuevos tipos de mesa aprobados en el generador paramétrico de mesas | alta | pendiente | — | — | 0 |
-| T3.6 | Modelar las nuevas estructuras Backing aprobadas como mobiliario paramétrico de Taller | alta | pendiente | — | — | 0 |
-| T3.7 | Enseñar a la lectura de fotos las nuevas estructuras Backing aprobadas | media | pendiente | — | — | 0 |
-| T3.8 | Punto de control: ejecutar las suites de registros y modelado antes del trabajo de interfaz y exportación de Taller | baja | pendiente | — | — | 0 |
-| T3.9 | Una tarjeta de creación por tipo de mesa en Fondos y muebles | media | pendiente | — | — | 0 |
-| T3.10 | Grupo Backing en Fondos y muebles con los siete elementos Backing existentes y los nuevos | baja | pendiente | — | — | 0 |
-| T3.11 | Verificar y reparar la exportación GLB de cada tipo de elemento de escena | alta | pendiente | — | — | 0 |
-| T3.12 | Implementar el arnés de verificación en navegador de Taller y Blender para cada tipo de elemento | alta | pendiente | — | — | 0 |
-| T3.13 | Ejecutar el escenario real de integración de elementos esenciales de Taller | media | pendiente | — | — | 0 |
-| T3.15 | Auditar los elementos esenciales de Taller y la compatibilidad de exportación | media | pendiente | — | — | 0 |
-
-**SP-4 — Proyectos guardados**
+**SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T4.1 | Copiar el contrato de diseño aprobado para proyectos guardados | baja | pendiente | — | — | 0 |
-| T4.2 | Implementar almacenamiento de proyectos con versiones y validación de escenas | alta | pendiente | — | — | 0 |
-| T4.3 | Implementar API de proyectos con autorización por recurso | alta | pendiente | — | — | 0 |
-| T4.4 | Implementar la lista de proyectos y el guardado de Taller con protección ante conflictos | alta | pendiente | — | — | 0 |
-| T4.5 | Implementar una importación de escenas heredadas sin pérdida e idempotente | alta | pendiente | — | — | 0 |
-| T4.6 | Implementar el arnés de integración de proyectos guardados entre varios navegadores | alta | pendiente | — | — | 0 |
-| T4.7 | Ejecutar el escenario de integración entre navegadores de proyectos e importación | media | pendiente | — | — | 0 |
-| T4.8 | Revisar las interfaces renderizadas de proyectos e importación | media | pendiente | — | — | 0 |
-| T4.9 | Auditar el aislamiento de proyectos, la concurrencia y la preservación de la importación | media | pendiente | — | — | 0 |
-| T4.31 | Ejecutar el punto de control de almacenamiento y autorización de proyectos | media | pendiente | — | — | 0 |
+| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | completada | gpt-6-luna | codex-luis | 2 |
+| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | bloqueada | gemini-3.8-flash-low | antigravity | 4 |
+| T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
+| T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | pendiente | — | — | 0 |
+| T3.7 | Teach photo reading the approved new Backing structures | media | pendiente | — | — | 0 |
+| T3.8 | Checkpoint: run the registry and modelling suites before Taller UI and export work | baja | pendiente | — | — | 0 |
+| T3.9 | One creation card per table type in Fondos y muebles | media | pendiente | — | — | 0 |
+| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | pendiente | — | — | 0 |
+| T3.11 | Verify and repair the GLB export of every scene element type | alta | pendiente | — | — | 0 |
+| T3.12 | Implement the Taller browser and Blender verification harness for every element type | alta | pendiente | — | — | 0 |
+| T3.13 | Run the real Taller essentials integration scenario | media | pendiente | — | — | 0 |
+| T3.15 | Audit Taller essentials and export compatibility | media | pendiente | — | — | 0 |
 
-**SP-5 — Decoraciones guardadas**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T5.1 | Copiar el contrato de interfaz aprobado para la biblioteca personal de decoraciones | baja | pendiente | — | — | 0 |
-| T5.2 | Agregar almacenamiento validado propiedad de la cuenta y una API protegida de decoraciones personales | alta | pendiente | — | — | 0 |
-| T5.3 | Conectar en Taller los flujos de guardado, colocación e importación idempotente de la biblioteca del navegador | alta | pendiente | — | — | 0 |
-| T5.4 | Verificar la persistencia entre navegadores, la colocación y el aislamiento de propiedad | alta | pendiente | — | — | 0 |
-| T5.5 | Revisar la interfaz renderizada de la biblioteca personal según su contrato | media | pendiente | — | — | 0 |
-| T5.6 | Auditar la propiedad de las decoraciones personales y la recuperación de importaciones | media | pendiente | — | — | 0 |
-
-**SP-6 — Gasto en IA por usuario y sesión**
+**SP-4 — Saved projects**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T6.1 | Fijar el contrato de interfaz aprobado para el gasto en IA | baja | pendiente | — | — | 0 |
-| T6.2 | Definir el almacenamiento persistente de uso de IA y ai-usage@1 | alta | pendiente | — | — | 0 |
-| T6.3 | Atribuir el uso en cada llamada de modelo de pago de Next y ai-api | alta | pendiente | — | — | 0 |
-| T6.4 | Crear el panel de gasto para el personal y una API con filtros del lado del servidor | alta | pendiente | — | — | 0 |
-| T6.5 | Ejecutar verificaciones reales de atribución de uso y autorización desde el punto de entrada | alta | pendiente | — | — | 0 |
-| T6.6 | Revisar el panel de gasto renderizado según gasto-ia@v1 | media | pendiente | — | — | 0 |
-| T6.7 | Auditar la cobertura, identidad y minimización de datos del gasto en IA | media | pendiente | — | — | 0 |
+| T4.1 | Copy the approved saved-projects design contract | baja | pendiente | — | — | 0 |
+| T4.2 | Implement versioned project storage and scene validation | alta | pendiente | — | — | 0 |
+| T4.3 | Implement project APIs with per-resource authorization | alta | pendiente | — | — | 0 |
+| T4.4 | Implement the project list and conflict-safe Taller saving | alta | pendiente | — | — | 0 |
+| T4.5 | Implement a lossless and idempotent legacy-scene import | alta | pendiente | — | — | 0 |
+| T4.6 | Implement the multi-browser saved-project integration harness | alta | pendiente | — | — | 0 |
+| T4.7 | Run the cross-browser project and import integration scenario | media | pendiente | — | — | 0 |
+| T4.8 | Review the rendered project and import interfaces | media | pendiente | — | — | 0 |
+| T4.9 | Audit project isolation, concurrency and import preservation | media | pendiente | — | — | 0 |
+| T4.31 | Run the project storage and authorization checkpoint | media | pendiente | — | — | 0 |
 
-**SP-7 — Chat asistido como tres herramientas y explorador de decoraciones**
+**SP-5 — Saved decorations**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T7.1 | Copiar en el repositorio el contrato herramientas-chat@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
-| T7.2 | Catálogo de herramientas, control de acceso por plan del lado del servidor para el chat guiado y etiquetas de gasto por herramienta | alta | pendiente | — | — | 0 |
-| T7.3 | API de conteo de globos por formulario, frase o foto sobre los motores de conteo existentes | media | pendiente | — | — | 0 |
-| T7.4 | Punto de control: control de acceso de herramientas, API de conteo y etiquetas de gasto en un servidor en ejecución | media | pendiente | — | — | 0 |
-| T7.5 | Página principal de herramientas en / y retiro de la página clásica de chat | media | pendiente | — | — | 0 |
-| T7.6 | Página de conteo de globos: formulario, frase y foto con un resultado sin precios | media | pendiente | — | — | 0 |
-| T7.7 | Página de calculadora de costos basada en la cotización profesional existente, alimentada por el contador o manualmente | media | pendiente | — | — | 0 |
-| T7.8 | Galería de decoraciones listas para usar en Taller con un enlace para abrir como proyecto nuevo | media | pendiente | — | — | 0 |
-| T7.9 | Prueba de extremo a extremo en navegador de las tres herramientas y la galería en una compilación de producción | media | pendiente | — | — | 0 |
-| T7.10 | Revisión visual de SP-7 según el contrato herramientas-chat@v1 | media | pendiente | — | — | 0 |
-| T7.11 | Auditoría de SP-7: control de acceso de herramientas, filtraciones de precios, fuentes de conteo y etiquetas de gasto | media | pendiente | — | — | 0 |
+| T5.1 | Copy the approved personal-decoration library UI contract | baja | pendiente | — | — | 0 |
+| T5.2 | Add account-owned validated storage and protected personal-decoration API | alta | pendiente | — | — | 0 |
+| T5.3 | Connect Taller save, place and idempotent browser-library import flows | alta | pendiente | — | — | 0 |
+| T5.4 | Verify cross-browser persistence, placement and ownership isolation | alta | pendiente | — | — | 0 |
+| T5.5 | Review the rendered personal-library UI against its contract | media | pendiente | — | — | 0 |
+| T5.6 | Audit personal-decoration ownership and import recovery | media | pendiente | — | — | 0 |
+
+**SP-6 — AI spend per user and session**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T6.1 | Pin the approved AI-spend UI contract | baja | pendiente | — | — | 0 |
+| T6.2 | Define durable AI usage storage and ai-usage@1 | alta | pendiente | — | — | 0 |
+| T6.3 | Attribute usage at every paid Next and ai-api model call | alta | pendiente | — | — | 0 |
+| T6.4 | Build the staff spend dashboard and server-filtered API | alta | pendiente | — | — | 0 |
+| T6.5 | Run real-entrypoint usage attribution and authorization checks | alta | pendiente | — | — | 0 |
+| T6.6 | Review the rendered spend dashboard against gasto-ia@v1 | media | pendiente | — | — | 0 |
+| T6.7 | Audit AI spend completeness, identity and data minimization | media | pendiente | — | — | 0 |
+
+**SP-7 — Assisted chat as three tools and the decorations explorer**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T7.1 | Copy the owner-approved herramientas-chat@v1 contract into the repository | baja | pendiente | — | — | 0 |
+| T7.2 | Tool catalogue, server-side price gating of the guided chat and per-tool spend tags | alta | pendiente | — | — | 0 |
+| T7.3 | Balloon counter API by form, phrase or photo on the existing counting engines | media | pendiente | — | — | 0 |
+| T7.4 | Checkpoint: tool gating, counter API and spend tags on a running server | media | pendiente | — | — | 0 |
+| T7.5 | Tool home page at / and retirement of the classic chat page | media | pendiente | — | — | 0 |
+| T7.6 | Balloon counter page: form, phrase and photo with a price-free result | media | pendiente | — | — | 0 |
+| T7.7 | Cost calculator page from the existing professional quote, fed by the counter or by hand | media | pendiente | — | — | 0 |
+| T7.8 | Ready-made decorations gallery in the Taller with an open-as-new-project link | media | pendiente | — | — | 0 |
+| T7.9 | Browser end-to-end of the three tools and the gallery on a production build | media | pendiente | — | — | 0 |
+| T7.10 | SP-7 visual review against the herramientas-chat@v1 contract | media | pendiente | — | — | 0 |
+| T7.11 | SP-7 audit: tool gating, price leaks, counting sources and spend tags | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 

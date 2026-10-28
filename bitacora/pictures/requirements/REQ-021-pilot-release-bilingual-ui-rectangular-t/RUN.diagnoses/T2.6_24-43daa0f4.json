@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:24",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La prueba de activación espera /cuenta, pero el destino real depende del rol",
+ "origin": "El último fallo registrado (att-0084, indicado por el owner) es un timeout en el helper de activación de scripts/test/test-integracion-cuentas-ui.ts: espera solo /cuenta, mientras el endpoint redirige a destinoPorDefecto(session.permissions) (/3d con permiso de taller, /asistente, /catalogo, o /cuenta en otro caso). La salida visible de la verificación termina en 'exit code 1' sin la línea de error decisiva, así que el diagnóstico depende de esa nota. Los fallos anteriores (getByLabel('Contraseña nueva') frente a 'Nueva contraseña', y uv_os_homedir ENOENT por falta de HOME) ya tienen indicaciones del owner.",
+ "steps": [
+  "Antes de cambiar nada, confirma que T1.8 pasa `npm run cuentas:test-integracion-ui` con su rework.",
+  "En scripts/test/test-integracion-cuentas-ui.ts, espera la ruta exacta que devuelve la activación para el rol realmente activado (/3d, /asistente, /catalogo o /cuenta, según destinoPorDefecto), no solo /cuenta; redacta la URL en los logs.",
+  "Fija locale es-ES en el contexto del navegador y usa la etiqueta real 'Nueva contraseña'. Conserva HOME aislado y escribible, todas las aserciones de seguridad y autorización, y comprueba que PICTURES_REQ02 viene de verifier.env_file.",
+  "Añade una regresión del mapeo rol→destino y ejecuta `npm run cuentas:test-integracion-ui` con la base de datos de prueba autorizada."
+ ],
+ "option": "retry_with_note",
+ "note": "Last failure (att-0084): the activation helper waits only for '/cuenta', but activation redirects to destinoPorDefecto(session.permissions): /3d for taller permission, /asistente for chat, /catalogo for catalogue, /cuenta otherwise. Fix the helper: after activation, derive the expected destination from the role actually activated and wait for that exact path (log it redacted). Set the browser context locale to es-ES and use the real label 'Nueva contraseña'. Keep the isolated writable HOME for the child build and server, all security and authorization assertions, and do not bypass the redirect. Confirm PICTURES_REQ02 is read from verifier.env_file. Add a regression test for the role-to-destination mapping, then run npm run cuentas:test-integracion-ui against the authorized test database.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T14:42:19",
+ "seconds": 23.8
+}

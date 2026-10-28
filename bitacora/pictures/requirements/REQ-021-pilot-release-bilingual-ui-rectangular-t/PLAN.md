@@ -6,7 +6,7 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 20/90 · generado: 2026-10-28T12:15:59-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 28/92 · generado: 2026-10-28T14:43:39-05:00
 
 **M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
 
@@ -37,7 +37,7 @@ created: 2026-10-26
 | T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-1 | 3 |
 | T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 2 |
 | T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-luis | 2 |
-| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | en curso | gpt-6-luna | codex-luis | 18 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | bloqueada | gpt-6-luna | codex-luis | 24 |
 | T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
 | T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
 
@@ -59,22 +59,24 @@ created: 2026-10-26
 | T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
 | T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 2/52
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 10/54
 
 **SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
+| T3.1 | Repair what blocks T3.8 | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T3.14 | Repair what blocks T3.8 | baja | completada | gpt-6-luna | codex-2 | 1 |
 | T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | completada | gpt-6-luna | codex-luis | 2 |
 | T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | en curso | gemini-3.8-flash-low | antigravity | 4 |
-| T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
-| T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | pendiente | — | — | 0 |
-| T3.7 | Teach photo reading the approved new Backing structures | media | pendiente | — | — | 0 |
-| T3.8 | Checkpoint: run the registry and modelling suites before Taller UI and export work | baja | pendiente | — | — | 0 |
-| T3.9 | One creation card per table type in Fondos y muebles | media | pendiente | — | — | 0 |
-| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | pendiente | — | — | 0 |
-| T3.11 | Verify and repair the GLB export of every scene element type | alta | pendiente | — | — | 0 |
+| T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | completada | gemini-3.8-flash-low | antigravity | 6 |
+| T3.5 | Model the approved new table types in the parametric table generator | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | completada | gpt-6-luna | codex-luis | 1 |
+| T3.7 | Teach photo reading the approved new Backing structures | media | completada | gpt-6-luna | codex-luis | 1 |
+| T3.8 | Checkpoint: run the registry and modelling suites before Taller UI and export work | baja | completada | gpt-6-luna | codex-2 | 5 |
+| T3.9 | One creation card per table type in Fondos y muebles | media | completada | gpt-6-luna | codex-2 | 1 |
+| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | en curso | sonnet | claude-luis | 1 |
+| T3.11 | Verify and repair the GLB export of every scene element type | alta | en curso | gpt-6-luna | codex-2 | 2 |
 | T3.12 | Implement the Taller browser and Blender verification harness for every element type | alta | pendiente | — | — | 0 |
 | T3.13 | Run the real Taller essentials integration scenario | media | pendiente | — | — | 0 |
 | T3.15 | Audit Taller essentials and export compatibility | media | pendiente | — | — | 0 |

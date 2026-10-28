@@ -1,5 +1,5 @@
 {
- "actions": 16,
+ "actions": 19,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -20,6 +20,14 @@
   "T2.6:aff5b5ddd8872b32b769652c47c9ece64b2923cc55190c553a1d8527437551dc": {
    "attempt": "",
    "task": "T2.6"
+  },
+  "T3.4:9be69cc2139305e998aeb5086c1a08584aa74e86da4ef6a26f60ab9d68b421d3": {
+   "attempt": "att-0074",
+   "task": "T3.4"
+  },
+  "T3.8:b9c03896d1b83ed041e1f321f2b29b28c796d687f465b9c870fbe7914f90002f": {
+   "attempt": "att-0087",
+   "task": "T3.8"
   }
  },
  "cases": {
@@ -367,6 +375,38 @@
    "status": "unrepairable",
    "task": "T3.2"
   },
+  "a7e4072d9605d657": {
+   "after_restored": [
+    "T3.5",
+    "T3.7",
+    "T3.1"
+   ],
+   "applied": 1,
+   "at": 1793214698.099,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: El fallo está en scripts/test/test-taller-registros-completos.ts:43, una aserción obsoleta. Espera `Object.keys(FORMAS_ESCENOGRAFIA)` igual a [\"caja\",\"cilindro\",\"panel\"], pero src/lib/globos3d/escenog"
+   ],
+   "first_at": 1793214697.188,
+   "history": [
+    {
+     "at": 1793214698.099,
+     "repair": "plan r15: repair task T3.14 before T3.8",
+     "result": "fixed"
+    }
+   ],
+   "id": "a7e4072d9605d657",
+   "lines": [
+    "att-0085: cancelled",
+    "rebase r14 → r15: kept 25, redo 19, new 1, removed 0"
+   ],
+   "repair": "plan r15: repair task T3.14 before T3.8",
+   "revision": 15,
+   "status": "applied",
+   "target": "T3.8",
+   "task": "T3.8",
+   "task_added": "T3.14"
+  },
   "aa47a9c76aac5fd4": {
    "applied": 1,
    "at": 1793189979.903,
@@ -403,6 +443,44 @@
    "status": "unrepairable",
    "task": "T1.8"
   },
+  "b87f7ddd569aa339": {
+   "applied": 1,
+   "at": 1793211862.948,
+   "class": "regression",
+   "evidence": [
+    "failing tests scripts/test/test-taller-registros-completos.ts belong to accepted T3.3",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1793211800.796,
+   "history": [
+    {
+     "at": 1793211801.107,
+     "repair": "revision invalid: UI_WORK_UNDECLARED: T3.1: UI extension expected_paths requires explicit ui boolean",
+     "result": "failed"
+    },
+    {
+     "at": 1793211821.762,
+     "repair": "revision invalid: UI_WORK_UNDECLARED: T3.1: UI extension expected_paths requires explicit ui boolean",
+     "result": "failed"
+    },
+    {
+     "at": 1793211842.333,
+     "repair": "revision invalid: UI_WORK_UNDECLARED: T3.1: UI extension expected_paths requires explicit ui boolean",
+     "result": "failed"
+    },
+    {
+     "at": 1793211862.948,
+     "repair": "revision invalid: UI_WORK_UNDECLARED: T3.1: UI extension expected_paths requires explicit ui boolean",
+     "result": "failed"
+    }
+   ],
+   "id": "b87f7ddd569aa339",
+   "invalid": 3,
+   "repair": "revision invalid: UI_WORK_UNDECLARED: T3.1: UI extension expected_paths requires explicit ui boolean",
+   "status": "exhausted",
+   "task": "T3.8",
+   "why": "the same failure came back after its repair"
+  },
   "d80355426ef6e253": {
    "applied": 1,
    "at": 1793149470.724,
@@ -423,6 +501,43 @@
    "repair": "model diagnosis: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
    "status": "exhausted",
    "task": "T2.6",
+   "why": "the same failure came back after its repair"
+  },
+  "d89b7da47d29e18a": {
+   "applied": 1,
+   "at": 1793207800.177,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 3 failures: El verificador `cmp` apunta a /home/david/bitacora/pictures/requirements/REQ-021-.../aprobacion-backing-mesas.json, una ruta fuera del repositorio. La sandbox de verificación monta solo una copia limp"
+   ],
+   "first_at": 1793207788.172,
+   "history": [
+    {
+     "at": 1793207788.496,
+     "repair": "revision invalid: SUBPLAN_ORDER: T3.1: must follow implementation boundary T1.8b from SP-1",
+     "result": "failed"
+    },
+    {
+     "at": 1793207794.026,
+     "repair": "revision invalid: SUBPLAN_ORDER: T3.1: must follow implementation boundary T1.8b from SP-1",
+     "result": "failed"
+    },
+    {
+     "at": 1793207794.607,
+     "repair": "revision invalid: SUBPLAN_ORDER: T3.1: must follow implementation boundary T1.8b from SP-1",
+     "result": "failed"
+    },
+    {
+     "at": 1793207800.177,
+     "repair": "revision invalid: SUBPLAN_ORDER: T3.1: must follow implementation boundary T1.8b from SP-1",
+     "result": "failed"
+    }
+   ],
+   "id": "d89b7da47d29e18a",
+   "invalid": 3,
+   "repair": "revision invalid: SUBPLAN_ORDER: T3.1: must follow implementation boundary T1.8b from SP-1",
+   "status": "exhausted",
+   "task": "T3.4",
    "why": "the same failure came back after its repair"
   },
   "e183741af7e98937": {

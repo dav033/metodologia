@@ -1,0 +1,23 @@
+{
+ "request": "T3.8:3",
+ "state": "done",
+ "kind": "conflict",
+ "label": "Conflicto entre tareas",
+ "tone": "warn",
+ "headline": "Checkpoint T3.8 falla: el registro incluye 'arco_apuntado' y la suite espera solo 3 tipos",
+ "origin": "El fallo está en `scripts/test/test-taller-registros-completos.ts:86` (aserción `deepStrictEqual`): el registro devuelve `['arco_apuntado','caja','cilindro','panel']` y la suite espera `['caja','cilindro','panel']`. Los tres intentos (att-0081 a att-0083) dieron el mismo error. T3.8 es un checkpoint sin reparaciones, así que no puede cambiar ni la suite ni el registro; reintentar con la misma tarea repetirá el fallo. Las evidencias no muestran si `arco_apuntado` debe existir o si la suite quedó desactualizada.",
+ "steps": [
+  "Revisa en el registro de tipos de Taller (la fuente que lee la suite) si `arco_apuntado` es un tipo válido, y qué tarea lo añadió (T3.3, T3.5, T3.6 o T3.7).",
+  "Si es válido, actualiza la lista esperada de `scripts/test/test-taller-registros-completos.ts` en la tarea dueña de esa suite: sube `revision` en PLAN.json, ejecuta `python bitacora.py --project pictures plan-json freeze REQ-021` y elige la opción `revise`.",
+  "Si no debía existir, quita `arco_apuntado` del registro en la tarea que lo añadió y deja que T3.8 reintente después.",
+  "Revisa el estado con `bitacora.py --project pictures scheduler-op REQ-021 status` antes de reintentar T3.8."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T13:23:41",
+ "seconds": 19.5
+}

@@ -1,17 +1,6 @@
 {
- "at": "2026-10-28T08:25:48",
- "cause": "El bloqueo actual (att-0052/0053/0056/0057, PREDECESSOR_NEEDS_RESOLUTION) viene de T1.8, que la auditoría devolvió; T2.6 no debe arrancar hasta que T1.8 pase de punta a punta, y esa corrección corresponde a quien lleva el plan de REQ-021, no a T2.6. Antes, los intentos att-0027 a att-0038 fallaban con /login?error=auth-unavailable: src/proxy.ts (líneas 14-15 y 45-50) redirige ahí cuando resolveRequestSession (src/lib/cuentas/sesion.ts → servicio.ts:290 resolveSession) lanza, y esos catch no registran el error, así que el stderr de next start no muestra la causa. No es falta de secreto de autenticación: en src/lib/cuentas y src/lib/auth no se lee ninguna variable de secreto, y el login (/api/login, 200) usa otro pool. La hipótesis más probable es un fallo de la consulta de sesión en el pool del proxy (src/lib/cuentas/pool.ts, connectionTimeoutMillis 5000, DATABASE_URL de runtimeEnv en scripts/test/test-integracion-cuentas-ui.ts:174), sin confirmar porque no se ejecutó nada.",
- "confidence": "media",
- "failures": 9,
- "model": "haiku",
- "not_the_task": true,
- "profile": "claude",
- "seconds": 86.9,
- "solution": "1. Hacer que el responsable de T1.8 reabra y corrija esa tarea según la auditoría, y que pase de punta a punta; reintentar el arranque de T2.6 solo después de eso.\n2. En src/proxy.ts, en los catch de las líneas 14-15 y 45-50, registrar el error (nombre de clase y mensaje de pg, sin DATABASE_URL ni secretos) con un identificador de correlación, para que el stderr de next start muestre la causa.\n3. Reproducir en local con las variables de verifier.env_file (PICTURES_REQ021_DATABASE_URL) ejecutando npm run cuentas:test-integracion-ui, y leer el error de pg: timeout de conexión de 5 s frente a relación inexistente o search_path incorrecto.\n4. Si es timeout en frío, reutilizar una sola instancia de pool entre sesion.ts y api/login o ajustar connectionTimeoutMillis en src/lib/cuentas/pool.ts; si es search_path, verificar que databaseUrlForSchema (test-integracion-cuentas-ui.ts:68-72) reciba el schema y que 037 y 038 se apliquen en él.\n5. Repetir la verificación sin cambiar criterios de aceptación ni el comando npm run cuentas:test-integracion-ui.",
- "source_attempt": "att-0038",
- "source_available": true,
- "source_directory": "/home/david/.local/tmp/bt-analyst-f3kepu2y/source",
- "source_snapshot": "2c6ac7636db2a6d8b5aae010ce5159e46251af47",
- "state": "done",
+ "failures": 15,
+ "started": 1793216515.3975203,
+ "state": "running",
  "task": "T2.6"
 }

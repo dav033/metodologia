@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:18",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "La verificación falla: el build de Next no encuentra HOME en el sandbox (ENOENT)",
+ "origin": "El sandbox de verificación no tiene variables de entorno, así que falta HOME. El error decisivo es \"A system error occurred: uv_os_homedir returned ENOENT (no such file or directory)\", seguido de \"AssertionError: next build must succeed with an explicit, secret-free build environment\" y \"254 !== 0\" en scripts/test/test-integracion-cuentas-ui.ts:135. El fallo viene del entorno del script, no de la lógica de T2.6, y se repite igual en el intento att-0027. La regla automática decía código, pero la evidencia lo contradice.",
+ "steps": [
+  "Confirma primero que T1.8 pasa `npm run cuentas:test-integracion-ui` de punta a punta con su rework, como pidió el owner.",
+  "En scripts/test/test-integracion-cuentas-ui.ts, pasa al proceso hijo del `next build` un entorno explícito y sin secretos que incluya HOME (por ejemplo un directorio temporal) y PATH, sin depender de variables del shell.",
+  "Mantén intactos los criterios de aceptación y el comando; lee PICTURES_REQ021_DATABASE_URL solo desde el entorno y ejecuta `npm run cuentas:test-integracion-ui` con solo las variables de verifier.env_file para comprobar que pasa."
+ ],
+ "option": "retry_with_note",
+ "note": "The verifier sandbox has no environment variables, so HOME is unset and `next build` fails with 'uv_os_homedir returned ENOENT' (exit 254). First confirm predecessor T1.8 passes `npm run cuentas:test-integracion-ui` end to end. Then, in scripts/test/test-integracion-cuentas-ui.ts, give the child process running the production build an explicit secret-free environment that sets HOME (e.g. a temporary directory) and PATH, and do not depend on shell variables. Do not change the acceptance criteria or the command. Read PICTURES_REQ021_DATABASE_URL only from the environment and verify with only the verifier.env_file variables.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T12:19:51",
+ "seconds": 16.7
+}

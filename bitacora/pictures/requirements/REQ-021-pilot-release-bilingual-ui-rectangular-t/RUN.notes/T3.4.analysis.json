@@ -1,6 +1,17 @@
 {
+ "at": "2026-10-28T12:16:25",
+ "cause": "El verificador `cmp` apunta a /home/david/bitacora/pictures/requirements/REQ-021-.../aprobacion-backing-mesas.json, una ruta fuera del repositorio. La sandbox de verificación monta solo una copia limpia del repo, sin /home/david/bitacora, así que el archivo no existe allí y `cmp` devuelve exit 2 en los tres intentos. En el host el archivo sí existe (confirmado con Glob) y el repo ya contiene docs/req021/aprobacion-backing-mesas.json; no pude ejecutar `cmp` ni el validador para comprobar la igualdad de bytes ni el SHA-256, porque el análisis es de solo lectura. Lo que falla es el comando de verificación del plan, no el contenido de la tarea.",
+ "confidence": "media",
  "failures": 3,
- "started": 1793207720.4305434,
- "state": "running",
+ "model": "haiku",
+ "not_the_task": true,
+ "profile": "claude",
+ "seconds": 65.3,
+ "solution": "1. Pedir al coordinador (dueño del plan) que cambie la verificación de T3.4 para no depender de rutas fuera del repo: que compare contra una copia dentro del repo o que el comando se ejecute solo en el host, no en la sandbox.\n2. Si el coordinador mantiene el `cmp`, pedir que la verificación de bytes se ejecute fuera de la sandbox, en el host, antes de cerrar T3.4.\n3. Confirmar en el host, sin modificar nada, que `sha256sum docs/req021/propuesta-backing-mesas.json` da 382e02dfc1d2afa57daae1164a59c960aaf80ba7836421a1182a12ab1ba6d476 (valor de `propuestaSha256`); si no coincide, la aprobación debe volver al dueño.\n4. Verificar que el validador `npx tsx scripts/taller/validar-propuesta-piloto.ts docs/req021/propuesta-backing-mesas.json --aprobacion docs/req021/aprobacion-backing-mesas.json` sale con 0 en un entorno con node_modules. La aprobación tiene 6 backings y 3 mesas (en el límite, no lo supera), así que no debería aparecer ENVELOPE_EXCEEDED.\n5. No repetir `cmp` contra la ruta de bitácora dentro de la sandbox; registrar el resultado del host en la bitácora de T3.4.",
+ "source_attempt": "att-0072",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-wybo1gca/source",
+ "source_snapshot": "8919f1e05bb29337e68bb9bf4bf45364e093cbfc",
+ "state": "done",
  "task": "T3.4"
 }

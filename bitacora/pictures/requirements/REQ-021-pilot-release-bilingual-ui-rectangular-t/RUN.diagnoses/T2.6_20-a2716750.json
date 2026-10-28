@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:20",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "La prueba E2E agotó 20 s esperando una redirección (waitForURL) tras el build.",
+ "origin": "El build de producción ya compila: los fallos previos (HOME ausente con uv_os_homedir ENOENT y getByLabel('Contraseña nueva')) quedaron atrás según las notas del dueño. La verificación independiente falla en `npm run cuentas:test-integracion-ui` con `Error: page.waitForURL: Timeout 20000ms exceeded.`, la misma causa en los intentos #1 y att-0027. La salida no muestra la URL esperada ni la página visible, así que no se puede confirmar si el origen es la activación, la etiqueta 'Nueva contraseña' con el locale de Accept-Language, o la predecesora T1.8, que la auditoría devolvió.",
+ "steps": [
+  "Confirma que T1.8 pasa `npm run cuentas:test-integracion-ui` de extremo a extremo con su rework antes de tocar T2.6.",
+  "En scripts/test/test-integracion-cuentas-ui.ts, fija locale es-ES en el contexto de cada navegador y usa las etiquetas reales ('Nueva contraseña').",
+  "En el paso waitForURL, espera un patrón de URL concreto y, en el catch, registra page.url() y el texto visible de la página para ver dónde se queda la redirección.",
+  "Reejecuta el comando con la base de datos de prueba autorizada, sin cambiar criterios ni el comando de verificación."
+ ],
+ "option": "retry_with_note",
+ "note": "Same failure repeated (page.waitForURL timeout 20000ms, same_cause_limit). Before anything else, confirm predecessor T1.8 passes `npm run cuentas:test-integracion-ui` end to end with its rework. In scripts/test/test-integracion-cuentas-ui.ts, create each browser context with locale 'es-ES' (keep the isolated HOME and the buildEnv fix), use the real labels ('Nueva contraseña') and wait for an explicit target URL. In the waitForURL failure path, log page.url() and the visible page text so the next run shows where the redirect stopped. Do not change acceptance criteria or the verification command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T13:38:48",
+ "seconds": 19.2
+}

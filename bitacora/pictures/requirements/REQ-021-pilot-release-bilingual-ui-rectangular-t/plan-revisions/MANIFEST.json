@@ -216,6 +216,18 @@
     "requirements_sha256": "29e0a5350940e265099e81f59a8045b35a5da65ea2284f8780eddd1460caa9a3",
     "plan_md_sha256": "2c8bd8bbb506a3aa06fe38ccaa1c974e1c845d5b76992c5a0c707acb4532bc8c"
    }
+  },
+  {
+   "revision": 14,
+   "sha256": "0b4058a792d1e1b19190efd0f161791380e819f796ac1d91978f767e297e6fac",
+   "frozen_at": "2026-10-28T14:03:57",
+   "source": "healing"
+  },
+  {
+   "revision": 15,
+   "sha256": "a4eb945b823d1e2575ee86ebe1e3dc1e54a05b0d87d61b6b9febec5543705b26",
+   "frozen_at": "2026-10-28T14:11:37",
+   "source": "healing"
   }
  ]
 }

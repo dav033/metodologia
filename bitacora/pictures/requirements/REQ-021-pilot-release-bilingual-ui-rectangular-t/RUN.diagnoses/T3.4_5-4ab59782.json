@@ -1,0 +1,23 @@
+{
+ "request": "T3.4:5",
+ "state": "done",
+ "kind": "plan",
+ "label": "Defecto del plan",
+ "tone": "lav",
+ "headline": "T3.4 falla siempre en el cmp: la aprobación de origen no existe dentro del sandbox",
+ "origin": "La comprobación `cmp -- docs/req021/aprobacion-backing-mesas.json /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json` sale con `exit code 2` y el error `cmp: /home/david/bitacora/.../aprobacion-backing-mesas.json: No such file or directory`. El verificador ejecuta la comprobación en un sandbox con una copia limpia del repositorio, sin `/home/david/bitacora`, así que la ruta de referencia no existe ahí. Es un defecto del plan (la comprobación apunta fuera del repo), no del código: el mismo error aparece en los cuatro intentos (att-0069, att-0070, att-0072, att-0075), y ningún cambio dentro del repo puede hacer que esa ruta exista en el sandbox.",
+ "steps": [
+  "Elige `stop`: reintentar repetirá el mismo ENOENT en cada intento.",
+  "Pide al coordinador que suba la `revision` de PLAN.json de REQ-021 en 1 y reemplace el `cmp` por una referencia que el sandbox pueda ver, por ejemplo el SHA-256 aprobado del propuesto o una copia del approval dentro del repo.",
+  "Ejecuta `bitacora.py --project pictures plan-json freeze REQ-021` y después elige la opción `revise` en la tarjeta de T3.4.",
+  "Cuando T3.4 vuelva a correr, comprueba que la validación `npx tsx scripts/taller/validar-propuesta-piloto.ts ... --aprobacion ...` llega a ejecutarse, porque el log actual no muestra su resultado."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T12:21:19",
+ "seconds": 15.5
+}
