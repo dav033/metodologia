@@ -16,7 +16,7 @@
   "checks": {
     "signin-start": {
       "ok": false,
-      "detail": "GET https://flow-remote.vercel.app/ returned HTTP 200; gateway /healthz returned HTTP 200 with matching release SHA; OAuth start returned HTTP 302 to github.com; OAuth client id, state, frontend callback and state-cookie attributes were observed; deployed source declares Secure, HttpOnly and SameSite=Strict for the session cookie: True; the session cookie emitted after owner sign-in was not observed because this run cannot use owner credentials."
+      "detail": "GET https://flow-remote.vercel.app/ returned HTTP 302; gateway /healthz returned HTTP 200 with non-matching release SHA; OAuth start returned HTTP 302 to github.com; OAuth client id, state, frontend callback and state-cookie attributes were not fully observed; deployed source declares Secure, HttpOnly and SameSite=Strict for the session cookie: True; the session cookie emitted after owner sign-in was not observed because this run cannot use owner credentials."
     },
     "negative-paths": {
       "ok": true,
