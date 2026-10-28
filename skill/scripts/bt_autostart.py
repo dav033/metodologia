@@ -30,6 +30,20 @@ def desktop_arg(value: str) -> str:
     return quoted.replace("\\", "\\\\").replace("%", "%%")
 
 
+def stable_path(value: str) -> str:
+    """The PATH to bake into a boot-time script, without per-shell directories. fnm puts `/run/user/<uid>/fnm_multishells/<pid>_<ts>/bin`
+    on PATH: a symlink to the node version in use, created by that shell and gone after the next boot. A service launched with it
+    could not find `codex` or `node` (REQ-021 after a reboot: Codex quota sampling answered `app_server_unavailable`, so the
+    router assigned nothing). Each such entry becomes the real directory it points to, or is dropped if it points nowhere."""
+    out: list[str] = []
+    for entry in value.split(os.pathsep):
+        if "fnm_multishells" in entry:
+            entry = os.path.realpath(entry) if os.path.isdir(entry) else ""
+        if entry and entry not in out:
+            out.append(entry)
+    return os.pathsep.join(out)
+
+
 def install(project: str, req: str, root: Path, cli: Path, *, scheduler: bool = False) -> Path:
     path = entry_path(project, req)
     name = path.stem
@@ -38,7 +52,7 @@ def install(project: str, req: str, root: Path, cli: Path, *, scheduler: bool = 
     command = ["scheduler-watch", req] if scheduler else ["run", req, "--resume"]
     script = host.write_script(state / "launch" / name, root,
                                [sys.executable, str(cli), "--project", project, *command],
-                               {"BITACORA_ROOT": str(root), "PATH": os.environ.get("PATH", "")})
+                               {"BITACORA_ROOT": str(root), "PATH": stable_path(os.environ.get("PATH", ""))})
     argv = ["/bin/bash", "-l", str(script)]
     path.parent.mkdir(parents=True, exist_ok=True)
     if host.platform() == "macos":
