@@ -1,28 +1,35 @@
 {
- "title": "SP-3 — Regla de modelado de los nuevos Backings",
- "coverage": "SP-3",
- "intro": "Para confirmar SP-3 falta una sola decisión. Los Backings nuevos se modelan como muebles paramétricos del Taller. Hoy el plan supone que se construyen solo con las formas que el Taller ya tiene (caja, cilindro y panel), de modo que no haya que programar formas nuevas. Un candidato de la investigación que necesite otra forma quedaría fuera del piloto. Necesito que confirmes esa regla o la cambies.",
+ "title": "SP-14 — Vista adicional para elegir un plan",
+ "coverage": "SP-14",
+ "intro": "En tu comentario sobre planes@v1 pides una vista adicional «para elegir el plan». La decisión anterior dejó la sección como informativa: sin cambiar la asignación de la cuenta, comprar, pedir o registrarse. Para que el contrato no contradiga ese alcance, recomiendo que la vista sirva para escoger y comparar visualmente un plan, sin aplicarlo a ninguna cuenta.",
+ "round": 13,
+ "status": "answered",
  "questions": [
   {
    "id": "q1",
-   "text": "¿Con qué formas se pueden modelar los nuevos Backings del piloto?",
+   "text": "¿Qué debe hacer la vista adicional para elegir un plan?",
    "type": "choice",
    "options": [
     {
      "key": "a",
-     "label": "Solo con caja, cilindro y panel; un candidato que necesite otra forma queda fuera del piloto"
+     "label": "Solo permite destacar o comparar un plan; no cambia la asignación de ninguna cuenta"
     },
     {
      "key": "b",
-     "label": "También con formas nuevas si un candidato aprobado las necesita (más trabajo y más plazo en SP-3)"
+     "label": "Permite cambiar el plan asignado a la cuenta desde esta vista"
     }
    ],
    "recommended": "a",
-   "why": "El piloto es el 16 de noviembre y los siete Backings que ya existen se construyen con esas tres formas. Añadir formas nuevas implica tocar el motor 3D, la exportación a Blender y la lectura de fotos, y amplía el alcance de SP-3 sin que se haya pedido."
+   "why": "Respeta la decisión anterior: /planes es pública e informativa; el administrador asigna el plan desde Cuentas. Si se quiere cambiar esa regla, debemos actualizar el requisito, permisos, tareas y pruebas antes de implementarlo."
   }
  ],
- "round": 13,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-28T11:32:31Z"
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-27T19:39:56Z",
+ "answered_at": "2026-10-27T19:42:20Z",
+ "answered_via": "web"
 }

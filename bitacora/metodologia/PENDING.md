@@ -214,3 +214,4 @@ _None_
 <!-- 2026-10-27: D-138 idle detection done. Open: verify T1.10 completes after T2.2; SP-3 contract removal by the Planner; SP-14 contract and confirmation -->
 <!-- 2026-10-27: D-139 done. Open: engine reload after a commit should not cancel/count attempts; analyses should expire when the plan revises; T2.6 retry after r8 join; new audits should include the proxy/real-login path -->
 <!-- 2026-10-28: boot PATH fix done (5e9e9e024). Open: router silent when it proposes nothing (add an attention item for ready tasks with no live attempt); claude-work token expired (http_401) -->
+<!-- 2026-10-28: round 14 open for SP-3 (owner to answer). Engine defects: `round new` overwrote answered round 13 (restored from git); subplan view lacks a link to its open questions -->
