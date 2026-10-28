@@ -112,10 +112,6 @@ def for_run(project: str, rdir: str | Path | None = None) -> tuple[tuple[tuple[s
     import bt_config
     environment, _ = load(path_for(bt_config.get("verifier.env_file", ""), project))
     merged = dict(environment)
-    patterns = _patterns(bt_config.get("verifier.inherit_env", []))
-    if patterns:                         # the owner chose not to start checks empty: its environment and ALL its secret files
-        files = [dict(load(path_for(source, project))[0]) for source in bt_config.get("verifier.secret_files", []) or []]
-        merged.update(inherited(patterns, [dict(os.environ), *files], set(merged)))
     wanted = declared(rdir) - set(merged)
     for source in bt_config.get("verifier.secret_files", []) or []:
         if not wanted:
@@ -126,3 +122,17 @@ def for_run(project: str, rdir: str | Path | None = None) -> tuple[tuple[tuple[s
     secrets = tuple(dict.fromkeys(value for key, value in merged.items()
                                   if SENSITIVE_ENV.search(key) or _CREDENTIAL_URL.search(value)))
     return tuple(merged.items()), secrets
+
+
+def ambient_for_run(project: str, explicit: set[str]) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]]:
+    """(variables, secret-looking values) the checks INHERIT under `verifier.inherit_env`: the owner's environment and every
+    variable of his secret files. They are handed to the sandbox but kept out of the evidence fingerprint (see
+    `QualityPolicy.ambient_environment`); names the project's env file or the plan's `requires` already set keep that value."""
+    import bt_config
+    patterns = _patterns(bt_config.get("verifier.inherit_env", []))
+    if not patterns:
+        return (), ()
+    files = [dict(load(path_for(source, project))[0]) for source in bt_config.get("verifier.secret_files", []) or []]
+    found = inherited(patterns, [dict(os.environ), *files], set(explicit))
+    secrets = tuple(dict.fromkeys(value for key, value in found.items() if SENSITIVE_ENV.search(key) or _CREDENTIAL_URL.search(value)))
+    return tuple(found.items()), secrets

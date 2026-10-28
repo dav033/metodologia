@@ -88,6 +88,9 @@ class QualityPolicy:
     network: bool = True  # checks share the host network (live services, a database); False = no network at all
     allow_production_actions: bool = True  # checks may run deploy/migrate-style commands; False = operator review
     environment: tuple[tuple[str, str], ...] = ()
+    # inherited from the owner (his environment, every variable of his secret files): reaches the checks but is NOT in the evidence
+    # fingerprint, which must stay stable across restarts or every earlier result stops verifying (REQ-021: SP-1 could not publish)
+    ambient_environment: tuple[tuple[str, str], ...] = ()
     secret_values: tuple[str, ...] = ()
     require_independent_review: bool = False
     cache_seconds: int = 86_400  # a check that passed on this exact tree is not run again for this long (0 = never reuse)
@@ -197,6 +200,9 @@ def _validate_policy_secrets(policy: QualityPolicy) -> None:
     if len(set(secrets)) != len(secrets):
         raise ValueError("secret values must be unique")
     _validate_environment(policy.environment, frozenset(secrets))
+    if not isinstance(policy.ambient_environment, tuple):
+        raise TypeError("ambient environment must be an immutable tuple")
+    _validate_environment(policy.ambient_environment, frozenset(secrets))
 
 
 @dataclass(frozen=True)

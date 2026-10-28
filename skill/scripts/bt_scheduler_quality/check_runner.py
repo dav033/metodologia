@@ -68,7 +68,7 @@ class CheckExecutor:
         return _complete_outcomes(specs, outcomes, issue_codes)
 
     def _preflight(self, spec: CheckSpec) -> str | None:
-        configured = {name for name, _ in self.policy.environment}
+        configured = {name for name, _ in (*self.policy.environment, *self.policy.ambient_environment)}
         for resource in spec.requires:
             if resource.startswith("service:"):
                 probe = self.authority.resource_available

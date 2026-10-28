@@ -58,7 +58,8 @@ DEFAULTS: dict = {
                  "max_idle_seconds": 600,
                  # checks start with an EMPTY environment and receive only verifier.env_file plus the secret-file variables their
                  # plan declares in `requires`. A list of name globs (["*"] = all, ["PICTURES_*", "DATABASE_URL"]) makes them also
-                 # inherit the owner's environment and ALL variables of verifier.secret_files (secret-looking values stay redacted)
+                 # inherit the owner's environment and ALL variables of verifier.secret_files (secret-looking values stay redacted). They are
+                 # ambient: they reach the checks but are NOT part of the evidence fingerprint, so earlier results keep verifying
                  "inherit_env": []},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)

@@ -206,7 +206,8 @@ def _environment(policy: QualityPolicy) -> list[tuple[str, str]]:
     if tools.path:
         environment["PATH"] = ":".join((*tools.path, environment["PATH"]))
     environment.update(tools.environment)
-    pairs = list(environment.items()) + list(policy.environment)
+    taken = set(environment) | {key for key, _ in policy.environment}
+    pairs = list(environment.items()) + [(k, v) for k, v in policy.ambient_environment if k not in taken] + list(policy.environment)
     if len({key for key, _ in pairs}) != len(pairs):
         raise ValueError("sandbox environment has duplicate names")
     return pairs

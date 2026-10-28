@@ -190,9 +190,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         import bt_verifier_env
 
         environment, secrets = bt_verifier_env.for_run(project, rdir)
+        ambient, ambient_secrets = bt_verifier_env.ambient_for_run(project, {name for name, _ in environment})
+        secrets = tuple(dict.fromkeys((*secrets, *ambient_secrets)))
         quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
-                                                  **({"environment": environment, "secret_values": secrets}
-                                                     if environment else {}),
+                                                  **({"environment": environment, "ambient_environment": ambient,
+                                                      "secret_values": secrets} if environment or ambient else {}),
                                                   **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
