@@ -1,0 +1,18 @@
+{
+  "propuestaSha256": "382e02dfc1d2afa57daae1164a59c960aaf80ba7836421a1182a12ab1ba6d476",
+  "aprobadoPor": "owner",
+  "fecha": "2026-10-28",
+  "backings": [
+    "panel_arco_apuntado",
+    "marco_hexagonal",
+    "marco_ventana",
+    "pared_shimmer",
+    "pedestales_cilindricos",
+    "panel_dos_niveles"
+  ],
+  "mesas": [
+    "imperial",
+    "infantil",
+    "barra"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+ "request": "T3.4:3",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "La aprobación del owner no existe en la ruta que compara cmp; T3.4 no puede pasar",
+ "origin": "El fallo es `cmp: /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json: No such file or directory` con exit code 2, en los tres intentos. Esa aprobación la escribe el coordinador u owner, no el agente, y el agente no puede crearla sin inventar una aprobación. Además, el verificador solo ve una copia limpia de los archivos del repo, así que esa ruta absoluta de ~/bitacora probablemente tampoco es accesible dentro de la sandbox. La salida de tsc y de generación de tipos no es la causa.",
+ "steps": [
+  "En el host, comprueba si existe el archivo: `ls -l /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/` y `find /home/david/bitacora/pictures -name aprobacion-backing-mesas.json`.",
+  "Si no existe, pide al owner o al coordinador que escriba la aprobación. No la sustituyas por docs/req021/propuesta-backing-mesas.json ni la generes tú.",
+  "Corrige la verificación para que use solo archivos del repo, o copia la aprobación dentro del repo. Eso es una revisión: sube \"revision\" en PLAN.json, ejecuta `bitacora.py --project pictures plan-json freeze REQ-021` y elige `revise`.",
+  "Tras la revisión, relanza T3.4 con `bitacora.py --project pictures scheduler-op REQ-021 status`, y decide con la opción que muestre el sistema."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T12:15:43",
+ "seconds": 23.5
+}

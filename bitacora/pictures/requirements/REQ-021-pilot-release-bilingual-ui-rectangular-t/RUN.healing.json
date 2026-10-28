@@ -1,5 +1,5 @@
 {
- "actions": 14,
+ "actions": 16,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -35,6 +35,27 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "T1.8 already had 3 automatic plan repairs"
+  },
+  "059223b0d66d0d20": {
+   "applied": 1,
+   "at": 1793199974.277,
+   "class": "quota",
+   "evidence": [
+    "quota signature in the last error: m5:quota_reset_unknown",
+    "reason code: m5:quota_reset_unknown"
+   ],
+   "first_at": 1793199973.876,
+   "history": [
+    {
+     "at": 1793199974.277,
+     "repair": "retry (quota)",
+     "result": "fixed"
+    }
+   ],
+   "id": "059223b0d66d0d20",
+   "repair": "retry (quota)",
+   "status": "applied",
+   "task": "T2.3"
   },
   "1cf12e094be5f4dc": {
    "applied": 1,
@@ -176,6 +197,27 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "the same failure came back after its repair"
+  },
+  "5f8f8bfab2c1ba75": {
+   "applied": 1,
+   "at": 1793207747.193,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/cc1eb114aaafb568ab5150bcc65b5349ecf0d5687a07cd505e0a327f167f0036",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1793207719.897,
+   "history": [
+    {
+     "at": 1793207747.193,
+     "repair": "retry (recommended, nothing placed the stop)",
+     "result": "fixed"
+    }
+   ],
+   "id": "5f8f8bfab2c1ba75",
+   "repair": "retry (recommended, nothing placed the stop)",
+   "status": "applied",
+   "task": "T3.4"
   },
   "68594766a62ed6e7": {
    "applied": 1,

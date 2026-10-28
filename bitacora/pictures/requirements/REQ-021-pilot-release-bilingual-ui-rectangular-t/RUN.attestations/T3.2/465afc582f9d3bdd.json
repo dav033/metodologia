@@ -1,0 +1,14 @@
+{
+ "at": 1793207040.62,
+ "attempt": "att-0059",
+ "binding": "465afc582f9d3bddcf10f6b39682549b499be413fec158c32c6d7b00ad9e00b4",
+ "by": "owner",
+ "evidence": "Owner approved proposal att-0059: 382e02dfc1d2afa57daae1164a59c960aaf80ba7836421a1182a12ab1ba6d476",
+ "evidence_sha256": "c73402936c25061c73f8c0801957898860b9654a1ef2088eeb1b87607370ae4c",
+ "expected": "The owner names the approved Backing and table candidates (or none); the approval file exists in the requirement folder with the proposal SHA-256, and no modelling task has started before this attestation.",
+ "purpose": "The owner approved a named subset of the proposal, recorded in the requirement folder as aprobacion-backing-mesas.json with the proposal file's SHA-256, before any modelling task starts.",
+ "schema": "attestation/1",
+ "seal": "c95521df4fda6ce3d9c12e02df09ec78cfccfa3b80d8647665db7e89e1ba1451",
+ "task": "T3.2",
+ "value": "The coordinator shows the owner docs/req021/propuesta-backing-mesas.md and writes his named answer to /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json with the SHA-256 of docs/req021/propuesta-backing-mesas.json."
+}

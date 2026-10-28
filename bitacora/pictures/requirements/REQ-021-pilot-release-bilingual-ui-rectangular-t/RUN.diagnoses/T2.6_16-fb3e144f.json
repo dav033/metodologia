@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:16",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "T2.6: la verificación no recibe PICTURES_REQ021_DATABASE_URL y T1.8 sigue pendiente",
+ "origin": "El test `npm run cuentas:test-integracion-ui` sale con código 1 en `resolveTestDatabaseTarget` (`/workspace/scripts/test/lib/base-prueba.ts:25:11`): \"Set PICTURES_REQ021_DATABASE_URL, or set DATABASE_URL together with CI=true and APP_ENV=test\". La sandbox del verificador solo tiene las variables de `verifier.env_file`, y ninguna de las dos combinaciones de variables aparece ahí, así que el fallo es de configuración del entorno y no de código; el reintento con notas (T2.6:10, 11 y 12) no lo cambió. Además, T2.6 depende de T1.8, que la auditoría devolvió sin resolver, y el dueño indicó no empezar T2.6 hasta que T1.8 pase el mismo comando de extremo a extremo.",
+ "steps": [
+  "Dejar que T1.8 pase `npm run cuentas:test-integracion-ui` de extremo a extremo antes de tocar T2.6.",
+  "Añadir `PICTURES_REQ021_DATABASE_URL` (o `DATABASE_URL` con `CI=true` y `APP_ENV=test`) a `~/.config/metodologia/verifier-pictures.env`; lo hace el dueño, porque es un secreto y el agente no debe inventarlo.",
+  "Mover la configuración de auth del servidor de producción a ese archivo o al propio script de test, no al entorno del shell, y reintentar T2.6 con `retry` cuando lo anterior esté hecho."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T10:43:01",
+ "seconds": 26.0
+}

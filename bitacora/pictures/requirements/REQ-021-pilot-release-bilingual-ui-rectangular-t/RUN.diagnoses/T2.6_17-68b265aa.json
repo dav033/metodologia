@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:17",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "T2.6 falla: el verificador no recibe la URL de la base de prueba REQ-021",
+ "origin": "El verificador ejecuta `npm run cuentas:test-integracion-ui` en un sandbox sin variables de entorno, salvo las de `verifier.env_file`. `resolveTestDatabaseTarget` (scripts/test/lib/base-prueba.ts:25) aborta con \"Set PICTURES_REQ021_DATABASE_URL, or set DATABASE_URL together with CI=true and APP_ENV=test\" antes de llegar a la comprobación del navegador. El mismo error se repite en todos los intentos, así que el código de T2.6 nunca llegó a ejecutarse. Además, el predecesor T1.8 sigue devuelto por auditoría, y el propietario pidió resolverlo antes de tocar T2.6.",
+ "steps": [
+  "Confirma que T1.8 pasa `npm run cuentas:test-integracion-ui` de extremo a extremo con su rework, antes de seguir con T2.6.",
+  "Añade `PICTURES_REQ021_DATABASE_URL` al archivo `verifier.env_file` del proyecto pictures (por ejemplo `~/.config/metodologia/verifier-pictures.env`), que es lo único que el sandbox recibe como entorno.",
+  "No pongas la URL en el código ni en el comando. Reintenta T2.6 sin cambiar los criterios de aceptación ni el comando.",
+  "Si el run llega a `/login?error=auth-unavailable`, la configuración de auth del servidor de producción debe venir de `verifier.env_file` o del propio script de prueba, no del entorno de la shell."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not start from a clean slate: first confirm that predecessor T1.8 passes `npm run cuentas:test-integracion-ui` end to end with its rework. Do not change the acceptance criteria or that command. The verifier sandbox passes only the variables of verifier.env_file, so the script reads PICTURES_REQ021_DATABASE_URL from the environment and never from hardcoded values. If the run reaches /login?error=auth-unavailable, set the production server's auth configuration from the test script itself, not from the shell environment.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T12:10:26",
+ "seconds": 19.8
+}
