@@ -45,6 +45,13 @@ class Due(Base):
         self.assertEqual(analyst.failures(self.rdir, "T1", doc), 2)
         self.assertEqual(analyst.due(self.rdir, "T1", doc), 0)
 
+    def test_audit_rejections_with_findings_are_not_failures_of_the_audit(self):
+        doc = {"tasks": {"T1": {"state": "ready", "attempts": ["a1", "a2", "a3", "a4"]}},
+               "attempts": {n: {"state": "rejected", "failure": "audit gate: 2 open blocking finding(s): F1 (high)"} for n in ("a1", "a2", "a3")}}
+        doc["attempts"]["a4"] = {"state": "failed", "failure": "npm test failed: cannot find module x"}
+        self.assertEqual(analyst.failures(self.rdir, "T1", doc), 1)
+        self.assertEqual(analyst.due(self.rdir, "T1", doc), 0)
+
     def test_an_analysis_is_not_repeated_until_two_more_failures_and_never_while_one_runs(self):
         analyst._save(self.rdir, "T1", {"state": "done", "failures": 3, "cause": "c", "solution": "s"})
         self.assertEqual(analyst.due(self.rdir, "T1", doc_with(4)), 0)

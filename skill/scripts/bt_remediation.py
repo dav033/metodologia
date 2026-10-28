@@ -280,9 +280,20 @@ def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, di
             "coupling": evidence("Touches what several accepted tasks share"),
             "confidence": evidence("The audit states the symptom; the cause is found while fixing"),
         },
-        "expected_paths": paths, "shared_resources": sorted({r for t in named for r in tasks[t].get("shared_resources") or ()}),
+        "expected_paths": paths, "shared_resources": _own_resources(tasks, named),
         "acceptance_criteria": criteria, "verification": verification, "covers": covers, "kind": "implement",
     }
+
+
+GENERIC_RESOURCES = ("package.json", "package-lock", "pnpm-lock", "yarn.lock")
+
+
+def _own_resources(tasks: dict[str, dict], named: list[str]) -> list[str]:
+    """The exclusive resources a remediation task inherits from the tasks it fixes: their contracts, ledgers and designs. NOT the
+    tool-level ones (`package.json scripts`): a fix of existing behaviour does not add scripts, and claiming them made REQ-021's
+    SP-1 remediation wait for an unrelated SP-2 test task that held the same manifest, so the subplan could not close."""
+    return sorted({r for t in named for r in tasks[t].get("shared_resources") or ()
+                   if not str(r).lower().startswith(GENERIC_RESOURCES)})
 
 
 def _parallel() -> bool:

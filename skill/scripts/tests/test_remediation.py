@@ -96,6 +96,14 @@ class Build(unittest.TestCase):
         self.assertNotIn("subplan_id", flat)
         self.assertEqual(nested["subplan_id"], "SP-1")
 
+    def test_remediation_does_not_inherit_the_package_manifest_resource_so_it_can_run_beside_other_work(self):
+        spec = plan(task("T1", shared_resources=["contract:session-guard", "package.json scripts"]),
+                    task("T2", ["T1"], kind="test", category="integration", paths=["src/two.py"]),
+                    task("T3", ["T2"], kind="audit", paths=["docs/audit.md", "docs/audit.findings.json"]))
+        revised = rem.build_revision(spec, "T3", [finding("F1", ["T1"])])
+        fix = next(t for t in revised["tasks"] if t["id"].startswith("T3."))
+        self.assertEqual(fix["shared_resources"], ["contract:session-guard"])
+
     def test_each_criterion_is_checked_by_the_command_of_the_task_that_owns_the_finding(self):
         spec = plan(task("T1", command="python -m unittest a/a.py", paths=["a/a.py"]),
                     task("T2", ["T1"], kind="test", category="integration", command="python -m unittest b/b.py",
