@@ -1,0 +1,22 @@
+{
+ "request": "T1.7:4",
+ "state": "done",
+ "kind": "unknown",
+ "label": "Sin identificar",
+ "tone": "muted",
+ "headline": "T1.7 bloqueada: el supervisor se perdió y la verificación falló sin causa identificada",
+ "origin": "El último fallo es \"lost: the supervising shim vanished without an exit record\": el proceso que supervisa el intento desapareció sin registrar salida, lo que apunta al entorno de ejecución más que a una regla del plan. La verificación independiente del intento att-0009 también falló con \"exit co…\", pero el texto está cortado, así que la evidencia no muestra qué check falló. Además, la auditoría devolvió T1.8, de la que depende T1.7, así que el trabajo debe rehacerse sobre su resultado nuevo.",
+ "steps": [
+  "Revisa la salida completa del intento att-0009 con `bitacora.py --project pictures scheduler-op REQ-021 status` y localiza la línea `exit code` y el check que falla.",
+  "Reproduce localmente con las variables de `~/.config/metodologia/verifier-pictures.env` cargadas: `npm run cuentas:test-integracion` y `npm run cuentas:test-integracion -- --solo-ci`.",
+  "Rebasa T1.7 sobre el resultado nuevo de T1.8 y reintenta; si el supervisor vuelve a desaparecer, repórtalo en lugar de cambiar código."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous verifier attempt (att-0009) exited non-zero and its output was truncated after \"exit co\", so the failing check is unknown. Before editing code, read the full verifier output for the failing check and fix only that cause. Rebase T1.7 onto the revised result of T1.8 (the audit sent it back), then confirm end to end on a production build started with `next start` against the REQ-021 test database. Run both `npm run cuentas:test-integracion` and `npm run cuentas:test-integracion -- --solo-ci` with the verifier env variables loaded. If the supervising shim vanishes again, report it without changing code.",
+ "confidence": "baja",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T06:05:46",
+ "seconds": 18.9
+}

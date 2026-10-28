@@ -1,5 +1,5 @@
 {
- "actions": 8,
+ "actions": 9,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -153,6 +153,27 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "the same failure came back after its repair"
+  },
+  "77a6b0e327243b30": {
+   "applied": 1,
+   "at": 1793185547.276,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: lost: the supervising shim vanished without an exit record",
+    "reason code: m5:permanent_or_unknown_cause"
+   ],
+   "first_at": 1793185526.785,
+   "history": [
+    {
+     "at": 1793185547.276,
+     "repair": "retry_with_note (recommended, nothing placed the stop)",
+     "result": "fixed"
+    }
+   ],
+   "id": "77a6b0e327243b30",
+   "repair": "retry_with_note (recommended, nothing placed the stop)",
+   "status": "applied",
+   "task": "T1.7"
   },
   "7fba542ef5969161": {
    "applied": 1,

@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 13/66 · generado: 2026-10-27T20:04:07-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 14/66 · generado: 2026-10-28T06:05:47-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 13/28
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 14/28
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -18,9 +18,9 @@ created: 2026-10-26
 | T1.2 | Permission catalogue, the plan catalogue, the six system roles and the route permission map | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.3 | Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | en curso | gpt-6-luna | codex-2 | 2 |
+| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-2 | 2 |
 | T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | pendiente | gpt-6-luna | codex-2 | 3 |
+| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | lista | gpt-6-luna | codex-2 | 4 |
 | T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | gpt-6.1-sol | codex-2 | 8 |
 | T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | — | — | 0 |
 | T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
@@ -36,7 +36,7 @@ created: 2026-10-26
 | T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | bloqueada | gpt-6-luna | codex-2 | 8 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | pendiente | gpt-6-luna | codex-2 | 8 |
 | T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
 | T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
 
