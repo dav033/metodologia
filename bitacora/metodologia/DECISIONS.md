@@ -1345,3 +1345,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** `verifier.inherit_env = []`; restore the old `failures()` filter.
 - **Evidence:** tests in `test_attempt_analyst`, `test_remediation`, `test_verifier_env`; T1.8 att-0039 completed and produced a real verdict; commits e3d851c96, 6c8da1103, 9dd7c38b0.
 
+## D-140 — The system asks pending Planner assumptions and applies the answer; Planners survive a reboot
+
+- **Date:** 2026-10-28 · **Status:** Accepted
+- **Context:** REQ-021 SP-3 could not be confirmed: its only blocker was a Planner assumption waiting for the owner, with no question round, so the panel offered nothing to answer. The Planner had died with a reboot (tmux), and `round new` had overwritten the answered round 13 after a numbering gap.
+- **Decision:** `bt_input_rounds.ensure` opens a confirm-or-change round for each pending owner-owned assumption of the focused subplan (never for keys or paths the owner must supply) and `apply_answers` resolves the SPEC row or leaves a note for the Planner; `new_round` numbers by highest + 1; the subplan note links to open questions; the panel revives Planners of plans still in planning (ran within 3 days, conversation present).
+- **Consequences:** + no silent block on an unasked assumption; + answers work without a live Planner; − the system writes the Status cell of a SPEC table row (only on an owner confirmation).
+- **Rollback:** remove the `ensure` calls and `_revive_planners`; behaviour returns to Planner-only rounds.
+- **Evidence:** `tests/test_input_rounds.py` (9), commit `4cd2ed0a1`; round 14 answered via web and applied by the revived Planner.
+

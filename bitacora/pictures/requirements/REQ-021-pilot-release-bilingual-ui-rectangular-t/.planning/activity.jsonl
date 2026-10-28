@@ -314,3 +314,7 @@
 {"at": "2026-10-28T06:08:01-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
 {"at": "2026-10-28T06:25:41-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 4 secciones traducidas", "diff": ""}
 {"at": "2026-10-28T06:32:07-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 1 secciones traducidas", "diff": ""}
+{"at": "2026-10-28T06:38:05-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3 (criterios)", "diff": "+ The proposal JSON conforms to PropuestaPilotoSchema: every candidate Backing structure and table type has Spanish and English names, real reference dimensions with at least one cited source, limits and a default inside them, the chair rule for tables, geometry for Backings from caja, cilindro and "}
+{"at": "2026-10-28T06:38:05-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools», «Review focus — SP-3 (2026-10-27, contract and code changes)» cambió", "diff": ""}
+{"at": "2026-10-28T06:38:47-05:00", "who": "Tú", "kind": "flow", "sp": "SP-3", "text": "Confirmaste SP-3 en la web; sigue SP-4", "diff": ""}
+{"at": "2026-10-28T06:38:48-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
