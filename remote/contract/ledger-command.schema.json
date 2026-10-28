@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/ledger-command.schema.json",
+  "title": "Bitácora remote LedgerCommand v1",
+  "$defs": {
+    "LedgerConfirmation": {
+      "additionalProperties": false,
+      "properties": {
+        "challenge_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "typed_req": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "challenge_id",
+        "typed_req"
+      ],
+      "type": "object"
+    },
+    "LedgerParams": {
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "route": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "account": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "option": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "round": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "answers": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    },
+    "LedgerPrecondition": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "idempotency_key": {
+      "maxLength": 120,
+      "minLength": 8,
+      "type": "string"
+    },
+    "command": {
+      "enum": [
+        "pause",
+        "resume",
+        "cancel-attempt",
+        "reopen",
+        "retry",
+        "revise",
+        "approve",
+        "launch",
+        "answer-decision",
+        "answer-round",
+        "cancel-plan",
+        "delete-plan",
+        "edit-brief",
+        "note"
+      ],
+      "type": "string"
+    },
+    "target": {
+      "pattern": "^[^/]+/REQ-[0-9]+$",
+      "type": "string"
+    },
+    "origin": {
+      "enum": [
+        "web",
+        "telegram"
+      ],
+      "type": "string"
+    },
+    "params": {
+      "$ref": "#/$defs/LedgerParams"
+    },
+    "precondition": {
+      "$ref": "#/$defs/LedgerPrecondition"
+    },
+    "confirmation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LedgerConfirmation"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "idempotency_key",
+    "command",
+    "target",
+    "origin",
+    "params",
+    "precondition"
+  ],
+  "type": "object"
+}

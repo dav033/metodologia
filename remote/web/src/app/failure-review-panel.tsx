@@ -1,48 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-type FailureReview = {
-  attemptId: string;
-  cause: string;
-  verification: { command: string | null; output: string };
-  diff: { stat: string | null; files: string[] };
-  logTail: string;
-};
-
-function record(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : null;
-}
-
-function text(value: unknown): value is string {
-  return typeof value === "string";
-}
-
-function safeReviewText(value: string): string {
-  return value.replace(/\b([A-Z0-9_]*(?:SECRET|TOKEN|PASSWORD|KEY|CREDENTIAL)[A-Z0-9_]*)\s*(?:=|:)\s*(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/gi, "$1=[REDACTED]");
-}
-
-function parseFailureReview(value: unknown): FailureReview {
-  const review = record(value);
-  const verification = record(review?.verification);
-  const diff = record(review?.diff);
-  if (!review || !text(review.attemptId) || !text(review.cause) || !verification || !diff || !text(review.logTail)) {
-    throw new Error("El detalle del intento no cumple el contrato v1.");
-  }
-  const files = Array.isArray(diff.files) ? diff.files.filter(text).map(safeReviewText) : [];
-  return {
-    attemptId: safeReviewText(review.attemptId),
-    cause: safeReviewText(review.cause),
-    verification: {
-      command: text(verification.command) ? safeReviewText(verification.command) : null,
-      output: text(verification.output) ? safeReviewText(verification.output) : "",
-    },
-    diff: { stat: text(diff.stat) ? safeReviewText(diff.stat) : null, files },
-    logTail: safeReviewText(review.logTail),
-  };
-}
+import type { FailureReview } from "../contract.generated";
+import { parseFailureReview } from "./remote-contract";
 
 export function FailureReviewPanel({ attemptId, target }: { attemptId: string; target: string }) {
   const [review, setReview] = useState<FailureReview | null>(null);

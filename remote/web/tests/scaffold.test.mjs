@@ -52,3 +52,10 @@ test("Tailwind CSS 4 is configured through PostCSS", async () => {
   assert.match(postcssConfig, /"@tailwindcss\/postcss"/);
   assert.match(css, /^@import "tailwindcss";/);
 });
+
+test("the phone serves the one flow-core source (skill/assets/flow-core.js, copied by npm run sync:flow-core)", async () => {
+  const [source, copy] = await Promise.all([readFile(join(root, "../../skill/assets/flow-core.js"), "utf8"), read("public/flow-core.js")]);
+  assert.equal(copy, source, "public/flow-core.js drifted; run `npm run sync:flow-core`");
+  assert.match(source, /active: 'running'/);
+  assert.match(source, /recovering: 'retry'/);
+});

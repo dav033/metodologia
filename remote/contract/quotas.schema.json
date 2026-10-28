@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/quotas.schema.json",
+  "title": "Bitácora remote QuotasResponse v1",
+  "$defs": {
+    "QuotaAccount": {
+      "additionalProperties": false,
+      "properties": {
+        "account": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The bitácora profile that owns the subscription."
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "windows": {
+          "items": {
+            "$ref": "#/$defs/QuotaWindow"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "account",
+        "provider",
+        "status",
+        "observedAt",
+        "windows"
+      ],
+      "type": "object"
+    },
+    "QuotaWindow": {
+      "additionalProperties": false,
+      "properties": {
+        "window": {
+          "description": "Window name as the provider reports it, e.g. five_hour, seven_day.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "usedPercent": {
+          "type": "number"
+        },
+        "resetsAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "window",
+        "usedPercent",
+        "resetsAt"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accounts": {
+      "items": {
+        "$ref": "#/$defs/QuotaAccount"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "checkedAt": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+      "type": "string"
+    }
+  },
+  "required": [
+    "accounts",
+    "checkedAt"
+  ],
+  "type": "object"
+}

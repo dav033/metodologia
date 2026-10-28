@@ -13,9 +13,17 @@ npm run mock
 ```
 
 In a second terminal, run `npm run dev`. The `/api/:path*` rewrite targets the mock gateway at
-`http://127.0.0.1:8790` by default. Set `FLOW_GATEWAY_ORIGIN` to the gateway origin for a deployed environment.
-The mock implements the browser session, v1 snapshot, event cursor and command endpoints used by the panel. Its
-fixture is local development data and is not included in production code paths.
+`http://127.0.0.1:8790` by default. Set `GATEWAY_ORIGIN` to the gateway origin for a deployed environment.
+The mock implements the gateway's session, snapshot, `/api/remote/v1/stream` (named `event`/`resync` frames), read
+models and command endpoints. Its payloads are `remote/contract/fixtures/*.json`, validated against the contract.
+
+## Contract and shared assets
+
+`src/contract.generated.ts` holds the wire types and constants generated from the Pydantic models
+(`skill/scripts/bt_contracts/remote.py`); regenerate it with `uv run python -m bt_contracts.schemas` from
+`skill/scripts`, never by hand. `src/app/remote-contract.ts` holds the runtime checks typed by it.
+`public/flow-core.js` is a build copy of `skill/assets/flow-core.js`: `npm run dev`/`build` refresh it
+(`npm run sync:flow-core`) and `npm run check:flow-core` fails when it drifted.
 
 For GitHub OAuth, configure the gateway's `GITHUB_CALLBACK_URL` to the **public frontend origin** at
 `/api/auth/callback` (for example, `https://flow.example.com/api/auth/callback`). The browser must start login and

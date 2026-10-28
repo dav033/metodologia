@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/command-history.schema.json",
+  "title": "Bitácora remote CommandHistoryResponse v1",
+  "$defs": {
+    "CommandHistoryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "command": {
+          "enum": [
+            "pause",
+            "resume",
+            "cancel-attempt",
+            "reopen",
+            "retry",
+            "revise",
+            "approve",
+            "launch",
+            "answer-decision",
+            "answer-round",
+            "cancel-plan",
+            "delete-plan",
+            "edit-brief",
+            "note"
+          ],
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "web",
+            "telegram"
+          ],
+          "type": "string"
+        },
+        "submittedAt": {
+          "format": "date-time",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+          "type": "string"
+        },
+        "finishedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "command",
+        "target",
+        "origin",
+        "submittedAt",
+        "finishedAt",
+        "result"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "commands": {
+      "items": {
+        "$ref": "#/$defs/CommandHistoryItem"
+      },
+      "type": "array"
+    },
+    "nextCursor": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "commands",
+    "nextCursor"
+  ],
+  "type": "object"
+}

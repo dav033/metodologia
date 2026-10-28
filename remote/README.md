@@ -15,7 +15,7 @@ Laptop (bt_server on 127.0.0.1:8765) <── reverse SSH tunnel 127.0.0.1:8765 <
 - **Laptop**: Single source of truth and only task executor. Runs `bt_server` on `127.0.0.1:8765`. Holds all API credentials for LLM providers (Claude, Codex). Outbound SSH reverse tunnel connects to AdvIn VPS.
 - **Gateway (`remote/gateway`)**: Python stdlib daemon running on AdvIn VPS under systemd (`flow-gateway.service`). Handles GitHub OAuth (restricted to user `dav033`), session management, snapshot caching, SSE fan-out, command relay with idempotency, event notifications, and Telegram bot.
 - **Web App (`remote/web`)**: Next.js 15 PWA mobile-first dashboard. Uses same-origin rewrites (`/api/:path*`) targeting the gateway origin, allowing first-party session cookies and SSE event streaming.
-- **Contract (`remote/contract`)**: JSON Schema definitions (`command.schema.json`, `event.schema.json`, `error.schema.json`) governing interaction between laptop, gateway, and clients.
+- **Contract (`remote/contract`)**: JSON Schemas generated from the Pydantic models in `skill/scripts/bt_contracts/remote.py` (`uv run python -m bt_contracts.schemas`), plus the validated fixtures the phone mock and gateway tests share. The phone's types (`remote/web/src/contract.generated.ts`) come from the same schemas; see [`docs/contract.md`](docs/contract.md).
 
 ## Running & Operating
 
