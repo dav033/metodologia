@@ -16,6 +16,7 @@ from pathlib import Path
 
 import bt_scheduler_adapter as adapter
 import bt_scheduler_ops as ops
+from bitacora_platform import failure_lines
 
 ANSWERS = "RUN.decisions.jsonl"
 NOTES = "RUN.notes"
@@ -96,8 +97,8 @@ MAX_ERROR = 1500
 
 
 def _clip(text: str, limit: int = MAX_ERROR) -> str:
-    text = (text or "").strip()
-    return text if len(text) <= limit else text[:limit].rstrip() + " …"
+    """The head that fits, and the decisive lines of what is cut: the owner's card must still say why the check failed."""
+    return failure_lines.clip((text or "").strip(), limit)
 
 
 def answers_path(rdir: Path) -> Path:

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import re
 
+from . import failure_lines
+
 UNRESOLVED = "merge conflict markers left in: "
 
 REVERTED = "files changed back to an older version than the base they started from: "
@@ -19,14 +21,52 @@ def _reverted_note(clash: str) -> str:
             "<file>`; the start is the first parent of your worktree's HEAD) unless the task really owns the file, then run the "
             "tests of the module again.")
 
-_NOISE_LINE = re.compile(r"^\s*npm (?:notice|warn(?:ing)?)\b", re.IGNORECASE)
+_NOISE_LINE = failure_lines._NOISE_LINE
 
+# kept for the importers of the adapter's old names; the digest itself uses `failure_lines`
 _ERROR_LINE = re.compile(r"\b(?:error|TS\d{4}|Traceback|AssertionError|Cannot find|not defined|is not a function)\b|✖|\bFAIL", re.IGNORECASE)
 
 def _without_noise(text: str) -> str:
     """The output without lines that never explain a failure (`npm notice ...`, `npm warn ...`) and blank runs."""
-    kept = [line for line in text.splitlines() if not _NOISE_LINE.match(line)]
-    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+    return failure_lines.without_noise(text, structured_logs=False)
+
+_PACKAGE_ADVICE = ("A check cannot find the package {names}: that is a dependency problem, not a code problem. Install the locked "
+                   "dependencies in your worktree with the package manager (for npm: `npm ci --offline`) and run the check "
+                   "yourself; do not edit configuration to avoid the import.")
+_SOURCE_ADVICE = ("A check loads {names}, but a source file the check imports does not exist in your final files: create it "
+                  "(and commit/keep it in the worktree) or fix the import path; this is not a dependency problem, so do not "
+                  "install or declare packages for it.")
+_UNNAMED_ADVICE = ("A check cannot load a module. If it is a package, install the locked dependencies (for npm: `npm ci "
+                   "--offline`); if it is a file of the repository, create it in your final files or fix the import path.")
+
+def _missing_module_note(text: str, known=()) -> str:
+    """The advice for a check that cannot load a module: a missing PACKAGE is a dependency problem, a missing SOURCE file
+    (relative, absolute, `/workspace/...`, a declared path of the plan) is the work's own (REQ-021 T3.11 att-0093: the agent was
+    told to reinstall dependencies for a script it never created). '' when no module is missing."""
+    found = failure_lines.missing_modules(text, known)
+    if not found and not failure_lines.mentions_missing_module(text):
+        return ""
+    def names(kind: str) -> str:
+        return ", ".join([f"`{name}`" for name, k in found if k == kind][:3])
+    parts = [advice.format(names=names(kind)) for kind, advice in (("source", _SOURCE_ADVICE), ("package", _PACKAGE_ADVICE))
+             if names(kind)]
+    return "\n\n".join(parts or [_UNNAMED_ADVICE]) + "\n\n"
+
+def _resource_note(text: str) -> str:
+    """The advice when the sandbox itself ran out of memory or processes (REQ-021 att-0088: Node's heap was exhausted during
+    `next build`): an environment limit, never a reason to change product code. '' when the output does not show one."""
+    kind, line = failure_lines.resource_limit(text)
+    if kind == "memory":
+        return (f"The verifier sandbox exhausted its memory while running a check (`{line[:160]}`). That is a limit of the "
+                "verification environment, not a defect of your code: do not change product code for it. Only if the plan "
+                "allows changing the check's script may you set an explicit `NODE_OPTIONS=--max-old-space-size=<MB>` in that "
+                "script; otherwise say so at the top of your final report.\n\n")
+    if kind == "processes":
+        return (f"The verifier sandbox could not start another process or thread while running a check (`{line[:160]}`). That is "
+                "a limit of the verification environment, not a defect of your code: do not change product code for it. Only "
+                "if the plan allows changing the check's script may you lower its parallelism (fewer workers); otherwise say "
+                "so at the top of your final report.\n\n")
+    return ""
 
 def _integration_note(clash: str) -> str:
     return ("Your result passed its checks but cannot be combined with work that was already accepted: "

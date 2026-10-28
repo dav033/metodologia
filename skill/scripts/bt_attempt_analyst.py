@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from bt_prompt_context import compact, concise, instruction
-from bitacora_platform import analyst_source
+from bitacora_platform import analyst_source, failure_lines
 
 FAILURES_BEFORE = 2
 REANALYZE_AFTER = 2
@@ -148,7 +148,7 @@ def bundle(rdir: Path, task: str, doc: dict, plan: dict | None) -> str:
         if text:
             parts.append(f"{label}:\n{text}")
     text = "\n\n".join(parts)
-    return compact(text) if concise() else text[:MAX_CONTEXT]
+    return compact(text) if concise() else failure_lines.clip(text, MAX_CONTEXT)
 
 
 def parse(text: str) -> dict[str, Any]:
@@ -195,7 +195,8 @@ def analyze(project: str, rdir: Path, task: str, *, runner: Callable[..., Any] =
                           capture_output=True, cwd=source.get("source_directory", work), env=env, timeout=int(config["timeout_seconds"]))
             text = out.read_text(encoding="utf-8") if out.is_file() else (done.stdout or "")
         if done.returncode:
-            raise ValueError(f"{provider} exited with {done.returncode}: {(done.stderr or done.stdout or '')[-300:]}")
+            raise ValueError(f"{provider} exited with {done.returncode}: "
+                             f"{failure_lines.clip(done.stderr or done.stdout or '', 300, keep='tail')}")
         result = {"state": "done", **parse(text)}
         result.update(source)
         if result["not_the_task"] and not source["source_available"]:
