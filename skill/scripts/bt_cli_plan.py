@@ -14,7 +14,7 @@ from bt_core import find_req
 def add_parser(sub: argparse._SubParsersAction) -> None:
     parser = sub.add_parser("plan-json", help="manage PLAN.json or read the conservative planning-history projection")
     parser.add_argument("action", choices=["init", "check", "freeze", "bind", "report", "show", "compat", "history",
-                                           "amend", "amendments", "retrofit-audit"])
+                                           "amend", "amendments", "retrofit-audit", "stages"])
     parser.add_argument("req", nargs="?", help="REQ-NNN (not used by history)")
     parser.add_argument("rest", nargs="*", help="amend: TASK FIELD VALUE (e.g. T4 complexity high)")
     parser.add_argument("--reason", help="amend: why the classification changed")
@@ -94,6 +94,8 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     rdir = find_req(root / project, req)
     if action in {"amend", "amendments"}:
         return _amend(args, rdir, project)
+    if action == "stages":
+        return _stages(rdir, as_json)
     compatibility_report = None
     if action in {"freeze", "bind", "compat"}:
         import bt_scheduler_adapter
@@ -103,6 +105,26 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
     if action == "check" and not as_json:
         _print_guard_warnings(root / project, rdir)
     return code
+
+
+def _stages(rdir: Path, as_json: bool) -> int:
+    """`plan-json stages REQ`: would each next stage be approved? Exit 1 when a DEFINED subplan would be refused."""
+    import bt_plan_adapter as adapter_
+
+    import bt_scheduler_adapter
+
+    try:
+        rows = adapter_.stage_readiness(rdir, compatibility_report=bt_scheduler_adapter.plan_compatibility_report(rdir))
+    except adapter_.planner.PlanContractError as exc:
+        print(f"{exc.code}: " + "; ".join(exc.issues[:5]))
+        return 1
+    if as_json:
+        print(json.dumps(rows, ensure_ascii=False, indent=1))
+    else:
+        for row in rows:
+            mark = "OK  " if row["ok"] else ("--  " if not row["tasks"] or row["depends_on_unfinished"] else "FAIL")
+            print(f"{mark} {row['subplan']:<6} {row['tasks']:>3} tareas  {row['problem']}".rstrip())
+    return 1 if any(not r["ok"] and r["tasks"] and not r["depends_on_unfinished"] for r in rows) else 0
 
 
 def _print_guard_warnings(project_dir: Path, rdir: Path) -> None:

@@ -321,6 +321,42 @@ def stage_problem(rdir: Path, subplans: list[str], *, compatibility_report: dict
     return None if allow_unmapped else _mapping_lines(projection, plan_id(rdir))
 
 
+def stage_readiness(rdir: Path, *, compatibility_report: dict[str, object] | None = None) -> list[dict]:
+    """Deterministic structure check of the whole plan, stage by stage: for every subplan in plan order (after the approved
+    stage), would the stage that adds it and everything before it be approved? `stage_problem` is the gate the owner meets when
+    he presses «Ejecutar subplan»; running it for every future stage tells the Planner, while it writes, what that button will
+    refuse (REQ-021 SP-3: evidence citing a later subplan's task, a composition gate that also composes subplans not yet staged).
+    A subplan with no tasks is not defined yet: it ends the chain (what follows depends on it) and is reported as such.
+    Returns [{subplan, tasks, ok, problem, depends_on_unfinished}] in plan order."""
+    draft, report = planner.sync.read_plan(rdir)
+    if not isinstance(draft, dict):
+        raise planner.PlanContractError("PLAN_INVALID", report.errors or ["PLAN.json: top level must be an object"])
+    found = planner.stages.latest(rdir)
+    approved = planner.stages.subplans_in(found[1]) if found else []
+    counts: dict[str, int] = {}
+    for task in draft.get("tasks") or []:
+        if isinstance(task, dict) and isinstance(task.get("subplan_id"), str):
+            counts[task["subplan_id"]] = counts.get(task["subplan_id"], 0) + 1
+    out, chain, blocked_by = [], [], ""
+    for sub in draft.get("subplans") or []:
+        sid = sub.get("id") if isinstance(sub, dict) else None
+        if not isinstance(sid, str) or sid in approved:
+            continue
+        item = {"subplan": sid, "tasks": counts.get(sid, 0), "ok": False, "problem": "", "depends_on_unfinished": ""}
+        if not item["tasks"]:
+            item["problem"] = "sin tareas: todavía no está definido"
+            blocked_by = blocked_by or sid
+        elif blocked_by:
+            item["problem"] = f"no se puede comprobar: depende de {blocked_by}, que aún no está definido"
+            item["depends_on_unfinished"] = blocked_by
+        else:
+            chain.append(sid)
+            problem = stage_problem(rdir, list(chain), compatibility_report=compatibility_report, allow_unmapped=True, draft=draft)
+            item["ok"], item["problem"] = problem is None, problem or ""
+        out.append(item)
+    return out
+
+
 def _next_stage(rdir: Path, subplans: list[str], *, draft: dict | None = None) -> tuple[dict, dict]:
     """(projection, draft), including unchanged approvals so publication is always revalidated."""
     if draft is None:
