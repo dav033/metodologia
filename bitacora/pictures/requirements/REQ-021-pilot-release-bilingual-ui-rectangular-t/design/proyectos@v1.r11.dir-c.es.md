@@ -143,97 +143,97 @@ La vista previa de la escena es un SVG ilustrativo neutro, etiquetado «Vista de
 | `server-version` | Explicación explícita de la carga del servidor y conservación del borrador local; cancelar |
 | `import` | Destino en la cuenta actual, importación o rechazo explícitos, advertencia sobre dispositivos compartidos; recuperación de datos inválidos/error y descarga del original |
 
-## 8. Reachable states
+## 8. Estados alcanzables
 
-The native Estado switch exposes every state below. States apply to the named surface; unrelated combinations retain the normal surface rather than inventing new business behavior. The Diálogo switch independently reaches every dialog on any view. The native controls are outside the product shell and retain the Mockup label.
+El selector nativo Estado permite acceder a todos los estados siguientes. Los estados se aplican a la superficie indicada; las combinaciones no relacionadas conservan la superficie normal en lugar de introducir comportamientos de negocio nuevos. El selector Diálogo permite acceder por separado a todos los diálogos desde cualquier vista. Los controles nativos están fuera del contenedor del producto y conservan la etiqueta Mockup.
 
-| State id | Relevant view | Visible outcome / recovery |
+| Id. del estado | Vista pertinente | Resultado visible / recuperación |
 |---|---|---|
-| `normal` | All | Authorized results or confirmed account-save text |
-| `loading` | List | Skeleton bands and polite loading status |
-| `empty` | List | No saved projects; existing Escena nueva action and brief next step |
-| `no-results` | List | Explicit no-match feedback and clear search action |
-| `next-page` | List | More fixture rows, end-of-list disabled control |
-| `next-page-error` | List | Already loaded rows remain; failed next-page reason and retry |
-| `unsaved` | Taller | Escena nueva / Sin guardar todavía; first named save required |
-| `saving` | Taller | Guardando… with pending control state; no claim of confirmed persistence |
-| `offline` | List/Taller | Query failure or unsaved scene; explicit retry, scene remains |
-| `error` | List/Taller | Load/save failure, recoverable explanation and retry |
-| `conflict` | Taller | Autosave stopped; local scene retained; server-load/copy panel |
-| `no-taller` | Read-only | Foreign scene readable, no editing or copy action |
-| `import-offer` | List/Taller | Legacy scene review entry with current-account explanation |
-| `import-invalid` | List/Taller/import dialog | Incompatible data explanation, raw mock download, no import submit |
-| `importing` | Import context/dialog | Importing status/disabled duplicate submit |
-| `imported` | List/Taller | One-project acknowledgement and original-retention message |
-| `import-error` | List/Taller/import dialog | Retry-safe failed confirmation plus original download |
-| `recovery` | Taller | Account-local recovery draft available |
-| `local-error` | Taller | Backup failure; stay in view and retry backup |
-| `permission-denied` | All | Access refusal without project names/owners/scene metadata |
-| `unavailable` | All | Non-disclosing unavailable-project surface |
-| `session-expired` | All | Same-account sign-in/recovery guidance and no scene data |
+| `normal` | Todas | Resultados autorizados o texto de confirmación al guardar la cuenta |
+| `loading` | Lista | Bandas de esqueleto y estado de carga anunciado de forma cortés |
+| `empty` | Lista | Sin proyectos guardados; acción existente Escena nueva y breve paso siguiente |
+| `no-results` | Lista | Aviso explícito de que no hay coincidencias y acción para borrar la búsqueda |
+| `next-page` | Lista | Más filas de muestra y control deshabilitado al final de la lista |
+| `next-page-error` | Lista | Las filas ya cargadas permanecen visibles; motivo del error al cargar la página siguiente y opción para reintentar |
+| `unsaved` | Taller | Escena nueva / Sin guardar todavía; se requiere el primer guardado con nombre |
+| `saving` | Taller | Guardando… con control en estado pendiente; no se afirma que los datos se hayan guardado |
+| `offline` | Lista/Taller | Error de consulta o escena sin guardar; opción explícita para reintentar y la escena permanece |
+| `error` | Lista/Taller | Error al cargar o guardar, explicación recuperable y opción para reintentar |
+| `conflict` | Taller | Guardado automático detenido; escena local conservada; panel para cargar la versión del servidor o copiar |
+| `no-taller` | Solo lectura | Escena ajena disponible para lectura, sin acciones para editar ni copiar |
+| `import-offer` | Lista/Taller | Acceso para revisar una escena heredada con explicación sobre la cuenta actual |
+| `import-invalid` | Lista/Taller/diálogo de importación | Explicación de datos incompatibles, descarga de muestra sin modificar y sin opción para confirmar la importación |
+| `importing` | Contexto/diálogo de importación | Estado de importación y confirmación duplicada deshabilitada |
+| `imported` | Lista/Taller | Confirmación de un proyecto y mensaje de que se conserva el original |
+| `import-error` | Lista/Taller/diálogo de importación | Confirmación fallida que se puede reintentar de forma segura, además de la descarga del original |
+| `recovery` | Taller | Borrador de recuperación disponible en la cuenta |
+| `local-error` | Taller | Error de copia de respaldo; permanece en la vista y permite reintentarla |
+| `permission-denied` | Todas | Acceso rechazado sin revelar nombres de proyectos, propietarios ni metadatos de escenas |
+| `unavailable` | Todas | Vista de proyecto no disponible que no revela información |
+| `session-expired` | Todas | Indicaciones para iniciar sesión o recuperar el acceso con la misma cuenta, sin datos de la escena |
 
-Controls additionally expose normal/hover/focus/press, validation and disabled/busy behavior. No checkbox is needed for import: the distinct explicit Importar a mi cuenta and Ahora no actions give consent/refusal without a redundant consent checkbox.
+Los controles también muestran los estados normal, hover, foco y pulsado, así como el comportamiento de validación y deshabilitado/ocupado. La importación no requiere una casilla: las acciones distintas y explícitas Importar a mi cuenta y Ahora no permiten aceptar o rechazar sin una casilla de consentimiento redundante.
 
-## 9. Responsive behavior
+## 9. Comportamiento adaptable
 
-- **360–639px:** 20px outer gutter; masthead/language/account controls wrap; heading/action stack; search/filter become full-width; preview moves below the row controls and explanation below the scene; Taller scene-name/status/save controls wrap, existing panel rail/inspector collapse to the phone tool context; dialogs use viewport-minus-40px width and 24px padding. Actions remain at least 44px high. Vertical scrolling is intentional; no horizontal page scroll is allowed.
-- **640–1099px:** 24px outer gutter; filters wrap above the list; expanded band keeps a scene plus explanation when space permits; Taller inspector collapses, preserving the main scene and rail. Native account/header controls wrap without changing navigation semantics.
-- **1100px and above:** 40px outer gutter, 1520px maximum shared shell; full-width project bands; 1.8:1 scene/explanation; existing scene/rail/inspector context visible.
+- **360–639px:** margen exterior de 20px; los controles de encabezado, idioma y cuenta se ajustan a varias líneas; el título y la acción se apilan; la búsqueda y los filtros ocupan todo el ancho; la vista previa aparece debajo de los controles de fila y la explicación debajo de la escena; los controles de nombre, estado y guardado de Taller se ajustan a varias líneas, y el riel de paneles existente y el inspector se contraen para mostrar el contexto de herramientas del teléfono; los diálogos ocupan el ancho de la ventana menos 40px y tienen relleno de 24px. Las acciones tienen una altura mínima de 44px. El desplazamiento vertical es intencional; no se permite el desplazamiento horizontal de la página.
+- **640–1099px:** margen exterior de 24px; los filtros se ajustan encima de la lista; la banda expandida conserva la escena y su explicación cuando hay espacio; el inspector de Taller se contrae y conserva la escena principal y el riel. Los controles nativos de cuenta y encabezado se ajustan a varias líneas sin cambiar la semántica de navegación.
+- **1100px en adelante:** margen exterior de 40px, contenedor compartido con ancho máximo de 1520px; bandas de proyectos a todo el ancho; proporción de 1.8:1 entre escena y explicación; contexto existente de escena, riel e inspector visible.
 
-Visual checks include 390, 768 and 1280px. Additional rendered probes at 360 and 1024px verify list reflow in both themes. English expansion is supported in the mockup's shared language selector; fixture project names remain data, not translated identities.
+Las comprobaciones visuales incluyen 390, 768 y 1280px. Las comprobaciones renderizadas adicionales en 360 y 1024px verifican el reflujo de la lista en ambos temas. El selector de idioma compartido de la maqueta admite la expansión al inglés; los nombres de proyectos de muestra son datos, no identidades traducidas.
 
-## 10. Accessibility targets and verification boundaries
+## 10. Objetivos de accesibilidad y límites de verificación
 
-Target applicable WCAG 2.2 AA, not a certification. Semantic headings/articles/navigation, programmatic names and state/error announcements are present; keyboard Enter/Space invoke buttons and disclosures. Named-save inputs have associated labels and aria-invalid/described error. Dialogs use the installed modal's inert background/focus containment. Escape returns to the invoking control. Focus uses a 3px product accent outline offset 4px. Control boundaries use the sibling's accessible texto-tenue alias rather than the decorative divider token. Text targets 4.5:1 and control edges/focus 3:1 in both themes. Reduced motion preserves information and actions.
+El objetivo es cumplir los criterios WCAG 2.2 AA aplicables, sin afirmar certificación. Se incluyen encabezados, artículos y navegación semánticos, nombres programáticos y anuncios de estado y error; Enter/Espacio activan botones y controles de expansión. Los campos para guardar con nombre tienen etiquetas asociadas, además de aria-invalid y una descripción del error. Los diálogos usan el fondo inerte y la contención del foco del componente modal instalado. Escape devuelve el foco al control que abrió el diálogo. El foco usa un contorno de acento del producto de 3px, separado por 4px. Los bordes de los controles usan el alias accesible texto-tenue del elemento hermano en lugar del token decorativo de divisor. El contraste del texto es de 4.5:1 y el de los bordes de controles y el foco, de 3:1 en ambos temas. El movimiento reducido conserva la información y las acciones.
 
-This is a planning fixture: save/import timing, matching/owner-filtering and transitions are in-memory simulation. The downloaded JSON is explicitly `escena-original.mock.json`; it demonstrates recovery UI, not user-data recovery. No storage/API, atomic revision check, idempotency, cross-browser scene fidelity, full-collection server search, authentication or real account-switch isolation is implemented or verified here. Existing photo/shopping/tool controls show a Mockup scope notice; they are retained context, not redesigned or implemented. Real behavior belongs to the plan's implementation/integration tasks.
+Esta es una muestra de planificación: la sincronización de guardado/importación, las coincidencias y el filtrado por propietario, y las transiciones son simulaciones en memoria. El JSON descargado se identifica explícitamente como `escena-original.mock.json`; muestra la interfaz de recuperación, no la recuperación de datos del usuario. Aquí no se implementa ni verifica almacenamiento/API, comprobación atómica de revisiones, idempotencia, fidelidad de escenas entre navegadores, búsqueda en el servidor de colecciones completas, autenticación ni aislamiento real al cambiar de cuenta. Los controles existentes de foto, compras y herramientas muestran un aviso de alcance Mockup; se conservan como contexto, no se rediseñan ni implementan. El comportamiento real corresponde a las tareas de implementación e integración del plan.
 
-## 11. Observable acceptance and honest evidence
+## 11. Criterios de aceptación observables y evidencia verificable
 
-| ID | Breakpoint | State | Observable expectation |
+| ID | Punto de quiebre | Estado | Expectativa observable |
 |---|---|---|---|
-| C-AC-01 | 360–1280px | All | The Pictures/Sempertex masthead, Geist type and shared account/navigation vocabulary remain recognizable; no new palette appears. |
-| C-AC-02 | 1100px+ | List normal | An expanded scene is inside its project's full-width band, with identity/actions above and save explanation beside it. |
-| C-AC-03 | 360–639px | List normal | Scene and explanation stack within the same band without horizontal overflow. |
-| C-AC-04 | All | List expanded/collapsed | Ver/Ocultar escena changes only the selected band and exposes aria-expanded; another band can replace the open preview. |
-| C-AC-05 | All | Loading/empty/no-results | Each named list state has distinct visible feedback and an actionable next step; loading uses skeleton bands. |
-| C-AC-06 | All | Next-page failure | Previously loaded rows stay visible while the next-page failure and Reintentar action appear below them. |
-| C-AC-07 | All | Staff list | Only the staff view exposes the owner filter; foreign entries carry owner and Solo lectura copy. |
-| C-AC-08 | All | Taller inline rename | The scene-name control becomes a labelled input in its current header position; confirm/Escape keep the context. |
-| C-AC-09 | All | First save invalid | Empty names show the associated field error and keep the dialog open. |
-| C-AC-10 | All | Saving/saved | Guardando… remains visible until acknowledgement; saved text is not shown for pending work. |
-| C-AC-11 | All | New scene | All three creation entry points yield Escena nueva with Sin guardar todavía after protecting prior edits. |
-| C-AC-12 | All | Conflict | The failure panel shows both server-load and owned-copy actions; normal save is stopped. |
-| C-AC-13 | All | Offline | Sin guardar and the offline reason remain beside the project context, with an explicit retry. |
-| C-AC-14 | All | Foreign original | No editable name or scene tool is present; copy is absent without Taller permission. |
-| C-AC-15 | All | Import offer | The current-account destination and shared-device warning precede distinct import/refusal actions. |
-| C-AC-16 | All | Invalid import | Explanation and original download remain available, while import submit is absent. |
-| C-AC-17 | 390px | Dialogs | Modal content fits within its viewport frame, with readable padding and reachable actions in both themes. |
-| C-AC-18 | All | Keyboard/reduced | Focus is visible, modal Escape restores invocation focus and reduced/still modes retain every action without travel. |
+| C-AC-01 | 360–1280px | Todas | El encabezado de Pictures/Sempertex, la tipografía Geist y el vocabulario compartido de cuenta y navegación siguen siendo reconocibles; no aparece una paleta nueva. |
+| C-AC-02 | 1100px+ | Lista normal | La escena expandida está dentro de la banda de ancho completo de su proyecto, con identidad y acciones arriba y la explicación del guardado al lado. |
+| C-AC-03 | 360–639px | Lista normal | La escena y la explicación se apilan dentro de la misma banda sin desbordamiento horizontal. |
+| C-AC-04 | Todas | Lista expandida/contraída | Ver/Ocultar escena solo cambia la banda seleccionada y expone aria-expanded; otra banda puede reemplazar la vista previa abierta. |
+| C-AC-05 | Todas | Carga/vacía/sin resultados | Cada estado de lista indicado tiene comentarios visibles diferenciados y un paso siguiente disponible; la carga usa bandas de esqueleto. |
+| C-AC-06 | Todas | Error al cargar la página siguiente | Las filas cargadas previamente permanecen visibles y el error al cargar la página siguiente y la acción Reintentar aparecen debajo. |
+| C-AC-07 | Todas | Lista del personal | Solo la vista del personal muestra el filtro por propietario; las entradas ajenas indican el propietario y el texto Solo lectura. |
+| C-AC-08 | Todas | Cambio de nombre en línea en Taller | El control del nombre de la escena se convierte en un campo etiquetado en la posición actual del encabezado; confirmar/Escape conservan el contexto. |
+| C-AC-09 | Todas | Primer guardado no válido | Los nombres vacíos muestran el error asociado al campo y mantienen abierto el diálogo. |
+| C-AC-10 | Todas | Guardando/guardado | Guardando… permanece visible hasta recibir la confirmación; el texto de guardado no aparece mientras la operación sigue pendiente. |
+| C-AC-11 | Todas | Escena nueva | Los tres puntos de entrada de creación muestran Escena nueva con Sin guardar todavía después de proteger las ediciones previas. |
+| C-AC-12 | Todas | Conflicto | El panel de error muestra las acciones para cargar la versión del servidor y crear una copia propia; el guardado normal se detiene. |
+| C-AC-13 | Todas | Sin conexión | Sin guardar y el motivo de la falta de conexión permanecen junto al contexto del proyecto, con una opción explícita para reintentar. |
+| C-AC-14 | Todas | Original ajeno | No hay un nombre editable ni herramientas de escena; la opción de copiar está ausente sin permisos de Taller. |
+| C-AC-15 | Todas | Oferta de importación | El destino en la cuenta actual y el aviso sobre dispositivos compartidos aparecen antes de las acciones diferenciadas para importar o rechazar. |
+| C-AC-16 | Todas | Importación no válida | La explicación y la descarga del original siguen disponibles; la opción para confirmar la importación está ausente. |
+| C-AC-17 | 390px | Diálogos | El contenido modal cabe dentro del marco de la ventana, con relleno legible y acciones accesibles en ambos temas. |
+| C-AC-18 | Todas | Teclado/movimiento reducido | El foco es visible, Escape devuelve el foco al control que abrió el modal y los modos reducido/estático conservan todas las acciones sin desplazamiento. |
 
-Build: real offline builder, 647KB self-contained HTML, 2126 source files bundled. No fallback or downloaded assets. `contrast.py`: **158 pairs checked in light and dark, all pass**. The first rendered audit found two band-padding findings caused by measurable closed-disclosure content; explicit hidden bodies fixed them. A complete subsequent audit measured 672 renders, 17,388 text measurements and 1,965 focus stops with a PASS. A focused interaction test found the invoking import button was being recreated; lifting the feedback component out of the render and retaining disclosure identity fixed the return target. The final source is re-audited after these fixes; final RESULT and counts are recorded below when complete.
+Compilación: generador sin conexión real, HTML autocontenido de 647KB y 2126 archivos fuente empaquetados. Sin recursos de respaldo ni descargados. `contrast.py`: **158 pares comprobados en temas claro y oscuro; todos pasan**. La primera auditoría renderizada encontró dos problemas de relleno en las bandas, causados por contenido medible en controles de expansión contraídos. Se corrigieron al ocultar explícitamente los cuerpos. Una auditoría posterior completa midió 672 renderizados, 17,388 mediciones de texto y 1,965 paradas de foco, con resultado APROBADO. Una prueba de interacción específica detectó que el botón de importación que abría el diálogo se recreaba; sacar el componente de confirmación del renderizado y conservar la identidad del control de expansión corrigió el destino del foco al volver. Se vuelve a auditar el código fuente final después de estas correcciones; el RESULTADO final y los conteos se registran abajo al terminar.
 
-The complete scripted mockup walkthrough passed 12 checks with zero page errors: first-save validation/acknowledgement, inline rename, offline retry, conflict copy, new/template guard, save-and-continue destination, focused search, authorized-owner/read-only/copy visibility, invalid import/download/Escape/focus, import refusal and English view. Initial walkthrough attempts had two locator/assertion mistakes (two Plantillas controls and two legitimate Escena matches), corrected without changing the UI's behavior. Additional 360/390/768/1024/1280px list probes found no contrast, control-edge, padding, alignment or overflow issues in either theme. Screenshots were inspected in memory for both candidates, desktop list/Taller, phone list/conflict/first-save/import and tablet list; no additional screenshot files were written.
+El recorrido automatizado completo de la maqueta pasó 12 comprobaciones sin errores de página: validación y confirmación del primer guardado, cambio de nombre en línea, reintento sin conexión, creación de copia ante un conflicto, protección al crear una escena nueva o usar una plantilla, destino al guardar y continuar, búsqueda con foco, visibilidad de propietario autorizado/solo lectura/copia, importación no válida/descarga/Escape/foco, rechazo de importación y vista en inglés. Los primeros intentos del recorrido tuvieron dos errores en selectores y aserciones (dos controles Plantillas y dos coincidencias válidas de Escena), que se corrigieron sin cambiar el comportamiento de la interfaz. Las comprobaciones adicionales de la lista en 360/390/768/1024/1280px no detectaron problemas de contraste, bordes de controles, relleno, alineación ni desbordamiento en ninguno de los temas. Se inspeccionaron en memoria capturas de pantalla de ambas opciones, la lista y Taller en escritorio, y la lista, el conflicto, el primer guardado y la importación en teléfono, además de la lista en tableta; no se escribieron archivos de capturas adicionales.
 
-`compare_directions.py` measured A/B/C: overall `ok=true`, selector evidence passes, no missing evidence. A–C layout similarity **0.114**, B–C **0.156**; both pairs have different motion; B–C also has different density. Shared route navigation intentionally remains the same. These measurements are visual distinction evidence, not proof of production behavior or owner approval.
+`compare_directions.py` midió A/B/C: resultado general `ok=true`, la evidencia del selector pasa y no falta evidencia. La similitud de diseño entre A–C es **0.114** y entre B–C, **0.156**; ambos pares tienen movimiento diferente. B–C también tiene densidad diferente. La navegación compartida entre rutas se mantiene igual intencionalmente. Estas mediciones son evidencia de distinción visual, no una prueba del comportamiento en producción ni de la aprobación del propietario.
 
-Final snapshot audit (after the component-identity and pending-navigation corrections): **672 renders / 672 planned, 17,388 text measurements, 1,963 focus stops**, at 1280/390/768px in both themes, exit 0. No combinations were sampled away.
+Auditoría de la instantánea final (después de las correcciones de identidad de componentes y navegación pendiente): **672 renderizados / 672 previstos, 17,388 mediciones de texto y 1,963 paradas de foco**, en 1280/390/768px y ambos temas, código de salida 0. No se omitió ninguna combinación.
 
-`RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`
+`RESULTADO: APROBADO — sin problemas de contraste, elementos no textuales, foco, alineación, relleno ni desbordamiento`
 
-Two additional final-file checks passed: Escena nueva and navigation to Proyectos each wait for an in-flight mock save acknowledgement. There were zero external HTTP(S) requests. At 150ms, expressive startup had three active animations; OS reduced motion and `?still=1` each had zero. Final contrast and A/B/C comparison were rerun on the built final file and passed. The final source/HTML hashes below match this tested snapshot.
+Se aprobaron dos comprobaciones adicionales del archivo final: Escena nueva y la navegación a Proyectos esperan la confirmación de un guardado de muestra en curso. No hubo solicitudes HTTP(S) externas. A los 150ms, el inicio expresivo tenía tres animaciones activas; el movimiento reducido del sistema operativo y `?still=1` tenían cero cada uno. Se volvieron a ejecutar el contraste final y la comparación A/B/C en el archivo final compilado; ambos pasaron. Los hashes del código fuente/HTML final indicados abajo corresponden a esta instantánea comprobada.
 
-## 12. Open question and assumptions
+## 12. Pregunta abierta y supuestos
 
-Q: David, ¿debe abrirse la vista previa del primer proyecto al entrar en Proyectos, como en esta exploración, o deben comenzar todas las escenas contraídas?
+P: David, ¿debe abrirse la vista previa del primer proyecto al entrar en Proyectos, como en esta exploración, o deben comenzar todas las escenas contraídas?
 
-Provisional assumption pending direction selection: the first authorized fixture opens for comparison; only one preview is expanded at a time. This affects initial presentation, not ownership, first-save/import consent or persistence semantics. The scope's account/save/conflict/import/new-scene decisions are already settled and are not reopened here.
+Supuesto provisional a la espera de elegir una dirección: la primera muestra autorizada se abre para comparar; solo se expande una vista previa a la vez. Esto afecta la presentación inicial, no la propiedad, el consentimiento para el primer guardado/importación ni la semántica de persistencia. Las decisiones de alcance sobre cuenta, guardado, conflictos, importación y escena nueva ya están resueltas y no se vuelven a plantear aquí.
 
-The owner has not selected or approved this direction. The canonical artifacts and plan remain untouched. Production behavior, independent visual review and any later canonical finalization remain with their assigned plan tasks.
+El propietario no ha elegido ni aprobado esta dirección. Los artefactos canónicos y el plan permanecen intactos. El comportamiento en producción, la revisión visual independiente y cualquier formalización canónica posterior corresponden a las tareas asignadas del plan.
 
-### Input/artifact identity
+### Identidad de la entrada y los artefactos
 
-| File | SHA-256 |
+| Archivo | SHA-256 |
 |---|---|
 | `SPEC.md` | `032cbfb717c61ff8edc32160716a92fb925e8d41e1e31c8f62176f8da9decd7d` |
 | `PLAN.json` | `4807c95679b4a0802ec51f16e30a7726d7baf989c5eb308c04dc9f2b6b84edd7` |

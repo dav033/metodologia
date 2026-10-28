@@ -25,27 +25,28 @@
   "SP-1": {
    "at": "2026-10-27T11:48:30-05:00",
    "by": "owner",
-   "digest": "0e816f1c3a834a46",
-   "repinned": "2026-10-27T20:12:18-05:00 auto: mechanical plan revisions r6-r8 (T1.11 scope, T2.6 waits for T1.8b)",
+   "digest": "932c927cac58e8db",
+   "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
    "via": "web"
   },
   "SP-14": {
    "at": "2026-10-27T18:48:24-05:00",
    "by": "owner",
    "digest": "d0646a82f247c96b",
+   "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
    "via": "web"
   },
   "SP-2": {
    "at": "2026-10-27T15:50:51-05:00",
    "by": "owner",
    "digest": "91743a92a5323f0c",
-   "repinned": "2026-10-27T20:12:18-05:00 auto: mechanical plan revisions r6-r8 (T1.11 scope, T2.6 waits for T1.8b)",
+   "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
    "via": "web"
   },
   "SP-3": {
-   "at": "2026-10-28T06:38:47-05:00",
+   "at": "2026-10-28T08:21:43-05:00",
    "by": "owner",
-   "digest": "e0cb3254de78f446",
+   "digest": "df7a735f35aa9065",
    "via": "web"
   }
  }

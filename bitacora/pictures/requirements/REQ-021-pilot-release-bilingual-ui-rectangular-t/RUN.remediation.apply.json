@@ -12,6 +12,19 @@
      "SP-2"
     ],
     "task": "T91"
+   },
+   {
+    "criteria": [
+     "On the integrated M1 candidate started with next start against the REQ-021 test database, a signed-out visitor follows the sign-in screen's plans link to the four plans, an administrator moves a Designer account to Designer Plus on the accounts screen and that person's next request opens the cost calculator but not the Taller 3D, and the plan names offered on the accounts screen are exactly the four the plans section shows.",
+     "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account\u2019s assigned plan and server permissions do not change."
+    ],
+    "id": "CG-4",
+    "subplans": [
+     "SP-1",
+     "SP-2",
+     "SP-14"
+    ],
+    "task": "T94"
    }
   ],
   "interfaces": [],
@@ -30,15 +43,19 @@
    "R2",
    "R3",
    "R16",
-   "R17"
+   "R17",
+   "R18",
+   "R19",
+   "R20"
   ],
-  "revision": 4,
+  "revision": 10,
   "schema_version": "1.3.0",
   "spec_ref": "SPEC.md",
   "stage": {
    "subplans": [
     "SP-1",
-    "SP-2"
+    "SP-2",
+    "SP-14"
    ],
    "version": 1
   },
@@ -166,6 +183,131 @@
      "design_task": "T2.1",
      "version": 1,
      "visual_review_task": "T2.7"
+    }
+   },
+   {
+    "acceptance_criteria": [
+     "The /planes page shows Entusiasta, Designer, Designer Plus and Master Designer in that order, each with its name, monthly price and included tools taken from the plan catalogue, and a value changed in the catalogue appears on the page without editing the page.",
+     "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
+     "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked \u00aba\u00fan no disponible\u00bb in Spanish and \u00abnot available yet\u00bb in English, the Entusiasta chat reads \u00abcon l\u00edmites\u00bb / \u00abwith limits\u00bb and the Designer chat \u00abcon l\u00edmites m\u00e1s altos\u00bb / \u00abwith higher limits\u00bb, and the page has no purchase, request or sign-up control and shows no limit value.",
+     "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
+     "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
+     "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding.",
+     "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an \u00abOcultar herramientas\u00bb control."
+    ],
+    "audit_task": "T14.6",
+    "consumes": [
+     {
+      "contract": "plan-catalogue",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     },
+     {
+      "contract": "permission-map",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     },
+     {
+      "contract": "session-guard",
+      "dependency": "contract",
+      "from": "SP-1",
+      "version": 1
+     }
+    ],
+    "covers": [
+     "R17",
+     "R18",
+     "R19",
+     "R20"
+    ],
+    "id": "SP-14",
+    "integration_test_task": "T14.4",
+    "milestone_id": "M1",
+    "outcome": "Anyone, signed in or not, opens the plans section from the sign-in screen or the account menu and compares Entusiasta, Designer, Designer Plus and Master Designer with their monthly price (COP in Spanish, USD in English) and included tools read from the plan catalogue, with the tools not built yet marked \u00aba\u00fan no disponible\u00bb; a separate view lets visitors select/highlight one plan for comparison only; nothing in it buys, requests, signs up or changes an account\u2019s assigned plan.",
+    "title": "Plans section: the four access plans, public and informative",
+    "ui": {
+     "contract": "planes",
+     "design_task": "T14.1",
+     "version": 1,
+     "visual_review_task": "T14.5"
+    },
+    "ui_brief": {
+     "copy_rules": [
+      "Plan names, prices and tool names come only from the plan catalogue; no marketing claims, testimonials, discounts or invented benefits",
+      "Plan names: Entusiasta (English: Enthusiast), Designer, Designer Plus, Master Designer",
+      "Spanish shows prices in COP per month and English in USD per month, never both currencies",
+      "Entusiasta is free (\u00abGratis\u00bb / \u00abFree\u00bb)",
+      "Tools not built yet say \u00aba\u00fan no disponible\u00bb (Spanish) and \u00abnot available yet\u00bb (English)",
+      "Chat limits are named without numbers: Entusiasta \u00abcon l\u00edmites\u00bb / \u00abwith limits\u00bb, Designer \u00abcon l\u00edmites m\u00e1s altos\u00bb / \u00abwith higher limits\u00bb (owner, 2026-10-27)",
+      "The Taller 3D line of Master Designer stands for the whole 3D balloon editor, the ready-made decorations explorer included; no separate explorer line (owner-confirmed 2026-10-27)",
+      "If the section says how a plan is obtained, it says only that an administrator assigns it"
+     ],
+     "existing_surface": {
+      "components": [
+       "LoginForm",
+       "CabeceraApp",
+       "MenuApp",
+       "MenuCuenta (planned by SP-2 T2.4, not on main yet)"
+      ],
+      "notes": "The sign-in screen and the account menu are redesigned by SP-2 (cuentas-admin@v1, owner-chosen direction \u00abParte de acceso\u00bb); planes@v1 only adds one plans link in each and follows that direction and the tokens of src/app/globals.css. The page data comes only from the plan catalogue (src/lib/planes/catalogo.ts, SP-1 T1.2).",
+      "paths": [
+       "src/app/login/page.tsx",
+       "src/app/login/LoginForm.tsx",
+       "src/app/globals.css",
+       "src/app/layout.tsx",
+       "src/components/ui/shell/CabeceraApp.tsx",
+       "src/components/ui/shell/MenuApp.tsx"
+      ],
+      "routes": [
+       "/login",
+       "/planes (new)"
+      ]
+     },
+     "flows": [
+      {
+       "name": "Signed-out visitor compares the plans",
+       "steps": [
+        "Opens the sign-in screen",
+        "Follows its plans link",
+        "Reads the four plans in order with name, monthly price and included tools",
+        "Goes back to the sign-in screen"
+       ]
+      },
+      {
+       "name": "Signed-in person looks at the plans",
+       "steps": [
+        "Opens the account menu on any signed-in page",
+        "Follows its plans entry",
+        "Reads the four plans",
+        "Returns to the page they came from"
+       ]
+      },
+      {
+       "name": "English visitor",
+       "steps": [
+        "Opens /planes with an English browser",
+        "Sees the same four plans and tools in English with prices in USD per month"
+       ]
+      }
+     ],
+     "must_not_change": [
+      "The sign-in screen and account menu layout, copy and behavior defined by cuentas-admin@v1, except one plans link in each",
+      "No purchase, subscription, request, contact or sign-up action anywhere in the section",
+      "No limit values, counters or limit messages",
+      "Custom roles, staff roles and permission keys are never shown in the section"
+     ],
+     "screens_states": [
+      "/planes in Spanish: Entusiasta, Designer, Designer Plus and Master Designer in that order, prices in COP per month, Entusiasta free",
+      "/planes in English: Enthusiast, Designer, Designer Plus and Master Designer with prices in USD per month",
+      "Cumulative plans: each plan includes everything of the plan before it; the contract decides whether a plan lists all its tools or what it adds",
+      "Chat lines without numbers: Entusiasta \u00abChat con l\u00edmites\u00bb / \u00abChat with limits\u00bb; Designer \u00abChat con l\u00edmites m\u00e1s altos\u00bb / \u00abChat with higher limits\u00bb",
+      "Tools not built yet (extended chat, structure detection, advanced balloon detection) shown under Designer Plus and Master Designer as \u00aba\u00fan no disponible\u00bb / \u00abnot available yet\u00bb",
+      "Signed-out page (no account menu) and signed-in page (account menu present)",
+      "Phone 390 px and desktop 1280 px without horizontal scrolling; keyboard focus order",
+      "Plans link on the sign-in screen and plans entry in the account menu"
+     ]
     }
    }
   ],
@@ -1062,7 +1204,8 @@
     "after": [
      "T1.7",
      "T1.10",
-     "T1.11"
+     "T1.11",
+     "T1.12"
     ],
     "classification_evidence": {
      "complexity": {
@@ -2247,7 +2390,8 @@
     "after": [
      "T2.3",
      "T2.4",
-     "T2.5"
+     "T2.5",
+     "T1.8b"
     ],
     "classification_evidence": {
      "complexity": {
@@ -2507,6 +2651,638 @@
    },
    {
     "acceptance_criteria": [
+     "The owner-approved planes@v1 contract is copied byte for byte into design/contracts/planes@v1.md."
+    ],
+    "after": [
+     "T91"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T14.2"
+      ],
+      "justification": "Copying an already approved file byte for byte needs no design decisions."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T2.1",
+       "task:T14.5"
+      ],
+      "justification": "The flow copies the plan-pinned draft, the same known step as the SP-2 design task."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T14.2",
+       "task:T14.3"
+      ],
+      "justification": "Both UI tasks of SP-14 read this contract, so they wait for it."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind design -> status unknown, no comparable samples",
+       "task:T2.1"
+      ],
+      "justification": "Ten minutes to copy and compare the hash."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T14.2"
+      ],
+      "justification": "A wrong copy only blocks UI tasks through the hash gate, which is easy to redo."
+     },
+     "scope": {
+      "evidence": [
+       "spec:SPEC.md#ui--design-contract-optional",
+       "task:T14.3"
+      ],
+      "justification": "One markdown file added under design/contracts."
+     }
+    },
+    "complexity": "low",
+    "confidence": "high",
+    "coupling": "medium",
+    "covers": [
+     "R18",
+     "R19",
+     "R20"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 10 to copy the pinned file and check its hash; the design itself is done during planning.",
+    "estimated_minutes": 10,
+    "expected_paths": [
+     "design/contracts/planes@v1.md"
+    ],
+    "id": "T14.1",
+    "kind": "design",
+    "milestone_id": "M1",
+    "objective": "The repository holds the exact owner-approved visual contract of the plans section and its two entry points before any of them is built.",
+    "repository": "pictures",
+    "risk": "low",
+    "scope": "isolated_fix",
+    "shared_resources": [
+     "design:planes@v1"
+    ],
+    "subplan_id": "SP-14",
+    "title": "Copy the owner-approved planes@v1 contract into the repository",
+    "ui": false,
+    "verification": [
+     {
+      "category": "static",
+      "purpose": "The owner-approved planes@v1 contract is copied byte for byte into design/contracts/planes@v1.md.",
+      "type": "command",
+      "value": "test -s design/contracts/planes@v1.md"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "The /planes page shows Entusiasta, Designer, Designer Plus and Master Designer in that order, each with its name, monthly price and included tools taken from the plan catalogue, and a value changed in the catalogue appears on the page without editing the page.",
+     "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
+     "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked \u00aba\u00fan no disponible\u00bb in Spanish and \u00abnot available yet\u00bb in English, the Entusiasta chat reads \u00abcon l\u00edmites\u00bb / \u00abwith limits\u00bb and the Designer chat \u00abcon l\u00edmites m\u00e1s altos\u00bb / \u00abwith higher limits\u00bb, and the page has no purchase, request or sign-up control and shows no limit value.",
+     "Without a session the /planes page is served, because the route permission map lists /planes as public, and every other page and API keeps exactly one mapped entry.",
+     "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
+     "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered."
+    ],
+    "after": [
+     "T14.1"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/app/globals.css",
+       "file:scripts/test/test-ui-armado-columna.ts"
+      ],
+      "justification": "A comparison of four cumulative plans at phone and desktop widths with two currencies needs care but no new data."
+     },
+     "confidence": {
+      "evidence": [
+       "file:scripts/test/test-ui-armado-columna.ts",
+       "assumption:the planes@v1 contract keeps one comparison view without tabs"
+      ],
+      "justification": "Static-render UI tests already exist in the repository; the contract layout is not drafted yet."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.2",
+       "task:T1.4"
+      ],
+      "justification": "Reads contract:plan-catalogue and the /planes entry of contract:permission-map from SP-1."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "file:scripts/test/test-ui-armado-columna.ts"
+      ],
+      "justification": "Fifty page, twenty strings, ten public-route check and forty tests make one hundred twenty minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "file:src/proxy.ts"
+      ],
+      "justification": "Public visitors would read a wrong price or a tool that does not exist, and a wrong map entry could open another route."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/app/layout.tsx",
+       "task:T1.2"
+      ],
+      "justification": "One new page, one component, one strings module and one test; the public map entry for /planes is written by T1.2."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R17",
+     "R18",
+     "R20"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 50 page and comparison component + 20 strings and language selection + 10 public-route check + 40 static-render tests = 120. No comparable history.",
+    "estimated_minutes": 120,
+    "expected_paths": [
+     "src/app/planes/page.tsx",
+     "src/components/planes/ComparadorPlanes.tsx",
+     "src/components/planes/textos-planes.ts",
+     "scripts/test/test-ui-planes.ts"
+    ],
+    "id": "T14.2",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "A public /planes page renders the four access plans only from the plan catalogue, in the visitor's language with its currency, with all tool lists visible, no hide-tools control, and an extra informational view to select/highlight a plan for comparison without changing account assignment.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:plan-catalogue",
+     "contract:permission-map",
+     "design:planes@v1"
+    ],
+    "subplan_id": "SP-14",
+    "title": "Public plans page: the four plans from the plan catalogue, prices by language",
+    "ui": true,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "The /planes page shows Entusiasta, Designer, Designer Plus and Master Designer in that order, each with its name, monthly price and included tools taken from the plan catalogue, and a value changed in the catalogue appears on the page without editing the page.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo catalogo"
+     },
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "With a Spanish browser language the page shows every price in COP per month and with an English one in USD per month, never both, Entusiasta shows as free in each language and is named Enthusiast in English.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo idioma"
+     },
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "Extended chat, structure detection and advanced balloon detection appear under Designer Plus and Master Designer marked \u00aba\u00fan no disponible\u00bb in Spanish and \u00abnot available yet\u00bb in English, the Entusiasta chat reads \u00abcon l\u00edmites\u00bb / \u00abwith limits\u00bb and the Designer chat \u00abcon l\u00edmites m\u00e1s altos\u00bb / \u00abwith higher limits\u00bb, and the page has no purchase, request or sign-up control and shows no limit value.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo sin-acciones"
+     },
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "Without a session the /planes page is served, because the route permission map lists /planes as public, and every other page and API keeps exactly one mapped entry.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo ruta-publica"
+     },
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo vista-eleccion"
+     },
+     {
+      "category": "functional",
+      "created_by": "T14.2",
+      "purpose": "At tablet width all four plans and full tool lists remain legible without horizontal scrolling, and no hide-tools control is rendered.",
+      "type": "command",
+      "value": "npm run planes:test-ui -- --solo tablet"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
+     "Apart from the plans link, the sign-in screen keeps the sign-in behavior its SP-2 test checks.",
+     "Apart from the plans entry, the account menu and Mi cuenta keep the behavior their SP-2 test checks."
+    ],
+    "after": [
+     "T14.2"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "task:T2.4"
+      ],
+      "justification": "Two links inside screens that SP-2 builds, placed where the planes@v1 contract says."
+     },
+     "confidence": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "assumption:SP-2 keeps the sign-in page at src/app/login/page.tsx"
+      ],
+      "justification": "The current sign-in page was read; the SP-2 redesign of it is not built yet."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T2.3",
+       "task:T91"
+      ],
+      "justification": "Touches files owned by T2.3 and T2.4 after the M1 composition check."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+       "file:src/app/login/LoginForm.tsx"
+      ],
+      "justification": "Ten, ten and twenty-five minutes make forty-five."
+     },
+     "risk": {
+      "evidence": [
+       "file:src/app/login/LoginForm.tsx",
+       "task:T2.3"
+      ],
+      "justification": "Editing the sign-in screen can break signing in for every pilot user."
+     },
+     "scope": {
+      "evidence": [
+       "file:src/app/login/page.tsx",
+       "task:T2.3"
+      ],
+      "justification": "Edits two SP-2 files and adds one test file."
+     }
+    },
+    "complexity": "low",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R19"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 10 sign-in link + 10 menu entry + 25 render tests and SP-2 regressions = 45. No comparable history.",
+    "estimated_minutes": 45,
+    "expected_paths": [
+     "src/app/login/page.tsx",
+     "src/components/cuentas/MenuCuenta.tsx",
+     "scripts/test/test-ui-planes-entrada.ts"
+    ],
+    "id": "T14.3",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "The sign-in screen and the account menu each lead to the plans section without changing anything else the cuentas-admin@v1 screens do.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts",
+     "contract:session-guard",
+     "design:planes@v1"
+    ],
+    "subplan_id": "SP-14",
+    "title": "Plans links on the sign-in screen and in the account menu",
+    "ui": true,
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T14.3",
+      "purpose": "The sign-in screen and the account menu each show one link to the plans section that opens /planes, signed out from the sign-in screen and signed in from the menu.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-ui-entrada"
+     },
+     {
+      "category": "regression",
+      "created_by": "T14.3",
+      "purpose": "Apart from the plans link, the sign-in screen keeps the sign-in behavior its SP-2 test checks.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-acceso -- --solo ingreso"
+     },
+     {
+      "category": "regression",
+      "created_by": "T14.3",
+      "purpose": "Apart from the plans entry, the account menu and Mi cuenta keep the behavior their SP-2 test checks.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run cuentas:test-ui-mi-cuenta"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
+     "Opening /planes without a session makes no other page or API reachable without a session.",
+     "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
+     "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an \u00abOcultar herramientas\u00bb control."
+    ],
+    "after": [
+     "T14.3"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "file:scripts/e2e/humo.ts",
+       "task:T2.6"
+      ],
+      "justification": "Two languages, two widths, signed-out and signed-in contexts in one production build."
+     },
+     "confidence": {
+      "evidence": [
+       "file:package.json",
+       "assumption:next build finishes within the sandbox time limit"
+      ],
+      "justification": "Playwright is already a dependency and the smoke shows its use; build time is not measured."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T14.3",
+       "task:T1.4"
+      ],
+      "justification": "Exercises SP-14 with the SP-1 guard and the SP-2 screens together."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+       "file:package.json"
+      ],
+      "justification": "Fifteen build, thirty-five flows and twenty-five evidence make seventy-five minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T14.6"
+      ],
+      "justification": "Last barrier before the audits for the first public page of the pilot."
+     },
+     "scope": {
+      "evidence": [
+       "file:scripts/e2e/humo.ts",
+       "task:T14.2"
+      ],
+      "justification": "One Playwright script and its evidence file."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R17",
+     "R18",
+     "R19",
+     "R20"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 build + 35 Playwright flows in two languages and widths + 25 evidence and teardown = 75. No comparable history.",
+    "estimated_minutes": 75,
+    "expected_paths": [
+     "scripts/test/test-integracion-planes.ts",
+     ".evidence/REQ-021/SP-14.integration.json"
+    ],
+    "id": "T14.4",
+    "kind": "test",
+    "milestone_id": "M1",
+    "objective": "Real browsers against next start prove the section is reachable signed out and signed in, follows the browser language and currency, fits phone, tablet and desktop, and choosing a plan in the informational view does not change assignment, and opens nothing else without a session.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts"
+    ],
+    "subplan_id": "SP-14",
+    "title": "Browser end-to-end of the plans section on a production build",
+    "verification": [
+     {
+      "category": "integration",
+      "created_by": "T14.4",
+      "purpose": "On a production build started with next start against the REQ-021 test database, a signed-out browser follows the sign-in screen's plans link to the four plans with COP prices, an English browser sees the same plans with USD prices, a signed-in Entusiasta reaches the section from the account menu, and the page fits 390 and 1280 pixel widths without horizontal scrolling with every link reachable by keyboard.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-integracion"
+     },
+     {
+      "category": "integration",
+      "created_by": "T14.4",
+      "purpose": "Opening /planes without a session makes no other page or API reachable without a session.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-integracion -- --solo sin-sesion"
+     },
+     {
+      "category": "integration",
+      "created_by": "T14.4",
+      "purpose": "A signed-in test account selects each plan in the public comparison view; its assigned plan and next-request permissions remain unchanged.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-integracion -- --solo selector-sin-cambio"
+     },
+     {
+      "category": "integration",
+      "created_by": "T14.4",
+      "purpose": "The extra plans view lets a visitor select/highlight any plan for comparison and return to the full comparison; it never changes account assignment, and all tool lists remain visible without an \u00abOcultar herramientas\u00bb control.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-integracion -- --solo selector-sin-cambio"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task."
+    ],
+    "after": [
+     "T14.4"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T14.1",
+       "task:T14.4"
+      ],
+      "justification": "Comparing rendered states with a written contract needs judgement but no new design."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T14.4",
+       "task:T2.7"
+      ],
+      "justification": "One page and two links bound the review, so the estimate rests on known tasks."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T14.2",
+       "task:T14.3"
+      ],
+      "justification": "Its ledger:SP-14-visual can send T14.2 or T14.3 back."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+       "task:T14.2"
+      ],
+      "justification": "Thirty for screenshots and comparison and fifteen for the ledger, forty-five minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T14.2"
+      ],
+      "justification": "A missed mismatch shows wrong or confusing prices to the public."
+     },
+     "scope": {
+      "evidence": [
+       "task:T14.4",
+       "spec:SPEC.md#ui--design-contract-optional"
+      ],
+      "justification": "Writes only a report and its ledger."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R18",
+     "R19",
+     "R20"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 30 screenshots and comparison of one page and two entry points at three widths and two languages + 15 ledger = 45.",
+    "estimated_minutes": 45,
+    "expected_paths": [
+     ".evidence/REQ-021/SP-14.visual.md",
+     ".evidence/REQ-021/SP-14.visual.findings.json"
+    ],
+    "id": "T14.5",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "objective": "A fresh reviewer compares the rendered plans section and its two entry points with the approved contract at phone, tablet and desktop widths and in both languages, including the extra selection view and records every mismatch with the task to redo.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "ledger:SP-14-visual"
+    ],
+    "subplan_id": "SP-14",
+    "title": "SP-14 visual review against the planes@v1 contract",
+    "verification": [
+     {
+      "category": "static",
+      "created_by": "T14.5",
+      "purpose": "The full plans comparison, extra select/highlight view and both entry links match the approved planes@v1 contract at phone, tablet and desktop widths in Spanish and English; every tool list is visible, no hide-tools control appears, and each finding names the repair task.",
+      "type": "command",
+      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-14.visual.findings.json"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding."
+    ],
+    "after": [
+     "T14.5"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T14.2",
+       "file:src/proxy.ts"
+      ],
+      "justification": "Checks that no price or tool is written outside the catalogue and that the public entry opens nothing else."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T14.4",
+       "task:T14.5"
+      ],
+      "justification": "Bounded by two implementation tasks with tests."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T14.2",
+       "task:T14.3"
+      ],
+      "justification": "Its ledger:SP-14 can send T14.2 or T14.3 back."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+       "task:T14.2"
+      ],
+      "justification": "Three fifteen-minute checks of catalogue use, public route and copy make forty-five minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "file:src/proxy.ts"
+      ],
+      "justification": "A missed defect publishes wrong prices or opens an internal route to anonymous visitors."
+     },
+     "scope": {
+      "evidence": [
+       "task:T14.5",
+       "spec:SPEC.md#requirements"
+      ],
+      "justification": "The audit writes only its report and ledger."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R17",
+     "R18",
+     "R19",
+     "R20"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 public route and proxy behavior + 15 catalogue as single source + 15 copy and ledger = 45.",
+    "estimated_minutes": 45,
+    "expected_paths": [
+     ".evidence/REQ-021/SP-14.audit.md",
+     ".evidence/REQ-021/SP-14.findings.json"
+    ],
+    "id": "T14.6",
+    "kind": "audit",
+    "milestone_id": "M1",
+    "objective": "An independent read-only review confirms SP-14 against R17 to R20 and records each confirmed defect with the task to redo in a blocking findings ledger.",
+    "repository": "pictures",
+    "risk": "medium",
+    "scope": "small_change",
+    "shared_resources": [
+     "ledger:SP-14"
+    ],
+    "subplan_id": "SP-14",
+    "title": "SP-14 audit: catalogue use, public route and copy",
+    "verification": [
+     {
+      "category": "static",
+      "created_by": "T14.6",
+      "purpose": "An independent audit of SP-14 records every confirmed defect with the task that must redo it in the SP-14 findings ledger, and the ledger has no open critical or high finding.",
+      "type": "command",
+      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-14.findings.json"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
      "On the integrated M1 tree started with next start against the REQ-021 test database, cuentas:primer-admin creates an administrator who activates through the activation screen, invites an Entusiasta person who activates and signs in, and that person reaches the chat and the catalogue but gets the no-access page on the Taller 3D and 403 on its APIs."
     ],
     "after": [
@@ -2673,7 +3449,6 @@
      "src/lib/asesor/voice.ts",
      "scripts/test/lib/sesion-prueba.ts",
      "scripts/test/test-guardias-rutas.ts",
-     "scripts/test/*.ts",
      "scripts/e2e/humo/configuracion.ts",
      "scripts/e2e/humo/pasos-asistente.ts",
      "scripts/e2e/humo/navegacion.ts",
@@ -2688,8 +3463,7 @@
     "scope": "large_change",
     "shared_resources": [
      "contract:permission-map",
-     "contract:session-guard",
-     "package.json scripts"
+     "contract:session-guard"
     ],
     "subplan_id": "SP-1",
     "title": "Remediate T1.8 findings F16, F17",
@@ -2737,13 +3511,315 @@
       "value": "npm run taller:test-estatico"
      }
     ]
+   },
+   {
+    "acceptance_criteria": [
+     "On the integrated M1 candidate started with next start against the REQ-021 test database, a signed-out visitor follows the sign-in screen's plans link to the four plans, an administrator moves a Designer account to Designer Plus on the accounts screen and that person's next request opens the cost calculator but not the Taller 3D, and the plan names offered on the accounts screen are exactly the four the plans section shows.",
+     "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account\u2019s assigned plan and server permissions do not change."
+    ],
+    "after": [
+     "T14.6"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T14.4",
+       "task:T2.6"
+      ],
+      "justification": "Chains the public section, the administrator screens and a second browser whose access changes."
+     },
+     "confidence": {
+      "evidence": [
+       "task:T2.6",
+       "task:T14.4"
+      ],
+      "justification": "Reuses the helpers of T2.6 and T14.4, whose flows are already specified."
+     },
+     "coupling": {
+      "evidence": [
+       "task:T91",
+       "task:T14.6"
+      ],
+      "justification": "Exercises SP-1, SP-2 and SP-14 together on the M1 candidate; it is the gate that closes M1."
+     },
+     "duration": {
+      "evidence": [
+       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+       "task:T91"
+      ],
+      "justification": "Fifteen build, thirty flow and fifteen evidence make sixty minutes."
+     },
+     "risk": {
+      "evidence": [
+       "spec:SPEC.md#requirements",
+       "task:T1.2"
+      ],
+      "justification": "A mismatch here sells one plan on the page and grants another on the server."
+     },
+     "scope": {
+      "evidence": [
+       "task:T91",
+       "spec:SPEC.md#requirements"
+      ],
+      "justification": "One composition script and its evidence file."
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "medium",
+    "covers": [
+     "R16",
+     "R17",
+     "R19"
+    ],
+    "estimate_rationale": "Agent estimate in minutes: 15 build + 30 two-browser flow + 15 evidence = 60. No comparable history.",
+    "estimated_minutes": 60,
+    "expected_paths": [
+     "scripts/test/test-composicion-planes.ts",
+     ".evidence/REQ-021/CG-4.integration.json"
+    ],
+    "id": "T94",
+    "kind": "test",
+    "milestone_id": "M1",
+    "objective": "On the integrated M1 candidate the plans section, the accounts screen and the permission guard agree on the four plans: the plans view, admin assignment and permission guard agree, and the public comparison selector never mutates assignment.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "small_change",
+    "shared_resources": [
+     "package.json scripts",
+     "candidate:CG-4"
+    ],
+    "title": "Composition check CG-4: access plans from the plans section to the accounts screen",
+    "ui": false,
+    "verification": [
+     {
+      "category": "integration",
+      "created_by": "T94",
+      "purpose": "On the integrated M1 candidate started with next start against the REQ-021 test database, a signed-out visitor follows the sign-in screen's plans link to the four plans, an administrator moves a Designer account to Designer Plus on the accounts screen and that person's next request opens the cost calculator but not the Taller 3D, and the plan names offered on the accounts screen are exactly the four the plans section shows.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-composicion"
+     },
+     {
+      "category": "integration",
+      "created_by": "T94",
+      "purpose": "Selecting/highlighting a plan in the public plans view is comparison-only: the signed-in account\u2019s assigned plan and server permissions do not change.",
+      "requires": [
+       "PICTURES_REQ021_DATABASE_URL"
+      ],
+      "type": "command",
+      "value": "npm run planes:test-integracion -- --solo selector-sin-cambio"
+     }
+    ]
+   },
+   {
+    "acceptance_criteria": [
+     "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+     "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff."
+    ],
+    "after": [
+     "T1.7",
+     "T1.10",
+     "T1.11"
+    ],
+    "classification_evidence": {
+     "complexity": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Defects in T1.5, T1.11, T1.2, T1.6, found by an independent audit"
+     },
+     "confidence": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "The audit states the symptom; the cause is found while fixing"
+     },
+     "coupling": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Touches what several accepted tasks share"
+     },
+     "duration": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "40 minutes per finding, regression tests included"
+     },
+     "risk": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "Changes code that other accepted tasks were built on"
+     },
+     "scope": {
+      "evidence": [
+       "task:T1.5",
+       "spec:SPEC.md"
+      ],
+      "justification": "2 finding(s) with known symptoms and owners"
+     }
+    },
+    "complexity": "medium",
+    "confidence": "medium",
+    "coupling": "high",
+    "covers": [
+     "R16",
+     "R17",
+     "R2",
+     "R3"
+    ],
+    "estimate_rationale": "2 confirmed finding(s), 40 min each, on the integrated tree",
+    "estimated_minutes": 80,
+    "expected_paths": [
+     "src/lib/cuentas/modo-local.ts",
+     "src/instrumentation.ts",
+     "next.config.ts",
+     "services/ai-api/app/main.py",
+     "scripts/test/test-modo-local.ts",
+     "services/ai-api/tests/test_modo_local.py",
+     "src/app/api/**/route.ts",
+     "src/lib/feedback-ia/acceso.ts",
+     "src/lib/guiada-motor/manejadores.ts",
+     "src/lib/happie/panel-prueba.ts",
+     "src/lib/shared-quotes/dependencies.server.ts",
+     "src/lib/taller/cotizacion-taller.ts",
+     "src/lib/asesor/voice.ts",
+     "scripts/test/lib/sesion-prueba.ts",
+     "scripts/test/test-guardias-rutas.ts",
+     "scripts/e2e/humo/configuracion.ts",
+     "scripts/e2e/humo/pasos-asistente.ts",
+     "scripts/e2e/humo/navegacion.ts",
+     "scripts/eval/eval-chat-jerga.ts",
+     "src/lib/cuentas/permisos.ts",
+     "src/lib/planes/catalogo.ts",
+     "src/lib/cuentas/mapa-rutas.ts",
+     "scripts/test/test-mapa-rutas.ts",
+     "scripts/test/test-catalogo-planes.ts",
+     "scripts/test/*.ts"
+    ],
+    "id": "T1.12",
+    "kind": "implement",
+    "milestone_id": "M1",
+    "objective": "Fix these confirmed audit findings of T1.8 (remediation round 3) on the tree already integrated, without rewriting the tasks that built it:\n- F19 (high; owned by T1.5, T1.11): The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions. Evidence from the audit: att-0048: Probe D (complete node --input-type=module replay in SP-1.audit.md) exited 0 against real fresh Next dev after deleting only this audit's generated .next artifacts. First non-loopback TCP POST /api/internal/ai/echo with forged x-app-auth-local-peer=127.0.0.1, no cookie, and invalid [] body reaches protected handler validation: HTTP 400 INVALID_INPUT. Identical warm forged request and plain remote control return 401 SESION_REQUERIDA; loopback control returns 400. No DB, session, Python call, paid provider or business mutation. modo-local.ts:26 unconditionally trusts the marker; peer-l\n- F20 (high; owned by T1.2, T1.6): Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff. Evidence from the audit: att-0048: Probe A exited 0 with twelve actual proxy POST assertions for /api/generate and /api/guiada/motor/imagen x six roles: all six admitted, including Entusiasta, Designer and Designer Plus. mapa-rutas.ts:64,67 and both outer/inner handler guards (generate/route.ts:504-507; guiada/motor/imagen/route.ts:38) require chat_asistido rather than taller_3d. Approved PLAN T1.2 explicitly assigns render and image generation to taller.usar; R16 reserves Taller/scene capabilities to Master Designer and staff. Existing proposal/approval checks validate content, not account entitlement. No provider or\nFor each finding add a regression test that exercises the real entry point, in the test file that this task's verification commands run, and keep every behaviour that works.",
+    "repository": "pictures",
+    "risk": "high",
+    "scope": "large_change",
+    "shared_resources": [
+     "contract:permission-map",
+     "contract:plan-catalogue",
+     "contract:session-guard"
+    ],
+    "subplan_id": "SP-1",
+    "title": "Remediate T1.8 findings F19, F20",
+    "verification": [
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=loopback"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=rechazo-arranque"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run cuentas:test-modo-local -- --test-name-pattern=sin-variable"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run cuentas:test-rutas"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run test-cotizacion-unica"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F19 (high) is fixed: The first non-loopback request to a fresh Next dev server can forge the peer marker before instrumentation installs socket capture and obtain unrestricted local administrator permissions.",
+      "type": "command",
+      "value": "npm run taller:test-estatico"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run cuentas:test-permisos -- --test-name-pattern=cobertura"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run cuentas:test-permisos -- --test-name-pattern=roles-sistema"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run planes:test-catalogo"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run cuentas:test-permisos -- --test-name-pattern=excepciones"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run cuentas:test-rutas"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run test-cotizacion-unica"
+     },
+     {
+      "category": "functional",
+      "created_by": "T1.12",
+      "purpose": "F20 (high) is fixed: Lower access plans can invoke image-generation APIs reserved by the approved permission map to Master Designer and staff.",
+      "type": "command",
+      "value": "npm run taller:test-estatico"
+     }
+    ]
    }
   ]
  },
- "request_id": "e1fe5aae92a441ac355561e3fee2aa6b4da1da37c260093240b6ac2fdb59e820",
- "revision": 4,
- "round": 2,
+ "request_id": "8708ac54edd85535238c6b438bb18900997d315b98eada7c60a7bc2a065c1e7e",
+ "revision": 10,
+ "round": 3,
  "schema": "remediation-apply/1",
- "sha256": "765881a006ff9363324ca086d55ea1b3d45423d482d5615ad70918ddd48a3168",
+ "sha256": "7d224de1e2df77ba32bf8230ba01b9217e224af88106468b113fbb1b2c4322e4",
  "stage": "committed"
 }

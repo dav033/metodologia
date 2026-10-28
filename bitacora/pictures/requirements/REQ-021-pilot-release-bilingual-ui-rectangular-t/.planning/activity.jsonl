@@ -330,3 +330,8 @@
 {"at": "2026-10-28T06:50:47-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 6 secciones traducidas", "diff": ""}
 {"at": "2026-10-28T07:01:06-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 30 secciones traducidas", "diff": ""}
 {"at": "2026-10-28T07:05:32-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-28T07:06:39-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 18 secciones traducidas", "diff": ""}
+{"at": "2026-10-28T08:21:29-05:00", "who": "Planner", "kind": "plan", "sp": "SP-1", "text": "Actualizó SP-1 (tareas)", "diff": "+ tarea: Remediate T1.8 findings F19, F20"}
+{"at": "2026-10-28T08:21:29-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
+{"at": "2026-10-28T08:21:43-05:00", "who": "Tú", "kind": "flow", "sp": "SP-3", "text": "Confirmaste SP-3 en la web; sigue SP-4", "diff": ""}
+{"at": "2026-10-28T08:21:44-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}

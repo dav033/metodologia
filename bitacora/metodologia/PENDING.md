@@ -219,3 +219,4 @@ _None_
 <!-- 2026-10-28: SP-3 stage refused (PLAN_INVALID + COMPOSITION_MISSING); Planner asked to fix. Idea: surface the stage_problem text in the panel as a persistent card, not only a one-off message -->
 <!-- 2026-10-28: D-141 done. Open: owner reconfirms SP-3; an end-to-end test with a multi-subplan plan and gates over future subplans (would catch engine interaction bugs); show the readiness reason next to each subplan in the list -->
 <!-- 2026-10-28: SP-1 chain T1.11 -> T1.8 -> T1.8b running under monitor; T1.5 local-mode redesign proposed to the owner (F1,F2,F10,F16,F19 same family) -->
+<!-- 2026-10-28: T1.8 passed; T1.8b running. Router audit-quality metric counts findings as failure (fix + Gemini recall benchmark proposed). claude-work token expired -->

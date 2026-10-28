@@ -1,0 +1,22 @@
+{
+ "request": "T1.8:11",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "Auditoría T1.8 bloqueada: F19 y F20 (high) abiertos y límite de rework agotado",
+ "origin": "La auditoría independiente de T1.8 (intento att-0012) dejó abiertos dos hallazgos high, F19 y F20, en el árbol actual. El sistema no puede convertirlos en tareas de remediación porque la tarea que señalan, T1.5, ya fue devuelta el máximo de veces (gates.max_reworks): «T1.5 was already sent back 2 time(s)». Mientras existan hallazgos high abiertos, el ledger de SP-1 no cumple el criterio de aceptación. El error es del código del proyecto, no del entorno. La evidencia no incluye el texto completo de F19 y F20, así que su contenido concreto debe leerse en el log de att-0012 y en `.evidence/REQ-021/SP-1.findings.json`.",
+ "steps": [
+  "Abre el log de att-0012 y `.evidence/REQ-021/SP-1.findings.json`. Copia F19 y F20 con su evidencia y la tarea que indican en `RUN.notes/<tarea>.audit.md` de cada una.",
+  "Devuelve las tareas para que las arreglen: pulsa «Devolver T1.2, T1.5, T1.6, T1.7, T2.6, T14.4, T91, T1.11, T94, T1.3, T1.4, T1.9, T1.10» o ejecuta `bitacora.py --project pictures scheduler-op REQ-021 rework T1.2,T1.5,T1.6,T1.7,T2.6,T14.4,T91,T1.11,T94,T1.3,T1.4,T1.9,T1.10 --only --reason \"hallazgos F19 (high), F20 (high)\"`. Si el sistema rechaza T1.5 por max_reworks, revisa `scheduler-op REQ-021 ",
+  "Cuando terminen esas tareas, reintenta T1.8 para que la auditoría revise el árbol completo. Al final comprueba con `bitacora.py --project pictures audit-ledger check .evidence/REQ-021/SP-1.findings.json`; debe pasar sin hallazgos critical ni high abiertos."
+ ],
+ "option": "rework_findings",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T07:34:52",
+ "seconds": 18.5
+}

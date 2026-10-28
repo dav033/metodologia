@@ -1,0 +1,22 @@
+{
+ "request": "T1.8:10",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T1.8 bloqueada: el agente salió con código 1 y no se confirmó que fuera pasajero",
+ "origin": "La auditoría att-0012 dejó en el ledger de SP-1 un hallazgo F1 de severidad alta y estado abierto (\"Production standalone startup…\"; la evidencia está truncada), así que el criterio «sin hallazgos críticos o altos abiertos» no se cumple. El último fallo registrado es solo «agent_error: exit code 1», sin mensaje de error, y por eso el sistema no pudo clasificarlo como pasajero (m5:transience_unconfirmed). Los intentos cancelados por recarga del motor y los rechazos de auditoría ya no cuentan como fallos, según las decisiones del dueño.",
+ "steps": [
+  "Revisa el estado con `bitacora.py --project pictures scheduler-op REQ-021 status` y lee el hallazgo F1 en `.evidence/REQ-021/SP-1.findings.json`, junto con la tarea que debe rehacerlo.",
+  "Confirma que esa tarea de remediación está completada en el árbol actual. Si no lo está, complétala antes de reauditar: reintentar T1.8 no cierra F1 por sí solo.",
+  "Reintenta T1.8 con la nota indicada, para que la auditoría registre los hallazgos y ejecute `bitacora.py --project pictures audit-ledger check .evidence/REQ-021/SP-1.findings.json` como último paso."
+ ],
+ "option": "retry_with_note",
+ "note": "The previous attempt ended with agent_error exit code 1 and no diagnostic. Re-audit the current tree end to end, including tasks T1.9, T1.10 and T1.11. Record every confirmed defect in .evidence/REQ-021/SP-1.findings.json with the task that must redo it. An open high finding or a rejected audit is a result to record, not a failure: do not cancel or reclassify the attempt. Run the audit-ledger check command last.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T07:19:37",
+ "seconds": 18.0
+}

@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 14/68 · generado: 2026-10-28T07:02:58-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 17/69 · generado: 2026-10-28T08:08:40-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 14/28
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 17/29
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -21,11 +21,12 @@ created: 2026-10-26
 | T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-1 | 3 |
 | T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
 | T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-2 | 6 |
-| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | gpt-6.1-sol | codex-luis | 9 |
-| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | — | — | 0 |
+| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 12 |
+| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | en curso | gpt-6.1-sol | codex-luis | 1 |
 | T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T1.11 | Remediate T1.8 findings F16, F17 | media | en curso | gpt-6-luna | codex-2 | 2 |
+| T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 2 |
+| T1.12 | Remediate T1.8 findings F19, F20 | media | completada | gpt-6-luna | codex-luis | 1 |
 
 **SP-2 — Sign-in, invitation and administration screens**
 
@@ -324,7 +325,8 @@ Real people sign in with their own invited account and each one reaches exactly 
 - [ ] T1.9 — Remediate T1.8 findings F1, F2, F3, F4 · repo: pictures · after: T1.7 · verify: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · files: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/lib/cuentas/permisos.ts, src/lib/planes/catalogo.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-mapa-rutas.ts, scripts/test/test-catalogo-planes.ts, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/test/*.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · resources: contract:permission-map, contract:plan-catalogue, contract:session-guard, package.json scripts · covers: R16, R17, R2, R3 · kind: implement · subplan: SP-1
 - [ ] T1.10 — Remediate T1.8 findings F6 · repo: pictures · after: T1.7, T1.9 · verify: `npm run cuentas:test-servicio -- --test-name-pattern=invitacion` · files: src/lib/seguridad/scrypt.ts, src/lib/asesor/auth.ts, src/lib/cuentas/servicio.ts, src/lib/cuentas/enlaces.ts, src/lib/cuentas/limite-intentos.ts, scripts/cuentas/primer-admin.ts, scripts/cuentas/sembrar-prueba.ts, scripts/test/test-cuentas-servicio.ts · resources: contract:account-service, contract:permission-map, package.json scripts · covers: R1, R16, R3 · kind: implement · subplan: SP-1
 - [ ] T1.11 — Remediate T1.8 findings F16, F17 · repo: pictures · after: T1.7, T1.10 · verify: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · files: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · resources: contract:permission-map, contract:session-guard · covers: R2 · kind: implement · subplan: SP-1
-- [ ] T1.8 — SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands · repo: pictures · after: T1.7, T1.10, T1.11 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` · files: .evidence/REQ-021/SP-1.audit.md, .evidence/REQ-021/SP-1.findings.json · resources: ledger:SP-1 · covers: R1, R2, R3, R16 · kind: audit · subplan: SP-1
+- [ ] T1.12 — Remediate T1.8 findings F19, F20 · repo: pictures · after: T1.7, T1.10, T1.11 · verify: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · files: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts, src/lib/cuentas/permisos.ts, src/lib/planes/catalogo.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-mapa-rutas.ts, scripts/test/test-catalogo-planes.ts, scripts/test/*.ts · resources: contract:permission-map, contract:plan-catalogue, contract:session-guard · covers: R16, R17, R2, R3 · kind: implement · subplan: SP-1
+- [ ] T1.8 — SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands · repo: pictures · after: T1.7, T1.10, T1.11, T1.12 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` · files: .evidence/REQ-021/SP-1.audit.md, .evidence/REQ-021/SP-1.findings.json · resources: ledger:SP-1 · covers: R1, R2, R3, R16 · kind: audit · subplan: SP-1
 - [ ] T1.8b — Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands · repo: pictures · after: T1.8 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.audit-crosscheck.findings.json` · files: .evidence/REQ-021/SP-1.audit-crosscheck.md, .evidence/REQ-021/SP-1.audit-crosscheck.findings.json · covers: R1, R2, R3, R16 · kind: audit · subplan: SP-1
 
   Classification: complexity high; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
