@@ -104,6 +104,11 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
                            compatibility_report=compatibility_report, cross_check=bool(getattr(args, "cross_check", False)))
     if action == "check" and not as_json:
         _print_guard_warnings(root / project, rdir)
+        import bt_stage_readiness
+        refused = [r for r in bt_stage_readiness.rows(rdir, refresh=True) if r.get("new_errors")]
+        for row in refused:
+            print(f"ERROR STAGE {row['subplan']}: «Ejecutar subplan» would be refused: " + "; ".join(row["new_errors"][:3]))
+        code = code or (1 if refused else 0)
     return code
 
 

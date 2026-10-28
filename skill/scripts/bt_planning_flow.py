@@ -194,6 +194,13 @@ def problems(rdir: Path, sp: dict, design_rows: dict | None = None, input_rows: 
     import bt_verification
     if bt_verification.missing(rdir, sp["id"]):
         out.append("falta cómo probarlo: una fila para este subplan en SPEC `## Pruebas` (dónde, cómo y qué debes ver)")
+    if sp["tasks"]:
+        try:
+            import bt_stage_readiness
+            if (refused := bt_stage_readiness.problem_for(rdir, sp["id"])):
+                out.append(refused)
+        except Exception:  # noqa: BLE001 - the readiness walk never breaks the page
+            pass
     pending = [r["item"] for r in inputs_for(rdir, sp["id"], input_rows) if r["pending"]]
     if pending:
         out.append("faltan entradas: " + ", ".join(pending[:4]) + (f" y {len(pending) - 4} más" if len(pending) > 4 else ""))
