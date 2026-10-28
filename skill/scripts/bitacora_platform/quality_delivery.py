@@ -17,20 +17,51 @@ from bt_scheduler_recovery_adapter import (
     refusal_detail,
 )
 
+from . import failure_lines
 from .quality_notes import (
-    _ERROR_LINE,
     REVERTED,
     UNRESOLVED,
     _give_way_note,
     _integration_note,
+    _missing_module_note,
+    _resource_note,
     _reverted_note,
     _unresolved_note,
-    _without_noise,
 )
 from .quality_review_gate import VERIFIER as AUDIT_GATE_VERIFIER
 
 m1 = scheduler_adapter.core
 LOGGER = logging.getLogger("bt_scheduler_quality_adapter")
+# per failing check (three at most): its decisive lines, the tail of the rest, the whole block; the note goes into a prompt
+DECISIVE_CHARS, TAIL_CHARS, BLOCK_CHARS = 1500, 800, 4000
+
+
+def _declared_paths(port) -> tuple[str, ...]:
+    """Every path the plan's tasks declare: the repository layout that tells a missing source file from a package."""
+    try:
+        return tuple(str(path) for spec in port.core.plan.tasks for path in getattr(spec, "expected_paths", ()) or ())
+    except Exception:  # noqa: BLE001 - without a plan the classification falls back to the shape of the name
+        return ()
+
+
+def _check_block(check: Mapping, full: str) -> str:
+    """One failing check: a long run buries the first failures, so every failing test is named and the decisive lines are
+    taken from the whole output (a short one too) before a tail of the rest, which is cut first when the block is full."""
+    header = f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n"
+    if not full.strip():
+        return header.rstrip("\n")
+    names = [m.group(0)[:200] for m in re.finditer(r"(?m)^(?:FAIL|ERROR): .+|^FAILED \S+::.+", full)][:12]
+    listing = ("Failing tests (" + str(len(names)) + (" shown" if len(names) == 12 else "") + "):\n"
+               + "\n".join(names) + "\n\n") if names else ""
+    decisive = failure_lines.decisive_excerpt(full, DECISIVE_CHARS, exclude="\n".join(names))
+    listing += ("Decisive lines (found anywhere in the output):\n" + decisive + "\n\n" if decisive else
+                "Decisive lines: none recognised; read the end of the output below.\n\n")
+    quiet = failure_lines.without_noise(full)           # npm notices and info/debug JSON log records are counted, not shown
+    room = max(0, min(TAIL_CHARS, BLOCK_CHARS - len(header) - len(listing) - 20))
+    tail = quiet[-room:] if room else ""
+    if tail and len(tail) < len(quiet):
+        tail = "…" + (tail[tail.find("\n") + 1:] if "\n" in tail else tail)
+    return (header + listing + ("End of the output:\n" + tail if tail else "")).rstrip("\n")
 
 
 class QualityDeliveryMethods:
@@ -92,9 +123,11 @@ class QualityDeliveryMethods:
                    and task_id in (entry.detail.get("named") or ()))
 
     def _failure_digest(self, result) -> str:
-        """The failing checks of an M6 result, with the tail of what each printed: what the agent must read to fix them."""
+        """The failing checks of an M6 result: per check its command, its exit code, the decisive lines of its whole output and
+        a short tail of the rest. pictures REQ-021 T2.6 att-0095: the 1500-char tail began under the Playwright timeout, below
+        ~3 KB of JSON server logs, no error pattern matched it, and 24 attempts never read why their check failed."""
         seen: set[tuple] = set()
-        blocks = []
+        blocks, outputs = [], []
         # what really FAILED first: the plan's order put two manual checks and a deferred one ahead of the e2e that failed, and the
         # three-block cap then hid the failure itself from the agent, the diagnosis and the self-healing (REQ-020 T14a, 14 attempts)
         ordered = sorted((c for c in result.get("checks") or () if isinstance(c, Mapping) and c.get("status") != "pass"),
@@ -110,30 +143,19 @@ class QualityDeliveryMethods:
                     raw = self.store.get_artifact(ref) or b"" if isinstance(ref, str) else b""
                 except Exception:  # noqa: BLE001 - a missing artifact only shortens the note
                     raw = b""
-                text = _without_noise(raw.decode("utf-8", "replace"))
-                if text:
+                text = raw.decode("utf-8", "replace")
+                if text.strip():
                     streams.append(text)
             full = "\n".join(streams)          # both streams: a build prints its errors on stdout, its notices on stderr
-            tail = full[-1500:]
-            # a long run buries the first failures above the tail: name every failing test, then the error lines, before it
-            names = [m.group(0)[:200] for m in re.finditer(r"(?m)^(?:FAIL|ERROR): .+|^FAILED \S+::.+", full)][:12]
-            listing = ("Failing tests (" + str(len(names)) + (" shown" if len(names) == 12 else "") + "):\n"
-                       + "\n".join(names) + "\n\n") if names else ""
-            if len(full) > len(tail):
-                lines = [line.strip()[:200] for line in full[:-len(tail)].splitlines() if _ERROR_LINE.search(line)][:20]
-                listing += ("Earlier error lines:\n" + "\n".join(lines) + "\n\n") if lines else ""
-            blocks.append(f"$ {check.get('command')}\nexit code {check.get('exit_code')}\n{listing}{tail}")
+            outputs.append(full)
+            blocks.append(_check_block(check, full))
             if len(blocks) == 3:
                 break
         if not blocks:
             return ""
-        text = "\n".join(blocks)
-        missing = ("A check cannot find a module or package: that is a dependency problem, not a code problem. Install the "
-                   "locked dependencies in your worktree with the package manager (for npm: `npm ci --offline`) and run the "
-                   "check yourself; do not edit configuration to avoid the import.\n\n"
-                   if re.search(r"MODULE_NOT_FOUND|Cannot find (?:module|package)|No module named|ModuleNotFoundError", text)
-                   else "")
-        return (missing + "The independent verification of your previous attempt failed. The checks run in a sandbox: "
+        text = "\n".join(outputs)
+        hints = _resource_note(text) + _missing_module_note(text, _declared_paths(self))
+        return (hints + "The independent verification of your previous attempt failed. The checks run in a sandbox: "
                 "`node_modules` mounted read-only, a clean copy of your final files, none of your environment variables. Fix the cause shown here before "
                 "anything else:\n\n" + "\n\n".join(blocks))
 

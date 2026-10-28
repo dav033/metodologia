@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 
 import bt_healing_classify as taxonomy
+from bitacora_platform import failure_lines
 
 # kind -> (label shown on the chip, colour token of the web theme)
 KINDS = {
@@ -32,7 +33,6 @@ KINDS = {
 CONFLICT = re.compile(r"(?:INTEGRATION_CONFLICT|integration gate):\s*(?P<left>[\w.+-]+) vs (?P<right>[\w.-]+) for (?P<task>[\w.-]+):\s*(?P<files>.*)")
 ENV_VAR = re.compile(r"\b([A-Z][A-Z0-9]*_[A-Z0-9_]{2,})\b[^\n]{0,40}?\b(?:is not set|not set|is missing|missing|"
                      r"undefined|is required|required)\b|(?:missing|undefined|required|falta)[^\n]{0,30}?\b([A-Z][A-Z0-9]*_[A-Z0-9_]{2,})\b")
-MODULE = re.compile(r"Cannot find (?:module|package) ['\"](?P<name>[^'\"]+)['\"]|No module named ['\"]?(?P<py>[\w.]+)")
 AUDIT_GATE = re.compile(r"audit gate: \d+ open blocking finding\(s\): (?P<findings>[^|]+)")
 CONNECTION = re.compile(r"ECONNREFUSED\s*(?P<addr>[\w.:\[\]-]+)?|connection refused|could not connect to server", re.I)
 
@@ -214,9 +214,22 @@ def _match(request: dict, doc: dict, *, plan=None, verify: str = "", failures: l
                       "Si es el espacio del verificador, sube `verifier.max_workspace_mb` (`bitacora.py config`) "
                       "— hoy 2048 por defecto — y reintenta.",
                       "Para el reinicio del run, `scheduler.min_free_mb` fija cuánto disco libre exige el vigilante."], "retry"), []
-    module = MODULE.search(text)
-    if module:
-        name = module["name"] or module["py"]
+    missing = failure_lines.missing_modules(text, taxonomy.declared_paths(plan))
+    if missing and missing[0][1] == "source":
+        # REQ-021 T3.11 att-0093: the check ran a script the agent never created and the card said «declare it in
+        # package.json»; a relative, absolute or declared path is a file of the work, not a package
+        name = missing[0][0]
+        return _diag("code", f"Falta el archivo fuente {name}",
+                     f"Una comprobación importa o ejecuta «{name}», que no existe en los archivos finales de la tarea. Es un "
+                     "archivo del repositorio, no una dependencia: instalar paquetes no lo arregla.",
+                     [(f"Reintenta con la indicación propuesta para que el agente cree {name} (y lo deje en su resultado) "
+                       "o corrija la ruta del import."),
+                      "Si el archivo lo debía crear otra tarea, revisa el orden del plan."], "retry_with_note",
+                     note=f"A check imports or runs '{name}', a source file that does not exist in your final files. Create it "
+                          "(and keep it committed in the worktree) or fix the import path; this is not a dependency problem, "
+                          "so do not install or declare packages for it. Run every verification command again."), []
+    if missing:
+        name = missing[0][0]
         return _diag("dependency", f"Falta la dependencia {name}",
                      f"Una comprobación no encuentra el módulo «{name}». O no está declarado en package.json / el "
                      "lockfile de la tarea, o el verificador no lo tiene instalado.",
@@ -360,12 +373,13 @@ def bundle(request: dict, *, plan=None, verify: str = "", failures: list[str] | 
                   *[f"- {c}" for c in task.acceptance_criteria],
                   "Verification commands:", *[f"- [{v.get('type', '')}] {v.get('value', '')}" for v in task.verification]]
     lines += ["Options offered: " + ", ".join(o["id"] for o in request.get("options", []))]
+    # each piece is clipped, but the decisive lines of what is cut stay (a timeout under pages of server logs)
     if failures:
-        lines += ["Attempt failures (oldest first):", *[f"- {f[:400]}" for f in failures[-6:]]]
+        lines += ["Attempt failures (oldest first):", *[f"- {failure_lines.clip(f, 400)}" for f in failures[-6:]]]
     for title, body in (("Last verification failure", verify), ("Owner notes in force", notes),
                         ("Audit notes", audit), ("Error shown on the card", request.get("error", ""))):
         if body:
-            lines += [f"{title}:", body[:2500]]
+            lines += [f"{title}:", failure_lines.clip(body, 2500)]
     if answered:
         lines += ["Earlier owner decisions for this task:",
                   *[f"- {a.get('request')} {a.get('option')}: {str(a.get('reason', ''))[:300]}" for a in answered[-4:]]]

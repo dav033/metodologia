@@ -201,9 +201,11 @@ def loss_of(result: str, raw: str) -> str | None:
 def error_excerpt(raw: str) -> str | None:
     """The last error-looking line of the output (bounded, secrets filtered), so a failed attempt says why in the
     provider's words and not with a fragment of the prompt echo."""
+    from bitacora_platform.failure_lines import is_decisive
+
     for line in reversed((raw or "")[-6000:].splitlines()):
         line = line.strip()
-        if line and not line.startswith("{") and _ERROR_LINE_RE.search(line):
+        if line and not line.startswith("{") and (_ERROR_LINE_RE.search(line) or is_decisive(line)):
             line = " ".join(line.split())[:240]
             try:
                 from bt_runtask import _safe_text

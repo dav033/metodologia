@@ -17,6 +17,8 @@ import hashlib
 import re
 from dataclasses import dataclass, field
 
+from bitacora_platform import failure_lines
+
 CLASSES = ("plan_defect", "integration_defect", "regression", "environment", "criterion_unmapped", "quota", "transient")
 
 INTEGRATION = re.compile(r"INTEGRATION_CONFLICT|INTEGRATION_FILES_LOST|PREDECESSOR_NEEDS_RESOLUTION|PREDECESSOR_HANDOFF_MISSING"
@@ -25,8 +27,9 @@ TRANSIENT = re.compile(r"ROUTE_INVALID|SANDBOX_UNAVAILABLE|RUNNER_BUSY|CHECK_TIM
                        r"|ECONNRESET|ETIMEDOUT|EAI_AGAIN|temporarily unavailable|decision was replaced|stale_or_cancelled|manual_cancel")
 CRITERION = re.compile(r"CRITERION_UNVERIFIABLE|CRITERION_AMBIGUOUS|CRITERION_MANUAL|CHECK_UNMAPPED")
 PLAN = re.compile(r"CHECK_UNSUPPORTED|not a git repository|relative executable|CHECK_PRODUCTION_ACTION")
+# a missing module is environment only when it is a PACKAGE (`missing_package`): a missing source file of the work is not
 ENVIRONMENT = re.compile(r"ENOTCACHED|only-if-cached|EROFS|read-only file system|ENOSPC|No space left|ECONNREFUSED|connection refused|could not connect to server"
-                         r"|Cannot find module '[^'.\/][^']*'|No module named|\b[A-Z][A-Z0-9]*_[A-Z0-9_]{2,}\b[^\n]{0,40}\b(?:is not set|is missing|undefined)", re.I)
+                         r"|\b[A-Z][A-Z0-9]*_[A-Z0-9_]{2,}\b[^\n]{0,40}\b(?:is not set|is missing|undefined)", re.I)
 # a real quota/rate-limit message, never a bare number or a word that happens to be in the text
 QUOTA = re.compile(r"usage limit|rate[- ]?limit(?:ed)?|quota (?:exceeded|exhausted|reached)|insufficient[_ ]quota|too many requests"
                    r"|you(?:'ve| have) hit your limit|\b429\b[^\n]{0,60}(?:too many|rate|limit)", re.I)
@@ -47,6 +50,21 @@ FROM_DIAGNOSIS = {"conflict": "integration_defect", "plan": "plan_defect", "envi
 
 def class_of_diagnosis(diagnosis: dict | None) -> str:
     return FROM_DIAGNOSIS.get((diagnosis or {}).get("kind", ""), "unknown")
+
+
+def declared_paths(plan) -> tuple[str, ...]:
+    """Every path the plan's tasks declare: the repository layout that tells a missing source file from a package."""
+    try:
+        return tuple(str(path) for spec in getattr(plan, "tasks", ()) or () for path in getattr(spec, "expected_paths", ()) or ())
+    except Exception:  # noqa: BLE001 - without a plan the shape of the name decides
+        return ()
+
+
+def missing_package(text: str, plan=None) -> tuple[str, bool]:
+    """(the first missing PACKAGE the text names, whether it names missing modules at all). REQ-021 T3.11 att-0093 ran a
+    script the agent never created and was retried as an environment problem: a missing source file is the work's own."""
+    found = failure_lines.missing_modules(text, declared_paths(plan))
+    return next((name for name, kind in found if kind == "package"), ""), bool(found)
 
 
 @dataclass(frozen=True)
@@ -155,8 +173,13 @@ def classify(request: dict, *, verify: str = "", failures=(), plan=None, doc: di
     if PLAN.search(text) or diagnosis.get("kind") == "plan":
         return case("plan_defect", f"a check of the plan cannot work as written: {_first(PLAN, text) or diagnosis.get('headline', '')}")
     hit = ENVIRONMENT.search(text)
-    if hit or diagnosis.get("kind") in ("environment", "dependency"):
-        return case("environment", f"environment signature: {(hit.group(0) if hit else diagnosis.get('headline', ''))[:120]}")
+    package, missing = missing_package(text, plan)
+    # a "dependency" diagnosis cached (or guessed by a model) before the source/package split must not send a missing
+    # source file back as an environment problem
+    stale = diagnosis.get("kind") == "dependency" and missing and not package
+    if hit or package or (diagnosis.get("kind") in ("environment", "dependency") and not stale):
+        found = hit.group(0) if hit else f"missing package '{package}'" if package else diagnosis.get("headline", "")
+        return case("environment", f"environment signature: {found[:120]}")
     if QUOTA.search(error) or reason.endswith(("quota_reset_unknown", "wait_limit", "wait_window_exceeded")):
         return case("quota", f"quota signature in the last error: {_first(QUOTA, error) or reason}", decisive=error)
     if "audit gate:" in text and reason.endswith(("rework_impact", "rework_limit")):

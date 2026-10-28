@@ -5,6 +5,7 @@ import re
 from itertools import groupby
 
 import bt_config
+from bitacora_platform import failure_lines
 
 
 def concise() -> bool:
@@ -46,9 +47,14 @@ def repair_excerpt(text: str, limit: int = 700) -> str:
         code = re.match(r"exit code (-?\d+)\b", body.lstrip())
         if not head.startswith("$ ") or not code or code.group(1) == "0":
             continue
-        lines = [line.strip()[:160] for line in body.splitlines()[1:]
-                 if _SIGNAL.search(line) and not line.lstrip().startswith(("{", "npm notice"))]
-        out.append(head[:200] + f"\nexit code {code.group(1)}" + ("".join("\n" + line for line in dict.fromkeys(lines[:6]))))
+        # six lines: the decisive ones first (a Playwright timeout has none of _SIGNAL's words), shown in their order
+        picked: dict[str, tuple[bool, int]] = {}
+        for n, line in enumerate(body.splitlines()[1:]):
+            decisive = failure_lines.is_decisive(line)
+            if (decisive or _SIGNAL.search(line)) and not failure_lines.noise(line) and not line.lstrip().startswith("{"):
+                picked.setdefault(line.strip()[:160], (not decisive, n))
+        lines = sorted(sorted(picked, key=picked.__getitem__)[:6], key=lambda line: picked[line][1])
+        out.append(head[:200] + f"\nexit code {code.group(1)}" + "".join("\n" + line for line in lines))
     return "\n".join(out)[:limit] or str(text or "")[:min(limit, 400)]
 
 

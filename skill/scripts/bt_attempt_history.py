@@ -16,6 +16,8 @@ import re
 import time
 from pathlib import Path
 
+from bitacora_platform import failure_lines
+
 NOTES = "RUN.notes"
 SHOWN = 6                   # attempts listed in a prompt; older ones are counted
 ERROR_LINE = re.compile(r"error|fail|exit code|cannot|not found|denied|refused|conflict|timeout|assert", re.I)
@@ -151,8 +153,12 @@ def repeats(history: list[dict]) -> int:
 def _excerpt(text: str) -> str:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     command = next((line for line in lines if line.startswith("$ ")), "")
-    error = next((line for line in lines if ERROR_LINE.search(line) and not line.startswith(("$ ", "exit code"))),
-                 next((line for line in lines if line.startswith("exit code")), ""))
+    # a verification note opens with advice and a preamble that say "failed": the error is what the check printed under
+    # its command, and the decisive line of it (a Playwright timeout matched none of ERROR_LINE's words)
+    output = [line for line in (lines[lines.index(command) + 1:] if command else lines) if not line.startswith(("$ ", "exit code"))]
+    error = (failure_lines.first_decisive("\n".join(output))
+             or next((line for line in output if ERROR_LINE.search(line)),
+                     next((line for line in lines if line.startswith("exit code")), "")))
     picked = [x for x in (command, error) if x] or lines[:1]
     return " — ".join(picked)[:300]
 
