@@ -7,7 +7,10 @@ name = "bitacora"
 version = "0.1.0"
 description = "Local engineering workspace: bitácora documents, Scheduler runs, provider routing and web UI"
 requires-python = ">=3.12"
-dependencies = []  # stdlib only; optional Node is a separate capability (REQ-007 M7)
+dependencies = [
+    "psutil>=7,<8",
+    "pydantic>=2.12,<3",
+]
 
 [project.scripts]
 bitacora = "bitacora:main"
@@ -320,4 +323,10 @@ bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "assets/vendor/**/*", "agents/*", "agents/**/*",
   "agents/*/skills/*/SKILL.md", "githooks/*",
   "references/*.md", "references/stacks/*", "vendor/archify/**/*",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.100",
+    "ruff>=0.14",
 ]
