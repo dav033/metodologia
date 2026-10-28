@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from bt_contracts.execution import AgentReport, ProcessRecord, VerifyOutcome
 from bt_contracts.failure import Budget, FailureClass, RecoveryAction, Spent
 from bt_durable.control import classify, frontier, policy
-from bt_scheduler_core.plan import load_plan
+from bt_durable.legacy import load_plan
 from hypothesis import given, settings
 from hypothesis import strategies as st
 

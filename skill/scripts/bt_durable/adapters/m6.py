@@ -22,12 +22,13 @@ from bt_contracts.execution import (
     VerifyOutcome,
     VerifyStatus,
 )
-from bt_scheduler_core.plan import TaskSpec
 from bt_scheduler_quality import sandbox_mounts
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.snapshot import SnapshotSource
 from bt_scheduler_quality.store import QualityStore
+
+from ..legacy import TaskSpec
 
 RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
 _HEAP = re.compile(r"--max-old-space-size=(\d+)")

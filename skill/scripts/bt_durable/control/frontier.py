@@ -9,9 +9,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
-from bt_scheduler_core.config import Config
-from bt_scheduler_core.plan import Plan, TaskSpec
-from bt_scheduler_core.resources import claims_for, conflict
+from ..legacy import Config, Plan, TaskSpec, claims_for, conflict
 
 DONE = frozenset({"completed", "inherited"})
 STOPPED = frozenset({"blocked", "cancelled"})

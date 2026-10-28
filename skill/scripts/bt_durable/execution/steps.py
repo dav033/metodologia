@@ -44,7 +44,7 @@ def plan(run: RunRef):
     """The validated Plan for a run: rebuilt from the checkpointed approved text, cached per process."""
     key = (run.run_id, run.plan_sha256)
     if key not in _PLANS:
-        from bt_scheduler_core.plan import load_plan
+        from ..legacy import load_plan
         _PLANS[key] = load_plan(plan_text(run.model_dump(mode="json")), approved_sha256=run.plan_sha256,
                                 plan_id=run.plan_id, revision=run.revision)
     return _PLANS[key]

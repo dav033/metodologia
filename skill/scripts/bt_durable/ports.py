@@ -20,7 +20,8 @@ from bt_contracts.execution import (
     Snapshot,
     VerifyOutcome,
 )
-from bt_scheduler_core.plan import Plan, TaskSpec
+
+from .legacy import Plan, TaskSpec
 
 
 @runtime_checkable

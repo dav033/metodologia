@@ -14,7 +14,8 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from bt_contracts.execution import RunRef, Snapshot
-from bt_scheduler_core.plan import TaskSpec
+
+from ..legacy import TaskSpec
 
 IDENT = {"GIT_AUTHOR_NAME": "Bitacora Durable", "GIT_AUTHOR_EMAIL": "durable@localhost",
          "GIT_COMMITTER_NAME": "Bitacora Durable", "GIT_COMMITTER_EMAIL": "durable@localhost",

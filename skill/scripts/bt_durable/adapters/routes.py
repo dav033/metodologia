@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Sequence
 
 from bt_contracts.execution import Route, RouteDecision, RunRef
-from bt_scheduler_core.plan import TaskSpec
+
+from ..legacy import TaskSpec
 
 Capacity = Callable[[Route], tuple[float | None, float | None]]   # (remaining or None if unknown, reset epoch)
 

@@ -12,10 +12,12 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from bt_scheduler_core.states import AttemptState, RunStatus, TaskState
+import bt_scheduler_adapter as _sched  # the core's one door (its boundary rule)
 from pydantic import Field, RootModel
 
 from bt_contracts._base import NonEmpty, SnakeWireModel, Timestamp, WireModel
+
+AttemptState, RunStatus, TaskState = _sched.core.states.AttemptState, _sched.core.states.RunStatus, _sched.core.states.TaskState
 
 SCHEMA_VERSION = 1
 API_PREFIX = "/api/remote/v1"

@@ -4,7 +4,8 @@ from __future__ import annotations
 import hashlib
 
 from bt_contracts.execution import RunRef
-from bt_scheduler_core.plan import Plan, load_plan
+
+from ..legacy import Plan, load_plan
 
 
 class FilePlans:

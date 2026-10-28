@@ -20,11 +20,11 @@ from bt_contracts.execution import (
     Route,
     Snapshot,
 )
-from bt_scheduler_core.plan import Plan, TaskSpec
-from bt_scheduler_executor import handoff
-from bt_scheduler_executor import model as m3
-from bt_scheduler_executor.prompt import build_prompt
-from bt_scheduler_executor.workspace import GitWorkspaces
+
+from ..legacy import GitWorkspaces, Plan, TaskSpec, build_prompt, handoff
+from ..legacy import m3 as _m3
+
+m3 = _m3.model
 
 from .files import atomic_write
 
