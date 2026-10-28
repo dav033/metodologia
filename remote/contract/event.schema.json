@@ -1,18 +1,167 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://flow-remote.invalid/contract/v1/event.schema.json",
-  "title": "Bitácora remote event v1",
-  "type": "object",
-  "required": ["schemaVersion", "id", "cursor", "type", "occurredAt", "target", "data"],
-  "properties": {
-    "schemaVersion": { "const": 1 },
-    "id": { "type": "string", "minLength": 1, "maxLength": 160 },
-    "cursor": { "type": "string", "minLength": 1, "maxLength": 256 },
-    "type": { "enum": ["attempt.failed", "attempt.blocked", "run.finished", "round.waiting", "plan.waiting", "quota.exhausted", "attempt.stalled", "laptop.offline", "command.updated"] },
-    "occurredAt": { "type": "string", "format": "date-time", "description": "RFC 3339 timestamp normalized to UTC. Legacy naive laptop timestamps are interpreted in the laptop's local timezone before conversion." },
-    "target": { "$ref": "command.schema.json#/$defs/target" },
-    "data": { "type": "object" },
-    "dedupeKey": { "type": "string", "minLength": 1, "maxLength": 256 }
+  "title": "Bitácora remote RemoteEvent v1",
+  "$defs": {
+    "EventSubject": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "run",
+            "attempt",
+            "task",
+            "plan",
+            "round"
+          ],
+          "type": "string"
+        },
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "taskId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "attemptId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "roundId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "kind",
+        "project",
+        "req"
+      ],
+      "type": "object"
+    },
+    "SystemSubject": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "system",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "type": "integer"
+    },
+    "id": {
+      "maxLength": 160,
+      "minLength": 1,
+      "type": "string"
+    },
+    "cursor": {
+      "maxLength": 256,
+      "minLength": 1,
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "attempt.failed",
+        "attempt.blocked",
+        "run.finished",
+        "round.waiting",
+        "plan.waiting",
+        "quota.exhausted",
+        "attempt.stalled",
+        "laptop.offline",
+        "command.updated"
+      ],
+      "type": "string"
+    },
+    "occurredAt": {
+      "description": "RFC 3339 UTC; legacy naive laptop times are read as laptop-local.",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+      "type": "string"
+    },
+    "target": {
+      "discriminator": {
+        "mapping": {
+          "attempt": "#/$defs/EventSubject",
+          "plan": "#/$defs/EventSubject",
+          "round": "#/$defs/EventSubject",
+          "run": "#/$defs/EventSubject",
+          "system": "#/$defs/SystemSubject",
+          "task": "#/$defs/EventSubject"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/EventSubject"
+        },
+        {
+          "$ref": "#/$defs/SystemSubject"
+        }
+      ]
+    },
+    "data": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "dedupeKey": {
+      "maxLength": 256,
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "id",
+    "cursor",
+    "type",
+    "occurredAt",
+    "target",
+    "data",
+    "dedupeKey"
+  ],
+  "type": "object"
 }

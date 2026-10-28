@@ -1,0 +1,67 @@
+[
+ {
+  "schemaVersion": 1,
+  "id": "evt_fixture_1",
+  "cursor": "[\"v2\", \"1\", \"evt_fixture_1\"]",
+  "type": "attempt.failed",
+  "occurredAt": "2026-10-19T12:00:01Z",
+  "target": {
+   "kind": "task",
+   "project": "lotm",
+   "req": "REQ-027",
+   "taskId": "T15a",
+   "attemptId": "att-0008"
+  },
+  "data": {
+   "title": "Login screen and runs list",
+   "failure": "La verificación terminó",
+   "verdict": "rejected",
+   "summary": "La verificación terminó",
+   "retryExhausted": true,
+   "attemptsUsed": 3,
+   "maxAttempts": 3,
+   "retriesRemaining": 0
+  },
+  "dedupeKey": "evt_fixture_1"
+ },
+ {
+  "schemaVersion": 1,
+  "id": "evt_fixture_2",
+  "cursor": "[\"v2\", \"2\", \"evt_fixture_2\"]",
+  "type": "attempt.failed",
+  "occurredAt": "2026-10-19T12:00:02Z",
+  "target": {
+   "kind": "task",
+   "project": "lotm",
+   "req": "REQ-027",
+   "taskId": "T15a",
+   "attemptId": "att-0008"
+  },
+  "data": {
+   "title": "Login screen and runs list",
+   "failure": "La verificación terminó",
+   "verdict": "rejected",
+   "summary": "La verificación terminó",
+   "retryExhausted": true,
+   "attemptsUsed": 3,
+   "maxAttempts": 3,
+   "retriesRemaining": 0
+  },
+  "dedupeKey": "evt_fixture_2"
+ },
+ {
+  "schemaVersion": 1,
+  "id": "evt_fixture_3",
+  "cursor": "[\"v2\", \"3\", \"evt_fixture_3\"]",
+  "type": "quota.exhausted",
+  "occurredAt": "2026-10-19T12:00:03Z",
+  "target": {
+   "kind": "system"
+  },
+  "data": {
+   "profile": "claude-work",
+   "until": "2026-10-19T17:00:00Z"
+  },
+  "dedupeKey": "evt_fixture_3"
+ }
+]

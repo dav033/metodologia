@@ -1,0 +1,247 @@
+[
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0001",
+  "type": "pause",
+  "target": {
+   "kind": "run",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "running",
+   "revision": 3
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0002",
+  "type": "resume",
+  "target": {
+   "kind": "run",
+   "project": "pictures",
+   "req": "REQ-018"
+  },
+  "precondition": {
+   "state": "paused",
+   "revision": 7
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0003",
+  "type": "cancel-attempt",
+  "target": {
+   "kind": "attempt",
+   "project": "lotm",
+   "req": "REQ-027",
+   "taskId": "T15a",
+   "attemptId": "att-0008"
+  },
+  "precondition": {
+   "state": "running"
+  },
+  "reason": "Stop the stalled attempt"
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0004",
+  "type": "reopen",
+  "target": {
+   "kind": "task",
+   "project": "pictures",
+   "req": "REQ-018",
+   "taskId": "T2"
+  },
+  "precondition": {
+   "state": "blocked"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0005",
+  "type": "retry",
+  "target": {
+   "kind": "task",
+   "project": "lotm",
+   "req": "REQ-027",
+   "taskId": "T15c"
+  },
+  "precondition": {
+   "state": "ready"
+  },
+  "route": {
+   "routeId": "route-codex-work",
+   "provider": "codex",
+   "model": "gpt-6.1-sol",
+   "account": "codex-work"
+  },
+  "reason": "Keep the review step"
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0006",
+  "type": "revise",
+  "target": {
+   "kind": "run",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "blocked",
+   "revision": 3
+  },
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0007",
+  "type": "approve",
+  "target": {
+   "kind": "plan",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "review",
+   "revision": 2
+  },
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0008",
+  "type": "launch",
+  "target": {
+   "kind": "plan",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "approved",
+   "revision": 2
+  },
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0009",
+  "type": "answer-decision",
+  "target": {
+   "kind": "run",
+   "project": "pictures",
+   "req": "REQ-018",
+   "taskId": "T2"
+  },
+  "precondition": {
+   "state": "open"
+  },
+  "requestId": "T2:3",
+  "option": "retry",
+  "reason": ""
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0010",
+  "type": "answer-round",
+  "target": {
+   "kind": "round",
+   "project": "lotm",
+   "req": "REQ-027",
+   "roundId": "2"
+  },
+  "precondition": {
+   "state": "open"
+  },
+  "round": 2,
+  "answers": {
+   "q1": {
+    "choice": "safe",
+    "note": ""
+   },
+   "q2": {
+    "text": "Keep the audit trail"
+   }
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0011",
+  "type": "cancel-plan",
+  "target": {
+   "kind": "plan",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "review",
+   "revision": 2
+  },
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0012",
+  "type": "delete-plan",
+  "target": {
+   "kind": "plan",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "review",
+   "revision": 2
+  },
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0013",
+  "type": "edit-brief",
+  "target": {
+   "kind": "task",
+   "project": "lotm",
+   "req": "REQ-027",
+   "taskId": "T15c"
+  },
+  "precondition": {
+   "state": "running",
+   "revision": 2
+  },
+  "field": "objective",
+  "value": "Recover the rejected task",
+  "confirmation": {
+   "challengeId": "Xb1Hq8mN2pRt5vWy7zA9cD3eF6gJ0kLs4uV8wYx2Qz0",
+   "typedReq": "REQ-027"
+  }
+ },
+ {
+  "schemaVersion": 1,
+  "idempotencyKey": "web-fixture-command-0014",
+  "type": "note",
+  "target": {
+   "kind": "run",
+   "project": "lotm",
+   "req": "REQ-027"
+  },
+  "precondition": {
+   "state": "running"
+  },
+  "note": "Watch the verifier output."
+ }
+]

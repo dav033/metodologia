@@ -9,7 +9,7 @@ import time
 from typing import Any, Callable, Mapping
 from urllib.request import Request, urlopen
 
-from app import ACTIVE_RUN_STATES, TELEGRAM_REQ_ID
+from app import ACTIVE_RUN_STATES, TELEGRAM_REQ_ID, run_state
 from upstream import UpstreamError
 
 logger = logging.getLogger(__name__)
@@ -136,9 +136,10 @@ class TelegramBot:
         keyboard: list[list[dict[str, str]]] = []
         self._callbacks.clear()
         for run in active[:20]:
+            # The snapshot contract (remote/contract/snapshot.schema.json): `req` and `state` (F11).
             project = run.get("project")
-            req = run.get("req_id")
-            status = run.get("status")
+            req = run.get("req")
+            status = run_state(run)
             if (not isinstance(project, str) or not 1 <= len(project) <= 80
                     or not isinstance(req, str) or not TELEGRAM_REQ_ID.fullmatch(req)
                     or not isinstance(status, str)):
@@ -166,7 +167,7 @@ class TelegramBot:
     @staticmethod
     def _is_active_run(run: object) -> bool:
         return isinstance(run, Mapping) and (
-            run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES
+            run.get("active") is True or run_state(run) in ACTIVE_RUN_STATES
         )
 
     def _is_owner_chat(self, chat: object) -> bool:

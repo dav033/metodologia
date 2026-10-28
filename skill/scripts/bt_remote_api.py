@@ -350,10 +350,10 @@ def _review_verification(result: dict | None, artifacts: dict[str, bytes]) -> di
 
 def _review_diff(attempt_dir) -> dict:
     if attempt_dir is None:
-        return {"stat": None}
+        return {"stat": None, "files": []}
     handoff = attempt_dir / "handoff"
     if handoff.is_symlink():
-        return {"stat": None}
+        return {"stat": None, "files": []}
     manifest_raw = _read_review_file(handoff / "manifest.json")
     try:
         manifest = json.loads(manifest_raw.decode("utf-8")) if manifest_raw else {}

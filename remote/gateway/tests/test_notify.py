@@ -1,3 +1,5 @@
+import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,6 +28,17 @@ class FakeLaptop:
 
     def events(self, _after):
         return {"events": self.feed, "nextCursor": str(len(self.feed))}
+
+
+# Real feed events, validated against the contract by test_remote_contracts.
+EVENTS = json.loads((Path(__file__).resolve().parents[2] / "contract" / "fixtures" / "events.json")
+                    .read_text(encoding="utf-8"))
+
+
+def fresh(event):
+    """A fixture event that just happened: the outbox drops messages older than an hour."""
+    from datetime import datetime, timezone
+    return {**copy.deepcopy(event), "occurredAt": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 
 
 def make_config(database_path):
@@ -93,6 +106,37 @@ class NotificationTests(unittest.TestCase):
             clock[0] += 10
             restarted.poll_once()
             self.assertEqual(len(self.sent), 1)
+
+    def env_runtime(self, origin):
+        env = {"LAPTOP_ORIGIN": "http://127.0.0.1:18765", "FLOW_GATEWAY_KEY": "key", "TELEGRAM_BOT_TOKEN": "token",
+               "TELEGRAM_CHAT_ID": "chat", "GATEWAY_DATABASE": str(self.database_path)}
+        if origin is not None:
+            env["FLOW_FRONTEND_ORIGIN"] = origin
+        return GatewayRuntime(GatewayConfig.from_env(env), laptop=self.laptop, sender=self.sent.append)
+
+    def test_f10_failure_notification_carries_cause_and_review_link_without_secrets(self):
+        event = fresh(EVENTS[0])
+        event["data"]["failure"] = "tests failed: GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz123456 " + "x" * 600
+        self.laptop.feed = [event]
+        self.env_runtime("https://flow.example.test/").poll_once()
+
+        message = self.sent[0]
+        self.assertIn("Una tarea falló", message)
+        self.assertIn("lotm/REQ-027 · T15a", message)
+        self.assertIn("Causa: tests failed", message)
+        self.assertIn("https://flow.example.test/review?project=lotm&req=REQ-027&taskId=T15a#attempt-att-0008", message)
+        self.assertNotIn("ghp_", message)
+        self.assertLess(len(message), 600)
+
+    def test_f10_notification_without_frontend_origin_or_task_has_no_link(self):
+        quota = fresh(EVENTS[2])
+        quota["type"] = "attempt.blocked"
+        failure = fresh(EVENTS[0])
+        self.laptop.feed = [failure, quota]
+        self.env_runtime(None).poll_once()
+        self.assertIn("Causa: La verificación terminó", self.sent[0])
+        self.assertNotIn("http", self.sent[0])
+        self.assertEqual(self.sent[1], "Una tarea quedó bloqueada.")
 
 
 if __name__ == "__main__":

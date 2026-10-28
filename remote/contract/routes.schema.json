@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/routes.schema.json",
+  "title": "Bitácora remote RoutesResponse v1",
+  "$defs": {
+    "RouteOption": {
+      "additionalProperties": false,
+      "properties": {
+        "routeId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "available": {
+          "description": "The single rule bt_route_pins.usable also applies to pinned retries.",
+          "type": "boolean"
+        },
+        "quotaStatus": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "routeId",
+        "provider",
+        "model",
+        "profile",
+        "available",
+        "quotaStatus"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "routes": {
+      "items": {
+        "$ref": "#/$defs/RouteOption"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "routes"
+  ],
+  "type": "object"
+}

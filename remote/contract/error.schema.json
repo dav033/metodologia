@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/error.schema.json",
+  "title": "Bitácora remote Problem v1",
+  "additionalProperties": false,
+  "properties": {
+    "code": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "details": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "code",
+    "message"
+  ],
+  "type": "object"
+}

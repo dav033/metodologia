@@ -238,6 +238,23 @@ class RemoteApiTests(unittest.TestCase):
         self.assertIsNone(task["activeAttempt"])
         self.assertEqual(task["reviewAttempt"]["id"], "A-failed")
 
+    def test_snapshot_decisions_and_rounds_are_plain_contract_fields_without_page_html(self):
+        import bt_remote_snapshot
+        import remote_fixture_root
+
+        with tempfile.TemporaryDirectory() as root:
+            remote_fixture_root.build(Path(root))
+            with remote_fixture_root.producing(Path(root)) as base:
+                snapshot = bt_remote_snapshot.build_snapshot(base)
+        decision = snapshot["decisionRequests"][0]
+        for leaked in ("diagnosis_html", "note_prefill", "diagnosis", "agent", "you_can", "error"):
+            self.assertNotIn(leaked, decision)
+        self.assertNotIn("<", json.dumps(snapshot["decisionRequests"]))
+        self.assertEqual([option["id"] for option in decision["options"]], ["retry", "rework_conflict", "stop"])
+        self.assertEqual(set(decision["options"][1]), {"id", "label", "consequence"})
+        question = snapshot["rounds"][0]["questions"][0]
+        self.assertNotIn("agent_note", question)
+
     def test_keyed_read_models_are_served_by_the_real_http_listener(self):
         with tempfile.TemporaryDirectory() as root:
             import bt_remote_commands as commands

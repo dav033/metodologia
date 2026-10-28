@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/review.schema.json",
+  "title": "Bitácora remote FailureReview v1",
+  "$defs": {
+    "ReviewDiff": {
+      "additionalProperties": false,
+      "properties": {
+        "stat": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "files": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "stat",
+        "files"
+      ],
+      "type": "object"
+    },
+    "ReviewVerification": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "output"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "attemptId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "cause": {
+      "type": "string"
+    },
+    "verification": {
+      "$ref": "#/$defs/ReviewVerification"
+    },
+    "diff": {
+      "$ref": "#/$defs/ReviewDiff"
+    },
+    "logTail": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "attemptId",
+    "cause",
+    "verification",
+    "diff",
+    "logTail"
+  ],
+  "type": "object"
+}

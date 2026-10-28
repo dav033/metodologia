@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/challenge.schema.json",
+  "title": "Bitácora remote ChallengeRequest v1",
+  "$defs": {
+    "PlanTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "plan",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "RunTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "run",
+          "type": "string"
+        },
+        "taskId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The task a run-level decision is about, if any."
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "TaskTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "task",
+          "type": "string"
+        },
+        "taskId": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind",
+        "taskId"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "target": {
+      "anyOf": [
+        {
+          "pattern": "^[^/]+/REQ-[0-9]+$",
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/PlanTarget"
+        },
+        {
+          "$ref": "#/$defs/RunTarget"
+        },
+        {
+          "$ref": "#/$defs/TaskTarget"
+        }
+      ]
+    },
+    "typedReq": {
+      "pattern": "^REQ-[0-9]{3,}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target",
+    "typedReq"
+  ],
+  "type": "object"
+}

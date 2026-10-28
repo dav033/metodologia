@@ -1,0 +1,927 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flow-remote.invalid/contract/v1/snapshot.schema.json",
+  "title": "Bitácora remote RemoteSnapshot v1",
+  "$defs": {
+    "ActiveTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "ready",
+            "running",
+            "verifying",
+            "rejected",
+            "completed",
+            "blocked",
+            "cancelled"
+          ],
+          "type": "string"
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attempt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "state",
+        "attempt"
+      ],
+      "type": "object"
+    },
+    "Attempt": {
+      "additionalProperties": false,
+      "description": "One attempt as the snapshot shows it (`bt_live_api._attempt`, camelCased by `bt_remote_snapshot`).",
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "anyOf": [
+            {
+              "enum": [
+                "reserved",
+                "dispatched",
+                "running",
+                "verifying",
+                "accepted",
+                "failed",
+                "rejected",
+                "cancelled",
+                "uncertain"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effort": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "account": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "startedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "endedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durationS": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "live": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verdict": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastActivityAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "state",
+        "provider",
+        "model",
+        "effort",
+        "account",
+        "startedAt",
+        "endedAt",
+        "durationS",
+        "live",
+        "verdict",
+        "failure",
+        "lastActivityAt"
+      ],
+      "type": "object"
+    },
+    "DecisionOption": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "consequence": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "label",
+        "consequence"
+      ],
+      "type": "object"
+    },
+    "DecisionRequest": {
+      "additionalProperties": false,
+      "description": "An open Scheduler decision, projected to plain text: no rendered HTML and no form prefill.",
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "task": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attempt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "what": {
+          "type": "string"
+        },
+        "needs": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/DecisionOption"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "recommended": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unskippable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "project",
+        "req",
+        "task",
+        "attempt",
+        "source",
+        "title",
+        "what",
+        "needs",
+        "reason",
+        "evidence",
+        "options",
+        "recommended",
+        "unskippable"
+      ],
+      "type": "object"
+    },
+    "PlanTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acceptanceCriteria": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "state",
+        "revision",
+        "updatedAt",
+        "acceptanceCriteria"
+      ],
+      "type": "object"
+    },
+    "RoundOption": {
+      "additionalProperties": false,
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ],
+      "type": "object"
+    },
+    "RoundQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "choice",
+            "open"
+          ],
+          "type": "string"
+        },
+        "options": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/RoundOption"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "recommended": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "why": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "suggested": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "type"
+      ],
+      "type": "object"
+    },
+    "SnapshotPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/PlanTask"
+          },
+          "type": "array"
+        },
+        "acceptanceCriteria": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "project",
+        "req",
+        "state",
+        "revision",
+        "updatedAt",
+        "tasks",
+        "acceptanceCriteria"
+      ],
+      "type": "object"
+    },
+    "SnapshotRound": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "round": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "intro": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "coverage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "questions": {
+          "items": {
+            "$ref": "#/$defs/RoundQuestion"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "round",
+        "status",
+        "questions"
+      ],
+      "type": "object"
+    },
+    "SnapshotRun": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "project/REQ-NNN",
+          "type": "string"
+        },
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "state": {
+          "description": "M1 run status (running, paused, completed, blocked, cancelled) for Scheduler runs; legacy runs report their own status, or idle/running when they have none.",
+          "type": "string"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Deprecated alias window of `state` for older gateways; removed in v2."
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "active": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeAttempt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attempt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "activeTask": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActiveTask"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lastActivityAt": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/SnapshotTask"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "project",
+        "req",
+        "state",
+        "status",
+        "title",
+        "active",
+        "revision",
+        "updatedAt",
+        "activeAttempt",
+        "activeTask",
+        "lastActivityAt",
+        "tasks"
+      ],
+      "type": "object"
+    },
+    "SnapshotTask": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "ready",
+            "running",
+            "verifying",
+            "rejected",
+            "completed",
+            "blocked",
+            "cancelled"
+          ],
+          "type": "string"
+        },
+        "activeAttempt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attempt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reviewAttempt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Attempt"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Latest failed or rejected attempt, for the failure review."
+        },
+        "history": {
+          "items": {
+            "$ref": "#/$defs/Attempt"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "state",
+        "activeAttempt",
+        "reviewAttempt",
+        "history"
+      ],
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "type": "integer"
+    },
+    "generatedAt": {
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}",
+      "type": "string"
+    },
+    "cursor": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "runs": {
+      "items": {
+        "$ref": "#/$defs/SnapshotRun"
+      },
+      "type": "array"
+    },
+    "plans": {
+      "items": {
+        "$ref": "#/$defs/SnapshotPlan"
+      },
+      "type": "array"
+    },
+    "rounds": {
+      "items": {
+        "$ref": "#/$defs/SnapshotRound"
+      },
+      "type": "array"
+    },
+    "decisionRequests": {
+      "items": {
+        "$ref": "#/$defs/DecisionRequest"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "cursor",
+    "runs",
+    "plans",
+    "rounds",
+    "decisionRequests"
+  ],
+  "type": "object"
+}

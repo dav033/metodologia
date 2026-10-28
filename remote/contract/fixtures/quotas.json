@@ -1,0 +1,23 @@
+{
+ "checkedAt": "2026-10-19T12:00:00Z",
+ "accounts": [
+  {
+   "account": "codex-work",
+   "provider": "codex",
+   "status": "ok",
+   "observedAt": "2026-10-19T12:00:00+00:00",
+   "windows": [
+    {
+     "window": "five_hour",
+     "usedPercent": 27.0,
+     "resetsAt": "2026-10-19T13:00:00+00:00"
+    },
+    {
+     "window": "seven_day",
+     "usedPercent": 64.0,
+     "resetsAt": "2026-10-25T12:00:00+00:00"
+    }
+   ]
+  }
+ ]
+}

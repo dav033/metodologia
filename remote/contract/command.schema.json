@@ -1,85 +1,1054 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://flow-remote.invalid/contract/v1/command.schema.json",
-  "title": "Bitácora remote command v1",
-  "description": "A command accepted by POST /api/remote/v1/commands. Every variant is idempotent and guarded by a target precondition.",
-  "oneOf": [
-    { "$ref": "#/$defs/pause" },
-    { "$ref": "#/$defs/resume" },
-    { "$ref": "#/$defs/cancelAttempt" },
-    { "$ref": "#/$defs/reopen" },
-    { "$ref": "#/$defs/retry" },
-    { "$ref": "#/$defs/revise" },
-    { "$ref": "#/$defs/approve" },
-    { "$ref": "#/$defs/launch" },
-    { "$ref": "#/$defs/answerRound" },
-    { "$ref": "#/$defs/cancelPlan" },
-    { "$ref": "#/$defs/deletePlan" },
-    { "$ref": "#/$defs/editBrief" },
-    { "$ref": "#/$defs/note" }
-  ],
-  "unevaluatedProperties": false,
+  "title": "Bitácora remote RemoteCommand v1",
   "$defs": {
-    "common": {
-      "type": "object",
-      "required": ["schemaVersion", "idempotencyKey", "type", "target", "precondition"],
+    "AnswerDecisionCommand": {
+      "additionalProperties": false,
       "properties": {
-        "schemaVersion": { "const": 1 },
-        "idempotencyKey": { "type": "string", "minLength": 16, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
-        "type": { "type": "string" },
-        "target": { "$ref": "#/$defs/target" },
-        "precondition": { "$ref": "#/$defs/precondition" },
-        "confirmation": { "$ref": "#/$defs/confirmation" }
-      }
-    },
-    "target": {
-      "type": "object",
-      "required": ["kind", "project", "req"],
-      "properties": {
-        "kind": { "enum": ["run", "attempt", "task", "plan", "round"] },
-        "project": { "type": "string", "minLength": 1, "maxLength": 80 },
-        "req": { "type": "string", "pattern": "^REQ-[0-9]{3,}$" },
-        "taskId": { "type": "string", "minLength": 1, "maxLength": 120 },
-        "attemptId": { "type": "string", "minLength": 1, "maxLength": 120 },
-        "roundId": { "type": "string", "minLength": 1, "maxLength": 120 }
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "answer-decision",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RunTarget"
+        },
+        "requestId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "option": {
+          "minLength": 1,
+          "type": "string"
+        }
       },
-      "additionalProperties": false
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target",
+        "requestId",
+        "option"
+      ],
+      "type": "object"
     },
-    "precondition": {
-      "type": "object",
-      "required": ["state"],
+    "AnswerRoundCommand": {
+      "additionalProperties": false,
       "properties": {
-        "state": { "type": "string", "minLength": 1, "maxLength": 80 },
-        "revision": { "type": "integer", "minimum": 0 },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "answer-round",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RoundTarget"
+        },
+        "round": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "answers": {
+          "additionalProperties": true,
+          "maxProperties": 50,
+          "minProperties": 1,
+          "type": "object"
+        }
       },
-      "additionalProperties": false
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target",
+        "round",
+        "answers"
+      ],
+      "type": "object"
     },
-    "confirmation": {
-      "type": "object",
-      "required": ["challengeId", "typedReq"],
+    "ApproveCommand": {
+      "additionalProperties": false,
       "properties": {
-        "challengeId": { "type": "string", "minLength": 16, "maxLength": 128 },
-        "typedReq": { "type": "string", "pattern": "^REQ-[0-9]{3,}$" }
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "approve",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/PlanTarget"
+        }
       },
-      "additionalProperties": false
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target"
+      ],
+      "type": "object"
     },
-    "reason": { "type": "string", "minLength": 1, "maxLength": 2000 },
-    "route": { "type": "string", "minLength": 1, "maxLength": 200 },
-    "brief": { "type": "string", "minLength": 1, "maxLength": 20000 },
-    "base": { "$ref": "#/$defs/common" },
-    "pause": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "pause" } } }] },
-    "resume": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "resume" } } }] },
-    "cancelAttempt": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["reason"], "properties": { "type": { "const": "cancel-attempt" }, "reason": { "$ref": "#/$defs/reason" } } }] },
-    "reopen": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "reopen" } } }] },
-    "retry": { "allOf": [{ "$ref": "#/$defs/base" }, { "properties": { "type": { "const": "retry" }, "route": { "$ref": "#/$defs/route" } } }] },
-    "revise": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "revise" } } }] },
-    "approve": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "approve" } } }] },
-    "launch": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "launch" } } }] },
-    "answerRound": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["answer"], "properties": { "type": { "const": "answer-round" }, "answer": { "type": "object", "minProperties": 1, "maxProperties": 50 } } }] },
-    "cancelPlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "cancel-plan" } } }] },
-    "deletePlan": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["confirmation"], "properties": { "type": { "const": "delete-plan" } } }] },
-    "editBrief": { "description": "The command dispatcher must require confirmation.typedReq to exactly equal target.req before freezing the owner-approved revision or invoking revise.", "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["brief", "confirmation"], "properties": { "type": { "const": "edit-brief" }, "brief": { "$ref": "#/$defs/brief" } } }] },
-    "note": { "allOf": [{ "$ref": "#/$defs/base" }, { "required": ["note"], "properties": { "type": { "const": "note" }, "note": { "type": "string", "minLength": 1, "maxLength": 4000 } } }] }
-  }
+    "AttemptTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "attempt",
+          "type": "string"
+        },
+        "attemptId": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        },
+        "taskId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind",
+        "attemptId"
+      ],
+      "type": "object"
+    },
+    "CancelAttemptCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "cancel-attempt",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/AttemptTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "reason",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "CancelPlanCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "cancel-plan",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/PlanTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "Confirmation": {
+      "additionalProperties": false,
+      "properties": {
+        "challengeId": {
+          "description": "Opaque, one-use id returned by POST /challenges for this exact target.",
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        },
+        "typedReq": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "challengeId",
+        "typedReq"
+      ],
+      "type": "object"
+    },
+    "DeletePlanCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "delete-plan",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/PlanTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "EditBriefCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "edit-brief",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TaskTarget"
+        },
+        "field": {
+          "enum": [
+            "brief",
+            "objective",
+            "criteria",
+            "acceptance_criteria"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "maxLength": 20000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target",
+        "field",
+        "value"
+      ],
+      "type": "object"
+    },
+    "LaunchCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "launch",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/PlanTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "NoteCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "note",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RunTarget"
+        },
+        "note": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target",
+        "note"
+      ],
+      "type": "object"
+    },
+    "PauseCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "pause",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RunTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "PlanTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "plan",
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "Precondition": {
+      "additionalProperties": false,
+      "properties": {
+        "state": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "updatedAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "type": "object"
+    },
+    "ReopenCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "reopen",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TaskTarget",
+          "description": "Reopen always names the task; the precondition is that task's state."
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "ResumeCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "resume",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RunTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "RetryCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type": {
+          "const": "retry",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/TaskTarget"
+        },
+        "route": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RouteSelector"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "ReviseCommand": {
+      "additionalProperties": false,
+      "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "integer"
+        },
+        "idempotencyKey": {
+          "maxLength": 120,
+          "minLength": 16,
+          "pattern": "^[A-Za-z0-9._:-]+$",
+          "type": "string"
+        },
+        "precondition": {
+          "$ref": "#/$defs/Precondition"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 2000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "confirmation": {
+          "$ref": "#/$defs/Confirmation"
+        },
+        "type": {
+          "const": "revise",
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/RunTarget"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "idempotencyKey",
+        "precondition",
+        "confirmation",
+        "type",
+        "target"
+      ],
+      "type": "object"
+    },
+    "RoundTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "round",
+          "type": "string"
+        },
+        "roundId": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind",
+        "roundId"
+      ],
+      "type": "object"
+    },
+    "RouteSelector": {
+      "additionalProperties": false,
+      "properties": {
+        "routeId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "account": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "routeId"
+      ],
+      "type": "object"
+    },
+    "RunTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "run",
+          "type": "string"
+        },
+        "taskId": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The task a run-level decision is about, if any."
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "TaskTarget": {
+      "additionalProperties": false,
+      "properties": {
+        "project": {
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        },
+        "req": {
+          "pattern": "^REQ-[0-9]{3,}$",
+          "type": "string"
+        },
+        "kind": {
+          "const": "task",
+          "type": "string"
+        },
+        "taskId": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "project",
+        "req",
+        "kind",
+        "taskId"
+      ],
+      "type": "object"
+    }
+  },
+  "description": "A command the phone or the Telegram bot posts to the gateway. Every variant is idempotent and guarded.",
+  "discriminator": {
+    "mapping": {
+      "answer-decision": "#/$defs/AnswerDecisionCommand",
+      "answer-round": "#/$defs/AnswerRoundCommand",
+      "approve": "#/$defs/ApproveCommand",
+      "cancel-attempt": "#/$defs/CancelAttemptCommand",
+      "cancel-plan": "#/$defs/CancelPlanCommand",
+      "delete-plan": "#/$defs/DeletePlanCommand",
+      "edit-brief": "#/$defs/EditBriefCommand",
+      "launch": "#/$defs/LaunchCommand",
+      "note": "#/$defs/NoteCommand",
+      "pause": "#/$defs/PauseCommand",
+      "reopen": "#/$defs/ReopenCommand",
+      "resume": "#/$defs/ResumeCommand",
+      "retry": "#/$defs/RetryCommand",
+      "revise": "#/$defs/ReviseCommand"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/PauseCommand"
+    },
+    {
+      "$ref": "#/$defs/ResumeCommand"
+    },
+    {
+      "$ref": "#/$defs/CancelAttemptCommand"
+    },
+    {
+      "$ref": "#/$defs/ReopenCommand"
+    },
+    {
+      "$ref": "#/$defs/RetryCommand"
+    },
+    {
+      "$ref": "#/$defs/ReviseCommand"
+    },
+    {
+      "$ref": "#/$defs/ApproveCommand"
+    },
+    {
+      "$ref": "#/$defs/LaunchCommand"
+    },
+    {
+      "$ref": "#/$defs/AnswerDecisionCommand"
+    },
+    {
+      "$ref": "#/$defs/AnswerRoundCommand"
+    },
+    {
+      "$ref": "#/$defs/CancelPlanCommand"
+    },
+    {
+      "$ref": "#/$defs/DeletePlanCommand"
+    },
+    {
+      "$ref": "#/$defs/EditBriefCommand"
+    },
+    {
+      "$ref": "#/$defs/NoteCommand"
+    }
+  ]
 }

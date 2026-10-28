@@ -86,17 +86,17 @@ def filter_candidates(pin: Mapping[str, str], candidates):
 
 
 def available(candidate) -> bool:
-    return (candidate.profile_authorized and candidate.source_status == "available" and
-            candidate.runtime_status == "available" and candidate.auth_status != "invalid" and
-            candidate.quota_status != "exhausted")
+    """Delegates to the one rule pinned retries apply (bt_route_pins.usable), so a listed route is retryable (F22)."""
+    import bt_route_pins
+    return bt_route_pins.usable(candidate)
 
 
 def route_options(project: str, rdir: Path, task_id: str) -> list[dict[str, object]]:
-    _, candidates = task_candidates(project, rdir, task_id)
-    return [{"route_id": item.route_id, "provider": item.provider, "model": item.model,
-             "profile": item.profile, "account": item.profile,
-             "available": available(item), "quota_status": item.quota_status}
-            for item in candidates]
+    """The task's current Scheduler candidates in the contract's RouteOption shape (bt_contracts.remote)."""
+    import bt_route_pins
+    return [{"routeId": item.route_id, "provider": item.provider, "model": item.model, "profile": item.profile,
+             "available": available(item), "quotaStatus": item.quota_status}
+            for item in bt_route_pins.candidates_for(project, rdir, task_id)]
 
 
 def validate_available(project: str, rdir: Path, task_id: str, pin: Mapping[str, str]):

@@ -237,15 +237,20 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
       nextSnapshot.runs[0].tasks[0].activeAttempt.state = "failed";
     });
     await waitForText("failed");
+    // M1 statuses only (M1_RUN_STATUSES): a run stuck on a rejected task is `blocked`; the task shows `rejected`.
     updateSnapshot((nextSnapshot) => {
-      nextSnapshot.runs[0].state = "rejected";
-      nextSnapshot.runs[0].tasks[0].state = "rejected";
-      delete nextSnapshot.runs[0].tasks[0].activeAttempt;
-      nextSnapshot.runs[0].tasks[0].reviewAttempt = { id: "att-rejected-1", live: false };
+      const run = nextSnapshot.runs[0];
+      run.state = "blocked";
+      run.status = "blocked";
+      run.activeAttempt = null;
+      run.activeTask = null;
+      run.tasks[0].state = "rejected";
+      run.tasks[0].activeAttempt = null;
+      run.tasks[0].reviewAttempt = { ...run.tasks[1].reviewAttempt, id: "att-rejected-1" };
     });
     await waitForTaskState("T15a", "rejected");
-    const rejectedState = await waitForText("Reabrir ejecución");
-    assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and runs should expose recovery controls");
+    const rejectedState = await waitForText("Reabrir ejecución · T15a");
+    assert.ok(rejectedState.includes("Reabrir") && rejectedState.includes("Reabrir ejecución"), "rejected tasks and blocked runs should expose recovery controls");
     const rejectedTaskCard = "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T15a'))";
     const rejectedForms = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; return [...card.querySelectorAll('.recovery-form')].length; })()`, returnByValue: true });
     assert.equal(rejectedForms.result?.value, 0, "rejected tasks must be reopened before retry or brief-edit forms become available");
@@ -273,13 +278,14 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "retry" && command.target.taskId === "T15a"); attempt += 1) await delay(100);
     const rejectedRetry = gateway.receivedCommands.find((command) => command.type === "retry" && command.target.taskId === "T15a");
     assert.equal(rejectedRetry?.precondition.state, "ready", "retry must use the authoritative ready state after reopen");
-    assert.equal(rejectedRetry?.route?.route_id, "route-codex-work");
+    assert.equal(rejectedRetry?.route?.routeId, "route-codex-work");
     assert.equal(rejectedRetry?.reason, "Keep the review step", "retry should carry the phone note");
     const rejectedEdit = await cdp(socket, "Runtime.evaluate", { expression: `(() => { const card = ${rejectedTaskCard}; const form = [...card.querySelectorAll('.recovery-form')].find((item) => item.querySelector('textarea[name="brief"]')); const textarea = form.querySelector('textarea[name="brief"]'); const input = form.querySelector('input[name="typedReq"]'); Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(textarea, 'Recover the rejected task'); textarea.dispatchEvent(new Event('input', { bubbles: true })); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, 'REQ-027'); input.dispatchEvent(new Event('input', { bubbles: true })); const valid = form.checkValidity(); if (valid) form.requestSubmit(); return valid; })()`, returnByValue: true });
     assert.equal(rejectedEdit.result?.value, true, "rejected task brief edit should pass browser validation");
-    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "edit-brief" && command.task === "T15a"); attempt += 1) await delay(100);
-    const rejectedEditCommand = gateway.receivedCommands.find((command) => command.type === "edit-brief" && command.task === "T15a");
-    assert.equal(rejectedEditCommand?.precondition.state, "rejected", "brief edit must retain the authoritative run state while targeting the reopened task");
+    for (let attempt = 0; attempt < 40 && !gateway.receivedCommands.some((command) => command.type === "edit-brief" && command.target.taskId === "T15a"); attempt += 1) await delay(100);
+    const rejectedEditCommand = gateway.receivedCommands.find((command) => command.type === "edit-brief" && command.target.taskId === "T15a");
+    assert.equal(rejectedEditCommand?.target.kind, "task", "brief edit names its task in the contract target");
+    assert.equal(rejectedEditCommand?.precondition.state, "blocked", "brief edit must retain the authoritative run state while targeting the reopened task");
     assert.equal(rejectedEditCommand?.value, "Recover the rejected task");
     gateway.commands = [];
     gateway.receivedCommands = [];
@@ -305,14 +311,16 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     await cdp(socket, "Page.navigate", { url: frontendOrigin });
     await waitForText("rejected");
     updateSnapshot((nextSnapshot) => {
-      nextSnapshot.runs[0].state = "finished";
-      nextSnapshot.runs[0].tasks[0].state = "completed";
-      delete nextSnapshot.runs[0].tasks[0].activeAttempt;
-      delete nextSnapshot.runs[0].tasks[0].reviewAttempt;
-      delete nextSnapshot.runs[0].activeAttempt;
+      const run = nextSnapshot.runs[0];
+      run.state = "completed";
+      run.status = "completed";
+      run.tasks[0].state = "completed";
+      run.tasks[0].activeAttempt = null;
+      run.tasks[0].reviewAttempt = null;
+      run.activeAttempt = null;
     });
-    await waitForText("finished");
-    await waitForText("completed");
+    const completed = await waitForText("completed");
+    assert.ok(!completed.includes("Reabrir ejecución"), "a completed run offers no reopen");
     updateSnapshot((nextSnapshot) => { nextSnapshot.laptop.online = false; });
     await waitForText("LAPTOP SIN CONEXIÓN");
     gateway.snapshot = originalSnapshot;
@@ -343,7 +351,7 @@ test("real panel entrypoint renders every contract run and refreshes live snapsh
     assert.equal(gateway.commands[1]?.target.taskId, "T2");
     await waitForText("Historial de comandos");
     await waitForText("Origen · Web");
-    await waitForText("Resultado · accepted");
+    await waitForText("Resultado · Aplicado");
     await assertNoHorizontalOverflow(socket, "control sheet fixture");
     for (let attempt = 0; attempt < 40; attempt += 1) {
       const ready = await cdp(socket, "Runtime.evaluate", { expression: "[...document.querySelectorAll('.task-card')].find((card) => card.querySelector('.row-heading strong')?.textContent?.startsWith('T2'))?.querySelector('button')?.disabled === false", returnByValue: true });

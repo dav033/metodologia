@@ -66,11 +66,18 @@ class RemoteRecoveryTests(unittest.TestCase):
             "precondition": {"state": "blocked"},
         }
 
+    @staticmethod
+    def accepted_retry(*_args, on_accepted=None, **_kwargs):
+        """ops.retry after its state check passed: the pin hook runs, then the task reopens."""
+        if on_accepted is not None:
+            on_accepted()
+        return ["T1: reopened"]
+
     def dispatch(self, request, candidate_rows):
         with (
             patch("bt_remote_commands._run_target", return_value=("demo", "REQ-001", self.rdir)),
             patch("bt_route_pins.candidates_for", return_value=tuple(candidate_rows)),
-            patch("bt_scheduler_ops.retry", return_value=["T1: reopened"]) as retry,
+            patch("bt_scheduler_ops.retry", side_effect=self.accepted_retry) as retry,
             patch("bt_scheduler_ops.resume", return_value="watchdog started"),
         ):
             result = self.ledger.submit(request, commands.dispatch_handlers(),
@@ -336,6 +343,82 @@ class RemoteRecoveryTests(unittest.TestCase):
     def test_pin_parameters_are_retry_only(self):
         request = {**self.request(), "command": "resume", "params": {"route": "claude"}}
         self.assertIn("solo se admiten en retry", commands.validate(request))
+
+    def test_f22_route_listing_and_pinned_retry_share_one_availability_rule(self):
+        import bt_remote_recovery as recovery
+
+        rows = (candidate("route-ok"), candidate("route-unknown", quota_status="unknown"),
+                candidate("route-exhausted", quota_status="exhausted"),
+                candidate("route-unauthorized", profile_authorized=False))
+        with patch("bt_route_pins.candidates_for", return_value=rows), \
+                patch("bt_remote_recovery.task_candidates", return_value=(None, rows)):
+            listed = recovery.route_options("demo", self.rdir, "T1")
+            # The listing says available exactly when a pinned retry to that route would be accepted.
+            for item in rows:
+                row = next(option for option in listed if item.route_id in option.values())
+                pinned = pins.available("demo", self.rdir, "T1", {"route": item.route_id})
+                self.assertEqual(row["available"], bool(pinned), item.route_id)
+        self.assertEqual([option["available"] for option in listed], [True, False, False, False])
+
+    def stale_retry(self, params, prior_pin=None):
+        """Post a retry whose ledger precondition passes but whose task moves before the Scheduler check (F33)."""
+        bt_core, rdir, harness = self.real_blocked_run()
+        if prior_pin:
+            pins.set_pin(rdir, "T1", prior_pin)
+        before = pins.load(rdir)
+
+        def state_then_advance(target, command, params_):
+            observed = commands.target_state(target, command, params_)
+            harness.core.reopen("T1", "scheduler", "concurrent progress")
+            harness.core.step()
+            scheduler.write_projection(rdir, harness.core)
+            return observed
+
+        body = {"idempotency_key": f"stale-retry-{len(params):04d}-{bool(prior_pin)}", "command": "retry",
+                "target": "demo/REQ-001", "origin": "web", "params": {"task": "T1", **params},
+                "precondition": {"state": "blocked", "revision": 1}}
+        rows = (candidate(), candidate(route_id="route-b", model="opus", account_ref="acct:stable-b"))
+        with patch("bt_route_pins.candidates_for", return_value=rows), \
+                patch.object(api, "_target_state", state_then_advance), \
+                patch.object(ops, "kill_agent", return_value=0):
+            status, response = self.post_real(body, bt_core)
+        self.assertEqual((status, response["code"]), (409, "STALE_PRECONDITION"), response)
+        self.assertEqual(harness.state("T1"), "active")
+        return before, pins.load(rdir)
+
+    def test_f33_stale_retry_does_not_persist_a_new_route_pin(self):
+        before, after = self.stale_retry({"route": "route-b"})
+        self.assertEqual((before, after), ({}, {}))
+
+    def test_f33_stale_retry_keeps_the_previous_pin_when_it_asked_for_another(self):
+        before, after = self.stale_retry({"route": "route-b"}, prior_pin={"route": "route-a"})
+        self.assertEqual(after, before)
+        self.assertEqual(after["T1"]["route"], "route-a")
+
+    def test_f33_stale_unpinned_retry_does_not_clear_the_previous_pin(self):
+        before, after = self.stale_retry({}, prior_pin={"route": "route-a"})
+        self.assertEqual(after, before)
+
+    def test_f33_retry_refused_after_the_state_check_restores_the_previous_pin(self):
+        pins.set_pin(self.rdir, "T1", {"route": "route-a"})
+        before = pins.load(self.rdir)
+
+        def accepted_then_stale(*_args, on_accepted=None, **_kwargs):
+            on_accepted()
+            self.assertEqual(pins.get(self.rdir, "T1"), {"route": "route-b"}, "the pin is in force before reopening")
+            raise scheduler_core.SchedulerError("STALE_PRECONDITION", "task T1 changed from blocked to active")
+
+        with (
+            patch("bt_remote_commands._run_target", return_value=("demo", "REQ-001", self.rdir)),
+            patch("bt_route_pins.candidates_for", return_value=(candidate(), candidate("route-b"))),
+            patch("bt_scheduler_ops.retry", side_effect=accepted_then_stale),
+            patch("bt_scheduler_ops.resume", return_value="watchdog started") as resume,
+        ):
+            result = self.ledger.submit(self.request("retry-race-0001", route="route-b"),
+                                        commands.dispatch_handlers(), lambda *_args: {"state": "blocked"})
+        self.assertEqual((result["status"], result["code"]), ("REJECTED", "STALE_PRECONDITION"))
+        self.assertEqual(pins.load(self.rdir), before)
+        resume.assert_not_called()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,20 @@
+{
+ "routes": [
+  {
+   "routeId": "route-unavailable",
+   "provider": "claude",
+   "model": "sonnet",
+   "profile": "work",
+   "available": false,
+   "quotaStatus": "unknown"
+  },
+  {
+   "routeId": "route-codex-work",
+   "provider": "codex",
+   "model": "gpt-6.1-sol",
+   "profile": "codex-work",
+   "available": true,
+   "quotaStatus": "available"
+  }
+ ]
+}

@@ -1,0 +1,287 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-10-19T12:00:00Z",
+ "cursor": "2026-10-19T12:00:00Z",
+ "runs": [
+  {
+   "id": "lotm/REQ-027",
+   "project": "lotm",
+   "req": "REQ-027",
+   "state": "running",
+   "status": "running",
+   "title": "Remote flow control",
+   "active": true,
+   "revision": 3,
+   "updatedAt": "2026-10-19T11:59:45Z",
+   "activeAttempt": {
+    "id": "att-0008",
+    "number": 1,
+    "state": "running",
+    "provider": "codex",
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "account": "codex-work",
+    "startedAt": "2026-10-19T11:50:00Z",
+    "endedAt": null,
+    "durationS": null,
+    "live": true,
+    "verdict": null,
+    "failure": null,
+    "lastActivityAt": "2026-10-19T11:59:45Z"
+   },
+   "activeTask": {
+    "id": "T15a",
+    "title": "Login screen and runs list",
+    "state": "running",
+    "attempt": {
+     "id": "att-0008",
+     "number": 1,
+     "state": "running",
+     "provider": "codex",
+     "model": "gpt-6.1-sol",
+     "effort": "medium",
+     "account": "codex-work",
+     "startedAt": "2026-10-19T11:50:00Z",
+     "endedAt": null,
+     "durationS": null,
+     "live": true,
+     "verdict": null,
+     "failure": null,
+     "lastActivityAt": "2026-10-19T11:59:45Z"
+    }
+   },
+   "lastActivityAt": "2026-10-19T11:59:45Z",
+   "tasks": [
+    {
+     "id": "T15a",
+     "title": "Login screen and runs list",
+     "state": "running",
+     "activeAttempt": {
+      "id": "att-0008",
+      "number": 1,
+      "state": "running",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "account": "codex-work",
+      "startedAt": "2026-10-19T11:50:00Z",
+      "endedAt": null,
+      "durationS": null,
+      "live": true,
+      "verdict": null,
+      "failure": null,
+      "lastActivityAt": "2026-10-19T11:59:45Z"
+     },
+     "reviewAttempt": null,
+     "history": [
+      {
+       "id": "att-0008",
+       "number": 1,
+       "state": "running",
+       "provider": "codex",
+       "model": "gpt-6.1-sol",
+       "effort": "medium",
+       "account": "codex-work",
+       "startedAt": "2026-10-19T11:50:00Z",
+       "endedAt": null,
+       "durationS": null,
+       "live": true,
+       "verdict": null,
+       "failure": null,
+       "lastActivityAt": "2026-10-19T11:59:45Z"
+      }
+     ]
+    },
+    {
+     "id": "T15c",
+     "title": "Failure review screen",
+     "state": "rejected",
+     "activeAttempt": null,
+     "reviewAttempt": {
+      "id": "att-rejected-fixture",
+      "number": 1,
+      "state": "rejected",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "account": "codex-work",
+      "startedAt": "2026-10-19T11:50:00Z",
+      "endedAt": "2026-10-19T11:58:00Z",
+      "durationS": 540.0,
+      "live": false,
+      "verdict": "rejected",
+      "failure": "La verificación falló.",
+      "lastActivityAt": "2026-10-19T11:58:00Z"
+     },
+     "history": [
+      {
+       "id": "att-rejected-fixture",
+       "number": 1,
+       "state": "rejected",
+       "provider": "codex",
+       "model": "gpt-6.1-sol",
+       "effort": "medium",
+       "account": "codex-work",
+       "startedAt": "2026-10-19T11:50:00Z",
+       "endedAt": "2026-10-19T11:58:00Z",
+       "durationS": 540.0,
+       "live": false,
+       "verdict": "rejected",
+       "failure": "La verificación falló.",
+       "lastActivityAt": "2026-10-19T11:58:00Z"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pictures/REQ-018",
+   "project": "pictures",
+   "req": "REQ-018",
+   "state": "paused",
+   "status": "paused",
+   "title": "Pilot release",
+   "active": true,
+   "revision": 7,
+   "updatedAt": "2026-10-19T11:55:00Z",
+   "activeAttempt": null,
+   "activeTask": null,
+   "lastActivityAt": "2026-10-19T11:50:00Z",
+   "tasks": [
+    {
+     "id": "T2",
+     "title": "Recover stalled work",
+     "state": "blocked",
+     "activeAttempt": null,
+     "reviewAttempt": {
+      "id": "att-0101",
+      "number": 3,
+      "state": "failed",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "account": "codex-work",
+      "startedAt": "2026-10-19T11:50:00Z",
+      "endedAt": "2026-10-19T11:49:00Z",
+      "durationS": 540.0,
+      "live": false,
+      "verdict": null,
+      "failure": "Se agotaron los intentos.",
+      "lastActivityAt": "2026-10-19T11:49:00Z"
+     },
+     "history": [
+      {
+       "id": "att-0101",
+       "number": 3,
+       "state": "failed",
+       "provider": "codex",
+       "model": "gpt-6.1-sol",
+       "effort": "medium",
+       "account": "codex-work",
+       "startedAt": "2026-10-19T11:50:00Z",
+       "endedAt": "2026-10-19T11:49:00Z",
+       "durationS": 540.0,
+       "live": false,
+       "verdict": null,
+       "failure": "Se agotaron los intentos.",
+       "lastActivityAt": "2026-10-19T11:49:00Z"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "plans": [
+  {
+   "id": "REQ-027",
+   "project": "lotm",
+   "req": "REQ-027",
+   "state": "review",
+   "revision": 2,
+   "updatedAt": "2026-10-19T11:45:00Z",
+   "tasks": [
+    {
+     "id": "T15a",
+     "title": "Login screen and runs list",
+     "state": "running",
+     "revision": null,
+     "updatedAt": null,
+     "acceptanceCriteria": [
+      "Shows state and last sign of life",
+      "No horizontal scroll at 360 px"
+     ]
+    }
+   ],
+   "acceptanceCriteria": [
+    "Shows state and last sign of life",
+    "No horizontal scroll at 360 px"
+   ]
+  }
+ ],
+ "rounds": [
+  {
+   "project": "lotm",
+   "req": "REQ-027",
+   "round": 2,
+   "title": "Scope",
+   "intro": "Confirma el alcance pendiente.",
+   "status": "open",
+   "questions": [
+    {
+     "id": "q1",
+     "text": "¿Qué prioridad prefieres?",
+     "type": "choice",
+     "options": [
+      {
+       "key": "fast",
+       "label": "Rapidez"
+      },
+      {
+       "key": "safe",
+       "label": "Seguridad"
+      }
+     ],
+     "recommended": "safe",
+     "why": "La opción recomendada protege los datos."
+    },
+    {
+     "id": "q2",
+     "text": "¿Qué detalle debemos considerar?",
+     "type": "open",
+     "suggested": ""
+    }
+   ]
+  }
+ ],
+ "decisionRequests": [
+  {
+   "id": "T2:3",
+   "project": "pictures",
+   "req": "REQ-018",
+   "task": "T2",
+   "attempt": "att-0101",
+   "source": "task",
+   "title": "T2 bloqueada: attempts_exhausted",
+   "what": "La recuperación automática no puede continuar sin una decisión.",
+   "needs": "Decidir si se reintenta.",
+   "reason": "attempts_exhausted",
+   "evidence": [
+    "Se agotaron los intentos disponibles."
+   ],
+   "options": [
+    {
+     "id": "retry",
+     "label": "Reintentar",
+     "consequence": "Crea otro intento y consume una oportunidad."
+    },
+    {
+     "id": "stop",
+     "label": "Detener",
+     "consequence": "Pausa el scheduler hasta que lo reanudes."
+    }
+   ],
+   "recommended": "retry",
+   "unskippable": false
+  }
+ ]
+}

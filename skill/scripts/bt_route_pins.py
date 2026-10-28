@@ -37,6 +37,8 @@ def matches(pin: dict, candidate) -> bool:
 
 
 def usable(candidate) -> bool:
+    """The one availability rule: the remote route listing (bt_remote_recovery) and pinned retries both use it.
+    Unknown quota is not available (fail closed), so the phone never offers a route the retry would refuse (F22)."""
     return (candidate.source_status == "available" and candidate.runtime_status == "available"
             and candidate.profile_authorized and candidate.auth_status != "invalid"
             and candidate.quota_status == "available")
@@ -104,6 +106,22 @@ def set_pin(rdir: Path, task: str, pin: dict, by: str = "remote") -> None:
 def clear(rdir: Path, task: str) -> None:
     data = load(rdir)
     if data.pop(task, None) is not None:
+        _write(rdir, data)
+
+
+def entry(rdir: Path, task: str) -> dict | None:
+    """The task's stored pin exactly as written (with its `by`), to restore it if a retry is refused."""
+    value = load(rdir).get(task)
+    return dict(value) if isinstance(value, dict) else None
+
+
+def restore(rdir: Path, task: str, previous: dict | None) -> None:
+    data = load(rdir)
+    if previous is None:
+        if data.pop(task, None) is not None:
+            _write(rdir, data)
+    elif data.get(task) != previous:
+        data[task] = previous
         _write(rdir, data)
 
 
