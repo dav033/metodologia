@@ -1,7 +1,7 @@
 {
   "schema_version": "1.3.0",
   "plan_id": "REQ-021",
-  "revision": 10,
+  "revision": 12,
   "spec_ref": "SPEC.md",
   "composition_gates": [
     {
@@ -2651,7 +2651,8 @@
       "objective": "Server routes expose activation, reset, notice acceptance and own-password change to their holders, and account and role administration only to administrators, all on top of the SP-1 service.",
       "repository": "pictures",
       "after": [
-        "T1.4"
+        "T1.4",
+        "T1.8b"
       ],
       "complexity": "medium",
       "scope": "large_change",

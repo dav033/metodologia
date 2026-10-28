@@ -39,8 +39,8 @@
   "SP-2": {
    "at": "2026-10-27T15:50:51-05:00",
    "by": "owner",
-   "digest": "91743a92a5323f0c",
-   "repinned": "2026-10-28T07:36:04-05:00 auto remediation of T1.8",
+   "digest": "d9f721b08c1a6dbf",
+   "repinned": "2026-10-28T08:39:19-05:00 auto: SP-2 builds on the audited SP-1 (T2.2 after T1.8b), plan r12",
    "via": "web"
   },
   "SP-3": {

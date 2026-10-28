@@ -1,5 +1,5 @@
 {
- "actions": 11,
+ "actions": 13,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -31,6 +31,25 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "T1.8 already had 3 automatic plan repairs"
+  },
+  "2f51a5461eed7582": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1793194265.039,
+   "history": [
+    {
+     "at": 1793194265.044,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "2f51a5461eed7582",
+   "status": "unrepairable",
+   "task": "T3.2"
   },
   "3cfbf5e7566addd7": {
    "applied": 1,
@@ -246,6 +265,25 @@
    "task": "T1.8",
    "why": "T1.8 already had 3 automatic plan repairs"
   },
+  "8ef4cde22dbd71ab": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1793194295.842,
+   "history": [
+    {
+     "at": 1793194295.849,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "8ef4cde22dbd71ab",
+   "status": "unrepairable",
+   "task": "T3.2"
+  },
   "aa47a9c76aac5fd4": {
    "applied": 1,
    "at": 1793189979.903,
@@ -318,8 +356,8 @@
    "why": "T1.8 already had 3 automatic plan repairs"
   },
   "e65cd54ee5262310": {
-   "applied": 1,
-   "at": 1793193813.906,
+   "applied": 3,
+   "at": 1793193876.85,
    "class": "integration_defect",
    "evidence": [
     "integration evidence in the last error: PREDECESSOR_NEEDS_RESOLUTION",
@@ -331,12 +369,23 @@
      "at": 1793193813.906,
      "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por la auditoría y sigue sin resolver",
      "result": "fixed"
+    },
+    {
+     "at": 1793193845.346,
+     "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por auditoría y sigue sin resolver",
+     "result": "fixed"
+    },
+    {
+     "at": 1793193876.85,
+     "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no arranca: su predecesor T1.8 sigue devuelto por auditoría sin resolver",
+     "result": "fixed"
     }
    ],
    "id": "e65cd54ee5262310",
-   "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por la auditoría y sigue sin resolver",
-   "status": "applied",
-   "task": "T2.6"
+   "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no arranca: su predecesor T1.8 sigue devuelto por auditoría sin resolver",
+   "status": "exhausted",
+   "task": "T2.6",
+   "why": "the same failure came back after its repair"
   }
  }
 }

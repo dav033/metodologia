@@ -1363,3 +1363,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** remove the `problem_for` call in `bt_planning_flow.problems` and the check lines in `bt_cli_plan`.
 - **Evidence:** `tests/test_stage_readiness.py`, `tests/test_stage_readiness_gate.py` (9); live run: SP-3..SP-6 pass; commits 0c0aab046, 3ee99ae62.
 
+## D-142 — The owner manages execution and tests from the Plan tab
+
+- **Date:** 2026-10-28 · **Status:** Accepted
+- **Context:** the owner could only act on a blocked task (decision cards, recovery, self-healing, rework) on a different page (`/plans/<project>/<REQ>`) or in the terminal, and the Plan tab did not show which subplans had finished running.
+- **Decision:** a per-subplan «Ejecución» tab in the Plan tab (`bt_page_planning_run`) reusing the run page's cards and rows, plus «Reintentar» per task and «Devolver tareas aceptadas» (`bt_plans_api.rework` → `scheduler-op rework --only`, cost confirmation); the subplan list shows `ejecución n/m ✓`; forms carry `back` (local `/p/…` paths only).
+- **Consequences:** + one place to follow and decide; − the status is read once per few seconds (shared cache); running a single test on demand is still not offered (checks run inside each task).
+- **Rollback:** remove the `run` view and tab and the `rework` / `retry-task` actions.
+- **Evidence:** `tests/test_page_planning_run.py` (8); rendered SP-2 view checked in a browser; commit `19011d35f`.
+

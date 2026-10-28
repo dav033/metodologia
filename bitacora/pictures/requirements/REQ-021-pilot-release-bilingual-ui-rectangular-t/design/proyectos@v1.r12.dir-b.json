@@ -1,0 +1,42 @@
+{
+  "name": "Inspector lateral",
+  "axes": {
+    "concept": "Un proyecto seleccionado conserva su lugar en la lista y dispone de un inspector contiguo; en el Taller, ese espacio aloja guardado y recuperación sin sustituir la escena.",
+    "layout": "Shell Pictures/Sempertex y navegación horizontal heredados. Hoja continua con filtros arriba, lista de selección de 1.65 fr e inspector de 1 fr. Taller con herramientas, lienzo e inspector; debajo de 1100px el inspector baja y en teléfono el estado crítico precede al lienzo.",
+    "navigation": "Seleccionar una fila muestra sus datos; Abrir proyecto es una acción explícita en el inspector. Búsqueda y propietario preceden a la paginación. Proyectos/Taller permanecen en la misma regla horizontal; los diálogos guardan el contexto y devuelven el foco.",
+    "typography": "Geist Sans y Geist Mono locales existentes. H1 24px, inspector 20px, nombres de fila 16px (15px teléfono), cuerpo 15px y metadatos 12–13px. La selección gana jerarquía en el inspector sin una nueva tipografía.",
+    "density": "Tres filas de muestra por primera página, separadores suaves y 24px de padding vertical; 28px en filtros/inspector, 20px de padding de hoja en teléfono. Información secundaria reunida en un solo inspector, sin tarjetas por proyecto ni miniaturas.",
+    "components": "Button, Input y Skeleton reales de shadcn; Dialog de Animate UI/Base UI; native select/details; botones de selección con aria-pressed y marcador Motion compartido. Paneles de radio 32px, campos 18px y acciones pill del shell hermano.",
+    "colour": "Mismos tokens de globals.css y contratos hermanos en claro/oscuro: fondo/superficie/texto, acento únicamente en acción principal/foco, texto-tenue para bordes de controles y exito/aviso/error para estados reales. Sin nueva paleta.",
+    "motion": "Registro espacial opuesto: hoja +12px vertical, filas −18px horizontal con 65ms de secuencia, inspector +26px, marcador scaleY y spring compartido, estado scale .6→1, punto de guardado desplazado tres ciclos, controles −2px/press .98 e icono +3px. Expresivo 560/180ms con cubic-bezier(.77,0,.175,1) y (.23,1,.32,1), natural 340/140 y sutil 180/100; reduced/still elimina movimiento."
+  },
+  "evidence": {
+    "layout": [
+      ".project-space",
+      ".project-inspector",
+      ".editor-surface",
+      ".save-inspector"
+    ],
+    "navigation": [
+      ".record",
+      ".inspector-actions",
+      ".route-nav",
+      ".collection-head"
+    ],
+    "typography": [
+      ".heading h1",
+      ".record-title",
+      ".project-inspector h2",
+      ".record-sub"
+    ],
+    "motion": [
+      ".workspace",
+      ".record",
+      ".project-inspector",
+      ".selection-mark",
+      ".save-inspector",
+      ".btn",
+      ".status-dot"
+    ]
+  }
+}

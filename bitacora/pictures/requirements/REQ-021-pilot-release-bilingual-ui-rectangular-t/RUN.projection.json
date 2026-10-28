@@ -22,20 +22,20 @@
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-28T13:23:57+00:00",
+ "heartbeat_at": "2026-10-28T13:39:19+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
   "revision": 11,
   "sha256": "e0cf6400d86b9ead2850597bcd5e1751cd283e4830d4eecdd630712b70ad6f7c"
  },
- "projected_at": "2026-10-28T13:23:57+00:00",
+ "projected_at": "2026-10-28T13:39:19+00:00",
  "projection": true,
  "req": "REQ-021",
  "scheduler_status": "running",
- "sessions": 56,
+ "sessions": 58,
  "stage": {
   "complete": false,
-  "joining": null,
+  "joining": 12,
   "outside": [
    "SP-4",
    "SP-5",
@@ -681,12 +681,12 @@
     "T2.5",
     "T1.8b"
    ],
-   "attempts": 11,
+   "attempts": 13,
    "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:a3ec17042095b069cef2033c8a511d035a2eb3263255df89f355457846694e64:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "executor": "route:m2:v1:691be8c7b46c120a293588c03e1e82aa73ad288d599ae34fcce7395487d20ae5:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T2.6",
    "max_attempts": 3,
    "milestone": "M1",

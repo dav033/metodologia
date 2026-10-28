@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:13",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T2.6 no arranca: su predecesor T1.8 sigue devuelto por auditoría sin resolver",
+ "origin": "El scheduler rechaza el arranque con PREDECESSOR_NEEDS_RESOLUTION porque T1.8 fue devuelta por la auditoría independiente y aún no pasa `npm run cuentas:test-integracion-ui` de extremo a extremo. El bloqueo está en T1.8, no en el código de T2.6: los reintentos anteriores (T2.6:7, :10, :11 y :12) repitieron el mismo rechazo. El fallo de fondo, visto en att-0027, es `navigated to http://127.0.0.1:41193/login?error=auth-unavailable`: el servidor de producción toma su configuración de auth del entorno de shell, que la sandbox del verificador no tiene.",
+ "steps": [
+  "Resuelve primero T1.8: haz que `npm run cuentas:test-integracion-ui` pase de extremo a extremo tras su revisión.",
+  "Antes de reintentar T2.6, haz que la configuración de auth del servidor de producción venga de verifier.env_file (por ejemplo ~/.config/metodologia/verifier-pictures.env) o del propio script de test, no del entorno de shell. No cambies los criterios de aceptación ni el comando.",
+  "Comprueba el estado con `bitacora.py --project pictures scheduler-op REQ-021 status`. T2.6 queda parada hasta que T1.8 esté resuelta.",
+  "Cuando T1.8 esté resuelta, reintenta T2.6 con `bitacora.py --project pictures scheduler-op REQ-021 decide <id> retry --reason \"T1.8 resuelta\"`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:25:08",
+ "seconds": 21.3
+}

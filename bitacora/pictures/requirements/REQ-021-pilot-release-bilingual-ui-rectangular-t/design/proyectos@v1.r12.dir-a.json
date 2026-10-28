@@ -1,0 +1,36 @@
+{
+  "name": "Registro operativo",
+  "axes": {
+    "concept": "Operational project register: compare saved scene names, owners and true save states; open a row directly.",
+    "layout": "The fixed Pictures/Sempertex masthead and neutral horizontal route rule precede one continuous full-width register. Name/owner/state/Open share a desktop row. No preview sidebar; Taller keeps toolbar/rail/canvas/inspector.",
+    "navigation": "Direct row opening, name search and authorized owner selector in one toolbar; native account disclosure and Proyectos/Taller routes; contextual naming, copy and leave/load confirmations.",
+    "typography": "Existing Geist Sans only: 24px H1, 20px section title, compact 16px semibold project names, 14px actions, 12–13px metadata. Existing Geist Mono for numeric scene counts.",
+    "density": "One 28px-inset rounded sheet with 16px vertical desktop rows and 24px column gaps. Phone rows have 20px insets/vertical padding and a two-column owner/Open grouping; controls stay at least 44px high.",
+    "components": "Real installed shadcn/Base UI Button, Input, Skeleton and Animate UI Dialog/AlertDialog; native selects/details and a custom semantic ruled list. Existing sibling radii/pill actions and ring-and-dot mark.",
+    "colour": "Unchanged Pictures globals.css palette in both themes: fondo/superficie/texto/acento; semantic success/warning/error only for real state. Existing texto-tenue aliases accessible control edges; no new palette.",
+    "motion": "Precise quick-cut registration: 360ms cubic-bezier(.77,0,.175,1), row stagger 28ms; route enters −8px, search −4px, paper +8px, rows +10px, status −5px, feedback −6px. Controls 150ms, plus press/focus/arrow and saving/skeleton feedback. Natural/subtle scale down; OS reduced/still removes motion."
+  },
+  "evidence": {
+    "layout": [
+      ".register",
+      ".project-row",
+      ".filterbar"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".open-project",
+      ".user-menu summary"
+    ],
+    "typography": [
+      ".heading h1",
+      ".section-top h2",
+      ".project-name"
+    ],
+    "motion": [
+      ".paper",
+      ".project-row",
+      ".route-nav",
+      ".searchbox"
+    ]
+  }
+}

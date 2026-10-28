@@ -6,7 +6,7 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 18/69 · generado: 2026-10-28T08:23:47-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 18/69 · generado: 2026-10-28T08:37:22-05:00
 
 **M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
 
@@ -37,7 +37,7 @@ created: 2026-10-26
 | T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | bloqueada | gpt-6-luna | codex-2 | 11 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | bloqueada | gpt-6-luna | codex-2 | 13 |
 | T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
 | T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
 
@@ -65,8 +65,8 @@ created: 2026-10-26
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | en curso | gpt-6-luna | codex-2 | 1 |
-| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | en curso | gpt-6-luna | codex-2 | 1 |
+| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | verificando | gpt-6-luna | codex-2 | 1 |
+| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | verificando | gpt-6-luna | codex-2 | 1 |
 | T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | pendiente | — | — | 0 |
 | T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
 | T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | pendiente | — | — | 0 |
@@ -351,7 +351,7 @@ Real people sign in with their own invited account and each one reaches exactly 
 
   - Acceptance / static: The owner-approved cuentas-admin@v1 contract is copied byte for byte into design/contracts/cuentas-admin@v1.md. Check: `test -s design/contracts/cuentas-admin@v1.md`
 
-- [ ] T2.2 — Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles · repo: pictures · after: T1.4 · verify: `npm run cuentas:test-api -- --test-name-pattern=enlaces` · files: src/lib/cuentas/aviso-datos.ts, src/app/api/cuentas/activar/route.ts, src/app/api/cuentas/restablecer/route.ts, src/app/api/cuentas/aviso/route.ts, src/app/api/cuentas/mi-cuenta/route.ts, src/app/api/admin/cuentas/route.ts, src/app/api/admin/cuentas/[id]/route.ts, src/app/api/admin/roles/route.ts, src/app/api/admin/roles/[id]/route.ts, src/lib/cuentas/dependientes.ts, src/lib/cuentas/regenerar-enlace.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-cuentas-api.ts · resources: package.json scripts, contract:account-service, contract:session-guard · covers: R1, R3, R16 · kind: implement · subplan: SP-2 · ui: no
+- [ ] T2.2 — Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles · repo: pictures · after: T1.4, T1.8b · verify: `npm run cuentas:test-api -- --test-name-pattern=enlaces` · files: src/lib/cuentas/aviso-datos.ts, src/app/api/cuentas/activar/route.ts, src/app/api/cuentas/restablecer/route.ts, src/app/api/cuentas/aviso/route.ts, src/app/api/cuentas/mi-cuenta/route.ts, src/app/api/admin/cuentas/route.ts, src/app/api/admin/cuentas/[id]/route.ts, src/app/api/admin/roles/route.ts, src/app/api/admin/roles/[id]/route.ts, src/lib/cuentas/dependientes.ts, src/lib/cuentas/regenerar-enlace.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-cuentas-api.ts · resources: package.json scripts, contract:account-service, contract:session-guard · covers: R1, R3, R16 · kind: implement · subplan: SP-2 · ui: no
 
   Classification: complexity medium; scope large_change; risk high; coupling high; confidence medium; estimate 120 minutes.
   `aviso-datos.ts` exports `AVISO_DATOS = { version: 1, es, en }` with the SPEC «Data-processing notice» text verbatim, placeholders included. Routes: `POST /api/cuentas/activar` {token, contrasena, versionAviso}; `POST /api/cuentas/restablecer` {token, contrasena}; `GET /api/cuentas/activar?token=` returns name and email for a valid invitation only; `POST /api/cuentas/aviso` accepts the current version for the session's account; `PATCH /api/cuentas/mi-cuenta` {actual, nueva} (the SP-1 service revokes every session of the account; the route then opens a new session for the requesting browser). Admin (`cuentas.administrar`): `GET/POST /api/admin/cuentas` (list with search and filters; invite), `PATCH/DELETE /api/admin/cuentas/[id]` (role, state, reset link; delete requires `confirmarCorreo` equal to the email). Roles (`roles.administrar`): `GET/POST /api/admin/roles`, `PATCH/DELETE /api/admin/roles/[id]`. All mutations keep `isSameOriginRequest`; errors are stable codes (`LINK_INVALIDO`, `CORREO_REGISTRADO`, `ULTIMO_ADMIN`, `ROL_EN_USO`, `ROL_SISTEMA`).

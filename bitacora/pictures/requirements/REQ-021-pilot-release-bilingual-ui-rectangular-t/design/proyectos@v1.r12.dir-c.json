@@ -1,0 +1,36 @@
+{
+  "name": "Edición en contexto",
+  "axes": {
+    "concept": "Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria.",
+    "layout": "Una pila de bandas horizontales a todo el ancho. La banda abierta contiene escena y explicación en proporción 1.8:1; no existe un panel maestro-detalle lateral ni una cuadrícula permanente de tarjetas.",
+    "navigation": "Cabecera y navegación horizontal compartidas; Ver escena/Ocultar escena expande el proyecto en su propio lugar, Abrir lleva al Taller o a solo lectura. Qué se guarda despliega la explicación junto al estado.",
+    "typography": "Geist Sans del producto: título 24px, proyecto 20px, sección 16–18px, cuerpo 14–15px, metadatos 12–13px. Geist Mono solo en la identificación Sempertex heredada.",
+    "density": "Proyectos cerrados de una fila y una única escena abierta. La información secundaria se revela a demanda; 28px de margen interior en escritorio y 20px en teléfono.",
+    "components": "Button/Input/Skeleton/Dialog reales de shadcn y Base UI/Animate UI. Composición propia de bandas expandibles y renombrado in situ; botones con presión táctil, selector de propietario nativo y disclosure de cuenta heredado.",
+    "colour": "Exactamente Pictures: fondo/superficie/texto/acento y tokens Taller para el visor; roles accesibles de borde de control heredados de cuentas-admin y planes. No hay nueva paleta ni familia tipográfica.",
+    "motion": "Asentamiento táctil: bandas se comprimen .985 y asientan con 55ms de secuencia; escena .965→1.008→1; estado rota -14°→5°→0; avisos se asientan verticalmente; presión .965 con spring 220/16; hover de iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento."
+  },
+  "evidence": {
+    "layout": [
+      ".project-stack",
+      ".project-band[data-expanded=\"true\"] .band-detail",
+      ".save-header"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".expand-control",
+      ".scene-title-button"
+    ],
+    "typography": [
+      ".heading h1",
+      ".band-title",
+      ".band-meta"
+    ],
+    "motion": [
+      ".project-band",
+      ".scene-window",
+      ".scene-title-button",
+      ".save-status .status-icon"
+    ]
+  }
+}

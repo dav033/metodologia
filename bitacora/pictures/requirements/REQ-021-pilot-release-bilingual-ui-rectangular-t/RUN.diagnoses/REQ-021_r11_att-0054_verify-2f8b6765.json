@@ -1,0 +1,22 @@
+{
+ "request": "REQ-021:r11:att-0054:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T3.2 espera la aprobación manual del dueño; no hay aprobación registrada",
+ "origin": "El criterio de aceptación «el dueño aprobó un subconjunto» solo tiene evidencia manual (CRITERION_MANUAL: This acceptance criterion has only manual evidence.), así que el verificador no puede dar veredicto. En la evidencia no existe /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json ni una respuesta nombrada del dueño, y no aparece ningún fallo en las dos comprobaciones de comando. Aprobar a mano (review_pass) sin esa respuesta registraría una decisión que el dueño no ha tomado.",
+ "steps": [
+  "Muestra a David docs/req021/propuesta-backing-mesas.md y pregúntale qué ids de Backings y tipos de mesa aprueba, o si no aprueba ninguno.",
+  "Calcula el hash con sha256sum docs/req021/propuesta-backing-mesas.json y escribe /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json con propuestaSha256, aprobadoPor \"owner\", fecha, backings, mesas y notas si las hay.",
+  "Valida con npx tsx scripts/taller/validar-propuesta-piloto.ts docs/req021/propuesta-backing-mesas.json --aprobacion /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json y, si sale 0, reanuda T3.2 para que el verificador ejecute las comprobaciones."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "alta",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:31:22",
+ "seconds": 17.2
+}

@@ -8537,11 +8537,26 @@
    ],
    "directions": [
     {
+     "axes": {
+      "colour": "Unchanged Pictures globals.css palette in both themes: fondo/superficie/texto/acento; semantic success/warning/error only for real state. Existing texto-tenue aliases accessible control edges; no new palette.",
+      "components": "Real installed shadcn/Base UI Button, Input, Skeleton and Animate UI Dialog/AlertDialog; native selects/details and a custom semantic ruled list. Existing sibling radii/pill actions and ring-and-dot mark.",
+      "concept": "Operational project register: compare saved scene names, owners and true save states; open a row directly.",
+      "density": "One 28px-inset rounded sheet with 16px vertical desktop rows and 24px column gaps. Phone rows have 20px insets/vertical padding and a two-column owner/Open grouping; controls stay at least 44px high.",
+      "layout": "The fixed Pictures/Sempertex masthead and neutral horizontal route rule precede one continuous full-width register. Name/owner/state/Open share a desktop row. No preview sidebar; Taller keeps toolbar/rail/canvas/inspector.",
+      "motion": "Precise quick-cut registration: 360ms cubic-bezier(.77,0,.175,1), row stagger 28ms; route enters −8px, search −4px, paper +8px, rows +10px, status −5px, feedback −6px. Controls 150ms, plus press/focus/arrow and saving/skeleton feedback. Natural/subtle scale down; OS reduced/still removes motion.",
+      "navigation": "Direct row opening, name search and authorized owner selector in one toolbar; native account disclosure and Proyectos/Taller routes; contextual naming, copy and leave/load confirmations.",
+      "typography": "Existing Geist Sans only: 24px H1, 20px section title, compact 16px semibold project names, 14px actions, 12–13px metadata. Existing Geist Mono for numeric scene counts."
+     },
      "delegation": "D-20261028-082143-c622",
      "id": "a",
+     "json_sha256": "9b070043758a8cf973a672d37dce5b361dd44fc5490d7c4529f857f787abf425",
+     "name": "Registro operativo",
+     "note_sha256": "ee5bba2ba7dc4795e8d4aede45ee57c9fc8b89dd25a34289c46902ac6d5907e9",
      "revision": 12,
      "seed": "Operational: dense working information in the existing shell; hierarchy by type scale and grouping, precise quick transitions.",
-     "status": "drafting"
+     "sha256": "e5d2ea4673fcda6f3e505b70852b6790224f68f97c621c2864cb989d7dab4544",
+     "status": "ready",
+     "tsx_sha256": "ddc9599820489751e7a20d57cb793f204d156f9a1e8bfbfb639bd0bf3f102d6a"
     },
     {
      "delegation": "D-20261028-082144-9c2a",
@@ -8551,11 +8566,26 @@
      "status": "drafting"
     },
     {
+     "axes": {
+      "colour": "Exactamente Pictures: fondo/superficie/texto/acento y tokens Taller para el visor; roles accesibles de borde de control heredados de cuentas-admin y planes. No hay nueva paleta ni familia tipográfica.",
+      "components": "Button/Input/Skeleton/Dialog reales de shadcn y Base UI/Animate UI. Composición propia de bandas expandibles y renombrado in situ; botones con presión táctil, selector de propietario nativo y disclosure de cuenta heredado.",
+      "concept": "Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria.",
+      "density": "Proyectos cerrados de una fila y una única escena abierta. La información secundaria se revela a demanda; 28px de margen interior en escritorio y 20px en teléfono.",
+      "layout": "Una pila de bandas horizontales a todo el ancho. La banda abierta contiene escena y explicación en proporción 1.8:1; no existe un panel maestro-detalle lateral ni una cuadrícula permanente de tarjetas.",
+      "motion": "Asentamiento táctil: bandas se comprimen .985 y asientan con 55ms de secuencia; escena .965→1.008→1; estado rota -14°→5°→0; avisos se asientan verticalmente; presión .965 con spring 220/16; hover de iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento.",
+      "navigation": "Cabecera y navegación horizontal compartidas; Ver escena/Ocultar escena expande el proyecto en su propio lugar, Abrir lleva al Taller o a solo lectura. Qué se guarda despliega la explicación junto al estado.",
+      "typography": "Geist Sans del producto: título 24px, proyecto 20px, sección 16–18px, cuerpo 14–15px, metadatos 12–13px. Geist Mono solo en la identificación Sempertex heredada."
+     },
      "delegation": "D-20261028-082144-45ee",
      "id": "c",
+     "json_sha256": "a2e798b6b31410847924b3fa5f8c26a00e8bf56eaed0807bdd061ea03a076984",
+     "name": "Edición en contexto",
+     "note_sha256": "880305b825c2859e469a88965c336f2c60aff7f1018f01e901bdb2a9e0321186",
      "revision": 12,
      "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
-     "status": "drafting"
+     "sha256": "403ac3672d0c14edf9f280ba26368b971bc09ce8227acd9ea9649db9236b465f",
+     "status": "ready",
+     "tsx_sha256": "4de35ec0f1c7fbe4964d4d3b9c706dd96b721137ab503ddc32a3e6464c729b4f"
     }
    ],
    "error": "",

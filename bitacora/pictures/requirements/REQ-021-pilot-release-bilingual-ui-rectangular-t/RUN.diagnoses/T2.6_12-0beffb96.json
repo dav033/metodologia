@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:12",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T2.6 no arranca: su predecesor T1.8 sigue devuelto por auditoría sin resolver",
+ "origin": "El scheduler rechaza el arranque con PREDECESSOR_NEEDS_RESOLUTION porque T1.8 fue devuelta por la auditoría independiente y no está resuelta. El fallo viene de T1.8, no del código de T2.6. Los intentos anteriores de T2.6 fallaron en la verificación con `navigated to \"http://127.0.0.1:41193/login?error=auth-unavailable\"`: el servidor de producción no recibe su configuración de auth en el entorno vacío del verificador. Esa causa sigue pendiente, pero solo se verá cuando T1.8 esté resuelta.",
+ "steps": [
+  "Resuelve primero T1.8: su rework debe pasar `npm run cuentas:test-integracion-ui` de punta a punta. Comprueba su estado con `bitacora.py --project pictures scheduler-op REQ-021 status`.",
+  "Cuando T1.8 esté resuelta, reintenta T2.6 con la nota de abajo. No cambies los criterios de aceptación ni el comando de verificación.",
+  "Si la verificación vuelve a dar `/login?error=auth-unavailable`, pasa la configuración de auth del servidor de producción desde `verifier.env_file` (por ejemplo `~/.config/metodologia/verifier-pictures.env`) o desde el propio script, no desde el entorno de la shell."
+ ],
+ "option": "retry_with_note",
+ "note": "Do not start T2.6 until predecessor T1.8 is resolved: its rework must pass `npm run cuentas:test-integracion-ui` end to end. Then make the production server's auth configuration come from verifier.env_file or from the test script itself, not from the shell environment; the verifier sandbox has no environment variables, and a run that reaches /login?error=auth-unavailable has failed. Do not change the acceptance criteria or the cuentas:test-integracion-ui command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:24:32",
+ "seconds": 16.8
+}
