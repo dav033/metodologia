@@ -54,6 +54,18 @@ class LifecycleTests:
         env = json.loads(done.log_path.read_text().strip().splitlines()[-1])
         self.assertEqual(env, {**BASE_ENV, "X_GIVEN": "v a l$HOME\"\n", "BT_ATTEMPT_KEY": key})
 
+    def test_an_inherited_service_identity_never_reaches_the_unit(self):
+        # an engine running as a systemd service copies its own INVOCATION_ID into the agent environment: the unit
+        # must keep the manager's identity, so the attempt stays observable and terminable (REQ-021 a1, 2026-10-28)
+        key = self.key("inherit")
+        inherited = {"INVOCATION_ID": "d0083645ab904d76bec6a30ba19dd613", "JOURNAL_STREAM": "8:1", "SYSTEMD_EXEC_PID": "1"}
+        identity = self.sup.launch(self.spec(key, [PY, "-I", "-c", "import time; time.sleep(30)"],
+                                             env={**BASE_ENV, **inherited}))
+        self.assertNotEqual(identity.invocation_id, inherited["INVOCATION_ID"])
+        self.assertEqual(self.sup.observe(key).state, "running")
+        ended = self.sup.terminate(key)
+        self.assertEqual(ended.live_pids, [])
+
     def test_output_cap_bounds_the_log_and_keeps_the_tail(self):
         key = self.key("cap")
         code = "import sys\nfor i in range(20000): sys.stdout.write(f'line {i:06d} ' + 'x' * 24 + '\\n')"

@@ -18,6 +18,16 @@ ATTEMPT_KEY_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
 ENV_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 MARKER_ENV = "BT_ATTEMPT_KEY"           # set on every process of an attempt; reserved, callers may not pass it
 SUPERVISOR_ENV = "BT_SUPERVISOR_ID"     # set on the systemd unit (not on the agent) to recognise our own units
+# Variables the service manager sets for each unit. A caller that copies its own environment (an engine that itself
+# runs as a systemd service) would otherwise hand the agent the ENGINE's INVOCATION_ID, and the supervisor's identity
+# check would then see its own unit as foreign (REQ-030, pictures REQ-021 att a1, 2026-10-28).
+MANAGER_ENV = frozenset({
+    "INVOCATION_ID", "JOURNAL_STREAM", "SYSTEMD_EXEC_PID", "MANAGERPID", "MANAGERPIDFDID", "NOTIFY_SOCKET",
+    "LISTEN_PID", "LISTEN_FDS", "LISTEN_FDNAMES", "WATCHDOG_PID", "WATCHDOG_USEC", "MEMORY_PRESSURE_WATCH",
+    "MEMORY_PRESSURE_WRITE", "TRIGGER_UNIT", "TRIGGER_PATH", "TRIGGER_TIMER_REALTIME_USEC",
+    "TRIGGER_TIMER_MONOTONIC_USEC", "RUNTIME_DIRECTORY", "STATE_DIRECTORY", "CACHE_DIRECTORY", "LOGS_DIRECTORY",
+    "CONFIGURATION_DIRECTORY", "CREDENTIALS_DIRECTORY", "EXIT_CODE", "EXIT_STATUS", "SERVICE_RESULT",
+})
 
 Backend = Literal["systemd", "pgroup"]
 State = Literal["running", "exited", "absent", "unknown"]
@@ -47,7 +57,8 @@ class Limits(_Frozen):
 class LaunchSpec(_Frozen):
     """Everything needed to start one attempt. `env` is the COMPLETE environment of the agent (like
     `subprocess.Popen(env=...)`), plus the `BT_ATTEMPT_KEY` marker the supervisor adds; nothing leaks in from the
-    orchestrator or from the systemd user manager. `argv`, `cwd` and `stdin_text` are stored 0600 in the attempt state
+    orchestrator or from the systemd user manager, and the per-unit variables of the manager (`MANAGER_ENV`) are
+    dropped: they belong to the unit that runs the agent, never to the caller. `argv`, `cwd` and `stdin_text` are stored 0600 in the attempt state
     directory; `env` and `stdin_text` are deleted from disk as soon as the attempt has started."""
 
     attempt_key: str
@@ -89,7 +100,7 @@ class LaunchSpec(_Frozen):
                 raise ValueError(f"environment variable {name} contains NUL")
         if MARKER_ENV in value or SUPERVISOR_ENV in value:
             raise ValueError(f"{MARKER_ENV} and {SUPERVISOR_ENV} are reserved for the supervisor")
-        return value
+        return {name: item for name, item in value.items() if name not in MANAGER_ENV}
 
     @model_validator(mode="after")
     def _stdin(self) -> LaunchSpec:
