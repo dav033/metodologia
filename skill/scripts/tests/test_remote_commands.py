@@ -654,6 +654,19 @@ class EntryPointTests(LedgerBase):
         self.assertEqual((status, response["code"]), (400, "INVALID_COMMAND"))
         self.assertEqual(self.route_ledger().rows(), [])
 
+    def test_f16_malformed_commands_are_invalid_not_key_errors(self):
+        """A valid key with a missing target/params/precondition must reach validation, not crash fingerprinting."""
+        for missing in ("target", "precondition", "command"):
+            with self.subTest(missing=missing):
+                body = req(idempotency_key=f"key-f16-{missing}")
+                body.pop(missing)
+                result = self.ledger.submit(body, self.handlers, lambda target: self.state)
+                self.assertEqual((result["status"], result["code"]), ("REJECTED", "INVALID_COMMAND"))
+                status, response = self.post(body)
+                self.assertEqual((status, response["code"]), (400, "INVALID_COMMAND"))
+        self.assertEqual(self.calls, [])
+        self.assertEqual(self.route_ledger().rows(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -48,8 +48,9 @@
   function edgeKey(ev) { return ev.from + '>' + ev.to; }
 
   // plan-status task state -> what the strip shows
-  var TASK_STATE = { completed: 'done', running: 'running', verifying: 'running', rejected: 'retry', blocked: 'blocked',
-    cancelled: 'pending', pending: 'pending', ready: 'pending' };
+  // M1 names (`active`, `recovering`) arrive too, from the Scheduler doc and the remote member state
+  var TASK_STATE = { completed: 'done', running: 'running', verifying: 'running', active: 'running', rejected: 'retry',
+    recovering: 'retry', blocked: 'blocked', cancelled: 'pending', pending: 'pending', ready: 'pending' };
   var TASK_CLASS = { done: 'k-verify', running: 'k-run', retry: 'k-recover', blocked: 'k-bad', pending: 'k-state' };
   function taskState(state) { return TASK_STATE[state] || 'pending'; }
 

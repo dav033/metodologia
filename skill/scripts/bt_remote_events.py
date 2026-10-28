@@ -170,7 +170,9 @@ def build_events(state: dict[str, Any], now: float | None = None) -> list[dict[s
         if not isinstance(target, dict) or target.get("kind") not in {"run", "attempt", "task", "plan", "round"}:
             continue
         identity = f'{command.get("idempotency_key", "")}:{command.get("outcome", "")} '
-        out.append(_event("command.updated", identity.strip(), command.get("created_at", ""), target,
+        # Ledger rows carry received_at/finished_at (bt_remote_commands); the update happened when it finished (F39).
+        occurred_at = command.get("finished_at") or command.get("received_at") or ""
+        out.append(_event("command.updated", identity.strip(), occurred_at, target,
                           {"command": command.get("command"), "outcome": command.get("outcome"),
                            "origin": command.get("origin")}))
     for offline in state.get("offline", []):

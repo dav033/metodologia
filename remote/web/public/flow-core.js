@@ -13,7 +13,7 @@
     start_order: 'run', dispatch_ack: 'run', execution_started: 'run', execution_finished: 'run', executor_event: 'run',
     cancel_order: 'run', dispatch_voided: 'run', reconciled: 'run', reconcile_redeliver: 'run', lease_expired: 'run',
     delivery_abandoned: 'run', verify_order: 'verify', verdict: 'verify', recommendation: 'recover', recovery: 'recover',
-    manual_resolution: 'recover', state_change: 'state', task_state: 'state', run_paused: 'state', run_resumed: 'state',
+    manual_resolution: 'recover', recovery_intervention: 'recover', recovery_cycle: 'recover', state_change: 'state', task_state: 'state', run_paused: 'state', run_resumed: 'state',
     run_cancelled: 'state', housekeeping: 'state', incident: 'warn', incident_detected: 'warn',
     observation_ignored: 'warn', port_error: 'warn', port_invalid: 'warn', unknown: 'bad', dispatch_rejected: 'bad',
     message_rejected: 'bad', stream: 'stream', digest: 'stream'
@@ -28,7 +28,7 @@
     execution_started: 'empieza a ejecutar', execution_finished: 'termina de ejecutar', executor_event: 'evento del ejecutor',
     cancel_order: 'cancela', dispatch_voided: 'anula la orden', reconciled: 'reconcilia', reconcile_redeliver: 'reenvía',
     lease_expired: 'vence el permiso', delivery_abandoned: 'abandona la entrega', verify_order: 'pide verificar',
-    verdict: 'veredicto', recommendation: 'recomendación', recovery: 'recuperación', manual_resolution: 'resolución manual',
+    verdict: 'veredicto', recommendation: 'recomendación', recovery: 'recuperación', recovery_intervention: 'intervención', recovery_cycle: 'ciclo de recuperación', manual_resolution: 'resolución manual',
     state_change: 'estado del intento', task_state: 'estado de la tarea', run_paused: 'pausa', run_resumed: 'reanuda',
     run_cancelled: 'cancela la ejecución', housekeeping: 'mantenimiento', incident: 'incidente',
     incident_detected: 'detecta incidente', observation_ignored: 'ignora una observación', port_error: 'error de puerto',
@@ -48,8 +48,9 @@
   function edgeKey(ev) { return ev.from + '>' + ev.to; }
 
   // plan-status task state -> what the strip shows
-  var TASK_STATE = { completed: 'done', running: 'running', verifying: 'running', rejected: 'retry', blocked: 'blocked',
-    cancelled: 'pending', pending: 'pending', ready: 'pending' };
+  // M1 names (`active`, `recovering`) arrive too, from the Scheduler doc and the remote member state
+  var TASK_STATE = { completed: 'done', running: 'running', verifying: 'running', active: 'running', rejected: 'retry',
+    recovering: 'retry', blocked: 'blocked', cancelled: 'pending', pending: 'pending', ready: 'pending' };
   var TASK_CLASS = { done: 'k-verify', running: 'k-run', retry: 'k-recover', blocked: 'k-bad', pending: 'k-state' };
   function taskState(state) { return TASK_STATE[state] || 'pending'; }
 
@@ -70,8 +71,8 @@
       out.total += n;
       if (from === to) out.loops[from] = (out.loops[from] || 0) + n;
       else {
-        var e = out.edges[from + '>' + to] || (out.edges[from + '>' + to] = { count: 0, cats: {} });
-        e.count += n; e.cats[cat] = (e.cats[cat] || 0) + n;
+        var e = out.edges[from + '>' + to] || (out.edges[from + '>' + to] = { count: 0, cats: {}, last: 0 });
+        e.count += n; e.last = Math.max(e.last, at || 0); e.cats[cat] = (e.cats[cat] || 0) + n;
       }
       [from, to].forEach(function (id) {
         var node = out.nodes[id] || (out.nodes[id] = { count: 0, last: 0 });

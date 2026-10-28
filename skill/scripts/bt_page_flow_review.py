@@ -56,6 +56,21 @@ def _tail(content: bytes) -> tuple[str, bool]:
     return text, truncated
 
 
+def _manifest_v1(manifest: dict[str, Any]) -> dict[str, Any]:
+    return {key: manifest.get(key) for key in ("request", "checks", "criteria", "issues")}
+
+
+# One reader per published M6 manifest version (bt_scheduler_quality.evidence.MANIFEST_VERSION is the newest).
+# 1.1 only adds fields this page does not show (reason_code, tree digests, argv), so it reads like 1.
+_MANIFEST_READERS = {"m6.evidence-manifest/1": _manifest_v1, "m6.evidence-manifest/1.1": _manifest_v1}
+
+
+def read_manifest(manifest: Any) -> dict[str, Any] | None:
+    """The fields this page uses from a known manifest version; None for an unknown or malformed one."""
+    reader = _MANIFEST_READERS.get(manifest.get("schema_version")) if isinstance(manifest, dict) else None
+    return reader(manifest) if reader else None
+
+
 def _read_review(root: Path, query: dict[str, str]) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     project, req, task_id, attempt_id, reference = (query.get(k, "") for k in ("project", "req", "task", "attempt", "ref"))
     match = _RESULT.fullmatch(reference)
@@ -81,9 +96,9 @@ def _read_review(root: Path, query: dict[str, str]) -> tuple[dict[str, Any], lis
         manifest_bytes = _artifact(conn, reference, _RESULT)
         if len(manifest_bytes) > 256 * 1024:
             raise ReviewError("El manifiesto excede el límite de lectura.")
-        manifest = json.loads(manifest_bytes)
-        request = manifest.get("request") if isinstance(manifest, dict) else None
-        if not isinstance(request, dict) or manifest.get("schema_version") != "m6.evidence-manifest/1" or any((request.get("plan_id") != status["plan"]["plan_id"],
+        manifest = read_manifest(json.loads(manifest_bytes))
+        request = manifest.get("request") if manifest else None
+        if not isinstance(request, dict) or any((request.get("plan_id") != status["plan"]["plan_id"],
                                                   request.get("task_id") != task_id,
                                                   request.get("attempt_id") != attempt_id,
                                                   request.get("revision") != status["plan"]["revision"])):

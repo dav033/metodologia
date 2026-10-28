@@ -181,11 +181,25 @@ def dispatch_run_command(command: str, target: str, params: dict, *, preconditio
             candidates = bt_route_pins.available(project, rdir, task, pin)
             if not candidates:
                 raise RouteUnavailableError("La ruta fijada no está disponible; la tarea no se reabrió.")
-            bt_route_pins.set_pin(rdir, task, pin)
-        else:
-            bt_route_pins.clear(rdir, task)
+        previous = bt_route_pins.entry(rdir, task)
+        persisted = []
+
+        def persist_pin() -> None:
+            # Runs only after ops.retry accepted the task state and before it reopens the task (F33).
+            if pin is not None:
+                bt_route_pins.set_pin(rdir, task, pin)
+            else:
+                bt_route_pins.clear(rdir, task)
+            persisted.append(True)
+
         expected_state = (precondition or {}).get("state")
-        messages = ops.retry(project, req, rdir, task, reason, expected_task_state=expected_state)
+        try:
+            messages = ops.retry(project, req, rdir, task, reason, expected_task_state=expected_state,
+                                 on_accepted=persist_pin)
+        except BaseException:
+            if persisted:       # refused after the first check (a later stale move): nothing of it persists
+                bt_route_pins.restore(rdir, task, previous)
+            raise
         messages.append(ops.resume(project, req, rdir))
         return {"messages": messages}
     if command == "answer-decision":
@@ -268,7 +282,9 @@ def _now() -> str:
 
 def fingerprint(req: dict) -> str:
     """Digest of everything that changes the effect: a reused key with other content must not replay."""
-    body = {k: req[k] for k in ("command", "target", "params", "precondition")}
+    # A missing field digests as null, so a malformed body reaches validate() instead of raising KeyError (F16);
+    # complete bodies digest exactly as before, so stored keys keep replaying.
+    body = {k: req.get(k) for k in ("command", "target", "params", "precondition")}
     return hashlib.sha256(json.dumps(body, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
 
 

@@ -375,11 +375,12 @@ def _refresh_projection(rdir: Path) -> bool:
 
 
 def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wait: float = 180.0,
-          expected_task_state: str | None = None) -> list[str]:
+          expected_task_state: str | None = None, on_accepted=None) -> list[str]:
     """Cancel a live attempt and reopen its task once Scheduler makes it recoverable.
 
     A task reopened by a separate operator move is already ready; preserve that state instead of waiting for a block
-    which will never arrive. A task already recovering can be reopened directly.
+    which will never arrive. A task already recovering can be reopened directly. `on_accepted()` runs once the task
+    state matched `expected_task_state` and before anything is cancelled or reopened (the remote route pin).
     """
     current = status(project, req, rdir)
     task_state = current.get("task_states", {}).get(task)
@@ -387,6 +388,8 @@ def retry(project: str, req: str, rdir: Path, task: str, reason: str = "", *, wa
         raise core.SchedulerError(
             "STALE_PRECONDITION", f"task {task} changed from {expected_task_state} to {task_state}",
         )
+    if on_accepted is not None:
+        on_accepted()
     attempts = [a["attempt"] for a in current["live_attempts"] if a["task"] == task]
     lines = []
     for attempt in attempts:

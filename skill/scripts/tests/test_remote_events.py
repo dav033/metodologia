@@ -69,8 +69,9 @@ class FixtureTests(unittest.TestCase):
                 "a3", state="running", live=True, last_activity_at=OLD)}])]},
             "laptop.offline": {"offline": [{"since": AT}]},
             "command.updated": {"commands": [{"idempotency_key": "a" * 24, "command": "retry",
-                                                "target": "demo/REQ-001",
-                                                "origin": "web", "outcome": "done", "created_at": AT}]},
+                                                "target": "demo/REQ-001", "origin": "web", "status": "OK",
+                                                "code": None, "outcome": '{"messages": []}',
+                                                "received_at": AT, "finished_at": AT}]},
         }
         produced = set()
         for kind, fixture in fixtures.items():
@@ -112,6 +113,23 @@ class FixtureTests(unittest.TestCase):
     def test_malformed_cursor_is_rejected(self):
         with self.assertRaises(feed.CursorError):
             feed.page([], "not-a-cursor")
+
+    def test_f39_command_events_use_the_ledger_row_times(self):
+        import bt_remote_commands as commands
+
+        with tempfile.TemporaryDirectory() as root:
+            ledger = commands.Ledger(Path(root) / "commands.db")
+            ledger.submit({"idempotency_key": "f" * 20, "command": "pause", "target": "demo/REQ-001",
+                           "origin": "web", "params": {}, "precondition": {"state": "running"}},
+                          {"pause": lambda _target, _params: {"messages": ["paused"]}},
+                          lambda _target: {"state": "running"})
+            row = ledger.rows()[0]
+        event = events_for({"commands": [row]})["command.updated"]
+        self.assertNotEqual(event["occurredAt"], "1970-01-01T00:00:00Z")
+        self.assertEqual(event["occurredAt"], row["finished_at"])
+        self.assertEqual(event["target"], {"kind": "run", "project": "demo", "req": "REQ-001"})
+        pending = {**row, "finished_at": None}
+        self.assertEqual(events_for({"commands": [pending]})["command.updated"]["occurredAt"], row["received_at"])
 
 
 class Handler:

@@ -24,6 +24,9 @@ assert.strictEqual(C.label('dispatch_ack'), 'acepta la orden');
 assert.strictEqual(C.label('brand_new'), 'brand_new');
 assert.strictEqual(C.taskState('verifying'), 'running');
 assert.strictEqual(C.taskState('rejected'), 'retry');
+// M1 task states reach the strip unmapped from some sources (the Scheduler doc, the remote member state)
+assert.strictEqual(C.taskState('active'), 'running');
+assert.strictEqual(C.taskState('recovering'), 'retry');
 
 // filters: task, category, node, edge
 const events = [ev(1, 'M2', 'M1', 'assignment'), ev(2, 'M1', 'M3', 'start_order', {task: 'T5'}),
@@ -120,6 +123,12 @@ class FlowPage(unittest.TestCase):
         out = subprocess.run(["node", "-e", NODE_TEST, str(CORE)], capture_output=True, text=True, timeout=30)
         self.assertEqual(out.returncode, 0, out.stderr)
         self.assertEqual(out.stdout.strip(), "ok")
+
+    def test_remote_phone_serves_the_one_flow_core_source(self):
+        """remote/web/public/flow-core.js is a build copy of assets/flow-core.js (`npm run sync:flow-core`)."""
+        copy = ASSETS.parents[1] / "remote" / "web" / "public" / "flow-core.js"
+        self.assertEqual(copy.read_bytes(), CORE.read_bytes(),
+                         "remote/web/public/flow-core.js drifted; run `npm run sync:flow-core` in remote/web")
 
 
 if __name__ == "__main__":

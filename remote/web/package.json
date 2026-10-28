@@ -6,14 +6,18 @@
     "node": ">=22"
   },
   "scripts": {
+    "predev": "node scripts/sync-flow-core.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/sync-flow-core.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-concurrency=1 tests/*.test.mjs",
     "mock": "node mocks/gateway.mjs",
-    "verify": "npm run lint && npm run typecheck && npm test && npm run build"
+    "verify": "npm run check:flow-core && npm run lint && npm run typecheck && npm test && npm run build",
+    "sync:flow-core": "node scripts/sync-flow-core.mjs",
+    "check:flow-core": "node scripts/sync-flow-core.mjs --check"
   },
   "dependencies": {
     "next": "15.5.28",
