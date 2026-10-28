@@ -22,7 +22,13 @@ from pathlib import Path
 from typing import Literal
 
 import bt_run_owner
-from bt_contracts.execution import Backend, OwnerRecord, RunRef
+from bt_contracts.execution import (
+    Backend,
+    LegacyProgress,
+    LegacyTask,
+    OwnerRecord,
+    RunRef,
+)
 from pydantic import BaseModel, ConfigDict, Field
 
 LIVE_ATTEMPTS = frozenset({"reserved", "dispatched", "running", "verifying", "uncertain"})
@@ -182,6 +188,22 @@ def inventory(*, state_dir: Path, rdir: Path, project: str, req: str, owner_pids
 def run_ref(inv: Inventory) -> RunRef:
     return RunRef(project=inv.project, req=inv.req, plan_id=inv.plan_id, revision=inv.revision,
                   plan_sha256=inv.plan_sha256, plan_path=Path(inv.plan_path))
+
+
+def legacy_progress(inv: Inventory) -> LegacyProgress:
+    """What the durable run starts from: inherited and reconcilable tasks with their legacy snapshot material."""
+    out = []
+    for t in inv.tasks:
+        if t.verdict not in ("inherit", "reconcile") or not (t.snapshot_sha and t.base_sha and t.manifest_path):
+            continue
+        manifest = json.loads(Path(t.manifest_path).read_text(encoding="utf-8"))
+        worktree = manifest.get("worktree")
+        out.append(LegacyTask(task_id=t.task_id, verdict=t.verdict, snapshot_sha=t.snapshot_sha, base_sha=t.base_sha,
+                              repository=Path(manifest["repository"]), attempt_dir=Path(t.manifest_path).parent.parent,
+                              manifest_path=Path(t.manifest_path),
+                              worktree=Path(worktree) if worktree and Path(worktree).is_dir() else None,
+                              provenance=f"legacy {t.attempt} {t.evidence or ''}"[:500]))
+    return LegacyProgress(inventory_digest=inv.digest, tasks=tuple(out))
 
 
 def inherited(inv: Inventory) -> dict[str, str]:

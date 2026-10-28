@@ -16,6 +16,8 @@ from bt_contracts.execution import (
     AttemptOutcome,
     AttemptRef,
     AttemptStatus,
+    LegacyProgress,
+    LegacyTask,
     Prepared,
     ProcessRecord,
     Route,
@@ -48,23 +50,43 @@ def task_workflow_id(run: RunRef, task_id: str, round_no: int) -> str:
 
 # ---------------------------------------------------------------------------------------------------------- run
 @DBOS.workflow(name="bt.run")
-def run_workflow(run_data: dict, settings_data: dict, inherited: dict) -> dict:
-    """Start every ready task, wait for news, repeat; ends when nothing is left to run. `inherited` maps task ids
-    the migration bridge proved complete to their provenance."""
+def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict:
+    """Start every ready task, wait for news, repeat; ends when nothing is left to run. `legacy_data` is the progress
+    the migration bridge re-proved (LegacyProgress): inherited snapshots are integrated into the new line first, in
+    plan order, so dependents build on them; reconcilable ones are verified again before they count."""
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
+    legacy = LegacyProgress.model_validate(legacy_data)
     plan = steps.plan(run)
-    states: dict[str, str] = {task_id: "inherited" for task_id in inherited}
+    states: dict[str, str] = {}
+    results: dict[str, dict] = {}
+    reconcile = legacy.of("reconcile")
+    inherit = legacy.of("inherit")
+    for task in plan.tasks:
+        item = inherit.get(task.id)
+        if item is None:
+            continue
+        snapshot = Snapshot(snapshot_sha=item.snapshot_sha, base_sha=item.base_sha, manifest_path=item.manifest_path)
+        merged = _enqueue(engine.INTEGRATE, f"bt:{run.run_id}:seed:{task.id}", integrate_workflow, run_data, task.id,
+                          snapshot.model_dump(mode="json"))
+        if merged.get("ref") and not merged.get("conflict") and not merged.get("internal_error"):
+            states[task.id] = "inherited"
+            results[task.id] = {"task_id": task.id, "status": "inherited", "provenance": item.provenance,
+                                "integrated_ref": merged["ref"]}
+        else:                                       # it no longer fits the line: verify it and continue from it
+            reconcile[task.id] = item
+            steps.emit("inherit_refused", {"run_id": run.run_id, "task_id": task.id,
+                                           "reason": merged.get("conflict") or merged.get("internal_error")})
     rounds: dict[str, int] = {}
     paused = False
     seen_commands: set[str] = set()
-    results: dict[str, dict] = {}
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
         front = frontier.compute(plan, states, max_parallel=settings.max_parallel)
         if not paused:
             for task_id in front.ready:
                 rounds[task_id] = rounds.get(task_id, 0) + 1
-                _start_task(run, task_id, rounds[task_id], settings, note="")
+                _start_task(run, task_id, rounds[task_id], settings, note="",
+                            legacy=reconcile.get(task_id) if rounds[task_id] == 1 else None)
                 states[task_id] = "running"
         DBOS.set_event("summary", _summary(run, states, results, paused))
         if front.finished:
@@ -105,10 +127,12 @@ def run_workflow(run_data: dict, settings_data: dict, inherited: dict) -> dict:
     return summary
 
 
-def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str) -> None:
+def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,
+                legacy: LegacyTask | None = None) -> None:
     with SetWorkflowID(task_workflow_id(run, task_id, round_no)):
         DBOS.start_workflow(task_workflow, run.model_dump(mode="json"), task_id, round_no,
-                            settings.model_dump(mode="json"), note, DBOS.workflow_id)
+                            settings.model_dump(mode="json"), note, DBOS.workflow_id,
+                            legacy.model_dump(mode="json") if legacy else None)
 
 
 def _summary(run: RunRef, states: dict, results: dict, paused: bool, final: bool = False) -> dict:
@@ -123,15 +147,17 @@ def _summary(run: RunRef, states: dict, results: dict, paused: bool, final: bool
 # --------------------------------------------------------------------------------------------------------- task
 @DBOS.workflow(name="bt.task")
 def task_workflow(run_data: dict, task_id: str, round_no: int, settings_data: dict, note: str,
-                  parent_id: str) -> dict:
+                  parent_id: str, legacy_data: dict | None = None) -> dict:
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
-    outcome = _run_task(run, task_id, round_no, settings, note)
+    legacy = LegacyTask.model_validate(legacy_data) if legacy_data else None
+    outcome = _run_task(run, task_id, round_no, settings, note, legacy)
     DBOS.send(parent_id, {"kind": "task_done", "outcome": outcome.model_dump(mode="json")}, TOPIC_RUN,
               idempotency_key=f"{DBOS.workflow_id}:done")
     return outcome.model_dump(mode="json")
 
 
-def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str) -> TaskOutcome:
+def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,
+              legacy: LegacyTask | None = None) -> TaskOutcome:
     budget = settings.budget
     started = steps.now()
     outcomes: list[AttemptOutcome] = []
@@ -141,6 +167,11 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     remediated = False
     number = (round_no - 1) * 100
     base_override = ""
+    if legacy is not None:                       # a legacy snapshot counts only after it passes verification again
+        reconciled, failure_note = _reconcile(run, task_id, round_no, legacy)
+        if reconciled is not None:
+            return reconciled
+        base_override, note = legacy.snapshot_sha, failure_note or note
     decisions = 0
     while True:
         DBOS.set_event("state", {"task_id": task_id, "state": "routing", "attempts": len(outcomes)})
@@ -224,7 +255,24 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             remediated = False
 
 
-def _evaluate(attempt: AttemptRef, route: Route, agent: dict, verify: dict | None, profile: str) -> AttemptOutcome:
+def _reconcile(run: RunRef, task_id: str, round_no: int, legacy: LegacyTask) -> tuple[TaskOutcome | None, str]:
+    attempt = AttemptRef(run=run, task_id=task_id, number=(round_no - 1) * 100 + 99, workflow_id=DBOS.workflow_id)
+    material = Prepared(worktree=legacy.worktree or legacy.attempt_dir, branch="legacy", base_sha=legacy.base_sha,
+                        repository=legacy.repository, attempt_dir=legacy.attempt_dir, prompt_path=legacy.manifest_path,
+                        argv=("legacy-evidence",), env_file=legacy.manifest_path, timeout_seconds=1)
+    snapshot = Snapshot(snapshot_sha=legacy.snapshot_sha, base_sha=legacy.base_sha, manifest_path=legacy.manifest_path)
+    DBOS.set_event("state", {"task_id": task_id, "state": "reconciling", "attempt": attempt.attempt_key})
+    agent = {"prepared": material.model_dump(mode="json"), "snapshot": snapshot.model_dump(mode="json")}
+    outcome = _evaluate(attempt, None, agent, None, STANDARD)
+    steps.emit("legacy_reconciled", {"run_id": run.run_id, "task_id": task_id, "status": outcome.status.value,
+                                     "provenance": legacy.provenance})
+    if outcome.status == AttemptStatus.ACCEPTED:
+        done = _finish(run, task_id, TaskStatus.COMPLETED, [], outcome, None)
+        return done.model_copy(update={"provenance": f"reconciled {legacy.provenance}"[:500]}), ""
+    return None, outcome.failure.agent_note if outcome.failure else ""
+
+
+def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dict | None, profile: str) -> AttemptOutcome:
     """Verify (if there is something to verify), integrate a pass, and classify whatever went wrong."""
     if agent.get("internal_error"):
         failure = classify.classify(classify.AttemptFacts(internal_error=agent["internal_error"]))

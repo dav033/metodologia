@@ -10,6 +10,7 @@ ask for once (more time, more workspace, a larger Node heap) — it never change
 from __future__ import annotations
 
 import dataclasses
+import json
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -82,10 +83,12 @@ class M6Verifier:
             return VerifyOutcome(status=VerifyStatus.NEEDS_REVIEW, reason_code="SNAPSHOT_INVALID",
                                  digest="the attempt left no snapshot to verify")
         key = attempt.verify_key if profile == "standard" else f"{attempt.verify_key}:{profile}"
+        # the trusted handoff manifest names the attempt that produced the snapshot (a legacy one when reconciling)
+        producer = json.loads(snapshot.manifest_path.read_text(encoding="utf-8")).get("attempt_id") or attempt.attempt_key
         order = {"idempotency_key": key, "plan_id": attempt.run.plan_id, "revision": attempt.run.revision,
-                 "task_id": attempt.task_id, "attempt_id": attempt.attempt_key, "token": attempt.number,
+                 "task_id": attempt.task_id, "attempt_id": producer, "token": attempt.number,
                  "acceptance_criteria": list(task.acceptance_criteria), "verification": [dict(v) for v in task.verification]}
-        source = SnapshotSource(attempt.attempt_key, prepared.repository, prepared.attempt_dir, snapshot.manifest_path,
+        source = SnapshotSource(producer, prepared.repository, prepared.attempt_dir, snapshot.manifest_path,
                                 snapshot.base_sha, snapshot.snapshot_sha, prepared.worktree)
         result = self._engine(attempt.run, profile).verify(order, source)
         return outcome_of(result, self.store)

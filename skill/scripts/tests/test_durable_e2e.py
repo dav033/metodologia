@@ -2,6 +2,7 @@
 M2/M9). The engine is a separate process: tests SIGKILL it mid-run and prove recovery without duplicate launches."""
 from __future__ import annotations
 
+import json
 import os
 import signal
 import subprocess
@@ -130,6 +131,43 @@ class DurableRuns(unittest.TestCase):
         self.client.answer(run, "T1", OwnerAnswer(request_id=decision["request_id"], action="stop"))
         status = self.settled(run)
         self.assertEqual(status["summary"]["status"], "blocked")
+
+
+    def _legacy_from_first_run(self, verdict):
+        """Run T1 once, then describe its real snapshot as legacy progress for a second plan revision."""
+        from bt_contracts.execution import LegacyProgress, LegacyTask
+        first = RunRef.model_validate(self.lab.freeze([task("T1")], revision=1))
+        self.start_engine()
+        self.client.start(first, FAST)
+        self.assertEqual(self.settled(first)["summary"]["status"], "completed")
+        manifest = next(self.lab.state.glob("attempts-root/attempts/*T1-a1*/handoff/manifest.json"))
+        data = json.loads(manifest.read_text())
+        legacy = LegacyProgress(tasks=(LegacyTask(task_id="T1", verdict=verdict, snapshot_sha=data["snapshot_sha"],
+                                                  base_sha=data["base_sha"], repository=Path(data["repository"]),
+                                                  attempt_dir=manifest.parent.parent, manifest_path=manifest,
+                                                  worktree=None, provenance="first run"),))
+        second = RunRef.model_validate(self.lab.freeze([task("T1"), task("T2", after=["T1"], paths=["T2/**"])],
+                                                       revision=2))
+        return second, legacy
+
+    def test_migrated_progress_is_integrated_not_rerun_and_dependents_build_on_it(self):
+        run, legacy = self._legacy_from_first_run("inherit")
+        self.client.start(run, FAST, legacy)
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(status["summary"]["tasks"]["T1"], "inherited")
+        self.assertEqual(len(self.lab.launches()), 2)            # T1 in the first run, T2 now: T1 never re-ran
+        t2 = self.lab.launches()[-1]
+        self.assertEqual(Path(t2["cwd"]).joinpath("out.txt").read_text(), "good\n")   # T2 started on T1's work
+
+    def test_reconcilable_progress_is_verified_again_before_it_counts(self):
+        run, legacy = self._legacy_from_first_run("reconcile")
+        self.client.start(run, FAST, legacy)
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(status["summary"]["tasks"]["T1"], "completed")
+        self.assertIn("reconciled", status["summary"]["results"]["T1"]["provenance"])
+        self.assertEqual(len(self.lab.launches()), 2)            # verified again, not re-run
 
 
 if __name__ == "__main__":

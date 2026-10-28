@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Iterable
 
-from bt_contracts.execution import RunRef
+from bt_contracts.execution import LegacyProgress, RunRef
 from bt_contracts.owner import OwnerAnswer, RunCommand
 from dbos import DBOSClient, EnqueueOptions
 
@@ -27,14 +27,14 @@ class Client:
         self.client.destroy()
 
     # ----------------------------------------------------------------------------------------------- runs
-    def start(self, run: RunRef, settings: Settings, inherited: dict[str, str] | None = None) -> str:
+    def start(self, run: RunRef, settings: Settings, legacy: LegacyProgress | None = None) -> str:
         workflow_id = f"bt:{run.run_id}"
         options: EnqueueOptions = {"workflow_name": RUN_WORKFLOW, "queue_name": RUNS, "workflow_id": workflow_id,
                                    "app_version": APP_VERSION}
         existing = self.client.list_workflows(workflow_ids=[workflow_id], load_input=False, load_output=False)
         if not existing:
             self.client.enqueue(options, run.model_dump(mode="json"), settings.model_dump(mode="json"),
-                                dict(inherited or {}))
+                                (legacy or LegacyProgress()).model_dump(mode="json"))
         return workflow_id
 
     def summary(self, run: RunRef) -> dict | None:

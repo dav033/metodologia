@@ -135,7 +135,7 @@ def cmd_migrate(args) -> int:
     (rdir / "RUN.durable-run.json").write_text(run.model_dump_json(indent=1), encoding="utf-8")
     client = _client()
     try:
-        workflow = client.start(run, Settings(), migrate.inherited(inv))
+        workflow = client.start(run, Settings(), migrate.legacy_progress(inv))
     finally:
         client.close()
     print(json.dumps({"owner": record.model_dump(mode="json"), "backup": str(backup), "workflow": workflow,

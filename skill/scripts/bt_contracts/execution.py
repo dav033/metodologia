@@ -195,6 +195,31 @@ class TaskOutcome(Contract):
     provenance: str = Field(default="", max_length=500)
 
 
+class LegacyTask(Contract):
+    """One task's legacy progress, re-proved by the migration bridge (bt_durable.migrate) from M6 evidence.
+
+    `inherit`: a PASS for this exact task specification and a snapshot that still exists — integrated into the new
+    line without running anything. `reconcile`: a snapshot exists but the evidence does not prove it — the snapshot is
+    verified again first, and only a PASS makes it count."""
+    task_id: TaskId
+    verdict: Literal["inherit", "reconcile"]
+    snapshot_sha: GitSha
+    base_sha: GitSha
+    repository: Path
+    attempt_dir: Path
+    manifest_path: Path
+    worktree: Path | None = None
+    provenance: str = Field(default="", max_length=500)
+
+
+class LegacyProgress(Contract):
+    inventory_digest: str = Field(default="", max_length=64)
+    tasks: tuple[LegacyTask, ...] = ()
+
+    def of(self, verdict: str) -> dict[str, LegacyTask]:
+        return {t.task_id: t for t in self.tasks if t.verdict == verdict}
+
+
 class OwnerRecord(Contract):
     """Who owns the execution state of one run. Exactly one backend; changes only through an explicit migration."""
     run_id: str
