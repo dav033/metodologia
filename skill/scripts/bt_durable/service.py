@@ -9,7 +9,6 @@ from __future__ import annotations
 import logging
 import signal
 import threading
-import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -39,14 +38,24 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
                           briefs_for=briefs_for)
 
-    def repos(role_project: str):
-        return repositories_for(role_project)
-
     integrator = _ProjectIntegrator(repositories_for)
     return Ports(plans=plans, router=StaticRouter(routes, capacity), preparer=attempts,
                  runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
-                 capturer=attempts, verifier=verifier or M6Verifier(store_path=cfg.state_dir / "m6-quality.sqlite3"),
+                 capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
                  integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"))
+
+
+def requirement_dir(run) -> Path:
+    return Path(run.plan_path).parent.parent              # <req dir>/plan-revisions/PLAN.rN.json
+
+
+def operator_verifier(store_path: Path) -> M6Verifier:
+    """M6 with the operator's per-run policy and authorization callbacks (shared with the legacy owner)."""
+    from bt_scheduler_executor_wiring import operator_quality_policy
+    from bt_scheduler_verification_authority import owner_verification_authority
+    return M6Verifier(store_path=store_path,
+                      policy_for=lambda run: operator_quality_policy(run.project, requirement_dir(run)),
+                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project))
 
 
 class _ProjectIntegrator:
@@ -114,11 +123,6 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, stop: 
                 LOG.warning("reaper pass failed: %s", error)
     finally:
         engine.stop()
-
-
-def main_loop_forever() -> None:  # pragma: no cover - the CLI wires real ports and calls serve()
-    while True:
-        time.sleep(3600)
 
 
 __all__ = ["Path", "reap_once", "serve", "wire"]

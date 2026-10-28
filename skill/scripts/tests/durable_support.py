@@ -103,10 +103,8 @@ class Lab:
     def ports(self):
         """Real ports for the lab (call only in a process whose BITACORA_ROOT points at the lab)."""
         from bt_contracts.execution import Route
-        from bt_durable.adapters.m6 import M6Verifier
         from bt_durable.adapters.runtime import SupervisorRuntime
-        from bt_durable.service import wire
-        from bt_durable.settings import EngineConfig
+        from bt_durable.service import operator_verifier, wire
         from bt_scheduler_executor_adapter import MethodologyDriver
 
         cfg = self.engine_config()
@@ -114,7 +112,7 @@ class Lab:
         return cfg, wire(cfg, repositories_for=lambda project: {"app": self.repo},
                          driver_for=lambda project: MethodologyDriver(project),
                          routes=[Route(provider="claude", model="sonnet")], runtime=runtime,
-                         verifier=M6Verifier(store_path=self.state / "m6-quality.sqlite3"))
+                         verifier=operator_verifier(self.state / "m6-quality.sqlite3"))
 
     def engine_config(self):
         from bt_durable.settings import EngineConfig
@@ -122,7 +120,7 @@ class Lab:
                             verify_concurrency=2)
 
     def spawn_engine(self) -> subprocess.Popen:
-        log = open(self.root / "engine.log", "ab")
+        log = open(self.root / "engine.log", "ab")  # noqa: SIM115 - handed to the child process, closed with it
         return subprocess.Popen([sys.executable, str(Path(__file__)), "serve", str(self.write_config())],
                                 env={**os.environ, **self.env()}, stdout=log, stderr=subprocess.STDOUT,
                                 start_new_session=True)

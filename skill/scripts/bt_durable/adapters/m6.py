@@ -45,19 +45,24 @@ def relaxed(policy: QualityPolicy) -> QualityPolicy:
 
 
 class M6Verifier:
-    def __init__(self, *, store_path: Path, policy: QualityPolicy | None = None, authority=None, attestations=None):
-        self.store = QualityStore(Path(store_path))
-        self.policy = policy or QualityPolicy()
-        self.authority = authority
-        self.attestations = attestations
-        self._engines: dict[str, QualityEngine] = {}
+    """`policy_for(run)` / `authority_for(run)` give each run its operator policy (verifier env, requires, accepted
+    fingerprints) and its authorization callbacks, the same ones the legacy owner uses."""
 
-    def _engine(self, profile: str) -> QualityEngine:
-        if profile not in self._engines:
-            policy = relaxed(self.policy) if profile == "relaxed" else self.policy
-            self._engines[profile] = QualityEngine(policy, self.store, verification_authority=self.authority,
-                                                   attestations=self.attestations)
-        return self._engines[profile]
+    def __init__(self, *, store_path: Path, policy_for=None, authority_for=None, attestations=None):
+        self.store = QualityStore(Path(store_path))
+        self.policy_for = policy_for or (lambda run: QualityPolicy())
+        self.authority_for = authority_for or (lambda run: None)
+        self.attestations = attestations
+        self._engines: dict[tuple[str, str], QualityEngine] = {}
+
+    def _engine(self, run, profile: str) -> QualityEngine:
+        key = (run.run_id, profile)
+        if key not in self._engines:
+            policy = self.policy_for(run)
+            policy = relaxed(policy) if profile == "relaxed" else policy
+            self._engines[key] = QualityEngine(policy, self.store, verification_authority=self.authority_for(run),
+                                               attestations=self.attestations)
+        return self._engines[key]
 
     def close(self) -> None:
         close = getattr(self.store, "close", None)
@@ -75,7 +80,7 @@ class M6Verifier:
                  "acceptance_criteria": list(task.acceptance_criteria), "verification": [dict(v) for v in task.verification]}
         source = SnapshotSource(attempt.attempt_key, prepared.repository, prepared.attempt_dir, snapshot.manifest_path,
                                 snapshot.base_sha, snapshot.snapshot_sha, prepared.worktree)
-        result = self._engine(profile).verify(order, source)
+        result = self._engine(attempt.run, profile).verify(order, source)
         return outcome_of(result, self.store)
 
 

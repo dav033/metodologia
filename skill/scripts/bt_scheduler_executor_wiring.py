@@ -140,6 +140,34 @@ def _with_owner_notes(rdir, plan, base):
 LEGACY_FILE = "RUN.environment-legacy.json"
 
 
+def operator_quality_policy(project: str, rdir: Path, overrides: Mapping | None = None):
+    """The M6 policy of a run: the operator's `verifier.*` settings, the verifier environment of the project and the
+    plan's declared `requires`, and the environment fingerprints the owner accepts. Shared by the legacy owner and the
+    durable runtime (bt_durable), so both verify with the same rules."""
+    from bt_scheduler_quality.policy import QualityPolicy
+
+    import bt_config
+    import bt_verifier_env
+
+    configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
+    mb = bt_config.get("verifier.max_workspace_mb", 2048)
+    if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 64:
+        configured["max_workspace_bytes"] = mb << 20
+    configured["cache_ignores_outputs"] = bt_config.get("verifier.cache_ignores_outputs", True)
+    rerun = bt_config.get("verifier.rerun_failed_checks", 1)
+    if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
+        configured["rerun_failed_checks"] = rerun
+    environment, secrets = bt_verifier_env.for_run(project, rdir)
+    ambient, ambient_secrets = bt_verifier_env.ambient_for_run(project, {name for name, _ in environment})
+    secrets = tuple(dict.fromkeys((*secrets, *ambient_secrets)))
+    legacy = _legacy_fingerprints(rdir)
+    return QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
+                            **({"environment": environment, "ambient_environment": ambient,
+                                "secret_values": secrets} if environment or ambient else {}),
+                            **({"accepted_environment_fingerprints": legacy} if legacy else {}),
+                            **dict(overrides or {})})
+
+
 def _legacy_fingerprints(rdir: Path) -> tuple[str, ...]:
     """Environment fingerprints the owner accepts next to the current one (`RUN.environment-legacy.json`: {"fingerprints": [...],
     "reason": ...}): results produced while the verifier environment was different on purpose keep verifying for composition."""
@@ -192,29 +220,7 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                     if quality_store_path is not None else None)
     quality_runtime_policy = None
     if quality_path is not None:
-        from bt_scheduler_quality.policy import QualityPolicy
-
-        import bt_config
-
-        configured = {key: bt_config.get(f"verifier.{key}", True) for key in ("network", "allow_production_actions")}
-        mb = bt_config.get("verifier.max_workspace_mb", 2048)
-        if isinstance(mb, int) and not isinstance(mb, bool) and mb >= 64:
-            configured["max_workspace_bytes"] = mb << 20
-        configured["cache_ignores_outputs"] = bt_config.get("verifier.cache_ignores_outputs", True)
-        rerun = bt_config.get("verifier.rerun_failed_checks", 1)
-        if isinstance(rerun, int) and not isinstance(rerun, bool) and 0 <= rerun <= 3:
-            configured["rerun_failed_checks"] = rerun
-        import bt_verifier_env
-
-        environment, secrets = bt_verifier_env.for_run(project, rdir)
-        ambient, ambient_secrets = bt_verifier_env.ambient_for_run(project, {name for name, _ in environment})
-        secrets = tuple(dict.fromkeys((*secrets, *ambient_secrets)))
-        legacy = _legacy_fingerprints(rdir)
-        quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
-                                                  **({"environment": environment, "ambient_environment": ambient,
-                                                      "secret_values": secrets} if environment or ambient else {}),
-                                                  **({"accepted_environment_fingerprints": legacy} if legacy else {}),
-                                                  **dict(quality_policy or {})})
+        quality_runtime_policy = operator_quality_policy(project, rdir, quality_policy)
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)
     plan = api.sched.run_plan(rdir)

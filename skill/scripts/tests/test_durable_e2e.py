@@ -15,12 +15,11 @@ sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
 import durable_support as lab_support
-from durable_support import Lab, task, wait_until
-
 from bt_contracts.execution import RunRef
 from bt_contracts.owner import OwnerAnswer
 from bt_durable.client import Client
 from bt_durable.settings import Settings
+from durable_support import Lab, task, wait_until
 
 FAST = Settings(max_parallel=2, poll_seconds=0.5, run_poll_seconds=5, owner_wait_seconds=5)
 SYSTEMD = subprocess.run(["systemctl", "--user", "is-system-running"], capture_output=True, text=True,
@@ -75,7 +74,7 @@ class DurableRuns(unittest.TestCase):
         status = self.settled(run)
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual(len(self.lab.launches()), 3)                     # one agent process per task
-        line = lab_support.git(self.lab.repo, "rev-parse", f"refs/bt/line/proj/REQ-900/r1/app")
+        line = lab_support.git(self.lab.repo, "rev-parse", "refs/bt/line/proj/REQ-900/r1/app")
         self.assertEqual(lab_support.git(self.lab.repo, "show", f"{line}:out.txt"), "good")
 
     def test_an_implementation_failure_is_retried_from_its_snapshot_with_the_decisive_lines(self):
