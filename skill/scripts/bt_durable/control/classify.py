@@ -30,7 +30,10 @@ _VOLATILE = re.compile(r"0x[0-9a-f]+|\b[0-9a-f]{12,}\b|\d+(?:\.\d+)?(?:ms|s)?\b|
 
 # M6 reason/issue codes that are not a verdict on the code
 _TRANSIENT_VERIFY = frozenset({"SANDBOX_UNAVAILABLE", "RUNNER_BUSY", "STORE_FAILURE"})
-_MANUAL_VERIFY = frozenset({"CHECK_MANUAL", "CRITERION_UNMAPPED", "CRITERION_AMBIGUOUS"})
+_MANUAL_VERIFY = frozenset({"CHECK_MANUAL", "CRITERION_UNMAPPED", "CRITERION_AMBIGUOUS", "CRITERION_MANUAL"})
+# what a coordinator receipt can settle (bt_scheduler_quality.recovery.ATTESTABLE): only manual evidence is missing
+_ATTESTABLE = frozenset({"CRITERION_MANUAL", "CHECK_MANUAL", "CHECK_UNMAPPED"})
+MANUAL_EVIDENCE = "MANUAL_EVIDENCE_REQUIRED"
 _ENV_VERIFY = frozenset({"BLOCKED_EXTERNAL", "BLOCKED_ENV", "CHECK_UNAVAILABLE", "OUTPUT_LIMIT"})
 _PERMISSION_VERIFY = frozenset({"POLICY_ENTRY_MISSING_AUTHORIZATION", "AUTHORIZATION_DENIED", "OPERATOR_REVIEW"})
 _INTERNAL_VERIFY = frozenset({"SNAPSHOT_INVALID", "UNCLASSIFIED_INTERNAL"})
@@ -122,6 +125,14 @@ def _classify_verdict(verify: VerifyOutcome, out: str, facts: AttemptFacts) -> F
     if reason in _PERMISSION_VERIFY:
         return _report(FailureClass.PERMISSION, reason, "a check needs an authorization the operator has not given", ev)
     if verify.status == VerifyStatus.NEEDS_REVIEW:
+        codes = set(verify.issue_codes) or {reason}
+        if "CRITERION_MANUAL" in codes and codes <= _ATTESTABLE:
+            # not a failure of the code and not opaque: the owner (or coordinator) attests the named manual checks
+            # with `bt-durable attest`, and the same snapshot is verified again without an agent run
+            checks = "; ".join(verify.manual_checks) or "the task's manual checks"
+            return _report(FailureClass.PRODUCT_DECISION, MANUAL_EVIDENCE,
+                           f"manual evidence is missing for: {checks}"[:500],
+                           [*ev, *(Evidence(kind="manual_check", excerpt=check[:2000]) for check in verify.manual_checks[:5])])
         if reason in _TRANSIENT_VERIFY:
             return _report(FailureClass.TRANSIENT, reason, "the verifier could not run the checks", ev)
         if reason in _MANUAL_VERIFY:

@@ -42,12 +42,30 @@ def git(cwd, *args) -> str:
     return done.stdout.strip()
 
 
-def task(tid, *, after=(), scenario="ok", check=CHECK_GOOD, paths=None, resources=()):
+def task(tid, *, after=(), scenario="ok", check=CHECK_GOOD, paths=None, resources=(), subplan=None, kind=None,
+         extra_checks=()):
     criterion = f"{tid} produces the good output"
-    return {"id": tid, "milestone_id": "M1", "title": f"{tid} SCENARIO:{scenario}", "objective": f"do {tid}",
-            "repository": "app", "after": list(after), "expected_paths": paths or [f"{tid}/**", "out.txt"],
-            "shared_resources": list(resources), "acceptance_criteria": [criterion],
-            "verification": [{"type": "command", "value": check, "purpose": criterion}]}
+    item = {"id": tid, "milestone_id": "M1", "title": f"{tid} SCENARIO:{scenario}", "objective": f"do {tid}",
+            "repository": "app", "after": list(after), "expected_paths": paths or [f"{tid}/**", f"{tid}.task", "out.txt"],
+            "shared_resources": list(resources), "acceptance_criteria": [criterion, *(c["purpose"] for c in extra_checks)],
+            "verification": [{"type": "command", "value": check, "purpose": criterion, "category": "functional"},
+                             *extra_checks]}
+    if subplan:
+        item["subplan_id"] = subplan
+    if kind:
+        item["kind"] = kind
+    return item
+
+
+def subplan(sid, members_test, audit, *, produces=()):
+    """A minimal plan 1.3.0 subplan (bt_scheduler_core.subplans.parse_plan_extensions)."""
+    return {"id": sid, "milestone_id": "M1", "title": f"subplan {sid}", "outcome": f"{sid} works",
+            "covers": ["R1"], "acceptance_criteria": [f"{sid} is accepted"], "integration_test_task": members_test,
+            "audit_task": audit, **({"produces": list(produces)} if produces else {})}
+
+
+def gate(gid, members, task_id):
+    return {"id": gid, "subplans": list(members), "task": task_id, "criteria": [f"{gid} composes {', '.join(members)}"]}
 
 
 class Lab:
@@ -80,9 +98,9 @@ class Lab:
         self.unit_prefix = f"bt-test-{hashlib.sha256(str(self.root).encode()).hexdigest()[:6]}-"
 
     # ---------------------------------------------------------------------------------------------- plan
-    def freeze(self, tasks, revision=1) -> dict:
-        text = json.dumps({"schema_version": "1.0.0", "plan_id": "REQ-900", "revision": revision, "tasks": tasks},
-                          indent=1) + "\n"
+    def freeze(self, tasks, revision=1, *, schema="1.0.0", **extra) -> dict:
+        text = json.dumps({"schema_version": schema, "plan_id": "REQ-900", "revision": revision, "tasks": tasks,
+                           **extra}, indent=1) + "\n"
         folder = self.rdir / "plan-revisions"
         folder.mkdir(exist_ok=True)
         path = folder / f"PLAN.r{revision}.json"

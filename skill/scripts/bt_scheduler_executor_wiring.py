@@ -91,16 +91,21 @@ def _migration_probe(line) -> Callable[[], str]:
     return probe
 
 
-def _with_owner_notes(rdir, plan, base):
+def owner_notes(rdir, plan, base, *, state=None, verify=True):
     """The prompt notes of a retry, preceded by what the owner wrote for the task in answer to a decision request, by
-    the open audit findings of a task sent back, and, for an audit task, by how to write its findings ledger."""
+    the open audit findings of a task sent back, and, for an audit task, by how to write its findings ledger.
+
+    Shared by both runtimes (REQ-030): `state(task_id)` gives the attempts document the history is read from (default:
+    the legacy run's M1 document); `verify(request)` False leaves out the last verification note, for a caller that
+    already hands the agent that same failure as its own note."""
     import bt_attempt_history
     import bt_audit_gate
     import bt_scheduler_decisions
 
     def _history(task_id: str) -> str:
         try:
-            return bt_attempt_history.prompt(rdir, task_id, bt_scheduler_decisions._state(rdir))
+            doc = state(task_id) if state is not None else bt_scheduler_decisions._state(rdir)
+            return bt_attempt_history.prompt(rdir, task_id, doc)
         except Exception:  # noqa: BLE001 - a prompt without its history is still a prompt
             return ""
 
@@ -117,7 +122,8 @@ def _with_owner_notes(rdir, plan, base):
                  bt_scheduler_decisions.audit_notes(rdir, request.task_id),
                  _history(request.task_id),
                  _analysis(request.task_id),
-                 bt_scheduler_decisions.verify_notes(rdir, request.task_id)]
+                 bt_scheduler_decisions.verify_notes(rdir, request.task_id)
+                 if verify is True or (callable(verify) and verify(request)) else ""]
         try:
             task = plan.task(request.task_id)
             if task.meta.get("kind") == "audit":
@@ -134,6 +140,17 @@ def _with_owner_notes(rdir, plan, base):
 
         return compact("\n\n".join(part for part in parts if part))
     return notes
+
+
+_with_owner_notes = owner_notes
+
+
+def joined_notes(*sources):
+    """One notes callable from several (each `request -> str`, None skipped), in order, blank results dropped."""
+    present = [source for source in sources if source is not None]
+    if not present:
+        return None
+    return lambda request: "\n\n".join(text for text in (source(request) for source in present) if text)
 
 
 
@@ -368,7 +385,8 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                conflict_sink=wiring.recovery.publish_conflict_observation)
             port.base_ref = continuation.base_ref
             base_notes = continuation.notes
-        executor.briefs.notes = _with_owner_notes(rdir, scheduler.plan, base_notes)
+        # the design contract notes given to PlanBriefs above are kept: assigning `notes` replaces them (they were lost)
+        executor.briefs.notes = owner_notes(rdir, scheduler.plan, joined_notes(base_notes, design_notes))
         if quality_store_path is not None:
             import bt_attempt_history
             import bt_attestation

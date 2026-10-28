@@ -15,6 +15,8 @@ from pathlib import Path
 from bt_contracts.execution import AttemptRef, Route
 from dbos import DBOS
 
+from .adapters.briefs import DurableBriefs
+from .adapters.composition import CompositionComposer
 from .adapters.integration import GitLineIntegrator
 from .adapters.m3 import M3Attempts
 from .adapters.m6 import M6Verifier
@@ -38,13 +40,14 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     plans = FilePlans()
     attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
-                          briefs_for=briefs_for)
+                          briefs_for=briefs_for or DurableBriefs(repositories_for=repositories_for))
 
-    integrator = _ProjectIntegrator(repositories_for)
+    integrator = _ProjectIntegrator(repositories_for, cfg.state_dir)
     return Ports(plans=plans, router=StaticRouter(routes, capacity), preparer=attempts,
                  runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
-                 integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"))
+                 integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"),
+                 composer=integrator)
 
 
 def requirement_dir(run) -> Path:
@@ -52,31 +55,57 @@ def requirement_dir(run) -> Path:
 
 
 def operator_verifier(store_path: Path) -> M6Verifier:
-    """M6 with the operator's per-run policy and authorization callbacks (shared with the legacy owner)."""
+    """M6 with the operator's per-run policy, authorization callbacks and coordinator receipts for manual checks, and
+    the notes trail the legacy owner keeps (`RUN.notes/<task>.history.jsonl`, `<task>.verify.md`)."""
     from bt_scheduler_executor_wiring import operator_quality_policy
     from bt_scheduler_verification_authority import owner_verification_authority
+
+    from .legacy import attestations
     return M6Verifier(store_path=store_path,
                       policy_for=lambda run: operator_quality_policy(run.project, requirement_dir(run)),
-                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project))
+                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project),
+                      attestations_for=lambda run: attestations(requirement_dir(run)),
+                      on_verdict=record_verdict)
+
+
+def record_verdict(attempt: AttemptRef, outcome) -> None:
+    """What the legacy quality port writes after a verdict: a FAIL's digest becomes the last-failure note and one line
+    of the task's history; a PASS clears the note. A verdict that is not about the code (needs review) writes nothing."""
+    from .legacy import record_history, write_verify_notes
+    rdir = requirement_dir(attempt.run)
+    if outcome.status.value == "FAIL" and outcome.digest:
+        write_verify_notes(rdir, attempt.task_id, outcome.digest)
+        record_history(rdir, attempt.task_id, attempt.attempt_key, outcome.digest)
+    elif outcome.status.value == "PASS":
+        write_verify_notes(rdir, attempt.task_id, "")
 
 
 class _ProjectIntegrator:
-    """Integration lines are per project; the run tells which project's repositories to use."""
+    """Integration lines and composition gates are per project; the run tells which project's repositories to use."""
 
-    def __init__(self, repositories_for: Callable[[str], object]):
+    def __init__(self, repositories_for: Callable[[str], object], state_dir: Path):
         self.repositories_for = repositories_for
+        self.state_dir = Path(state_dir)
         self._lines: dict[str, GitLineIntegrator] = {}
 
     def _for(self, project: str) -> GitLineIntegrator:
         if project not in self._lines:
-            self._lines[project] = GitLineIntegrator(self.repositories_for(project))
+            line = GitLineIntegrator(self.repositories_for(project))
+            line.composer = CompositionComposer(self.state_dir, lines=line, plan_for=steps.plan)
+            self._lines[project] = line
         return self._lines[project]
 
-    def base_ref(self, run, task):
-        return self._for(run.project).base_ref(run, task)
+    def base_ref(self, run, task, *, home=""):
+        return self._for(run.project).base_ref(run, task, home=home)
 
-    def integrate(self, run, task, snapshot):
-        return self._for(run.project).integrate(run, task, snapshot)
+    def integrate(self, run, task, snapshot, *, lines=()):
+        return self._for(run.project).integrate(run, task, snapshot, lines=lines)
+
+    def sync(self, run, role, items):
+        return self._for(run.project).sync(run, role, items)
+
+    def compose(self, run, gate_id, evidence):
+        return self._for(run.project).composer.compose(run, gate_id, evidence)
 
 
 def reap_once(prefix: str = "") -> list[str]:

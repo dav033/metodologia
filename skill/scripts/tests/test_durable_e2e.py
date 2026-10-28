@@ -27,7 +27,8 @@ SYSTEMD = subprocess.run(["systemctl", "--user", "is-system-running"], capture_o
                          check=False).stdout.strip() in ("running", "degraded")
 
 
-class DurableRuns(unittest.TestCase):
+class EngineCase(unittest.TestCase):
+    """A lab, an engine process the test can kill, and a client (no tests of its own: other suites subclass it)."""
     backend = "systemd" if SYSTEMD else "pgroup"
 
     def setUp(self):
@@ -73,6 +74,8 @@ class DurableRuns(unittest.TestCase):
             print((self.lab.root / "engine.log").read_text()[-4000:])
             raise
 
+
+class DurableRuns(EngineCase):
     def test_a_dependent_plan_runs_verifies_and_integrates(self):
         run = RunRef.model_validate(self.lab.freeze([task("T1"), task("T2", after=["T1"]), task("T3")]))
         self.start_engine()

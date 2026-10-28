@@ -155,6 +155,8 @@ class VerifyOutcome(Contract):
     failing_checks: tuple[str, ...] = ()
     passing_checks: tuple[str, ...] = ()
     digest: str = Field(default="", max_length=12000)
+    issue_codes: tuple[str, ...] = ()            # every M6 issue code of the result (not only the first reason)
+    manual_checks: tuple[str, ...] = ()          # purposes of the manual checks the result still lacks evidence for
 
 
 class AttemptStatus(StrEnum):
@@ -193,6 +195,7 @@ class TaskOutcome(Contract):
     integrated_ref: GitSha | None = None
     decision: RecoveryDecision | None = None
     provenance: str = Field(default="", max_length=500)
+    verdict_ref: str = Field(default="", max_length=200)     # the M6 evidence of the accepted snapshot (m6://result/…)
 
 
 class LegacyTask(Contract):

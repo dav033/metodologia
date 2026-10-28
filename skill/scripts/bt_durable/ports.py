@@ -72,9 +72,18 @@ class Verifier(Protocol):
 
 @runtime_checkable
 class Integrator(Protocol):
-    """One integration line per run and repository. `integrate` is compare-and-swap: it never loses accepted work."""
-    def base_ref(self, run: RunRef, task: TaskSpec) -> str: ...
-    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot) -> tuple[str | None, str]: ...  # (ref, conflict)
+    """One integration line per run and repository (plus one per 1.3.0 subplan). `integrate` is compare-and-swap: it
+    never loses accepted work. `home`/`lines` come from `control.subplans` ("" / () for plans without subplans)."""
+    def base_ref(self, run: RunRef, task: TaskSpec, *, home: str = "") -> str: ...
+    def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
+                  lines: tuple[str, ...] = ()) -> tuple[str | None, str]: ...  # (ref, conflict)
+    def sync(self, run: RunRef, role: str, items: dict[str, list[tuple[str, str]]]) -> dict[str, dict]: ...
+
+
+@runtime_checkable
+class Composer(Protocol):
+    """Composition gates: subplan versions and the gate's candidate (idempotent per member versions)."""
+    def compose(self, run: RunRef, gate_id: str, evidence: dict[str, list[dict]]) -> dict: ...
 
 
 @runtime_checkable
@@ -93,3 +102,4 @@ class Ports:
     verifier: Verifier
     integrator: Integrator
     telemetry: Telemetry
+    composer: Composer | None = None            # plan 1.3.0 composition gates

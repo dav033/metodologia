@@ -28,16 +28,26 @@ from bt_contracts.execution import (
     TaskStatus,
     VerifyOutcome,
 )
-from bt_contracts.failure import FailureReport, RecoveryAction, RecoveryDecision
+from bt_contracts.failure import (
+    FailureClass,
+    FailureReport,
+    RecoveryAction,
+    RecoveryDecision,
+)
 from bt_contracts.owner import OwnerAnswer, RunCommand
 from dbos import DBOS, SetWorkflowID
 
-from ..control import classify, frontier, policy
+from ..control import classify, frontier, policy, subplans
 from ..settings import Settings
 from . import engine, steps
 
 TOPIC_RUN = "run"
 STANDARD, RELAXED = "standard", "relaxed"
+OWNER_FIRST = frozenset({FailureClass.PRODUCT_DECISION, FailureClass.PERMISSION})   # never answered by a new agent run
+# DBOS.patch names (README "Upgrading workflows"): each sits right before a plain step, never before a wait
+PATCH_OWNER_REVERIFY = "bt-task-owner-reverify"
+PATCH_RECONCILE_ASKS_OWNER = "bt-task-reconcile-asks-owner"
+PATCH_RUN_SUBPLANS = "bt-run-subplans"
 
 
 def run_workflow_id(run: RunRef) -> str:
@@ -79,16 +89,43 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     rounds: dict[str, int] = {}
     paused = False
     seen_commands: set[str] = set()
+    # plan 1.3.0: subplan lines and composition gates, switched on by a patch so that a run recorded before it replays
+    # its old iterations unchanged (the patch returns False where they already recorded a step)
+    lines_on = False
+    composed: dict[str, str] = {}
+    rejected: dict[str, str] = {}
+    synced: frozenset = frozenset()
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
-        front = frontier.compute(plan, states, max_parallel=settings.max_parallel)
+        if not lines_on and subplans.enabled(plan) and DBOS.patch(PATCH_RUN_SUBPLANS):
+            lines_on = True
+            steps.emit("subplans_enabled", {"run_id": run.run_id, "subplans": [sp.id for sp in plan.subplans],
+                                            "gates": [gate.id for gate in plan.composition_gates]})
+        if lines_on:
+            accepted = _accepted_snapshots(states, results, inherit)
+            if frozenset(accepted) != synced or not synced:
+                for role, items in _line_items(plan, accepted).items():
+                    report = steps.sync_lines(run_data, role, items)
+                    if any(item["conflicts"] for item in report.values()):
+                        steps.emit("subplan_line_conflict", {"run_id": run.run_id, "report": report})
+                synced = frozenset(accepted)
+            for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
+                built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
+                                                          for sp in gate.subplans})
+                if built.get("state") == "rejected":
+                    rejected[gate.id] = str(built.get("reason") or "rejected")[:300]
+                else:
+                    composed[gate.id] = str(built.get("candidate_id"))
+                steps.emit("gate_composed", {"run_id": run.run_id, "gate": gate.id, **built})
+        gates = subplans.Gates(composed, rejected) if lines_on else None
+        front = frontier.compute(plan, states, max_parallel=settings.max_parallel, gates=gates)
         if not paused:
             for task_id in front.ready:
                 rounds[task_id] = rounds.get(task_id, 0) + 1
                 _start_task(run, task_id, rounds[task_id], settings, note="",
                             legacy=reconcile.get(task_id) if rounds[task_id] == 1 else None)
                 states[task_id] = "running"
-        DBOS.set_event("summary", _summary(run, states, results, paused))
+        DBOS.set_event("summary", _summary(run, states, results, paused, gates))
         if front.finished:
             break
         if not paused and not any(s == "running" for s in states.values()) and not front.ready:
@@ -121,7 +158,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         else:
             steps.emit("command_refused", {"run_id": run.run_id, "request_id": command.request_id,
                                            "reason": f"{command.kind} does not apply to the current state"})
-    summary = _summary(run, states, results, paused, final=True)
+    summary = _summary(run, states, results, paused, subplans.Gates(composed, rejected) if lines_on else None,
+                       final=True)
     DBOS.set_event("summary", summary)
     steps.emit("run_settled", {"run_id": run.run_id, "status": summary["status"]})
     return summary
@@ -135,13 +173,45 @@ def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, no
                             legacy.model_dump(mode="json") if legacy else None)
 
 
-def _summary(run: RunRef, states: dict, results: dict, paused: bool, final: bool = False) -> dict:
+def _summary(run: RunRef, states: dict, results: dict, paused: bool, gates: subplans.Gates | None = None,
+             final: bool = False) -> dict:
     values = set(states.values())
     if final:
         status = "completed" if values <= frontier.DONE and states else ("blocked" if values & frontier.STOPPED else "settled")
     else:
         status = "paused" if paused else "running"
-    return {"run_id": run.run_id, "status": status, "tasks": dict(states), "results": results}
+    out = {"run_id": run.run_id, "status": status, "tasks": dict(states), "results": results}
+    if gates is not None:
+        out["gates"] = {"composed": dict(gates.composed), "rejected": dict(gates.rejected)}
+    return out
+
+
+def _accepted_snapshots(states: dict, results: dict, inherit: dict) -> dict[str, str]:
+    """Task -> the snapshot it was accepted with (its own work, not the line tip it was merged into)."""
+    out = {}
+    for task_id, state in states.items():
+        if state not in frontier.DONE:
+            continue
+        snapshot = (results.get(task_id) or {}).get("snapshot_sha") or (
+            inherit[task_id].snapshot_sha if task_id in inherit else "")
+        if snapshot:
+            out[task_id] = snapshot
+    return out
+
+
+def _line_items(plan, accepted: dict[str, str]) -> dict[str, dict[str, list[list[str]]]]:
+    """Role -> subplan -> [[task, snapshot], ...] in plan order, for the accepted tasks of each subplan's scope."""
+    order = [t.id for t in plan.tasks]
+    out: dict[str, dict[str, list[list[str]]]] = {}
+    for subplan_id, scope in subplans.scopes(plan).items():
+        # every line exists from the start (even empty), so a member never falls back to the run line
+        role = plan.task(next(t for t in order if plan.task(t).meta.get("subplan_id") == subplan_id)).repository
+        out.setdefault(role, {}).setdefault(subplan_id, [])
+        for task_id in order:
+            if task_id in scope and task_id in accepted:
+                role = plan.task(task_id).repository
+                out.setdefault(role, {}).setdefault(subplan_id, []).append([task_id, accepted[task_id]])
+    return out
 
 
 # --------------------------------------------------------------------------------------------------------- task
@@ -167,12 +237,24 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
     remediated = False
     number = (round_no - 1) * 100
     base_override = ""
+    decisions = 0
     if legacy is not None:                       # a legacy snapshot counts only after it passes verification again
-        reconciled, failure_note = _reconcile(run, task_id, round_no, legacy)
+        reconciled, failure_note, failure = _reconcile(run, task_id, round_no, legacy)
         if reconciled is not None:
             return reconciled
         base_override, note = legacy.snapshot_sha, failure_note or note
-    decisions = 0
+        if failure is not None and failure.failure_class in OWNER_FIRST and DBOS.patch(PATCH_RECONCILE_ASKS_OWNER):
+            # missing manual evidence or an authorization is not fixed by an agent: the owner attests or decides first
+            steps.emit("reconcile_needs_owner", {"run_id": run.run_id, "task_id": task_id, "code": failure.code})
+            decision = RecoveryDecision(action=RecoveryAction.ESCALATE, reason=f"{failure.failure_class.value}: "
+                                        f"{failure.summary}"[:500], failure=failure, note_for_agent=failure.agent_note)
+            decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes,
+                                       _legacy_target(run, task_id, round_no, legacy))
+            if isinstance(answer, TaskOutcome):
+                return answer
+            if answer.action == "stop":
+                return _finish(run, task_id, TaskStatus.BLOCKED, outcomes, None, decision)
+            note = answer.note or note
     while True:
         DBOS.set_event("state", {"task_id": task_id, "state": "routing", "attempts": len(outcomes)})
         at = steps.now()
@@ -244,8 +326,11 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             base_override = ""                                           # next base is the current line tip
             note = decision.note_for_agent
         else:                                                            # escalate / stop: the owner decides
-            decisions += 1
-            answer = _ask_owner(run, task_id, decisions, decision, settings)
+            target = ((attempt, choice.route, agent) if agent.get("snapshot") else
+                      _legacy_target(run, task_id, round_no, legacy) if legacy is not None else None)
+            decisions, answer = _owner(run, task_id, decisions, decision, settings, outcomes, target)
+            if isinstance(answer, TaskOutcome):
+                return answer
             if answer.action == "stop":
                 return _finish(run, task_id, TaskStatus.BLOCKED, outcomes, outcome, decision)
             note = answer.note or decision.note_for_agent
@@ -255,21 +340,66 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             remediated = False
 
 
-def _reconcile(run: RunRef, task_id: str, round_no: int, legacy: LegacyTask) -> tuple[TaskOutcome | None, str]:
+def _legacy_target(run: RunRef, task_id: str, round_no: int, legacy: LegacyTask) -> tuple[AttemptRef, None, dict]:
+    """The legacy snapshot as something to verify: its own attempt reference (number 99 of the round) and material."""
     attempt = AttemptRef(run=run, task_id=task_id, number=(round_no - 1) * 100 + 99, workflow_id=DBOS.workflow_id)
     material = Prepared(worktree=legacy.worktree or legacy.attempt_dir, branch="legacy", base_sha=legacy.base_sha,
                         repository=legacy.repository, attempt_dir=legacy.attempt_dir, prompt_path=legacy.manifest_path,
                         argv=("legacy-evidence",), env_file=legacy.manifest_path, timeout_seconds=1)
     snapshot = Snapshot(snapshot_sha=legacy.snapshot_sha, base_sha=legacy.base_sha, manifest_path=legacy.manifest_path)
+    return attempt, None, {"prepared": material.model_dump(mode="json"), "snapshot": snapshot.model_dump(mode="json"),
+                           "producer": _legacy_producer(legacy)}
+
+
+def _legacy_producer(legacy: LegacyTask) -> str:
+    """The legacy attempt that made the snapshot (`legacy att-0059 m6://…` -> att-0059): what a receipt is bound to."""
+    words = legacy.provenance.split()
+    return words[1] if len(words) > 1 and words[0] == "legacy" else ""
+
+
+def _reconcile(run: RunRef, task_id: str, round_no: int,
+               legacy: LegacyTask) -> tuple[TaskOutcome | None, str, FailureReport | None]:
+    attempt, _route, agent = _legacy_target(run, task_id, round_no, legacy)
     DBOS.set_event("state", {"task_id": task_id, "state": "reconciling", "attempt": attempt.attempt_key})
-    agent = {"prepared": material.model_dump(mode="json"), "snapshot": snapshot.model_dump(mode="json")}
     outcome = _evaluate(attempt, None, agent, None, STANDARD)
     steps.emit("legacy_reconciled", {"run_id": run.run_id, "task_id": task_id, "status": outcome.status.value,
                                      "provenance": legacy.provenance})
     if outcome.status == AttemptStatus.ACCEPTED:
         done = _finish(run, task_id, TaskStatus.COMPLETED, [], outcome, None)
-        return done.model_copy(update={"provenance": f"reconciled {legacy.provenance}"[:500]}), ""
-    return None, outcome.failure.agent_note if outcome.failure else ""
+        return done.model_copy(update={"provenance": f"reconciled {legacy.provenance}"[:500]}), "", None
+    return None, outcome.failure.agent_note if outcome.failure else "", outcome.failure
+
+
+def _owner(run: RunRef, task_id: str, decisions: int, decision: RecoveryDecision, settings: Settings,
+           outcomes: list[AttemptOutcome], target: tuple[AttemptRef, Route | None, dict] | None
+           ) -> tuple[int, OwnerAnswer | TaskOutcome]:
+    """Ask the owner. `reverify` verifies `target` (the task's latest snapshot) again, without an agent run — after the
+    coordinator attested its manual checks, or to rule out a flaky check — and finishes the task when it now passes;
+    while it does not, the owner is asked again with the new evidence. Anything else is returned for the caller."""
+    while True:
+        decisions += 1
+        answer = _ask_owner(run, task_id, decisions, decision, settings, target)
+        if not (answer.action == "reverify" and target is not None and DBOS.patch(PATCH_OWNER_REVERIFY)):
+            return decisions, answer
+        attempt, route, agent = target
+        profile = f"owner{decisions}"
+        steps.emit("owner_reverify", {"run_id": run.run_id, "task_id": task_id, "attempt_key": attempt.attempt_key,
+                                      "request_id": answer.request_id})
+        verify = _enqueue(engine.VERIFY, f"bt:{attempt.attempt_key}:verify:{profile}", verify_workflow,
+                          attempt.model_dump(mode="json"), agent["prepared"], agent["snapshot"], profile)
+        outcome = _evaluate(attempt, route, agent, verify, profile)
+        if outcome.status == AttemptStatus.ACCEPTED:
+            outcomes.append(outcome)
+            done = _finish(run, task_id, TaskStatus.COMPLETED, outcomes, outcome, None)
+            if agent.get("producer"):
+                done = done.model_copy(update={"provenance": f"reconciled legacy {agent['producer']} after the "
+                                                             f"owner's re-verification {answer.request_id}"[:500]})
+            return decisions, done
+        failure = outcome.failure
+        decision = RecoveryDecision(action=RecoveryAction.ESCALATE,
+                                    reason=f"still not proven after re-verification: {failure.summary if failure else ''}"[:500],
+                                    failure=failure, note_for_agent=failure.agent_note if failure else "")
+        steps.emit_decision(attempt, decision)
 
 
 def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dict | None, profile: str) -> AttemptOutcome:
@@ -343,13 +473,22 @@ def _remediation_note(outcomes: list[AttemptOutcome]) -> str:
     return "\n\n".join(parts)[:6000]
 
 
-def _ask_owner(run: RunRef, task_id: str, sequence: int, decision: RecoveryDecision, settings: Settings) -> OwnerAnswer:
-    """Publish the decision request and wait durably for a matching answer. Answers to older requests are refused."""
+def _ask_owner(run: RunRef, task_id: str, sequence: int, decision: RecoveryDecision, settings: Settings,
+               target: tuple[AttemptRef, Route | None, dict] | None = None) -> OwnerAnswer:
+    """Publish the decision request and wait durably for a matching answer. Answers to older requests are refused.
+    With a snapshot to verify again, `reverify` is offered, and the request names the attempt a coordinator receipt
+    must be bound to (`verify_attempt`) and the command that attests and answers in one go."""
     request_id = f"{task_id}:d{sequence}"
     request = {"request_id": request_id, "task_id": task_id, "reason": decision.reason,
                "failure": decision.failure.model_dump(mode="json") if decision.failure else None,
                "limit_hit": decision.limit_hit,
                "options": ["retry", "retry_with_note", "retry_other_route", "stop"]}
+    if target is not None:
+        request["options"] = ["reverify", *request["options"]]
+        request["verify_attempt"] = target[2].get("producer") or target[0].attempt_key
+        if decision.failure is not None and decision.failure.code == classify.MANUAL_EVIDENCE:
+            request["attest"] = (f"uv run bt-durable attest {run.project} {run.req} {task_id} --request {request_id} "
+                                 "--evidence '<what was done and what was seen>'")
     DBOS.set_event("decision", request)
     DBOS.set_event("state", {"task_id": task_id, "state": "needs_decision", "request_id": request_id})
     steps.emit("decision_requested", {"run_id": run.run_id, "task_id": task_id, "request_id": request_id,
@@ -377,7 +516,8 @@ def _finish(run: RunRef, task_id: str, status: TaskStatus, outcomes: list[Attemp
             last: AttemptOutcome | None, decision: RecoveryDecision | None) -> TaskOutcome:
     outcome = TaskOutcome(run_id=run.run_id, task_id=task_id, status=status, attempts=len(outcomes),
                           snapshot_sha=last.snapshot.snapshot_sha if last and last.snapshot else None,
-                          integrated_ref=last.integrated_ref if last else None, decision=decision)
+                          integrated_ref=last.integrated_ref if last else None, decision=decision,
+                          verdict_ref=last.verify.result_ref if last and last.verify else "")
     DBOS.set_event("state", {"task_id": task_id, "state": status.value})
     steps.emit("task_settled", {"run_id": run.run_id, "task_id": task_id, "status": status.value,
                                 "attempts": len(outcomes)})

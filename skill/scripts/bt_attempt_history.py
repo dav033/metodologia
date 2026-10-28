@@ -137,6 +137,19 @@ def entries(rdir: Path, task: str, doc: dict) -> list[dict]:
     return out
 
 
+def with_recorded(doc: dict, rdir: Path, task: str) -> dict:
+    """`doc` plus the attempts of `task` that only this history file knows, after the known ones and in the order they
+    were recorded, as rejected: a run continued by the durable runtime (REQ-030) keeps one history across both
+    runtimes, and a run born there has no M1 document at all."""
+    known = list(doc.get("tasks", {}).get(task, {}).get("attempts", []))
+    extra = [attempt for attempt in _recorded(rdir, task) if attempt not in known]
+    if not extra:
+        return doc
+    attempts = {**doc.get("attempts", {}), **{attempt: {"state": "rejected", "failure": ""} for attempt in extra}}
+    tasks = {**doc.get("tasks", {}), task: {**doc.get("tasks", {}).get(task, {}), "attempts": known + extra}}
+    return {**doc, "tasks": tasks, "attempts": attempts}
+
+
 def repeats(history: list[dict]) -> int:
     """How many of the last failed attempts, counted back from the newest, failed with the same signature."""
     failed = [h for h in history if h["outcome"] != "accepted"]

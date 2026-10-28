@@ -4,7 +4,8 @@
   start PROJECT REQ                       start the latest frozen revision of a NEW run under the durable runtime
   migrate PROJECT REQ [--apply|--rollback]  move a legacy run (dry run by default; see bt_durable.migrate)
   status PROJECT REQ                      run summary, task states, open decisions
-  answer PROJECT REQ TASK REQUEST ACTION  answer an open decision (retry|retry_with_note|retry_other_route|stop)
+  answer PROJECT REQ TASK REQUEST ACTION  answer an open decision (reverify|retry|retry_with_note|retry_other_route|stop)
+  attest PROJECT REQ TASK --request ID --evidence TEXT  receipt for the task's manual checks, then reverify
   pause|resume PROJECT REQ                stop/allow starting new tasks (running agents continue)
   retry-task PROJECT REQ TASK             start a blocked task again (new round)
   cancel PROJECT REQ                      cancel every workflow of the run; the engine's reaper stops their units
@@ -26,7 +27,6 @@ from bt_contracts.owner import OwnerAnswer
 
 from . import migrate
 from .settings import EngineConfig, Settings
-
 
 ENV_FILE = Path.home() / ".config" / "bitacora" / "durable.env"   # 0600; the engine unit reads the same file
 
@@ -193,6 +193,36 @@ def cmd_answer(args) -> int:
     return 0
 
 
+def cmd_attest(args) -> int:
+    """The coordinator's receipt for the manual checks of TASK (bt_attestation), bound to the attempt the open decision
+    names (`verify_attempt`), then the `reverify` answer to that decision: the same snapshot is verified again and the
+    receipt settles only its own manual check. A stale request id is refused before anything is written."""
+    from .legacy import manual_checks, mint_attestation
+    run = _run_of(args.project, args.req)
+    rdir = requirement_dir(args.project, args.req)
+    client = _client()
+    try:
+        decision = (client.status(run)["tasks"].get(args.task) or {}).get("decision") or {}
+        if decision.get("request_id") != args.request_id or "reverify" not in decision.get("options", ()):
+            raise SystemExit(f"STALE_REQUEST: {args.task} has no open decision {args.request_id} that can be re-verified "
+                             f"(open: {decision.get('request_id') or 'none'})")
+        from .adapters.plans import FilePlans
+        plan = FilePlans().load(run)
+        checks = manual_checks(plan, args.task)
+        if args.which:
+            checks = [c for c in checks if args.which.lower() in (c["purpose"] + c["value"]).lower()]
+        if not checks:
+            raise SystemExit(f"{args.task} has no manual check{f' matching {args.which!r}' if args.which else ''}")
+        bound = decision.get("verify_attempt", "") if bt_config.get("gates.attestation_bind_attempt", True) is True else ""
+        written = [str(mint_attestation(rdir, args.task, c["purpose"], c["value"], c["expected"], args.evidence, args.by,
+                                        attempt=bound)) for c in checks]
+        sent = client.answer(run, args.task, OwnerAnswer(request_id=args.request_id, action="reverify", by=args.by))
+        print(json.dumps({"receipts": written, "bound_to": bound, "answered": sent}, indent=1))
+    finally:
+        client.close()
+    return 0
+
+
 def cmd_command(args) -> int:
     client = _client()
     try:
@@ -232,15 +262,22 @@ def main(argv: list[str] | None = None) -> int:
     a = sub.add_parser("answer")
     for name in ("project", "req", "task", "request_id"):
         a.add_argument(name)
-    a.add_argument("action", choices=("retry", "retry_with_note", "retry_other_route", "stop"))
+    a.add_argument("action", choices=("reverify", "retry", "retry_with_note", "retry_other_route", "stop"))
     a.add_argument("--note", default="")
+    t = sub.add_parser("attest")
+    for name in ("project", "req", "task"):
+        t.add_argument(name)
+    t.add_argument("--request", dest="request_id", required=True)
+    t.add_argument("--evidence", required=True)
+    t.add_argument("--which", default="", help="only the manual checks whose purpose or value contains this text")
+    t.add_argument("--by", default="coordinator")
     r = sub.add_parser("retry-task")
     for name in ("project", "req", "task"):
         r.add_argument(name)
     r.add_argument("--note", default="")
     args = parser.parse_args(argv)
     handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "status": cmd_status,
-                "answer": cmd_answer, "pause": cmd_command, "resume": cmd_command, "retry-task": cmd_command,
+                "answer": cmd_answer, "attest": cmd_attest, "pause": cmd_command, "resume": cmd_command, "retry-task": cmd_command,
                 "cancel": cmd_cancel}
     return handlers[args.cmd](args)
 

@@ -17,7 +17,8 @@ class OwnerAnswer(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     request_id: str = Field(min_length=3, max_length=120)
-    action: Literal["retry", "retry_with_note", "retry_other_route", "stop"]
+    # reverify: verify the same snapshot again (after the coordinator attested its manual checks); no agent attempt
+    action: Literal["retry", "retry_with_note", "retry_other_route", "reverify", "stop"]
     note: str = Field(default="", max_length=6000)
     extra_attempts: int = Field(default=1, ge=1, le=10)
     by: str = Field(default="owner", min_length=1, max_length=80)

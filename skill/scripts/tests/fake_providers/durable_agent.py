@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -15,10 +16,14 @@ from pathlib import Path
 
 prompt = sys.argv[-1] if len(sys.argv) > 1 else ""
 scenario = next((w.split(":", 1)[1].strip(".,;") for w in prompt.split() if w.startswith("SCENARIO:")), "ok")
+found = re.search(r"## Task (\S+?):", prompt)
+task_id = found.group(1) if found else ""
 count = os.environ.get("FAKE_COUNT")
 if count:
     with open(count, "a", encoding="utf-8") as stream:
-        stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(),
+        # `seen`: the task files already in the tree it started from (which line or candidate it was given)
+        stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(), "task": task_id,
+                                 "seen": sorted(p.name for p in Path(".").glob("*.task")), "at": time.time(),
                                  "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt}) + "\n")
 
 
@@ -32,6 +37,10 @@ def done(text: str = "done") -> None:
 if scenario == "ok":
     Path("out.txt").write_text("good\n")
     time.sleep(float(os.environ.get("FAKE_DELAY", "0.2")))
+    done()
+elif scenario == "own":                         # leaves a file of its own, so each line's content is visible
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
     done()
 elif scenario == "fixlater":                    # wrong first, right when it continues from its own snapshot
     if Path("attempt-marker.txt").exists():
