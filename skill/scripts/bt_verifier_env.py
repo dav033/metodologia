@@ -6,6 +6,8 @@ bitácora, the plan or argv, and the ones that look secret are registered so eve
 """
 from __future__ import annotations
 
+import fnmatch
+import os
 import re
 from pathlib import Path
 
@@ -75,6 +77,34 @@ def declared(rdir: str | Path | None) -> set[str]:
             if isinstance(name, str) and ENV_NAME.fullmatch(name)}
 
 
+def _patterns(value: object) -> tuple[str, ...]:
+    """`verifier.inherit_env`: True or "*" for everything, or a list of variable-name globs (PICTURES_*, DATABASE_URL)."""
+    if value is True:
+        return ("*",)
+    if isinstance(value, str):
+        value = [value]
+    return tuple(p for p in value if isinstance(p, str) and p.strip()) if isinstance(value, list) else ()
+
+
+def inherited(patterns: tuple[str, ...], sources: list[dict[str, str]], skip: set[str]) -> dict[str, str]:
+    """The variables a check inherits instead of starting empty: those of `sources` (the owner's environment and its secret
+    files) whose name matches a pattern, with the same refusals as the env file (sandbox-protected names, LD_/GIT_/PYTHON*,
+    control characters, size). Names in `skip` (already set by the project's env file) keep their value."""
+    found: dict[str, str] = {}
+    total = 0
+    for source in sources:
+        for key, value in source.items():
+            if (key in skip or key in found or not any(fnmatch.fnmatchcase(key, p) for p in patterns)
+                    or not ENV_NAME.fullmatch(key) or key in FORBIDDEN_ENV or key.startswith(("LD_", "GIT_", "PYTHON"))
+                    or not value or len(value.encode()) > MAX_VALUE_BYTES or any(ord(c) < 32 for c in value)):
+                continue
+            total += len(key.encode()) + len(value.encode())
+            if total > MAX_ENV_BYTES // 4:
+                return found
+            found[key] = value
+    return found
+
+
 def for_run(project: str, rdir: str | Path | None = None) -> tuple[tuple[tuple[str, str], ...], tuple[str, ...]]:
     """What the checks of a run receive: the project's `verifier.env_file`, plus each variable a check of the frozen plan
     declares in `requires` that is missing there, taken from the owner's secret files (`verifier.secret_files`). Only
@@ -82,6 +112,10 @@ def for_run(project: str, rdir: str | Path | None = None) -> tuple[tuple[tuple[s
     import bt_config
     environment, _ = load(path_for(bt_config.get("verifier.env_file", ""), project))
     merged = dict(environment)
+    patterns = _patterns(bt_config.get("verifier.inherit_env", []))
+    if patterns:                         # the owner chose not to start checks empty: its environment and ALL its secret files
+        files = [dict(load(path_for(source, project))[0]) for source in bt_config.get("verifier.secret_files", []) or []]
+        merged.update(inherited(patterns, [dict(os.environ), *files], set(merged)))
     wanted = declared(rdir) - set(merged)
     for source in bt_config.get("verifier.secret_files", []) or []:
         if not wanted:

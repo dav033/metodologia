@@ -61,6 +61,35 @@ class ForRun(unittest.TestCase):
         with patch("bt_config.get", side_effect=lambda key, default=None: config.get(key, default)):
             self.assertEqual(dict(venv.for_run("p", None)[0]), {"MODE": "test"})   # no frozen plan: nothing declared
 
+    def test_inherit_env_hands_over_the_owners_environment_and_every_secret_file_variable(self):
+        import os
+        from unittest.mock import patch
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        (root / "verifier.env").write_text("MODE=test\n", encoding="utf-8")
+        (root / "secrets.env").write_text("DB_URL=postgres://u:pw@localhost:55433/db\nBOT_TOKEN=t0ken\nMODE=prod\n", encoding="utf-8")
+        config = {"verifier.env_file": str(root / "verifier.env"), "verifier.secret_files": [str(root / "secrets.env")],
+                  "verifier.inherit_env": ["*"]}
+        owner = {"PICTURES_FLAG": "1", "PATH": "/evil", "LD_PRELOAD": "x", "GIT_DIR": "/x", "PYTHONPATH": "/p", "EMPTY": ""}
+        with patch("bt_config.get", side_effect=lambda key, default=None: config.get(key, default)), \
+                patch.dict(os.environ, owner, clear=True):
+            environment, secrets = venv.for_run("p", None)
+            narrowed = dict(venv.for_run("p", None)[0]) if config.update({"verifier.inherit_env": ["PICTURES_*"]}) is None else {}
+        env = dict(environment)
+        self.assertEqual(env["MODE"], "test")                                   # the project's file wins over a secret file
+        self.assertEqual(env["PICTURES_FLAG"], "1")
+        self.assertEqual({env["DB_URL"], env["BOT_TOKEN"]}, {"postgres://u:pw@localhost:55433/db", "t0ken"})
+        for protected in ("PATH", "LD_PRELOAD", "GIT_DIR", "PYTHONPATH", "EMPTY"):
+            self.assertNotIn(protected, env)                                    # what the sandbox protects is never inherited
+        self.assertIn("t0ken", secrets)                                          # secret-looking values stay redacted
+        self.assertEqual(narrowed, {"MODE": "test", "PICTURES_FLAG": "1"})     # a glob list narrows what is inherited
+
+    def test_inherit_env_is_off_by_default(self):
+        from unittest.mock import patch
+        with patch("bt_config.get", side_effect=lambda key, default=None: default):
+            self.assertEqual(venv.for_run("p", None), ((), ()))
+
     def test_declared_reads_the_requires_of_the_latest_frozen_revision(self):
         from unittest.mock import patch
         plan = {"tasks": [{"verification": [{"requires": ["DB_URL", "service:x", "bad name"]}]}, {"verification": []}]}

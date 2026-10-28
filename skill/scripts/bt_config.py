@@ -55,7 +55,11 @@ DEFAULTS: dict = {
                  # a check with no output AND no CPU in its whole process tree for this long is hung (a deadlocked test, a pool
                  # with no free connection) and FAILS as a defect of the code, instead of waiting max_command_seconds (3000 s) and
                  # being retried as an infrastructure timeout. 0 = off
-                 "max_idle_seconds": 600},
+                 "max_idle_seconds": 600,
+                 # checks start with an EMPTY environment and receive only verifier.env_file plus the secret-file variables their
+                 # plan declares in `requires`. A list of name globs (["*"] = all, ["PICTURES_*", "DATABASE_URL"]) makes them also
+                 # inherit the owner's environment and ALL variables of verifier.secret_files (secret-looking values stay redacted)
+                 "inherit_env": []},
     "gates": {"audit_blocking": ["critical", "high"], "audit_ledger_required": True, "max_reworks": 2,
               "second_auditor": True, "audit_read_only": True,   # an audit that changes source is rejected (bt_audit_gate)
               # a verified result that could not be combined with the accepted work around it (the tasks about to start
