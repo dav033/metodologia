@@ -5774,7 +5774,648 @@
    "auto_runs": 3,
    "behavior": "proyectos@v1.r11.behavior.md",
    "chosen": null,
-   "comparison": null,
+   "comparison": {
+    "directions": [
+     {
+      "density": 96,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".paper.register"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row"
+        },
+        {
+         "ok": true,
+         "selector": ".editor"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".paper.register"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row"
+        },
+        {
+         "ok": true,
+         "selector": ".btn"
+        },
+        {
+         "ok": true,
+         "selector": ".save-status"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".filterbar"
+        },
+        {
+         "ok": true,
+         "selector": ".open-project"
+        },
+        {
+         "ok": true,
+         "selector": ".work-subnav"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".project-name"
+        },
+        {
+         "ok": true,
+         "selector": ".section-top h2"
+        },
+        {
+         "ok": true,
+         "selector": ".save-status"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, sans-serif"
+      ],
+      "id": "proyectos@v1.r11.dir-a.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes paper-register { \n  0% { transform: translateY(8px); }\n  100% { transform: translateY(0px); }\n}",
+       "@keyframes row-register { \n  0% { transform: translateX(10px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes feedback-register { \n  0% { transform: translateY(-6px); }\n  100% { transform: translateY(0px); }\n}",
+       "@keyframes status-register { \n  0% { transform: translateX(-5px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes save-spin { \n  100% { transform: rotate(360deg); }\n}",
+       "@keyframes skeleton-register { \n  50% { transform: scaleX(0.94); transform-origin: left center; }\n}",
+       "@keyframes focus-register { \n  0% { outline-offset: 5px; }\n  100% { outline-offset: 3px; }\n}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:12",
+       "DIV:0:1:12:12",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:1:1:1:0",
+       "SPAN:2:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:2:1",
+       "SUMMARY:10:1:2:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "SPAN:10:1:1:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:9:2:2:4",
+       "P:9:2:2:1",
+       "SPAN:9:2:1:0",
+       "A:9:3:2:0",
+       "A:9:3:2:0",
+       "A:9:4:2:0",
+       "BUTTON:9:5:2:1",
+       "DIV:0:2:11:2",
+       "DIV:0:2:3:1",
+       "H1:0:2:3:0",
+       "P:0:3:3:0",
+       "LABEL:9:3:3:1",
+       "SELECT:10:3:2:1",
+       "NAV:0:4:11:1",
+       "A:0:4:1:1",
+       "A:1:4:1:1",
+       "SECTION:0:5:11:8",
+       "DIV:1:5:11:1",
+       "DIV:1:5:2:1",
+       "H2:1:5:2:0",
+       "P:1:5:2:0",
+       "BUTTON:10:5:1:1",
+       "svg:10:5:0:0",
+       "DIV:1:6:11:1",
+       "DIV:1:6:7:1",
+       "LABEL:1:6:7:0",
+       "DIV:1:6:7:1",
+       "svg:1:7:0:0",
+       "path:1:7:0:0",
+       "circle:1:7:0:0",
+       "INPUT:1:6:7:1",
+       "DIV:8:6:4:1",
+       "LABEL:8:6:4:0",
+       "P:8:6:4:1",
+       "DIV:1:7:11:0",
+       "SPAN:1:7:3:0",
+       "SPAN:10:7:1:0",
+       "DIV:1:8:11:1",
+       "SPAN:1:8:4:0",
+       "SPAN:5:8:2:0",
+       "SPAN:8:8:2:0",
+       "DIV:1:8:11:3",
+       "ARTICLE:1:8:11:1",
+       "DIV:1:9:4:1",
+       "H3:1:9:4:0",
+       "P:1:9:4:0",
+       "SPAN:5:9:2:0",
+       "SPAN:8:9:2:0",
+       "svg:8:9:0:0",
+       "path:8:9:0:0",
+       "BUTTON:11:9:1:1",
+       "svg:11:9:0:0",
+       "path:11:9:0:0",
+       "path:11:9:0:0",
+       "ARTICLE:1:10:11:1",
+       "DIV:1:10:4:1",
+       "H3:1:10:4:0",
+       "P:1:10:4:0",
+       "SPAN:5:10:2:0",
+       "SPAN:8:10:2:0",
+       "svg:8:10:0:0",
+       "path:8:10:0:0",
+       "BUTTON:11:10:1:1",
+       "svg:11:10:0:0",
+       "path:11:10:0:0",
+       "path:11:10:0:0",
+       "DIV:1:11:11:1",
+       "DIV:1:12:1:0",
+       "P:1:12:1:0",
+       "BUTTON:10:11:1:1",
+       "svg:11:12:0:0",
+       "path:11:12:0:0",
+       "FOOTER:0:12:11:1",
+       "SPAN:0:13:2:0",
+       "SPAN:10:13:2:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "17px",
+       "20px",
+       "24px"
+      ]
+     },
+     {
+      "density": 103,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".workspace"
+        },
+        {
+         "ok": true,
+         "selector": ".project-index"
+        },
+        {
+         "ok": true,
+         "selector": ".preview-column"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".project-index"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-art"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row"
+        },
+        {
+         "ok": true,
+         "selector": ".status"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".project-rows"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row[aria-pressed=\"true\"]"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector h2"
+        },
+        {
+         "ok": true,
+         "selector": ".index-title h2"
+        },
+        {
+         "ok": true,
+         "selector": ".count"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, system-ui, sans-serif"
+      ],
+      "id": "proyectos@v1.r11.dir-b.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes indexHinge { \n  0% { transform: perspective(1000px) rotateY(9deg) translateX(-16px); }\n  70% { transform: perspective(1000px) rotateY(-1deg) translateX(2px); }\n  100% { transform: none; }\n}",
+       "@keyframes inspectorDock { \n  0% { transform: translateX(32px); }\n  75% { transform: translateX(-3px); }\n  100% { transform: none; }\n}",
+       "@keyframes sceneDolly { \n  0% { transform: translateY(12px) scale(0.94); }\n  65% { transform: translateY(-2px) scale(1.008); }\n  100% { transform: none; }\n}",
+       "@keyframes rowDepth { \n  0% { transform: translateX(-8px); }\n  100% { transform: none; }\n}",
+       "@keyframes statusRegister { \n  0% { transform: scaleX(0.8); }\n  100% { transform: scaleX(1); }\n}",
+       "@keyframes loadingScan { \n  0%, 100% { transform: translateX(0px); }\n  50% { transform: translateX(3px); }\n}",
+       "{\"duration\":620,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":620,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":620,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":775,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":620,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":620,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:12",
+       "DIV:0:1:12:12",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:1:1:1:0",
+       "SPAN:1:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:1:1",
+       "SUMMARY:10:1:1:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:9:2:2:3",
+       "P:9:2:2:1",
+       "STRONG:9:2:1:0",
+       "A:9:3:2:1",
+       "A:9:4:2:1",
+       "BUTTON:9:4:2:1",
+       "DIV:0:2:11:1",
+       "H1:0:2:2:0",
+       "BUTTON:10:2:2:1",
+       "svg:10:2:0:0",
+       "NAV:0:3:11:1",
+       "A:0:3:1:1",
+       "A:1:3:1:1",
+       "P:0:4:11:0",
+       "DIV:0:5:11:8",
+       "ASIDE:0:5:3:7",
+       "DIV:1:5:2:0",
+       "H2:1:5:1:0",
+       "SPAN:3:5:0:0",
+       "DIV:1:6:2:1",
+       "DIV:1:6:2:1",
+       "LABEL:1:6:2:0",
+       "INPUT:1:6:2:1",
+       "DIV:1:7:2:2",
+       "BUTTON:1:7:2:1",
+       "STRONG:1:7:2:0",
+       "SMALL:1:8:2:0",
+       "SPAN:2:7:0:0",
+       "svg:2:7:0:0",
+       "path:2:7:0:0",
+       "BUTTON:1:8:2:1",
+       "STRONG:1:8:2:0",
+       "SMALL:1:9:2:0",
+       "DIV:1:11:2:1",
+       "BUTTON:1:11:2:1",
+       "svg:2:11:0:0",
+       "path:2:11:0:0",
+       "P:1:12:2:0",
+       "DIV:3:5:6:7",
+       "DIV:3:5:6:0",
+       "H2:3:5:2:0",
+       "SPAN:9:5:1:0",
+       "FIGURE:3:6:6:5",
+       "DIV:3:6:6:5",
+       "svg:3:6:5:5",
+       "path:4:8:5:2",
+       "path:6:7:1:3",
+       "path:5:9:2:1",
+       "path:6:9:2:1",
+       "ellipse:5:8:0:1",
+       "ellipse:5:8:0:1",
+       "ellipse:5:7:1:1",
+       "ellipse:5:7:1:1",
+       "ellipse:6:7:1:1",
+       "ellipse:6:7:1:1",
+       "ellipse:6:7:0:1",
+       "ellipse:7:7:0:1",
+       "ellipse:7:7:1:1",
+       "ellipse:7:7:1:1",
+       "ellipse:7:8:1:1",
+       "path:4:10:0:0",
+       "FIGCAPTION:3:11:6:0",
+       "DIV:3:11:6:1",
+       "P:3:12:6:0",
+       "ASIDE:9:5:2:7",
+       "H2:10:5:2:0",
+       "SPAN:10:6:2:0",
+       "svg:10:6:0:0",
+       "path:10:6:0:0",
+       "DL:10:6:2:1",
+       "DIV:10:6:2:1",
+       "DT:10:6:2:0",
+       "DD:10:7:2:0",
+       "DIV:10:7:2:1",
+       "DT:10:7:2:0",
+       "DD:10:8:2:0",
+       "DIV:10:11:2:1",
+       "BUTTON:10:11:2:1",
+       "svg:11:12:0:0",
+       "path:11:12:0:0",
+       "FOOTER:0:12:11:1",
+       "SPAN:0:13:2:0",
+       "SPAN:10:13:2:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "20px",
+       "24px"
+      ]
+     },
+     {
+      "density": 90,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".project-stack"
+        },
+        {
+         "ok": true,
+         "selector": ".project-band[data-expanded=\"true\"] .band-detail"
+        },
+        {
+         "ok": true,
+         "selector": ".save-header"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".project-band"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-window"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-title-button"
+        },
+        {
+         "ok": true,
+         "selector": ".save-status .status-icon"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".expand-control"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-title-button"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".band-title"
+        },
+        {
+         "ok": true,
+         "selector": ".band-meta"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, system-ui, sans-serif"
+      ],
+      "id": "proyectos@v1.r11.dir-c.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes band-settle { \n  0% { transform: translateY(10px) scale(0.985); }\n  55% { transform: translateY(-2px) scale(1.003); }\n  100% { transform: translateY(0px) scale(1); }\n}",
+       "@keyframes scene-seat { \n  0% { transform: scale(0.965); }\n  60% { transform: scale(1.008); }\n  100% { transform: scale(1); }\n}",
+       "@keyframes notice-settle { \n  0% { transform: translateY(-6px) scaleY(0.97); }\n  65% { transform: translateY(1px) scaleY(1.008); }\n  100% { transform: none; }\n}",
+       "@keyframes status-seat { \n  0% { transform: rotate(-14deg) scale(0.85); }\n  65% { transform: rotate(5deg) scale(1.08); }\n  100% { transform: none; }\n}",
+       "@keyframes field-seat { \n  0% { transform: scaleX(0.96); }\n  60% { transform: scaleX(1.01); }\n  100% { transform: scaleX(1); }\n}",
+       "@keyframes save-turn { \n  100% { transform: rotate(360deg); }\n}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:14",
+       "DIV:0:1:12:14",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:2:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:1:1",
+       "SUMMARY:10:1:1:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:0:2:11:1",
+       "H1:0:2:1:0",
+       "BUTTON:10:2:2:1",
+       "svg:10:2:0:0",
+       "NAV:0:3:11:1",
+       "A:0:3:1:1",
+       "A:1:3:1:1",
+       "DIV:0:4:11:1",
+       "DIV:0:4:5:1",
+       "LABEL:0:4:5:0",
+       "svg:1:5:0:0",
+       "path:1:5:0:0",
+       "circle:1:5:0:0",
+       "INPUT:0:5:5:1",
+       "DIV:5:5:7:1",
+       "BUTTON:9:5:2:1",
+       "DIV:0:6:11:7",
+       "ARTICLE:0:6:11:5",
+       "DIV:0:6:11:1",
+       "DIV:1:6:8:1",
+       "H2:1:6:8:0",
+       "P:1:6:8:0",
+       "DIV:9:6:3:1",
+       "BUTTON:9:6:2:1",
+       "svg:10:6:0:0",
+       "path:10:6:0:0",
+       "BUTTON:10:6:1:1",
+       "svg:11:6:0:0",
+       "path:11:6:0:0",
+       "DIV:0:7:11:4",
+       "DIV:1:7:7:3",
+       "svg:1:7:7:3",
+       "path:2:9:4:2",
+       "path:3:7:1:2",
+       "g:3:7:1:2",
+       "circle:3:9:0:0",
+       "circle:3:9:0:0",
+       "circle:3:8:0:0",
+       "circle:3:8:0:0",
+       "circle:3:8:0:0",
+       "circle:3:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:8:0:0",
+       "ellipse:4:9:1:0",
+       "path:4:9:1:0",
+       "SPAN:1:10:2:0",
+       "DIV:8:7:4:3",
+       "H3:8:7:1:0",
+       "P:8:8:3:0",
+       "DETAILS:8:8:1:1",
+       "SUMMARY:8:8:1:1",
+       "ARTICLE:0:11:11:1",
+       "DIV:0:11:11:1",
+       "DIV:1:11:8:1",
+       "H2:1:11:8:0",
+       "P:1:12:8:0",
+       "DIV:9:11:2:1",
+       "BUTTON:9:11:1:1",
+       "svg:10:12:0:0",
+       "path:10:12:0:0",
+       "BUTTON:10:11:1:1",
+       "svg:11:12:0:0",
+       "path:11:12:0:0",
+       "DIV:0:12:11:1",
+       "P:0:13:3:0",
+       "BUTTON:10:13:1:1",
+       "FOOTER:0:14:11:1",
+       "SPAN:0:14:2:0",
+       "SPAN:11:14:1:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "20px",
+       "24px"
+      ]
+     }
+    ],
+    "evidence_ok": true,
+    "missing_evidence": [],
+    "ok": true,
+    "pairs": [
+     {
+      "a": "proyectos@v1.r11.dir-a.html",
+      "b": "proyectos@v1.r11.dir-b.html",
+      "layout_similarity": 0.131,
+      "ok": true,
+      "same_density": true,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": false
+     },
+     {
+      "a": "proyectos@v1.r11.dir-a.html",
+      "b": "proyectos@v1.r11.dir-c.html",
+      "layout_similarity": 0.114,
+      "ok": true,
+      "same_density": true,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": false
+     },
+     {
+      "a": "proyectos@v1.r11.dir-b.html",
+      "b": "proyectos@v1.r11.dir-c.html",
+      "layout_similarity": 0.156,
+      "ok": true,
+      "same_density": false,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": true
+     }
+    ],
+    "schema_version": 1
+   },
    "continuation_choice": null,
    "delegation": "D-20261028-063847-bad7",
    "digest": "77b0705ff968adf6",
@@ -7867,11 +8508,26 @@
      "tsx_sha256": "e6c87a73c4ea96b11e288d720f08539e42e7405b715a371c071021ef0f334cbe"
     },
     {
+     "axes": {
+      "colour": "Exactamente Pictures: fondo/superficie/texto/acento y tokens Taller para el visor; roles accesibles de borde de control heredados de cuentas-admin y planes. No hay nueva paleta ni familia tipográfica.",
+      "components": "Button/Input/Skeleton/Dialog reales de shadcn y Base UI/Animate UI. Composición propia de bandas expandibles y renombrado in situ; botones con presión táctil, selector de propietario nativo y disclosure de cuenta heredado.",
+      "concept": "Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria.",
+      "density": "Proyectos cerrados de una fila y una única escena abierta. La información secundaria se revela a demanda; 28px de margen interior en escritorio y 20px en teléfono.",
+      "layout": "Una pila de bandas horizontales a todo el ancho. La banda abierta contiene escena y explicación en proporción 1.8:1; no existe un panel maestro-detalle lateral ni una cuadrícula permanente de tarjetas.",
+      "motion": "Asentamiento táctil: bandas se comprimen .985 y asientan con 55ms de secuencia; escena .965→1.008→1; estado rota -14°→5°→0; avisos se asientan verticalmente; presión .965 con spring 220/16; hover de iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento.",
+      "navigation": "Cabecera y navegación horizontal compartidas; Ver escena/Ocultar escena expande el proyecto en su propio lugar, Abrir lleva al Taller o a solo lectura. Qué se guarda despliega la explicación junto al estado.",
+      "typography": "Geist Sans del producto: título 24px, proyecto 20px, sección 16–18px, cuerpo 14–15px, metadatos 12–13px. Geist Mono solo en la identificación Sempertex heredada."
+     },
      "delegation": "D-20261028-063848-d056",
      "id": "c",
+     "json_sha256": "a2e798b6b31410847924b3fa5f8c26a00e8bf56eaed0807bdd061ea03a076984",
+     "name": "Edición en contexto",
+     "note_sha256": "eb30ce7507aa76d7adae84fb052a740d613911a874c0a28548d3952da5e681ff",
      "revision": 11,
      "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
-     "status": "drafting"
+     "sha256": "67054c904ffab4e227045695ee9737f2440ec3462d1499d17d8dc2a6d8b8c9a3",
+     "status": "ready",
+     "tsx_sha256": "f081bd227ac4e420001cc7f3772a2d88a87e9a8f9c19a68f47e61022241a63f9"
     }
    ],
    "error": "",
@@ -7913,7 +8569,7 @@
     "96a5b6dfff3718af",
     "9474e736e49409e4"
    ],
-   "finished": "2026-10-27T05:51:01-05:00",
+   "finished": "2026-10-28T07:05:28-05:00",
    "fresh": false,
    "history": [
     {
@@ -7953,7 +8609,7 @@
    "revision": 5,
    "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
    "started": "2026-10-28T06:38:47-05:00",
-   "status": "drafting",
+   "status": "choosing",
    "subplan_id": "SP-4",
    "summary": "the delegation's process died before writing an outcome (killed, for instance by restarting the service that started it)",
    "ui_digest": "efc4338fbf71ccd6"
