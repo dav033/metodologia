@@ -1,7 +1,7 @@
 """Integrator port: one integration line per run and repository, advanced only by compare-and-swap.
 
 `refs/bt/line/<project>/<req>/r<rev>/<repository>` starts at the repository's HEAD when the run starts. Integrating a
-verified snapshot is a three-way `git merge-tree` of the line tip and the snapshot over the snapshot's base, written
+verified snapshot is a three-way `git merge-tree` of the line tip and the snapshot (git computes the merge base), written
 as a merge commit, and an `update-ref <new> <old>` that fails if anyone moved the line in between (then the step is
 retried on the new tip). A conflict never touches the line: it is returned as a fact for the classifier. This keeps
 the invariant the legacy line could lose under concurrent writers (M0 finding 9): accepted work is never dropped.
@@ -68,11 +68,11 @@ class GitLineIntegrator:
         tip = self.base_ref(run, task)
         if _git(repo, "merge-base", "--is-ancestor", snapshot.snapshot_sha, tip, check=False).returncode == 0:
             return tip, ""                               # already integrated (a re-run of this step)
-        if tip == snapshot.base_sha:
-            new = snapshot.snapshot_sha                  # fast-forward: the line did not move since the attempt began
+        if _git(repo, "merge-base", "--is-ancestor", tip, snapshot.snapshot_sha, check=False).returncode == 0:
+            new = snapshot.snapshot_sha                  # fast-forward: the attempt already contains the whole line
         else:
-            merged = _git(repo, "merge-tree", "--write-tree", "--merge-base", snapshot.base_sha, tip,
-                          snapshot.snapshot_sha, check=False)
+            # git computes the merge base: a retry that continued from an earlier snapshot shares the line's history
+            merged = _git(repo, "merge-tree", "--write-tree", tip, snapshot.snapshot_sha, check=False)
             if merged.returncode == 1:
                 files = [line.split("\t", 1)[-1] for line in merged.stdout.splitlines()[1:] if "\t" in line]
                 return None, "conflicts with accepted work in: " + ", ".join(sorted(set(files))[:20])

@@ -23,6 +23,11 @@ DEFAULTS: dict = {
     "quota": {"default_cooldown_min": 30},
     "relay": {"enabled": False, "threshold_percent": 92, "exit_current": True, "max_chain": 3, "auto": True},
     "run": {"isolation": "off"},
+    # execution: which runtime owns NEW runs (REQ-030). `legacy` is the Scheduler M1–M6; `dbos` is bt_durable, whose
+    # engine service needs the uv environment. Existing runs never change owner implicitly (RUN.owner.json decides).
+    # `database_url` empty = SQLite under the state folder; set a postgresql:// URL for the durable system database.
+    "execution": {"backend": "legacy", "database_url": "", "agent_concurrency": 2, "verify_concurrency": 1,
+                  "routes": ["claude::sonnet"]},
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)
@@ -138,6 +143,7 @@ ALLOWED: dict[str, tuple] = {
     "gates.rebase_cascade": ("content", "downstream"),
     "audit.provider": ("antigravity", "claude", "codex", "none"),
     "run.isolation": ("off", "worktree"),
+    "execution.backend": ("legacy", "dbos"),
 }
 ALLOWED_ITEMS: dict[str, tuple] = {"gates.audit_blocking": ("critical", "high", "medium", "low")}
 

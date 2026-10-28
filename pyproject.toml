@@ -27,6 +27,7 @@ install-agents = "install_agents:main"
 install-rtk = "bt_entrypoints:install_rtk"
 bitacora-inventory = "migration_inventory:main"
 bt-engine-benchmark = "bt_engine_benchmark:main"
+bt-durable = "bt_durable.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
@@ -185,6 +186,7 @@ py-modules = [
   "bt_remote_snapshot",
   "bt_remote_views",
   "bt_route_pins",
+  "bt_run_owner",
   "bt_scheduler_metadata",
   "bt_scheduler_projection",
   "bt_profile_matrix",

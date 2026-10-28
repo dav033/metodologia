@@ -46,15 +46,27 @@ def start_request(attempt: AttemptRef, task: TaskSpec, *, base_ref: str, timeout
 class M3Attempts:
     """One object for the three attempt ports, sharing the workspace manager and the attempt directories."""
 
-    def __init__(self, *, root: Path, repositories: Mapping[str, Path] | Callable[[str], Path | None],
-                 plan_for: Callable[[AttemptRef], Plan], driver, briefs_for: Callable[[Plan], object] | None = None,
-                 prompt_rtk: bool = False):
+    def __init__(self, *, root: Path, repositories_for: Callable[[str], Mapping[str, Path] | Callable[[str], Path | None]],
+                 plan_for: Callable[[AttemptRef], Plan], driver_for: Callable[[str], object],
+                 briefs_for: Callable[[Plan], object] | None = None, prompt_rtk: bool = False):
         self.root = Path(root)
-        self.workspaces = GitWorkspaces(self.root / "ws", repositories)
+        self.repositories_for = repositories_for
         self.plan_for = plan_for
-        self.driver = driver
+        self.driver_for = driver_for
         self.briefs_for = briefs_for
         self.prompt_rtk = prompt_rtk
+        self._workspaces: dict[str, GitWorkspaces] = {}
+        self._drivers: dict[str, object] = {}
+
+    def workspaces(self, project: str) -> GitWorkspaces:
+        if project not in self._workspaces:
+            self._workspaces[project] = GitWorkspaces(self.root / "ws" / project, self.repositories_for(project))
+        return self._workspaces[project]
+
+    def driver(self, project: str):
+        if project not in self._drivers:
+            self._drivers[project] = self.driver_for(project)
+        return self._drivers[project]
 
     def attempt_dir(self, attempt: AttemptRef) -> Path:
         path = self.root / "attempts" / attempt.attempt_key
@@ -66,15 +78,16 @@ class M3Attempts:
                 limits: dict) -> Prepared:
         timeout = int(limits.get("runtime_max_seconds") or DEFAULT_TIMEOUT)
         request = start_request(attempt, task, base_ref=base_ref, timeout=timeout)
-        self.workspaces.check(request)
-        ws = self.workspaces.allocate(request)
+        workspaces = self.workspaces(attempt.run.project)
+        workspaces.check(request)
+        ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
         brief = self._brief(attempt, request, note)
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
         atomic_write(adir / "workspace.json", json.dumps(ws.to_dict(), sort_keys=True).encode(), 0o600)
-        launch = self.driver.prepare(_m3_route(route), prompt, ws, float(timeout))
+        launch = self.driver(attempt.run.project).prepare(_m3_route(route), prompt, ws, float(timeout))
         env = {k: v for k, v in os.environ.items() if k not in launch.env_remove}
         env.update(dict(launch.env_set))
         env_file = adir / "agent.env.json"
@@ -108,7 +121,7 @@ class M3Attempts:
         raw = _read_capped(process.log_path)
         timed_out = process.result == "timeout"
         cancelled = process.result in ("cancelled", "signal") and process.exit_code is None
-        found = self.driver.classify(_m3_route(route), raw, process.exit_code, timed_out=timed_out, cancelled=cancelled)
+        found = self.driver(attempt.run.project).classify(_m3_route(route), raw, process.exit_code, timed_out=timed_out, cancelled=cancelled)
         usage = dict(found.usage or {})
         total = usage.get("total_tokens")
         if total is None and isinstance(usage.get("input_tokens"), int):

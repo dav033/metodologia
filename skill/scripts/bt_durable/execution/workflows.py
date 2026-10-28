@@ -191,12 +191,16 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
                 continue
             outcomes.append(outcome)
             break
+        # a retry continues from the attempt's own snapshot (its partial work is kept), never from scratch
+        continued = outcome.snapshot.snapshot_sha if outcome.snapshot and outcome.snapshot.snapshot_sha else ""
         if decision.action in (RecoveryAction.RETRY, RecoveryAction.REMEDIATE):
             note = decision.note_for_agent if decision.action == RecoveryAction.RETRY else _remediation_note(outcomes)
             remediated = remediated or decision.action == RecoveryAction.REMEDIATE
+            base_override = continued
         elif decision.action == RecoveryAction.RETRY_OTHER_ROUTE:
             exclude.append(_route_key(choice.route))
             route_changes += 1
+            base_override = continued
         elif decision.action == RecoveryAction.WAIT:
             waits += 1
             DBOS.set_event("state", {"task_id": task_id, "state": "recovering", "until": decision.not_before})

@@ -369,6 +369,10 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
         import bt_scheduler_ops as ops
         if ops.on_hold(rdir):
             raise RuntimeErrorCode("OWNER_HELD", "an operator hold is active; release it with scheduler-op resume")
+        import bt_run_owner
+        refused = bt_run_owner.refuse_legacy_start(rdir)   # REQ-030: one owner per run, never two runtimes
+        if refused:
+            raise RuntimeErrorCode("OWNED_BY_DBOS", refused)
         from bt_requirements_gate import PLANNING_FILES, require_ready
 
         require_ready(rdir, waive=PLANNING_FILES)      # D-134: the run executes a frozen revision; planning goes on

@@ -14,7 +14,8 @@ from dbos import DBOS, DBOSConfig
 from ..ports import Ports
 from ..settings import EngineConfig
 
-AGENTS, VERIFY, INTEGRATE = "bt-agents", "bt-verify", "bt-integrate"
+RUNS, AGENTS, VERIFY, INTEGRATE = "bt-runs", "bt-agents", "bt-verify", "bt-integrate"
+APP_VERSION = "PATCHING_ENABLED"        # what DBOS pins when enable_patching is on; clients enqueue for it
 LOG = logging.getLogger("bt_durable")
 
 _lock = threading.Lock()
@@ -54,6 +55,7 @@ def start(cfg: EngineConfig, wired: Ports) -> None:
         }
         DBOS(config=dbos_config)
         DBOS.launch()
+        DBOS.register_queue(RUNS, worker_concurrency=64)
         DBOS.register_queue(AGENTS, worker_concurrency=cfg.agent_concurrency)
         DBOS.register_queue(VERIFY, worker_concurrency=cfg.verify_concurrency)
         DBOS.register_queue(INTEGRATE, worker_concurrency=1)
