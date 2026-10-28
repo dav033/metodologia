@@ -1,7 +1,7 @@
 {
   "schema_version": "1.3.0",
   "plan_id": "REQ-021",
-  "revision": 4,
+  "revision": 7,
   "spec_ref": "SPEC.md",
   "composition_gates": [
     {
@@ -461,7 +461,6 @@
     },
     {
       "acceptance_criteria": [
-        "The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact.",
         "The proposal JSON conforms to PropuestaPilotoSchema: every candidate Backing structure and table type has Spanish and English names, real reference dimensions with at least one cited source, limits and a default inside them, the chair rule for tables, geometry from caja, cilindro and panel only for Backings, photo-reading relevance, synonyms and an estimate; it lists the seven existing Backing ids and the eight table types as kept, and no candidate id collides with FONDOS_CATALOGO, TIPOS_MESA or another candidate.",
         "The proposal validator rejects a colliding id, a default outside its limits, a missing source, a wrong list of existing pieces, a Backing geometry outside caja, cilindro and panel, an approval whose SHA-256 does not match the proposal and an approval above the envelope, naming the failing field.",
         "The owner approved a named subset of the proposal, recorded in the requirement folder as aprobacion-backing-mesas.json with the proposal file's SHA-256, before any modelling task starts.",
@@ -510,7 +509,6 @@
         "The Blender comparison script passes identical inputs and names the element type and property that differs beyond 1 mm or 1/255, tested without Blender.",
         "The owner approves, from a sourced proposal, which new Backing structures and table types the pilot gets; the Taller models them as parametric tables and parametric furniture through exhaustive type registries and integrates them with search, scene AI, photo reading, English phrases and the shopping list; Fondos y muebles offers one card per table type (the eight existing types, rectangular included, plus the new ones) that adds it at its default size and opens the existing table editor, and one Backing group with the seven existing props moved from their former groups plus the new ones; the GLB of every element type the code enumerates, alone and in one full scene, opens in portable Blender LTS with the same layout, sizes in metres and base colours, or the failing type is listed as a defect.",
         "A production build on loopback completes the real table-card, Backing and every-element-type GLB flow, recording Blender import evidence per element type or an explicit external block; no unexecuted check is reported as passed.",
-        "Phone, tablet and desktop renderings of the table type cards, the table editor with a new type, the Backing group and the unchanged export menu match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks.",
         "An independent SP-3 spec and standards audit has no open critical or high findings, maps each defect to its introducing task, checks modelled pieces against docs/req021/aprobacion-backing-mesas.json and the proposal, and distinguishes GLB structural evidence from real Blender and owner evidence."
       ],
       "audit_task": "T3.15",
@@ -558,90 +556,7 @@
           "version": 1
         }
       ],
-      "title": "Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export",
-      "ui": {
-        "contract": "taller-esenciales",
-        "design_task": "T3.1",
-        "version": 1,
-        "visual_review_task": "T3.14"
-      },
-      "ui_brief": {
-        "copy_rules": [
-          "Spanish interface; every new string in src/components/tres-d/textos-taller-esenciales.ts for later translation",
-          "Table card names are the existing type names (Mesa redonda, Mesa rectangular…); new pieces take the Spanish names the owner approves in T3.2; until then mockups use visibly marked placeholders («Mesa nueva A», «Backing nuevo A») and never invented names, dimensions or pictures",
-          "The group is called «Backing»; no invented descriptions",
-          "Furniture lines show quantity and dimensions, never a rental price"
-        ],
-        "existing_surface": {
-          "components": [
-            "PanelAnadir",
-            "FondosYMuebles",
-            "DibujoFondo",
-            "EditorConjuntoMesa",
-            "Inspector",
-            "ListaEscenografia",
-            "ExportarEscenaTaller"
-          ],
-          "notes": "SP-3 moved to M2 (owner 2026-10-27, answer B). The new table types and Backings are not known until the owner approves the research list during execution (T3.2, T3.4), so the design shows them only as marked placeholders. Dimension labels of every type come from one registry (ETIQUETA_MEDIDAS_MESA, T3.3). Read on origin/main a9f3d6e5 (the registered pictures checkout has the same Taller files). The functionality already exists; SP-3 changes only the entry points and adds pieces. Today: the Añadir panel (PanelAnadir) has a repository selector Todos / Sempertex / Mobiliario / Escenografía; under «Todos» FondosYMuebles sits in the Utilería tab with the heading «Fondos y muebles · no son globos: no cotizan» and four groups of three-column cards (thumbnail + name): «Fondos y tapetes», «Sillas y asientos», «Mesas», «Decorado de pie». «Mesas» lists the fixed catalogue tables (Imperial, redonda, cóctel, postres…) and ends with ONE card «Mesa con sillas a medida» (round 1.5 m with eight Tiffany chairs); its search words omit «rectangular»; touching it adds a round table, selects it and shows a status line. The inspector then shows EditorConjuntoMesa: «Mesa» (Tipo de mesa select with the eight types, sliders Diámetro / Lado / Largo / Ancho total, Ancho de la mesa, Alto de la tapa, Mantel, tapa/mantel and patas colours, + camino de mesa) and «Sillas» (Cantidad − / + with «caben N», the warning «Se pidieron X, pero en esta mesa con esta disposición solo caben Y», Tipo de silla, Disposición, colours, + cojín). panel_redondo, media_luna and arcos_chiara are in «Fondos y tapetes»; pedestales, aro_metalico, aro_hexagonal (shown as «Marco hexagonal metálico») and arco_metalico in «Decorado de pie». The shopping list already shows furniture as «N × Mesa rectangular 240×90 (mobiliario)» under «Mobiliario · no es producto de la tienda», without price, with the real placed chair count. Export: the header «Exportar» menu with «Descargar PNG · 3000 px» and «Descargar modelo GLB», states «Preparando GLB…», «Descarga GLB iniciada.» and «No se pudo exportar GLB: …»; SP-3 does not change it. No screenshots are stored in the repository.",
-          "paths": [
-            "src/components/tres-d/PanelAnadir.tsx",
-            "src/components/tres-d/FondosYMuebles.tsx",
-            "src/components/tres-d/DibujoFondo.tsx",
-            "src/components/tres-d/EditorConjuntoMesa.tsx",
-            "src/components/tres-d/Inspector.tsx",
-            "src/components/tres-d/ListaEscenografia.tsx",
-            "src/components/tres-d/ExportarEscenaTaller.tsx",
-            "src/lib/catalogo/anadir-repositorios.ts",
-            "src/lib/catalogo/asignacion-fondos.ts",
-            "src/lib/globos3d/mobiliario-conjunto-tipos.ts",
-            "src/lib/globos3d/fondos-escenografia.ts",
-            "src/lib/globos3d/mobiliario-catalogo.ts"
-          ],
-          "routes": [
-            "/3d"
-          ],
-          "screenshots": []
-        },
-        "flows": [
-          {
-            "name": "Add a table by its type",
-            "steps": [
-              "Opens the Añadir panel of the Taller 3D and Fondos y muebles (Utilería tab under «Todos», or the Mobiliario repository)",
-              "Sees one card per table type in the «Mesas» group: Redonda, Cuadrada, Rectangular, Ovalada, Cóctel, Media luna, Serpentina, En U and one card per new type the owner approves (unknown until SP-3's research is approved; mockups show them as marked placeholders «Mesa nueva A», «Mesa nueva B»)",
-              "Optionally searches «rectangular» and finds its card",
-              "Touches the card: the table appears at its default size with its default chairs, is selected and the existing table editor opens in the inspector",
-              "Edits size, chairs and arrangement exactly as today"
-            ]
-          },
-          {
-            "name": "Find and add a Backing",
-            "steps": [
-              "Opens Fondos y muebles (or the Escenografía repository)",
-              "Opens the new Backing group with the seven existing props and the new approved Backings (mockups show the new ones as marked placeholders «Backing nuevo A», «Backing nuevo B»)",
-              "Finds one by browsing, by searching «Backing» or by its original name",
-              "Adds it by touching or dragging the card, as with any other card"
-            ]
-          }
-        ],
-        "must_not_change": [
-          "The Taller shell, header, side rail, viewer, inspector layout and the table editor's controls (only the dimension labels and limits of new types are added)",
-          "The card style (thumbnail and name) and the other cards of every group",
-          "The export menu, its actions and its states; the shopping list layout",
-          "Existing furniture and prop ids, their repositories, saved scenes and original-name, AI and photo discovery",
-          "Shopify /catalogo and its categories (Backing exists only in the Taller)"
-        ],
-        "screens_states": [
-          "«Mesas» group with one card per parametric table type in place of today's single «Mesa con sillas a medida» card; each card uses the existing card style with a thumbnail of that type at its default size",
-          "Panel result counter and Mobiliario repository selector count including the table type cards",
-          "Search «rectangular» showing the Rectangular card; the existing no-results state",
-          "The existing status line after adding a table, naming the added type",
-          "The existing table editor with a new table type selected: its dimension labels and slider limits for that shape",
-          "Backing group in Fondos y muebles and in the Escenografía repository view: the seven existing cards and the new Backing cards, each once",
-          "«Fondos y tapetes» and «Decorado de pie» without the seven moved cards",
-          "Phone, tablet and desktop widths of the Añadir panel",
-          "Without new pieces approved: «Mesas» holds the fixed tables and the eight type cards, and Backing holds the seven existing props"
-        ]
-      }
+      "title": "Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export"
     },
     {
       "acceptance_criteria": [
@@ -3984,101 +3899,6 @@
       "subplan_id": "SP-14"
     },
     {
-      "id": "T3.1",
-      "milestone_id": "M2",
-      "title": "Copy the approved Taller essentials design contract",
-      "objective": "The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact.",
-      "repository": "pictures",
-      "after": [
-        "T1.8",
-        "T1.8b"
-      ],
-      "complexity": "low",
-      "scope": "small_change",
-      "estimated_minutes": 20,
-      "risk": "low",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated estimate of 20 minutes including focused verification, not a deadline.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: The inspected boundary requires bounded changes using existing domain operations."
-        },
-        "scope": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: Changes are limited to design/contracts/taller-esenciales@v1.md and the listed focused verification artifacts."
-        },
-        "duration": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: Uncalibrated agent estimate: 6 minutes inspection, 6 implementation or execution, 8 focused verification and evidence."
-        },
-        "risk": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: Failure would produce incorrect scene geometry, shopping quantities or exported materials."
-        },
-        "coupling": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: Explicit prerequisites order shared scene files and package script registration; consumers use the stated versioned contracts."
-        },
-        "confidence": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "spec:SPEC.md#clarifications",
-            "task:T1.8"
-          ],
-          "justification": "Copy the approved Taller essentials design contract: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending."
-        }
-      },
-      "expected_paths": [
-        "design/contracts/taller-esenciales@v1.md"
-      ],
-      "shared_resources": [
-        "design:T3.1"
-      ],
-      "acceptance_criteria": [
-        "The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "cmp -- design/contracts/taller-esenciales@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/taller-esenciales@v1.md",
-          "purpose": "The repository contract is byte-identical to the owner-approved taller-esenciales@v1 artifact.",
-          "created_by": "T3.1",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R9",
-        "R10",
-        "R11"
-      ],
-      "kind": "design",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
       "id": "T3.2",
       "milestone_id": "M2",
       "title": "Research new Backing structures and table types, write the validated proposal and get the owner's approval",
@@ -4196,7 +4016,6 @@
       "objective": "Paths without a folder are under src/lib/globos3d/; test-* and dorado/ paths are under scripts/test/. Turn every per-type spot of the Taller into an exhaustive registry so new table, piece or Backing types become compiler-checked data changes that leave existing pieces unchanged; this defines contracts taller-scene@1 and taller-catalogue@1. (1) In mobiliario-conjunto-tipos.ts, next to NOMBRE_MESA, LIMITES_MESA, PARTIDA_MESA and FONDO_DEL_ANCHO, add Readonly<Record<TipoMesa, ...>> registries: MEDIDA_PRINCIPAL_MESA ('diametro' | 'lado' | 'largo' | 'ancho_total', the dimension medidaDeMesa prints), ETIQUETA_MEDIDAS_MESA ({ ancho: string; fondo: string | null }, today's editor labels Diámetro, Lado, Largo, Ancho total and Ancho de la mesa), SINONIMOS_MESA (readonly string[] search words: today's TEXTO_CONJUNTO words of FondosYMuebles.tsx split per type, plus «rectangular» for rectangular), MESA_ADMITE_CAMINO (boolean, true exactly for redonda, cuadrada, rectangular and ovalada), MESA_SIMETRICA (boolean, true exactly for redonda, cuadrada, rectangular, ovalada and coctel) and SINGULAR_MESA (the noun for sentences such as the status line). (2) In mobiliario-mesas-param.ts derive ADMITE_CAMINO and SIMETRICAS from those registries instead of literal Sets. (3) In mobiliario-conjunto.ts make medidaDeMesa read MEDIDA_PRINCIPAL_MESA instead of its if-chain and add sillasDePartida(tipo: TipoMesa): number = min(8, the capacity sillasParaMesa reports for PARTIDA_MESA[tipo] with the default chair). (4) In herramientas-escena-mesas.ts generate the tipo describe text of the scene-AI table tools from TIPOS_MESA, NOMBRE_MESA and SINONIMOS_MESA instead of hand-written strings. (5) New tipos-escena.ts exports TIPOS_DE_PIEZA = { columna: true, ..., modulo: true } as const satisfies Record<TipoPieza, true> (TipoPieza from piezas.ts, all 17 types), LISTA_TIPOS_DE_PIEZA (its keys) and elementosEnumerables(): readonly ElementoEnumerable[], with ElementoEnumerable = { clase: 'pieza'; tipo: TipoPieza } | { clase: 'mesa'; tipo: TipoMesa } | { clase: 'silla'; tipo: TipoSilla } | { clase: 'backing'; id: string } | { clase: 'sala' }, listing every piece type, TIPOS_MESA type, TIPOS_SILLA type and IDS_BACKING id and the room, in that order. TIPOS_PIEZA in herramientas-escena.ts becomes LISTA_TIPOS_DE_PIEZA, so esquema-escena.ts accepts scenes holding modulo pieces (rejected today). (6) New fondos-backing.ts exports BACKING_NUEVOS: readonly MuebleCatalogo[] = [] (filled by T3.6), and FONDOS_CATALOGO in fondos-escenografia.ts becomes [...FONDOS_BASE, ...CATALOGO_MOBILIARIO, ...BACKING_NUEVOS]. (7) New backing.ts exports IDS_BACKING_EXISTENTES (panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal, arco_metalico), IDS_BACKING = [...IDS_BACKING_EXISTENTES, ...BACKING_NUEVOS ids], esBacking(id): boolean and grupoVisibleDe(f: FondoCatalogo): 'backing' or the entry's current visual group, without changing any entry's semantic grupo, clase or repository. (8) Tests: new test-taller-registros-completos.ts asserts at runtime that every Record<TipoMesa> registry has exactly the TIPOS_MESA keys, TIPOS_DE_PIEZA has the 17 keys including modulo, every IDS_BACKING id is in FONDOS_CATALOGO and assigned to escenografia in ASIGNACION_FONDOS, elementosEnumerables() lists each element once, medidaDeMesa, the tool describe text, ADMITE_CAMINO, SIMETRICAS and sillasDePartida give today's results for the eight types, and a scene holding a modulo piece validates; test-catalogo-dorado.ts keeps dorado/catalogo-fondos.json byte-identical for the pre-existing catalogue entries and table types and compares entries and table types added later against new goldens dorado/catalogo-mesas-nuevas.json and dorado/catalogo-backing-nuevos.json (both start as empty lists; --escribir writes only those two); test-mobiliario-libre.ts asserts that the first eight TIPOS_MESA are the existing types in their order instead of TIPOS_MESA.length === 8; test-anadir-repositorios.tsx writes its card counts as expressions of BACKING_NUEVOS.length (Escenografía 25 + n, Todos 52 + n) while its DORADO_DE_SIEMPRE hashes stay unchanged. No UI change.",
       "repository": "pictures",
       "after": [
-        "T1.8",
         "T1.8b"
       ],
       "complexity": "high",
@@ -4948,10 +4767,9 @@
       "id": "T3.9",
       "milestone_id": "M2",
       "title": "One creation card per table type in Fondos y muebles",
-      "objective": "Following design/contracts/taller-esenciales@v1.md, replace the single «Mesa con sillas a medida» card of the «Mesas» group in src/components/tres-d/FondosYMuebles.tsx with one card per TIPOS_MESA type (the eight existing types and the approved new ones, in TIPOS_MESA order, after the fixed catalogue tables, which stay), each named NOMBRE_MESA[tipo], with a thumbnail of that type at its PARTIDA_MESA size and search text NOMBRE_MESA plus SINONIMOS_MESA, so «rectangular» finds the Rectangular card; TEXTO_CONJUNTO goes away. Touching a card calls agregarConjuntoPorDefecto(escena, maxNodos, tipo) (src/lib/globos3d/mobiliario-conjunto-escena.ts; today it always builds a redonda with 8 chairs), which adds that type at its PARTIDA_MESA size with sillasDePartida(tipo) chairs, selects it, opens the existing table editor and shows the existing status line naming the type with SINGULAR_MESA. In src/components/tres-d/EditorConjuntoMesa.tsx the dimension labels come from ETIQUETA_MEDIDAS_MESA instead of the etiquetaAncho if-chain; controls, capacity warning and undo stay. contarFondosYMuebles and fijasDe (src/lib/catalogo/anadir-repositorios.ts) count the type cards instead of the single card. Every new string goes in src/components/tres-d/textos-taller-esenciales.ts. New scripts/test/test-taller-mesas-piloto.ts covers the cards, the search, the typed default add, the editor labels and limits for every type, capacity warning and undo; in scripts/test/test-anadir-repositorios.tsx and scripts/test/test-anadir-repositorios-ui.ts write the Mobiliario and Todos counts as expressions of TIPOS_MESA.length and re-pin the DORADO_DE_SIEMPRE hashes whose filter shows the «Mesas» group, stating in the task report that the HTML diff only replaces the table card.",
+      "objective": "Replace the single «Mesa con sillas a medida» card in the existing «Mesas» group of src/components/tres-d/FondosYMuebles.tsx with one card per TIPOS_MESA type (the eight existing types and the approved new ones, in TIPOS_MESA order, after the fixed catalogue tables, which stay), each named NOMBRE_MESA[tipo], with a thumbnail of that type at its PARTIDA_MESA size and search text NOMBRE_MESA plus SINONIMOS_MESA, so «rectangular» finds the Rectangular card; TEXTO_CONJUNTO goes away. Touching a card calls agregarConjuntoPorDefecto(escena, maxNodos, tipo) (src/lib/globos3d/mobiliario-conjunto-escena.ts; today it always builds a redonda with 8 chairs), which adds that type at its PARTIDA_MESA size with sillasDePartida(tipo) chairs, selects it, opens the existing table editor and shows the existing status line naming the type with SINGULAR_MESA. In src/components/tres-d/EditorConjuntoMesa.tsx the dimension labels come from ETIQUETA_MEDIDAS_MESA instead of the etiquetaAncho if-chain; controls, capacity warning and undo stay. contarFondosYMuebles and fijasDe (src/lib/catalogo/anadir-repositorios.ts) count the type cards instead of the single card. Keep the current card hierarchy and navigation; add no screen. New strings go in src/components/tres-d/textos-taller-esenciales.ts. New scripts/test/test-taller-mesas-piloto.ts covers the cards, the search, the typed default add, the editor labels and limits for every type, capacity warning and undo; in scripts/test/test-anadir-repositorios.tsx and scripts/test/test-anadir-repositorios-ui.ts write the Mobiliario and Todos counts as expressions of TIPOS_MESA.length and re-pin the DORADO_DE_SIEMPRE hashes whose filter shows the «Mesas» group, stating in the task report that the HTML diff only replaces the table card.",
       "repository": "pictures",
       "after": [
-        "T3.1",
         "T3.8"
       ],
       "complexity": "medium",
@@ -4996,7 +4814,7 @@
           "evidence": [
             "task:T3.10",
             "task:T3.3",
-            "task:T3.1"
+            "task:T3.8"
           ],
           "justification": "Shares FondosYMuebles.tsx and the Añadir tests with the Backing group task and reads the registries of T3.3."
         },
@@ -5025,7 +4843,8 @@
       "acceptance_criteria": [
         "Fondos y muebles shows one creation card per parametric table type, the eight existing types and every approved new type, each found by searching its name or synonyms (rectangular included); touching a card adds that type at its default size (rectangular 240 × 90 × 75 cm) with as many default chairs as fit up to eight, selects it and opens the existing table editor.",
         "The existing table editor shows the right dimension labels and limits for every table type and keeps its capacity warning and undo, and the fixed Imperial and other fixed table pieces remain available.",
-        "The repository card counts and the Mobiliario selector count include exactly the table type cards in place of the former single «Mesa con sillas a medida» card."
+        "The repository card counts and the Mobiliario selector count include exactly the table type cards in place of the former single «Mesa con sillas a medida» card.",
+        "At phone (390 px), tablet (768 px) and desktop (1280 px) widths, table-type cards reuse the existing Fondos y muebles card/grid pattern, stay legible and reachable, and add no screen or navigation."
       ],
       "verification": [
         {
@@ -5048,6 +4867,13 @@
           "purpose": "The repository card counts and the Mobiliario selector count include exactly the table type cards in place of the former single «Mesa con sillas a medida» card.",
           "created_by": "T3.3",
           "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-taller-mesas-piloto.ts",
+          "purpose": "At phone (390 px), tablet (768 px) and desktop (1280 px) widths, table-type cards reuse the existing Fondos y muebles card/grid pattern, stay legible and reachable, and add no screen or navigation.",
+          "created_by": "T3.9",
+          "category": "functional"
         }
       ],
       "covers": [
@@ -5055,13 +4881,13 @@
       ],
       "kind": "implement",
       "subplan_id": "SP-3",
-      "ui": true
+      "ui": false
     },
     {
       "id": "T3.10",
       "milestone_id": "M2",
       "title": "Backing group in Fondos y muebles with the seven existing and the new Backing props",
-      "objective": "Following design/contracts/taller-esenciales@v1.md, show in src/components/tres-d/FondosYMuebles.tsx a «Backing» group, in Fondos y muebles under «Todos» and in the Escenografía repository view, listing every IDS_BACKING prop once (the seven existing ones and the approved new ones) through grupoVisibleDe (src/lib/globos3d/backing.ts), for presentation only: the seven no longer appear in «Fondos y tapetes» or «Decorado de pie», while the entries' semantic grupo, clase, ids, ASIGNACION_FONDOS repository, saved scenes, scene AI and photo reading stay unchanged and Shopify /catalogo is untouched. Searching «Backing» matches every Backing card (the word joins their search text in the panel only) and the original names still match. Cards add by click, drag and keyboard as today. New strings in src/components/tres-d/textos-taller-esenciales.ts. New scripts/test/test-backing-piloto.ts covers group membership, absence from the former groups, search and adding; update the group-dependent counts and re-pin the affected DORADO_DE_SIEMPRE hashes in scripts/test/test-anadir-repositorios.tsx and scripts/test/test-anadir-repositorios-ui.ts, stating in the task report that the HTML diff only moves the seven cards and adds the new ones.",
+      "objective": "Using the existing Fondos y muebles group and card patterns, show in src/components/tres-d/FondosYMuebles.tsx a «Backing» group, in Fondos y muebles under «Todos» and in the Escenografía repository view, listing every IDS_BACKING prop once (the seven existing ones and the approved new ones) through grupoVisibleDe (src/lib/globos3d/backing.ts), for presentation only: the seven no longer appear in «Fondos y tapetes» or «Decorado de pie», while the entries' semantic grupo, clase, ids, ASIGNACION_FONDOS repository, saved scenes, scene AI and photo reading stay unchanged and Shopify /catalogo is untouched. Searching «Backing» matches every Backing card (the word joins their search text in the panel only) and the original names still match. Cards add by click, drag and keyboard as today. Keep the current group hierarchy and navigation; add no screen. New strings in src/components/tres-d/textos-taller-esenciales.ts. New scripts/test/test-backing-piloto.ts covers group membership, absence from the former groups, search and adding; update the group-dependent counts and re-pin the affected DORADO_DE_SIEMPRE hashes in scripts/test/test-anadir-repositorios.tsx and scripts/test/test-anadir-repositorios-ui.ts, stating in the task report that the HTML diff only moves the seven cards and adds the new ones.",
       "repository": "pictures",
       "after": [
         "T3.9"
@@ -5131,7 +4957,8 @@
       "acceptance_criteria": [
         "Fondos y muebles has one Backing group listing panel_redondo, media_luna, arcos_chiara, pedestales, aro_metalico, aro_hexagonal, arco_metalico and every approved new Backing once each, the seven no longer appear in «Fondos y tapetes» or «Decorado de pie», and each card adds its prop by click or drag.",
         "Searching «Backing» finds every Backing card and the original names still find each prop; ids, repository ownership, saved scenes, scene AI and photo discovery resolve the same ids, and Shopify /catalogo is unchanged.",
-        "The catalogue repository suite passes with every Backing prop still assigned to its former repository."
+        "The catalogue repository suite passes with every Backing prop still assigned to its former repository.",
+        "At phone (390 px), tablet (768 px) and desktop (1280 px) widths, the Backing group reuses the existing Fondos y muebles group/card pattern, stays legible and reachable, and adds no screen or navigation."
       ],
       "verification": [
         {
@@ -5153,6 +4980,13 @@
           "value": "npx tsx --conditions=react-server scripts/test/test-catalogo-repositorios.ts",
           "purpose": "The catalogue repository suite passes with every Backing prop still assigned to its former repository.",
           "category": "regression"
+        },
+        {
+          "type": "command",
+          "value": "npx tsx scripts/test/test-backing-piloto.ts",
+          "purpose": "At phone (390 px), tablet (768 px) and desktop (1280 px) widths, the Backing group reuses the existing Fondos y muebles group/card pattern, stays legible and reachable, and adds no screen or navigation.",
+          "created_by": "T3.10",
+          "category": "functional"
         }
       ],
       "covers": [
@@ -5160,7 +4994,7 @@
       ],
       "kind": "implement",
       "subplan_id": "SP-3",
-      "ui": true
+      "ui": false
     },
     {
       "id": "T3.11",
@@ -5432,7 +5266,7 @@
         "coupling": {
           "evidence": [
             "task:T1.8",
-            "task:T3.14"
+            "task:T3.12"
           ],
           "justification": "Exercises SP-1's session guard and every SP-3 piece together before the reviews."
         },
@@ -5486,108 +5320,13 @@
       "ui": false
     },
     {
-      "id": "T3.14",
-      "milestone_id": "M2",
-      "title": "Review rendered Taller essentials against the design",
-      "objective": "Phone, tablet and desktop renderings of the table type cards, the table editor with a new type, the Backing group and the unchanged export menu match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks.",
-      "repository": "pictures",
-      "after": [
-        "T3.13"
-      ],
-      "complexity": "medium",
-      "scope": "small_change",
-      "estimated_minutes": 60,
-      "risk": "medium",
-      "coupling": "medium",
-      "confidence": "medium",
-      "estimate_rationale": "Uncalibrated estimate of 60 minutes including focused verification, not a deadline.",
-      "classification_evidence": {
-        "complexity": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: The inspected boundary requires bounded changes using existing domain operations."
-        },
-        "scope": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: Changes are limited to .evidence/REQ-021/SP-3.visual.md, .evidence/REQ-021/SP-3.visual.findings.json and the listed focused verification artifacts."
-        },
-        "duration": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: Uncalibrated agent estimate: 20 minutes inspection, 20 implementation or execution, 20 focused verification and evidence."
-        },
-        "risk": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: Failure would produce incorrect scene geometry, shopping quantities or exported materials."
-        },
-        "coupling": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: Explicit prerequisites order shared scene files and package script registration; consumers use the stated versioned contracts."
-        },
-        "confidence": {
-          "evidence": [
-            "file:src/components/tres-d/FondosYMuebles.tsx",
-            "spec:SPEC.md#requirements",
-            "spec:SPEC.md#clarifications",
-            "task:T3.13"
-          ],
-          "justification": "Review rendered Taller essentials against the design: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending."
-        }
-      },
-      "expected_paths": [
-        ".evidence/REQ-021/SP-3.visual.md",
-        ".evidence/REQ-021/SP-3.visual.findings.json"
-      ],
-      "shared_resources": [
-        "ledger:T3.14"
-      ],
-      "acceptance_criteria": [
-        "Phone, tablet and desktop renderings of the table type cards, the table editor with a new type, the Backing group and the unchanged export menu match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks."
-      ],
-      "verification": [
-        {
-          "type": "command",
-          "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-3.visual.findings.json",
-          "purpose": "Phone, tablet and desktop renderings of the table type cards, the table editor with a new type, the Backing group and the unchanged export menu match the approved taller-esenciales@v1 contract, with actionable findings mapped to their owning tasks.",
-          "created_by": "T3.14",
-          "category": "static"
-        }
-      ],
-      "covers": [
-        "R9",
-        "R10",
-        "R11"
-      ],
-      "kind": "audit",
-      "subplan_id": "SP-3",
-      "ui": false
-    },
-    {
       "id": "T3.15",
       "milestone_id": "M2",
       "title": "Audit Taller essentials and export compatibility",
       "objective": "An independent SP-3 spec and standards audit has no open critical or high findings, maps each defect to its introducing task, checks modelled pieces against docs/req021/aprobacion-backing-mesas.json and the proposal, and distinguishes GLB structural evidence from real Blender and owner evidence.",
       "repository": "pictures",
       "after": [
-        "T3.14"
+        "T3.13"
       ],
       "complexity": "medium",
       "scope": "small_change",
@@ -5601,7 +5340,7 @@
           "evidence": [
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: The inspected boundary requires bounded changes using existing domain operations."
         },
@@ -5609,7 +5348,7 @@
           "evidence": [
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: Changes are limited to .evidence/REQ-021/SP-3.audit.md, .evidence/REQ-021/SP-3.findings.json and the listed focused verification artifacts."
         },
@@ -5617,7 +5356,7 @@
           "evidence": [
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: Uncalibrated agent estimate: 30 minutes inspection, 30 implementation or execution, 30 focused verification and evidence."
         },
@@ -5625,7 +5364,7 @@
           "evidence": [
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: Failure would produce incorrect scene geometry, shopping quantities or exported materials."
         },
@@ -5633,7 +5372,7 @@
           "evidence": [
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: Explicit prerequisites order shared scene files and package script registration; consumers use the stated versioned contracts."
         },
@@ -5642,7 +5381,7 @@
             "file:src/lib/globos3d/mobiliario-conjunto-tipos.ts",
             "spec:SPEC.md#requirements",
             "spec:SPEC.md#clarifications",
-            "task:T3.14"
+            "task:T3.13"
           ],
           "justification": "Audit Taller essentials and export compatibility: Existing source was inspected; round 9 answers now settle product behavior, while Designer reconciliation and future integration evidence remain pending."
         }
@@ -5678,7 +5417,7 @@
     {
       "id": "T92",
       "milestone_id": "M2",
-      "title": "Composition check CG-2: accounts and Taller essentials",
+      "title": "Composition check CG-2: accounts, Taller essentials, saved decorations and AI spend",
       "objective": "On the integrated candidate of SP-1, SP-2, SP-14 SP-3, SP-5 and SP-6, run npm run taller:test-composicion-esenciales (authored by T3.12) and record .evidence/REQ-021/CG-2.integration.json: the integrated candidate passes Master Designer table, Backing and GLB operations and Entusiasta direct access denial; also run `npm run decoraciones:test-integracion` and record personal-library persistence and ownership results in the same evidence file.",
       "repository": "pictures",
       "after": [
@@ -7016,7 +6755,6 @@
         "src/lib/asesor/voice.ts",
         "scripts/test/lib/sesion-prueba.ts",
         "scripts/test/test-guardias-rutas.ts",
-        "scripts/test/*.ts",
         "scripts/e2e/humo/configuracion.ts",
         "scripts/e2e/humo/pasos-asistente.ts",
         "scripts/e2e/humo/navegacion.ts",
@@ -7024,8 +6762,7 @@
       ],
       "shared_resources": [
         "contract:permission-map",
-        "contract:session-guard",
-        "package.json scripts"
+        "contract:session-guard"
       ],
       "acceptance_criteria": [
         "F16 (high) is fixed: Local administrator admission trusts the destination hostname, so a remote request adapted to a loopback internal Next.js URL receives unrestricted administration.",
