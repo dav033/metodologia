@@ -344,3 +344,9 @@
 {"at": "2026-10-28T08:40:56-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: direcciones listas para comparar y elegir", "diff": ""}
 {"at": "2026-10-28T08:42:02-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
 {"at": "2026-10-28T08:44:22-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 17 secciones traducidas", "diff": ""}
+{"at": "2026-10-28T08:52:19-05:00", "who": "Planner", "kind": "plan", "sp": "SP-7", "text": "Actualizó SP-7 (resultado, criterios, tareas)", "diff": "+ One tool catalogue names the home, normal chat, balloon counter, cost calculator and decorations gallery with the permission and spend tag of each, and every page and API of the four tools is mapped to exactly that permission."}
+{"at": "2026-10-28T08:52:19-05:00", "who": "Planner", "kind": "plan", "sp": "SP-8", "text": "Actualizó SP-8 (resultado, criterios, tareas)", "diff": "+ The language of a request is the signed-in account's saved language, else the idioma cookie, else English when Accept-Language prefers English, else Spanish, and the html lang attribute matches it."}
+{"at": "2026-10-28T08:52:19-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools», «M3 — English / Spanish» cambió", "diff": ""}
+{"at": "2026-10-28T09:04:19-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-1", "text": "SP-1 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-28T09:37:19-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 131 secciones traducidas, 83 pendientes", "diff": ""}
+{"at": "2026-10-28T09:42:24-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 208 secciones traducidas", "diff": ""}

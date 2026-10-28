@@ -1,0 +1,22 @@
+{
+ "request": "T2.3:2",
+ "state": "done",
+ "kind": "quota",
+ "label": "Cuota del agente",
+ "tone": "warn",
+ "headline": "T2.3 bloqueada: se agotó la cuota del agente y no se sabe cuándo se renueva",
+ "origin": "El fallo es de cuota, no del código ni del plan: el intento att-0062 terminó con quota_exhausted y el sistema registró m5:quota_reset_unknown (\"Se agotó la cuota y no se sabe cuándo se renueva.\"). Las verificaciones de T2.3 no llegaron a ejecutarse en este intento, así que no indican fallos en la pantalla de ingreso, activación, restablecimiento o aviso. Es el segundo intento de T2.3; el primero (att-0024) llegó a aceptarse y luego fue devuelto por revisión. Un aviso de relevo indica que la ventana de 5 h de esta cuenta está al 86% y se renueva a las 10:59; no confirma que sea la cuota del agente que falló.",
+ "steps": [
+  "Ejecuta `globalusage` para ver la cuota de 5 h y 7 d del agente que ejecutó att-0062 y cuándo se renueva.",
+  "Si la ventana sigue agotada, espera a su renovación antes de reintentar; si el aviso de 10:59 corresponde a ese agente, reintenta después de esa hora.",
+  "Cuando haya cuota disponible, reintenta T2.3 con la opción retry (sin nota, el código no necesita cambios)."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T09:51:34",
+ "seconds": 18.1
+}

@@ -3,28 +3,28 @@ req: REQ-021
 status: draft
 created: 2026-10-26
 ---
-# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto de IA, elementos esenciales de Taller, inglés, módulos y chat
+# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto en IA, elementos esenciales de Taller, inglés, módulos y chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/69 · generado: 2026-10-28T08:40:06-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 16/90 · generado: 2026-10-28T09:25:37-05:00
 
-**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 14/29
+**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 15/29
 
 **SP-1 — Cuentas, sesiones y permisos del lado del servidor**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T1.1 | Esquema de cuentas: migración 037 y el helper de esquema de prueba aislado | media | completada | gpt-6-luna | codex-1 | 2 |
+| T1.1 | Esquema de cuentas: migración 037 y helper aislado para el esquema de pruebas | media | completada | gpt-6-luna | codex-1 | 2 |
 | T1.2 | Catálogo de permisos, catálogo de planes, los seis roles del sistema y el mapa de permisos de rutas | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.3 | Servicio de cuentas: invitaciones, activación, inicio de sesión con bloqueo, enlaces de restablecimiento, roles y comandos de un solo uso | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T1.4 | Sesiones del servidor y guardia de permisos en el proxy y la API de inicio de sesión, en sustitución de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Modo local sin restricciones que impide iniciar fuera de next dev en loopback | media | completada | gpt-6-luna | codex-1 | 3 |
-| T1.6 | Aplicar la guardia de permisos a cada handler de API y migrar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T1.4 | Sesiones del servidor y control de permisos en el proxy y la API de inicio de sesión, en reemplazo de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T1.5 | Modo local sin restricciones que se niega a iniciar fuera de next dev en loopback | media | completada | gpt-6-luna | codex-1 | 3 |
+| T1.6 | Aplicar el control de permisos a cada handler de API y trasladar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
 | T1.7 | Verificación de extremo a extremo de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 6 |
 | T1.8 | Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 12 |
-| T1.8b | Auditoría de verificación cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 1 |
+| T1.8b | Auditoría cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | completada | gpt-6.1-sol | codex-luis | 1 |
 | T1.9 | Corregir los hallazgos F1, F2, F3, F4 de T1.8 | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.10 | Corregir el hallazgo F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
+| T1.10 | Corregir los hallazgos F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
 | T1.11 | Corregir los hallazgos F16, F17 de T1.8 | media | completada | gpt-6-luna | codex-2 | 2 |
 | T1.12 | Corregir los hallazgos F19, F20 de T1.8 | media | completada | gpt-6-luna | codex-luis | 1 |
 
@@ -32,22 +32,22 @@ created: 2026-10-26
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T2.1 | Copiar al repositorio el contrato aprobado por el propietario cuentas-admin@v1 | baja | completada | gpt-6.1-sol | codex-2 | 2 |
-| T2.2 | API de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | en curso | gpt-6-luna | codex-luis | 3 |
-| T2.3 | Pantallas de inicio de sesión, activación de invitación, restablecimiento de contraseña y nueva aceptación del aviso | media | pendiente | gpt-6-luna | codex-2 | 1 |
-| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | pendiente | gpt-6-luna | codex-2 | 1 |
-| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | pendiente | gpt-6-luna | codex-2 | 1 |
+| T2.1 | Copiar en el repositorio el contrato cuentas-admin@v1 aprobado por el propietario | baja | completada | gpt-6.1-sol | codex-2 | 2 |
+| T2.2 | API de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | completada | gpt-6-luna | codex-1 | 4 |
+| T2.3 | Pantallas de inicio de sesión, activación de invitación, restablecimiento de contraseña y nueva aceptación del aviso | media | en curso | gpt-6-luna | codex-1 | 2 |
+| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | lista | gpt-6-luna | codex-2 | 1 |
+| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | lista | gpt-6-luna | codex-2 | 1 |
 | T2.6 | Prueba de extremo a extremo en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | pendiente | gpt-6-luna | codex-2 | 13 |
 | T2.7 | Revisión visual de SP-2 según el contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
 | T2.8 | Auditoría de SP-2: pantallas de cuenta, API de administración y aviso de datos | media | pendiente | — | — | 0 |
 
-**SP-14 — Sección de planes: los cuatro planes de acceso, públicos e informativos**
+**SP-14 — Sección de planes: los cuatro planes de acceso, pública e informativa**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14.1 | Copiar al repositorio el contrato de planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
+| T14.1 | Copiar en el repositorio el contrato planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
 | T14.2 | Página pública de planes: los cuatro planes del catálogo, precios por idioma | media | pendiente | — | — | 0 |
-| T14.3 | Enlaces a planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
+| T14.3 | Enlaces a los planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
 | T14.4 | Prueba de extremo a extremo en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
 | T14.5 | Revisión visual de SP-14 según el contrato planes@v1 | media | pendiente | — | — | 0 |
 | T14.6 | Auditoría de SP-14: uso del catálogo, ruta pública y textos | media | pendiente | — | — | 0 |
@@ -56,27 +56,27 @@ created: 2026-10-26
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T91 | Verificación de composición de M1: del primer administrador a un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
+| T91 | Verificación de composición de M1: desde el primer administrador hasta un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
 | T94 | Verificación de composición CG-4: planes de acceso desde la sección de planes hasta la pantalla de cuentas | media | pendiente | — | — | 0 |
 
-**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas de chat** · dificultad alta · 1/40
+**M2 — Trabajo guardado, elementos esenciales de Taller, gasto por usuario y herramientas de chat** · dificultad alta · 1/52
 
-**SP-3 — Elementos esenciales de Taller: Backing y tipos de mesa investigados y modelados, tarjetas de tipo y exportación a Blender de todos los tipos**
+**SP-3 — Elementos esenciales de Taller: estructuras Backing y tipos de mesa investigados y modelados, tarjetas por tipo y exportación a Blender de todos los tipos**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T3.2 | Investigar nuevas estructuras de Backing y tipos de mesa, redactar la propuesta validada y obtener la aprobación del propietario | media | en curso | gpt-6-luna | codex-luis | 2 |
+| T3.2 | Investigar nuevas estructuras Backing y tipos de mesa, redactar la propuesta validada y obtener la aprobación del propietario | media | verificando | gpt-6-luna | codex-luis | 2 |
 | T3.3 | Hacer exhaustivos los registros de mesas, piezas y Backing, y agregar los puntos de extensión de Backing | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T3.4 | Registrar en el repositorio la lista aprobada por el propietario de nuevos Backings y tipos de mesa | baja | pendiente | — | — | 0 |
+| T3.4 | Registrar en el repositorio la lista de nuevos Backings y tipos de mesa aprobados por el propietario | baja | pendiente | — | — | 0 |
 | T3.5 | Modelar los nuevos tipos de mesa aprobados en el generador paramétrico de mesas | alta | pendiente | — | — | 0 |
-| T3.6 | Modelar las nuevas estructuras de Backing aprobadas como muebles paramétricos de Taller | alta | pendiente | — | — | 0 |
-| T3.7 | Enseñar a la lectura de fotografías las nuevas estructuras de Backing aprobadas | media | pendiente | — | — | 0 |
-| T3.8 | Punto de control: ejecutar las suites de registro y modelado antes del trabajo de interfaz y exportación de Taller | baja | pendiente | — | — | 0 |
-| T3.9 | Una tarjeta de creación por cada tipo de mesa en Fondos y muebles | media | pendiente | — | — | 0 |
-| T3.10 | Grupo Backing en Fondos y muebles con los siete accesorios Backing existentes y los nuevos | baja | pendiente | — | — | 0 |
+| T3.6 | Modelar las nuevas estructuras Backing aprobadas como mobiliario paramétrico de Taller | alta | pendiente | — | — | 0 |
+| T3.7 | Enseñar a la lectura de fotos las nuevas estructuras Backing aprobadas | media | pendiente | — | — | 0 |
+| T3.8 | Punto de control: ejecutar las suites de registros y modelado antes del trabajo de interfaz y exportación de Taller | baja | pendiente | — | — | 0 |
+| T3.9 | Una tarjeta de creación por tipo de mesa en Fondos y muebles | media | pendiente | — | — | 0 |
+| T3.10 | Grupo Backing en Fondos y muebles con los siete elementos Backing existentes y los nuevos | baja | pendiente | — | — | 0 |
 | T3.11 | Verificar y reparar la exportación GLB de cada tipo de elemento de escena | alta | pendiente | — | — | 0 |
-| T3.12 | Implementar el arnés de verificación en navegador y Blender de Taller para cada tipo de elemento | alta | pendiente | — | — | 0 |
-| T3.13 | Ejecutar el escenario de integración real de elementos esenciales de Taller | media | pendiente | — | — | 0 |
+| T3.12 | Implementar el arnés de verificación en navegador de Taller y Blender para cada tipo de elemento | alta | pendiente | — | — | 0 |
+| T3.13 | Ejecutar el escenario real de integración de elementos esenciales de Taller | media | pendiente | — | — | 0 |
 | T3.15 | Auditar los elementos esenciales de Taller y la compatibilidad de exportación | media | pendiente | — | — | 0 |
 
 **SP-4 — Proyectos guardados**
@@ -84,38 +84,54 @@ created: 2026-10-26
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T4.1 | Copiar el contrato de diseño aprobado para proyectos guardados | baja | pendiente | — | — | 0 |
-| T4.2 | Implementar almacenamiento de proyectos versionado y validación de escenas | alta | pendiente | — | — | 0 |
+| T4.2 | Implementar almacenamiento de proyectos con versiones y validación de escenas | alta | pendiente | — | — | 0 |
 | T4.3 | Implementar API de proyectos con autorización por recurso | alta | pendiente | — | — | 0 |
-| T4.4 | Implementar la lista de proyectos y el guardado de Taller con protección contra conflictos | alta | pendiente | — | — | 0 |
+| T4.4 | Implementar la lista de proyectos y el guardado de Taller con protección ante conflictos | alta | pendiente | — | — | 0 |
 | T4.5 | Implementar una importación de escenas heredadas sin pérdida e idempotente | alta | pendiente | — | — | 0 |
-| T4.6 | Implementar el arnés de integración de proyectos guardados en varios navegadores | alta | pendiente | — | — | 0 |
-| T4.7 | Ejecutar el escenario de integración entre navegadores para proyectos e importación | media | pendiente | — | — | 0 |
+| T4.6 | Implementar el arnés de integración de proyectos guardados entre varios navegadores | alta | pendiente | — | — | 0 |
+| T4.7 | Ejecutar el escenario de integración entre navegadores de proyectos e importación | media | pendiente | — | — | 0 |
 | T4.8 | Revisar las interfaces renderizadas de proyectos e importación | media | pendiente | — | — | 0 |
-| T4.9 | Auditar el aislamiento de proyectos, la concurrencia y la preservación durante la importación | media | pendiente | — | — | 0 |
+| T4.9 | Auditar el aislamiento de proyectos, la concurrencia y la preservación de la importación | media | pendiente | — | — | 0 |
 | T4.31 | Ejecutar el punto de control de almacenamiento y autorización de proyectos | media | pendiente | — | — | 0 |
 
 **SP-5 — Decoraciones guardadas**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T5.1 | Copiar el contrato aprobado de interfaz de la biblioteca de decoraciones personales | baja | pendiente | — | — | 0 |
-| T5.2 | Agregar almacenamiento validado propiedad de la cuenta y API protegida de decoraciones personales | alta | pendiente | — | — | 0 |
-| T5.3 | Conectar los flujos de guardado y colocación en Taller, y de importación idempotente desde la biblioteca del navegador | alta | pendiente | — | — | 0 |
+| T5.1 | Copiar el contrato de interfaz aprobado para la biblioteca personal de decoraciones | baja | pendiente | — | — | 0 |
+| T5.2 | Agregar almacenamiento validado propiedad de la cuenta y una API protegida de decoraciones personales | alta | pendiente | — | — | 0 |
+| T5.3 | Conectar en Taller los flujos de guardado, colocación e importación idempotente de la biblioteca del navegador | alta | pendiente | — | — | 0 |
 | T5.4 | Verificar la persistencia entre navegadores, la colocación y el aislamiento de propiedad | alta | pendiente | — | — | 0 |
 | T5.5 | Revisar la interfaz renderizada de la biblioteca personal según su contrato | media | pendiente | — | — | 0 |
 | T5.6 | Auditar la propiedad de las decoraciones personales y la recuperación de importaciones | media | pendiente | — | — | 0 |
 
-**SP-6 — Gasto de IA por usuario y sesión**
+**SP-6 — Gasto en IA por usuario y sesión**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T6.1 | Fijar el contrato aprobado de interfaz de gasto de IA | baja | pendiente | — | — | 0 |
-| T6.2 | Definir el almacenamiento durable de uso de IA y ai-usage@1 | alta | pendiente | — | — | 0 |
-| T6.3 | Atribuir el uso en cada llamada de modelo de Next y ai-api con costo | alta | pendiente | — | — | 0 |
-| T6.4 | Crear el panel de gasto para el personal y una API con filtros aplicados en el servidor | alta | pendiente | — | — | 0 |
-| T6.5 | Ejecutar verificaciones de atribución de uso y autorización desde el punto de entrada real | alta | pendiente | — | — | 0 |
+| T6.1 | Fijar el contrato de interfaz aprobado para el gasto en IA | baja | pendiente | — | — | 0 |
+| T6.2 | Definir el almacenamiento persistente de uso de IA y ai-usage@1 | alta | pendiente | — | — | 0 |
+| T6.3 | Atribuir el uso en cada llamada de modelo de pago de Next y ai-api | alta | pendiente | — | — | 0 |
+| T6.4 | Crear el panel de gasto para el personal y una API con filtros del lado del servidor | alta | pendiente | — | — | 0 |
+| T6.5 | Ejecutar verificaciones reales de atribución de uso y autorización desde el punto de entrada | alta | pendiente | — | — | 0 |
 | T6.6 | Revisar el panel de gasto renderizado según gasto-ia@v1 | media | pendiente | — | — | 0 |
-| T6.7 | Auditar la integridad del gasto de IA, la identidad y la minimización de datos | media | pendiente | — | — | 0 |
+| T6.7 | Auditar la cobertura, identidad y minimización de datos del gasto en IA | media | pendiente | — | — | 0 |
+
+**SP-7 — Chat asistido como tres herramientas y explorador de decoraciones**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T7.1 | Copiar en el repositorio el contrato herramientas-chat@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
+| T7.2 | Catálogo de herramientas, control de acceso por plan del lado del servidor para el chat guiado y etiquetas de gasto por herramienta | alta | pendiente | — | — | 0 |
+| T7.3 | API de conteo de globos por formulario, frase o foto sobre los motores de conteo existentes | media | pendiente | — | — | 0 |
+| T7.4 | Punto de control: control de acceso de herramientas, API de conteo y etiquetas de gasto en un servidor en ejecución | media | pendiente | — | — | 0 |
+| T7.5 | Página principal de herramientas en / y retiro de la página clásica de chat | media | pendiente | — | — | 0 |
+| T7.6 | Página de conteo de globos: formulario, frase y foto con un resultado sin precios | media | pendiente | — | — | 0 |
+| T7.7 | Página de calculadora de costos basada en la cotización profesional existente, alimentada por el contador o manualmente | media | pendiente | — | — | 0 |
+| T7.8 | Galería de decoraciones listas para usar en Taller con un enlace para abrir como proyecto nuevo | media | pendiente | — | — | 0 |
+| T7.9 | Prueba de extremo a extremo en navegador de las tres herramientas y la galería en una compilación de producción | media | pendiente | — | — | 0 |
+| T7.10 | Revisión visual de SP-7 según el contrato herramientas-chat@v1 | media | pendiente | — | — | 0 |
+| T7.11 | Auditoría de SP-7: control de acceso de herramientas, filtraciones de precios, fuentes de conteo y etiquetas de gasto | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
@@ -124,12 +140,29 @@ created: 2026-10-26
 | T92 | Verificación de composición CG-2: cuentas, sección de planes y elementos esenciales de Taller | media | pendiente | — | — | 0 |
 | T93 | Verificación de composición CG-3: cuentas y proyectos guardados | media | pendiente | — | — | 0 |
 | T95 | Verificación de composición CG-5: decoraciones guardadas en el candidato integrado | media | pendiente | — | — | 0 |
-| T96 | Verificación de composición CG-6: gasto de IA por cuenta en el candidato integrado | media | pendiente | — | — | 0 |
+| T96 | Verificación de composición CG-6: gasto en IA por cuenta en el candidato integrado | media | pendiente | — | — | 0 |
+| T97 | Verificación de composición CG-7: herramientas de chat y galería en el candidato integrado | media | pendiente | — | — | 0 |
 
-**M3 — Inglés / español** · dificultad — · 0/0
+**M3 — Inglés / español** · dificultad media · 0/9
+
+**SP-8 — Selector de idioma, Taller 3D y navegación en inglés**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
+| T8.1 | Mecanismo de idioma: orden de detección, diccionarios bilingües tipados y elección guardada | media | pendiente | — | — | 0 |
+| T8.2 | Selector de idioma e inglés para la navegación, las pantallas de cuenta, la página de planes y el aviso de datos | media | pendiente | — | — | 0 |
+| T8.3 | Control de cobertura que detecta literales en español fuera de los diccionarios de texto | media | pendiente | — | — | 0 |
+| T8.4 | Taller en inglés, parte 1: estructura, biblioteca, paneles para agregar elementos, menús, ayuda y exportación | baja | pendiente | — | — | 0 |
+| T8.5 | Taller en inglés, parte 2: inspector, editores, paneles, lista de compras y ficha de montaje | baja | pendiente | — | — | 0 |
+| T8.6 | Taller en inglés, parte 3: panel de IA y frases visibles para el usuario generadas en lib | media | pendiente | — | — | 0 |
+| T8.7 | Prueba de extremo a extremo en navegador: primera visita en inglés, elección guardada, sin texto restante en español y texto que cabe | media | pendiente | — | — | 0 |
+| T8.8 | Auditoría de SP-8: detección de idioma, elección guardada, cobertura y español sin cambios | media | pendiente | — | — | 0 |
+
+**Sin subplan**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T98 | Verificación de composición CG-8: inglés en cuentas, proyectos guardados, herramientas y Taller | media | pendiente | — | — | 0 |
 
 **M4 — Módulos editables y chat → 3D** · dificultad — · 0/0
 
@@ -146,7 +179,6 @@ created: 2026-10-26
 - Contrato de diseño SP-5: `decoraciones@v1` · aprobación pendiente
 - Contrato de diseño SP-6: `gasto-ia@v1` · aprobación pendiente
 - Contrato de diseño SP-7: `herramientas-chat@v1` · aprobación pendiente
-- Contrato de diseño SP-8: `idioma-taller@v1` · aprobación pendiente
 - Contrato de diseño SP-9: `textos-producto@v1` · aprobación pendiente
 - Contrato de diseño SP-10: `idioma-resto@v1` · aprobación pendiente
 - Contrato de diseño SP-11: `modulos-editables@v1` · aprobación pendiente
@@ -819,60 +851,249 @@ Cada usuario que inicia sesión guarda y vuelve a abrir proyectos y decoraciones
 
 <!-- SP-6 tasks -->
 
-- [ ] T6.1 — Fijar el contrato de interfaz aprobado para gasto de IA · repo: pictures · después de: T94 · verificar: `test -s design/contracts/gasto-ia@v1.md` · archivos: design/contracts/gasto-ia@v1.md · recursos: design:gasto-ia@v1 · cubre: R4, R5 · tipo: design · subplan: SP-6 · interfaz: no
-- [ ] T6.2 — Definir el almacenamiento duradero del uso de IA y ai-usage@1 · repo: pictures · después de: T94 · verificar: `npm run gasto:test-esquema` · archivos: scripts/migrations/040_gasto_ia.sql, src/lib/gasto-ia/repositorio.ts, src/lib/registro/contrato-uso.ts, src/lib/cuentas/dependientes.ts, services/ai-api/app/registro.py · recursos: postgres:account-data, contract:account-service@1, contract:session-guard@1 · cubre: R4, R5 · tipo: implement · subplan: SP-6 · interfaz: no
-- [ ] T6.3 — Atribuir el uso en cada llamada pagada a modelos de Next y ai-api · repo: pictures · después de: T6.2 · verificar: `npm run gasto:test-captura` · archivos: src/lib/registro/envoltorios.ts, src/lib/registro/ruta.ts, src/app/api/escena-ia/route.ts, src/lib/ia/nucleo/telemetria-llamadas.ts, services/ai-api/app/registro.py, services/ai-api/app/main.py · recursos: contract:ai-usage@1, postgres:account-data, contract:session-guard@1 · cubre: R4, R5 · tipo: implement · subplan: SP-6 · interfaz: no
-- [ ] T6.4 — Crear el panel de gasto para el personal y la API con filtros del lado del servidor · repo: pictures · después de: T6.1, T6.2, T6.3 · verificar: `npm run gasto:test-ui -- --solo filtros` · archivos: src/app/admin/page.tsx, src/app/api/admin/gasto/route.ts, src/lib/gasto-ia/repositorio.ts, src/components/admin/GastoIa.tsx · recursos: design:gasto-ia@v1, contract:ai-usage@1, contract:permission-map@1 · cubre: R4, R5 · tipo: implement · subplan: SP-6 · interfaz: sí
-- [ ] T6.5 — Ejecutar comprobaciones de atribución de uso y autorización desde el punto de entrada real · repo: pictures · después de: T6.4 · verificar: `npm run gasto:test-integracion` · archivos: scripts/test/test-integracion-gasto-ia.ts, .evidence/REQ-021/SP-6.integration.json · recursos: postgres:account-data, contract:ai-usage@1 · cubre: R4, R5 · tipo: test · subplan: SP-6 · interfaz: sí
-- [ ] T6.6 — Revisar el panel de gasto renderizado según gasto-ia@v1 · repo: pictures · después de: T6.5 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-6.visual.findings.json` · archivos: .evidence/REQ-021/SP-6.visual.md, .evidence/REQ-021/SP-6.visual.findings.json · recursos: ledger:SP-6-visual, design:gasto-ia@v1 · cubre: R4, R5 · tipo: audit · subplan: SP-6 · interfaz: no
-- [ ] T6.7 — Auditar la cobertura del gasto de IA, la identidad y la minimización de datos · repo: pictures · después de: T6.6 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-6.findings.json` · archivos: .evidence/REQ-021/SP-6.audit.md, .evidence/REQ-021/SP-6.findings.json · recursos: ledger:SP-6, contract:ai-usage@1 · cubre: R4, R5 · tipo: audit · subplan: SP-6 · interfaz: no
+- [ ] T6.1 — Fijar el contrato de UI aprobado para gasto en IA · repositorio: pictures · después: T94 · verificar: `test -s design/contracts/gasto-ia@v1.md` · archivos: design/contracts/gasto-ia@v1.md · recursos: design:gasto-ia@v1 · cubre: R4, R5 · tipo: diseño · subplan: SP-6 · ui: no
+- [ ] T6.2 — Definir el almacenamiento duradero del uso de IA y ai-usage@1 · repositorio: pictures · después: T94 · verificar: `npm run gasto:test-esquema` · archivos: scripts/migrations/040_gasto_ia.sql, src/lib/gasto-ia/repositorio.ts, src/lib/registro/contrato-uso.ts, src/lib/cuentas/dependientes.ts, services/ai-api/app/registro.py · recursos: postgres:account-data, contract:account-service@1, contract:session-guard@1 · cubre: R4, R5 · tipo: implementación · subplan: SP-6 · ui: no
+- [ ] T6.3 — Atribuir el uso en cada llamada pagada a modelos de Next y ai-api · repositorio: pictures · después: T6.2 · verificar: `npm run gasto:test-captura` · archivos: src/lib/registro/envoltorios.ts, src/lib/registro/ruta.ts, src/app/api/escena-ia/route.ts, src/lib/ia/nucleo/telemetria-llamadas.ts, services/ai-api/app/registro.py, services/ai-api/app/main.py · recursos: contract:ai-usage@1, postgres:account-data, contract:session-guard@1 · cubre: R4, R5 · tipo: implementación · subplan: SP-6 · ui: no
+- [ ] T6.4 — Crear el panel de gasto para el personal y una API con filtros del lado del servidor · repositorio: pictures · después: T6.1, T6.2, T6.3 · verificar: `npm run gasto:test-ui -- --solo filtros` · archivos: src/app/admin/page.tsx, src/app/api/admin/gasto/route.ts, src/lib/gasto-ia/repositorio.ts, src/components/admin/GastoIa.tsx · recursos: design:gasto-ia@v1, contract:ai-usage@1, contract:permission-map@1 · cubre: R4, R5 · tipo: implementación · subplan: SP-6 · ui: sí
+- [ ] T6.5 — Ejecutar verificaciones de atribución del uso y autorización desde puntos de entrada reales · repositorio: pictures · después: T6.4 · verificar: `npm run gasto:test-integracion` · archivos: scripts/test/test-integracion-gasto-ia.ts, .evidence/REQ-021/SP-6.integration.json · recursos: postgres:account-data, contract:ai-usage@1 · cubre: R4, R5 · tipo: prueba · subplan: SP-6 · ui: sí
+- [ ] T6.6 — Revisar el panel de gasto renderizado según gasto-ia@v1 · repositorio: pictures · después: T6.5 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-6.visual.findings.json` · archivos: .evidence/REQ-021/SP-6.visual.md, .evidence/REQ-021/SP-6.visual.findings.json · recursos: ledger:SP-6-visual, design:gasto-ia@v1 · cubre: R4, R5 · tipo: auditoría · subplan: SP-6 · ui: no
+- [ ] T6.7 — Auditar la integridad, identidad y minimización de datos del gasto en IA · repositorio: pictures · después: T6.6 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-6.findings.json` · archivos: .evidence/REQ-021/SP-6.audit.md, .evidence/REQ-021/SP-6.findings.json · recursos: ledger:SP-6, contract:ai-usage@1 · cubre: R4, R5 · tipo: auditoría · subplan: SP-6 · ui: no
 
 <!-- /SP-6 tasks -->
-- **SP-7 — Chat asistido con tres herramientas y explorador de decoraciones** (interfaz: `herramientas-chat@v1`): El chat asistido se convierte en un contador de globos, una calculadora de costos y el chat normal, cada uno con sus propios prompts y gasto medido por separado, sin inventar nunca cantidades ni precios; un explorador de decoraciones listas para usar muestra las decoraciones 3D existentes y, como todo lo de Taller 3D, solo es accesible para Master Designer y los roles del personal; cada herramienta solo es accesible según los planes de acceso que le asigna el catálogo de planes. Cubre R13, R16.
+- **SP-7 — Chat asistido con tres herramientas y explorador de decoraciones** (UI: `herramientas-chat@v1`): El chat asistido se convierte en un contador de globos, una calculadora de costos y el chat normal, cada uno con sus propias instrucciones y el gasto medido por separado, sin inventar nunca cantidades ni precios; un explorador de decoraciones listas para usar muestra las decoraciones 3D existentes y, como todo lo del Taller 3D, solo está disponible para Master Designer y los roles del personal; cada herramienta solo está disponible según los planes de acceso que le asigna el catálogo de planes. Cubre R13, R16.
+
+<!-- SP-7 tasks -->
+
+  Tareas de SP-7 (ronda 15 del responsable, 2026-10-28). El chat guiado (/asistente, VistaGuiada) se convierte en el chat normal; se retira la página del chat clásico en / y / pasa a ser la página principal de herramientas (q1). Contador: página propia para ingresar formulario, frase o foto; muestra cantidades y lista de compras sin precios (q2 + nota del responsable: también admite una foto, usando el conteo de fotos existente services/ai-api conteo-referencia; «detección avanzada de globos» sigue «aún no disponible»). Calculadora: la cotización profesional existente (src/components/cotizacion/CotizacionProfesional.tsx, src/lib/cotizacion/profesional.ts: materiales, mano de obra, equipo y transporte, costos indirectos, margen) como página propia, con datos del contador o ingresados manualmente (q3 + nota del responsable). Las cuentas sin costos.usar no reciben precios en el chat; el servidor hace cumplir esta regla (q4). Galería dentro del Taller en /3d/decoraciones con enlace propio (q5).
+  Los permisos provienen de SP-1 (chat.usar, contador.usar, costos.usar, decoraciones.explorar). Las etiquetas de gasto alimentan el campo tool de ai-usage@1 de SP-6. Contratos consumidos: session-guard@1, permission-map@1, plan-catalogue@1 (SP-1), taller-scene@1 (SP-3), ai-usage@1 (SP-6). La puerta de composición CG-7 agrega SP-7 al candidato M2. Orden de recortes: la división, la regla de no mostrar precios y la confiabilidad nunca se sacrifican; si hay retraso, lo primero que se elimina son los filtros de la galería (recorte 3 del responsable: mejoras del chat más allá de la división).
+  DAG: T7.1 (diseño) ∥ T7.2 (catálogo de herramientas, control de acceso, etiquetas) → T7.3 (API del contador) → T7.4 punto de control → {T7.5 página principal, T7.6 contador, T7.7 calculadora, T7.8 galería} (UI, después de T7.1) → T7.9 integración → T7.10 revisión visual → T7.11 auditoría.
+
+- [ ] T7.1 — Copiar al repositorio el contrato herramientas-chat@v1 aprobado por el responsable · repositorio: pictures · después: T3.3, T6.2 · verificar: `test -s design/contracts/herramientas-chat@v1.md` · archivos: design/contracts/herramientas-chat@v1.md · recursos: design:herramientas-chat@v1 · cubre: R13, R16 · tipo: diseño · subplan: SP-7 · ui: no
+
+  Clasificación: complejidad baja; alcance: corrección aislada; riesgo bajo; acoplamiento medio; confianza alta; estimación: 10 minutos.
+  El planificador proporciona el borrador aprobado para el plan; la tarea lo copia sin cambios.
+
+  - Aceptación / estática: El contrato herramientas-chat@v1 aprobado por el responsable se copia byte por byte en design/contracts/herramientas-chat@v1.md. Verificación: `test -s design/contracts/herramientas-chat@v1.md`
+
+- [ ] T7.2 — Catálogo de herramientas, control de precios del chat guiado en el servidor y etiquetas de gasto por herramienta · repositorio: pictures · después: T3.3, T6.2 · verificar: `npm run herramientas:test-gating -- --test-name-pattern=catalogo` · archivos: src/lib/herramientas/catalogo-herramientas.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, src/lib/guiada-motor/costear-idea-elegida.ts, src/lib/registro/cliente.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-herramientas-gating.ts · recursos: scripts de package.json, contract:permission-map, contract:ai-usage · cubre: R13, R16 · tipo: implementación · subplan: SP-7 · ui: no
+
+  Clasificación: complejidad alta; alcance: cambio grande; riesgo alto; acoplamiento alto; confianza media; estimación: 150 minutos.
+  `catalogo-herramientas.ts`: `HERRAMIENTAS = { inicio, chat, contador, calculadora, galeria }`; cada una tiene `ruta`, `permiso` (sesion, chat.usar, contador.usar, costos.usar, decoraciones.explorar), `etiquetaGasto` (chat, contador, calculadora; galeria no tiene llamadas pagadas) y nombres ES/EN; `herramientasDe(permisos)` respeta el orden del catálogo.
+  Ruta guiada: cuando la sesión no tiene `costos.usar`, quitar `costear_decoracion` y la acción `costear` del plan de acciones de herramientas enviado al modelo; hacer que `respuestaSinModelo` y la validación del texto final eliminen precios y totales; y responder a los endpoints de cotización (`/api/guiada/motor/*` costing, `/api/cotizacion-profesional`, `/api/taller/cotizacion*`) con 403 `SIN_PERMISO` mediante el mapa; agregar al prompt una línea que indique que aquí no hay costos disponibles, sin nombrar ningún plan. Gasto: `cliente.ts` envía `x-herramienta` según la herramienta de la página, y el servidor lo copia al campo `tool` de ai-usage@1 (nunca se usa como fuente confiable para permisos). El script npm `herramientas:test-gating` = `tsx --conditions=react-server --test scripts/test/test-herramientas-gating.ts`.
+
+  - Aceptación / funcional: Un solo catálogo de herramientas define la página principal, el chat normal, el contador de globos, la calculadora de costos y la galería de decoraciones, con el permiso y la etiqueta de gasto de cada una; además, cada página y API de las cuatro herramientas está asociada exactamente a ese permiso. Verificación: `npm run herramientas:test-gating -- --test-name-pattern=catalogo`
+  - Aceptación / funcional: Para una cuenta sin costos.usar, el chat guiado nunca llama a una herramienta de cotización, nunca responde con un precio, total o cotización, y sus API de cotización y cotización profesional responden 403 SIN_PERMISO, sin indicar qué plan incluye costos. Verificación: `npm run herramientas:test-gating -- --test-name-pattern=sin-precios`
+  - Aceptación / funcional: Cada llamada pagada a modelos del chat, contador y calculadora se registra en el registro de uso de IA con su propia etiqueta de herramienta (chat, contador, calculadora), junto con la cuenta autenticada y la sesión. Verificación: `npm run herramientas:test-gating -- --test-name-pattern=etiquetas`
+  - Aceptación / funcional: Un encabezado x-herramienta falsificado, un ID de cuenta o sesión proporcionado por el cliente y una solicitud POST de origen cruzado a las API con control de acceso nunca conceden acceso ni cambian la cuenta a la que pertenece un registro de gasto. Verificación: `npm run herramientas:test-gating -- --test-name-pattern=abuso`
+
+- [ ] T7.3 — API del contador de globos mediante formulario, frase o foto con los motores de conteo existentes · repositorio: pictures · después: T7.2 · verificar: `npm run contador:test-api -- --test-name-pattern=formulario` · archivos: src/app/api/contador/route.ts, src/lib/contador/contar.ts, src/lib/contador/esquema.ts, scripts/test/test-contador-api.ts · recursos: scripts de package.json, contract:ai-usage · cubre: R13 · tipo: implementación · subplan: SP-7 · ui: no
+
+  Clasificación: complejidad media; alcance: funcionalidad completa; riesgo medio; acoplamiento medio; confianza media; estimación: 120 minutos.
+  `POST /api/contador` (permiso contador.usar): `{ modo: 'formulario', estructura, medidas, tamanos, colores } | { modo: 'frase', texto } | { modo: 'foto', imagen }`. Formulario → `PYTHON_ESTIMAR_CONTEO_PATH`; frase → una llamada al modelo extrae los campos del formulario (validados con zod); si faltan medidas, responde `{ pregunta }` y luego usa el motor; foto (JPEG/PNG/WebP, máximo 8 MB) → `/internal/v1/ia/conteo-referencia` con su tolerancia. Respuesta `{ conteos: [{ tamano, color, cantidad }], listaCompra: [{ producto, cantidad }], origen, tolerancia? }`, nunca incluye precios. El script npm `contador:test-api` = `tsx --conditions=react-server --test scripts/test/test-contador-api.ts`.
+
+  - Aceptación / funcional: POST /api/contador con una estructura, sus medidas, tamaños y colores de globos devuelve el conteo de globos por tamaño y color y la lista de compras sin precios, igual a la estimación del motor para la misma entrada. Verificación: `npm run contador:test-api -- --test-name-pattern=formulario`
+  - Aceptación / funcional: POST /api/contador con una frase extrae la estructura y las medidas con el modelo y luego cuenta con el motor; si la frase no incluye una medida, la solicita en vez de adivinar un número. Verificación: `npm run contador:test-api -- --test-name-pattern=frase`
+  - Aceptación / funcional: POST /api/contador con una foto devuelve el conteo de fotos existente de services/ai-api conteo-referencia con su tolerancia, identificado como una estimación a partir de la foto, y rechaza archivos que no sean imágenes o que superen el tamaño permitido. Verificación: `npm run contador:test-api -- --test-name-pattern=foto`
+
+- [ ] T7.4 — Punto de control: control de acceso de herramientas, API del contador y etiquetas de gasto en un servidor en ejecución · repositorio: pictures · después: T7.3 · verificar: `npm run herramientas:test-checkpoint` · archivos: scripts/test/test-herramientas-checkpoint.ts, .evidence/REQ-021/SP-7.checkpoint.json · recursos: scripts de package.json · cubre: R13, R16 · tipo: prueba · subplan: SP-7
+
+  Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 60 minutos.
+  El script npm `herramientas:test-checkpoint` = `tsx scripts/test/test-herramientas-checkpoint.ts`; los estados esperados provienen de esta especificación (403 para costos sin costos.usar).
+
+  - Aceptación / integración: Antes de crear cualquier pantalla, con los estados esperados documentados a partir de SPEC, las API reales de herramientas, contador y control de acceso pasan en un servidor en ejecución contra la base de datos REQ-021: Entusiasta cuenta por forma, frase y foto; su POST a las API profesionales de cotización y cálculo de costos recibe 403, y cada llamada queda registrada en el libro de uso bajo la etiqueta de su herramienta. Verificación: `npm run herramientas:test-checkpoint`
+
+- [ ] T7.5 — Página de inicio de herramientas en / y retiro de la página clásica de chat · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run herramientas:test-ui-portada` · archivos: src/app/page.tsx, src/components/herramientas/PortadaHerramientas.tsx, src/components/herramientas/textos-herramientas.ts, src/components/ui/shell/CabeceraApp.tsx, src/components/ui/shell/MenuApp.tsx, scripts/test/test-ui-portada.ts · recursos: scripts de package.json, contract:plan-catalogue · cubre: R13, R16 · tipo: implementación · subplan: SP-7 · ui: sí
+
+  Clasificación: complejidad media; alcance cambio grande; riesgo medio; acoplamiento medio; confianza media; estimación 120 minutos.
+  / muestra `herramientasDe(permisos)` como tarjetas; /api/chat sigue disponible (el agente de planes del chat guiado). Se eliminan los componentes usados solo por la página clásica; `npx tsc --noEmit` y la compilación demuestran que nada más los importaba. El script npm `herramientas:test-ui-portada` = `tsx scripts/test/test-ui-portada.ts`.
+
+  - Aceptación / funcional: La página de inicio / muestra solo las herramientas permitidas por el rol de la cuenta con sesión iniciada, cada una abre su propia página; la página clásica de chat desaparece mientras /api/chat sigue atendiendo al agente de planes del chat guiado. Verificación: `npm run herramientas:test-ui-portada`
+
+- [ ] T7.6 — Página del contador de globos: formulario, frase y foto con resultado sin precios · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run contador:test-ui` · archivos: src/app/contador/page.tsx, src/components/herramientas/contador/FormularioContador.tsx, src/components/herramientas/contador/ResultadoConteo.tsx, src/components/herramientas/contador/textos-contador.ts, scripts/test/test-ui-contador.ts · recursos: scripts de package.json · cubre: R13 · tipo: implementación · subplan: SP-7 · ui: sí
+
+  Clasificación: complejidad media; alcance funcionalidad completa; riesgo medio; acoplamiento medio; confianza media; estimación 120 minutos.
+  «Calcular costo» aparece solo con costos.usar y entrega el resultado a /calculadora mediante la clave de sessionStorage `calculadora:desde-contador` (sin carga útil en la URL). El script npm `contador:test-ui` = `tsx scripts/test/test-ui-contador.ts`.
+
+  - Aceptación / funcional: La página del contador de globos cuenta por forma, frase o foto y muestra cantidades por tamaño y color y la lista de compras sin precios, y ofrece «Calcular costo» solo a las cuentas con costos.usar. Verificación: `npm run contador:test-ui`
+
+- [ ] T7.7 — Página de la calculadora de costos basada en la cotización profesional existente, con datos del contador o ingresados manualmente · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run calculadora:test-ui` · archivos: src/app/calculadora/page.tsx, src/components/herramientas/calculadora/Calculadora.tsx, src/components/herramientas/calculadora/textos-calculadora.ts, scripts/test/test-ui-calculadora.ts · recursos: scripts de package.json · cubre: R13 · tipo: implementación · subplan: SP-7 · ui: sí
+
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 90 minutos.
+  Los totales provienen de la cotización profesional existente en Python; la página nunca calcula un total por sí misma. El script npm `calculadora:test-ui` = `tsx scripts/test/test-ui-calculadora.ts`.
+
+  - Aceptación / funcional: La página de la calculadora de costos recibe el resultado del contador o los materiales ingresados manualmente, permite editar los precios de los globos y agregar mano de obra, transporte, costos indirectos y margen, y muestra los precios por producto del catálogo real y los totales de la cotización profesional. Verificación: `npm run calculadora:test-ui`
+
+- [ ] T7.8 — Galería de decoraciones listas en el Taller con un enlace para abrirlas como proyecto nuevo · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run galeria:test-ui -- --solo galeria` · archivos: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · recursos: scripts de package.json, contract:taller-scene · cubre: R13, R16 · tipo: implementación · subplan: SP-7 · ui: sí
+
+  Clasificación: complejidad media; alcance funcionalidad completa; riesgo medio; acoplamiento medio; confianza media; estimación 150 minutos.
+  `galeria-decoraciones.ts` crea un índice `{ id, nombre, ocasion, tamano, miniatura }` a partir de `IDEAS_ASISTENTE` y `IDEAS_SEMPERTEX`. El Taller lee `?decoracion=<id>` una vez, la abre como una escena nueva sin guardar con la misma regla que «Abrir en Escena» (SP-4: primero se guardan los cambios pendientes del proyecto abierto o se pregunta al usuario) y elimina el parámetro. El script npm `galeria:test-ui` = `tsx scripts/test/test-ui-galeria.ts`.
+
+  - Aceptación / funcional: La galería de decoraciones en /3d/decoraciones muestra todos los elementos de Ideas del asistente e Ideas Sempertex, con búsqueda, filtros de ocasión y tamaño, y vista previa; «Abrir como proyecto nuevo» abre /3d?decoracion=<id> como una escena nueva sin guardar. Verificación: `npm run galeria:test-ui -- --solo galeria`
+  - Aceptación / funcional: Solo se puede acceder a la galería y a su enlace directo con decoraciones.explorar; las demás cuentas reciben la página de acceso denegado, y un id de decoración desconocido muestra un mensaje de no encontrado sin modificar la escena abierta. Verificación: `npm run galeria:test-ui -- --solo permisos`
+
+- [ ] T7.9 — Prueba integral de extremo a extremo en navegador de las tres herramientas y la galería sobre una compilación de producción · repo: pictures · después de: T7.5, T7.6, T7.7, T7.8 · verificar: `npm run herramientas:test-integracion` · archivos: scripts/test/test-integracion-herramientas.ts, .evidence/REQ-021/SP-7.integration.json · recursos: scripts de package.json · cubre: R13, R16 · tipo: prueba · subplan: SP-7
+
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo alto; acoplamiento medio; confianza media; estimación 90 minutos.
+  El script npm `herramientas:test-integracion` = `tsx scripts/test/test-integracion-herramientas.ts`; las llamadas a modelos de pago usan el proveedor configurado de menor costo y una llamada por herramienta.
+
+  - Aceptación / integración: En una compilación de producción contra la base de datos REQ-021, con los resultados esperados documentados a partir de SPEC, Entusiasta ve el chat y el contador en la página de inicio, cuenta por forma y foto sin precios y no puede usar la calculadora; Designer Plus envía el resultado del contador a la calculadora y obtiene totales con margen; Master Designer abre una decoración de la galería como proyecto nuevo; y el libro de uso contiene una fila por cada llamada de pago con la etiqueta de su herramienta. Verificación: `npm run herramientas:test-integracion`
+
+- [ ] T7.10 — Revisión visual de SP-7 según el contrato herramientas-chat@v1 · repo: pictures · después de: T7.9 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json` · archivos: .evidence/REQ-021/SP-7.visual.md, .evidence/REQ-021/SP-7.visual.findings.json · recursos: ledger:SP-7-visual · cubre: R13 · tipo: auditoría · subplan: SP-7
+
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 60 minutos.
+  Eje de revisión `visual` (rendered-ui-fidelity-audit).
+
+  - Aceptación / estática: Las pantallas renderizadas de inicio, contador, calculadora y galería coinciden con el contrato aprobado herramientas-chat@v1 en anchos de teléfono, tableta y escritorio, y cada hallazgo queda registrado junto con la tarea para corregirlo en el libro visual de SP-7. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json`
+
+- [ ] T7.11 — Auditoría de SP-7: control de acceso a herramientas, filtraciones de precios, fuentes de conteo y etiquetas de gasto · repo: pictures · después de: T7.10 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json` · archivos: .evidence/REQ-021/SP-7.audit.md, .evidence/REQ-021/SP-7.findings.json · recursos: ledger:SP-7 · cubre: R13, R16 · tipo: auditoría · subplan: SP-7
+
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo alto; acoplamiento medio; confianza media; estimación 75 minutos.
+  Como mínimo, verifica que no haya rutas de cálculo de costos sin costos.usar (herramientas de modelo, respuestas de reglas, texto final, API); que los conteos provengan solo de los motores; que la etiqueta de gasto nunca otorgue acceso; y que el enlace directo no pueda sobrescribir trabajo sin guardar.
+
+  - Aceptación / estática: Una auditoría independiente de SP-7 registra cada defecto confirmado junto con la tarea que debe corregirlo en el libro de hallazgos de SP-7, y el libro no tiene hallazgos críticos ni altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json`
+
+<!-- /SP-7 tasks -->
+
 
 <!-- CG-3 tasks -->
 
   Composición de los subplanes aceptados en el candidato integrado.
 
-- [ ] T93 — Comprobación de composición CG-3: cuentas y proyectos guardados · repo: pictures · después de: T92, T4.9 · verificar: `npm run proyectos:test-composicion` · archivos: .evidence/REQ-021/CG-3.integration.json · recursos: candidate:CG-3 · cubre: R2, R6, R7, R9, R11 · tipo: test · interfaz: no
+- [ ] T93 — Verificación de composición CG-3: cuentas y proyectos guardados · repo: pictures · después de: T92, T4.9 · verificar: `npm run proyectos:test-composicion` · archivos: .evidence/REQ-021/CG-3.integration.json · recursos: candidate:CG-3 · cubre: R2, R6, R7, R9, R11 · tipo: prueba · ui: no
 
-  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 45 minutos.
-  Ejecutar en el candidato integrado el modo de composición creado por T4.6 (CG-3 incluye SP-1, SP-2, SP-14, SP-3 y SP-4, por lo que va después de CG-2, que va después de CG-4). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el entorno de pruebas.
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 45 minutos.
+  Ejecutar en el candidato integrado el modo de composición creado por T4.6 (CG-3 incluye SP-1, SP-2, SP-14, SP-3 y SP-4, así que viene después de CG-2, que viene después de CG-4). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el arnés.
 
-  - Aceptación / integración: El candidato integrado permite guardar y volver a abrir proyectos dentro de la cuenta con cada tipo de mesa y cada accesorio de Backing, lectura/copia por parte del personal, rechazo de conflictos y rechazo de la eliminación de cuentas. Comprobación: `npm run proyectos:test-composicion`
+  - Aceptación / integración: El candidato integrado supera las pruebas de guardado y reapertura de proyectos con ámbito de cuenta para cada tipo de tabla y cada propiedad Backing, lectura/copia por parte del personal, rechazo de conflictos y rechazo de eliminación de cuentas. Verificación: `npm run proyectos:test-composicion`
 
 <!-- /CG-3 tasks -->
 <!-- CG-5 tasks -->
 
-  Compuerta de composición CG-5: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5 (acumulativa, después de CG-3).
+  Puerta de composición CG-5: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5 (acumulativa, después de CG-3).
 
-- [ ] T95 — Comprobación de composición CG-5: decoraciones guardadas en el candidato integrado · repo: pictures · después de: T93, T5.6 · verificar: `npm run decoraciones:test-integracion` · archivos: .evidence/REQ-021/CG-5.integration.json · recursos: candidate:CG-5, db:personal-decorations · cubre: R8 · tipo: test · interfaz: no
+- [ ] T95 — Verificación de composición CG-5: decoraciones guardadas en el candidato integrado · repo: pictures · después de: T93, T5.6 · verificar: `npm run decoraciones:test-integracion` · archivos: .evidence/REQ-021/CG-5.integration.json · recursos: candidate:CG-5, db:personal-decorations · cubre: R8 · tipo: prueba · ui: no
 
-  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 35 minutos.
-  Ejecutar en el candidato integrado el modo de integración de SP-5 (creado por T5.4). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el entorno de pruebas.
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 35 minutos.
+  Ejecutar en el candidato integrado el modo de integración de SP-5 (creado por T5.4). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el arnés.
 
-  - Aceptación / integración: El candidato integrado permite persistir las decoraciones guardadas que pertenecen a la cuenta entre navegadores, colocarlas en un proyecto, dar acceso de solo lectura al personal, permitir modificaciones solo al propietario y denegar el acceso entre cuentas. Comprobación: `npm run decoraciones:test-integracion`
+  - Aceptación / integración: El candidato integrado supera las pruebas de persistencia de decoraciones guardadas propiedad de la cuenta entre navegadores, incorporación en un proyecto, acceso de solo lectura por parte del personal, modificación solo por el propietario y denegación entre cuentas. Verificación: `npm run decoraciones:test-integracion`
 
 <!-- /CG-5 tasks -->
 <!-- CG-6 tasks -->
 
-  Compuerta de composición CG-6: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6 (acumulativa, después de CG-5).
+  Puerta de composición CG-6: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6 (acumulativa, después de CG-5).
 
-- [ ] T96 — Comprobación de composición CG-6: gasto de IA por cuenta en el candidato integrado · repo: pictures · después de: T95, T6.7 · verificar: `npm run gasto:test-integracion` · archivos: .evidence/REQ-021/CG-6.integration.json · recursos: candidate:CG-6, db:ai-usage · cubre: R4, R5 · tipo: test · interfaz: no
+- [ ] T96 — Verificación de composición CG-6: gasto en IA por cuenta en el candidato integrado · repo: pictures · después de: T95, T6.7 · verificar: `npm run gasto:test-integracion` · archivos: .evidence/REQ-021/CG-6.integration.json · recursos: candidate:CG-6, db:ai-usage · cubre: R4, R5 · tipo: prueba · ui: no
 
-  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 35 minutos.
-  Ejecutar en el candidato integrado el modo de integración de SP-6 (creado por T6.5). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el entorno de pruebas.
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 35 minutos.
+  Ejecutar en el candidato integrado el modo de integración de SP-6 (creado por T6.5). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el arnés.
 
-  - Aceptación / integración: El candidato integrado registra el uso atribuido a la cuenta/sesión para llamadas representativas de texto e imagen desde Next y ai-api; las llamadas de proyectos se agrupan bajo el proyecto con el detalle de la conversación, el uso facturable conocido en errores del proveedor se registra como parcial/error, el personal ve los totales y se deniega el acceso a Usuario. Comprobación: `npm run gasto:test-integracion`
+  - Aceptación / integración: El candidato integrado registra el uso atribuido a cuenta/sesión para llamadas representativas de texto e imagen desde Next y ai-api; las llamadas de proyecto se agrupan bajo el proyecto con detalle de conversación, el uso facturable conocido de errores del proveedor queda marcado como parcial/error, el personal ve los totales y se deniega el acceso a Usuario. Verificación: `npm run gasto:test-integracion`
 
 <!-- /CG-6 tasks -->
 
-### M3 — Inglés / español
-La interfaz sigue el idioma del navegador en la primera visita y la elección de la cuenta después; primero se habilitan por completo el Taller 3D y la navegación en inglés, y luego los textos de los productos, las pantallas restantes y las respuestas de IA.
+<!-- CG-7 tasks -->
 
-- **SP-8 — Cambio de idioma, Taller 3D y navegación en inglés** (UI: `idioma-taller@v1`): Un mecanismo de idioma con detección en la primera visita, un selector que recuerda la elección por cuenta y todas las cadenas del Taller 3D y la navegación en ambos idiomas; la sección pública de planes y el aviso de datos pasan del idioma del navegador a este mecanismo. Cubre R12.
-- **SP-9 — Textos de productos y decoraciones en inglés** (UI: `textos-producto@v1`): Los nombres y descripciones en inglés de cada producto y decoración se generan una vez a partir del texto en español, se almacenan y se muestran cuando el idioma es inglés, con el texto en español como alternativa, y una persona administradora puede corregirlos. Cubre R12.
-- **SP-10 — Pantallas restantes y respuestas de IA en inglés** (UI: `idioma-resto@v1`): Las herramientas de chat, el catálogo, la administración, el gasto y las pantallas de estadísticas están completamente en inglés, y la IA de la escena y las herramientas de chat responden en el idioma de la persona usuaria. Cubre R12.
+  Puerta de composición CG-7: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7 (acumulativa, después de CG-6).
+
+- [ ] T97 — Verificación de composición CG-7: herramientas de chat y galería en el candidato integrado · repo: pictures · después de: T96, T7.11 · verificar: `npm run herramientas:test-integracion -- --modo CG-7` · archivos: .evidence/REQ-021/CG-7.integration.json · recursos: candidate:CG-7 · cubre: R13, R16 · tipo: prueba
+
+  Clasificación: complejidad media; alcance cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación 40 minutos.
+  `npm run herramientas:test-integracion -- --modo CG-7` agrega los pasos para guardar como proyecto y consultar la vista de gastos del personal.
+
+  - Aceptación / integración: En el candidato integrado con SP-7, Entusiasta cuenta una decoración sin precios y no puede usar la calculadora; Master Designer abre una decoración de la galería como proyecto nuevo y la guarda como proyecto; y las llamadas de pago de cada herramienta aparecen bajo su propia etiqueta en la vista de gastos del personal. Verificación: `npm run herramientas:test-integracion -- --modo CG-7`
+
+<!-- /CG-7 tasks -->
+
+
+### M3 — Inglés / Español
+La interfaz sigue el idioma del navegador en la primera visita y la elección de la cuenta después; el Taller 3D y la navegación aparecen primero completamente en inglés, seguidos de los textos del producto, las pantallas restantes y las respuestas de la IA.
+
+- **SP-8 — Selector de idioma, Taller 3D y navegación en inglés** (sin Designer, ronda 15 del responsable): Un mecanismo de idioma con detección en la primera visita, un selector cuya elección se recuerda por cuenta y todas las cadenas del Taller 3D y la navegación en ambos idiomas; la sección pública de planes y el aviso de datos pasan del idioma del navegador a este mecanismo. Cubre R12.
+
+<!-- SP-8 tasks -->
+
+  Tareas de SP-8 (ronda 15 del responsable, 2026-10-28): selector en el menú de cuenta, en el inicio de sesión y en la página de planes; idioma del navegador en la primera visita y, después, guardado en la cuenta (q6); medidas en cm/m y precios del catálogo en COP también en inglés, USD solo en la sección de planes (q7); sin Designer: el selector sigue al control de tema y las pruebas verifican que el texto en inglés quepa en tres anchos (q8); /asesor y /happie no se traducen (q9). Orden de recorte 1 (responsable): SP-8 es la parte del trabajo de idioma que se entrega primero; SP-9 y SP-10 se recortan antes.
+  Mecanismo (idioma@1, T8.1): `src/lib/idioma/` con `type Idioma = 'es' | 'en'`, `resolverIdioma(request)`, helpers de servidor y cliente y `definirTextos({ es, en })`, cuyo tipo exige que ambos idiomas tengan las mismas claves. Sin prefijo de URL ni dependencias nuevas: diccionarios tipados en módulos junto a las pantallas (`textos-*.ts`, `src/components/tres-d/textos/*.ts`). El idioma de la cuenta usa la columna `idioma` creada por SP-1 T1.1. El español sigue siendo el idioma predeterminado y su representación no cambia.
+  Protección de cobertura (T8.3): análisis de AST de TypeScript de los archivos que nombre una tarea, usado por cada tarea de extracción con sus propios archivos y por la prueba de integración con todos ellos. DAG: T8.1 → {T8.2, T8.3} → {T8.4, T8.5, T8.6} → integración T8.7 → auditoría T8.8; CG-8 agrega SP-8 a la candidata.
+
+- [ ] T8.1 — Mecanismo de idioma: orden de detección, diccionarios bilingües tipados y elección guardada · repo: pictures · después de: T1.8b · verificar: `npm run idioma:test -- --test-name-pattern=deteccion` · archivos: src/lib/idioma/idioma.ts, src/lib/idioma/servidor.ts, src/lib/idioma/cliente.tsx, src/lib/idioma/textos.ts, src/app/layout.tsx, src/app/api/idioma/route.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-idioma.ts · recursos: scripts de package.json, contract:idioma, contract:session-guard · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
+
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento alto; confianza media; estimación: 120 minutos.
+  `POST /api/idioma` {idioma} es público (entrada del mapa `publica`): establece la cookie `idioma` (1 año, SameSite=Lax) y, si hay una sesión, actualiza `cuentas.idioma` mediante el servicio de SP-1. El script de npm `idioma:test` = `tsx --conditions=react-server --test scripts/test/test-idioma.ts`.
+
+  - Aceptación / funcional: El idioma de una solicitud es el idioma guardado de la cuenta que inició sesión; si no, el de la cookie idioma; si no, inglés cuando Accept-Language prefiere inglés; en caso contrario, español. El atributo lang de html coincide con ese idioma. Verificación: `npm run idioma:test -- --test-name-pattern=deteccion`
+  - Aceptación / estática: Cada diccionario de texto define las mismas claves en español y en inglés: TypeScript rechaza una clave que falte en cualquiera de los idiomas y una prueba en tiempo de ejecución enumera todos los diccionarios y detecta cualquier valor vacío en inglés. Verificación: `npm run idioma:test -- --test-name-pattern=paridad`
+  - Aceptación / funcional: Al elegir un idioma, se establece la cookie idioma para cualquier persona y, si inició sesión, se guarda en la cuenta, de modo que otro navegador de la misma cuenta se abra en ese idioma; se rechaza con 400 cualquier valor distinto de es o en. Verificación: `npm run idioma:test -- --test-name-pattern=guardar`
+
+- [ ] T8.2 — Selector de idioma e inglés para la navegación, las pantallas de cuenta, la página de planes y el aviso de datos · repo: pictures · después de: T8.1 · verificar: `npm run idioma:test-ui-navegacion -- --solo selector` · archivos: src/components/idioma/SelectorIdioma.tsx, src/components/cuentas/MenuCuenta.tsx, src/components/cuentas/textos-acceso.ts, src/components/cuentas/textos-cuenta.ts, src/components/cuentas/AvisoDatos.tsx, src/app/planes/page.tsx, src/components/planes/textos-planes.ts, src/components/ui/shell/CabeceraApp.tsx, src/components/ui/shell/MenuApp.tsx, src/components/herramientas/textos-herramientas.ts, scripts/test/test-ui-idioma-navegacion.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
+
+  Clasificación: complejidad media; alcance large_change; riesgo medio; acoplamiento medio; confianza media; estimación: 120 minutos.
+  La página de planes mantiene COP para español y USD para inglés, ahora mediante el mecanismo (R20). El script de npm `idioma:test-ui-navegacion` = `tsx scripts/test/test-ui-idioma-navegacion.ts`.
+
+  - Aceptación / funcional: Aparece un selector de idioma con el estilo del control de tema en el menú de cuenta, en la pantalla de inicio de sesión y en la página de planes; al cambiar de idioma, la página se vuelve a mostrar en el otro idioma sin cerrar sesión ni perder la escena abierta. Verificación: `npm run idioma:test-ui-navegacion -- --solo selector`
+  - Aceptación / funcional: La página de planes, el aviso de datos, las pantallas de inicio de sesión, activación, restablecimiento, aviso y Mi cuenta, y la navegación compartida leen el idioma del mecanismo en lugar del navegador, con todas las cadenas en español e inglés. Verificación: `npm run idioma:test-ui-navegacion -- --solo pantallas`
+
+- [ ] T8.3 — Protección de cobertura que detecta literales en español fuera de los diccionarios de texto · repo: pictures · después de: T8.1 · verificar: `npm run idioma:test-guardia` · archivos: scripts/idioma/cobertura.ts, scripts/idioma/test-cobertura-guardia.ts · recursos: scripts de package.json · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
+
+  Clasificación: complejidad media; alcance small_change; riesgo bajo; acoplamiento medio; confianza alta; estimación: 60 minutos.
+  `npm run idioma:test-cobertura -- <files…>` = `tsx scripts/idioma/cobertura.ts`; lista permitida: números y unidades (cm, m, %), puntuación e iconos, códigos de producto (R12, 260Q), nombres de marca (Sempertex). `idioma:test-guardia` = `tsx --test scripts/idioma/test-cobertura-guardia.ts`.
+
+  - Aceptación / funcional: npm run idioma:test-cobertura -- <paths> enumera todos los nodos de texto JSX y los literales de label, title, placeholder o aria-label que contienen letras en los archivos indicados y que no provienen de un diccionario de texto; termina con un código distinto de cero si encuentra alguno. Verificación: `npm run idioma:test-guardia`
+
+- [ ] T8.4 — Taller en inglés, parte 1: estructura, biblioteca, paneles para agregar, menús, ayuda y exportación · repo: pictures · después de: T8.3 · verificar: `npm run idioma:test-cobertura -- src/components/tres-d/Taller3D.tsx src/components/tres-d/Biblioteca.tsx src/components/tres-d/PanelAnadir.tsx src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/MenuMas.tsx src/components/tres-d/ExportarEscenaTaller.tsx src/components/tres-d/AyudaTaller.tsx` · archivos: src/components/tres-d/Taller3D.tsx, src/components/tres-d/Biblioteca.tsx, src/components/tres-d/PanelAnadir.tsx, src/components/tres-d/FondosYMuebles.tsx, src/components/tres-d/FormasYLetras.tsx, src/components/tres-d/DecoracionesPequenas.tsx, src/components/tres-d/UtileriaFiesta.tsx, src/components/tres-d/MuralesTechoArboles.tsx, src/components/tres-d/IdeasDelAsistente.tsx, src/components/tres-d/FiltrosTaxonomia.tsx, src/components/tres-d/SelectorRepositorio.tsx, src/components/tres-d/MenuMas.tsx, src/components/tres-d/MenuContextual.tsx, src/components/tres-d/AyudaTaller.tsx, src/components/tres-d/SobreVisor.tsx, src/components/tres-d/ExportarEscenaTaller.tsx, src/components/tres-d/CapturaRender.tsx, src/components/tres-d/ControlesTactiles.tsx, src/components/tres-d/HojaMovil.tsx, src/components/tres-d/DialogoTaller.tsx, src/components/tres-d/BuscarPorFoto.tsx, src/components/tres-d/SelectorAmbienteVisor.tsx, src/components/tres-d/nuevas-taller.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/components/tres-d/textos/taller-marco.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
+
+  Clasificación: complejidad baja; alcance large_change; riesgo medio; acoplamiento alto; confianza alta; estimación: 180 minutos.
+  Diccionario `src/components/tres-d/textos/taller-marco.ts`. El inglés usa vocabulario sencillo de decoración; los nombres de piezas y productos conservan los nombres del catálogo hasta SP-9.
+
+  - Aceptación / estática: Los componentes de estructura del Taller, biblioteca, paneles para agregar, menús, ayuda, exportación y captura pasan la protección de cobertura y se muestran en inglés sin cadenas en español. Verificación: `npm run idioma:test-cobertura -- src/components/tres-d/Taller3D.tsx src/components/tres-d/Biblioteca.tsx src/components/tres-d/PanelAnadir.tsx src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/MenuMas.tsx src/components/tres-d/ExportarEscenaTaller.tsx src/components/tres-d/AyudaTaller.tsx`
+
+- [ ] T8.5 — Taller en inglés, parte 2: inspector, editores, paneles, lista de compras y hoja de armado · repo: pictures · después de: T8.3 · verificar: `npm run idioma:test-taller -- edicion` · archivos: src/components/tres-d/Inspector.tsx, src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/EditorConjuntoMesa.tsx, src/components/tres-d/EditorMueble.tsx, src/components/tres-d/EditorRemate.tsx, src/components/tres-d/EditorRotulo.tsx, src/components/tres-d/EditorTrazo.tsx, src/components/tres-d/EditoresFiguras.tsx, src/components/tres-d/PanelEscena.tsx, src/components/tres-d/PanelDecoracion.tsx, src/components/tres-d/PanelPared.tsx, src/components/tres-d/PanelOrganico.tsx, src/components/tres-d/PanelFlor.tsx, src/components/tres-d/PanelPiezas.tsx, src/components/tres-d/PaletaEscena.tsx, src/components/tres-d/SeccionBomba.tsx, src/components/tres-d/SeccionHelio.tsx, src/components/tres-d/SeccionPrecio.tsx, src/components/tres-d/SelectorPerfilTamano.tsx, src/components/tres-d/PartesSolitario.tsx, src/components/tres-d/ListaCompra.tsx, src/components/tres-d/ListaEscenografia.tsx, src/components/tres-d/DialogoCompra.tsx, src/components/tres-d/HojaArmadoCapa.tsx, src/components/tres-d/HojaArmadoCompacta.tsx, src/components/tres-d/HojaArmadoCuartetos.tsx, src/components/tres-d/HojaArmadoEscena.tsx, src/components/tres-d/HojaArmadoEstructura.tsx, src/components/tres-d/HojaArmadoHelio.tsx, src/components/tres-d/HojaArmadoLista.tsx, src/components/tres-d/HojaArmadoMetalizados.tsx, src/components/tres-d/HojaArmadoPagina.tsx, src/components/tres-d/HojaArmadoTramos.tsx, src/components/tres-d/TarjetaReceta.tsx, src/components/tres-d/EtiquetasMedidas.tsx, src/components/tres-d/MarcaHelio.tsx, src/components/tres-d/ProcedenciaDeItem.tsx, src/components/tres-d/GrillaCompacta.tsx, src/components/tres-d/CampoTexto.tsx, src/components/tres-d/DiagramaCapa.tsx, src/components/tres-d/CotizacionProfesionalDesdeTaller.tsx, src/components/tres-d/ControlFotoIA.tsx, src/components/tres-d/EtapasFotoRealista.tsx, src/components/tres-d/VisorFoto.tsx, src/components/tres-d/GeneradorIA.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-idioma-taller.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
+
+  Clasificación: complejidad baja; alcance large_change; riesgo medio; acoplamiento alto; confianza alta; estimación: 210 minutos.
+  Diccionario `src/components/tres-d/textos/taller-edicion.ts`. El script de npm `idioma:test-taller` = `tsx scripts/test/test-idioma-taller.ts <area>` muestra el área en ambos idiomas y compara el español con el resultado anterior al cambio; `HojaArmado.test.ts` sigue pasando sin cambios en español. Las medidas se mantienen en cm/m y los precios en COP.
+
+  - Aceptación / funcional: El inspector del Taller, los editores de piezas, los paneles de escena y decoración, la lista de compras, el diálogo de compra y la hoja de montaje pasan el control de cobertura y se muestran en inglés sin dejar ninguna cadena en español, mientras que la visualización en español permanece idéntica byte por byte. Verificación: `npm run idioma:test-taller -- edicion`
+
+- [ ] T8.6 — Taller en inglés, parte 3: panel de IA y frases para el usuario generadas en lib · repo: pictures · después de: T8.3 · verificar: `npm run idioma:test-mensajes` · archivos: src/components/tres-d/ia/BannerVerAntes.tsx, src/components/tres-d/ia/CalificacionTurno.tsx, src/components/tres-d/ia/ComposicionIA.tsx, src/components/tres-d/ia/MenuConversacion.tsx, src/components/tres-d/ia/PanelIA.tsx, src/components/tres-d/ia/PestanasLaterales.tsx, src/components/tres-d/ia/TarjetaEnCurso.tsx, src/components/tres-d/ia/TarjetaFotoRealista.tsx, src/components/tres-d/ia/TarjetaPregunta.tsx, src/components/tres-d/ia/TarjetaTurno.tsx, src/components/tres-d/ia/useNombresDePasos.ts, src/lib/globos3d/avisos-usuario.ts, src/lib/globos3d/glosario-taller.ts, src/lib/errores-ui/traducir-error-servidor.ts, src/components/tres-d/textos/taller-ia.ts, scripts/test/test-idioma-mensajes-taller.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · UI: no
+
+  Clasificación: complejidad media; alcance: cambio_grande; riesgo medio; acoplamiento medio; confianza media; estimación: 150 minutos.
+  Las funciones que generan frases reciben `idioma: Idioma` (valor predeterminado 'es'). El idioma de las respuestas del modelo corresponde a SP-10. El script de npm `idioma:test-mensajes` = `tsx --test scripts/test/test-idioma-mensajes-taller.ts`.
+
+  - Aceptación / funcional: El panel de IA del Taller y las frases para el usuario generadas en src/lib (avisos de herramientas, el glosario del Taller y los mensajes de error del servidor que se muestran en el Taller) se producen en el idioma solicitado, y los archivos del panel de IA pasan el control de cobertura. Verificación: `npm run idioma:test-mensajes`
+
+- [ ] T8.7 — Prueba de extremo a extremo en el navegador: primera visita en inglés, elección guardada, sin texto en español y texto que cabe · repo: pictures · después de: T8.2, T8.4, T8.5, T8.6 · verificar: `npm run idioma:test-integracion` · archivos: scripts/test/test-integracion-idioma.ts, .evidence/REQ-021/SP-8.integration.json · recursos: scripts de package.json · cubre: R12 · tipo: prueba · subplan: SP-8
+
+  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 100 minutos.
+  El script de npm `idioma:test-integracion` = `tsx scripts/test/test-integracion-idioma.ts`; también ejecuta el control de cobertura en todos los archivos de T8.2, T8.4, T8.5 y T8.6.
+
+  - Aceptación / integración: En una compilación de producción, una primera visita con un navegador en inglés muestra la pantalla de inicio de sesión, la navegación y el Taller 3D en inglés, con los textos esperados tomados de los diccionarios; al cambiar al español, la elección se conserva en la cuenta y se refleja en un segundo navegador; un análisis del Taller en inglés renderizado no encuentra ninguna cadena en español; y ninguna etiqueta, botón ni elemento de menú se desborda de su contenedor a 390, 768 y 1280 px. Verificación: `npm run idioma:test-integracion`
+
+- [ ] T8.8 — Auditoría de SP-8: detección del idioma, elección guardada, cobertura y español sin cambios · repo: pictures · después de: T8.7 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json` · archivos: .evidence/REQ-021/SP-8.audit.md, .evidence/REQ-021/SP-8.findings.json · recursos: ledger:SP-8 · cubre: R12 · tipo: auditoría · subplan: SP-8
+
+  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
+  Verifica como mínimo: orden de detección, coherencia de la cookie y la cuenta, ausencia de español en los archivos cubiertos, salida en español sin cambios, unidades cm/m y COP conservadas.
+
+  - Aceptación / estática: Una auditoría independiente de SP-8 registra cada defecto confirmado junto con la tarea que debe corregirlo en el registro de hallazgos de SP-8, y el registro no tiene hallazgos críticos ni altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json`
+
+<!-- tareas de /SP-8 -->
+
+<!-- tareas de CG-8 -->
+
+  Puerta de composición CG-8: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8 (acumulativa, después de CG-7).
+
+- [ ] T98 — Verificación de composición CG-8: inglés en cuentas, proyectos guardados, herramientas y el Taller · repo: pictures · después de: T97, T8.8 · verificar: `npm run idioma:test-integracion -- --modo CG-8` · archivos: .evidence/REQ-021/CG-8.integration.json · recursos: candidate:CG-8 · cubre: R12 · tipo: prueba
+
+  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 40 minutos.
+  `npm run idioma:test-integracion -- --modo CG-8`.
+
+  - Aceptación / integración: En el candidato integrado con SP-8, una primera visita en inglés inicia sesión, abre un proyecto guardado y una decoración de la galería en el Taller en inglés, cuenta con el contador y, al cambiar al español, la elección se conserva en la cuenta y se refleja en otro navegador. Verificación: `npm run idioma:test-integracion -- --modo CG-8`
+
+<!-- tareas de /CG-8 -->
+
+
+- **SP-9 — Textos de productos y decoraciones en inglés** (UI: `textos-producto@v1`): Los nombres y las descripciones en inglés de cada producto y decoración se generan una sola vez a partir del texto en español, se almacenan, se muestran cuando el idioma es inglés con el texto en español como alternativa y pueden ser corregidos por un administrador. Cubre R12.
+- **SP-10 — Pantallas restantes y respuestas de IA en inglés** (UI: `idioma-resto@v1`): Las pantallas de herramientas de chat, catálogo, administración, gastos y estadísticas están completamente en inglés, y la IA de escena y las herramientas de chat responden en el idioma del usuario. Cubre R12.
 
 ### M4 — Módulos editables y chat → 3D
 Los usuarios editan módulos y cuartetos más allá de sus colores, y el chat normal recomienda decoraciones 3D prediseñadas que se abren en el Taller.

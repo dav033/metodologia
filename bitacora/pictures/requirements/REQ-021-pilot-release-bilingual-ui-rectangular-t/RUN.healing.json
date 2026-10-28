@@ -428,6 +428,19 @@
    "task": "T2.6",
    "why": "the same failure came back after its repair"
   },
+  "fb0100b4849cbd1f": {
+   "applied": 0,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: killed: the supervising shim was terminated from outside",
+    "reason code: m5:permanent_or_unknown_cause"
+   ],
+   "first_at": 1793196260.754,
+   "history": [],
+   "id": "fb0100b4849cbd1f",
+   "status": "open",
+   "task": "T2.2"
+  },
   "fdac6db8cf963885": {
    "applied": 0,
    "class": "criterion_unmapped",

@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/90 · generado: 2026-10-28T08:51:26-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 16/90 · generado: 2026-10-28T09:51:23-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 14/29
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 15/29
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -33,10 +33,10 @@ created: 2026-10-26
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
 | T2.1 | Copy the owner-approved cuentas-admin@v1 contract into the repository | baja | completada | gpt-6.1-sol | codex-2 | 2 |
-| T2.2 | Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles | media | en curso | gpt-6-luna | codex-luis | 3 |
-| T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | pendiente | gpt-6-luna | codex-2 | 1 |
-| T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | pendiente | gpt-6-luna | codex-2 | 1 |
-| T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | pendiente | gpt-6-luna | codex-2 | 1 |
+| T2.2 | Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles | media | completada | gpt-6-luna | codex-1 | 4 |
+| T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | bloqueada | gpt-6-luna | codex-1 | 2 |
+| T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | en curso | gpt-6-luna | codex-2 | 2 |
+| T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | lista | gpt-6-luna | codex-2 | 1 |
 | T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | pendiente | gpt-6-luna | codex-2 | 13 |
 | T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
 | T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |

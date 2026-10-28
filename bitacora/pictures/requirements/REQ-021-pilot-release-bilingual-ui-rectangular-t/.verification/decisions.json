@@ -1,6 +1,8 @@
 {
  "gated": true,
  "schema_version": 1,
- "seen": {},
+ "seen": {
+  "SP-1": "1:82885950bdfe1bc2c0ab8e169cce74c4c2332f02"
+ },
  "subplans": {}
 }

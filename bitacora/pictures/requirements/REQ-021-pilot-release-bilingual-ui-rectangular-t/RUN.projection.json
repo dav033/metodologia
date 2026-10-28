@@ -1,33 +1,38 @@
 {
  "attention": [
   {
+   "kind": "blocked_task",
+   "reason": "m5:quota_reset_unknown",
+   "task_id": "T2.3"
+  },
+  {
    "kind": "composition_waiting",
-   "reason": "unpublished_subplan_version:SP-1;unpublished_subplan_version:SP-2",
+   "reason": "unpublished_subplan_version:SP-2",
    "task_id": "T91"
   },
   {
    "kind": "composition_waiting",
-   "reason": "unpublished_subplan_version:SP-1;unpublished_subplan_version:SP-2;unpublished_subplan_version:SP-14",
+   "reason": "unpublished_subplan_version:SP-2;unpublished_subplan_version:SP-14",
    "task_id": "T94"
   },
   {
    "kind": "composition_waiting",
-   "reason": "unpublished_subplan_version:SP-1;unpublished_subplan_version:SP-2;unpublished_subplan_version:SP-14;unpublished_subplan_version:SP-3",
+   "reason": "unpublished_subplan_version:SP-2;unpublished_subplan_version:SP-14;unpublished_subplan_version:SP-3",
    "task_id": "T92"
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-28T13:52:07+00:00",
+ "heartbeat_at": "2026-10-28T14:57:15+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
   "revision": 13,
   "sha256": "e51cd70f5c61ee38c31280c3c2fe88c21dbd04f49f4a6c837c3d4dd90be058c6"
  },
- "projected_at": "2026-10-28T13:52:07+00:00",
+ "projected_at": "2026-10-28T14:57:15+00:00",
  "projection": true,
  "req": "REQ-021",
  "scheduler_status": "running",
- "sessions": 60,
+ "sessions": 63,
  "stage": {
   "complete": false,
   "joining": null,
@@ -54,17 +59,17 @@
  "status": "running",
  "subplans": [
   {
-   "commit": null,
+   "commit": "82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
    "id": "SP-1",
-   "manifest_sha256": null,
-   "status": "accepted",
-   "version": null
+   "manifest_sha256": "a9d7a2dcd45a9b9b04ca10395e41685bc97a459a4f7766788e87ed5bfc1d8921",
+   "status": "published",
+   "version": 1
   },
   {
    "commit": null,
    "id": "SP-2",
    "manifest_sha256": null,
-   "status": "open",
+   "status": "blocked",
    "version": null
   },
   {
@@ -530,72 +535,72 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T1.4",
     "T1.8b"
    ],
-   "attempts": 3,
+   "attempts": 4,
    "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "",
-   "executor": "route:m2:v1:3a560a19a7b37562cf308a5e9ef8c14c7b550495bea2310ddec2c27819076207:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
+   "evidence": "m6://result/a25deb52a7c68e436203f3f33434007a1120a316f4f919842768b7dfba3b2f3b",
+   "executor": "route:m2:v1:b47dc044643e64a2f5d1392adb7a6503f6b8438530fb0791af800c9564e5f660:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T2.2",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-luis",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1793194669.0432897",
+   "quota_observed_at": "1793195572.7899816",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "47.0",
-   "quota_valid_until": "1793201869.0432897",
+   "quota_used_percent": "60.0",
+   "quota_valid_until": "1793202772.7899816",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "done",
    "title": "Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles",
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:6be7b6501be36164f9c6ecda3b81855b2fc13d06e8273c430bc17d92a4d1f290",
    "after": [
     "T2.1",
     "T2.2"
    ],
-   "attempts": 1,
-   "attempts_used": 0,
+   "attempts": 2,
+   "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/7f2cfbfb62977f314df9d1f7cccf94b8e6efba76f3e33a4ef42105a08c1342df",
-   "executor": "route:m2:v1:a7bd1f17265d3dbf25de00d85e024ad097c5766062c4c9028c435df89ffada92:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "",
+   "executor": "route:m2:v1:6ab2361ab93463c58bc7200987318a1c309e512e6b7dd9a704b7861484663918:cd1ad6e7d8d9e633653dbe63a4ffea1843925399a1a031d1a8be713170786d0b",
    "id": "T2.3",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-1",
    "provider": "codex",
-   "quota_observed_at": "1793140537.1243305",
+   "quota_observed_at": "1793197398.4000928",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "55.0",
-   "quota_valid_until": "1793147737.1243305",
-   "reason": "",
+   "quota_used_percent": "66.0",
+   "quota_valid_until": "1793204598.4000928",
+   "reason": "m5:quota_reset_unknown",
    "repo": "pictures",
-   "retries_remaining": 3,
+   "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "blocked",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "todo",
+   "status": "blocked",
    "title": "Sign-in, invitation activation, password reset and notice re-acceptance screens",
    "unreachable": false
   },
@@ -605,32 +610,32 @@
     "T2.1",
     "T2.2"
    ],
-   "attempts": 1,
-   "attempts_used": 0,
+   "attempts": 2,
+   "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/29b29f1667e7579393f1f8a36cecd781b92b1501a54b991a34e8bed5a2d84294",
-   "executor": "route:m2:v1:91db07984941bbc139a52d6ca62909ec08a77481c816f2c272b86855f157cfaf:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "",
+   "executor": "route:m2:v1:e1c2619978efcb86922d95d2e1d05d3fcd130eafcaad6740dc52dd7fe8c30a74:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T2.4",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
    "profile": "codex-2",
    "provider": "codex",
-   "quota_observed_at": "1793141798.6773512",
+   "quota_observed_at": "1793198342.2836323",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "56.0",
-   "quota_valid_until": "1793148998.6773512",
+   "quota_used_percent": "59.0",
+   "quota_valid_until": "1793205542.2836323",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 3,
+   "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "active",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "todo",
+   "status": "in_progress",
    "title": "Account menu on every signed-in page and the Mi cuenta page",
    "unreachable": false
   },
@@ -663,7 +668,7 @@
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "pending",
+   "scheduler_state": "ready",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
    "status": "todo",
    "title": "Administration screens: accounts list, invitations, account actions and the role editor",
@@ -704,7 +709,7 @@
    "selection_reason": "",
    "status": "todo",
    "title": "Browser end-to-end: invite, activate, sign in and change plan on a production build",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -738,7 +743,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-2 visual review against the cuentas-admin@v1 contract",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -772,7 +777,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-2 audit: account screens, administration APIs and the data notice",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1250,7 +1255,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Copy the owner-approved planes@v1 contract into the repository",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1284,7 +1289,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Public plans page: the four plans from the plan catalogue, prices by language",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1318,7 +1323,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Plans links on the sign-in screen and in the account menu",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1352,7 +1357,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Browser end-to-end of the plans section on a production build",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1386,7 +1391,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-14 visual review against the planes@v1 contract",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1420,7 +1425,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-14 audit: catalogue use, public route and copy",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1456,7 +1461,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "M1 composition check: first administrator to an Entusiasta user on the integrated tree",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1491,7 +1496,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Composition check CG-2: accounts, plans section and Taller essentials",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
@@ -1525,7 +1530,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Composition check CG-4: access plans from the plans section to the accounts screen",
-   "unreachable": false
+   "unreachable": true
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",

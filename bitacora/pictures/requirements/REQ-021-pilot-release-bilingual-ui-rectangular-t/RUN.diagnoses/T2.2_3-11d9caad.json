@@ -1,0 +1,23 @@
+{
+ "request": "T2.2:3",
+ "state": "done",
+ "kind": "cancelled",
+ "label": "Cancelado",
+ "tone": "muted",
+ "headline": "T2.2 bloqueada: el proceso supervisor fue terminado desde fuera",
+ "origin": "El último fallo registrado es \"killed: the supervising shim was terminated from outside\". Eso indica que el proceso que supervisa el intento fue matado desde fuera del run, no que una verificación haya fallado con un error de código. La regla no reconoce la causa y por eso marca permanent_or_unknown_cause. El intento anterior (att-0019) sí falló en la verificación de `npm run cuentas:test-api -- --test-name-…`, pero la evidencia está cortada y no muestra el error concreto, así que no se puede afirmar que el código del intento sea el problema.",
+ "steps": [
+  "Ejecuta `\"/usr/bin/python3\" \"/home/david/dev/metodologia/skill/scripts/bitacora.py\" --project pictures scheduler-op REQ-021 status` para ver el id de la decisión pendiente de T2.2.",
+  "Revisa el log completo de att-0019 para ver el error exacto de `npm run cuentas:test-api -- --test-name-pattern=…`; si es un fallo de código, reintenta después con `retry_with_note` indicando ese error.",
+  "Decide la opción `retry` con `scheduler-op REQ-021 decide <id> retry --reason \"…\"`, ya que el último fallo fue una terminación externa y no un error de código.",
+  "Si el mismo corte vuelve a aparecer tras el reintento, revisa qué proceso externo termina el shim antes de volver a reintentar."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T09:04:34",
+ "seconds": 13.8
+}
