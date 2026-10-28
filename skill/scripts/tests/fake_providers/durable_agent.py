@@ -57,6 +57,15 @@ elif scenario == "escape":                      # a setsid grandchild that ignor
     subprocess.Popen([sys.executable, "-c", child], start_new_session=True)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
     time.sleep(600)
+elif scenario == "quotaonce":                   # the first start hits the provider limit, later ones work
+    previous = [line for line in open(count, encoding="utf-8")] if count else []
+    if sum(1 for line in previous if '"quotaonce"' in line) <= 1:
+        reset = os.environ.get("FAKE_RESET", str(int(time.time()) + 3))
+        print(json.dumps({"type": "result", "subtype": "error", "is_error": True,
+                          "result": f"Claude AI usage limit reached|{reset}"}), flush=True)
+        sys.exit(1)
+    Path("out.txt").write_text("good\n")
+    done()
 elif scenario == "quota":
     reset = os.environ.get("FAKE_RESET", str(int(time.time()) + 3))
     print(json.dumps({"type": "result", "subtype": "error", "is_error": True,

@@ -76,6 +76,7 @@ class Lab:
             git(self.repo, "commit", "-q", "-m", "initial")
         self.rdir = self.bitacora / "proj" / "requirements" / "REQ-900-lab"
         self.rdir.mkdir(parents=True, exist_ok=True)
+        self.database_override: str | None = None
         self.unit_prefix = f"bt-test-{hashlib.sha256(str(self.root).encode()).hexdigest()[:6]}-"
 
     # ---------------------------------------------------------------------------------------------- plan
@@ -96,7 +97,8 @@ class Lab:
 
     def write_config(self, **settings) -> Path:
         path = self.root / "lab.json"
-        path.write_text(json.dumps({"root": str(self.root), "backend": self.backend, "settings": settings}))
+        path.write_text(json.dumps({"root": str(self.root), "backend": self.backend, "settings": settings,
+                                    "database_url": self.database_override}))
         return path
 
     def launches(self) -> list[dict]:
@@ -107,6 +109,8 @@ class Lab:
 
     @property
     def database_url(self) -> str:
+        if self.database_override:
+            return self.database_override
         return f"sqlite:///{(self.state / 'dbos.sqlite3').resolve()}"
 
     # ------------------------------------------------------------------------------------------- engine
@@ -165,6 +169,7 @@ def wait_until(predicate, timeout: float, interval: float = 0.25, what: str = "c
 def _serve(config_path: str) -> None:
     data = json.loads(Path(config_path).read_text())
     lab = Lab(Path(data["root"]), backend=data["backend"])
+    lab.database_override = data.get("database_url")
     from bt_durable.service import serve
     cfg, ports = lab.ports()
     serve(cfg, ports, reap_seconds=2.0)

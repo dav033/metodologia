@@ -170,5 +170,68 @@ class DurableRuns(unittest.TestCase):
         self.assertEqual(len(self.lab.launches()), 2)            # verified again, not re-run
 
 
+    def test_cancelling_a_run_stops_every_writer(self):
+        os.environ["FAKE_SLOW_SECONDS"] = "60"
+        self.addCleanup(os.environ.pop, "FAKE_SLOW_SECONDS", None)
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="slow")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        launch = wait_until(lambda: self.lab.launches(), 60, what="the agent to start")[0]
+        beat = Path(launch["cwd"]) / "heartbeat.txt"
+        wait_until(lambda: beat.exists() and beat.stat().st_size > 0, 30, what="the agent to write")
+        cancelled = self.client.cancel(run)
+        self.assertTrue(cancelled)
+        def stopped():
+            size = beat.stat().st_size
+            time.sleep(1.0)
+            return beat.stat().st_size == size
+        wait_until(stopped, 30, interval=0.5, what="the agent to stop writing")   # the reaper terminated its unit
+        alive = [p for p in Path("/proc").iterdir() if p.name.isdigit() and _marked(p, launch["pid"])]
+        self.assertEqual(alive, [])
+
+    def test_no_capacity_waits_durably_for_the_reset_then_runs(self):
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="quotaonce")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(len(self.lab.launches()), 2)
+        events = [json.loads(line) for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines()]
+        decisions = [e for e in events if e["event"] == "recovery_decision"]
+        self.assertEqual([(d["failure_class"], d["action"]) for d in decisions], [("quota", "wait")])
+
+    def test_duplicate_concurrent_answers_start_one_attempt(self):
+        import threading
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="neverfix")]))
+        settings = FAST.model_copy(update={"budget": FAST.budget.model_copy(update={"max_attempts": 1})})
+        self.start_engine()
+        self.client.start(run, settings)
+        first = wait_until(lambda: (self.client.status(run)["tasks"].get("T1") or {}).get("decision"), 120,
+                           interval=1, what="an owner decision")
+        before = len(self.lab.launches())
+        answers = [threading.Thread(target=self.client.answer,
+                                    args=(run, "T1", OwnerAnswer(request_id=first["request_id"], action="retry")))
+                   for _ in range(4)]
+        [a.start() for a in answers]
+        [a.join() for a in answers]
+        second = wait_until(lambda: ((self.client.status(run)["tasks"].get("T1") or {}).get("decision") or {})
+                            .get("request_id") not in (None, first["request_id"]) and
+                            self.client.status(run)["tasks"]["T1"]["decision"], 120, interval=1,
+                            what="the next decision")
+        self.assertEqual(len(self.lab.launches()), before + 1)       # four answers, one new attempt
+        self.client.answer(run, "T1", OwnerAnswer(request_id=second["request_id"], action="stop"))
+        self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+
+
+def _marked(proc: Path, agent_pid: int) -> bool:
+    """A live process of the cancelled attempt: its own pid or one carrying the attempt marker in its environment."""
+    try:
+        if int(proc.name) == agent_pid:
+            return True
+        return b"BT_ATTEMPT_KEY=proj-REQ-900" in (proc / "environ").read_bytes()
+    except OSError:
+        return False
+
+
 if __name__ == "__main__":
     unittest.main()

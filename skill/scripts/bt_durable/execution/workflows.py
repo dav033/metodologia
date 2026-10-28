@@ -280,7 +280,8 @@ def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dic
     process = ProcessRecord.model_validate(agent["process"]) if agent.get("process") else None
     report = AgentReport.model_validate(agent["agent"]) if agent.get("agent") else None
     snapshot = Snapshot.model_validate(agent["snapshot"]) if agent.get("snapshot") else None
-    if verify is None and snapshot is not None and snapshot.snapshot_sha:
+    unverifiable = report is not None and report.status in ("limit", "timeout", "cancelled")   # cut short: retry, not judge
+    if verify is None and snapshot is not None and snapshot.snapshot_sha and not unverifiable:
         verify = _enqueue(engine.VERIFY, f"bt:{attempt.attempt_key}:verify:{profile}", verify_workflow,
                           attempt.model_dump(mode="json"), agent["prepared"], agent["snapshot"], profile)
     if verify and verify.get("internal_error"):
@@ -294,7 +295,7 @@ def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dic
                                   known_paths=tuple(agent.get("paths", ())))
     failure: FailureReport | None = classify.classify(facts)
     integrated = None
-    if failure is None and snapshot is not None:
+    if failure is None and snapshot is not None and verdict is not None:
         merged = _enqueue(engine.INTEGRATE, f"bt:{attempt.attempt_key}:integrate", integrate_workflow,
                           attempt.run.model_dump(mode="json"), attempt.task_id, agent["snapshot"])
         if merged.get("internal_error"):
@@ -304,7 +305,7 @@ def _evaluate(attempt: AttemptRef, route: Route | None, agent: dict, verify: dic
                                                               integration_conflict=merged["conflict"]))
         else:
             integrated = merged.get("ref")
-    if failure is None and snapshot is None:
+    if failure is None and (snapshot is None or verdict is None):
         failure = classify.classify(classify.AttemptFacts(process=process, agent=report))
     status = (AttemptStatus.ACCEPTED if failure is None else
               AttemptStatus.REJECTED if verdict and verdict.status.value == "FAIL" else
