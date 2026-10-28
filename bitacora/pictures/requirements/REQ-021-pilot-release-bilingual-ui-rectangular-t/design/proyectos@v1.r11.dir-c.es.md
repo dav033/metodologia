@@ -31,117 +31,117 @@ La lista responde «¿Qué escena guardada quiero continuar?». El encabezado de
 
 Los propietarios guardan, buscan, vuelven a abrir y continúan sus proyectos. Los empleados/administradores autorizados buscan entre los propietarios a los que tienen permiso de acceder y leen los originales de otras personas. Copiar requiere permiso para usar Taller y crea un proyecto propio; nunca edita ni transfiere el original. El acceso de solo lectura sin permiso para usar Taller tiene su propia presentación accesible y no incluye controles para copiar/editar. Una persona que inicia sesión en un navegador compartido da su consentimiento explícito antes de importar contenido heredado.
 
-## 3. Information architecture and approach
+## 3. Arquitectura de la información y enfoque
 
-Retain the Pictures/Sempertex masthead, language/account controls and neutral horizontal route rule from the siblings. Proyectos introduces two route destinations, Taller 3D and Proyectos, because the saved-project brief requires them; this is not a new global navigation model. The Taller retains the scene toolbar, panel rail, scene/IA inspector vocabulary, undo/redo, photo and shopping-list controls as contextual existing UI.
+Se conservan el encabezado de Pictures/Sempertex, los controles de idioma y cuenta, y la regla horizontal neutra de las vistas relacionadas. Proyectos introduce dos destinos de ruta, Taller 3D y Proyectos, porque el requisito de proyectos guardados los exige; esto no constituye un nuevo modelo de navegación global. El Taller conserva la barra de herramientas de escena, la barra lateral de paneles, el vocabulario del inspector de escena/IA, deshacer/rehacer y los controles contextuales existentes de foto y lista de compras.
 
-**Change specific to this direction:** projects are full-width collapsible bands, not a permanent table, a card grid or a master/detail sidebar. Opening “Ver escena” reveals the scene inside that project's band. Name/owner/open action stay on its original line. At most one preview is open. “Qué se guarda” reveals the local-versus-account explanation at its point of use. In the Taller, the editable name itself becomes the labelled field; Enter/check confirms and Escape cancels. New controls use press/settle feedback rather than a new visual identity.
+**Cambio específico de esta dirección:** los proyectos son bandas expandibles de ancho completo, no una tabla permanente, una cuadrícula de tarjetas ni una barra lateral de maestro/detalle. Al abrir «Ver escena», la escena aparece dentro de la banda de ese proyecto. El nombre, el propietario y la acción de apertura permanecen en su línea original. Se abre como máximo una vista previa. «Qué se guarda» muestra la explicación de almacenamiento local frente a la cuenta en el punto donde se necesita. En el Taller, el nombre editable pasa a ser el campo etiquetado; Enter o el botón de verificación confirma y Escape cancela. Los controles nuevos responden con una sensación de presión y asentamiento, sin introducir una nueva identidad visual.
 
-Two HTML thumbnails were drawn first:
+Primero se dibujaron dos miniaturas HTML:
 
-- **Candidate 1, chosen:** full-width project band with in-place preview and adjacent save-boundary disclosure. It preserves project identity and action alignment while progressive disclosure changes the density.
-- Candidate 2: two-column scene-first sheets. It is a valid composition inside the system but repeats large previews and loses the first candidate's direct relationship between the closed row and its open state.
+- **Candidata 1, elegida:** banda de proyecto de ancho completo con vista previa en el mismo lugar y divulgación contigua sobre los límites del guardado. Mantiene la identidad del proyecto y la alineación de las acciones, mientras la divulgación progresiva cambia la densidad.
+- Candidata 2: paneles de dos columnas que priorizan la escena. Es una composición válida dentro del sistema, pero repite vistas previas grandes y pierde la relación directa de la primera candidata entre la fila cerrada y su estado abierto.
 
-The full mockup develops candidate 1. Both thumbnails remain illustrative compositions; neither is the complete interactive artifact. The main HTML is built from real installed components, not the stand-in HTML fallback.
+El mockup completo desarrolla la candidata 1. Ambas miniaturas siguen siendo composiciones ilustrativas; ninguna es el artefacto interactivo completo. El HTML principal se construye con componentes instalados reales, no con la alternativa HTML de sustitución.
 
-## 4. Fixed design system and eight axes
+## 4. Sistema de diseño fijo y ocho ejes
 
-Project tokens are mapped onto the real kit's semantic roles; there is no new palette or font family.
+Los tokens del proyecto se asignan a los roles semánticos reales del kit; no se introduce una paleta ni una familia tipográfica nuevas.
 
-| Project source | Kit responsibility | Light / dark |
+| Fuente del proyecto | Responsabilidad del kit | Claro / oscuro |
 |---|---|---|
-| `--fondo` | background | #faf9fc / #0b0c10 |
-| `--superficie` | card, popover | #ffffff / #16181f |
-| `--superficie-suave` | subtle local group | #faf8fd / #1c1e26 |
-| `--superficie-2` | secondary, muted, accent | #efe9f8 / #242733 |
-| `--texto` | foregrounds | #1c1425 / #f4f5f7 |
-| `--texto-suave` | supporting copy | #6b6178 / #9aa1ad |
-| `--texto-tenue` | accessible control edge, inherited sibling alias | #766c85 / #8a91a0 |
-| `--acento`, `--sobre-acento` | primary / text on primary | #6d3fe0, #ffffff / #9479ff, #120b24 |
-| `--acento-hover` | primary hover role | #5530b8 / #a58dff |
-| `--borde`, `--borde-suave` | decorative outline / divider | #e3daef, #efe9f8 / #383c48, #2a2d38 |
-| `--exito`, `--exito-suave` | success roles | #1f7a55, #dcf5e9 / #78d6a8, #173b31 |
-| `--aviso`, `--aviso-suave` | warning roles | #8f5f12, #fff3d8 / #f7c46b, #3f311c |
-| `--error`, `--error-suave` | error roles | #b23a45, #ffeaec / #ff979f, #43252a |
-| `--taller-visor`, `--taller-panel`, `--taller-encima` | existing workshop scene context | #ebe7f1, #faf9fc, #f3eefb / #1a1722, #16131d, #231e2e |
+| `--fondo` | fondo | #faf9fc / #0b0c10 |
+| `--superficie` | tarjeta, menú emergente | #ffffff / #16181f |
+| `--superficie-suave` | grupo local sutil | #faf8fd / #1c1e26 |
+| `--superficie-2` | secundario, atenuado, acento | #efe9f8 / #242733 |
+| `--texto` | primeros planos | #1c1425 / #f4f5f7 |
+| `--texto-suave` | texto de apoyo | #6b6178 / #9aa1ad |
+| `--texto-tenue` | borde accesible de control, alias heredado de la vista relacionada | #766c85 / #8a91a0 |
+| `--acento`, `--sobre-acento` | primario / texto sobre el primario | #6d3fe0, #ffffff / #9479ff, #120b24 |
+| `--acento-hover` | rol de hover del primario | #5530b8 / #a58dff |
+| `--borde`, `--borde-suave` | contorno decorativo / divisor | #e3daef, #efe9f8 / #383c48, #2a2d38 |
+| `--exito`, `--exito-suave` | roles de éxito | #1f7a55, #dcf5e9 / #78d6a8, #173b31 |
+| `--aviso`, `--aviso-suave` | roles de advertencia | #8f5f12, #fff3d8 / #f7c46b, #3f311c |
+| `--error`, `--error-suave` | roles de error | #b23a45, #ffeaec / #ff979f, #43252a |
+| `--taller-visor`, `--taller-panel`, `--taller-encima` | contexto existente de la escena del taller | #ebe7f1, #faf9fc, #f3eefb / #1a1722, #16131d, #231e2e |
 
-Geist Sans and Geist Mono are embedded from the existing local Next WOFF2 assets. Mono remains limited to inherited metadata/wordmark treatment. Panel/field/pill radii 32/18/999px and 24px inset match the siblings. Desktop band padding is 28px; phone padding is 20px; modal padding is 28px desktop and 24px phone. Colour identifies primary action and real save/error states. It does not recolour route navigation.
+Geist Sans y Geist Mono se integran desde los recursos WOFF2 locales existentes de Next. Mono se limita al tratamiento heredado de metadatos y marca denominativa. Los radios de panel/campo/píldora de 32/18/999px y el margen interior de 24px coinciden con las vistas relacionadas. El relleno de la banda es de 28px en escritorio y 20px en teléfono; el relleno del diálogo es de 28px en escritorio y 24px en teléfono. El color identifica la acción principal y los estados reales de guardado/error. No cambia el color de la navegación de rutas.
 
-| Axis | Observable direction |
+| Eje | Dirección observable |
 |---|---|
-| concept | Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria. |
+| concepto | Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria. |
 | layout | Una pila de bandas horizontales a todo el ancho. La banda abierta contiene escena y explicación en proporción 1.8:1; no existe un panel maestro-detalle lateral ni una cuadrícula permanente de tarjetas. |
 | navigation | Cabecera y navegación horizontal compartidas; Ver escena/Ocultar escena expande el proyecto en su propio lugar, Abrir lleva al Taller o a solo lectura. Qué se guarda despliega la explicación junto al estado. |
 | typography | Geist Sans del producto: título 24px, proyecto 20px, sección 16–18px, cuerpo 14–15px, metadatos 12–13px. Geist Mono solo en la identificación Sempertex heredada. |
 | density | Proyectos cerrados de una fila y una única escena abierta. La información secundaria se revela a demanda; 28px de margen interior en escritorio y 20px en teléfono. |
 | components | Button/Input/Skeleton/Dialog reales de shadcn y Base UI/Animate UI. Composición propia de bandas expandibles y renombrado in situ; botones con presión táctil, selector de propietario nativo y disclosure de cuenta heredado. |
 | colour | Exactamente Pictures: fondo/superficie/texto/acento y tokens Taller para el visor; roles accesibles de borde de control heredados de cuentas-admin y planes. No hay nueva paleta ni familia tipográfica. |
-| motion | Asentamiento táctil: bandas se comprimen .985 y asientan con 55ms de secuencia; escena .965→1.008→1; estado rota -14°→5°→0; avisos se asientan verticalmente; presión .965 con spring 220/16; hover de iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento. |
+| motion | Asentamiento táctil: las bandas se comprimen .985 y se asientan con una secuencia de 55ms; la escena pasa de .965→1.008→1; el estado rota de -14°→5°→0; los avisos se asientan verticalmente; presión .965 con spring 220/16; hover en iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento. |
 
-Actual components, with import evidence:
+Componentes reales, con evidencia de importación:
 
-| Component name | Source and use |
+| Nombre del componente | Fuente y uso |
 |---|---|
-| `shadcn:button default default/hover/focus/pressed/disabled/loading` | `@/components/ui/button`; account save, import and owned copy |
-| `shadcn:button outline default/hover/focus/pressed/disabled` | Same import; preview, navigation, retry and cancellation |
-| `shadcn:input text empty/filled/focus/invalid/disabled` | `@/components/ui/input`; search, inline name and named save |
-| `shadcn:skeleton record loading` | `@/components/ui/skeleton`; list skeleton bands |
-| `shadcn:dialog project open/closed/validating/busy` | `@/components/ui/dialog`; actual installed Animate UI/Base UI dialog with focus containment |
-| `custom:project-band collapsed/expanded` | Semantic article and button with aria-expanded/aria-controls; no invented library attribution |
-| `custom:account-disclosure closed/open/focus` | Shared native details/summary with Escape/outside dismissal |
-| `custom:owner-filter native all/mine/other` | Labelled native select; staff-only |
-| `custom:scene-preview illustrative` | Inline SVG depicting a neutral mock scene, not a WebGL renderer or stored thumbnail contract |
-| `custom:motion profile/reduced` | `@kit/motion` profile; `motion.button` from `motion/react`, spring from useMotionProfile |
-| `custom:planning-controls` | `mountMockup/useMockup` from `@kit/mockup`; native view/state/scene/theme/motion selectors |
+| `shadcn:button default default/hover/focus/pressed/disabled/loading` | `@/components/ui/button`; guardado de cuenta, importación y copia propia |
+| `shadcn:button outline default/hover/focus/pressed/disabled` | Mismo import; vista previa, navegación, reintento y cancelación |
+| `shadcn:input text empty/filled/focus/invalid/disabled` | `@/components/ui/input`; búsqueda, nombre en línea y guardado con nombre |
+| `shadcn:skeleton record loading` | `@/components/ui/skeleton`; bandas esqueleto de la lista |
+| `shadcn:dialog project open/closed/validating/busy` | `@/components/ui/dialog`; diálogo real instalado de Animate UI/Base UI con confinamiento del foco |
+| `custom:project-band collapsed/expanded` | Artículo semántico y botón con aria-expanded/aria-controls; sin atribución inventada a una biblioteca |
+| `custom:account-disclosure closed/open/focus` | details/summary nativos compartidos, con cierre mediante Escape o clic fuera |
+| `custom:owner-filter native all/mine/other` | Select nativo etiquetado; solo para el personal |
+| `custom:scene-preview illustrative` | SVG en línea que representa una escena neutra de ejemplo; no es un renderizador WebGL ni un contrato de miniatura almacenada |
+| `custom:motion profile/reduced` | Perfil `@kit/motion`; `motion.button` de `motion/react`, spring de useMotionProfile |
+| `custom:planning-controls` | `mountMockup/useMockup` de `@kit/mockup`; selectores nativos de vista/estado/escena/tema/movimiento |
 
-## 5. Navigation, interaction and motion
+## 5. Navegación, interacción y movimiento
 
-The list opens own projects in Taller and foreign projects in read-only view. The real destinations are `/proyectos`, `/3d?proyecto=<id>` and `/proyectos/[id]` as specified by the plan. The HTML simulates navigation locally, with no network request. View changes focus H1; disclosures keep focus on the invoking control. Preview buttons expose expanded state and a target id. First save and copy require a trimmed non-empty name. Dialog Escape/cancel return to the exact surviving invoking control; there is a name/button/H1 fallback after the source view is replaced. Closed details explicitly hide their bodies, preserving disclosure visibility and measurement.
+La lista abre los proyectos propios en el Taller y los proyectos ajenos en modo de solo lectura. Los destinos reales son `/proyectos`, `/3d?proyecto=<id>` y `/proyectos/[id]`, según lo especificado en el plan. El HTML simula la navegación localmente, sin solicitudes de red. Los cambios de vista enfocan H1; las divulgaciones mantienen el foco en el control que las activa. Los botones de vista previa exponen el estado expandido y un id de destino. El primer guardado y la copia requieren un nombre no vacío después de recortarlo. Escape o cancelar en un diálogo devuelven el foco exactamente al control activador que siga disponible; si la vista de origen fue reemplazada, se usa como alternativa el campo de nombre, el botón o H1. Los detalles cerrados ocultan explícitamente su contenido, preservando la visibilidad y medición de la divulgación.
 
-Motion grammar is tactile, finite and legible throughout. Expressive uses 520ms settle / 170ms controls / 55ms band offsets with cubic-bezier(.34,1.4,.64,1). Natural is 320/140/30ms and subtle 160/100/12ms. Distinct behaviors present in the artifact:
+La gramática del movimiento es táctil, finita y legible en todas las vistas. El modo expresivo usa asentamiento de 520ms / controles de 170ms / desfases de banda de 55ms con cubic-bezier(.34,1.4,.64,1). El modo natural usa 320/140/30ms y el sutil, 160/100/12ms. El artefacto presenta estos comportamientos diferenciados:
 
-1. Band load/view choreography compresses .985, lifts briefly and settles; each subsequent band offsets 55ms.
-2. The expanded scene seats from .965 through 1.008 to 1 without hiding its text.
-3. Notices settle with a short vertical compression, independently of the scene.
-4. Save status icons rotate -14° through 5° to zero and settle in scale.
-5. Inline edit fields seat from scaleX(.96) through 1.01 to 1, anchored at the text edge.
-6. Button hover raises its icon; press compresses to .965. The name control uses the installed Motion spring, stiffness 220/damping 16 for expressive.
-7. Pending save/import has a rotating icon only while pending; keyboard feedback remains a static high-contrast outline.
+1. La coreografía de carga/cambio de vista de las bandas las comprime a .985, las eleva brevemente y las asienta; cada banda siguiente tiene un desfase de 55ms.
+2. La escena expandida se acomoda desde .965, pasa por 1.008 y llega a 1 sin ocultar su texto.
+3. Los avisos se asientan con una breve compresión vertical, independiente de la escena.
+4. Los iconos de estado de guardado rotan de -14° a 5° y luego a cero, y se asientan en escala.
+5. Los campos de edición en línea se acomodan desde scaleX(.96), pasan por 1.01 y llegan a 1, anclados al borde del texto.
+6. El hover del botón eleva su icono; al presionarlo se comprime a .965. El control de nombre usa el spring de Motion instalado, con stiffness 220/damping 16 en modo expresivo.
+7. El guardado/importación pendiente muestra un icono giratorio solo mientras está pendiente; la respuesta del teclado sigue siendo un contorno estático de alto contraste.
 
-Reduced OS preference, Quieto and `?still=1` remove travel, animated transitions and spinning while retaining every state, control and status word. Hidden-tab CSS animations are paused in the product; there is no persistent decorative ambient effect. Entrance motion uses transforms without layout changes, opacity reduction or mid-animation colour changes.
+La preferencia reducida del sistema operativo, Quieto y `?still=1` eliminan el desplazamiento, las transiciones animadas y el giro, manteniendo todos los estados, controles y textos de estado. En el producto, las animaciones CSS de pestañas ocultas quedan en pausa; no hay efectos ambientales decorativos persistentes. El movimiento de entrada usa transformaciones sin cambios de layout, reducción de opacidad ni cambios de color a mitad de la animación.
 
-## 6. Flows and behavioral invariants
+## 6. Flujos e invariantes de comportamiento
 
-1. **First save:** new scene → “Sin guardar todavía” → Guardar proyecto → name dialog → validation or Guardando… → only a confirmed current revision says Guardado en tu cuenta. Subsequent edits autosave; Guardar ahora remains available outside pending/conflict states. Production responses acknowledge only their submitted generation and identity.
-2. **New project:** Escena nueva, template and Abrir en Escena share the same transition. A saved project finishes pending save first; an unsaved scene asks before discard. Failure/conflict keeps the scene and blocks replacement. The new scene is called Escena nueva, has no saved identity and does not upload until its first named save. No new delete or history interface is added.
-3. **Reopen:** search the full authorized collection, use owner filter only when permitted, preserve visible rows on next-page failure, and reopen the complete scene. Filter changes reset pagination; late responses must not replace the current query. These are production requirements, not claims about the mock fixture's synchronous search.
-4. **Conflict:** a stale write stops autosave, retains the local scene and exposes Cargar versión del servidor / Guardar una copia. Loading the server version confirms which scene will be displayed and leaves the local recovery draft available. Saving an owned copy requests its name and never updates the foreign/original document.
-5. **Offline/failure:** show Sin guardar with the reason and retry; a retry shows Guardando… until acknowledgement. A local backup failure asks the person to keep the view open and retry backup. Auth loss shows no project metadata and directs recovery through the same account.
-6. **Foreign original:** read-only scene/owner banner; no editable name, scene tools or save-original action. With Taller permission, Guardar una copia opens an explicit owned-copy dialog; without it, the copy action is absent.
-7. **Legacy import:** first authenticated Taller entry offers review for the current account, warns about shared devices and explains the scene-only boundary. Import is explicit, retry-safe and creates exactly one owned project after response loss/retry. Ahora no preserves the original and the list offers a way back to import. Invalid/unknown data has explanation plus raw-original download. Success/refusal/failure never changes or erases the browser source. Another account receives a fresh consent prompt, never a prior receipt or draft.
+1. **Primer guardado:** escena nueva → «Sin guardar todavía» → Guardar proyecto → diálogo de nombre → validación o Guardando… → solo una revisión actual confirmada indica Guardado en tu cuenta. Las ediciones posteriores se guardan automáticamente; Guardar ahora sigue disponible fuera de los estados pendiente/conflicto. Las respuestas de producción reconocen únicamente la generación e identidad que enviaron.
+2. **Proyecto nuevo:** Escena nueva, plantilla y Abrir en Escena comparten la misma transición. Un proyecto guardado primero completa el guardado pendiente; una escena sin guardar pide confirmación antes de descartarse. Un fallo/conflicto conserva la escena y bloquea el reemplazo. La escena nueva se llama Escena nueva, no tiene identidad guardada y no se carga hasta su primer guardado con nombre. No se agrega una nueva interfaz de eliminación ni de historial.
+3. **Reapertura:** buscar en toda la colección autorizada, usar el filtro de propietario solo cuando esté permitido, conservar las filas visibles si falla la página siguiente y reabrir la escena completa. Los cambios de filtro restablecen la paginación; las respuestas tardías no deben reemplazar la consulta actual. Estos son requisitos de producción, no afirmaciones sobre la búsqueda sincrónica del fixture del mock.
+4. **Conflicto:** una escritura obsoleta detiene el guardado automático, conserva la escena local y muestra Cargar versión del servidor / Guardar una copia. Al cargar la versión del servidor se confirma qué escena se mostrará y se mantiene disponible el borrador local de recuperación. Al guardar una copia propia se solicita su nombre y nunca se actualiza el documento ajeno/original.
+5. **Sin conexión/fallo:** mostrar Sin guardar con el motivo y la opción de reintentar; un reintento muestra Guardando… hasta recibir confirmación. Si falla una copia de seguridad local, se pide a la persona que mantenga la vista abierta y vuelva a intentarla. Si se pierde la autenticación, no se muestra metadata del proyecto y se indica recuperar el acceso mediante la misma cuenta.
+6. **Original ajeno:** aviso de solo lectura con escena y propietario; sin nombre editable, herramientas de escena ni acción para guardar sobre el original. Con permiso de Taller, Guardar una copia abre un diálogo explícito para crear una copia propia; sin ese permiso, la acción de copia no aparece.
+7. **Importación heredada:** la primera entrada autenticada al Taller ofrece revisar los datos de la cuenta actual, advierte sobre dispositivos compartidos y explica el límite de solo escena. La importación es explícita, segura ante reintentos y crea exactamente un proyecto propio aunque se pierda la respuesta y se reintente. Ahora no conserva el original y la lista ofrece una forma de volver a importar. Los datos inválidos/desconocidos incluyen una explicación y la descarga del original sin procesar. El éxito, la negativa o el fallo nunca modifican ni borran el origen del navegador. Otra cuenta recibe una nueva solicitud de consentimiento, nunca un comprobante ni borrador anterior.
 
-Only the name and complete scene travel between browsers. AI conversation/generated images remain local. No merge, delete, transfer, public sharing or version-history UI is introduced. These invariants remain binding when the finalizer/implementer adopts a direction.
+Solo el nombre y la escena completa se transfieren entre navegadores. La conversación con IA y las imágenes generadas permanecen locales. No se incorpora una interfaz de combinación, eliminación, transferencia, uso compartido público ni historial de versiones. Estos invariantes siguen siendo obligatorios cuando quien finalice/implemente adopte una dirección.
 
-## 7. View and dialog specifications
+## 7. Especificaciones de vistas y diálogos
 
-| Inspector view | Surface and hierarchy | Main action / progressive detail |
+| Vista del inspector | Superficie y jerarquía | Acción principal / detalle progresivo |
 |---|---|---|
-| `projects` | Own project search, import recovery entry and stack of project bands | Escena nueva; per-row Abrir; Ver/Ocultar escena; Qué se guarda |
-| `staff` | Same shared surface plus labelled owner filter | Open authorized owned or foreign scene; clear distinction of owner/read-only |
-| `workshop` | Existing Taller context, scene name, account save status, contextual failure panel | In-place name, explicit first save/Guardar ahora, local save explanation and failure recovery |
-| `readonly` | Foreign owner/read-only banner and complete scene context | Owned copy only with Taller permission; return to permitted list |
+| `projects` | Búsqueda de proyectos propios, acceso para recuperar importaciones y pila de bandas de proyectos | Escena nueva; Abrir por fila; Ver/Ocultar escena; Qué se guarda |
+| `staff` | La misma superficie compartida más un filtro de propietario etiquetado | Abrir una escena propia o ajena autorizada; distinción clara de propietario/solo lectura |
+| `workshop` | Contexto existente del Taller, nombre de escena, estado de guardado en la cuenta y panel contextual de fallos | Nombre en el lugar, primer guardado explícito/Guardar ahora, explicación del guardado local y recuperación ante fallos |
+| `readonly` | Aviso de propietario ajeno/solo lectura y contexto completo de la escena | Copia propia solo con permiso de Taller; volver a la lista permitida |
 
-The scene preview is a neutral illustrative SVG, labelled “Vista de escena · Mockup”. No new server thumbnail field, screenshot-generation job or additional persisted project content is proposed.
+La vista previa de la escena es un SVG ilustrativo neutro, etiquetado «Vista de escena · Mockup». No se propone un nuevo campo de miniatura en el servidor, un trabajo de generación de capturas ni contenido persistente adicional del proyecto.
 
-| Inspector dialog (`scene`) | Contents and outcomes |
+| Diálogo del inspector (`scene`) | Contenido y resultados |
 |---|---|
-| empty | No dialog |
-| `first-save` | Named-save field, validation, scene-only explanation, save/cancel |
-| `copy` | Owned-copy name, original-retention explanation, save/cancel |
-| `new-scene` | Save before replacement; explicit unsaved discard or cancel; blocked save has visible reason |
-| `leave` | Preserve pending work before project-list navigation; save continues to the original requested destination |
-| `server-version` | Explicit server load and local-draft-retention explanation; cancel |
-| `import` | Current-account destination, explicit import/refusal, shared-device warning; invalid/error recovery and original download |
+| empty | Sin diálogo |
+| `first-save` | Campo para guardar con nombre, validación, explicación del límite de solo escena, guardar/cancelar |
+| `copy` | Nombre de la copia propia, explicación de que se conserva el original, guardar/cancelar |
+| `new-scene` | Guardar antes de reemplazar; descartar sin guardar o cancelar de forma explícita; el fallo del guardado muestra el motivo |
+| `leave` | Conservar el trabajo pendiente antes de navegar a la lista de proyectos; el guardado continúa hacia el destino solicitado originalmente |
+| `server-version` | Explicación explícita de la carga del servidor y conservación del borrador local; cancelar |
+| `import` | Destino en la cuenta actual, importación o rechazo explícitos, advertencia sobre dispositivos compartidos; recuperación de datos inválidos/error y descarga del original |
 
 ## 8. Reachable states
 
