@@ -15,21 +15,21 @@ source_behavior: proyectos@v1.r11.behavior.md
 
 # Edición en contexto — proyectos@v1 · r11 · C
 
-## 1. Identity and traceability
+## 1. Identidad y trazabilidad
 
-**Exploration only; draft, not approved and not an implementation contract.** This direction-specific note accompanies the TSX, self-contained HTML, two candidate compositions and axis JSON. It does not replace or modify canonical `proyectos@v1.md` / `.html`, either sibling contract, SPEC or PLAN. The owner selects a direction; a separate finalizer writes the canonical pair after selection.
+**Solo exploración; borrador, no aprobado ni contrato de implementación.** Esta nota específica de la dirección acompaña el TSX, el HTML autocontenido, dos composiciones candidatas y el JSON de ejes. No reemplaza ni modifica el `proyectos@v1.md` / `.html` canónico, ninguno de los contratos relacionados, SPEC ni PLAN. El propietario selecciona una dirección; un finalizador independiente escribe el par canónico después de la selección.
 
-Behavioral scope: `proyectos@v1.r11.behavior.md`, R6/R7 and SPEC “Behavior — SP-3 and SP-4 (round 9 answered)”. Consumers, if this direction is selected and independently approved: SP-4 T4.1 copies the approved artifact, T4.4 implements list/save/conflict/read-only/new-scene views, T4.5 implements import, T4.8 reviews rendered fidelity. No other subplan acquires a UI dependency merely by consuming project identity. Compatibility with the old unapproved mockup: **breaking visual composition**, because list disclosure, hierarchy and in-place editing need implementation and review; product persistence/ownership rules are unchanged. Compatibility with an approved production implementation is undetermined; none is claimed.
+Alcance del comportamiento: `proyectos@v1.r11.behavior.md`, R6/R7 y SPEC «Comportamiento — SP-3 y SP-4 (respuestas de la ronda 9)». Consumidores, si se selecciona y aprueba esta dirección de forma independiente: SP-4 T4.1 copia el artefacto aprobado; T4.4 implementa las vistas de lista/guardado/conflicto/solo lectura/escena nueva; T4.5 implementa la importación; T4.8 revisa la fidelidad del renderizado. Ningún otro subplan adquiere una dependencia de UI por el solo hecho de consumir la identidad del proyecto. Compatibilidad con la maqueta anterior no aprobada: **composición visual incompatible**, porque la divulgación de la lista, la jerarquía y la edición en contexto requieren implementación y revisión; las reglas de persistencia/propiedad del producto no cambian. La compatibilidad con una implementación de producción aprobada está por determinar; no se afirma que exista.
 
-Sources inspected read-only in t12 and asesor: `src/app/globals.css`, `layout.tsx`, `/3d/page.tsx`, `Taller3D.tsx`, local scene-saving logic and shell navigation. Existing local save uses one browser scene and a 500ms debounce; it is not account persistence. The sibling canonical cuentas-admin and planes Markdown/HTML and their selected TSX establish the shared account masthead, language control, account disclosure, neutral horizontal navigation, Geist and generous radius vocabulary. Older requests for independent palettes/typefaces yield to this delegation's explicit fixed-product-system scope.
+Fuentes inspeccionadas en modo de solo lectura en t12 y asesor: `src/app/globals.css`, `layout.tsx`, `/3d/page.tsx`, `Taller3D.tsx`, la lógica local para guardar escenas y la navegación del shell. El guardado local existente usa una escena del navegador y un debounce de 500ms; no es persistencia vinculada a una cuenta. El Markdown/HTML canónico relacionado de cuentas-admin y planes y sus TSX seleccionados establecen el encabezado compartido de cuenta, el control de idioma, la divulgación de cuenta, la navegación horizontal neutra, Geist y el vocabulario de bordes generosamente redondeados. Las solicitudes anteriores de paletas/tipografías independientes ceden ante el alcance explícito de esta delegación, que fija el sistema visual del producto.
 
-Only revision-specific files are written. Production repositories are not edited. No package installation, network fetch, server, commit, plan edit or approval occurs.
+Solo se escriben archivos específicos de esta revisión. No se editan los repositorios de producción. No se instalan paquetes, no se consultan recursos de red, no se inicia ningún servidor ni se realizan commits, cambios al plan o aprobaciones.
 
-## 2. Purpose and users
+## 2. Propósito y usuarios
 
-The list answers “Which saved scene do I want to continue?” The editing header answers “What is this project called, and are these changes saved to my account?” The scene stays in context while the person edits its name, reviews the save boundary, or resolves a failure.
+La lista responde «¿Qué escena guardada quiero continuar?». El encabezado de edición responde «¿Cómo se llama este proyecto y estos cambios se guardaron en mi cuenta?». La escena permanece en contexto mientras la persona edita su nombre, revisa los límites del guardado o resuelve un error.
 
-Owners save, search, reopen and continue their projects. Authorized employees/administrators search across permitted owners and read foreign originals. Copying requires Taller permission and creates an owned project; it never edits or transfers the original. Read-only access without Taller permission has its own accessible presentation and no copy/edit controls. A person signing into a shared browser gives explicit consent before legacy import.
+Los propietarios guardan, buscan, vuelven a abrir y continúan sus proyectos. Los empleados/administradores autorizados buscan entre los propietarios a los que tienen permiso de acceder y leen los originales de otras personas. Copiar requiere permiso para usar Taller y crea un proyecto propio; nunca edita ni transfiere el original. El acceso de solo lectura sin permiso para usar Taller tiene su propia presentación accesible y no incluye controles para copiar/editar. Una persona que inicia sesión en un navegador compartido da su consentimiento explícito antes de importar contenido heredado.
 
 ## 3. Information architecture and approach
 
@@ -217,7 +217,11 @@ The complete scripted mockup walkthrough passed 12 checks with zero page errors:
 
 `compare_directions.py` measured A/B/C: overall `ok=true`, selector evidence passes, no missing evidence. A–C layout similarity **0.114**, B–C **0.156**; both pairs have different motion; B–C also has different density. Shared route navigation intentionally remains the same. These measurements are visual distinction evidence, not proof of production behavior or owner approval.
 
-Final snapshot audit: running; no final snapshot result claimed yet.
+Final snapshot audit (after the component-identity and pending-navigation corrections): **672 renders / 672 planned, 17,388 text measurements, 1,963 focus stops**, at 1280/390/768px in both themes, exit 0. No combinations were sampled away.
+
+`RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`
+
+Two additional final-file checks passed: Escena nueva and navigation to Proyectos each wait for an in-flight mock save acknowledgement. There were zero external HTTP(S) requests. At 150ms, expressive startup had three active animations; OS reduced motion and `?still=1` each had zero. Final contrast and A/B/C comparison were rerun on the built final file and passed. The final source/HTML hashes below match this tested snapshot.
 
 ## 12. Open question and assumptions
 
