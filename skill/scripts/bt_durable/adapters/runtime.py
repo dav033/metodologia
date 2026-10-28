@@ -6,11 +6,14 @@ agent environment comes from the attempt's 0600 JSON file (secrets never reach a
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 from bt_contracts.execution import AttemptRef, Prepared, ProcessRecord
 from bt_supervisor.api import TerminationUncertain, make_supervisor
-from bt_supervisor.model import Limits, LaunchSpec, Observation
+from bt_supervisor.model import LaunchSpec, Limits, Observation
+
+LOG = logging.getLogger("bt_durable.runtime")
 
 
 def _record(obs: Observation) -> ProcessRecord:
@@ -51,8 +54,8 @@ class SupervisorRuntime:
             self.supervisor.release(attempt.attempt_key)
         except TerminationUncertain:
             raise
-        except Exception:  # noqa: BLE001 - an already released attempt is fine
-            pass
+        except Exception as error:  # noqa: BLE001 - an already released attempt is fine
+            LOG.debug("release %s: %s", attempt.attempt_key, error)
 
     def owned(self, prefix: str) -> list[str]:
         return [i.attempt_key for i in self.supervisor.list_attempts(prefix)]

@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
-
 from bt_contracts.failure import Budget
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Settings(BaseModel):

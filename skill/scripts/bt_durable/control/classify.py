@@ -12,7 +12,12 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-from bt_contracts.execution import AgentReport, ProcessRecord, VerifyOutcome, VerifyStatus
+from bt_contracts.execution import (
+    AgentReport,
+    ProcessRecord,
+    VerifyOutcome,
+    VerifyStatus,
+)
 from bt_contracts.failure import Evidence, FailureClass, FailureReport
 
 _HEAP = re.compile(r"JavaScript heap out of memory|Ineffective mark-compacts near heap limit|heap limit Allocation failed")

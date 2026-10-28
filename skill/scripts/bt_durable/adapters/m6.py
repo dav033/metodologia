@@ -13,7 +13,13 @@ import dataclasses
 from pathlib import Path
 from types import SimpleNamespace
 
-from bt_contracts.execution import AttemptRef, Prepared, Snapshot, VerifyOutcome, VerifyStatus
+from bt_contracts.execution import (
+    AttemptRef,
+    Prepared,
+    Snapshot,
+    VerifyOutcome,
+    VerifyStatus,
+)
 from bt_scheduler_core.plan import TaskSpec
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy

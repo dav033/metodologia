@@ -12,7 +12,14 @@ import os
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
-from bt_contracts.execution import AgentReport, AttemptRef, Prepared, ProcessRecord, Route, Snapshot
+from bt_contracts.execution import (
+    AgentReport,
+    AttemptRef,
+    Prepared,
+    ProcessRecord,
+    Route,
+    Snapshot,
+)
 from bt_scheduler_core.plan import Plan, TaskSpec
 from bt_scheduler_executor import handoff
 from bt_scheduler_executor import model as m3

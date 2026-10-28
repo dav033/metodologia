@@ -10,13 +10,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from hypothesis import given, settings
-from hypothesis import strategies as st
-
 from bt_contracts.execution import AgentReport, ProcessRecord, VerifyOutcome
 from bt_contracts.failure import Budget, FailureClass, RecoveryAction, Spent
 from bt_durable.control import classify, frontier, policy
 from bt_scheduler_core.plan import load_plan
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 SCRIPTS = Path(__file__).resolve().parents[1]
 
@@ -215,7 +214,7 @@ class Boundary(unittest.TestCase):
                 f"sys.meta_path.insert(0, B()); sys.path.insert(0, {str(SCRIPTS)!r})\n"
                 "import bt_durable.control.frontier, bt_durable.control.classify, bt_durable.control.policy\n"
                 "print('ok')")
-        done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60)
+        done = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=60, check=False)
         self.assertEqual(done.returncode, 0, done.stderr)
 
 

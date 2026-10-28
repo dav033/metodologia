@@ -11,8 +11,6 @@ Events (DBOS.set_event): `state`, `decision` on task workflows; `summary` on the
 """
 from __future__ import annotations
 
-from dbos import DBOS, SetWorkflowID
-
 from bt_contracts.execution import (
     AgentReport,
     AttemptOutcome,
@@ -30,6 +28,7 @@ from bt_contracts.execution import (
 )
 from bt_contracts.failure import FailureReport, RecoveryAction, RecoveryDecision
 from bt_contracts.owner import OwnerAnswer, RunCommand
+from dbos import DBOS, SetWorkflowID
 
 from ..control import classify, frontier, policy
 from ..settings import Settings
@@ -268,8 +267,8 @@ def _remediation_note(outcomes: list[AttemptOutcome]) -> str:
     for outcome in outcomes:
         if outcome.failure is not None:
             seen.setdefault(outcome.failure.signature, outcome)
-    parts = ["REMEDIATION. The same failure repeated. Fix the cause of EVERY failure below in one change; the "
-             "failing checks are the probes that reproduce them. Do not weaken or remove any check."]
+    parts = [("REMEDIATION. The same failure repeated. Fix the cause of EVERY failure below in one change; the "
+              "failing checks are the probes that reproduce them. Do not weaken or remove any check.")]
     for outcome in seen.values():
         failing = ", ".join(outcome.verify.failing_checks) if outcome.verify else ""
         parts.append(f"- {outcome.failure.code} ({failing}): {outcome.failure.summary}\n{outcome.failure.agent_note[:2500]}")

@@ -14,7 +14,14 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from bt_contracts.execution import AttemptOutcome
-from bt_contracts.failure import Budget, FailureClass, FailureReport, RecoveryAction, RecoveryDecision, Spent
+from bt_contracts.failure import (
+    Budget,
+    FailureClass,
+    FailureReport,
+    RecoveryAction,
+    RecoveryDecision,
+    Spent,
+)
 
 TRANSIENT_BACKOFF = (30.0, 120.0, 600.0, 1800.0)
 QUOTA_COOLDOWN = 1800.0            # bt_config quota.default_cooldown_min when the provider gives no reset time

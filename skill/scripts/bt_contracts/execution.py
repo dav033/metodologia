@@ -204,7 +204,7 @@ class OwnerRecord(Contract):
     migrated_from: str | None = None
 
 
-from .failure import FailureReport, RecoveryDecision  # noqa: E402  (forward references resolved below)
+from .failure import FailureReport, RecoveryDecision
 
 AttemptOutcome.model_rebuild()
 TaskOutcome.model_rebuild()

@@ -8,10 +8,16 @@ from __future__ import annotations
 
 import time
 
-from dbos import DBOS
-
-from bt_contracts.execution import AttemptRef, Prepared, ProcessRecord, Route, RunRef, Snapshot
+from bt_contracts.execution import (
+    AttemptRef,
+    Prepared,
+    ProcessRecord,
+    Route,
+    RunRef,
+    Snapshot,
+)
 from bt_contracts.failure import RecoveryDecision
+from dbos import DBOS
 
 from ..control import frontier
 from . import engine
