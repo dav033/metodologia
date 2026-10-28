@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 14/66 · generado: 2026-10-28T06:05:47-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/66 · generado: 2026-10-28T06:26:56-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 14/28
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 15/28
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -20,8 +20,8 @@ created: 2026-10-26
 | T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
 | T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-2 | 2 |
 | T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | lista | gpt-6-luna | codex-2 | 4 |
-| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | gpt-6.1-sol | codex-2 | 8 |
+| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-1 | 5 |
+| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | en curso | gpt-6.1-sol | codex-luis | 9 |
 | T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | — | — | 0 |
 | T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |

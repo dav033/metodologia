@@ -1,6 +1,17 @@
 {
+ "at": "2026-10-28T06:08:13",
+ "cause": "Fallo 1 (diff de permisos de entusiasta): ya no aplica al código sellado. `scripts/test/test-integracion-cuentas.ts:161-162` ordena ambos lados con `.sort()`; el diff antiguo corresponde a una versión sin ese sort. Fallo 2 (`/3d/captura` para entusiasta: 307 en vez de 200): `src/proxy.ts:41-44` responde 200 con rewrite a `/sin-acceso` cuando hay sesión sin permiso, así que el 307 sólo sale de `NextResponse.redirect` por defecto, en la rama sin sesión (`src/proxy.ts:35-39`) o en la de `resolveSession` fallido (`src/proxy.ts:28-31`, `/login?error=auth-unavailable`). El login previo dio 200 con esa misma cookie, así que la sospecha es que el proxy no resuelve la sesión en el servidor de verificación (`src/lib/cuentas/sesion.ts:14`, `DATABASE_URL`), no la tabla de permisos. El mensaje del intento fallido no mostraba `Location`; el script actual sí la imprime en `test-integracion-cuentas.ts:181-185`, y `.evidence/REQ-021/SP-1.integration.json` (ejecución previa) registra `status: 200` para esa página denegada.",
+ "confidence": "media",
  "failures": 3,
- "started": 1793185522.111273,
- "state": "running",
+ "model": "haiku",
+ "not_the_task": false,
+ "profile": "claude",
+ "seconds": 171.0,
+ "solution": "1. Ejecutar `npm run cuentas:test-integracion` sin cambiar código y leer el `Location` del 307 que imprime el assert en la línea 184.\n2. Si `Location` es `/login?from=...`: la cookie no llega a `resolveSession`. Comprobar que `serverEnv.DATABASE_URL` (líneas 125-135) apunta a la misma base y esquema que el login, y que la fila de `account_sessions` existe (`token_hash` = sha256 del token).\n3. Si `Location` es `/login?error=auth-unavailable`: el proxy no puede consultar la base. Registrar el error real de `resolveSession` (sin credenciales) y corregir la conexión; no cambiar la expectativa de 200.\n4. Ejecutar `npm run cuentas:test-integracion -- --solo-ci` por separado: esa ruta nunca se ha verificado y depende de las suites `cuentas:test-*` y de `next build` con `AUTH_LOCAL_SIN_RESTRICCIONES`. Corregir cada suite que falle.\n5. Antes de editar, leer el resultado de T1.8 y de sus remediaciones T1.9, T1.10 y T1.11 en la bitácora de REQ-021 (`/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/`) y confirmar que el código sellado (efd1714) los contiene.",
+ "source_attempt": "att-0041",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-srowpkh4/source",
+ "source_snapshot": "efd1714d74104edee586d22e28dc285fdb34fa5d",
+ "state": "done",
  "task": "T1.7"
 }
