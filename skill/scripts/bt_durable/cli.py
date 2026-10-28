@@ -28,8 +28,19 @@ from . import migrate
 from .settings import EngineConfig, Settings
 
 
+ENV_FILE = Path.home() / ".config" / "bitacora" / "durable.env"   # 0600; the engine unit reads the same file
+
+
 def database_url() -> str:
-    configured = bt_config.get("execution.database_url", "")
+    """BT_DURABLE_DATABASE_URL (environment, or ~/.config/bitacora/durable.env) > execution.database_url > SQLite.
+    The PostgreSQL password lives only in that 0600 file, never in the shared config."""
+    import os
+    url = os.environ.get("BT_DURABLE_DATABASE_URL", "")
+    if not url and ENV_FILE.is_file():
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            if line.startswith("BT_DURABLE_DATABASE_URL="):
+                url = line.split("=", 1)[1].strip().strip('"')
+    configured = url or bt_config.get("execution.database_url", "")
     return configured or f"sqlite:///{(Path(bt_core.STATE) / 'durable' / 'dbos.sqlite3').resolve()}"
 
 
@@ -40,11 +51,11 @@ def engine_config() -> EngineConfig:
 
 
 def routes() -> list[Route]:
-    """`execution.routes`: "provider:profile:model" entries, in preference order (validated at launch again)."""
+    """`execution.routes`: "provider:profile:model[:effort]" entries, in preference order (validated at launch again)."""
     out = []
     for item in bt_config.get("execution.routes", []) or []:
-        provider, profile, model = (item.split(":") + ["", ""])[:3]
-        out.append(Route(provider=provider, profile=profile, model=model))
+        provider, profile, model, effort = (item.split(":") + ["", "", ""])[:4]
+        out.append(Route(provider=provider, profile=profile, model=model, effort=effort))
     return out
 
 
@@ -102,8 +113,9 @@ def cmd_engine(_args) -> int:
 
     from .service import serve, wire
     cfg = engine_config()
+    from .adapters.routes import LiveQuota
     serve(cfg, wire(cfg, repositories_for=lambda project: repositories(project),
-                    driver_for=lambda project: MethodologyDriver(project), routes=routes()))
+                    driver_for=lambda project: MethodologyDriver(project), routes=routes(), capacity=LiveQuota()))
     return 0
 
 

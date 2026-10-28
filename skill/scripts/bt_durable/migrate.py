@@ -118,6 +118,23 @@ def _manifest(state_dir: Path, project: str, req: str, attempt: str) -> Path | N
     return Path(hits[-1]) if hits else None
 
 
+def _last_snapshot(state_dir: Path, project: str, req: str, attempts: list[str]):
+    """(attempt, manifest, snapshot, base) of the newest attempt whose captured snapshot still exists, or None."""
+    for attempt in reversed(attempts):
+        manifest = _manifest(state_dir, project, req, attempt)
+        if manifest is None:
+            continue
+        try:
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        snapshot, base = data.get("snapshot_sha"), data.get("base_sha")
+        if data.get("status") == "captured" and snapshot and base and snapshot != base \
+                and _commit_exists(data.get("repository", ""), snapshot):
+            return attempt, manifest, snapshot, base
+    return None
+
+
 def _commit_exists(repo: str, sha: str) -> bool:
     if not repo or not sha:
         return False
@@ -150,6 +167,14 @@ def inventory(*, state_dir: Path, rdir: Path, project: str, req: str, owner_pids
                          if doc["attempts"].get(a, {}).get("state") == "accepted"), None)
         diagnosis = str(rec.get("reason") or "")[:500]
         if state != "completed" or accepted is None:
+            continued = _last_snapshot(state_dir, project, req, rec.get("attempts", []))
+            if continued is not None:                    # keep the partial work: verify it, then continue from it
+                attempt, manifest, snapshot, base = continued
+                tasks.append(TaskInventory(task_id=task_id, legacy_state=state, verdict="reconcile", attempt=attempt,
+                                           snapshot_sha=snapshot, base_sha=base, manifest_path=str(manifest),
+                                           diagnosis=diagnosis,
+                                           reason=f"not completed: continue from the last legacy snapshot ({attempt})"))
+                continue
             tasks.append(TaskInventory(task_id=task_id, legacy_state=state, verdict="redo", diagnosis=diagnosis,
                                        reason="not completed under the legacy runtime" if state != "completed"
                                        else "completed without an accepted attempt"))

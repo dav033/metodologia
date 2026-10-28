@@ -112,6 +112,13 @@ class Migration(unittest.TestCase):
         lg.accepted("T2", "att-2", lg.result("T2", "FAIL", s2), s2)                 # accepted on weaker evidence
         lg.accepted("T3", "att-3", lg.result("T3", "PASS", s3, tamper=True), s3)    # tampered evidence
         lg.tasks["T4"] = {"state": "blocked", "attempts": [], "reason": "attempts_exhausted: check X fails"}
+        s5 = lg.snapshot("t5")                                                      # blocked, with partial work
+        lg.tasks["T5"] = {"state": "blocked", "attempts": ["att-5"], "reason": "same_cause_limit"}
+        lg.attempts["att-5"] = {"state": "rejected", "task_id": "T5"}
+        hand = lg.state / "executor" / "proj-REQ-777-r2-x" / "attempts" / "att-5-ff" / "handoff"
+        hand.mkdir(parents=True)
+        (hand / "manifest.json").write_text(json.dumps({"repository": str(lg.repo), "snapshot_sha": s5,
+                                                        "base_sha": lg.base, "status": "captured"}))
 
     def inventory(self, **kw):
         return migrate.inventory(state_dir=self.legacy.state, rdir=self.legacy.rdir, project="proj", req="REQ-777", **kw)
@@ -120,7 +127,7 @@ class Migration(unittest.TestCase):
         self.legacy.write()
         inv = self.inventory()
         verdicts = {t.task_id: t.verdict for t in inv.tasks}
-        self.assertEqual(verdicts, {"T1": "inherit", "T2": "reconcile", "T3": "redo", "T4": "redo"})
+        self.assertEqual(verdicts, {"T1": "inherit", "T2": "reconcile", "T3": "redo", "T4": "redo", "T5": "reconcile"})
         self.assertEqual(migrate.inherited(inv), {"T1": "legacy att-1 " + inv.tasks[0].evidence})
         self.assertIn("attempts_exhausted", next(t for t in inv.tasks if t.task_id == "T4").diagnosis)
 

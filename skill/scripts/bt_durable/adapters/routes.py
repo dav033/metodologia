@@ -42,3 +42,31 @@ class StaticRouter:
 
     def alternatives(self, run: RunRef, task: TaskSpec, *, exclude: tuple[str, ...]) -> int:
         return len(self._allowed(exclude))
+
+
+class LiveQuota:
+    """Capacity from the subscription readings `globalusage` uses (bt_quota_live: read-only, cached 60 s, no model
+    calls). A window at or above `ceiling` percent means no capacity until its reset; an account that cannot be read
+    is unknown (None), never invented."""
+
+    def __init__(self, ceiling: float = 95.0, reader=None):
+        self.ceiling = ceiling
+        self.reader = reader
+
+    def __call__(self, route: Route) -> tuple[float | None, float | None]:
+        if not route.profile:
+            return None, None
+        try:
+            rows = self.reader() if self.reader else __import__("bt_quota_live").read_all_live()
+        except Exception:  # noqa: BLE001 - a failed reading is "unknown", not "full"
+            return None, None
+        row = next((r for r in rows if r.get("profile") == route.profile), None)
+        if not row or row.get("status") != "ok":
+            return None, None
+        full = [w for w in (row.get("windows") or {}).values()
+                if isinstance(w, dict) and (w.get("used_percent") or 0) >= self.ceiling]
+        if not full:
+            return 100.0 - max((w.get("used_percent") or 0) for w in (row.get("windows") or {}).values()
+                               if isinstance(w, dict)) if row.get("windows") else None, None
+        resets = [w.get("resets_at") for w in full if w.get("resets_at")]
+        return 0.0, max(resets) if resets else None

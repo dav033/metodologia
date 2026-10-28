@@ -7,6 +7,8 @@ After=default.target
 [Service]
 Type=simple
 WorkingDirectory=%h/dev/metodologia
+# BT_DURABLE_DATABASE_URL (PostgreSQL); absent = SQLite under the state folder
+EnvironmentFile=-%h/.config/bitacora/durable.env
 ExecStart=%h/.local/bin/uv run --project %h/dev/metodologia bt-durable engine
 Restart=always
 RestartSec=5
