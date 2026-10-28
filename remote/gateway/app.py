@@ -21,6 +21,9 @@ SUPPORTED_COMMANDS = frozenset({"pause", "resume", "cancel-attempt", "reopen", "
                                 "edit-brief", "note"})
 CHALLENGED_COMMANDS = frozenset({"revise", "approve", "launch", "cancel-plan", "delete-plan", "edit-brief"})
 TELEGRAM_REQ_ID = re.compile(r"REQ-[0-9]{3,6}\Z")
+# Idempotency keys of the phone/Telegram envelope: remote/contract/command.schema.json (16..120, the ledger's cap).
+IDEMPOTENCY_KEY = re.compile(r"[A-Za-z0-9._:-]{16,120}\Z")
+TASK_COMMANDS = frozenset({"reopen", "retry", "edit-brief"})
 
 
 def _ledger_command(payload: dict[str, Any]) -> dict[str, Any]:
@@ -32,18 +35,25 @@ def _ledger_command(payload: dict[str, Any]) -> dict[str, Any]:
     project, req = target.get("project"), target.get("req")
     if not isinstance(project, str) or not isinstance(req, str):
         return {}
+    # Task-scoped moves name their task and cancel names its attempt (F21): without it the laptop would compare the
+    # precondition against nothing, so the command is refused here instead of being relayed.
+    if command in TASK_COMMANDS and not (isinstance(target.get("taskId"), str) and target["taskId"]):
+        return {}
+    if command == "cancel-attempt" and not (isinstance(target.get("attemptId"), str) and target["attemptId"]):
+        return {}
 
     params: dict[str, Any] = {}
-    if command == "cancel-attempt" and isinstance(target.get("attemptId"), str):
+    if command == "cancel-attempt":
         params["attempt"] = target["attemptId"]
-    if command in {"reopen", "retry", "edit-brief"} and isinstance(target.get("taskId"), str):
+    if command in TASK_COMMANDS:
         params["task"] = target["taskId"]
     if command == "retry":
         route = payload.get("route")
         if isinstance(route, str):
             params["route"] = route
         elif isinstance(route, dict):
-            route_id = route.get("id", route.get("route_id", route.get("routeId", route.get("route"))))
+            # `routeId` is the contract name; `route_id`/`id`/`route` are the alias window of phones built before it.
+            route_id = route.get("routeId", route.get("route_id", route.get("id", route.get("route"))))
             if isinstance(route_id, str):
                 params["route"] = route_id
             for key in ("model", "account"):
@@ -77,6 +87,11 @@ def _ledger_command(payload: dict[str, Any]) -> dict[str, Any]:
         request["confirmation"] = {"challenge_id": confirmation.get("challengeId"),
                                    "typed_req": confirmation.get("typedReq")}
     return request
+
+
+def run_state(run: Mapping[str, Any]) -> Any:
+    """A snapshot run's state: `state` is canonical; `status` is the alias window of laptops before the contract."""
+    return run.get("state", run.get("status"))
 
 
 class GatewayRuntime:
@@ -116,7 +131,7 @@ class GatewayRuntime:
         if self.liveness.status is LaptopStatus.OFFLINE:
             return 503, {"code": "LAPTOP_OFFLINE", "idempotency_key": key}
         request = _ledger_command(payload) if isinstance(payload, dict) else {}
-        if not request or not isinstance(key, str) or len(key) < 16:
+        if not request or not isinstance(key, str) or not IDEMPOTENCY_KEY.fullmatch(key):
             return 400, {"code": "INVALID_COMMAND"}
         confirmation = payload.get("confirmation")
         if payload.get("type") in CHALLENGED_COMMANDS and (
@@ -199,8 +214,7 @@ class GatewayRuntime:
         precondition = request.get("precondition")
         if (isinstance(request.get("schemaVersion"), bool)
                 or set(request) != {"schemaVersion", "idempotencyKey", "type", "target", "precondition"}
-                or not isinstance(key, str) or not 16 <= len(key) <= 128
-                or not re.fullmatch(r"[A-Za-z0-9._:-]+", key)
+                or not isinstance(key, str) or not IDEMPOTENCY_KEY.fullmatch(key)
                 or not isinstance(command, str) or command not in {"pause", "resume"}
                 or not isinstance(target, Mapping)
                 or set(target) != {"kind", "project", "req"} or target.get("kind") != "run"
@@ -276,7 +290,7 @@ class GatewayRuntime:
         self.snapshot_cache = snapshot
         self.hub.update_snapshot(snapshot)
         has_active_run = any(
-            isinstance(run, dict) and (run.get("active") is True or run.get("status") in ACTIVE_RUN_STATES)
+            isinstance(run, dict) and (run.get("active") is True or run_state(run) in ACTIVE_RUN_STATES)
             for run in runs
         )
         self.has_cached_active_run = has_active_run
@@ -322,7 +336,7 @@ class GatewayRuntime:
             if not isinstance(event, dict):
                 continue
             self.hub.publish(event)
-            notification = notification_for_event(event)
+            notification = notification_for_event(event, self.config.frontend_origin)
             if notification:
                 self.outbox.enqueue(*notification, created_at=event_timestamp(event))
         next_cursor = result.get("nextCursor")

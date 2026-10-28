@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import http.client
 import json
 import tempfile
@@ -14,6 +15,12 @@ from config import GatewayConfig
 from server import create_server
 from stream import StreamHub
 from upstream import UpstreamError
+
+
+# The laptop's real snapshot and feed dialect, validated against the contract by test_remote_contracts.
+FIXTURES = Path(__file__).resolve().parents[2] / "contract" / "fixtures"
+SNAPSHOT = json.loads((FIXTURES / "snapshot.json").read_text(encoding="utf-8"))
+EVENTS = json.loads((FIXTURES / "events.json").read_text(encoding="utf-8"))
 
 
 class CountingLaptop:
@@ -32,8 +39,7 @@ class CountingLaptop:
         self.calls["snapshot"] += 1
         if not self.online:
             raise UpstreamError("offline")
-        return {"schemaVersion": 1, "generatedAt": "2026-10-21T12:00:00Z", "cursor": "laptop-cursor",
-                "runs": [{"status": "idle"}]}
+        return copy.deepcopy(SNAPSHOT)
 
     def events(self, after):
         self.calls["events"] += 1
@@ -134,16 +140,16 @@ class RuntimeTests(unittest.TestCase):
     def test_polled_events_are_fanned_out_and_offline_keeps_cache(self):
         self.runtime.poll_once()
         cursor = self.runtime.hub.live_cursor()
-        self.laptop.feed = [{"type": "run.done", "id": "e1"}]
+        self.laptop.feed = copy.deepcopy(EVENTS[:1])
         self.runtime.poll_once()
         events, _ = self.runtime.hub.events_after(cursor)
-        self.assertEqual([e["id"] for _, e in events], ["e1"])
+        self.assertEqual([e for _, e in events], EVENTS[:1])
         self.laptop.online = False
         for _ in range(3):
             self.runtime.poll_once()
         state = self.runtime.hub.read_snapshot()
         self.assertFalse(state["online"])
-        self.assertEqual(state["snapshot"]["runs"], [{"status": "idle"}])
+        self.assertEqual(state["snapshot"]["runs"], SNAPSHOT["runs"])
         self.assertIsNotNone(state["cachedAt"])
 
 
@@ -179,6 +185,7 @@ class HttpTests(unittest.TestCase):
         conn, resp = self.get("/api/remote/v1/stream", headers)
         self.assertEqual(resp.status, 200)
         self.assertEqual(resp.getheader("Content-Type").split(";")[0], "text/event-stream")
+        self.assertIn("no-transform", resp.getheader("Cache-Control"), "compressing proxies must not buffer frames")
         buf = b""
         while len([e for e in parse_sse(buf[:buf.rfind(b"\n\n") + 2] if b"\n\n" in buf else b"")
                    if e[1] in ("event", "resync")]) < count:
@@ -202,7 +209,7 @@ class HttpTests(unittest.TestCase):
         body = json.loads(resp.read())
         conn.close()
         self.assertEqual(body["schemaVersion"], 1)
-        self.assertEqual(body["runs"], [{"status": "idle"}])
+        self.assertEqual(body["runs"], SNAPSHOT["runs"])
         self.assertFalse(body["online"])
         self.assertFalse(body["laptop"]["online"])
         self.assertIsNotNone(body["cachedAt"])
@@ -253,11 +260,11 @@ class HttpTests(unittest.TestCase):
         self.assertEqual([d["n"] for _, _, d in got], [1])
 
     def test_unknown_event_id_triggers_resync_with_snapshot(self):
-        self.hub.update_snapshot({"schemaVersion": 1, "generatedAt": "2026-10-21T12:00:00Z",
-                                  "cursor": "cursor", "runs": ["x"]})
+        self.hub.update_snapshot(copy.deepcopy(SNAPSHOT))
         got = self.read_stream({"Last-Event-ID": "stale:9"}, 1)
         self.assertEqual(got[0][1], "resync")
-        self.assertEqual(got[0][2]["runs"], ["x"])
+        self.assertEqual(got[0][2]["runs"], SNAPSHOT["runs"])
+        self.assertEqual(got[0][2]["laptop"], {"online": True})
         self.assertNotIn("snapshot", got[0][2])
 
 

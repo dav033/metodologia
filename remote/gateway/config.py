@@ -23,6 +23,7 @@ class GatewayConfig:
     bind_port: int = 8790
     request_timeout: float = 5.0
     probe_interval: float = 5.0
+    frontend_origin: str = ""   # phone origin for review links in notifications; optional (FLOW_FRONTEND_ORIGIN)
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "GatewayConfig":
@@ -59,4 +60,11 @@ class GatewayConfig:
             bind_port=port,
             request_timeout=timeout,
             probe_interval=interval,
+            frontend_origin=_origin(values.get("FLOW_FRONTEND_ORIGIN", "")),
         )
+
+
+def _origin(value: str) -> str:
+    """An https (or loopback http) origin without a trailing slash, or "" when unset or unusable."""
+    origin = value.strip().rstrip("/")
+    return origin if origin.startswith(("https://", "http://127.0.0.1", "http://localhost")) else ""

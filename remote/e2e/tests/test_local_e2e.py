@@ -243,7 +243,7 @@ adapter.write_projection(rdir, scheduler)
     def _build_web(cls):
         if not (WEB / "node_modules" / ".bin" / "next").exists():
             subprocess.run([shutil.which("npm") or "npm", "ci", "--offline"], cwd=WEB, check=True, timeout=180)
-        environment = {**os.environ, "FLOW_GATEWAY_ORIGIN": f"http://127.0.0.1:{cls.gateway_port}"}
+        environment = {**os.environ, "GATEWAY_ORIGIN": f"http://127.0.0.1:{cls.gateway_port}"}  # next.config.ts
         subprocess.run(["npm", "run", "build"], cwd=WEB, env=environment, check=True, timeout=240)
 
     @classmethod
@@ -307,7 +307,7 @@ adapter.write_projection(rdir, scheduler)
 
     @classmethod
     def _start_web(cls):
-        environment = {**os.environ, "FLOW_GATEWAY_ORIGIN": f"http://127.0.0.1:{cls.gateway_port}"}
+        environment = {**os.environ, "GATEWAY_ORIGIN": f"http://127.0.0.1:{cls.gateway_port}"}  # next.config.ts
         cls.web_process = subprocess.Popen(
             [shutil.which("npm") or "npm", "start", "--", "--hostname", "127.0.0.1", "--port", str(cls.web_port)],
             cwd=WEB, env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,

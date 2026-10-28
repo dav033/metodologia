@@ -136,7 +136,9 @@ def make_handler(service: OAuthService, hub: StreamHub | None = None,
             cursor = self.headers.get("Last-Event-ID") or hub.live_cursor()
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
-            self.send_header("Cache-Control", "no-store")
+            # no-transform: a compressing proxy (the phone's Next/Vercel rewrite) would otherwise buffer every frame.
+            self.send_header("Cache-Control", "no-store, no-transform")
+            self.send_header("X-Accel-Buffering", "no")
             self.send_header("Connection", "close")
             self.end_headers()
             self.close_connection = True

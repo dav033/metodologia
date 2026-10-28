@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import copy
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,17 +12,18 @@ from config import GatewayConfig
 from telegram_bot import TelegramBot
 
 
+# The laptop's real snapshot dialect, validated against the contract by test_remote_contracts (F11).
+SNAPSHOT = json.loads((Path(__file__).resolve().parents[2] / "contract" / "fixtures" / "snapshot.json")
+                      .read_text(encoding="utf-8"))
+
+
 class FakeLaptop:
     def __init__(self) -> None:
         self.commands: list[dict[str, Any]] = []
+        self.snapshot_data = copy.deepcopy(SNAPSHOT)
 
     def snapshot(self) -> dict[str, Any]:
-        return {"runs": [{
-            "project": "demo",
-            "req_id": "REQ-027",
-            "status": "running",
-            "active": True,
-        }]}
+        return self.snapshot_data
 
     def post_json(self, path: str, command: dict[str, Any]) -> dict[str, Any]:
         if path != "/api/remote/v1/commands":
@@ -78,7 +81,7 @@ class TelegramBotTests(unittest.TestCase):
         self.api.updates = [{"update_id": 1, "message": {"chat": {"id": "owner-chat"}, "text": "/estado"}}]
         self.bot.poll_once()
         message = next(payload for method, payload in self.api.calls if method == "sendMessage")
-        self.assertIn("demo/REQ-027 — running", message["text"])
+        self.assertIn("lotm/REQ-027 — running", message["text"])
         callback_data = message["reply_markup"]["inline_keyboard"][0][0]["callback_data"]
         self.api.updates = [{"update_id": 2, "callback_query": {
             "id": "callback-2",
@@ -92,7 +95,7 @@ class TelegramBotTests(unittest.TestCase):
         command = self.laptop.commands[0]
         self.assertEqual(command["command"], "pause")
         self.assertEqual(command["origin"], "telegram")
-        self.assertEqual(command["target"], "demo/REQ-027")
+        self.assertEqual(command["target"], "lotm/REQ-027")
         self.assertEqual(command["precondition"], {"state": "running"})
         self.assertEqual(len(command["idempotency_key"]), 32)
         self.assertTrue(any(method == "answerCallbackQuery" for method, _payload in self.api.calls))
@@ -115,8 +118,20 @@ class TelegramBotTests(unittest.TestCase):
         message = next(payload for method, payload in self.api.calls if method == "sendMessage")
         self.assertIn("Ejecuciones activas:", message["text"])
         button = message["reply_markup"]["inline_keyboard"][0][0]
-        self.assertEqual(button["text"], "Pausar: demo/REQ-027")
+        self.assertEqual(button["text"], "Pausar: lotm/REQ-027")
         self.assertLessEqual(len(button["callback_data"].encode("utf-8")), 64)
+        self.assertIn("pictures/REQ-018 — paused", message["text"])
+        resume = message["reply_markup"]["inline_keyboard"][1][0]
+        self.assertEqual(resume["text"], "Reanudar: pictures/REQ-018")
+
+    def test_f11_estado_reads_the_canonical_state_without_the_deprecated_status_alias(self) -> None:
+        for run in self.laptop.snapshot_data["runs"]:
+            run.pop("status")
+        self.api.updates = [{"update_id": 1, "message": {"chat": {"id": "owner-chat"}, "text": "/estado"}}]
+        self.bot.poll_once()
+        message = next(payload for method, payload in self.api.calls if method == "sendMessage")
+        self.assertIn("lotm/REQ-027 — running", message["text"])
+        self.assertEqual(message["reply_markup"]["inline_keyboard"][0][0]["text"], "Pausar: lotm/REQ-027")
 
     def test_telegram_relay_rejects_commands_outside_safe_run_controls(self) -> None:
         command = {

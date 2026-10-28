@@ -1,0 +1,15 @@
+{
+ "attemptId": "att-rejected-fixture",
+ "cause": "La verificación falló; GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz123456",
+ "verification": {
+  "command": "npm run verify",
+  "output": "Fallo de fixture en rejected"
+ },
+ "diff": {
+  "stat": "2 files changed, 3 insertions(+)",
+  "files": [
+   "remote/web/src/app/page.tsx"
+  ]
+ },
+ "logTail": "Authorization: Bearer abc.def.ghi\nFin de log"
+}

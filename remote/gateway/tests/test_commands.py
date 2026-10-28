@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from unittest.mock import Mock
 
-from app import GatewayRuntime, _ledger_command
+from app import SUPPORTED_COMMANDS, GatewayRuntime, _ledger_command
 from auth import OAuthConfig, SessionStore
 from config import GatewayConfig
 from liveness import LaptopStatus
@@ -73,6 +73,38 @@ class CommandRelayTests(unittest.TestCase):
         })
         self.assertEqual(result["challengeId"], "challenge-token")
         self.laptop.challenge.assert_called_once_with({"target": "demo/REQ-027", "typedReq": "REQ-027"})
+
+    def test_f21_reopen_and_retry_without_task_identity_are_refused_before_the_laptop(self):
+        for kind in ("reopen", "retry"):
+            with self.subTest(kind=kind):
+                result = self.runtime.submit_command(command(
+                    type=kind, target={"kind": "run", "project": "demo", "req": "REQ-027"}, route=None))
+                self.assertEqual(result["code"], "INVALID_COMMAND")
+        self.laptop.command.assert_not_called()
+
+    def test_f17_idempotency_key_bounds_match_the_contract_and_the_ledger(self):
+        for key in ("k" * 15, "k" * 121, "web key with spaces 0001"):
+            with self.subTest(key=key):
+                self.assertEqual(self.runtime.submit_command(command(idempotencyKey=key))["code"], "INVALID_COMMAND")
+        telegram = {"schemaVersion": 1, "idempotencyKey": "k" * 121, "type": "pause",
+                    "target": {"kind": "run", "project": "demo", "req": "REQ-027"}, "precondition": {"state": "running"}}
+        self.assertEqual(self.runtime.submit_telegram_command(telegram)["code"], "INVALID_COMMAND")
+        self.laptop.command.assert_not_called()
+        self.assertEqual(self.runtime.submit_command(command(idempotencyKey="k" * 120))["status"], "OK")
+
+    def test_every_contract_command_fixture_is_translated_for_the_laptop(self):
+        fixtures = json.loads((Path(__file__).resolve().parents[2] / "contract" / "fixtures" / "commands.json")
+                              .read_text(encoding="utf-8"))
+        self.assertEqual(sorted({item["type"] for item in fixtures}), sorted(SUPPORTED_COMMANDS))
+        for fixture in fixtures:
+            with self.subTest(type=fixture["type"]):
+                translated = _ledger_command(fixture)
+                self.assertEqual((translated["command"], translated["origin"]), (fixture["type"], "web"))
+                self.assertEqual(translated["target"], f'{fixture["target"]["project"]}/{fixture["target"]["req"]}')
+                if fixture["target"].get("taskId") and fixture["type"] in {"reopen", "retry", "edit-brief"}:
+                    self.assertEqual(translated["params"]["task"], fixture["target"]["taskId"])
+        retry = next(item for item in fixtures if item["type"] == "retry")
+        self.assertEqual(_ledger_command(retry)["params"]["route"], retry["route"]["routeId"])
 
     def test_route_object_is_translated_to_string_selectors_for_laptop_ledger(self):
         translated = _ledger_command(command())
