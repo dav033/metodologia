@@ -79,6 +79,9 @@ def _save(rdir: Path | str, task: str, data: dict[str, Any]) -> None:
 # rejections as failures of the audit sent it to the analyst, which called it «not the task» and cancelled its re-run (REQ-021 T1.8:
 # three rejections, then every re-audit cancelled after the remediation had finished).
 AUDIT_REJECTION = "audit gate:"
+# An order the scheduler refused before it ran (`start rejected: PREDECESSOR_NEEDS_RESOLUTION…`) says nothing about the task's own work:
+# REQ-021's T2.6 collected five of them, the analyst called it «not the task» and the owner met 13 «attempts» that never ran
+START_REJECTED = "start rejected:"
 
 
 def failures(rdir: Path | str, task: str, doc: dict) -> int:
@@ -88,7 +91,7 @@ def failures(rdir: Path | str, task: str, doc: dict) -> int:
     # cancel attempts that never got to run. Counting them let the analyst's stops feed new analyses that stopped the next attempt
     # (REQ-021 T1.8: an audit was cancelled after 16 s and 38 s and could never judge the remediation).
     return sum(1 for h in bt_attempt_history.entries(Path(rdir), task, doc)
-               if h["outcome"] not in ("accepted", "cancelled") and not str(h["text"]).startswith(AUDIT_REJECTION))
+               if h["outcome"] not in ("accepted", "cancelled") and not str(h["text"]).startswith((AUDIT_REJECTION, START_REJECTED)))
 
 
 def enabled() -> bool:

@@ -52,6 +52,14 @@ class Due(Base):
         self.assertEqual(analyst.failures(self.rdir, "T1", doc), 1)
         self.assertEqual(analyst.due(self.rdir, "T1", doc), 0)
 
+    def test_an_order_refused_before_it_ran_is_not_a_failure_of_the_task(self):
+        doc = doc_with(1)
+        for n in range(5):
+            doc["attempts"][f"att-r{n}"] = {"state": "failed", "failure": "start rejected: PREDECESSOR_NEEDS_RESOLUTION: T2.2 does not fit"}
+            doc["tasks"]["T1"]["attempts"].append(f"att-r{n}")
+        self.assertEqual(analyst.failures(self.rdir, "T1", doc), 1)
+        self.assertEqual(analyst.due(self.rdir, "T1", doc), 0)
+
     def test_an_analysis_is_not_repeated_until_two_more_failures_and_never_while_one_runs(self):
         analyst._save(self.rdir, "T1", {"state": "done", "failures": 3, "cause": "c", "solution": "s"})
         self.assertEqual(analyst.due(self.rdir, "T1", doc_with(4)), 0)
