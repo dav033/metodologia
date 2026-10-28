@@ -63,7 +63,7 @@ def rows(rdir: Path, *, refresh: bool = False) -> list[dict]:
     if not refresh:
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            if data.get("key") == key and isinstance(data.get("rows"), list):
+            if data.get("digest") == key and isinstance(data.get("rows"), list):
                 return data["rows"]
         except (OSError, ValueError):
             pass
@@ -80,7 +80,7 @@ def rows(rdir: Path, *, refresh: bool = False) -> list[dict]:
         seen |= set(row["errors"])
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps({"key": key, "rows": found}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        path.write_text(json.dumps({"digest": key, "rows": found}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     except OSError:
         pass
     return found
