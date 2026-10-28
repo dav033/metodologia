@@ -134,7 +134,7 @@ class M3Attempts:
         ws = m3.Workspace(path=str(prepared.worktree), branch=prepared.branch, base_sha=prepared.base_sha,
                           repo=str(prepared.repository))
         # `when` is fixed per attempt so a re-run of this step writes the same commit (same tree, same parents)
-        when = float(attempt.number)
+        when = 1_700_000_000.0 + attempt.number
         manifest = handoff.capture(ws, prepared.attempt_dir, dirname=attempt.attempt_key, attempt_id=attempt.attempt_key,
                                    when=when, patch_max=PATCH_MAX, mode="snapshot",
                                    declared_paths=tuple(task.expected_paths))

@@ -118,6 +118,7 @@ class ProcessRecord(Contract):
     exit_code: int | None = None
     result: str | None = None
     oom_killed: bool = False
+    live_pids: tuple[int, ...] = ()      # stragglers still alive after the main process exited
     started_at: float | None = None
     ended_at: float | None = None
     log_path: Path

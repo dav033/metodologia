@@ -21,10 +21,17 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SCRIPTS = HERE.parent
 AGENT = HERE / "fake_providers" / "durable_agent.py"
-CHECK_GOOD = "python3 -c \"import pathlib,sys; sys.exit(0 if pathlib.Path('out.txt').read_text()=='good\\n' else 1)\""
-CHECK_HEAP = ("python3 -c \"import os,sys; ok='max-old-space' in os.environ.get('NODE_OPTIONS',''); "
-              "print('' if ok else 'FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory',"
-              " file=sys.stderr); sys.exit(0 if ok else 134)\"")
+CHECK_GOOD = "python3 checks/check_out.py"
+CHECK_HEAP = "python3 checks/check_heap.py"
+CHECKS = {
+    "check_out.py": "import pathlib, sys\nsys.exit(0 if pathlib.Path('out.txt').is_file() and "
+                    "pathlib.Path('out.txt').read_text() == 'good\\n' else 1)\n",
+    # a check that fails like a Node build out of heap unless the verifier raised the heap (an environment limit)
+    "check_heap.py": "import os, re, sys\nheap = re.search(r'max-old-space-size=(\\d+)', os.environ.get('NODE_OPTIONS', ''))\n"
+                     "if not heap or int(heap.group(1)) < 8000:\n"
+                     "    print('FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory', "
+                     "file=sys.stderr)\n    sys.exit(134)\n",
+}
 
 
 def git(cwd, *args) -> str:
@@ -45,7 +52,7 @@ def task(tid, *, after=(), scenario="ok", check=CHECK_GOOD, paths=None, resource
 
 class Lab:
     def __init__(self, root: Path | None = None, *, backend: str = "auto"):
-        self.root = Path(root or tempfile.mkdtemp(prefix="bt-durable-lab-"))
+        self.root = Path(root or tempfile.mkdtemp(prefix="bt-durable-lab-", dir=os.environ.get("BT_LAB_DIR") or None))
         self.backend = backend
         self.bitacora = self.root / "bitacora"
         (self.bitacora / "proj").mkdir(parents=True, exist_ok=True)
@@ -62,6 +69,9 @@ class Lab:
             self.repo.mkdir()
             git(self.repo, "init", "-q", "-b", "main")
             (self.repo / "README.md").write_text("lab\n")
+            (self.repo / "checks").mkdir()
+            for name, body in CHECKS.items():
+                (self.repo / "checks" / name).write_text(body)
             git(self.repo, "add", "-A")
             git(self.repo, "commit", "-q", "-m", "initial")
         self.rdir = self.bitacora / "proj" / "requirements" / "REQ-900-lab"
@@ -137,7 +147,8 @@ class Lab:
                     os.kill(int(entry.name), signal.SIGKILL)
             except OSError:
                 pass
-        shutil.rmtree(self.root, ignore_errors=True)
+        if not os.environ.get("BT_KEEP_LAB"):
+            shutil.rmtree(self.root, ignore_errors=True)
 
 
 def wait_until(predicate, timeout: float, interval: float = 0.25, what: str = "condition"):

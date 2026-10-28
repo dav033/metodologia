@@ -39,7 +39,12 @@ class DurableRuns(unittest.TestCase):
         self.engine = self.lab.spawn_engine()
         self.addCleanup(self._stop_engine, self.engine)
         if self.client is None:
-            wait_until(lambda: (self.lab.state / "dbos.sqlite3").exists(), 60, what="DBOS database")
+            try:
+                wait_until(lambda: (self.lab.state / "dbos.sqlite3").exists() or self.engine.poll() is not None, 60,
+                           what="DBOS database")
+            finally:
+                if self.engine.poll() is not None:
+                    raise AssertionError("engine exited: " + (self.lab.root / "engine.log").read_text()[-3000:])
             time.sleep(1.0)
             self.client = Client(self.lab.database_url)
             self.addCleanup(self.client.close)

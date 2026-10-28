@@ -33,6 +33,8 @@ TERMINAL = frozenset({"SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EX
 def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver_for: Callable[[str], object],
          routes: list[Route], verifier: M6Verifier | None = None, runtime=None, capacity=None,
          briefs_for=None) -> Ports:
+    cfg.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    cfg.state_dir.chmod(0o700)                             # M6 and the supervisor refuse a shared directory
     plans = FilePlans()
     attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,

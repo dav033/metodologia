@@ -10,7 +10,8 @@ import logging
 from pathlib import Path
 
 from bt_contracts.execution import AttemptRef, Prepared, ProcessRecord
-from bt_supervisor.api import TerminationUncertain, make_supervisor
+from bt_supervisor.api import make_supervisor
+from bt_supervisor.errors import TerminationUncertain
 from bt_supervisor.model import LaunchSpec, Limits, Observation
 
 LOG = logging.getLogger("bt_durable.runtime")
@@ -20,6 +21,7 @@ def _record(obs: Observation) -> ProcessRecord:
     ident = obs.identity
     return ProcessRecord(backend=ident.backend, unit=ident.unit, invocation_id=ident.invocation_id, state=obs.state,
                          exit_code=obs.exit_code, result=obs.result, oom_killed=obs.oom_killed,
+                         live_pids=tuple(obs.live_pids),
                          started_at=obs.started_at, ended_at=obs.ended_at, log_path=obs.log_path)
 
 

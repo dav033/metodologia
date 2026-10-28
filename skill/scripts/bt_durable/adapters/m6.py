@@ -10,6 +10,7 @@ ask for once (more time, more workspace, a larger Node heap) — it never change
 from __future__ import annotations
 
 import dataclasses
+import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -21,18 +22,22 @@ from bt_contracts.execution import (
     VerifyStatus,
 )
 from bt_scheduler_core.plan import TaskSpec
+from bt_scheduler_quality import sandbox_mounts
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy
 from bt_scheduler_quality.snapshot import SnapshotSource
 from bt_scheduler_quality.store import QualityStore
 
-RELAXED_NODE_HEAP_MB = 6144
+RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
+_HEAP = re.compile(r"--max-old-space-size=(\d+)")
 
 
 def relaxed(policy: QualityPolicy) -> QualityPolicy:
     env = dict(policy.environment)
-    if "NODE_OPTIONS" not in env:
-        env["NODE_OPTIONS"] = f"--max-old-space-size={RELAXED_NODE_HEAP_MB}"
+    current = _HEAP.search(env.get("NODE_OPTIONS", "")) or _HEAP.search(sandbox_mounts.NODE_OPTIONS)
+    heap = min(max(int(current.group(1)) * 2 if current else RELAXED_NODE_HEAP_MB, 4096), RELAXED_NODE_HEAP_MB)
+    others = _HEAP.sub("", env.get("NODE_OPTIONS", "")).strip()
+    env["NODE_OPTIONS"] = f"{others} --max-old-space-size={heap}".strip()
     return dataclasses.replace(
         policy,
         max_command_seconds=min(policy.max_command_seconds * 2, 3 * 3600),
@@ -49,6 +54,8 @@ class M6Verifier:
     fingerprints) and its authorization callbacks, the same ones the legacy owner uses."""
 
     def __init__(self, *, store_path: Path, policy_for=None, authority_for=None, attestations=None):
+        Path(store_path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        Path(store_path).parent.chmod(0o700)                 # the M6 store refuses a directory others can read
         self.store = QualityStore(Path(store_path))
         self.policy_for = policy_for or (lambda run: QualityPolicy())
         self.authority_for = authority_for or (lambda run: None)

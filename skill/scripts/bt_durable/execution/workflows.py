@@ -226,12 +226,19 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
 
 def _evaluate(attempt: AttemptRef, route: Route, agent: dict, verify: dict | None, profile: str) -> AttemptOutcome:
     """Verify (if there is something to verify), integrate a pass, and classify whatever went wrong."""
+    if agent.get("internal_error"):
+        failure = classify.classify(classify.AttemptFacts(internal_error=agent["internal_error"]))
+        return AttemptOutcome(attempt=attempt, status=AttemptStatus.EXECUTION_FAILED, route=route, failure=failure)
     process = ProcessRecord.model_validate(agent["process"]) if agent.get("process") else None
     report = AgentReport.model_validate(agent["agent"]) if agent.get("agent") else None
     snapshot = Snapshot.model_validate(agent["snapshot"]) if agent.get("snapshot") else None
     if verify is None and snapshot is not None and snapshot.snapshot_sha:
         verify = _enqueue(engine.VERIFY, f"bt:{attempt.attempt_key}:verify:{profile}", verify_workflow,
                           attempt.model_dump(mode="json"), agent["prepared"], agent["snapshot"], profile)
+    if verify and verify.get("internal_error"):
+        failure = classify.classify(classify.AttemptFacts(internal_error=verify["internal_error"]))
+        return AttemptOutcome(attempt=attempt, status=AttemptStatus.NEEDS_REVIEW, route=route, process=process,
+                              agent=report, snapshot=snapshot, failure=failure)
     verdict = VerifyOutcome.model_validate(verify) if verify else None
     facts = classify.AttemptFacts(start_error=agent.get("start_error", ""), process=process, agent=report,
                                   verify=verdict, failing_output=verdict.digest if verdict else "",
@@ -242,7 +249,9 @@ def _evaluate(attempt: AttemptRef, route: Route, agent: dict, verify: dict | Non
     if failure is None and snapshot is not None:
         merged = _enqueue(engine.INTEGRATE, f"bt:{attempt.attempt_key}:integrate", integrate_workflow,
                           attempt.run.model_dump(mode="json"), attempt.task_id, agent["snapshot"])
-        if merged.get("conflict"):
+        if merged.get("internal_error"):
+            failure = classify.classify(classify.AttemptFacts(internal_error=merged["internal_error"]))
+        elif merged.get("conflict"):
             failure = classify.classify(classify.AttemptFacts(process=process, agent=report, verify=verdict,
                                                               integration_conflict=merged["conflict"]))
         else:
@@ -257,9 +266,14 @@ def _evaluate(attempt: AttemptRef, route: Route, agent: dict, verify: dict | Non
 
 
 def _enqueue(queue: str, workflow_id: str, func, *args) -> dict:
+    """Run a child workflow on its queue and wait for it. A child that failed is a FACT for the classifier
+    (`internal_error`), never an exception that would leave the task, and with it the run, without an outcome."""
     with SetWorkflowID(workflow_id):
         handle = DBOS.enqueue_workflow(queue, func, *args)
-    return handle.get_result()
+    try:
+        return handle.get_result()
+    except Exception as error:  # noqa: BLE001 - classified as an internal failure with its message as evidence
+        return {"internal_error": f"{type(error).__name__}: {error}"[:2000]}
 
 
 def _route_key(route: Route) -> str:
@@ -337,8 +351,11 @@ def agent_workflow(attempt_data: dict, route_data: dict, base: str, note: str, l
     while process["state"] == "running":
         DBOS.sleep(poll_seconds)
         process = steps.observe(attempt_data)
-    if process["state"] == "unknown":
-        process = steps.terminate(attempt_data)        # never leave a writer we cannot see
+    if process["state"] == "unknown" or process.get("live_pids"):
+        # never capture or release while something of the attempt may still write: stragglers or an unreadable unit
+        ended = process
+        process = {**steps.terminate(attempt_data), **{k: ended[k] for k in ("exit_code", "result", "oom_killed")
+                                                       if ended.get(k) is not None}}
     report = steps.read(attempt_data, route_data, process)
     snapshot = steps.capture(attempt_data, material)
     steps.release(attempt_data)

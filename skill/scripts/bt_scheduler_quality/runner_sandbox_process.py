@@ -205,8 +205,11 @@ def _environment(policy: QualityPolicy) -> list[tuple[str, str]]:
     environment = dict(_BASE_ENVIRONMENT)
     if tools.path:
         environment["PATH"] = ":".join((*tools.path, environment["PATH"]))
-    environment.update(tools.environment)
-    taken = set(environment) | {key for key, _ in policy.environment}
+    explicit = {key for key, _ in policy.environment}
+    # a toolchain value (NODE_OPTIONS, PLAYWRIGHT_BROWSERS_PATH) is a default: an explicit policy entry replaces it
+    # instead of making the sandbox unavailable as a duplicate (REQ-030: a bounded heap repair re-verifies with more)
+    environment.update((k, v) for k, v in tools.environment if k not in explicit)
+    taken = set(environment) | explicit
     pairs = list(environment.items()) + [(k, v) for k, v in policy.ambient_environment if k not in taken] + list(policy.environment)
     if len({key for key, _ in pairs}) != len(pairs):
         raise ValueError("sandbox environment has duplicate names")

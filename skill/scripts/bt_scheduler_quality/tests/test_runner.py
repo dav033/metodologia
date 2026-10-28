@@ -81,6 +81,25 @@ class SandboxRunnerTests(unittest.TestCase):
 
         self.assertEqual((result.status, result.exit_code), ("pass", 0))
 
+    def test_an_explicit_policy_variable_replaces_the_toolchain_default(self):
+        """REQ-030: a NODE_OPTIONS set by the policy (the bounded heap repair) used to collide with the toolchain's own
+        default and made the sandbox unavailable; the explicit value wins and the check sees only it."""
+        from bt_scheduler_quality import sandbox_mounts
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "snap"
+            root.mkdir()
+            (root / "probe.py").write_text(
+                "import os, sys\nsys.exit(0 if os.environ.get('NODE_OPTIONS') == '--max-old-space-size=12288' else 5)\n",
+                encoding="utf-8")
+            fake = sandbox_mounts.Toolchain((), (), (("NODE_OPTIONS", sandbox_mounts.NODE_OPTIONS),))
+            policy = QualityPolicy(environment=(("NODE_OPTIONS", "--max-old-space-size=12288"),))
+            with patch.object(sandbox_mounts, "toolchain", return_value=fake), \
+                    patch("bt_scheduler_quality.runner_sandbox_process.toolchain", return_value=fake):
+                result = SandboxRunner(policy).run(_check("probe.py"), root)
+
+        self.assertEqual((result.status, result.exit_code), ("pass", 0))
+
     def test_attempt_dependencies_are_shown_inside_the_workspace_and_writes_stay_in_the_sandbox(self):
         with tempfile.TemporaryDirectory() as directory:
             worktree = Path(directory) / "worktree"
