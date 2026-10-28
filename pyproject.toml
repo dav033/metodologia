@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "Local engineering workspace: bitácora documents, Scheduler runs, provider routing and web UI"
 requires-python = ">=3.12"
 dependencies = [
+    "dbos==3.3.0",
     "psutil>=7,<8",
     "pydantic>=2.12,<3",
 ]
@@ -29,7 +30,7 @@ bt-engine-benchmark = "bt_engine_benchmark:main"
 
 [tool.setuptools]
 package-dir = {"" = "skill/scripts", "bitacora_resources" = "skill"}
-packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_knowledge", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality", "bt_composition"]
+packages = ["bitacora_resources", "bitacora_platform", "bt_planner", "bt_knowledge", "plan_bench", "bt_scheduler_core", "bt_scheduler_decision", "bt_scheduler_executor", "bt_scheduler_monitor", "bt_scheduler_monitor.providers", "bt_scheduler_recovery", "bt_scheduler_quality", "bt_composition", "bt_contracts", "bt_supervisor", "bt_durable"]
 py-modules = [
   "bitacora",
   "bt_agent_models",
