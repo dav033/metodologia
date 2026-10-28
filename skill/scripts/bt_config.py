@@ -115,7 +115,9 @@ DEFAULTS: dict = {
     # planner.require_mapped_checks: approving (`plan-json freeze`) a plan with a check whose purpose is not a criterion's exact text, or
     # a criterion no check carries, is refused (they stop the run for a person on every attempt); --force approves anyway. Off by default:
     # `plan-json check` always warns, and the Planner agent is told the rule
-    "planner": {"require_mapped_checks": False},
+    # preflight (REQ-030): before approval, a check that runs an undeclared missing script, or requires a variable no
+    # verifier environment provides, blocks the plan (bt_planner.preflight); other findings stay warnings
+    "planner": {"require_mapped_checks": False, "preflight": True},
     # coordinator (P-157): the projects whose manual LIVE checks («Coordinator runs `cmd` with .env.local») the scheduler runs itself
     # and attests; each one is the owner's explicit authorization (it uses that project's credentials and real services)
     "coordinator": {"projects": [], "command_seconds": 1800, "files": {}, "env_files": {}, "retries": 1},

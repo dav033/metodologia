@@ -265,6 +265,62 @@ def mapping_problem(rdir: Path) -> str | None:
             "pass --force to approve anyway, or set planner.require_mapped_checks=false)")
 
 
+def git_facts(roots: dict[str, Path], ref: str = "HEAD"):
+    """(exists, read) callbacks over the repositories at `ref`, for bt_planner.preflight (which reads no repository)."""
+    import subprocess
+
+    def exists(role: str, path: str) -> bool | None:
+        repo = roots.get(role)
+        if repo is None:
+            return None
+        if path == ".":
+            return True
+        done = subprocess.run(["git", "cat-file", "-e", f"{ref}:{path}"], cwd=str(repo), capture_output=True, check=False)
+        return done.returncode == 0
+
+    def read(role: str, path: str) -> bytes | None:
+        repo = roots.get(role)
+        if repo is None:
+            return None
+        done = subprocess.run(["git", "show", f"{ref}:{path}"], cwd=str(repo), capture_output=True, check=False)
+        return done.stdout if done.returncode == 0 else None
+
+    return exists, read
+
+
+def preflight_check(plan: dict, roots: dict[str, Path], *, env_available=None, strict: bool = False, ref: str = "HEAD"):
+    """bt_planner.preflight over real repositories (the planner's one door, like every other planner call)."""
+    from bt_planner import preflight
+    exists, read = git_facts(roots, ref)
+    return preflight.check(plan, exists=exists, read=read, env_available=env_available, strict=strict, base=ref)
+
+
+def preflight_problem(rdir: Path) -> str | None:
+    """REQ-030 M6: structural defects a run would hit before any agent could fix them (bt_planner.preflight)."""
+    import bt_config
+    if not bt_config.get("planner.preflight", True):
+        return None
+    roots = repo_roots(rdir)
+    if roots is None:
+        return None                                   # an unresolvable workspace proves nothing either way
+    try:
+        import bt_verifier_env
+        from bt_scheduler_verification_authority import owner_verification_authority
+        plan = json.loads((Path(rdir) / planner.PLAN_JSON).read_text(encoding="utf-8"))
+        project = Path(rdir).resolve().parent.parent.name
+        environment, _ = bt_verifier_env.for_run(project, rdir)
+        names = {name for name, _ in environment}
+        authority = owner_verification_authority(rdir, project)
+        report = preflight_check(plan, roots,
+                                 env_available=lambda name: name in names or authority.resource_available(name))
+    except Exception:  # noqa: BLE001 - the pre-flight never blocks on its own failure; the planner check already ran
+        return None
+    if report.ok:
+        return None
+    more = f" (+{len(report.errors) - 4} more)" if len(report.errors) > 4 else ""
+    return "PLAN_PREFLIGHT: " + "; ".join(report.errors[:4]) + more + " (planner.preflight=false skips this gate)"
+
+
 def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] | None = None,
                         allow_unmapped: bool = False) -> str | None:
     """Approval gate: a PLAN.json that is invalid, or contradicts PLAN.md, cannot be approved. None for legacy plans."""
@@ -280,7 +336,7 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if report.ok:
-        return None if allow_unmapped else mapping_problem(rdir)
+        return preflight_problem(rdir) or (None if allow_unmapped else mapping_problem(rdir))
     more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
     return ("PLAN_INVALID: the plan cannot be approved while PLAN.json has errors: " + "; ".join(report.errors[:5]) +
             more + f" (bitacora.py plan-json check {plan_id(rdir)})")

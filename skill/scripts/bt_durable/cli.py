@@ -66,6 +66,23 @@ def latest_frozen(rdir: Path, project: str, req: str) -> RunRef:
                   plan_sha256=last["sha256"], plan_path=path)
 
 
+def preflight(run: RunRef, rdir: Path) -> None:
+    """Refuse a run whose frozen plan has structural defects (bt_planner.preflight) before anything is enqueued."""
+    import bt_plan_adapter
+    import bt_verifier_env
+    from bt_scheduler_verification_authority import owner_verification_authority
+    roots = bt_plan_adapter.repo_roots(rdir) or {}
+    environment, _ = bt_verifier_env.for_run(run.project, rdir)
+    names = {name for name, _ in environment}
+    authority = owner_verification_authority(rdir, run.project)
+    report = bt_plan_adapter.preflight_check(json.loads(run.plan_path.read_text(encoding="utf-8")), roots,
+                                             env_available=lambda n: n in names or authority.resource_available(n))
+    for warning in report.warnings[:10]:
+        print(f"warning: {warning}", file=sys.stderr)
+    if not report.ok:
+        raise SystemExit("PLAN_PREFLIGHT: " + "; ".join(report.errors[:6]))
+
+
 def _client():
     from .client import Client
     return Client(database_url())
@@ -95,6 +112,7 @@ def cmd_start(args) -> int:
     if (Path(bt_core.STATE) / "scheduler" / f"{args.project}-{args.req}.db").exists():
         raise SystemExit("this run has legacy Scheduler state: use `migrate`, not `start`")
     run = latest_frozen(rdir, args.project, args.req)
+    preflight(run, rdir)
     current = bt_run_owner.read(rdir)
     if not current:
         record = OwnerRecord(run_id=run.run_id, backend=Backend.DBOS, workflow_id=f"bt:{run.run_id}",
@@ -129,6 +147,7 @@ def cmd_migrate(args) -> int:
     if not args.apply:
         print(json.dumps(report, indent=1, ensure_ascii=False))
         return 2 if inv.blockers else 0
+    preflight(migrate.run_ref(inv), rdir)
     backup = migrate.backup(Path(bt_core.STATE), rdir, inv, Path(bt_core.STATE) / "durable" / "migrations")
     record = migrate.claim(rdir, inv, by="bt-durable migrate --apply")
     run = migrate.run_ref(inv)
