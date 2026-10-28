@@ -235,7 +235,8 @@ def _evaluate(attempt: AttemptRef, route: Route, agent: dict, verify: dict | Non
     verdict = VerifyOutcome.model_validate(verify) if verify else None
     facts = classify.AttemptFacts(start_error=agent.get("start_error", ""), process=process, agent=report,
                                   verify=verdict, failing_output=verdict.digest if verdict else "",
-                                  declared_requires=tuple(agent.get("requires", ())))
+                                  declared_requires=tuple(agent.get("requires", ())),
+                                  known_paths=tuple(agent.get("paths", ())))
     failure: FailureReport | None = classify.classify(facts)
     integrated = None
     if failure is None and snapshot is not None:
@@ -342,7 +343,7 @@ def agent_workflow(attempt_data: dict, route_data: dict, base: str, note: str, l
     snapshot = steps.capture(attempt_data, material)
     steps.release(attempt_data)
     return {"prepared": material, "process": process, "agent": report, "snapshot": snapshot,
-            "requires": _requires(attempt_data)}
+            "requires": _requires(attempt_data), "paths": _paths(attempt_data)}
 
 
 def _requires(attempt_data: dict) -> list[str]:
@@ -352,6 +353,11 @@ def _requires(attempt_data: dict) -> list[str]:
     for check in task.verification:
         names += [r for r in check.get("requires", ()) if isinstance(r, str) and not r.startswith("service:")]
     return names
+
+
+def _paths(attempt_data: dict) -> list[str]:
+    ref = AttemptRef.model_validate(attempt_data)
+    return list(frontier.task(steps.plan(ref.run), ref.task_id).expected_paths)
 
 
 @DBOS.workflow(name="bt.verify")

@@ -21,10 +21,9 @@ import time
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
-
 import bt_run_owner
 from bt_contracts.execution import Backend, OwnerRecord, RunRef
+from pydantic import BaseModel, ConfigDict, Field
 
 LIVE_ATTEMPTS = frozenset({"reserved", "dispatched", "running", "verifying", "uncertain"})
 SCHEMA = "bt-durable.migration/1"

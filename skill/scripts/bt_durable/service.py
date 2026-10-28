@@ -13,9 +13,8 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from dbos import DBOS
-
 from bt_contracts.execution import AttemptRef, Route
+from dbos import DBOS
 
 from .adapters.integration import GitLineIntegrator
 from .adapters.m3 import M3Attempts

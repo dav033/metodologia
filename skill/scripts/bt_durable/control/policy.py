@@ -25,8 +25,8 @@ from bt_contracts.failure import (
 
 TRANSIENT_BACKOFF = (30.0, 120.0, 600.0, 1800.0)
 QUOTA_COOLDOWN = 1800.0            # bt_config quota.default_cooldown_min when the provider gives no reset time
-REPAIRABLE_ENVIRONMENT = frozenset({"VERIFIER_OOM", "AGENT_OOM", "CHECK_TIMEOUT"})
-REVERIFY = frozenset({"VERIFIER_OOM", "CHECK_TIMEOUT", "FLAKY_SUSPECTED"})   # same snapshot, no new agent run
+REPAIRABLE_ENVIRONMENT = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "AGENT_OOM", "CHECK_TIMEOUT"})
+REVERIFY = frozenset({"VERIFIER_OOM", "VERIFIER_PROCESS_LIMIT", "CHECK_TIMEOUT", "FLAKY_SUSPECTED"})   # same snapshot, no new agent run
 
 
 def spent(outcomes: Iterable[AttemptOutcome], *, waits: int = 0, repairs: int = 0, route_changes: int = 0,

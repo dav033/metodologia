@@ -12,6 +12,7 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from bitacora_platform import failure_lines
 from bt_contracts.execution import (
     AgentReport,
     ProcessRecord,
@@ -20,14 +21,11 @@ from bt_contracts.execution import (
 )
 from bt_contracts.failure import Evidence, FailureClass, FailureReport
 
-_HEAP = re.compile(r"JavaScript heap out of memory|Ineffective mark-compacts near heap limit|heap limit Allocation failed")
-_KILLED = re.compile(r"(?m)^\s*Killed\s*$|signal SIGKILL|exit code 137\b")
 _ENV_MISSING = re.compile(r"\b(?:Set|Missing|missing|requires?|undefined env(?:ironment)? var(?:iable)?)\s+`?([A-Z][A-Z0-9_]{2,})`?")
 _CONN = re.compile(r"ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|socket hang up|stream disconnected|overloaded|"
                    r"\b(?:502|503|504|529)\b|Service Unavailable|Bad Gateway|rate.?limit", re.IGNORECASE)
 _AUTH = re.compile(r"\b401\b|\b403\b|unauthori[sz]ed|authentication (?:failed|required)|not logged in|invalid api key|"
                    r"login required|permission denied by policy", re.IGNORECASE)
-_PACKAGE = re.compile(r"Cannot find (?:module|package) '([^']+)'|No module named '?([A-Za-z0-9_.]+)'?")
 _VOLATILE = re.compile(r"0x[0-9a-f]+|\b[0-9a-f]{12,}\b|\d+(?:\.\d+)?(?:ms|s)?\b|/tmp/[^\s'\"]+|:\d+:\d+")
 
 # M6 reason/issue codes that are not a verdict on the code
@@ -51,6 +49,7 @@ class AttemptFacts:
     integration_conflict: str = ""
     internal_error: str = ""                 # an unexpected exception inside the runtime
     declared_requires: Sequence[str] = field(default_factory=tuple)
+    known_paths: Sequence[str] = field(default_factory=tuple)   # the task's expected paths: names of its own sources
 
 
 def signature(failure_class: FailureClass, code: str, lines: str) -> str:
@@ -137,21 +136,22 @@ def _classify_verdict(verify: VerifyOutcome, out: str, facts: AttemptFacts) -> F
             return _report(FailureClass.INTERNAL, reason, "the verifier rejected its own inputs", ev)
         return _report(FailureClass.VERIFICATION, reason, "the verifier could not decide", ev)
     lines = Evidence(kind="output_line", ref=verify.result_ref, excerpt=out[:2000])
-    if _HEAP.search(out) or (_KILLED.search(out) and "heap" in out.lower()):
-        return _report(FailureClass.ENVIRONMENT, "VERIFIER_OOM",
-                       "a check ran out of memory inside the verifier sandbox (not a code defect)", [*ev, lines],
-                       basis=_HEAP.pattern)
+    limit, shown = failure_lines.resource_limit(out)       # the same reading the agent's note uses
+    if limit:
+        code = "VERIFIER_OOM" if limit == "memory" else "VERIFIER_PROCESS_LIMIT"
+        return _report(FailureClass.ENVIRONMENT, code,
+                       f"a check hit the verifier sandbox's {limit} limit (not a code defect): {shown}", [*ev, lines],
+                       basis=code)
     missing = _ENV_MISSING.search(out)
     if missing and missing.group(1) in set(facts.declared_requires):
         return _report(FailureClass.ENVIRONMENT, "ENV_MISSING",
                        f"the check did not receive the declared variable {missing.group(1)}", [*ev, lines],
                        basis=missing.group(1))
-    package = _PACKAGE.search(out)
-    if package:
-        name = package.group(1) or package.group(2) or ""
-        if name and not name.startswith((".", "/")) and "/workspace/" not in name:
-            return _report(FailureClass.ENVIRONMENT, "DEPENDENCY_MISSING",
-                           f"the package {name} is not installed where the check runs", [*ev, lines], basis=name)
+    packages = [name for name, kind in failure_lines.missing_modules(out, facts.known_paths) if kind == "package"]
+    if packages:
+        return _report(FailureClass.ENVIRONMENT, "DEPENDENCY_MISSING",
+                       f"the package {packages[0]} is not installed where the check runs", [*ev, lines],
+                       basis=packages[0])
     note = ("The independent verification of your previous attempt failed. Decisive lines:\n\n" + out) if out else ""
     return _report(FailureClass.IMPLEMENTATION, "CHECK_FAILED",
                    "checks failed: " + ", ".join(verify.failing_checks[:5]) if verify.failing_checks else "checks failed",

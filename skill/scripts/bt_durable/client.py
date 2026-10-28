@@ -9,10 +9,9 @@ from __future__ import annotations
 import uuid
 from collections.abc import Iterable
 
-from dbos import DBOSClient, EnqueueOptions
-
 from bt_contracts.execution import RunRef
 from bt_contracts.owner import OwnerAnswer, RunCommand
+from dbos import DBOSClient, EnqueueOptions
 
 from .execution.engine import APP_VERSION, RUNS
 from .settings import Settings
