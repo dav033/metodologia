@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:10",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por la auditoría y sigue sin resolver",
+ "origin": "El scheduler rechazó el arranque con PREDECESSOR_NEEDS_RESOLUTION porque T2.6 depende de T1.8, y la auditoría independiente devolvió T1.8 para rehacerlo («A task this one depends on was sent back by the independent audit T1.8»). Antes, la verificación de los intentos anteriores (att-0027 y los siguientes) falló en `npm run cuentas:test-integracion-ui` con `navigated to \"http://127.0.0.1:41193/login?error=auth-unavailable\"`; la sandbox no tiene variables de entorno, así que el login probablemente no tiene la configuración de autenticación que necesita, un problema del entorno de verificación más que del código de T2.6. Ese fallo de verificación no es lo que bloquea ahora el arranque, pero volvería a aparecer en cuanto T1.8 se resuelva.",
+ "steps": [
+  "Revisa el estado de T1.8 con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-021 status` y completa el rework que pidió la auditoría hasta que deje de necesitar resolución.",
+  "Comprueba `~/.config/metodologia/verifier-pictures.env` y añade las variables de autenticación que lee el servidor de producción en el login, para que la verificación no devuelva `error=auth-unavailable` en la sandbox.",
+  "Cuando T1.8 esté resuelto, pide el reintento de T2.6 con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-021 decide <id> retry_with_note --reason \"…\"` usando la nota de abajo."
+ ],
+ "option": "retry_with_note",
+ "note": "Predecessor T1.8 was sent back by the independent audit; confirm its rework holds end to end before starting T2.6. The previous verification failed with navigated to /login?error=auth-unavailable because the verifier sandbox has no environment variables: make the production server's auth configuration come from verifier.env_file or from the test script itself, without changing the acceptance criteria or the cuentas:test-integracion-ui command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:23:30",
+ "seconds": 22.6
+}

@@ -3,64 +3,65 @@ req: REQ-021
 status: draft
 created: 2026-10-26
 ---
-# Plan — Lanzamiento piloto: cuentas y planes de acceso, trabajo guardado, gasto de IA, funciones esenciales de Taller, inglés, módulos y chat
+# Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: borrador · ejecución: en curso · hitos 0/5 · tareas 14/68 · generado: 2026-10-28T07:02:58-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 17/69 · generado: 2026-10-28T08:22:23-05:00
 
-**M1 — Cuentas, planes de acceso y sección de planes** · dificultad alta · 14/28
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 17/29
 
-**SP-1 — Cuentas, sesiones y permisos del lado del servidor**
-
-| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
-|---|---|---|---|---|---|---|
-| T1.1 | Esquema de cuentas: migración 037 y helper para el esquema de pruebas aislado | media | completada | gpt-6-luna | codex-1 | 2 |
-| T1.2 | Catálogo de permisos, catálogo de planes, los seis roles del sistema y el mapa de permisos de rutas | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.3 | Servicio de cuentas: invitaciones, activación, inicio de sesión con bloqueo, enlaces de restablecimiento, roles y comandos de un solo uso | alta | completada | gpt-6-luna | codex-luis | 2 |
-| T1.4 | Sesiones del servidor y protección de permisos en el proxy y la API de inicio de sesión, en reemplazo de APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Modo local sin restricciones que se niega a iniciar fuera de next dev en loopback | media | completada | gpt-6-luna | codex-1 | 3 |
-| T1.6 | Aplicar la protección de permisos a cada handler de API y migrar las suites existentes a una sesión de prueba compartida | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | Verificación integral de cuentas y permisos en una compilación de producción, y suites de SP-1 en CI | media | completada | gpt-6-luna | codex-2 | 6 |
-| T1.8 | Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | pendiente | gpt-6.1-sol | codex-luis | 9 |
-| T1.8b | Auditoría de contraste de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso | alta | pendiente | — | — | 0 |
-| T1.9 | Corregir los hallazgos F1, F2, F3, F4 de T1.8 | media | completada | gpt-6-luna | codex-2 | 1 |
-| T1.10 | Corregir el hallazgo F6 de T1.8 | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T1.11 | Corregir los hallazgos F16, F17 de T1.8 | media | en curso | gpt-6-luna | codex-2 | 2 |
-
-**SP-2 — Pantallas de inicio de sesión, invitación y administración**
+**SP-1 — Accounts, sessions and server-side permissions**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T2.1 | Copiar al repositorio el contrato cuentas-admin@v1 aprobado por el propietario | baja | completada | gpt-6.1-sol | codex-2 | 2 |
-| T2.2 | APIs de cuentas: activación, restablecimiento, aceptación del aviso, contraseña propia y administración de cuentas y roles | media | completada | gpt-6-luna | codex-2 | 2 |
-| T2.3 | Pantallas de inicio de sesión, activación de invitaciones, restablecimiento de contraseña y nueva aceptación del aviso | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.4 | Menú de cuenta en cada página con sesión iniciada y página Mi cuenta | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.5 | Pantallas de administración: lista de cuentas, invitaciones, acciones de cuenta y editor de roles | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.6 | Prueba integral en navegador: invitar, activar, iniciar sesión y cambiar de plan en una compilación de producción | media | pendiente | gpt-6-luna | codex-2 | 8 |
-| T2.7 | Revisión visual de SP-2 según el contrato cuentas-admin@v1 | media | pendiente | — | — | 0 |
-| T2.8 | Auditoría de SP-2: pantallas de cuentas, APIs de administración y aviso de datos | media | pendiente | — | — | 0 |
+| T1.1 | Accounts schema: migration 037 and the isolated test-schema helper | media | completada | gpt-6-luna | codex-1 | 2 |
+| T1.2 | Permission catalogue, the plan catalogue, the six system roles and the route permission map | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.3 | Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands | alta | completada | gpt-6-luna | codex-luis | 2 |
+| T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
+| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-1 | 3 |
+| T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
+| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-2 | 6 |
+| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 12 |
+| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | verificando | gpt-6.1-sol | codex-luis | 1 |
+| T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
+| T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 2 |
+| T1.12 | Remediate T1.8 findings F19, F20 | media | completada | gpt-6-luna | codex-luis | 1 |
 
-**SP-14 — Sección de planes: los cuatro planes de acceso, públicos e informativos**
+**SP-2 — Sign-in, invitation and administration screens**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T14.1 | Copiar al repositorio el contrato planes@v1 aprobado por el propietario | baja | pendiente | — | — | 0 |
-| T14.2 | Página pública de planes: los cuatro planes del catálogo, precios según el idioma | media | pendiente | — | — | 0 |
-| T14.3 | Enlaces a los planes en la pantalla de inicio de sesión y en el menú de cuenta | baja | pendiente | — | — | 0 |
-| T14.4 | Prueba integral en navegador de la sección de planes en una compilación de producción | media | pendiente | — | — | 0 |
-| T14.5 | Revisión visual de SP-14 según el contrato planes@v1 | media | pendiente | — | — | 0 |
-| T14.6 | Auditoría de SP-14: uso del catálogo, ruta pública y textos | media | pendiente | — | — | 0 |
+| T2.1 | Copy the owner-approved cuentas-admin@v1 contract into the repository | baja | completada | gpt-6.1-sol | codex-2 | 2 |
+| T2.2 | Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles | media | completada | gpt-6-luna | codex-2 | 2 |
+| T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-2 | 1 |
+| T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 1 |
+| T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-2 | 1 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | pendiente | gpt-6-luna | codex-2 | 8 |
+| T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
+| T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
+
+**SP-14 — Plans section: the four access plans, public and informative**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T14.1 | Copy the owner-approved planes@v1 contract into the repository | baja | pendiente | — | — | 0 |
+| T14.2 | Public plans page: the four plans from the plan catalogue, prices by language | media | pendiente | — | — | 0 |
+| T14.3 | Plans links on the sign-in screen and in the account menu | baja | pendiente | — | — | 0 |
+| T14.4 | Browser end-to-end of the plans section on a production build | media | pendiente | — | — | 0 |
+| T14.5 | SP-14 visual review against the planes@v1 contract | media | pendiente | — | — | 0 |
+| T14.6 | SP-14 audit: catalogue use, public route and copy | media | pendiente | — | — | 0 |
 
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T91 | Verificación de composición de M1: del primer administrador a un usuario Entusiasta en el árbol integrado | media | pendiente | — | — | 0 |
-| T94 | Verificación de composición CG-4: planes de acceso desde la sección de planes hasta la pantalla de cuentas | media | pendiente | — | — | 0 |
+| T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
+| T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Trabajo guardado, funciones esenciales de Taller, gasto por usuario y herramientas del chat** · dificultad alta · 0/40
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 0/40
 
-**SP-3 — Funciones esenciales de Taller: Backing investigado y modelado, tipos de mesa, tarjetas de tipos y exportación a Blender para todos los tipos**
+**SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
@@ -320,20 +321,21 @@ Personas reales inician sesión con su propia cuenta invitada y cada una accede 
   - Aceptación / integración: En una compilación de producción iniciada con next start contra la base de datos de prueba REQ-021, cada cuenta de Entusiasta, Designer Plus, Master Designer, Empleado interno y Administrador accede exactamente a las páginas y API asignadas; una cuenta desactivada pierde el acceso en su siguiente solicitud y se rechaza la contraseña compartida anterior. Verificación: `npm run cuentas:test-integracion`
   - Aceptación / estática: El flujo de trabajo de verificaciones de CI ejecuta las suites de SP-1 contra su servicio de Postgres y falla cuando se inicia una compilación con AUTH_LOCAL_SIN_RESTRICCIONES establecido. Verificación: `npm run cuentas:test-integracion -- --solo-ci`
 
-- [ ] T1.9 — Corregir los hallazgos F1, F2, F3, F4 de T1.8 · repo: pictures · después de: T1.7 · verificar: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · archivos: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/lib/cuentas/permisos.ts, src/lib/planes/catalogo.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-mapa-rutas.ts, scripts/test/test-catalogo-planes.ts, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/test/*.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · recursos: contract:permission-map, contract:plan-catalogue, contract:session-guard, scripts de package.json · cubre: R16, R17, R2, R3 · tipo: implement · subplan: SP-1
-- [ ] T1.10 — Corregir el hallazgo F6 de T1.8 · repo: pictures · después de: T1.7, T1.9 · verificar: `npm run cuentas:test-servicio -- --test-name-pattern=invitacion` · archivos: src/lib/seguridad/scrypt.ts, src/lib/asesor/auth.ts, src/lib/cuentas/servicio.ts, src/lib/cuentas/enlaces.ts, src/lib/cuentas/limite-intentos.ts, scripts/cuentas/primer-admin.ts, scripts/cuentas/sembrar-prueba.ts, scripts/test/test-cuentas-servicio.ts · recursos: contract:account-service, contract:permission-map, scripts de package.json · cubre: R1, R16, R3 · tipo: implement · subplan: SP-1
-- [ ] T1.11 — Corregir los hallazgos F16, F17 de T1.8 · repo: pictures · después de: T1.7, T1.10 · verificar: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · archivos: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · recursos: contract:permission-map, contract:session-guard · cubre: R2 · tipo: implement · subplan: SP-1
-- [ ] T1.8 — Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso · repo: pictures · después de: T1.7, T1.10, T1.11 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` · archivos: .evidence/REQ-021/SP-1.audit.md, .evidence/REQ-021/SP-1.findings.json · recursos: ledger:SP-1 · cubre: R1, R2, R3, R16 · tipo: audit · subplan: SP-1
-- [ ] T1.8b — Auditoría de verificación de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso · repo: pictures · después de: T1.8 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.audit-crosscheck.findings.json` · archivos: .evidence/REQ-021/SP-1.audit-crosscheck.md, .evidence/REQ-021/SP-1.audit-crosscheck.findings.json · cubre: R1, R2, R3, R16 · tipo: audit · subplan: SP-1
+- [ ] T1.9 — Corregir los hallazgos F1, F2, F3 y F4 de T1.8 · repo: pictures · después de: T1.7 · verificar: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · archivos: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/lib/cuentas/permisos.ts, src/lib/planes/catalogo.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-mapa-rutas.ts, scripts/test/test-catalogo-planes.ts, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/test/*.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · recursos: contract:permission-map, contract:plan-catalogue, contract:session-guard, scripts de package.json · cubre: R16, R17, R2, R3 · tipo: implementación · subplan: SP-1
+- [ ] T1.10 — Corregir los hallazgos F6 de T1.8 · repo: pictures · después de: T1.7, T1.9 · verificar: `npm run cuentas:test-servicio -- --test-name-pattern=invitacion` · archivos: src/lib/seguridad/scrypt.ts, src/lib/asesor/auth.ts, src/lib/cuentas/servicio.ts, src/lib/cuentas/enlaces.ts, src/lib/cuentas/limite-intentos.ts, scripts/cuentas/primer-admin.ts, scripts/cuentas/sembrar-prueba.ts, scripts/test/test-cuentas-servicio.ts · recursos: contract:account-service, contract:permission-map, scripts de package.json · cubre: R1, R16, R3 · tipo: implementación · subplan: SP-1
+- [ ] T1.11 — Corregir los hallazgos F16 y F17 de T1.8 · repo: pictures · después de: T1.7, T1.10 · verificar: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · archivos: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts · recursos: contract:permission-map, contract:session-guard · cubre: R2 · tipo: implementación · subplan: SP-1
+- [ ] T1.12 — Corregir los hallazgos F19 y F20 de T1.8 · repo: pictures · después de: T1.7, T1.10, T1.11 · verificar: `npm run cuentas:test-modo-local -- --test-name-pattern=loopback` · archivos: src/lib/cuentas/modo-local.ts, src/instrumentation.ts, next.config.ts, services/ai-api/app/main.py, scripts/test/test-modo-local.ts, services/ai-api/tests/test_modo_local.py, src/app/api/**/route.ts, src/lib/feedback-ia/acceso.ts, src/lib/guiada-motor/manejadores.ts, src/lib/happie/panel-prueba.ts, src/lib/shared-quotes/dependencies.server.ts, src/lib/taller/cotizacion-taller.ts, src/lib/asesor/voice.ts, scripts/test/lib/sesion-prueba.ts, scripts/test/test-guardias-rutas.ts, scripts/e2e/humo/configuracion.ts, scripts/e2e/humo/pasos-asistente.ts, scripts/e2e/humo/navegacion.ts, scripts/eval/eval-chat-jerga.ts, src/lib/cuentas/permisos.ts, src/lib/planes/catalogo.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-mapa-rutas.ts, scripts/test/test-catalogo-planes.ts, scripts/test/*.ts · recursos: contract:permission-map, contract:plan-catalogue, contract:session-guard · cubre: R16, R17, R2, R3 · tipo: implementación · subplan: SP-1
+- [ ] T1.8 — Auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso · repo: pictures · después de: T1.7, T1.10, T1.11, T1.12 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` · archivos: .evidence/REQ-021/SP-1.audit.md, .evidence/REQ-021/SP-1.findings.json · recursos: ledger:SP-1 · cubre: R1, R2, R3, R16 · tipo: auditoría · subplan: SP-1
+- [ ] T1.8b — Auditoría de verificación cruzada de T1.8: auditoría de seguridad de SP-1: cuentas, sesiones, permisos, modo local y comandos de un solo uso · repo: pictures · después de: T1.8 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.audit-crosscheck.findings.json` · archivos: .evidence/REQ-021/SP-1.audit-crosscheck.md, .evidence/REQ-021/SP-1.audit-crosscheck.findings.json · cubre: R1, R2, R3, R16 · tipo: auditoría · subplan: SP-1
 
-  Clasificación: complejidad alta; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación de 90 minutos.
-  Como mínimo, las verificaciones comprueban que: los tokens y las contraseñas nunca se registran ni almacenan en texto sin cifrar; las comparaciones son resistentes a ataques de temporización; el bloqueo no se puede eludir usando mayúsculas o espacios en el correo electrónico; los enlaces son de un solo uso incluso con concurrencia; cada route.ts y page.tsx está mapeado y protegido; las excepciones de autenticación propia no cambian; el modo local no se puede activar en ninguna compilación, inicio ni implementación y omite encabezados Host falsificados; `primer-admin` no puede crear un segundo administrador; eliminar una cuenta borra sus datos personales. Cada defecto confirmado indica la tarea que debe rehacerse.
+  Clasificación: complejidad alta; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 90 minutos.
+  Verificar al menos: que los tokens y las contraseñas nunca se registren ni almacenen en texto sin cifrar; comparaciones seguras en cuanto al tiempo; que el bloqueo no se pueda eludir usando mayúsculas o espacios en el correo electrónico; que los enlaces sean de un solo uso ante solicitudes simultáneas; que cada route.ts y page.tsx esté incluido en el mapa y protegido; que las excepciones de autenticación propia no cambien; que el modo local no se pueda activar en ninguna compilación, inicio o implementación y que ignore encabezados Host falsificados; que `primer-admin` no pueda crear un segundo administrador; que al eliminar una cuenta se borren sus datos personales. Cada defecto confirmado debe indicar la tarea que se debe rehacer.
 
-  - Criterios de aceptación / estáticos: Una auditoría de seguridad independiente de SP-1 registra cada defecto confirmado junto con la tarea que debe rehacerse en el ledger de hallazgos de SP-1, y el ledger no tiene hallazgos críticos o altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json`
+  - Aceptación / estática: Una auditoría de seguridad independiente de SP-1 registra cada defecto confirmado, junto con la tarea que debe rehacerse, en el registro de hallazgos de SP-1, y el registro no tiene hallazgos críticos ni altos abiertos. Verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json`
 
 <!-- /SP-1 tasks -->
 
-- **SP-2 — Pantallas de inicio de sesión, invitación y administración** (UI: `cuentas-admin@v1`): Una persona inicia sesión con correo electrónico y contraseña, activa un enlace de invitación y acepta el aviso de datos; un administrador invita a personas, les asigna uno de los cuatro planes de acceso u otro rol, crea roles seleccionando permisos y desactiva o elimina cuentas. Cubre R1, R3, R16, R17.
+- **SP-2 — Pantallas de inicio de sesión, invitación y administración** (UI: `cuentas-admin@v1`): Una persona inicia sesión con correo electrónico y contraseña, activa un enlace de invitación y acepta el aviso de datos; un administrador invita a personas, asigna uno de los cuatro planes de acceso u otro rol, crea roles seleccionando permisos y desactiva o elimina cuentas. Cubre R1, R3, R16, R17.
 
 <!-- SP-2 tasks -->
 

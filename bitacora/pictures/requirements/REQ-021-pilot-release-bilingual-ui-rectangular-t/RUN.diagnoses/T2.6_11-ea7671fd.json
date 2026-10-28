@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:11",
+ "state": "done",
+ "kind": "dependency",
+ "label": "Dependencias",
+ "tone": "info",
+ "headline": "T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por auditoría y sigue sin resolver",
+ "origin": "El scheduler rechazó el arranque con PREDECESSOR_NEEDS_RESOLUTION: T2.6 depende de T1.8 (sección de dependencias de la tarea), y la auditoría independiente devolvió T1.8 con la indicación de rehacer su trabajo sobre su nuevo resultado y comprobarlo de extremo a extremo. Mientras T1.8 no esté resuelto, el intento de T2.6 no empieza, así que el fallo de cuentas:test-integracion-ui (navigated to \"http://127.0.0.1:41193/login?error=auth-unavailable\") de los intentos anteriores no es la causa de este bloqueo. Reintentar T2.6 sin tocar T1.8 repetirá el rechazo; los reintentos T2.6:7 y T2.6:10 ya no lo han desbloqueado.",
+ "steps": [
+  "Revisa el estado de la dependencia: `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-021 status`, y resuelve T1.8 (rehacerla sobre el resultado de la auditoría y comprobar que `npm run cuentas:test-integracion-ui` pasa sin el error auth-unavailable).",
+  "Cuando T1.8 quede resuelta, toma la decisión retry_with_note de T2.6 con la indicación de abajo, para que la siguiente tentativa no vuelva a fallar por el entorno del verificador.",
+  "Si T1.8 no puede resolverse en este run, no reintentes T2.6: deja el run detenido y resuelve T1.8 antes de volver a lanzarlo."
+ ],
+ "option": "retry_with_note",
+ "note": "Predecessor T1.8 must be resolved first; do not start T2.6 until its rework passes end to end. The verifier sandbox has no environment variables, so the production server's auth configuration must come from verifier.env_file or from the test script itself (cuentas:test-integracion-ui), not from the shell environment; a run that reaches /login?error=auth-unavailable has failed. Do not change the acceptance criteria or the cuentas:test-integracion-ui command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:24:00",
+ "seconds": 15.5
+}

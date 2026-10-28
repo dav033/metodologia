@@ -1,5 +1,5 @@
 {
- "actions": 10,
+ "actions": 11,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -316,6 +316,27 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "T1.8 already had 3 automatic plan repairs"
+  },
+  "e65cd54ee5262310": {
+   "applied": 1,
+   "at": 1793193813.906,
+   "class": "integration_defect",
+   "evidence": [
+    "integration evidence in the last error: PREDECESSOR_NEEDS_RESOLUTION",
+    "reason code: m5:start_rejected_predecessor_needs_resolution"
+   ],
+   "first_at": 1793193787.529,
+   "history": [
+    {
+     "at": 1793193813.906,
+     "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por la auditoría y sigue sin resolver",
+     "result": "fixed"
+    }
+   ],
+   "id": "e65cd54ee5262310",
+   "repair": "retry_with_note chosen by the diagnosing model (haiku): T2.6 no puede arrancar: su predecesor T1.8 fue devuelto por la auditoría y sigue sin resolver",
+   "status": "applied",
+   "task": "T2.6"
   }
  }
 }

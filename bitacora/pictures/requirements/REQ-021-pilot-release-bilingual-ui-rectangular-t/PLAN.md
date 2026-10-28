@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 17/69 · generado: 2026-10-28T08:08:40-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 18/69 · generado: 2026-10-28T08:23:47-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 17/29
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -22,7 +22,7 @@ created: 2026-10-26
 | T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
 | T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-2 | 6 |
 | T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 12 |
-| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | en curso | gpt-6.1-sol | codex-luis | 1 |
+| T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | completada | gpt-6.1-sol | codex-luis | 1 |
 | T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
 | T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 2 |
@@ -37,7 +37,7 @@ created: 2026-10-26
 | T2.3 | Sign-in, invitation activation, password reset and notice re-acceptance screens | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.4 | Account menu on every signed-in page and the Mi cuenta page | media | completada | gpt-6-luna | codex-2 | 1 |
 | T2.5 | Administration screens: accounts list, invitations, account actions and the role editor | media | completada | gpt-6-luna | codex-2 | 1 |
-| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | pendiente | gpt-6-luna | codex-2 | 8 |
+| T2.6 | Browser end-to-end: invite, activate, sign in and change plan on a production build | media | bloqueada | gpt-6-luna | codex-2 | 11 |
 | T2.7 | SP-2 visual review against the cuentas-admin@v1 contract | media | pendiente | — | — | 0 |
 | T2.8 | SP-2 audit: account screens, administration APIs and the data notice | media | pendiente | — | — | 0 |
 
@@ -65,8 +65,8 @@ created: 2026-10-26
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | pendiente | — | — | 0 |
-| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | pendiente | — | — | 0 |
+| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | en curso | gpt-6-luna | codex-2 | 1 |
+| T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | en curso | gpt-6-luna | codex-2 | 1 |
 | T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | pendiente | — | — | 0 |
 | T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
 | T3.6 | Model the approved new Backing structures as parametric Taller furniture | alta | pendiente | — | — | 0 |

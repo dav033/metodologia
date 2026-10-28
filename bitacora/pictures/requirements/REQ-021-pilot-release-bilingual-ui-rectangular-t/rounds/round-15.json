@@ -1,0 +1,172 @@
+{
+ "title": "SP-7 (chat en tres herramientas) y SP-8 (idioma)",
+ "coverage": "SP-7, SP-8",
+ "intro": "Mientras eliges la dirección de SP-4, adelanto SP-7 y SP-8 (me pediste seguir definiendo). Lo que encontré en el código: hoy hay DOS chats asistidos, el «clásico» en / (src/app/page.tsx, 2.100 líneas) y el «guiado» en /asistente (VistaGuiada); ambos usan herramientas del modelo y los conteos y precios ya los calcula el motor (Python y el motor guiado), no el modelo. No hay decoraciones abiertas por enlace: el Taller ya tiene «Ideas del asistente» e «Ideas Sempertex» en su biblioteca y las abre como escena nueva. Idioma: no existe ningún mecanismo; la app tiene lang=\"es\" fijo, los prompts de IA están en español y el Taller 3D tiene unos 570 textos en sus componentes más los mensajes de lib/.",
+ "questions": [
+  {
+   "id": "q1",
+   "text": "SP-7: de los dos chats de hoy, ¿cuál pasa a ser el «chat normal»?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "El guiado (/asistente) es el chat normal; el clásico (/) se retira y / pasa a ser la portada con las herramientas de tu plan"
+    },
+    {
+     "key": "b",
+     "label": "El clásico (/) es el chat normal y el guiado se retira"
+    },
+    {
+     "key": "c",
+     "label": "Se mantienen los dos"
+    }
+   ],
+   "recommended": "a",
+   "why": "El guiado es el más reciente (motor guiado, pasos, cotización curada) y el que conecta con el Taller; mantener dos chats duplica pruebas, prompts y gasto."
+  },
+  {
+   "id": "q2",
+   "text": "SP-7: contador de globos (Entusiasta en adelante). ¿Cómo se usa?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Página propia: eliges estructura (arco, columna, guirnalda, orgánico…), medidas, tamaños y colores, o lo describes en una frase; responde cuántos globos de cada tamaño y color y la lista de compra SIN precios"
+    },
+    {
+     "key": "b",
+     "label": "Igual, pero solo con la frase (sin formulario)"
+    },
+    {
+     "key": "c",
+     "label": "Desde una foto (eso es la «detección avanzada», que hoy es «aún no disponible»)"
+    }
+   ],
+   "recommended": "a",
+   "why": "El formulario da números exactos del motor sin depender del modelo; la frase ayuda a quien no conoce los nombres. La foto es la detección avanzada, fuera del piloto."
+  },
+  {
+   "id": "q3",
+   "text": "SP-7: calculadora de costos (Designer Plus en adelante). ¿Qué recibe?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Lo mismo que el contador (o el resultado del contador con un botón «Calcular costo») y devuelve precio por producto y total con el catálogo real, más la cotización profesional que ya existe"
+    },
+    {
+     "key": "b",
+     "label": "Solo una lista de productos y cantidades que la persona escribe"
+    }
+   ],
+   "recommended": "a",
+   "why": "Reutiliza el motor de conteo y la cotización profesional existentes; la persona no tiene que copiar cantidades a mano."
+  },
+  {
+   "id": "q4",
+   "text": "SP-7: en el chat normal, una cuenta SIN calculadora (Entusiasta o Designer), ¿ve precios?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "No: el chat define la necesidad y el conteo, pero no muestra precios ni cotiza; sin anunciar qué plan los tiene"
+    },
+    {
+     "key": "b",
+     "label": "Sí: el chat sigue cotizando como hoy; la calculadora es solo una herramienta aparte"
+    }
+   ],
+   "recommended": "a",
+   "why": "Si el chat cotiza, la calculadora de Designer Plus no aporta nada; además el servidor debe negar el costeo a quien no tiene el permiso de costos."
+  },
+  {
+   "id": "q5",
+   "text": "SP-7: el explorador de decoraciones hechas (solo Master Designer, dentro del Taller 3D). ¿Qué es?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Una galería dentro del Taller (/3d/decoraciones) con las Ideas del asistente y las Ideas Sempertex: búsqueda, filtros por ocasión y tamaño, vista previa y «Abrir como proyecto nuevo» con su propio enlace (lo usa el chat en SP-12)"
+    },
+    {
+     "key": "b",
+     "label": "Basta con el panel de biblioteca que ya tiene el Taller; solo se asegura que sea de Master Designer"
+    }
+   ],
+   "recommended": "a",
+   "why": "SP-12 necesita un enlace para abrir una decoración desde el chat; la galería lo da y mejora la búsqueda. b es más barato pero deja a SP-12 sin destino."
+  },
+  {
+   "id": "q6",
+   "text": "SP-8: ¿dónde se cambia el idioma?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "En el menú de cuenta, en la pantalla de entrar y en la sección de planes; la primera vez se detecta del navegador y luego se guarda en tu cuenta"
+    },
+    {
+     "key": "b",
+     "label": "Solo en el menú de cuenta"
+    }
+   ],
+   "recommended": "a",
+   "why": "Quien aún no entra (pantalla de entrar, planes públicos) también necesita cambiarlo."
+  },
+  {
+   "id": "q7",
+   "text": "SP-8: en inglés, ¿medidas y precios?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Medidas en cm/m como hoy; precios del catálogo en COP como hoy (solo la sección de planes muestra USD, ya acordado)"
+    },
+    {
+     "key": "b",
+     "label": "Pulgadas/pies y precios convertidos a USD"
+    }
+   ],
+   "recommended": "a",
+   "why": "Los precios del catálogo son COP de Shopify; convertir exige una tasa y reglas que no existen. Las pulgadas tocarían el motor y la lista de compra."
+  },
+  {
+   "id": "q8",
+   "text": "SP-8: ¿necesita diseño (Designer) o se traduce sobre las pantallas actuales?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "Sin Designer: el selector de idioma sigue el estilo del interruptor de tema y las pruebas revisan que los textos en inglés no se corten en teléfono, tableta y escritorio"
+    },
+    {
+     "key": "b",
+     "label": "Con Designer, como los otros subplanes con pantallas"
+    }
+   ],
+   "recommended": "a",
+   "why": "No cambia ninguna pantalla, solo sus textos; como en SP-3, ahorra un ciclo de diseño. Si algo no cabe, la prueba lo detecta."
+  },
+  {
+   "id": "q9",
+   "text": "SP-8/SP-10: ¿se traducen también /asesor y /happie?",
+   "type": "choice",
+   "options": [
+    {
+     "key": "a",
+     "label": "No: tienen su propio acceso y quedan fuera del piloto"
+    },
+    {
+     "key": "b",
+     "label": "Sí"
+    }
+   ],
+   "recommended": "a",
+   "why": "Ya acordamos que /asesor y /happie siguen fuera de las cuentas del piloto."
+  }
+ ],
+ "round": 15,
+ "status": "open",
+ "answers": {},
+ "created_at": "2026-10-28T13:24:00Z"
+}

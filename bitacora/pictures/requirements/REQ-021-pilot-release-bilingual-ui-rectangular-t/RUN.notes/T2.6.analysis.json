@@ -1,17 +1,6 @@
 {
- "at": "2026-10-27T20:05:24",
- "cause": "El fallo está en `src/proxy.ts:9`: la firma `export async function proxy(request, resolveSession = resolveRequestSession)` usa un segundo parámetro que Next.js no le pasa. Next llama al proxy con `(request, event)`, así que dentro de `resolveSession(request)` (líneas 14 y 45) se ejecuta el objeto `event` y lanza TypeError; el `catch` lo convierte en `redirect` a `/login?error=auth-unavailable`. Por eso `/api/login` (excluido del matcher) responde 200, pero la primera ruta protegida tras el login (`waitForURL` de `scripts/test/test-integracion-cuentas-ui.ts:86`, o los siguientes) cae en ese redirect. Los tests de `scripts/test/test-sesion-guardia.ts:40-67` pasan el resolver como segundo argumento, así que nunca ejercitan la ruta real de Next. Confianza alta; no pude leer `node_modules/next/dist/docs` porque esa copia no tiene `node_modules`.",
- "confidence": "alta",
- "failures": 5,
- "model": "haiku",
- "not_the_task": false,
- "profile": "claude",
- "seconds": 79.8,
- "solution": "1. En `src/proxy.ts`, dejar `export async function proxy(request: NextRequest)` con un solo parámetro y mover la lógica a un export inyectable (p. ej. `procesarProxy(request, resolveSession = resolveRequestSession)`) que `proxy` llama con el resolver real. Nota de alcance: `src/proxy.ts` no está en `expected_paths` del plan; hace falta que el plan lo permita.\n2. Actualizar `scripts/test/test-sesion-guardia.ts` (líneas 40-67) para llamar a `procesarProxy(req, resolver)`, sin cambiar las expectativas.\n3. Añadir en el mismo test una llamada al export real `proxy(request, { waitUntil() {} })` con cookie inválida o sin cookie sobre una ruta protegida, y comprobar que redirige a `/login` sin `error=auth-unavailable`.\n4. Confirmar la firma `(request, event)` de proxy/middleware en la documentación de Next instalada (`node_modules/next/dist/docs`) antes de cerrar.\n5. Ejecutar `npm run cuentas:test-integracion-ui` con `PICTURES_REQ021_DATABASE_URL` y verificar que desaparece `navigated to \"…/login?error=auth-unavailable\"`.",
- "source_attempt": "att-0038",
- "source_available": true,
- "source_directory": "/home/david/.local/tmp/bt-analyst-2qu0dad0/source",
- "source_snapshot": "2c6ac7636db2a6d8b5aae010ce5159e46251af47",
- "state": "done",
+ "failures": 7,
+ "started": 1793193782.8405905,
+ "state": "running",
  "task": "T2.6"
 }
