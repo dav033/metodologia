@@ -335,3 +335,4 @@
 {"at": "2026-10-28T08:21:29-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}
 {"at": "2026-10-28T08:21:43-05:00", "who": "Tú", "kind": "flow", "sp": "SP-3", "text": "Confirmaste SP-3 en la web; sigue SP-4", "diff": ""}
 {"at": "2026-10-28T08:21:44-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-28T08:21:50-05:00", "who": "Tú", "kind": "flow", "sp": "SP-3", "text": "Ejecutar SP-3: etapa r11 aprobada (SP-1, SP-2, SP-14, SP-3), faltan 10 subplanes", "diff": ""}
