@@ -19,11 +19,10 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
-from durable_support import Lab, task, wait_until
-
 from bt_contracts.execution import RunRef
 from bt_durable.client import Client
 from bt_durable.settings import Settings
+from durable_support import Lab, task, wait_until
 
 FAST = Settings(max_parallel=1, poll_seconds=0.5, run_poll_seconds=5, owner_wait_seconds=5)
 

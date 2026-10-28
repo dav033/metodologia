@@ -41,7 +41,8 @@ class Versioning(unittest.TestCase):
     def spawn(self, version, *start):
         (self.dir / f"ready-{version}").unlink(missing_ok=True)
         proc = subprocess.Popen([os.environ.get("BT_VERSION_PYTHON") or sys.executable, str(PROBE), self.url, str(self.dir), version, *start],
-                                start_new_session=True, stdout=subprocess.DEVNULL, stderr=open(self.dir / f"{version}.log", "ab"))
+                                start_new_session=True, stdout=subprocess.DEVNULL,
+                                stderr=open(self.dir / f"{version}.log", "ab"))  # noqa: SIM115 - owned by the child
         self.procs.append(proc)
         wait(lambda: (self.dir / f"ready-{version}").exists())
         return proc
