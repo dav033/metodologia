@@ -265,7 +265,7 @@ def _task(task_id: str, audit_spec: dict, chunk: list[dict], tasks: dict[str, di
     evidence = lambda text: {"evidence": [ref, f"spec:{spec_ref}"], "justification": text}  # noqa: E731
     in_subplan = {"subplan_id": audit_spec["subplan_id"]} if plan.get("subplans") and audit_spec.get("subplan_id") else {}
     return {
-        **in_subplan,
+        **in_subplan, **({"ui": False} if audit_spec.get("ui") is False and all(tasks[t].get("ui") is False for t in named) else {}),
         "id": task_id, "milestone_id": audit_spec["milestone_id"],
         "title": f"Remediate {audit_spec['id']} findings {ids}"[:120], "objective": objective,
         "repository": repository, "after": after, "complexity": complexity,

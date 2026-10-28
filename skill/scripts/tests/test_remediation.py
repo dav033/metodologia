@@ -57,6 +57,13 @@ BASE = plan(task("T1"), task("T2", ["T1"], paths=["src/two.py"]), task("T3", ["T
 
 
 class Build(unittest.TestCase):
+    def test_non_ui_repair_inherits_explicit_non_ui_contract(self):
+        owner = task("T1", paths=["scripts/test/form.test.tsx"], ui=False)
+        audit = task("T4", ["T1"], kind="test", ui=False, subplan_id="SP-1")
+        repair = rem._task("T4.1", audit, [finding("F1", ["T1"])], {"T1": owner}, ["T1"], 1,
+                           "SPEC.md", {"subplans": [{"id": "SP-1"}]}, commands=[[{"command": "pytest test.py"}]])
+        self.assertIs(repair.get("ui"), False)
+
     def test_generated_repair_checks_are_admitted_by_m6(self):
         from bt_scheduler_quality.contracts import VerifyRequest
 

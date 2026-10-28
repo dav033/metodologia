@@ -66,6 +66,17 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(self.watch().run(), 0)
         self.assertEqual(self.spawned, [True])
 
+    def test_waiting_for_one_decision_resumes_when_another_task_becomes_ready(self):
+        watcher = self.watch(heal=lambda: False)
+        pending = iter([1, 1, 0])
+        watcher.pending = lambda: next(pending)
+        watcher.announce = lambda: None
+        states = [{"task_states": {"T1": "blocked", "T2": "pending"}},
+                  {"task_states": {"T1": "blocked", "T2": "ready"}}]
+        with patch.object(ops, "status", side_effect=states) as status:
+            self.assertTrue(watcher._wait_for_decisions())
+        self.assertEqual(status.call_count, 2)
+
     def test_the_healing_turn_runs_while_the_owner_waits_for_a_person(self):
         turns = []
         alive = [[1], [1], [1], [1], [1], [1], [1], []]                      # the owner is alive for 7 polls (35 s), then gone

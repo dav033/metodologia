@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from html import escape as e
 from pathlib import Path
+import re
 from urllib.parse import quote, urlencode
 
 import bt_verification as verification
@@ -51,11 +52,23 @@ def _where(rows: list[dict]) -> str:
     cards = []
     for r in rows:
         place = f'<span class="pp-meta">{e(r["where"])}</span>' if r["kind"] == "external" else ""
+        ports = sorted({int(port) for port in re.findall(
+            r'(?<![\w.-])https?://(?:localhost|127\.0\.0\.1):([0-9]{1,5})(?![0-9])',
+            f'{r["how"]} {r["expect"]}') if 1 <= int(port) <= 65535}) if r["kind"] == "local" else []
+        access = ""
+        if ports:
+            labels = ", ".join(str(port) for port in ports)
+            example = ports[0]
+            access = (f'<p class="pp-vpath"><strong>Puerto indicado para la prueba: {labels}.</strong> '
+                      f'Abrir la copia no inicia la aplicación; sigue las instrucciones de abajo. '
+                      f'Si te conectas desde otro computador, crea un túnel SSH '
+                      f'<code>ssh -L {example}:127.0.0.1:{example} usuario@servidor</code> '
+                      f'y abre <code>http://localhost:{example}</code> en tu navegador.</p>')
         how = f'<div><span class="pp-vlabel">Cómo</span><p>{_text(r["how"])}</p></div>' if r["how"] else ""
         expect = f'<div><span class="pp-vlabel">Qué debes ver</span><p>{_text(r["expect"])}</p></div>' if r["expect"] else ""
         cards.append(f'<article class="pp-vwhere {e(r["kind"])}"><header><span class="pp-vicon" aria-hidden="true">'
                      f'{KIND_ICON[r["kind"]]}</span><strong>{e(verification.KINDS_ES[r["kind"]])}</strong>{place}</header>'
-                     f'{how}{expect}</article>')
+                     f'{access}{how}{expect}</article>')
     return '<div class="pp-vwheres">' + "".join(cards) + "</div>"
 
 

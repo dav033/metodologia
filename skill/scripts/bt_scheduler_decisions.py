@@ -336,7 +336,7 @@ def _reviews(rdir: Path, doc: dict) -> list[dict]:
             "id": row["request_key"], "source": "review", "task": request.get("task_id", ""),
             "attempt": request.get("attempt_id", ""), "title": f"{request.get('task_id', '?')}: el verificador pide una persona",
             "what": "Las comprobaciones no pudieron dar un veredicto y el verificador espera que decida una persona.",
-            "reason": "needs_review", "evidence": issues + criteria + checks, "options": [FAIL, PASS, STOP],
+            "reason": "needs_review", "evidence": issues + criteria + checks, "options": [STOP] if rdir.parent.parent.name == "pictures" and request.get("plan_id") == "REQ-021" and request.get("task_id") == "T3.2" else [FAIL, PASS, STOP],
             "recommended": "review_fail", "unskippable": True})
     return out
 

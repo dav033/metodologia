@@ -102,7 +102,7 @@ class CheckExecutor:
         return [spec for spec in specs if spec.id not in costly] + [spec for spec in specs if spec.id in costly]
 
     def _run_or_reuse(self, spec, snapshot_root, remaining, mounts, started, tree, fingerprint) -> CommandOutcome:
-        reusable = spec.environment == "sandbox" and not spec.requires
+        reusable = spec.environment == "sandbox" and not spec.requires and not (spec.argv and spec.argv[0] == "cmp" and any(arg.startswith("/") for arg in spec.argv[1:]))
         key = reuse.pass_key(tree, spec, fingerprint) if tree and reusable else None
         if key:
             hit = self.store.cached_pass(key, self.policy.cache_seconds, time.time())

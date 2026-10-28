@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import bt_page_planning_run as run  # noqa: E402
+import bt_page_planning as planning  # noqa: E402
 import bt_plans_api as api  # noqa: E402
 import bt_server_plans  # noqa: E402
 
@@ -21,6 +22,20 @@ def ctx(tasks):
 
 
 class Progress(unittest.TestCase):
+    def test_subplan_links_open_execution_only_when_work_has_started(self):
+        c = ctx([task("T1", "SP-1", "completed"), task("T2", "SP-2", "pending")])
+        c.update({"opts": {"lang": "es", "mode": "subplans", "view": "design", "sp": "", "rev": 0,
+                           "only": False, "filter": ""}, "project": "p", "rid": "REQ-1", "rdir": Path("/r"),
+                  "subplans": [{"id": sid, "ref": "", "title": sid, "tasks": []} for sid in ("SP-1", "SP-2")],
+                  "rows": {}, "flow": None})
+        with patch.object(planning.drafts, "_plan", return_value={}), \
+             patch.object(planning.verification, "applies", return_value=False), \
+             patch.object(planning.activity, "events", return_value=[]), \
+             patch.object(planning, "text", side_effect=lambda _ctx, value: value):
+            html = planning._list(c)
+        self.assertIn("view=run&amp;sp=SP-1", html)
+        self.assertIn("view=design&amp;sp=SP-2", html)
+
     def test_done_over_total_per_subplan_and_the_tab_label(self):
         c = ctx([task("T1", "SP-1", "completed"), task("T2", "SP-1", "completed"), task("T3", "SP-2", "pending")])
         self.assertEqual(run.counts(c), {"SP-1": (2, 2), "SP-2": (0, 1)})

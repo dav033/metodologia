@@ -24,6 +24,29 @@ m1 = m1_adapter.core
 
 
 class OwnerCompositionRuntimeTests(unittest.TestCase):
+    def test_publication_accepts_historical_member_trees_only_when_final_audit_matches_line(self):
+        owner = OwnerCompositionRuntime.__new__(OwnerCompositionRuntime)
+        tasks = [SimpleNamespace(id="T1", meta={"subplan_id": "SP-1"}),
+                 SimpleNamespace(id="T2", meta={"subplan_id": "SP-1"})]
+        subplan = SimpleNamespace(id="SP-1", ui=None, audit_task="T2")
+        owner.plan = SimpleNamespace(plan_id="P", revision=1, sha256="a" * 64, tasks=tasks, subplans=(subplan,))
+        owner.scheduler = object()
+        owner.git = SimpleNamespace(tree_oid=lambda _: "final")
+        owner._reconcile_store_version_counters = lambda: None
+        owner._line_commits = lambda _: ("base", "tip")
+        owner._contract_hashes = lambda *_: {"api@1": "hash"}
+        owner._m6_evidence = lambda tid, _: {"task_id": tid, "tree_digest": "old" if tid == "T1" else "final"}
+        owner.store = SimpleNamespace(list_versions=lambda *_: ())
+        owner.engine = SimpleNamespace(publish_subplan_version=lambda *_: SimpleNamespace(version=1, commit="tip", manifest_sha256="h"))
+        owner.attentions = []
+        with patch("bt_scheduler_owner_composition.m1_adapter.subplan_status", return_value={"SP-1": "accepted"}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.accepted_attempt_facts", return_value={"T1": {}, "T2": {}}), \
+             patch("bt_scheduler_owner_composition.m1_adapter.record_subplan_version"):
+            self.assertEqual(owner.reconcile_subplans(), ("SP-1",))
+            owner._m6_evidence = lambda tid, _: {"task_id": tid, "tree_digest": "old"}
+            self.assertEqual(owner.reconcile_subplans(), ())
+            self.assertIn(("SP-1", "OWNER_COMPOSITION_LINE_TREE_MISMATCH"), owner.attentions)
+
     def test_store_version_counter_is_reconciled_before_next_publication(self):
         owner = SimpleNamespace(plan=SimpleNamespace(plan_id="REQ-1", subplans=(SimpleNamespace(id="SP-1"),)),
                                 scheduler=object(), store=SimpleNamespace(list_versions=lambda *_: (

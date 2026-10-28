@@ -216,9 +216,7 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         if parts == ["api", "flow", "decision"]:
             import bt_plans_api as api
             try:
-                message = api.decide(ROOT, form.get("project", ""), form.get("req", ""),
-                                     form.get("request", ""), form.get("option", ""), form.get("reason", ""),
-                                     by="flow")
+                message = __import__("bt_owner_proposal_api").decide(ROOT, form, by="flow")
             except api.PlanError as exc:
                 return self.send(json.dumps({"error": str(exc)}), 409, "application/json; charset=utf-8")
             return self.send(json.dumps({"message": message}), 200, "application/json; charset=utf-8")

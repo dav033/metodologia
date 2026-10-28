@@ -253,7 +253,8 @@ class OwnerCompositionRuntime(OwnerPropagationMixin):
                     continue
                 evidence = tuple(self._m6_evidence(task.id, facts[task.id]) for task in member_tasks)
                 line_tree = self.git.tree_oid(line_commit)
-                if line_tree is None or any(item["tree_digest"] != line_tree for item in evidence):
+                audit = next((item for item in evidence if item["task_id"] == subplan.audit_task), None)
+                if line_tree is None or audit is None or audit["tree_digest"] != line_tree:
                     self._attend(subplan.id, "OWNER_COMPOSITION_LINE_TREE_MISMATCH")
                     continue
                 contracts = self._contract_hashes(subplan.id, line_commit)

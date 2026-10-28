@@ -213,6 +213,17 @@ class VerificationWeb(Base):
         return {"project": "proj", "rid": "REQ-009", "rdir": self.rdir, "token": "tok", "root": Path(self.tmp.name),
                 "opts": {"lang": "en"}}
 
+    def test_local_test_port_is_visible_without_claiming_the_app_is_running(self):
+        import bt_page_verification as page
+        local = {"kind": "local", "where": "", "how": "Open http://localhost:3000/3d", "expect": ""}
+        html = page._where([local])
+        self.assertIn("Puerto indicado para la prueba: 3000", html)
+        self.assertIn("Abrir la copia no inicia la aplicación", html)
+        self.assertIn("ssh -L 3000:127.0.0.1:3000 usuario@servidor", html)
+        no_url = {**local, "how": "Run a command"}
+        self.assertNotIn("Puerto indicado", page._where([no_url]))
+        self.assertNotIn("Puerto indicado", page._where([{**local, "kind": "external"}]))
+
     def test_the_tab_explains_where_to_try_a_subplan_before_and_after_it_is_built(self):
         import bt_page_verification as page
         plan = page.panel(self.ctx(), {"id": "SP-1"})                        # no run yet: planning phase

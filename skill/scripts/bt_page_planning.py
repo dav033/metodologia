@@ -285,7 +285,8 @@ def _list(ctx: dict) -> str:
             meta += " · " + ran
         if verified.get(s["id"]) and verified[s["id"]] != "waiting":
             meta += " · " + verification.STATES_ES[verified[s["id"]]]
-        items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans"))}"'
+        destination = "run" if ran else "design"
+        items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans", view=destination))}"'
                      f' data-nav{" aria-current=true" if on else ""}><span class="pp-id">{e(s["id"])}</span>'
                      f'<span class="pp-item-main"><span class="pp-item-title" title="{e(s["title"])}">{text(ctx, s["title"])}</span>'
                      f'<span class="pp-meta">{e(meta)}</span></span>'

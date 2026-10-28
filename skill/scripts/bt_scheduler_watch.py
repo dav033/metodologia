@@ -316,7 +316,18 @@ class Watch:
         if not self.pending():
             return False
         self.log("the run waits for a decision of its owner")
+        def ready():
+            try:
+                states = ops.status(self.project, self.req, self.rdir).get("task_states", {})
+            except Exception as error:  # noqa: BLE001 - a transient status failure must not stop the watchdog
+                self.log(f"ready status unavailable ({type(error).__name__})")
+                return set()
+            return {task for task, state in states.items() if state == "ready"}
+        initial_ready = ready()
         while self.pending():
+            if ready() - initial_ready:
+                self.log("another task became ready while a decision remains open")
+                return True
             if self.heal():
                 return True
             self.announce()

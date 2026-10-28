@@ -391,6 +391,8 @@ def run(project: str, req: str, rdir: Path, *, resume: bool, no_autostart: bool 
             last_heartbeat = 0.0
             last_m4_pending_notice = 0.0
             while True:
+                import bt_owner_proposal_delivery
+                bt_owner_proposal_delivery.tick(project, req, rdir, wiring)
                 owner_composition = getattr(wiring, "composition_runtime", None)
                 owner_progress = False
                 if owner_composition is not None:

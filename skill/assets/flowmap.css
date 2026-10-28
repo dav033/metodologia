@@ -71,6 +71,19 @@
 .fl-decision-reason { flex-basis: 100%; display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
 .fl-decision-reason textarea { width: min(100%, 520px); min-height: 68px; resize: vertical; }
 .fl-decision-status { min-height: 1.4em; margin: 6px 0 0; color: var(--accent); font-size: 13px; }
+.fl-proposal > p { margin: 8px 0; color: var(--muted); font-size: 13px; }
+.fl-proposal-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.fl-proposal fieldset { min-width: 0; margin: 0; padding: 4px 10px; border: 1px solid var(--border); border-radius: 8px; }
+.fl-proposal legend { padding: 0 5px; color: var(--text); font-size: 13px; font-weight: 600; }
+.fl-proposal-item { padding: 12px 2px; border-bottom: 1px solid var(--border); }
+.fl-proposal-item:last-child { border-bottom: 0; }
+.fl-proposal-choice { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 14px; }
+.fl-proposal-choice input { flex: none; margin: 2px 0 0; }
+.fl-proposal-choice small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+.fl-proposal-details { margin: 5px 0 0 21px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.fl-proposal-details b { color: var(--text); font-weight: 600; }
+.fl-proposal-details p { margin: 6px 0; }
+@media (max-width: 700px) { .fl-proposal-groups { grid-template-columns: 1fr; } }
 .fl-stage { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 18px; align-items: start; }
 .fl-mapcard { background: var(--mantle); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .fl-crumbs { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-height: 30px; font-size: 13px; color: var(--muted); padding: 0 4px; }

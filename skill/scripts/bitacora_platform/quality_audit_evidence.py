@@ -109,6 +109,10 @@ class EvidenceRunner:
             del self.context.order
 
     def run(self, spec, snapshot_root, **kwargs):
+        from . import quality_owner_approval
+        result = quality_owner_approval.run(getattr(self.context, "order", None), spec, snapshot_root)
+        if result is not None:
+            return result
         result = quality_ledger_command.run(spec, snapshot_root)
         if result is not None:
             return result

@@ -44,6 +44,10 @@ class PlanListActions:
             token,
         )
         try:
+            if parts == ["api", "flow", "proposal"]:
+                import bt_owner_proposal_api
+                data = bt_owner_proposal_api.view(ROOT, q.get("project", ""), q.get("req", ""), q.get("attempt", ""))
+                return self.send(json.dumps(data, ensure_ascii=False), 200, "application/json; charset=utf-8")
             if parts == ["plans"]:
                 filt = "active" if q.get("filter") == "active" else "all"
                 return self.send(pp.index_page(api.plans_payload(ROOT), filt, api.all_trash(ROOT), token(),
