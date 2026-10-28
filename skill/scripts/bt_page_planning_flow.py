@@ -119,6 +119,11 @@ def actions(ctx: dict, s: dict) -> str:
                 "vuelve a pedir confirmación.")
     elif missing:
         note = "Para confirmarlo falta: " + e("; ".join(missing)) + "."
+        import bt_page_planning as planning
+        asked = planning._asking(ctx["rdir"])
+        if asked and any(m.startswith("faltan entradas") for m in missing):          # the answer is one click away
+            note += (f' <a data-nav href="{e(link(ctx["project"], ctx["rid"], ctx["opts"], view="asks"))}">'
+                     f'Responde {asked} pregunta{"s" if asked != 1 else ""} abierta{"s" if asked != 1 else ""}</a>.')
     else:
         note = "Todo listo: revisa diseño, tareas, criterios y entradas, y confírmalo."
     return (f'<div class="pp-flow {e(state)}"><span class="pp-state {e(DOT[state])}">{e(STATE_ES[state])}</span>'

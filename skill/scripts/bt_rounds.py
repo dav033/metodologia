@@ -16,6 +16,7 @@ Round file: requirements/REQ-NNN-<slug>/rounds/round-NN.json
 from __future__ import annotations
 
 import datetime as dt
+import re
 import time
 
 from bt_core import *  # noqa: F403
@@ -54,7 +55,9 @@ def validate(data: dict) -> None:
 def new_round(rdir: Path, data: dict) -> Path:
     validate(data)
     rounds_dir(rdir).mkdir(exist_ok=True)
-    n = len(list_rounds(rdir)) + 1
+    # the highest number on disk plus one, never the file count: a gap (a missing round-10) made the count collide with an existing
+    # file and overwrote the answered round 13 of REQ-021
+    n = max((int(m.group(1)) for f in list_rounds(rdir) if (m := re.fullmatch(r"round-(\d+)\.json", f.name))), default=0) + 1
     data.update({"round": n, "status": "open", "answers": {},
                  "created_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")})
     f = rounds_dir(rdir) / f"round-{n:02d}.json"

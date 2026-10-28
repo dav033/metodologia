@@ -300,10 +300,13 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
                 answers[qn["id"]] = {"choice": form.get(qn["id"], ""), "note": form.get(qn["id"] + "__note", "")}
             else:
                 answers[qn["id"]] = {"text": form.get(qn["id"], "")}
-        rounds.answer_round(f, answers, "web")
+        answered = rounds.answer_round(f, answers, "web")
+        import bt_input_rounds
+        applied = bt_input_rounds.apply_answers(rdir, answered)              # a confirmed assumption resolves its SPEC row itself
         commit(ROOT, f"{project}: {rid} answers to {f.stem} (web)")
         self.tell_planner(project, rid, f"The owner answered round {data.get('round')} of {rid} on the web. Read the answers "
-                          f"with `bitacora.py --project {project} round show {rid}` and carry on.")
+                          f"with `bitacora.py --project {project} round show {rid}` and carry on."
+                          + (f" The system already applied: {'; '.join(applied)}." if applied else ""))
         return "Respuestas guardadas. El agente las toma desde el archivo de la ronda."
 
     def decide(self, project: str, rid: str, rdir: Path, form: dict) -> str:
@@ -398,8 +401,23 @@ def serve(port: int = DEFAULT_PORT) -> None:
     httpd = create_http_server(port)
     import bt_live_api
     bt_live_api.warm(ROOT)
+    _revive_planners()
     print(f"Bitácora at {url(port)}  (Ctrl+C to stop)")
     httpd.serve_forever()
+
+def _revive_planners() -> None:
+    """After a reboot the panel brings the Planners back (they live in tmux, which does not survive it); best effort."""
+    def run() -> None:
+        try:
+            import bt_agent_terminal
+            started = bt_agent_terminal.revive_planners(ROOT)
+            if started:
+                print("Planner reiniciado: " + ", ".join(started))
+        except Exception:  # noqa: BLE001 - a Planner that cannot come back never stops the panel
+            pass
+    import threading
+    threading.Thread(target=run, name="revive-planners", daemon=True).start()
+
 
 def create_http_server(port: int = DEFAULT_PORT) -> ThreadingHTTPServer:
     """Build the panel server around systemd's listener when socket activation is configured."""

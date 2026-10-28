@@ -190,6 +190,35 @@ def notify_planner(project: str, req: str, text: str) -> bool:
     return exists(name) and send(name, "[Automatic notice from the web, not typed by the owner] " + text) == "Enviado."
 
 
+REVIVE_WITHIN_DAYS = 3
+_DONE = {"approved", "launched", "in-progress", "done", "cancelled"}
+
+
+def revive_planners(root: Path) -> list[str]:
+    """Start again, after a reboot, the Planners that were running: tmux does not survive it and nothing else brought them
+    back, so the owner's answers on the web reached nobody (REQ-021 SP-3). A Planner comes back only when its plan is still
+    being planned, it ran in the last `REVIVE_WITHIN_DAYS` days and it has a conversation to resume. Returns what was started."""
+    from bt_core import _front
+
+    started: list[str] = []
+    limit = time.time() - REVIVE_WITHIN_DAYS * 86400
+    for record in sorted(Path(root).glob("*/requirements/REQ-*/" + RECORD)):
+        rdir, project = record.parents[1], record.parents[3].name
+        try:
+            data = _record(rdir)
+            when = time.mktime(time.strptime(data.get("started_at", "")[:19], "%Y-%m-%dT%H:%M:%S"))
+            req = re.match(r"REQ-\d+", rdir.name)
+            if (not data.get("session_id") or when < limit or not req
+                    or _front(rdir / "PLAN.md", "status") in _DONE or exists(name_for(project, req.group(0), "planner"))):
+                continue
+            ok, message = start_planner(Path(root), project, rdir)
+            if ok:
+                started.append(f"{project}/{req.group(0)}")
+        except (ValueError, OSError, RuntimeError, subprocess.SubprocessError):
+            continue
+    return started
+
+
 def restart_planner(root: Path, project: str, rdir: Path) -> tuple[bool, str]:
     """Kill the running Planner and start it again on the same conversation; nothing it knew is lost."""
     req = re.match(r"REQ-\d+", Path(rdir).name)

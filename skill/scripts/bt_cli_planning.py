@@ -32,6 +32,8 @@ def dispatch(args: argparse.Namespace, root: Path, project: str) -> int:
         import bt_planning_resume as resume
         print(resume.briefing(project, rdir))
     elif args.action == "status":
+        import bt_input_rounds
+        bt_input_rounds.ensure(rdir)                    # an assumption that waits for the owner gets its question now
         st = flow.state(rdir)
         st["inputs"] = [row for row in st["inputs"] if row["pending"]]
         print(json.dumps(st, indent=1, ensure_ascii=False))

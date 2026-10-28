@@ -42,8 +42,12 @@ def _round(a, project: str, rdir: Path, rid: str) -> None:
         if not a.file:
             raise SystemExit("round answer needs --file <answers.json>  ({\"q1\": {\"choice\": \"a\"}, ...})")
         data = rounds.answer_round(f, json.loads(Path(a.file).read_text(encoding="utf-8")), "terminal")
+        import bt_input_rounds
+        applied = bt_input_rounds.apply_answers(rdir, data)
         commit(ROOT, f"{project}: {rid} answers to {f.stem} (terminal)")
         print(rounds.format_answers(data))
+        for line in applied:
+            print(f"applied: {line}")
         return
     data = rounds.wait_round(f, a.timeout)  # wait
     print(rounds.format_answers(data) if data else f"timeout: {f.name} still open")

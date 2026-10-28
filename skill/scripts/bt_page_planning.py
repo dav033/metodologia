@@ -120,6 +120,9 @@ def fragment(project: str, rid: str, rdir: Path, status: str | None, token: str,
            "rows": {row["ref"]: row for row in drafts.rows(rdir)}, "flow": None, "root": ROOT}
     if bt_planning_flow.active(rdir):
         ctx["flow"] = bt_planning_flow.state(rdir, ctx["subplans"], ctx["rows"])
+        import bt_input_rounds
+        if bt_input_rounds.ensure(rdir, ctx["flow"]) is not None:       # a Planner assumption waits for the owner: ask it
+            ctx["rows"] = {row["ref"]: row for row in drafts.rows(rdir)}
     if not opts["sp"] or opts["sp"] not in {s["id"] for s in ctx["subplans"]}:
         opts["sp"] = _default_subplan(rdir, ctx["subplans"], ctx["flow"])
     phase = ctx["flow"]["phase"] if ctx["flow"] else ""
