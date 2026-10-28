@@ -427,6 +427,25 @@
    "status": "exhausted",
    "task": "T2.6",
    "why": "the same failure came back after its repair"
+  },
+  "fdac6db8cf963885": {
+   "applied": 0,
+   "class": "criterion_unmapped",
+   "evidence": [
+    "verifier doubt about the mapping of evidence: CRITERION_MANUAL",
+    "reason code: needs_review"
+   ],
+   "first_at": 1793195331.241,
+   "history": [
+    {
+     "at": 1793195331.247,
+     "repair": "none",
+     "result": "pending"
+    }
+   ],
+   "id": "fdac6db8cf963885",
+   "status": "unrepairable",
+   "task": "T3.2"
   }
  }
 }

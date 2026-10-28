@@ -6,7 +6,7 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/69 · generado: 2026-10-28T08:40:06-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/90 · generado: 2026-10-28T08:51:26-05:00
 
 **M1 — Accounts, access plans and the plans section** · dificultad alta · 14/29
 
@@ -59,13 +59,13 @@ created: 2026-10-26
 | T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
 | T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 1/40
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 1/52
 
 **SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | en curso | gpt-6-luna | codex-luis | 2 |
+| T3.2 | Research new Backing structures and table types, write the validated proposal and get the owner's approval | media | verificando | gpt-6-luna | codex-luis | 2 |
 | T3.3 | Make the table, piece and Backing registries exhaustive and add the Backing extension points | alta | completada | gpt-6-luna | codex-2 | 1 |
 | T3.4 | Record the owner-approved list of new Backings and table types in the repository | baja | pendiente | — | — | 0 |
 | T3.5 | Model the approved new table types in the parametric table generator | alta | pendiente | — | — | 0 |
@@ -117,6 +117,22 @@ created: 2026-10-26
 | T6.6 | Review the rendered spend dashboard against gasto-ia@v1 | media | pendiente | — | — | 0 |
 | T6.7 | Audit AI spend completeness, identity and data minimization | media | pendiente | — | — | 0 |
 
+**SP-7 — Assisted chat as three tools and the decorations explorer**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T7.1 | Copy the owner-approved herramientas-chat@v1 contract into the repository | baja | pendiente | — | — | 0 |
+| T7.2 | Tool catalogue, server-side price gating of the guided chat and per-tool spend tags | alta | pendiente | — | — | 0 |
+| T7.3 | Balloon counter API by form, phrase or photo on the existing counting engines | media | pendiente | — | — | 0 |
+| T7.4 | Checkpoint: tool gating, counter API and spend tags on a running server | media | pendiente | — | — | 0 |
+| T7.5 | Tool home page at / and retirement of the classic chat page | media | pendiente | — | — | 0 |
+| T7.6 | Balloon counter page: form, phrase and photo with a price-free result | media | pendiente | — | — | 0 |
+| T7.7 | Cost calculator page from the existing professional quote, fed by the counter or by hand | media | pendiente | — | — | 0 |
+| T7.8 | Ready-made decorations gallery in the Taller with an open-as-new-project link | media | pendiente | — | — | 0 |
+| T7.9 | Browser end-to-end of the three tools and the gallery on a production build | media | pendiente | — | — | 0 |
+| T7.10 | SP-7 visual review against the herramientas-chat@v1 contract | media | pendiente | — | — | 0 |
+| T7.11 | SP-7 audit: tool gating, price leaks, counting sources and spend tags | media | pendiente | — | — | 0 |
+
 **Sin subplan**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
@@ -125,11 +141,28 @@ created: 2026-10-26
 | T93 | Composition check CG-3: accounts and saved projects | media | pendiente | — | — | 0 |
 | T95 | Composition check CG-5: saved decorations on the integrated candidate | media | pendiente | — | — | 0 |
 | T96 | Composition check CG-6: AI spend per account on the integrated candidate | media | pendiente | — | — | 0 |
+| T97 | Composition check CG-7: chat tools and gallery on the integrated candidate | media | pendiente | — | — | 0 |
 
-**M3 — English / Spanish** · dificultad — · 0/0
+**M3 — English / Spanish** · dificultad media · 0/9
+
+**SP-8 — Language switch, Taller 3D and navigation in English**
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
+| T8.1 | Language mechanism: detection order, typed bilingual dictionaries and the saved choice | media | pendiente | — | — | 0 |
+| T8.2 | Language switch and English for navigation, account screens, the plans page and the data notice | media | pendiente | — | — | 0 |
+| T8.3 | Coverage guard that finds Spanish literals outside the text dictionaries | media | pendiente | — | — | 0 |
+| T8.4 | Taller in English, part 1: shell, library, add panels, menus, help and export | baja | pendiente | — | — | 0 |
+| T8.5 | Taller in English, part 2: inspector, editors, panels, shopping list and assembly sheet | baja | pendiente | — | — | 0 |
+| T8.6 | Taller in English, part 3: AI panel and the user-facing sentences built in lib | media | pendiente | — | — | 0 |
+| T8.7 | Browser end-to-end: English first visit, saved choice, no Spanish left and text that fits | media | pendiente | — | — | 0 |
+| T8.8 | SP-8 audit: language detection, saved choice, coverage and unchanged Spanish | media | pendiente | — | — | 0 |
+
+**Sin subplan**
+
+| Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
+|---|---|---|---|---|---|---|
+| T98 | Composition check CG-8: English across accounts, saved projects, tools and the Taller | media | pendiente | — | — | 0 |
 
 **M4 — Editable modules and chat → 3D** · dificultad — · 0/0
 
@@ -146,7 +179,6 @@ created: 2026-10-26
 - Contrato de diseño SP-5: `decoraciones@v1` · aprobación pendiente
 - Contrato de diseño SP-6: `gasto-ia@v1` · aprobación pendiente
 - Contrato de diseño SP-7: `herramientas-chat@v1` · aprobación pendiente
-- Contrato de diseño SP-8: `idioma-taller@v1` · aprobación pendiente
 - Contrato de diseño SP-9: `textos-producto@v1` · aprobación pendiente
 - Contrato de diseño SP-10: `idioma-resto@v1` · aprobación pendiente
 - Contrato de diseño SP-11: `modulos-editables@v1` · aprobación pendiente
@@ -827,6 +859,99 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 <!-- /SP-6 tasks -->
 - **SP-7 — Assisted chat as three tools and the decorations explorer** (UI: `herramientas-chat@v1`): The assisted chat becomes a balloon counter, a cost calculator and the normal chat, each with its own prompts and spend measured separately and never inventing counts or prices; a ready-made decorations explorer lists existing 3D decorations and, like everything of the Taller 3D, is reachable only with Master Designer and the staff roles; each tool is reachable only with the access plans the plan catalogue gives it. Covers R13, R16.
 
+<!-- SP-7 tasks -->
+
+  SP-7 tasks (owner round 15, 2026-10-28). The guided chat (/asistente, VistaGuiada) becomes the normal chat; the classic chat page at / is retired and / becomes the tool home (q1). Counter: own page by form, phrase or photo, counts and shopping list without prices (q2 + owner note: also from a photo, using the existing services/ai-api conteo-referencia photo count; «detección avanzada de globos» stays «aún no disponible»). Calculator: the existing professional quote (src/components/cotizacion/CotizacionProfesional.tsx, src/lib/cotizacion/profesional.ts: materials, labour, equipment and transport, indirect costs, margin) as its own page, fed by the counter or by hand (q3 + owner note). Accounts without costos.usar get no prices in the chat, enforced on the server (q4). Gallery inside the Taller at /3d/decoraciones with its own link (q5).
+  Permissions come from SP-1 (chat.usar, contador.usar, costos.usar, decoraciones.explorar). Spend tags feed SP-6's ai-usage@1 tool field. Contracts consumed: session-guard@1, permission-map@1, plan-catalogue@1 (SP-1), taller-scene@1 (SP-3), ai-usage@1 (SP-6). Composition gate CG-7 adds SP-7 to the M2 candidate. Cut order: the split, the no-price rule and reliability are never traded; the gallery's filters are the first thing to drop if late (owner cut 3: chat improvements beyond the split).
+  DAG: T7.1 (design) ∥ T7.2 (tool catalogue, gating, tags) → T7.3 (counter API) → T7.4 checkpoint → {T7.5 home, T7.6 counter, T7.7 calculator, T7.8 gallery} (UI, after T7.1) → T7.9 integration → T7.10 visual review → T7.11 audit.
+
+- [ ] T7.1 — Copy the owner-approved herramientas-chat@v1 contract into the repository · repo: pictures · after: T3.3, T6.2 · verify: `test -s design/contracts/herramientas-chat@v1.md` · files: design/contracts/herramientas-chat@v1.md · resources: design:herramientas-chat@v1 · covers: R13, R16 · kind: design · subplan: SP-7 · ui: no
+
+  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
+  The scheduler supplies the plan-approved draft; the task copies it unchanged.
+
+  - Acceptance / static: The owner-approved herramientas-chat@v1 contract is copied byte for byte into design/contracts/herramientas-chat@v1.md. Check: `test -s design/contracts/herramientas-chat@v1.md`
+
+- [ ] T7.2 — Tool catalogue, server-side price gating of the guided chat and per-tool spend tags · repo: pictures · after: T3.3, T6.2 · verify: `npm run herramientas:test-gating -- --test-name-pattern=catalogo` · files: src/lib/herramientas/catalogo-herramientas.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, src/lib/guiada-motor/costear-idea-elegida.ts, src/lib/registro/cliente.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-herramientas-gating.ts · resources: package.json scripts, contract:permission-map, contract:ai-usage · covers: R13, R16 · kind: implement · subplan: SP-7 · ui: no
+
+  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 150 minutes.
+  `catalogo-herramientas.ts`: `HERRAMIENTAS = { inicio, chat, contador, calculadora, galeria }` each with `ruta`, `permiso` (sesion, chat.usar, contador.usar, costos.usar, decoraciones.explorar), `etiquetaGasto` (chat, contador, calculadora; galeria has no paid call) and names ES/EN; `herramientasDe(permisos)` in catalogue order.
+  Guided route: when the session lacks `costos.usar`, drop `costear_decoracion` and the `costear` plan action from the tool list sent to the model, make `respuestaSinModelo` and the final-text guard strip prices and totals, and answer the costing endpoints (`/api/guiada/motor/*` costing, `/api/cotizacion-profesional`, `/api/taller/cotizacion*`) 403 `SIN_PERMISO` through the map; the prompt gets a line telling it costs are not available here without naming a plan. Spend: `cliente.ts` sends `x-herramienta` from the page's tool and the server copies it into the ai-usage@1 `tool` field (never trusted for permissions). npm script `herramientas:test-gating` = `tsx --conditions=react-server --test scripts/test/test-herramientas-gating.ts`.
+
+  - Acceptance / functional: One tool catalogue names the home, normal chat, balloon counter, cost calculator and decorations gallery with the permission and spend tag of each, and every page and API of the four tools is mapped to exactly that permission. Check: `npm run herramientas:test-gating -- --test-name-pattern=catalogo`
+  - Acceptance / functional: For an account without costos.usar the guided chat never calls a costing tool, never answers with a price, total or quote, and its costing and professional-quote APIs answer 403 SIN_PERMISO, without naming which plan includes costs. Check: `npm run herramientas:test-gating -- --test-name-pattern=sin-precios`
+  - Acceptance / functional: Every paid model call of the chat, counter and calculator is recorded in the AI usage ledger under its own tool tag (chat, contador, calculadora) with the signed-in account and session. Check: `npm run herramientas:test-gating -- --test-name-pattern=etiquetas`
+  - Acceptance / functional: A forged x-herramienta header, a client-supplied account or session id and a cross-origin POST to the gated tool APIs never grant access and never change the account a spend row belongs to. Check: `npm run herramientas:test-gating -- --test-name-pattern=abuso`
+
+- [ ] T7.3 — Balloon counter API by form, phrase or photo on the existing counting engines · repo: pictures · after: T7.2 · verify: `npm run contador:test-api -- --test-name-pattern=formulario` · files: src/app/api/contador/route.ts, src/lib/contador/contar.ts, src/lib/contador/esquema.ts, scripts/test/test-contador-api.ts · resources: package.json scripts, contract:ai-usage · covers: R13 · kind: implement · subplan: SP-7 · ui: no
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  `POST /api/contador` (permission contador.usar): `{ modo: 'formulario', estructura, medidas, tamanos, colores } | { modo: 'frase', texto } | { modo: 'foto', imagen }`. Form → `PYTHON_ESTIMAR_CONTEO_PATH`; phrase → one model call extracts the form fields (zod-validated), missing measures return `{ pregunta }`, then the engine; photo (JPEG/PNG/WebP, at most 8 MB) → `/internal/v1/ia/conteo-referencia` with its tolerance. Response `{ conteos: [{ tamano, color, cantidad }], listaCompra: [{ producto, cantidad }], origen, tolerancia? }`, never a price. npm script `contador:test-api` = `tsx --conditions=react-server --test scripts/test/test-contador-api.ts`.
+
+  - Acceptance / functional: POST /api/contador with a structure, its measures, balloon sizes and colours returns the balloon count per size and colour and the shopping list without prices, equal to the engine's estimate for the same input. Check: `npm run contador:test-api -- --test-name-pattern=formulario`
+  - Acceptance / functional: POST /api/contador with a phrase extracts the structure and measures with the model and then counts with the engine; when the phrase lacks a measure it asks for it instead of guessing a number. Check: `npm run contador:test-api -- --test-name-pattern=frase`
+  - Acceptance / functional: POST /api/contador with a photo returns the existing photo count of services/ai-api conteo-referencia with its tolerance, labelled as an estimate from the photo, and refuses a non-image or oversized file. Check: `npm run contador:test-api -- --test-name-pattern=foto`
+
+- [ ] T7.4 — Checkpoint: tool gating, counter API and spend tags on a running server · repo: pictures · after: T7.3 · verify: `npm run herramientas:test-checkpoint` · files: scripts/test/test-herramientas-checkpoint.ts, .evidence/REQ-021/SP-7.checkpoint.json · resources: package.json scripts · covers: R13, R16 · kind: test · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  npm script `herramientas:test-checkpoint` = `tsx scripts/test/test-herramientas-checkpoint.ts`; expected statuses come from this SPEC (403 for costs without costos.usar).
+
+  - Acceptance / integration: Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each call lands in the usage ledger under its tool tag. Check: `npm run herramientas:test-checkpoint`
+
+- [ ] T7.5 — Tool home page at / and retirement of the classic chat page · repo: pictures · after: T7.1, T7.4 · verify: `npm run herramientas:test-ui-portada` · files: src/app/page.tsx, src/components/herramientas/PortadaHerramientas.tsx, src/components/herramientas/textos-herramientas.ts, src/components/ui/shell/CabeceraApp.tsx, src/components/ui/shell/MenuApp.tsx, scripts/test/test-ui-portada.ts · resources: package.json scripts, contract:plan-catalogue · covers: R13, R16 · kind: implement · subplan: SP-7 · ui: yes
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  / renders `herramientasDe(permisos)` as cards; /api/chat stays (the guided chat's plan agent). Components used only by the classic page are deleted; `npx tsc --noEmit` and the build prove nothing else imported them. npm script `herramientas:test-ui-portada` = `tsx scripts/test/test-ui-portada.ts`.
+
+  - Acceptance / functional: The home page / shows only the tools the signed-in account's role grants, each opening its own page; the classic chat page is gone while /api/chat keeps serving the guided chat's plan agent. Check: `npm run herramientas:test-ui-portada`
+
+- [ ] T7.6 — Balloon counter page: form, phrase and photo with a price-free result · repo: pictures · after: T7.1, T7.4 · verify: `npm run contador:test-ui` · files: src/app/contador/page.tsx, src/components/herramientas/contador/FormularioContador.tsx, src/components/herramientas/contador/ResultadoConteo.tsx, src/components/herramientas/contador/textos-contador.ts, scripts/test/test-ui-contador.ts · resources: package.json scripts · covers: R13 · kind: implement · subplan: SP-7 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  «Calcular costo» appears only with costos.usar and hands the result to /calculadora through sessionStorage key `calculadora:desde-contador` (no URL payload). npm script `contador:test-ui` = `tsx scripts/test/test-ui-contador.ts`.
+
+  - Acceptance / functional: The balloon counter page counts by form, by phrase or by photo and shows counts per size and colour and the shopping list without any price, and offers «Calcular costo» only to accounts with costos.usar. Check: `npm run contador:test-ui`
+
+- [ ] T7.7 — Cost calculator page from the existing professional quote, fed by the counter or by hand · repo: pictures · after: T7.1, T7.4 · verify: `npm run calculadora:test-ui` · files: src/app/calculadora/page.tsx, src/components/herramientas/calculadora/Calculadora.tsx, src/components/herramientas/calculadora/textos-calculadora.ts, scripts/test/test-ui-calculadora.ts · resources: package.json scripts · covers: R13 · kind: implement · subplan: SP-7 · ui: yes
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes.
+  Totals come from the existing Python professional quote; the page never computes a total itself. npm script `calculadora:test-ui` = `tsx scripts/test/test-ui-calculadora.ts`.
+
+  - Acceptance / functional: The cost calculator page takes the counter's result or materials typed by hand, lets the person edit balloon prices and add labour, transport, indirect costs and margin, and shows per-product prices from the real catalogue and the professional quote totals. Check: `npm run calculadora:test-ui`
+
+- [ ] T7.8 — Ready-made decorations gallery in the Taller with an open-as-new-project link · repo: pictures · after: T7.1, T7.4 · verify: `npm run galeria:test-ui -- --solo galeria` · files: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · resources: package.json scripts, contract:taller-scene · covers: R13, R16 · kind: implement · subplan: SP-7 · ui: yes
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence medium; estimate 150 minutes.
+  `galeria-decoraciones.ts` builds one index `{ id, nombre, ocasion, tamano, miniatura }` from `IDEAS_ASISTENTE` and `IDEAS_SEMPERTEX`. The Taller reads `?decoracion=<id>` once, opens it as a new unsaved scene with the same rule as «Abrir en Escena» (SP-4: pending edits of the open project are saved first or the user is asked) and removes the parameter. npm script `galeria:test-ui` = `tsx scripts/test/test-ui-galeria.ts`.
+
+  - Acceptance / functional: The decorations gallery at /3d/decoraciones lists every Ideas del asistente and Ideas Sempertex item with search, occasion and size filters and a preview, and «Abrir como proyecto nuevo» opens /3d?decoracion=<id> as a new unsaved scene. Check: `npm run galeria:test-ui -- --solo galeria`
+  - Acceptance / functional: The gallery and its deep link are reachable only with decoraciones.explorar; other accounts get the no-access page, and an unknown decoration id shows a not-found message without changing the open scene. Check: `npm run galeria:test-ui -- --solo permisos`
+
+- [ ] T7.9 — Browser end-to-end of the three tools and the gallery on a production build · repo: pictures · after: T7.5, T7.6, T7.7, T7.8 · verify: `npm run herramientas:test-integracion` · files: scripts/test/test-integracion-herramientas.ts, .evidence/REQ-021/SP-7.integration.json · resources: package.json scripts · covers: R13, R16 · kind: test · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
+  npm script `herramientas:test-integracion` = `tsx scripts/test/test-integracion-herramientas.ts`; paid model calls use the cheapest configured provider and one call per tool.
+
+  - Acceptance / integration: On a production build against the REQ-021 database, with expected results written from the SPEC, an Entusiasta sees chat and counter on the home page, counts by form and photo without prices and is refused the calculator; a Designer Plus sends the counter result to the calculator and gets totals with margin; a Master Designer opens a gallery decoration as a new project; and the usage ledger holds one row per paid call with its tool tag. Check: `npm run herramientas:test-integracion`
+
+- [ ] T7.10 — SP-7 visual review against the herramientas-chat@v1 contract · repo: pictures · after: T7.9 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json` · files: .evidence/REQ-021/SP-7.visual.md, .evidence/REQ-021/SP-7.visual.findings.json · resources: ledger:SP-7-visual · covers: R13 · kind: audit · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
+
+  - Acceptance / static: The rendered home, counter, calculator and gallery screens match the approved herramientas-chat@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-7 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json`
+
+- [ ] T7.11 — SP-7 audit: tool gating, price leaks, counting sources and spend tags · repo: pictures · after: T7.10 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json` · files: .evidence/REQ-021/SP-7.audit.md, .evidence/REQ-021/SP-7.findings.json · resources: ledger:SP-7 · covers: R13, R16 · kind: audit · subplan: SP-7
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 75 minutes.
+  Checks at least: no costing path without costos.usar (model tools, rule answers, final text, APIs); counts only from the engines; the spend tag never grants access; the deep link cannot overwrite unsaved work.
+
+  - Acceptance / static: An independent audit of SP-7 records every confirmed defect with the task that must redo it in the SP-7 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json`
+
+<!-- /SP-7 tasks -->
+
+
 <!-- CG-3 tasks -->
 
   Composition of accepted subplans on the integrated candidate.
@@ -864,10 +989,106 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
 <!-- /CG-6 tasks -->
 
+<!-- CG-7 tasks -->
+
+  Composition gate CG-7: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7 (cumulative, after CG-6).
+
+- [ ] T97 — Composition check CG-7: chat tools and gallery on the integrated candidate · repo: pictures · after: T96, T7.11 · verify: `npm run herramientas:test-integracion -- --modo CG-7` · files: .evidence/REQ-021/CG-7.integration.json · resources: candidate:CG-7 · covers: R13, R16 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run herramientas:test-integracion -- --modo CG-7` adds the save-as-project and staff spend-view steps.
+
+  - Acceptance / integration: On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view. Check: `npm run herramientas:test-integracion -- --modo CG-7`
+
+<!-- /CG-7 tasks -->
+
+
 ### M3 — English / Spanish
 The interface follows the browser language on the first visit and the account's choice afterwards; the Taller 3D and navigation are fully in English first, then product texts, the remaining screens and the AI replies.
 
-- **SP-8 — Language switch, Taller 3D and navigation in English** (UI: `idioma-taller@v1`): A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages; the public plans section and the data notice move from the browser language to this mechanism. Covers R12.
+- **SP-8 — Language switch, Taller 3D and navigation in English** (no Designer, owner round 15): A language mechanism with first-visit detection, a switch remembered per account, and every string of the Taller 3D and the navigation in both languages; the public plans section and the data notice move from the browser language to this mechanism. Covers R12.
+
+<!-- SP-8 tasks -->
+
+  SP-8 tasks (owner round 15, 2026-10-28): switch in the account menu, on sign-in and on the plans page; first visit from the browser, then saved on the account (q6); measures cm/m and catalogue prices COP in English too, USD only in the plans section (q7); no Designer: the switch follows the theme toggle and tests check that English text fits at three widths (q8); /asesor and /happie are not translated (q9). Cut order 1 (owner): SP-8 is the part of the language work that ships first; SP-9 and SP-10 are cut before it.
+  Mechanism (idioma@1, T8.1): `src/lib/idioma/` with `type Idioma = 'es' | 'en'`, `resolverIdioma(request)`, server and client helpers and `definirTextos({ es, en })`, whose type forces both languages to hold the same keys. No URL prefix and no new dependency: dictionaries are typed modules next to the screens (`textos-*.ts`, `src/components/tres-d/textos/*.ts`). The account's language uses the `idioma` column created by SP-1 T1.1. Spanish stays the default and Spanish rendering does not change.
+  Coverage guard (T8.3): a TypeScript-AST scan of the files a task names, used by each extraction task on its own files and by the integration test on all of them. DAG: T8.1 → {T8.2, T8.3} → {T8.4, T8.5, T8.6} → T8.7 integration → T8.8 audit; CG-8 adds SP-8 to the candidate.
+
+- [ ] T8.1 — Language mechanism: detection order, typed bilingual dictionaries and the saved choice · repo: pictures · after: T1.8b · verify: `npm run idioma:test -- --test-name-pattern=deteccion` · files: src/lib/idioma/idioma.ts, src/lib/idioma/servidor.ts, src/lib/idioma/cliente.tsx, src/lib/idioma/textos.ts, src/app/layout.tsx, src/app/api/idioma/route.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-idioma.ts · resources: package.json scripts, contract:idioma, contract:session-guard · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence medium; estimate 120 minutes.
+  `POST /api/idioma` {idioma} is public (map entry `publica`): sets cookie `idioma` (1 year, SameSite=Lax) and, with a session, updates `cuentas.idioma` through the SP-1 service. npm script `idioma:test` = `tsx --conditions=react-server --test scripts/test/test-idioma.ts`.
+
+  - Acceptance / functional: The language of a request is the signed-in account's saved language, else the idioma cookie, else English when Accept-Language prefers English, else Spanish, and the html lang attribute matches it. Check: `npm run idioma:test -- --test-name-pattern=deteccion`
+  - Acceptance / static: Every text dictionary defines the same keys in Spanish and English: TypeScript rejects a key missing in either language and a runtime test lists every dictionary and finds no empty English value. Check: `npm run idioma:test -- --test-name-pattern=paridad`
+  - Acceptance / functional: Choosing a language sets the idioma cookie for anyone and, when signed in, saves it on the account, so another browser of the same account opens in that language; a value other than es or en is refused with 400. Check: `npm run idioma:test -- --test-name-pattern=guardar`
+
+- [ ] T8.2 — Language switch and English for navigation, account screens, the plans page and the data notice · repo: pictures · after: T8.1 · verify: `npm run idioma:test-ui-navegacion -- --solo selector` · files: src/components/idioma/SelectorIdioma.tsx, src/components/cuentas/MenuCuenta.tsx, src/components/cuentas/textos-acceso.ts, src/components/cuentas/textos-cuenta.ts, src/components/cuentas/AvisoDatos.tsx, src/app/planes/page.tsx, src/components/planes/textos-planes.ts, src/components/ui/shell/CabeceraApp.tsx, src/components/ui/shell/MenuApp.tsx, src/components/herramientas/textos-herramientas.ts, scripts/test/test-ui-idioma-navegacion.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  The plans page keeps COP for Spanish and USD for English, now from the mechanism (R20). npm script `idioma:test-ui-navegacion` = `tsx scripts/test/test-ui-idioma-navegacion.ts`.
+
+  - Acceptance / functional: A language switch styled like the theme toggle appears in the account menu, on the sign-in screen and on the plans page, and switching re-renders the page in the other language without signing out or losing the open scene. Check: `npm run idioma:test-ui-navegacion -- --solo selector`
+  - Acceptance / functional: The plans page, the data notice and the sign-in, activation, reset, notice and Mi cuenta screens and the shared navigation read their language from the mechanism instead of the browser, with every string in Spanish and English. Check: `npm run idioma:test-ui-navegacion -- --solo pantallas`
+
+- [ ] T8.3 — Coverage guard that finds Spanish literals outside the text dictionaries · repo: pictures · after: T8.1 · verify: `npm run idioma:test-guardia` · files: scripts/idioma/cobertura.ts, scripts/idioma/test-cobertura-guardia.ts · resources: package.json scripts · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity medium; scope small_change; risk low; coupling medium; confidence high; estimate 60 minutes.
+  `npm run idioma:test-cobertura -- <files…>` = `tsx scripts/idioma/cobertura.ts`; allow-list: numbers and units (cm, m, %), punctuation and icons, product codes (R12, 260Q), brand names (Sempertex). `idioma:test-guardia` = `tsx --test scripts/idioma/test-cobertura-guardia.ts`.
+
+  - Acceptance / functional: npm run idioma:test-cobertura -- <paths> lists every JSX text node and label, title, placeholder or aria-label literal with letters in the given files that does not come from a text dictionary, and exits non-zero when it finds one. Check: `npm run idioma:test-guardia`
+
+- [ ] T8.4 — Taller in English, part 1: shell, library, add panels, menus, help and export · repo: pictures · after: T8.3 · verify: `npm run idioma:test-cobertura -- src/components/tres-d/Taller3D.tsx src/components/tres-d/Biblioteca.tsx src/components/tres-d/PanelAnadir.tsx src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/MenuMas.tsx src/components/tres-d/ExportarEscenaTaller.tsx src/components/tres-d/AyudaTaller.tsx` · files: src/components/tres-d/Taller3D.tsx, src/components/tres-d/Biblioteca.tsx, src/components/tres-d/PanelAnadir.tsx, src/components/tres-d/FondosYMuebles.tsx, src/components/tres-d/FormasYLetras.tsx, src/components/tres-d/DecoracionesPequenas.tsx, src/components/tres-d/UtileriaFiesta.tsx, src/components/tres-d/MuralesTechoArboles.tsx, src/components/tres-d/IdeasDelAsistente.tsx, src/components/tres-d/FiltrosTaxonomia.tsx, src/components/tres-d/SelectorRepositorio.tsx, src/components/tres-d/MenuMas.tsx, src/components/tres-d/MenuContextual.tsx, src/components/tres-d/AyudaTaller.tsx, src/components/tres-d/SobreVisor.tsx, src/components/tres-d/ExportarEscenaTaller.tsx, src/components/tres-d/CapturaRender.tsx, src/components/tres-d/ControlesTactiles.tsx, src/components/tres-d/HojaMovil.tsx, src/components/tres-d/DialogoTaller.tsx, src/components/tres-d/BuscarPorFoto.tsx, src/components/tres-d/SelectorAmbienteVisor.tsx, src/components/tres-d/nuevas-taller.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/components/tres-d/textos/taller-marco.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling high; confidence high; estimate 180 minutes.
+  Dictionary `src/components/tres-d/textos/taller-marco.ts`. English wording is plain decorator vocabulary; piece and product names keep their catalogue names until SP-9.
+
+  - Acceptance / static: The Taller shell, library, add panels, menus, help, export and capture components pass the coverage guard, and render in English with no Spanish string left. Check: `npm run idioma:test-cobertura -- src/components/tres-d/Taller3D.tsx src/components/tres-d/Biblioteca.tsx src/components/tres-d/PanelAnadir.tsx src/components/tres-d/FondosYMuebles.tsx src/components/tres-d/MenuMas.tsx src/components/tres-d/ExportarEscenaTaller.tsx src/components/tres-d/AyudaTaller.tsx`
+
+- [ ] T8.5 — Taller in English, part 2: inspector, editors, panels, shopping list and assembly sheet · repo: pictures · after: T8.3 · verify: `npm run idioma:test-taller -- edicion` · files: src/components/tres-d/Inspector.tsx, src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/EditorConjuntoMesa.tsx, src/components/tres-d/EditorMueble.tsx, src/components/tres-d/EditorRemate.tsx, src/components/tres-d/EditorRotulo.tsx, src/components/tres-d/EditorTrazo.tsx, src/components/tres-d/EditoresFiguras.tsx, src/components/tres-d/PanelEscena.tsx, src/components/tres-d/PanelDecoracion.tsx, src/components/tres-d/PanelPared.tsx, src/components/tres-d/PanelOrganico.tsx, src/components/tres-d/PanelFlor.tsx, src/components/tres-d/PanelPiezas.tsx, src/components/tres-d/PaletaEscena.tsx, src/components/tres-d/SeccionBomba.tsx, src/components/tres-d/SeccionHelio.tsx, src/components/tres-d/SeccionPrecio.tsx, src/components/tres-d/SelectorPerfilTamano.tsx, src/components/tres-d/PartesSolitario.tsx, src/components/tres-d/ListaCompra.tsx, src/components/tres-d/ListaEscenografia.tsx, src/components/tres-d/DialogoCompra.tsx, src/components/tres-d/HojaArmadoCapa.tsx, src/components/tres-d/HojaArmadoCompacta.tsx, src/components/tres-d/HojaArmadoCuartetos.tsx, src/components/tres-d/HojaArmadoEscena.tsx, src/components/tres-d/HojaArmadoEstructura.tsx, src/components/tres-d/HojaArmadoHelio.tsx, src/components/tres-d/HojaArmadoLista.tsx, src/components/tres-d/HojaArmadoMetalizados.tsx, src/components/tres-d/HojaArmadoPagina.tsx, src/components/tres-d/HojaArmadoTramos.tsx, src/components/tres-d/TarjetaReceta.tsx, src/components/tres-d/EtiquetasMedidas.tsx, src/components/tres-d/MarcaHelio.tsx, src/components/tres-d/ProcedenciaDeItem.tsx, src/components/tres-d/GrillaCompacta.tsx, src/components/tres-d/CampoTexto.tsx, src/components/tres-d/DiagramaCapa.tsx, src/components/tres-d/CotizacionProfesionalDesdeTaller.tsx, src/components/tres-d/ControlFotoIA.tsx, src/components/tres-d/EtapasFotoRealista.tsx, src/components/tres-d/VisorFoto.tsx, src/components/tres-d/GeneradorIA.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-idioma-taller.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling high; confidence high; estimate 210 minutes.
+  Dictionary `src/components/tres-d/textos/taller-edicion.ts`. npm script `idioma:test-taller` = `tsx scripts/test/test-idioma-taller.ts <area>` renders the area in both languages and compares Spanish with the pre-change output; `HojaArmado.test.ts` keeps passing unchanged in Spanish. Measures stay cm/m and prices COP.
+
+  - Acceptance / functional: The Taller inspector, piece editors, scene and decoration panels, shopping list, purchase dialog and assembly sheet pass the coverage guard and render in English with no Spanish string left, while Spanish rendering stays byte-identical. Check: `npm run idioma:test-taller -- edicion`
+
+- [ ] T8.6 — Taller in English, part 3: AI panel and the user-facing sentences built in lib · repo: pictures · after: T8.3 · verify: `npm run idioma:test-mensajes` · files: src/components/tres-d/ia/BannerVerAntes.tsx, src/components/tres-d/ia/CalificacionTurno.tsx, src/components/tres-d/ia/ComposicionIA.tsx, src/components/tres-d/ia/MenuConversacion.tsx, src/components/tres-d/ia/PanelIA.tsx, src/components/tres-d/ia/PestanasLaterales.tsx, src/components/tres-d/ia/TarjetaEnCurso.tsx, src/components/tres-d/ia/TarjetaFotoRealista.tsx, src/components/tres-d/ia/TarjetaPregunta.tsx, src/components/tres-d/ia/TarjetaTurno.tsx, src/components/tres-d/ia/useNombresDePasos.ts, src/lib/globos3d/avisos-usuario.ts, src/lib/globos3d/glosario-taller.ts, src/lib/errores-ui/traducir-error-servidor.ts, src/components/tres-d/textos/taller-ia.ts, scripts/test/test-idioma-mensajes-taller.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-8 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 150 minutes.
+  Sentence builders take `idioma: Idioma` (default 'es'). The model's own reply language is SP-10. npm script `idioma:test-mensajes` = `tsx --test scripts/test/test-idioma-mensajes-taller.ts`.
+
+  - Acceptance / functional: The Taller AI panel and the user-facing sentences built in src/lib (tool notices, the Taller glossary and server error messages shown in the Taller) are produced in the request's language, and the AI panel files pass the coverage guard. Check: `npm run idioma:test-mensajes`
+
+- [ ] T8.7 — Browser end-to-end: English first visit, saved choice, no Spanish left and text that fits · repo: pictures · after: T8.2, T8.4, T8.5, T8.6 · verify: `npm run idioma:test-integracion` · files: scripts/test/test-integracion-idioma.ts, .evidence/REQ-021/SP-8.integration.json · resources: package.json scripts · covers: R12 · kind: test · subplan: SP-8
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 100 minutes.
+  npm script `idioma:test-integracion` = `tsx scripts/test/test-integracion-idioma.ts`; it also runs the coverage guard over every file of T8.2, T8.4, T8.5 and T8.6.
+
+  - Acceptance / integration: On a production build, a first visit with an English browser shows the sign-in screen, the navigation and the Taller 3D in English, with expected texts taken from the dictionaries; switching to Spanish is kept on the account in a second browser; a scan of the rendered English Taller finds no Spanish string; and no label, button or menu item overflows its box at 390, 768 and 1280 px. Check: `npm run idioma:test-integracion`
+
+- [ ] T8.8 — SP-8 audit: language detection, saved choice, coverage and unchanged Spanish · repo: pictures · after: T8.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json` · files: .evidence/REQ-021/SP-8.audit.md, .evidence/REQ-021/SP-8.findings.json · resources: ledger:SP-8 · covers: R12 · kind: audit · subplan: SP-8
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  Checks at least: detection order, cookie and account consistency, no Spanish in covered files, Spanish output unchanged, cm/m and COP kept.
+
+  - Acceptance / static: An independent audit of SP-8 records every confirmed defect with the task that must redo it in the SP-8 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json`
+
+<!-- /SP-8 tasks -->
+
+<!-- CG-8 tasks -->
+
+  Composition gate CG-8: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8 (cumulative, after CG-7).
+
+- [ ] T98 — Composition check CG-8: English across accounts, saved projects, tools and the Taller · repo: pictures · after: T97, T8.8 · verify: `npm run idioma:test-integracion -- --modo CG-8` · files: .evidence/REQ-021/CG-8.integration.json · resources: candidate:CG-8 · covers: R12 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run idioma:test-integracion -- --modo CG-8`.
+
+  - Acceptance / integration: On the integrated candidate with SP-8, an English first visit signs in, opens a saved project and a gallery decoration in the English Taller, counts with the counter, and switching to Spanish is kept on the account in another browser. Check: `npm run idioma:test-integracion -- --modo CG-8`
+
+<!-- /CG-8 tasks -->
+
+
 - **SP-9 — Product and decoration texts in English** (UI: `textos-producto@v1`): English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator. Covers R12.
 - **SP-10 — Remaining screens and AI replies in English** (UI: `idioma-resto@v1`): The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language. Covers R12.
 

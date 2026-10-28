@@ -1,0 +1,23 @@
+{
+ "request": "REQ-021:r13:att-0059:verify",
+ "state": "done",
+ "kind": "manual",
+ "label": "Comprobación manual",
+ "tone": "lav",
+ "headline": "T3.2 espera la aprobación nominal del propietario; el archivo de aprobación no existe",
+ "origin": "La comprobación manual de T3.2 exige que el propietario apruebe un subconjunto nominal de la propuesta y que quede registrado en aprobacion-backing-mesas.json con el SHA-256 de propuesta-backing-mesas.json. Ese archivo no existe: `cat` devuelve `No such file or directory`, y propuesta-backing-mesas.md dice «Pendiente de respuesta nominal del propietario». El fallo no es de código ni de dependencias. Las comprobaciones automáticas no dieron veredicto y el revisor manual no puede dar por cumplido el criterio sin esa aprobación. Los archivos RUN.* sugieren que la ejecución avanzó; hay que comprobar que ninguna tarea de modelado empezó antes de la aprobación.",
+ "steps": [
+  "Muestra al propietario docs/req021/propuesta-backing-mesas.md y pídele por escrito los ids aprobados de Backings y tipos de mesa, o una lista vacía si no aprueba ninguno.",
+  "Calcula el hash con `sha256sum docs/req021/propuesta-backing-mesas.json` y escribe /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json con aprobadoPor \"owner\", la fecha, los ids aprobados y ese propuestaSha256.",
+  "Valida con `npx tsx scripts/taller/validar-propuesta-piloto.ts docs/req021/propuesta-backing-mesas.json --aprobacion /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/aprobacion-backing-mesas.json` y revisa que no haya ENVELOPE_EXCEEDED.",
+  "Revisa en RUN.decisions.jsonl o RUN.interventions.jsonl que no haya tareas de modelado iniciadas antes de la aprobación; si las hay, reabre esas tareas antes de continuar."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:49:06",
+ "seconds": 14.8
+}

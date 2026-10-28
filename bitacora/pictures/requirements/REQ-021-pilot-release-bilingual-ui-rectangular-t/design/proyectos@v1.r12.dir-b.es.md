@@ -85,20 +85,20 @@ Proyectos/Taller son enlaces de ruta sobre la misma regla horizontal. El selecto
 
 Los diálogos conservan el contexto, permiten cancelar y restauran el foco al control de origen si sigue montado. El botón de copia ajena y las herramientas de edición quedan deshabilitados sin `taller.usar`. La cabecera mantiene el renombrado en línea: Enter confirma, Escape cancela. Guardar ahora permanece visible y se deshabilita durante envío o conflicto.
 
-La gramática de movimiento es **registro espacial opuesto**, no una sucesión de fundidos: hoja desde +12px vertical, filas desde −18px horizontal, inspector desde +26px. Son desplazamientos de elementos presentes, sin texto que atraviese estados de baja opacidad. Hay ocho comportamientos observables: apertura de hoja; secuencia de filas; entrada del inspector; expansión del marcador; traslado compartido del marcador; asentamiento del punto de estado; recorrido del punto mientras guarda; hover/press e icono de acciones. El punto de envío usa tres ciclos finitos, no decoración ambiental permanente.
+La gramática de movimiento es **registro espacial opuesto**, no una sucesión de fundidos: hoja desde +12px vertical, filas desde −18px horizontal, inspector desde +26px. Son desplazamientos de elementos presentes, sin texto que atraviese estados de baja opacidad. Hay ocho comportamientos observables: apertura de hoja; secuencia de filas; entrada del inspector; expansión del marcador; traslado compartido del marcador; asentamiento del punto de estado; recorrido del punto mientras guarda; hover/presión e icono de acciones. El punto de envío usa tres ciclos finitos, no decoración ambiental permanente.
 
-Expresivo: 560ms espacial, 180ms controles, 65ms de secuencia; natural 340/140/35ms; sutil 180/100/15ms. Curvas del producto `.77,0,.175,1` y `.23,1,.32,1`; marcador con spring del perfil (expresivo 220/16/0.9). Quieto, `?still=1` y `prefers-reduced-motion` eliminan desplazamiento, animaciones y transiciones conservando información y acciones. La pestaña oculta pausa CSS; no hay efectos ambientales infinitos fuera de pantalla.
+Expresivo: 560ms espacial, 180ms controles, 65ms de secuencia; natural 340/140/35ms; sutil 180/100/15ms. Curvas del producto `.77,0,.175,1` y `.23,1,.32,1`; marcador con resorte del perfil (expresivo 220/16/0.9). Quieto, `?still=1` y `prefers-reduced-motion` eliminan desplazamiento, animaciones y transiciones conservando información y acciones. La pestaña oculta pausa CSS; no hay efectos ambientales infinitos fuera de pantalla.
 
 ## 6. Flujos
 
 1. **Primer guardado:** Escena nueva → Sin guardar → Guardar proyecto/Guardar ahora → nombre obligatorio y cuenta visible → confirmar → Guardado en tu cuenta. Cancelar no descarta la escena. El proyecto de ejemplo aparece en la colección de memoria y puede reabrirse.
-2. **Continuar:** abrir proyecto → nombre/escena → editar → Guardando… → confirmación de esos cambios. Guardar ahora permite enviar de inmediato. Una respuesta anterior no puede confirmar otra escena o una revisión posterior. El fixture protege el cambio de escena con una identidad de operación; la garantía real pertenece a la implementación.
+2. **Continuar:** abrir proyecto → nombre/escena → editar → Guardando… → confirmación de esos cambios. Guardar ahora permite enviar de inmediato. Una respuesta anterior no puede confirmar otra escena o una revisión posterior. Los datos de ejemplo protegen el cambio de escena con una identidad de operación; la garantía real pertenece a la implementación.
 3. **Escena nueva:** desde un proyecto confirmado se desvincula la nueva escena; desde envío pendiente se espera su confirmación. Una escena nunca guardada muestra confirmación con Cancelar, Guardar proyecto y Descartar y continuar. Tras guardar y continuar, la nueva escena vuelve a Sin guardar y conserva «Escena nueva». Plantillas y Abrir en Escena de la biblioteca deben reutilizar esta misma transición; sus selectores existentes no se rediseñan aquí.
 4. **Reabrir/buscar:** búsqueda sobre toda la colección autorizada antes de paginar → seleccionar resultado → inspeccionar propietario/estado → Abrir proyecto. Un fallo de siguiente página conserva los resultados actuales y ofrece Reintentar; el filtro nuevo invalida la página anterior.
 5. **Conflicto:** detener autosave → conservar borrador → Guardar una copia propia o Cargar versión del servidor. Esta última acción confirma que cambia la escena visible y conserva el borrador. Cancelar mantiene conflicto y borrador. Guardar una copia pide nombre; nunca modifica el original ajeno o la versión en conflicto.
 6. **Sin conexión/error:** estado explícito sin guardar, borrador conservado y Reintentar guardado. La maqueta permite simular recuperación; no es una prueba de conectividad real.
 7. **Original ajeno:** propietario y Solo lectura visibles, edición deshabilitada → copia propia solo con permiso del Taller. Sin ese permiso se explica por qué la copia está deshabilitada. Abrir nunca transfiere propiedad.
-8. **Importación:** consentimiento para la cuenta visible → nombre del proyecto → importar una vez → confirmación de conservación del original. No importar cierra sin tocar almacenamiento. Incompatibilidad explica el fallo y permite descargar el original de ejemplo. Reintentar no duplica el fixture. No se importan conversación ni imágenes.
+8. **Importación:** consentimiento para la cuenta visible → nombre del proyecto → importar una vez → confirmación de conservación del original. No importar cierra sin tocar almacenamiento. Incompatibilidad explica el fallo y permite descargar el original de ejemplo. Reintentar no duplica los datos de ejemplo. No se importan conversación ni imágenes.
 
 ## 7. Especificaciones de vistas
 
@@ -118,12 +118,12 @@ Solo se utilizan nombres numerados «Proyecto de ejemplo», cuentas `@prueba.loc
 
 ## 8. Estados y recuperación
 
-El inspector nativo conserva `view`, `state`, `scene`, `theme`, `motion` y la etiqueta **Mockup**. La lista de Estado declara todos los estados de esta dirección; Vista y Diálogo acotan dónde son aplicables. Un estado que no corresponde a la vista conserva su superficie base, sin inventar un error adicional.
+El inspector nativo conserva `view`, `state`, `scene`, `theme`, `motion` y la etiqueta **Maqueta**. La lista de Estado declara todos los estados de esta dirección; Vista y Diálogo acotan dónde son aplicables. Un estado que no corresponde a la vista conserva su superficie base, sin inventar un error adicional.
 
 | Estado | Vista/diálogo aplicable | Presentación y salida |
 |---|---|---|
 | normal | V1–V4 | Resultados o proyecto confirmado; solo lectura en V4 |
-| loading | V1/V2 | Tres filas Skeleton y anuncio Cargando proyectos… |
+| loading | V1/V2 | Tres filas de esqueleto y anuncio Cargando proyectos… |
 | empty | V1/V2 | Aún no tienes proyectos guardados + Escena nueva |
 | no-match | V1/V2 | No hay coincidencias + Limpiar búsqueda |
 | next-page | V1/V2 | Segunda página de datos de ejemplo y selección consistente |
@@ -141,7 +141,7 @@ El inspector nativo conserva `view`, `state`, `scene`, `theme`, `motion` y la et
 | imported | D4 | Proyecto importado una sola vez; original conservado |
 | validation | D1/D4, mediante acción | Nombre vacío muestra error asociado sin cerrar diálogo |
 
-Obsolescencia de respuestas de consulta y validación servidor se especifican en el comportamiento, pero esta maqueta no ejecuta consultas de red. No se presenta esa garantía como un resultado de la auditoría visual. Tampoco se simulan tokens, hashes, revisiones persistidas o sesiones reales.
+La obsolescencia de respuestas de consulta y la validación en servidor se especifican en el comportamiento, pero esta maqueta no ejecuta consultas de red. No se presenta esa garantía como un resultado de la auditoría visual. Tampoco se simulan tokens, hashes, revisiones persistidas o sesiones reales.
 
 ## 9. Reflujo
 
@@ -149,15 +149,15 @@ Obsolescencia de respuestas de consulta y validación servidor se especifican en
 - **768–1099px:** lista/inspector 1.4:1, inspector mínimo 260px; herramientas 150px y lienzo, estado de guardado debajo a todo el ancho. Padding exterior 28px. No desplazamiento horizontal.
 - **<768px:** una columna, 20px exteriores; filtros apilados, lista antes del inspector. En Taller el estado de guardado precede a herramientas/lienzo; solo lectura se expresa en su banda sin mensaje duplicado. Acciones Foto realista/Exportar/Lista de compra apiladas, sin cortar palabras para caber en tres columnas. Diálogos de ancho disponible, contenido desplazable y acciones apiladas.
 
-Los cambios se producen por CSS, sin alterar la identidad del proyecto. Se verifican 390/768/1024/1280px; 320px se añade en un probe de reflujo. La maqueta está en español según el brief; no implementa el trabajo de localización SP-8. El control de idioma se conserva en ES como contexto del shell.
+Los cambios se producen por CSS, sin alterar la identidad del proyecto. Se verifican 390/768/1024/1280px; 320px se añade en un sondeo de reflujo. La maqueta está en español según el brief; no implementa el trabajo de localización SP-8. El control de idioma se conserva en ES como contexto del shell.
 
 ## 10. Accesibilidad
 
-Objetivo WCAG 2.2 AA para controles y contenido del cambio, sujeto a revisión del producto implementado. Texto ≥4.5:1, bordes de campos ≥3:1, foco de 3px visible y controles de al menos 44px. Jerarquía H1/H2 y etiquetas asociadas; filas son botones con selección anunciada mediante `aria-pressed`, sin inventar un árbol ni un grid ARIA.
+Objetivo WCAG 2.2 AA para controles y contenido del cambio, sujeto a revisión del producto implementado. Texto ≥4.5:1, bordes de campos ≥3:1, foco de 3px visible y controles de al menos 44px. Jerarquía H1/H2 y etiquetas asociadas; filas son botones con selección anunciada mediante `aria-pressed`, sin inventar un árbol ni una cuadrícula ARIA.
 
 `role=status` anuncia guardado y carga; errores de nombre utilizan `role=alert`, `aria-invalid` y `aria-describedby`. Los diálogos tienen título/descripción, foco contenido y fondo inerte mediante la biblioteca real; Escape/cancelación retornan al origen cuando existe. El SVG tiene nombre accesible y se identifica como escena de ejemplo. Los iconos redundantes están ocultos a lectores. Selección y estado incluyen texto, no solo color.
 
-El runtime y CSS dan paridad a reducción de movimiento, Quieto y still, incluidos pseudo-elementos. Se verifica navegación Tab y recuperación de foco en cancelar conflicto. La auditoría automatizada no acredita por sí sola conformidad WCAG completa, lectura real con tecnologías de asistencia ni comportamiento servidor.
+El tiempo de ejecución y CSS dan paridad a reducción de movimiento, Quieto y still, incluidos pseudo-elementos. Se verifica navegación Tab y recuperación de foco en cancelar conflicto. La auditoría automatizada no acredita por sí sola conformidad WCAG completa, lectura real con tecnologías de asistencia ni comportamiento servidor.
 
 ## 11. Criterios visuales y evidencia
 
@@ -178,38 +178,38 @@ El runtime y CSS dan paridad a reducción de movimiento, Quieto y still, incluid
 | B-AC-13 | todos | foreign | Propietario y Solo lectura son visibles; editar está deshabilitado. |
 | B-AC-14 | todos | no-permission | Guardar una copia está deshabilitado y el motivo es legible. |
 | B-AC-15 | todos | incompatible | Descargar original está disponible y no se modifica localStorage. |
-| B-AC-16 | todos | imported/retry | Dos aceptaciones del fixture dejan un único proyecto importado. |
+| B-AC-16 | todos | imported/retry | Dos aceptaciones de los datos de ejemplo dejan un único proyecto importado. |
 | B-AC-17 | todos | diálogo cancelado | El foco retorna al control de origen y el conflicto permanece. |
 | B-AC-18 | todos | expressive | Hoja, filas, inspector, marcador y controles tienen movimientos observables distintos. |
 | B-AC-19 | todos | reduced/still | No queda animación activa; la selección y las acciones siguen presentes. |
 | B-AC-20 | 390 | Taller | Las tres acciones inferiores se apilan y sus etiquetas permanecen completas. |
-| B-AC-21 | ambos temas | todos | Texto, bordes de control y foco pasan medición; footer y contenido comparten eje exterior. |
-| B-AC-22 | todos | inspección | Vista, Estado, Diálogo, Tema, Movimiento y Mockup están visibles fuera del producto. |
+| B-AC-21 | ambos temas | todos | Texto, bordes de control y foco pasan medición; pie de página y contenido comparten eje exterior. |
+| B-AC-22 | todos | inspección | Vista, Estado, Diálogo, Tema, Movimiento y Maqueta están visibles fuera del producto. |
 
 ### Evidencia ejecutada
 
-- Builder real offline: **PASS**, 634 KB, 2.126 archivos fuente incluidos; sin instalación, fetch ni fallback. Entrada `proyectos@v1.r12.dir-b.tsx`, salida `proyectos@v1.r12.dir-b.html`.
-- `python3 <kit>/kit/contrast.py <HTML>`: **contrast: 158 pairs checked in light and dark, all pass**, exit 0.
-- `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <HTML> --widths 1280,390,768,1024`: **704 renders (704 combinations planned), 24252 text measurements, 2107 focus stops**, exit 0; sin muestreo ni controles omitidos por tope.
-- **RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems**
-- `compare_directions.py A.html B.html C.html --json`: **ok=true, evidence_ok=true, missing_evidence=[]**, exit 0. Las tres parejas pasan. Similitud de geometría A/B 0.121 y B/C 0.147; movimiento distinto en las tres parejas. La comparación no concede aprobación a ninguna dirección.
-- Probe expresivo: seis animaciones activas de hoja, filas, marcador e inspector en carga; punto de envío `save-travel` real. Quieto, `?still=1`, `?rm=1` y reducción del sistema dejan cero animaciones activas.
-- **48 escenarios adicionales de reflujo**, 320/390/640/768/1024/1280px, cuatro vistas y dos temas: sin overflow, estado crítico antes del lienzo y acciones inferiores apiladas completas en teléfono. Sin errores de navegador ni peticiones HTTP en los probes de flujo.
+- Generador real sin conexión: **APROBADO**, 634 KB, 2.126 archivos fuente incluidos; sin instalación, solicitudes de red ni alternativa de respaldo. Entrada `proyectos@v1.r12.dir-b.tsx`, salida `proyectos@v1.r12.dir-b.html`.
+- `python3 <kit>/kit/contrast.py <HTML>`: **contraste: se comprobaron 158 pares en modo claro y oscuro; todos aprobados**, código de salida 0.
+- `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <HTML> --widths 1280,390,768,1024`: **704 renderizados (704 combinaciones previstas), 24252 mediciones de texto, 2107 paradas de foco**, código de salida 0; sin muestreo ni controles omitidos por límite.
+- **RESULTADO: APROBADO — no hay problemas de contraste, elementos no textuales, foco, alineación, relleno ni desbordamiento**
+- `compare_directions.py A.html B.html C.html --json`: **ok=true, evidence_ok=true, missing_evidence=[]**, código de salida 0. Las tres parejas pasan. Similitud geométrica A/B 0.121 y B/C 0.147; movimiento distinto en las tres parejas. La comparación no concede aprobación a ninguna dirección.
+- Prueba expresiva: seis animaciones activas de hoja, filas, marcador e inspector al cargar; punto de envío `save-travel` real. En estado quieto, `?still=1`, `?rm=1` y con la reducción de movimiento del sistema, no quedan animaciones activas.
+- **48 escenarios adicionales de reflujo**, 320/390/640/768/1024/1280px, cuatro vistas y dos temas: sin desbordamiento; estado crítico antes del lienzo y acciones inferiores apiladas completas en teléfono. Sin errores del navegador ni solicitudes HTTP en las pruebas de flujo.
 
-`<kit>` = `/home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit`; `<HTML>` = la salida B asignada. Las herramientas se ejecutaron con los paths absolutos del brief. Las dos auditorías previas también pasaron (352 renders en dos anchos; después 704 en cuatro), pero las cifras anteriores corresponden a la **última construcción**, que incluye el ajuste de teléfono.
+`<kit>` = `/home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit`; `<HTML>` = la salida B asignada. Las herramientas se ejecutaron con las rutas absolutas del encargo. Las dos auditorías previas también pasaron (352 renderizados en dos anchos; luego 704 en cuatro), pero las cifras anteriores corresponden a la **última construcción**, que incluye el ajuste para teléfono.
 
-Los recorridos Playwright complementarios comprobaron búsqueda manteniendo foco, resultados fuera de la primera página, selección tras reintento, primer guardado/validación/listado/reapertura, copia ajena, denegación sin permiso, renombrado en línea y guardado simulado, espera antes de Escena nueva y protección frente a una respuesta de guardado obsoleta, conflicto/cancelación/foco, descarga de original de ejemplo e importación repetida sin duplicado. Un primer probe se interrumpió por un selector de prueba ambiguo durante la salida del diálogo; el probe corregido espera su cierre y pasa. No fue un fallo de la maqueta.
+Los recorridos complementarios con Playwright comprobaron la búsqueda manteniendo el foco, resultados fuera de la primera página, selección tras un reintento, primer guardado/validación/listado/reapertura, copia ajena, denegación sin permiso, renombrado en línea y guardado simulado, espera antes de Escena nueva y protección frente a una respuesta de guardado obsoleta, conflicto/cancelación/foco, descarga del original de ejemplo e importación repetida sin duplicados. Una primera prueba se interrumpió por un selector de prueba ambiguo al salir del diálogo; la prueba corregida espera a que se cierre y pasa. No fue un fallo de la maqueta.
 
-Se inspeccionaron capturas en memoria a 1280/390px en ambos temas. Se corrigió el apilado de acciones inferiores del Taller en teléfono a partir de esa inspección. No se escribieron capturas ni archivos de log fuera de los entregables permitidos.
+Se inspeccionaron capturas en memoria a 1280/390px en ambos temas. A partir de esa inspección, se corrigió el apilado de las acciones inferiores del Taller en teléfono. No se escribieron capturas ni archivos de registro fuera de los entregables permitidos.
 
 ## 12. Preguntas y límites
 
-**Q: ¿La importación debe conservar el nombre legado en un campo editable prellenado o pedir un nombre antes de confirmar?** Recomendación: prellenar el nombre legado sin modificar la fuente; la exploración expone un campo de nombre antes de importar. Responsable: owner/Planner. No cambia las decisiones ya cerradas sobre consentimiento, conservación o copia única.
+**P: ¿La importación debe conservar el nombre heredado en un campo editable prellenado o pedir un nombre antes de confirmar?** Recomendación: prellenar el nombre heredado sin modificar la fuente; la exploración muestra un campo para el nombre antes de importar. Responsable: responsable/planificador. No cambia las decisiones ya cerradas sobre consentimiento, conservación o copia única.
 
-Supuestos del fixture: seis proyectos neutros iniciales, paginación reducida, cuenta de ejemplo y memoria volátil. El ejemplo de escena usa globo/mesa como contexto del Taller existente; no propone nuevas piezas ni cambia sus herramientas. El idioma permanece ES, como pide el brief; la localización y los destinos Mi cuenta/Planes/Cerrar sesión pertenecen a sus subplanes y aquí se identifican al activarlos. Las herramientas de edición, plantillas y biblioteca se conservan como contexto; el mockup no ejecuta sus motores.
+Supuestos de los datos de prueba: seis proyectos neutros iniciales, paginación reducida, cuenta de ejemplo y memoria volátil. El ejemplo de escena usa un globo y una mesa como contexto del Taller existente; no propone piezas nuevas ni cambia sus herramientas. El idioma permanece en español, como pide el encargo; la localización y los destinos Mi cuenta/Planes/Cerrar sesión pertenecen a sus subplanes y aquí se identifican al activarlos. Las herramientas de edición, plantillas y biblioteca se conservan como contexto; la maqueta no ejecuta sus motores.
 
-Límites verificados: los probes prueban comportamiento de una maqueta local. Persistencia entre navegadores, autorización real, conservación byte a byte del original, recuperación después de recargar y deduplicación transaccional requieren implementación/verificación de SP-4. Ningún resultado visual se presenta como prueba de esas garantías.
+Límites verificados: las pruebas comprueban el comportamiento de una maqueta local. La persistencia entre navegadores, la autorización real, la conservación byte por byte del original, la recuperación después de recargar y la deduplicación transaccional requieren implementación y verificación de SP-4. Ningún resultado visual se presenta como prueba de esas garantías.
 
-Impacto: alternativa de composición e interacción compatible con el resultado funcional del brief; **breaking visual** respecto de la composición anterior, si se elige, por lista/inspector, apertura explícita y reflujo. Afecta T4.4/T4.5 y criterios de T4.8, con copia posterior T4.1. Los shells/tokens/contratos hermanos y los requisitos no cambian. Esta dirección sigue draft; no se concede aprobación ni se modifica el canónico.
+Impacto: alternativa de composición e interacción compatible con el resultado funcional del encargo; **cambio visual incompatible** con la composición anterior, si se elige, por la lista/inspector, la apertura explícita y el reflujo. Afecta T4.4/T4.5 y los criterios de T4.8, con copia posterior en T4.1. Las estructuras, los tokens, los contratos relacionados y los requisitos no cambian. Esta dirección sigue en borrador; no se concede aprobación ni se modifica la versión canónica.
 
 SHA-256 del HTML auditado: `37f1292c7b2c53cb926af040fee24ecac7c636845ddca7ef82e1aed609d85651`.

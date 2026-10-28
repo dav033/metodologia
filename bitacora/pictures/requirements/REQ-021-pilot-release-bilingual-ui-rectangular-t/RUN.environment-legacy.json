@@ -1,0 +1,3 @@
+{"fingerprints": ["151b329d1689a325ffd13aa4"],
+ "reason": "Results accepted while verifier.inherit_env was on (owner request, 2026-10-27) carry the fingerprint of that wider environment (66 ambient variables). They are real passes under a superset of the explicit environment; ambient variables no longer enter the fingerprint (commit afe5ee3e4), so these eight results are accepted explicitly instead of re-run.",
+ "by": "owner (delegated), session b4d5d9f9", "at": "2026-10-28T08:55"}
