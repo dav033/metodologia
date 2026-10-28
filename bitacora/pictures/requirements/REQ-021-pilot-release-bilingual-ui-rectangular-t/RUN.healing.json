@@ -1,5 +1,5 @@
 {
- "actions": 13,
+ "actions": 14,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -16,6 +16,10 @@
   "T1.8:dddbe39dc30251f737beb82cf5fef76e361fc028bfbe603415dffb3db89ff38a": {
    "attempt": "",
    "task": "T1.8"
+  },
+  "T2.6:aff5b5ddd8872b32b769652c47c9ece64b2923cc55190c553a1d8527437551dc": {
+   "attempt": "",
+   "task": "T2.6"
   }
  },
  "cases": {
@@ -31,6 +35,43 @@
    "status": "exhausted",
    "task": "T1.8",
    "why": "T1.8 already had 3 automatic plan repairs"
+  },
+  "1cf12e094be5f4dc": {
+   "applied": 1,
+   "at": 1793194786.277,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 9 failures: El bloqueo actual (att-0052/0053/0056/0057, PREDECESSOR_NEEDS_RESOLUTION) viene de T1.8, que la auditoría devolvió; T2.6 no debe arrancar hasta que T1.8 pase de punta a punta, y esa corrección corresp"
+   ],
+   "first_at": 1793194774.405,
+   "history": [
+    {
+     "at": 1793194774.711,
+     "repair": "revision invalid: SUBPLAN_LATE_CHECKPOINT: SP-2: more than eight tasks requires a checkpoint",
+     "result": "failed"
+    },
+    {
+     "at": 1793194775.257,
+     "repair": "revision invalid: SUBPLAN_LATE_CHECKPOINT: SP-2: more than eight tasks requires a checkpoint",
+     "result": "failed"
+    },
+    {
+     "at": 1793194780.775,
+     "repair": "revision invalid: SUBPLAN_LATE_CHECKPOINT: SP-2: more than eight tasks requires a checkpoint",
+     "result": "failed"
+    },
+    {
+     "at": 1793194786.277,
+     "repair": "revision invalid: SUBPLAN_LATE_CHECKPOINT: SP-2: more than eight tasks requires a checkpoint",
+     "result": "failed"
+    }
+   ],
+   "id": "1cf12e094be5f4dc",
+   "invalid": 3,
+   "repair": "revision invalid: SUBPLAN_LATE_CHECKPOINT: SP-2: more than eight tasks requires a checkpoint",
+   "status": "exhausted",
+   "task": "T2.6",
+   "why": "the same failure came back after its repair"
   },
   "2f51a5461eed7582": {
    "applied": 0,

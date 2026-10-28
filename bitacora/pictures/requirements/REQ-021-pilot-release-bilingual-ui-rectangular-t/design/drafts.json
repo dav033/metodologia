@@ -5774,7 +5774,641 @@
    "auto_runs": 3,
    "behavior": "proyectos@v1.r12.behavior.md",
    "chosen": null,
-   "comparison": null,
+   "comparison": {
+    "directions": [
+     {
+      "density": 96,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".register"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row"
+        },
+        {
+         "ok": true,
+         "selector": ".filterbar"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".paper"
+        },
+        {
+         "ok": true,
+         "selector": ".project-row"
+        },
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".searchbox"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".open-project"
+        },
+        {
+         "ok": true,
+         "selector": ".user-menu summary"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".section-top h2"
+        },
+        {
+         "ok": true,
+         "selector": ".project-name"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, sans-serif"
+      ],
+      "id": "proyectos@v1.r12.dir-a.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes paper-register { \n  0% { transform: translateY(8px); }\n  100% { transform: translateY(0px); }\n}",
+       "@keyframes row-register { \n  0% { transform: translateX(10px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes feedback-register { \n  0% { transform: translateY(-6px); }\n  100% { transform: translateY(0px); }\n}",
+       "@keyframes status-register { \n  0% { transform: translateX(-5px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes save-spin { \n  100% { transform: rotate(360deg); }\n}",
+       "@keyframes skeleton-register { \n  50% { transform: scaleX(0.94); transform-origin: left center; }\n}",
+       "@keyframes focus-register { \n  0% { outline-offset: 5px; }\n  100% { outline-offset: 3px; }\n}",
+       "@keyframes route-cut { \n  0% { transform: translateX(-8px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes filter-cut { \n  0% { transform: translateY(-4px); }\n  100% { transform: translateY(0px); }\n}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":360,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:12",
+       "DIV:0:1:12:12",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:1:1:1:0",
+       "SPAN:2:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:2:1",
+       "SUMMARY:10:1:2:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "SPAN:10:1:1:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:9:2:2:4",
+       "P:9:2:2:1",
+       "SPAN:9:2:1:0",
+       "A:9:3:2:0",
+       "A:9:3:2:0",
+       "A:9:4:2:0",
+       "BUTTON:9:5:2:1",
+       "DIV:0:2:11:2",
+       "DIV:0:2:3:1",
+       "H1:0:2:3:0",
+       "P:0:3:3:0",
+       "LABEL:9:2:3:1",
+       "SELECT:10:2:2:1",
+       "NAV:0:4:11:1",
+       "A:0:4:1:1",
+       "A:1:4:1:1",
+       "SECTION:0:5:11:7",
+       "DIV:1:5:11:1",
+       "DIV:1:5:2:1",
+       "H2:1:5:2:0",
+       "P:1:5:2:0",
+       "BUTTON:10:5:1:1",
+       "svg:10:5:0:0",
+       "DIV:1:6:11:1",
+       "DIV:1:6:7:1",
+       "LABEL:1:6:7:0",
+       "DIV:1:6:7:1",
+       "svg:1:7:0:0",
+       "path:1:7:0:0",
+       "circle:1:7:0:0",
+       "INPUT:1:6:7:1",
+       "DIV:8:6:4:1",
+       "LABEL:8:6:4:0",
+       "P:8:6:4:0",
+       "DIV:1:7:11:0",
+       "SPAN:1:7:3:0",
+       "SPAN:10:7:1:0",
+       "DIV:1:8:11:1",
+       "SPAN:1:8:4:0",
+       "SPAN:5:8:2:0",
+       "SPAN:8:8:2:0",
+       "DIV:1:8:11:2",
+       "ARTICLE:1:8:11:1",
+       "DIV:1:8:4:1",
+       "H3:1:8:4:0",
+       "P:1:9:4:0",
+       "SPAN:5:9:2:0",
+       "SPAN:8:9:2:0",
+       "svg:8:9:0:0",
+       "path:8:9:0:0",
+       "BUTTON:11:8:1:1",
+       "svg:11:9:0:0",
+       "path:11:9:0:0",
+       "path:11:9:0:0",
+       "ARTICLE:1:9:11:1",
+       "DIV:1:9:4:1",
+       "H3:1:9:4:0",
+       "P:1:10:4:0",
+       "SPAN:5:10:2:0",
+       "SPAN:8:10:2:0",
+       "svg:8:10:0:0",
+       "path:8:10:0:0",
+       "BUTTON:11:9:1:1",
+       "svg:11:10:0:0",
+       "path:11:10:0:0",
+       "path:11:10:0:0",
+       "DIV:1:10:11:1",
+       "DIV:1:11:1:0",
+       "P:1:11:1:0",
+       "BUTTON:10:11:1:1",
+       "svg:11:11:0:0",
+       "path:11:11:0:0",
+       "FOOTER:0:11:11:1",
+       "SPAN:0:12:2:0",
+       "SPAN:10:12:2:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "20px",
+       "24px"
+      ]
+     },
+     {
+      "density": 89,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".project-space"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector"
+        },
+        {
+         "ok": true,
+         "selector": ".editor-surface"
+        },
+        {
+         "ok": true,
+         "selector": ".save-inspector"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".workspace"
+        },
+        {
+         "ok": true,
+         "selector": ".record"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector"
+        },
+        {
+         "ok": true,
+         "selector": ".selection-mark"
+        },
+        {
+         "ok": true,
+         "selector": ".save-inspector"
+        },
+        {
+         "ok": true,
+         "selector": ".btn"
+        },
+        {
+         "ok": true,
+         "selector": ".status-dot"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".record"
+        },
+        {
+         "ok": true,
+         "selector": ".inspector-actions"
+        },
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".collection-head"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".record-title"
+        },
+        {
+         "ok": true,
+         "selector": ".project-inspector h2"
+        },
+        {
+         "ok": true,
+         "selector": ".record-sub"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, system-ui, sans-serif"
+      ],
+      "id": "proyectos@v1.r12.dir-b.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes workspace-open { \n  0% { transform: translateY(12px); }\n  100% { transform: translateY(0px); }\n}",
+       "@keyframes record-register { \n  0% { transform: translateX(-18px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes inspector-enter { \n  0% { transform: translateX(26px); }\n  100% { transform: translateX(0px); }\n}",
+       "@keyframes mark-expand { \n  0% { transform: scaleY(0.3); }\n  100% { transform: scaleY(1); }\n}",
+       "@keyframes status-settle { \n  0% { transform: scale(0.6); }\n  100% { transform: scale(1); }\n}",
+       "@keyframes save-travel { \n  0%, 100% { transform: translateX(-3px); }\n  50% { transform: translateX(3px); }\n}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":560,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:12",
+       "DIV:0:1:12:12",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:2:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:2:1",
+       "SUMMARY:10:1:2:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:9:2:2:3",
+       "P:10:2:2:0",
+       "A:10:3:2:1",
+       "A:10:3:2:1",
+       "BUTTON:10:4:2:1",
+       "DIV:0:2:11:1",
+       "H1:0:2:1:0",
+       "BUTTON:10:2:2:1",
+       "svg:10:2:0:0",
+       "NAV:0:3:11:1",
+       "A:0:3:1:1",
+       "A:1:3:1:1",
+       "SECTION:0:4:11:7",
+       "DIV:0:4:11:2",
+       "DIV:1:5:11:1",
+       "LABEL:1:5:11:0",
+       "INPUT:1:5:11:1",
+       "DIV:0:6:11:5",
+       "DIV:0:6:7:5",
+       "DIV:1:6:6:4",
+       "BUTTON:1:6:6:1",
+       "SPAN:1:7:0:0",
+       "SPAN:1:7:2:1",
+       "SPAN:1:7:2:0",
+       "SPAN:1:7:2:0",
+       "SPAN:7:7:0:0",
+       "svg:7:7:0:0",
+       "path:7:7:0:0",
+       "BUTTON:1:8:6:1",
+       "SPAN:1:8:2:1",
+       "SPAN:1:8:2:0",
+       "SPAN:1:8:2:0",
+       "SPAN:7:8:0:0",
+       "svg:7:8:0:0",
+       "path:7:8:0:0",
+       "BUTTON:1:9:6:1",
+       "SPAN:1:9:2:1",
+       "SPAN:1:9:2:0",
+       "SPAN:1:10:2:0",
+       "SPAN:7:10:0:0",
+       "svg:7:10:0:0",
+       "path:7:10:0:0",
+       "DIV:1:10:6:1",
+       "SPAN:1:11:1:0",
+       "BUTTON:4:11:1:1",
+       "svg:4:11:0:0",
+       "path:4:11:0:0",
+       "BUTTON:6:11:1:1",
+       "svg:7:11:0:0",
+       "path:7:11:0:0",
+       "ASIDE:8:6:4:5",
+       "DIV:8:7:4:0",
+       "svg:8:7:0:0",
+       "path:8:7:0:0",
+       "H2:8:7:4:0",
+       "DL:8:8:4:1",
+       "DIV:8:8:4:1",
+       "DT:8:8:4:0",
+       "DD:8:8:4:0",
+       "DIV:8:9:4:1",
+       "DT:8:9:4:0",
+       "DD:8:9:4:0",
+       "DIV:8:10:4:2",
+       "BUTTON:8:10:4:1",
+       "svg:10:10:0:0",
+       "path:10:10:0:0",
+       "P:8:11:4:0",
+       "FOOTER:0:12:11:1",
+       "SPAN:0:12:1:0",
+       "SPAN:9:12:2:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "20px",
+       "24px"
+      ]
+     },
+     {
+      "density": 90,
+      "evidence": {
+       "layout": [
+        {
+         "ok": true,
+         "selector": ".project-stack"
+        },
+        {
+         "ok": true,
+         "selector": ".project-band[data-expanded=\"true\"] .band-detail"
+        },
+        {
+         "ok": true,
+         "selector": ".save-header"
+        }
+       ],
+       "motion": [
+        {
+         "ok": true,
+         "selector": ".project-band"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-window"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-title-button"
+        },
+        {
+         "ok": true,
+         "selector": ".save-status .status-icon"
+        }
+       ],
+       "navigation": [
+        {
+         "ok": true,
+         "selector": ".route-nav"
+        },
+        {
+         "ok": true,
+         "selector": ".expand-control"
+        },
+        {
+         "ok": true,
+         "selector": ".scene-title-button"
+        }
+       ],
+       "typography": [
+        {
+         "ok": true,
+         "selector": ".heading h1"
+        },
+        {
+         "ok": true,
+         "selector": ".band-title"
+        },
+        {
+         "ok": true,
+         "selector": ".band-meta"
+        }
+       ]
+      },
+      "fonts": [
+       "\"Geist Mono\", monospace",
+       "Geist, system-ui, sans-serif"
+      ],
+      "id": "proyectos@v1.r12.dir-c.html",
+      "motion": [
+       "@keyframes pulse { \n  50% { opacity: 0.5; }\n}",
+       "@keyframes band-settle { \n  0% { transform: translateY(10px) scale(0.985); }\n  55% { transform: translateY(-2px) scale(1.003); }\n  100% { transform: translateY(0px) scale(1); }\n}",
+       "@keyframes scene-seat { \n  0% { transform: scale(0.965); }\n  60% { transform: scale(1.008); }\n  100% { transform: scale(1); }\n}",
+       "@keyframes notice-settle { \n  0% { transform: translateY(-6px) scaleY(0.97); }\n  65% { transform: translateY(1px) scaleY(1.008); }\n  100% { transform: none; }\n}",
+       "@keyframes status-seat { \n  0% { transform: rotate(-14deg) scale(0.85); }\n  65% { transform: rotate(5deg) scale(1.08); }\n  100% { transform: none; }\n}",
+       "@keyframes field-seat { \n  0% { transform: scaleX(0.96); }\n  60% { transform: scaleX(1.01); }\n  100% { transform: scaleX(1); }\n}",
+       "@keyframes save-turn { \n  100% { transform: rotate(360deg); }\n}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}",
+       "{\"duration\":520,\"easing\":\"linear\",\"frames\":[\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\",\"composite,computedOffset,easing,offset,transform\"]}"
+      ],
+      "nav": [
+       "0:2:6:0:row"
+      ],
+      "shape": [
+       "MAIN:0:1:12:14",
+       "DIV:0:1:12:14",
+       "HEADER:0:1:11:1",
+       "DIV:0:1:2:0",
+       "SPAN:0:1:0:0",
+       "svg:0:1:0:0",
+       "circle:0:1:0:0",
+       "circle:0:1:0:0",
+       "SPAN:2:1:1:0",
+       "DIV:9:1:3:1",
+       "LABEL:9:1:1:1",
+       "SELECT:9:1:1:1",
+       "DETAILS:10:1:1:1",
+       "SUMMARY:10:1:1:1",
+       "svg:10:1:0:0",
+       "circle:10:1:0:0",
+       "path:10:1:0:0",
+       "svg:11:1:0:0",
+       "path:11:1:0:0",
+       "DIV:0:2:11:1",
+       "H1:0:2:1:0",
+       "BUTTON:10:2:2:1",
+       "svg:10:2:0:0",
+       "NAV:0:3:11:1",
+       "A:0:3:1:1",
+       "A:1:3:1:1",
+       "DIV:0:4:11:1",
+       "DIV:0:4:5:1",
+       "LABEL:0:4:5:0",
+       "svg:1:5:0:0",
+       "path:1:5:0:0",
+       "circle:1:5:0:0",
+       "INPUT:0:5:5:1",
+       "DIV:5:5:7:1",
+       "BUTTON:9:5:2:1",
+       "DIV:0:6:11:7",
+       "ARTICLE:0:6:11:5",
+       "DIV:0:6:11:1",
+       "DIV:1:6:8:1",
+       "H2:1:6:8:0",
+       "P:1:6:8:0",
+       "DIV:9:6:3:1",
+       "BUTTON:9:6:2:1",
+       "svg:10:6:0:0",
+       "path:10:6:0:0",
+       "BUTTON:10:6:1:1",
+       "svg:11:6:0:0",
+       "path:11:6:0:0",
+       "DIV:0:7:11:4",
+       "DIV:1:7:7:3",
+       "svg:1:7:7:3",
+       "path:2:9:4:2",
+       "path:3:7:1:2",
+       "g:3:7:1:2",
+       "circle:3:9:0:0",
+       "circle:3:9:0:0",
+       "circle:3:8:0:0",
+       "circle:3:8:0:0",
+       "circle:3:8:0:0",
+       "circle:3:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:7:0:0",
+       "circle:4:8:0:0",
+       "ellipse:4:9:1:0",
+       "path:4:9:1:0",
+       "SPAN:1:10:2:0",
+       "DIV:8:7:4:3",
+       "H3:8:7:1:0",
+       "P:8:8:3:0",
+       "DETAILS:8:8:1:1",
+       "SUMMARY:8:8:1:1",
+       "ARTICLE:0:11:11:1",
+       "DIV:0:11:11:1",
+       "DIV:1:11:8:1",
+       "H2:1:11:8:0",
+       "P:1:12:8:0",
+       "DIV:9:11:2:1",
+       "BUTTON:9:11:1:1",
+       "svg:10:12:0:0",
+       "path:10:12:0:0",
+       "BUTTON:10:11:1:1",
+       "svg:11:12:0:0",
+       "path:11:12:0:0",
+       "DIV:0:12:11:1",
+       "P:0:13:3:0",
+       "BUTTON:10:13:1:1",
+       "FOOTER:0:14:11:1",
+       "SPAN:0:14:2:0",
+       "SPAN:11:14:1:0"
+      ],
+      "sizes": [
+       "12px",
+       "13px",
+       "14px",
+       "15px",
+       "16px",
+       "20px",
+       "24px"
+      ]
+     }
+    ],
+    "evidence_ok": true,
+    "missing_evidence": [],
+    "ok": true,
+    "pairs": [
+     {
+      "a": "proyectos@v1.r12.dir-a.html",
+      "b": "proyectos@v1.r12.dir-b.html",
+      "layout_similarity": 0.121,
+      "ok": true,
+      "same_density": true,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": false
+     },
+     {
+      "a": "proyectos@v1.r12.dir-a.html",
+      "b": "proyectos@v1.r12.dir-c.html",
+      "layout_similarity": 0.101,
+      "ok": true,
+      "same_density": true,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": false
+     },
+     {
+      "a": "proyectos@v1.r12.dir-b.html",
+      "b": "proyectos@v1.r12.dir-c.html",
+      "layout_similarity": 0.147,
+      "ok": true,
+      "same_density": true,
+      "same_motion": false,
+      "same_navigation": true,
+      "same_typography": true
+     }
+    ],
+    "schema_version": 1
+   },
    "continuation_choice": null,
    "delegation": "D-20261028-082143-c622",
    "digest": "07387a6ab5311ede",
@@ -8559,11 +9193,26 @@
      "tsx_sha256": "ddc9599820489751e7a20d57cb793f204d156f9a1e8bfbfb639bd0bf3f102d6a"
     },
     {
+     "axes": {
+      "colour": "Mismos tokens de globals.css y contratos hermanos en claro/oscuro: fondo/superficie/texto, acento únicamente en acción principal/foco, texto-tenue para bordes de controles y exito/aviso/error para estados reales. Sin nueva paleta.",
+      "components": "Button, Input y Skeleton reales de shadcn; Dialog de Animate UI/Base UI; native select/details; botones de selección con aria-pressed y marcador Motion compartido. Paneles de radio 32px, campos 18px y acciones pill del shell hermano.",
+      "concept": "Un proyecto seleccionado conserva su lugar en la lista y dispone de un inspector contiguo; en el Taller, ese espacio aloja guardado y recuperación sin sustituir la escena.",
+      "density": "Tres filas de muestra por primera página, separadores suaves y 24px de padding vertical; 28px en filtros/inspector, 20px de padding de hoja en teléfono. Información secundaria reunida en un solo inspector, sin tarjetas por proyecto ni miniaturas.",
+      "layout": "Shell Pictures/Sempertex y navegación horizontal heredados. Hoja continua con filtros arriba, lista de selección de 1.65 fr e inspector de 1 fr. Taller con herramientas, lienzo e inspector; debajo de 1100px el inspector baja y en teléfono el estado crítico precede al lienzo.",
+      "motion": "Registro espacial opuesto: hoja +12px vertical, filas −18px horizontal con 65ms de secuencia, inspector +26px, marcador scaleY y spring compartido, estado scale .6→1, punto de guardado desplazado tres ciclos, controles −2px/press .98 e icono +3px. Expresivo 560/180ms con cubic-bezier(.77,0,.175,1) y (.23,1,.32,1), natural 340/140 y sutil 180/100; reduced/still elimina movimiento.",
+      "navigation": "Seleccionar una fila muestra sus datos; Abrir proyecto es una acción explícita en el inspector. Búsqueda y propietario preceden a la paginación. Proyectos/Taller permanecen en la misma regla horizontal; los diálogos guardan el contexto y devuelven el foco.",
+      "typography": "Geist Sans y Geist Mono locales existentes. H1 24px, inspector 20px, nombres de fila 16px (15px teléfono), cuerpo 15px y metadatos 12–13px. La selección gana jerarquía en el inspector sin una nueva tipografía."
+     },
      "delegation": "D-20261028-082144-9c2a",
      "id": "b",
+     "json_sha256": "af45354a6e22ca5f32dcd7ae2f0f25b4ae980a4a4c7228b50742d53b7f6d7e32",
+     "name": "Inspector lateral",
+     "note_sha256": "5afa1c066f8952f3b1773320c9b41521d0a720ff696c970bb3feaead4268a2b1",
      "revision": 12,
      "seed": "Spatial: the same product shell with a different arrangement of the changed area (panels, inspector, canvas), alternative in-page navigation, spatial transitions.",
-     "status": "drafting"
+     "sha256": "37f1292c7b2c53cb926af040fee24ecac7c636845ddca7ef82e1aed609d85651",
+     "status": "ready",
+     "tsx_sha256": "3bd59d612d9b3aae1e5712ec58976207bf357db16de762463945617b4efae0ed"
     },
     {
      "axes": {
@@ -8627,7 +9276,7 @@
     "96a5b6dfff3718af",
     "9474e736e49409e4"
    ],
-   "finished": "2026-10-28T07:05:28-05:00",
+   "finished": "2026-10-28T08:40:52-05:00",
    "fresh": false,
    "history": [
     {
@@ -8667,7 +9316,7 @@
    "revision": 5,
    "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
    "started": "2026-10-28T08:21:43-05:00",
-   "status": "drafting",
+   "status": "choosing",
    "subplan_id": "SP-4",
    "summary": "the delegation's process died before writing an outcome (killed, for instance by restarting the service that started it)",
    "ui_digest": "efc4338fbf71ccd6"

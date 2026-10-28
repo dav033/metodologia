@@ -1372,3 +1372,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** remove the `run` view and tab and the `rework` / `retry-task` actions.
 - **Evidence:** `tests/test_page_planning_run.py` (8); rendered SP-2 view checked in a browser; commit `19011d35f`.
 
+## D-143 — Build order follows consumption: a consumer builds on the audited producer
+
+- **Date:** 2026-10-28 · **Status:** Accepted (delegated by the owner: «lo mejor para la arquitectura y el ciclo de vida»)
+- **Context:** REQ-021's SP-2 consumes SP-1's contracts but its builder tasks (T2.2–T2.5) depended only on T1.4, so they were built on the pre-audit SP-1. After the audit fixed `proxy.ts`, the permission map and the local mode, SP-2's accepted tasks no longer fit the integrated tree (two real conflicts: `package.json`, `src/lib/cuentas/permisos.ts`); T2.6 could not start and the engine's recovery path was unusable while other work ran.
+- **Decision:** the first builder task of a consuming subplan follows the producer's audit (`T2.2 after T1.8b`, plan r12) and the four tasks already built are redone on that base. Accepted over: waiting for the run to drain (hours, with SP-3 piling work on the old base), the unproven conflict-recovery path (blocked by `stale_activation`) and a manual reconciliation outside the flow.
+- **Consequences:** + SP-2 integrates with the audited SP-1 and later work conflicts less; − four accepted tasks redone (about an hour) and SP-3's T3.2 restarted.
+- **Rollback:** a new revision without `T1.8b` in T2.2's `after`.
+- **Evidence:** `git merge-tree` of the two final trees (2 conflicts); plan r12, stage r13, rework of T2.2–T2.5; analyst fix commit `fd29501fb`.
+

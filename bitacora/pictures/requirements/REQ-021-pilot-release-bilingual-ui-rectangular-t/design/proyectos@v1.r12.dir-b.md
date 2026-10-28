@@ -188,7 +188,15 @@ El runtime y CSS dan paridad a reducción de movimiento, Quieto y still, incluid
 
 ### Evidencia ejecutada
 
-PENDIENTE_RESULTADO_FINAL
+- Builder real offline: **PASS**, 634 KB, 2.126 archivos fuente incluidos; sin instalación, fetch ni fallback. Entrada `proyectos@v1.r12.dir-b.tsx`, salida `proyectos@v1.r12.dir-b.html`.
+- `python3 <kit>/kit/contrast.py <HTML>`: **contrast: 158 pairs checked in light and dark, all pass**, exit 0.
+- `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <HTML> --widths 1280,390,768,1024`: **704 renders (704 combinations planned), 24252 text measurements, 2107 focus stops**, exit 0; sin muestreo ni controles omitidos por tope.
+- **RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems**
+- `compare_directions.py A.html B.html C.html --json`: **ok=true, evidence_ok=true, missing_evidence=[]**, exit 0. Las tres parejas pasan. Similitud de geometría A/B 0.121 y B/C 0.147; movimiento distinto en las tres parejas. La comparación no concede aprobación a ninguna dirección.
+- Probe expresivo: seis animaciones activas de hoja, filas, marcador e inspector en carga; punto de envío `save-travel` real. Quieto, `?still=1`, `?rm=1` y reducción del sistema dejan cero animaciones activas.
+- **48 escenarios adicionales de reflujo**, 320/390/640/768/1024/1280px, cuatro vistas y dos temas: sin overflow, estado crítico antes del lienzo y acciones inferiores apiladas completas en teléfono. Sin errores de navegador ni peticiones HTTP en los probes de flujo.
+
+`<kit>` = `/home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit`; `<HTML>` = la salida B asignada. Las herramientas se ejecutaron con los paths absolutos del brief. Las dos auditorías previas también pasaron (352 renders en dos anchos; después 704 en cuatro), pero las cifras anteriores corresponden a la **última construcción**, que incluye el ajuste de teléfono.
 
 Los recorridos Playwright complementarios comprobaron búsqueda manteniendo foco, resultados fuera de la primera página, selección tras reintento, primer guardado/validación/listado/reapertura, copia ajena, denegación sin permiso, renombrado en línea y guardado simulado, espera antes de Escena nueva y protección frente a una respuesta de guardado obsoleta, conflicto/cancelación/foco, descarga de original de ejemplo e importación repetida sin duplicado. Un primer probe se interrumpió por un selector de prueba ambiguo durante la salida del diálogo; el probe corregido espera su cierre y pasa. No fue un fallo de la maqueta.
 
@@ -203,3 +211,5 @@ Supuestos del fixture: seis proyectos neutros iniciales, paginación reducida, c
 Límites verificados: los probes prueban comportamiento de una maqueta local. Persistencia entre navegadores, autorización real, conservación byte a byte del original, recuperación después de recargar y deduplicación transaccional requieren implementación/verificación de SP-4. Ningún resultado visual se presenta como prueba de esas garantías.
 
 Impacto: alternativa de composición e interacción compatible con el resultado funcional del brief; **breaking visual** respecto de la composición anterior, si se elige, por lista/inspector, apertura explícita y reflujo. Afecta T4.4/T4.5 y criterios de T4.8, con copia posterior T4.1. Los shells/tokens/contratos hermanos y los requisitos no cambian. Esta dirección sigue draft; no se concede aprobación ni se modifica el canónico.
+
+SHA-256 del HTML auditado: `37f1292c7b2c53cb926af040fee24ecac7c636845ddca7ef82e1aed609d85651`.

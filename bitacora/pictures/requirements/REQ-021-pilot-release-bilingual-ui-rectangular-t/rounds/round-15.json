@@ -166,7 +166,46 @@
   }
  ],
  "round": 15,
- "status": "open",
- "answers": {},
- "created_at": "2026-10-28T13:24:00Z"
+ "status": "answered",
+ "answers": {
+  "q1": {
+   "choice": "a",
+   "note": ""
+  },
+  "q2": {
+   "choice": "a",
+   "note": "ademas que se lke peuda psar una foto"
+  },
+  "q3": {
+   "choice": "a",
+   "note": "la calculadora de costos es una funcionalidad que ya esta en el chat guiado, es como una calculadora donde recibe o pones el precio de lso globos y tu peudes poner comsas como margen costo de trabajo transportrt etc"
+  },
+  "q4": {
+   "choice": "a",
+   "note": ""
+  },
+  "q5": {
+   "choice": "a",
+   "note": ""
+  },
+  "q6": {
+   "choice": "a",
+   "note": ""
+  },
+  "q7": {
+   "choice": "a",
+   "note": ""
+  },
+  "q8": {
+   "choice": "a",
+   "note": ""
+  },
+  "q9": {
+   "choice": "a",
+   "note": ""
+  }
+ },
+ "created_at": "2026-10-28T13:24:00Z",
+ "answered_at": "2026-10-28T13:43:54Z",
+ "answered_via": "web"
 }

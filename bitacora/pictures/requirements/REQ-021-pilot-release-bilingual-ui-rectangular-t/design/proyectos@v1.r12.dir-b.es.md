@@ -10,74 +10,74 @@ created: 2026-10-28
 
 ## 1. Identidad y trazabilidad
 
-**proyectos@v1 · draft · exploración r12/B, sin aprobación.** Esta nota acompaña a `proyectos@v1.r12.dir-b.tsx`, su HTML construido, las dos miniaturas y el JSON de ocho ejes. No sustituye el contrato canónico ni permite implementar una variante no elegida.
+**proyectos@v1 · borrador · exploración r12/B, sin aprobación.** Esta nota acompaña a `proyectos@v1.r12.dir-b.tsx`, su HTML construido, las dos miniaturas y el JSON de ocho ejes. No sustituye el contrato canónico ni permite implementar una variante no elegida.
 
-Alcance: SP-4, R6/R7, brief `proyectos@v1.r12.behavior.md`; contexto SPEC «Behavior — SP-3 and SP-4 (round 9 answered)» y SP-4 del PLAN vigente. Vistas afectadas: `/proyectos`, `/3d`, `/proyectos/[id]`. Consumidores futuros: T4.1, T4.4, T4.5 y T4.8; no se modifican plan, repositorios, contratos compartidos ni archivos de otra dirección.
+Alcance: SP-4, R6/R7, brief `proyectos@v1.r12.behavior.md`; contexto SPEC «Comportamiento — SP-3 y SP-4 (ronda 9 respondida)» y SP-4 del PLAN vigente. Vistas afectadas: `/proyectos`, `/3d`, `/proyectos/[id]`. Consumidores futuros: T4.1, T4.4, T4.5 y T4.8; no se modifican el plan, los repositorios, los contratos compartidos ni los archivos de otra dirección.
 
-Fuentes leídas: `globals.css`, `layout.tsx`, `Taller3D.tsx`, `Biblioteca.tsx`, `CabeceraApp.tsx` y `MenuApp.tsx` de los repositorios indicados; contratos y HTML hermanos `cuentas-admin@v1` y `planes@v1`; david-ui-kit/SKILL.md, directions.md, manifest.json, runtime y mockup-craft.md. La herramienta real estaba disponible: no se usó el fallback HTML ni se instalaron paquetes.
+Fuentes leídas: `globals.css`, `layout.tsx`, `Taller3D.tsx`, `Biblioteca.tsx`, `CabeceraApp.tsx` y `MenuApp.tsx` de los repositorios indicados; contratos y HTML relacionados `cuentas-admin@v1` y `planes@v1`; david-ui-kit/SKILL.md, directions.md, manifest.json, runtime y mockup-craft.md. La herramienta real estaba disponible: no se usó el HTML alternativo ni se instalaron paquetes.
 
 ## 2. Propósito y usuarios
 
-La persona encuentra un proyecto propio y lo continúa. El personal autorizado filtra por propietario y abre un original ajeno en solo lectura. Quien puede usar el Taller guarda una copia propia. La persona que llega con una escena heredada del navegador decide expresamente si importarla a su cuenta.
+La persona encuentra un proyecto propio y lo continúa. El personal autorizado filtra por propietario y abre un original ajeno en modo de solo lectura. Quien puede usar el Taller guarda una copia propia. La persona que llega con una escena heredada del navegador decide expresamente si importarla a su cuenta.
 
-La pregunta principal de la lista es «¿qué proyecto voy a abrir?». La del inspector del Taller es «¿mis cambios están guardados y cómo continúo si no lo están?». Una selección, una posición y una acción explícita evitan confundir inspección con apertura.
+La pregunta principal de la lista es «¿qué proyecto voy a abrir?». La del inspector del Taller es «¿mis cambios están guardados y cómo continúo si no lo están?». Una selección, una posición y una acción explícita evitan confundir la inspección con la apertura.
 
 ## 3. Arquitectura y enfoque espacial
 
-Se conserva el masthead Pictures/Sempertex, marca de anillo y punto, cuenta desplegable, idioma y regla horizontal de navegación de los contratos hermanos. El área cambiada es una hoja continua: filtros arriba, registros seleccionables a la izquierda e inspector a la derecha. La selección no abre el Taller; **Abrir proyecto** lo hace desde el inspector. No se añade un panel de vistas previas ni otro servicio de miniaturas.
+Se conserva el encabezado principal de Pictures/Sempertex, la marca del anillo y el punto, el menú desplegable de cuenta, el idioma y la regla horizontal de navegación de los contratos relacionados. El área modificada es una hoja continua: filtros arriba, registros seleccionables a la izquierda e inspector a la derecha. La selección no abre el Taller; **Abrir proyecto** lo hace desde el inspector. No se añade un panel de vistas previas ni otro servicio de miniaturas.
 
-En el Taller se mantiene la relación herramientas/lienzo/cabecera de escena. El nombre continúa editable en línea. El estado y las decisiones de recuperación se reúnen junto al lienzo; la escena permanece visible durante un conflicto. Se reproducen los nombres de las herramientas existentes como contexto; el SVG es una ilustración explícita de ejemplo, no el motor 3D ni un nuevo diseño de sus herramientas.
+En el Taller se mantiene la relación entre herramientas, lienzo y encabezado de escena. El nombre sigue siendo editable en línea. El estado y las decisiones de recuperación se reúnen junto al lienzo; la escena permanece visible durante un conflicto. Se reproducen los nombres de las herramientas existentes como contexto; el SVG es una ilustración explícita de ejemplo, no el motor 3D ni un nuevo diseño de las herramientas.
 
-Miniatura elegida: **candidate-1**, lista lateral con inspector contiguo. Candidate-2 explora una franja de selección horizontal con detalle debajo. Se elige la primera porque ofrece espacio estable para nombres y propietarios, mantiene la paginación junto a los resultados y deja una única zona de decisiones. Las dos miniaturas se escribieron antes de construir la dirección completa y se conservan.
+Miniatura elegida: **candidate-1**, lista lateral con inspector contiguo. Candidate-2 explora una franja de selección horizontal con el detalle debajo. Se elige la primera porque ofrece espacio estable para nombres y propietarios, mantiene la paginación junto a los resultados y deja una única zona de decisiones. Las dos miniaturas se escribieron antes de construir la dirección completa y se conservan.
 
 ## 4. Sistema visual y ocho ejes
 
-Se respetan Geist Sans/Geist Mono locales, sin nueva familia, paleta, material o identidad. La instrucción actual de conservar el sistema del producto y los hermanos gobierna sobre el feedback histórico que solicitaba paletas y familias distintas. La diferencia se concentra en estructura, selección y movimiento.
+Se respetan Geist Sans/Geist Mono locales, sin incorporar una familia, paleta, material o identidad nuevos. La instrucción vigente de conservar el sistema del producto y el de las pantallas relacionadas prevalece sobre el feedback histórico que solicitaba paletas y familias distintas. La diferencia se concentra en la estructura, la selección y el movimiento.
 
 | Eje | Expresión presente en la maqueta |
 |---|---|
-| concept | Un proyecto seleccionado conserva su lugar en la lista y dispone de un inspector contiguo; en el Taller, ese espacio aloja guardado y recuperación sin sustituir la escena. |
-| layout | Shell Pictures/Sempertex y navegación horizontal heredados. Hoja continua con filtros arriba, lista de selección de 1.65 fr e inspector de 1 fr. Taller con herramientas, lienzo e inspector; debajo de 1100px el inspector baja y en teléfono el estado crítico precede al lienzo. |
-| navigation | Seleccionar una fila muestra sus datos; Abrir proyecto es una acción explícita en el inspector. Búsqueda y propietario preceden a la paginación. Proyectos/Taller permanecen en la misma regla horizontal; los diálogos guardan el contexto y devuelven el foco. |
-| typography | Geist Sans y Geist Mono locales existentes. H1 24px, inspector 20px, nombres de fila 16px (15px teléfono), cuerpo 15px y metadatos 12–13px. La selección gana jerarquía en el inspector sin una nueva tipografía. |
-| density | Tres filas de muestra por primera página, separadores suaves y 24px de padding vertical; 28px en filtros/inspector, 20px de padding de hoja en teléfono. Información secundaria reunida en un solo inspector, sin tarjetas por proyecto ni miniaturas. |
-| components | Button, Input y Skeleton reales de shadcn; Dialog de Animate UI/Base UI; native select/details; botones de selección con aria-pressed y marcador Motion compartido. Paneles de radio 32px, campos 18px y acciones pill del shell hermano. |
-| colour | Mismos tokens de globals.css y contratos hermanos en claro/oscuro: fondo/superficie/texto, acento únicamente en acción principal/foco, texto-tenue para bordes de controles y exito/aviso/error para estados reales. Sin nueva paleta. |
-| motion | Registro espacial opuesto: hoja +12px vertical, filas −18px horizontal con 65ms de secuencia, inspector +26px, marcador scaleY y spring compartido, estado scale .6→1, punto de guardado desplazado tres ciclos, controles −2px/press .98 e icono +3px. Expresivo 560/180ms con cubic-bezier(.77,0,.175,1) y (.23,1,.32,1), natural 340/140 y sutil 180/100; reduced/still elimina movimiento. |
+| concept | Un proyecto seleccionado conserva su lugar en la lista y dispone de un inspector contiguo; en el Taller, ese espacio aloja el guardado y la recuperación sin sustituir la escena. |
+| layout | Shell de Pictures/Sempertex y navegación horizontal heredados. Hoja continua con filtros arriba, lista de selección de 1.65 fr e inspector de 1 fr. Taller con herramientas, lienzo e inspector; por debajo de 1100px, el inspector baja y, en el teléfono, el estado crítico aparece antes del lienzo. |
+| navigation | Seleccionar una fila muestra sus datos; Abrir proyecto es una acción explícita en el inspector. La búsqueda y el propietario preceden a la paginación. Proyectos/Taller permanecen en la misma regla horizontal; los diálogos conservan el contexto y devuelven el foco. |
+| typography | Geist Sans y Geist Mono locales existentes. H1 24px, inspector 20px, nombres de fila 16px (15px en teléfono), cuerpo 15px y metadatos 12–13px. La selección adquiere jerarquía en el inspector sin una tipografía nueva. |
+| density | Tres filas de muestra por primera página, separadores suaves y 24px de padding vertical; 28px en filtros/inspector, 20px de padding de hoja en teléfono. La información secundaria se reúne en un solo inspector, sin tarjetas por proyecto ni miniaturas. |
+| components | Button, Input y Skeleton reales de shadcn; Dialog de Animate UI/Base UI; select/details nativos; botones de selección con aria-pressed y marcador Motion compartido. Paneles con radio de 32px, campos de 18px y acciones pill del shell relacionado. |
+| colour | Los mismos tokens de globals.css y de los contratos relacionados en modo claro/oscuro: fondo/superficie/texto, acento solo en la acción principal y el foco, texto tenue para los bordes de controles y exito/aviso/error para estados reales. Sin paleta nueva. |
+| motion | Registro espacial en direcciones opuestas: hoja +12px vertical, filas −18px horizontal con una secuencia de 65ms, inspector +26px, marcador scaleY y spring compartido, estado scale .6→1, punto de guardado desplazado durante tres ciclos, controles −2px/press .98 e icono +3px. Expresivo: 560/180ms con cubic-bezier(.77,0,.175,1) y (.23,1,.32,1); natural: 340/140; sutil: 180/100; reduced/still elimina el movimiento. |
 
-| Token Pictures | Rol kit | Claro / oscuro |
+| Token de Pictures | Función en el kit | Claro / oscuro |
 |---|---|---|
-| `--fondo` | background | #faf9fc / #0b0c10 |
-| `--superficie` | card, popover | #ffffff / #16181f |
+| `--fondo` | fondo | #faf9fc / #0b0c10 |
+| `--superficie` | tarjeta, menú emergente | #ffffff / #16181f |
 | `--superficie-suave` | selección/inspector neutros | #faf8fd / #1c1e26 |
-| `--superficie-2` | secondary, muted, skeleton, disabled | #efe9f8 / #242733 |
-| `--texto` | foreground | #1c1425 / #f4f5f7 |
-| `--texto-suave` | muted-foreground | #6b6178 / #9aa1ad |
-| `--texto-tenue` | input/borde de control accesible heredado | #766c85 / #8a91a0 |
-| `--acento`, `--sobre-acento` | primary, ring / primary-foreground | #6d3fe0, #ffffff / #9479ff, #120b24 |
-| `--borde`, `--borde-suave` | border, separadores decorativos | #e3daef, #efe9f8 / #383c48, #2a2d38 |
+| `--superficie-2` | secundario, atenuado, marcador de posición, deshabilitado | #efe9f8 / #242733 |
+| `--texto` | primer plano | #1c1425 / #f4f5f7 |
+| `--texto-suave` | primer plano atenuado | #6b6178 / #9aa1ad |
+| `--texto-tenue` | borde de entrada/control accesible heredado | #766c85 / #8a91a0 |
+| `--acento`, `--sobre-acento` | principal, anillo / primer plano principal | #6d3fe0, #ffffff / #9479ff, #120b24 |
+| `--borde`, `--borde-suave` | borde, separadores decorativos | #e3daef, #efe9f8 / #383c48, #2a2d38 |
 | `--exito`, `--exito-suave` | estado confirmado | #1f7a55, #dcf5e9 / #78d6a8, #173b31 |
 | `--aviso`, `--aviso-suave` | conflicto/sin guardar | #8f5f12, #fff3d8 / #f7c46b, #3f311c |
 | `--error`, `--error-suave` | error de guardado | #b23a45, #ffeaec / #ff979f, #43252a |
 | `--taller-visor` | fondo del lienzo existente | #ebe7f1 / #1a1722 |
 
-Se heredan los radios de los hermanos: hoja 32px, selección 24px, campo 18px, acciones pill. Padding de filtros e inspector: 28px escritorio, 20px hoja en teléfono y 24px diálogo. Sin sombras en filas o paneles; sombra solo en el desplegable flotante de cuenta. El violeta identifica la acción principal y el foco; la selección y la navegación son neutras. «Solo lectura» no usa color de éxito.
+Se heredan los radios de los componentes relacionados: hoja 32px, selección 24px, campo 18px y acciones pill. Padding de filtros e inspector: 28px en escritorio, 20px de hoja en teléfono y 24px en diálogo. Sin sombras en filas o paneles; sombra solo en el menú desplegable flotante de cuenta. El violeta identifica la acción principal y el foco; la selección y la navegación son neutras. «Solo lectura» no usa el color de éxito.
 
-Componentes reales, denominación **source:id variant state**:
+Componentes reales, nomenclatura **source:id variant state**:
 
 | Componente | Importación y uso |
 |---|---|
-| `shadcn:button default/outline/ghost normal/hover/focus/pressed/disabled` | `@/components/ui/button`; abrir, guardar, reintentar, cancelar y herramientas existentes de contexto |
+| `shadcn:button default/outline/ghost normal/hover/focus/pressed/disabled` | `@/components/ui/button`; abrir, guardar, reintentar, cancelar y herramientas existentes como contexto |
 | `shadcn:input text normal/focus/invalid` | `@/components/ui/input`; buscar, nombrar, renombrar |
 | `shadcn:skeleton row loading` | `@/components/ui/skeleton`; filas aún no cargadas |
-| `animate-ui:dialog popup open/closed/validation` | Export `Dialog` de `@/components/ui/dialog`, instalado sobre Animate UI/Base UI; foco contenido y fondo modal inerte |
-| `native:select owner/language normal/focus` | Propietario autorizado e idioma español del fixture; los selectores externos del inspector son nativos |
-| `native:details account open/closed` | Cuenta heredada, Escape y restauración de foco |
+| `animate-ui:dialog popup open/closed/validation` | Exportación `Dialog` de `@/components/ui/dialog`, instalada sobre Animate UI/Base UI; foco contenido y fondo modal inerte |
+| `native:select owner/language normal/focus` | Propietario autorizado e idioma español del accesorio; los selectores externos del inspector son nativos |
+| `native:details account open/closed` | Cuenta heredada, Escape y restauración del foco |
 | `custom:project-record selection normal/selected` | Botón con `aria-pressed`, reglas, nombre y metadatos; marcador compartido `motion.span` |
 | `custom:project-inspector contextual normal/read-only` | Nombre, propietario, estado y acción explícita de apertura |
 | `custom:save-inspector contextual saved/saving/offline/error/conflict` | Explicación y recuperación junto al lienzo |
 
-`mountMockup/useMockup` proceden de `@kit/mockup`; `useMotionProfile` de `@kit/motion`; el marcador usa `motion/react`. Fuentes WOFF2 existentes de t12 embebidas por el builder. No se cargan imágenes, fuentes, scripts o estilos desde red.
+`mountMockup/useMockup` provienen de `@kit/mockup`; `useMotionProfile`, de `@kit/motion`; el marcador usa `motion/react`. El builder incorpora fuentes WOFF2 existentes de t12. No se cargan imágenes, fuentes, scripts ni estilos desde la red.
 
 ## 5. Navegación, interacción y movimiento
 
@@ -188,7 +188,15 @@ El runtime y CSS dan paridad a reducción de movimiento, Quieto y still, incluid
 
 ### Evidencia ejecutada
 
-PENDIENTE_RESULTADO_FINAL
+- Builder real offline: **PASS**, 634 KB, 2.126 archivos fuente incluidos; sin instalación, fetch ni fallback. Entrada `proyectos@v1.r12.dir-b.tsx`, salida `proyectos@v1.r12.dir-b.html`.
+- `python3 <kit>/kit/contrast.py <HTML>`: **contrast: 158 pairs checked in light and dark, all pass**, exit 0.
+- `UV_OFFLINE=1 uv run --offline --with playwright python <kit>/kit/audit_mockup.py <HTML> --widths 1280,390,768,1024`: **704 renders (704 combinations planned), 24252 text measurements, 2107 focus stops**, exit 0; sin muestreo ni controles omitidos por tope.
+- **RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems**
+- `compare_directions.py A.html B.html C.html --json`: **ok=true, evidence_ok=true, missing_evidence=[]**, exit 0. Las tres parejas pasan. Similitud de geometría A/B 0.121 y B/C 0.147; movimiento distinto en las tres parejas. La comparación no concede aprobación a ninguna dirección.
+- Probe expresivo: seis animaciones activas de hoja, filas, marcador e inspector en carga; punto de envío `save-travel` real. Quieto, `?still=1`, `?rm=1` y reducción del sistema dejan cero animaciones activas.
+- **48 escenarios adicionales de reflujo**, 320/390/640/768/1024/1280px, cuatro vistas y dos temas: sin overflow, estado crítico antes del lienzo y acciones inferiores apiladas completas en teléfono. Sin errores de navegador ni peticiones HTTP en los probes de flujo.
+
+`<kit>` = `/home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit`; `<HTML>` = la salida B asignada. Las herramientas se ejecutaron con los paths absolutos del brief. Las dos auditorías previas también pasaron (352 renders en dos anchos; después 704 en cuatro), pero las cifras anteriores corresponden a la **última construcción**, que incluye el ajuste de teléfono.
 
 Los recorridos Playwright complementarios comprobaron búsqueda manteniendo foco, resultados fuera de la primera página, selección tras reintento, primer guardado/validación/listado/reapertura, copia ajena, denegación sin permiso, renombrado en línea y guardado simulado, espera antes de Escena nueva y protección frente a una respuesta de guardado obsoleta, conflicto/cancelación/foco, descarga de original de ejemplo e importación repetida sin duplicado. Un primer probe se interrumpió por un selector de prueba ambiguo durante la salida del diálogo; el probe corregido espera su cierre y pasa. No fue un fallo de la maqueta.
 
@@ -203,3 +211,5 @@ Supuestos del fixture: seis proyectos neutros iniciales, paginación reducida, c
 Límites verificados: los probes prueban comportamiento de una maqueta local. Persistencia entre navegadores, autorización real, conservación byte a byte del original, recuperación después de recargar y deduplicación transaccional requieren implementación/verificación de SP-4. Ningún resultado visual se presenta como prueba de esas garantías.
 
 Impacto: alternativa de composición e interacción compatible con el resultado funcional del brief; **breaking visual** respecto de la composición anterior, si se elige, por lista/inspector, apertura explícita y reflujo. Afecta T4.4/T4.5 y criterios de T4.8, con copia posterior T4.1. Los shells/tokens/contratos hermanos y los requisitos no cambian. Esta dirección sigue draft; no se concede aprobación ni se modifica el canónico.
+
+SHA-256 del HTML auditado: `37f1292c7b2c53cb926af040fee24ecac7c636845ddca7ef82e1aed609d85651`.

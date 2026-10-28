@@ -341,3 +341,5 @@
 {"at": "2026-10-28T08:29:15-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 11 secciones traducidas", "diff": ""}
 {"at": "2026-10-28T08:39:02-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 11 secciones traducidas", "diff": ""}
 {"at": "2026-10-28T08:39:21-05:00", "who": "Tú", "kind": "flow", "sp": "", "text": "Ejecutar etapa: etapa r13 aprobada (SP-1, SP-2, SP-14, SP-3), faltan 10 subplanes", "diff": ""}
+{"at": "2026-10-28T08:40:56-05:00", "who": "Designer", "kind": "design", "sp": "SP-4", "text": "proyectos@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-28T08:42:02-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M1 — Accounts, access plans and the plans section» cambió", "diff": ""}

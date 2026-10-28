@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:13:analyst_not_the_task:aff5b5ddd8872b32b769652c47c9ece64b2923cc55190c553a1d8527437551dc",
+ "state": "done",
+ "kind": "code",
+ "label": "Código",
+ "tone": "bad",
+ "headline": "T2.6 falla: el servidor de producción no tiene la configuración de auth en la sandbox",
+ "origin": "La verificación `npm run cuentas:test-integracion-ui` sale con exit code 1 y el navegador llega a `/login?error=auth-unavailable`. La sandbox del verificador no tiene variables de entorno, y el servidor de producción toma su configuración de auth de la shell, así que la auth no está disponible en la verificación. El motivo `analyst_not_the_task:…` no es un código reconocido por el sistema; la dependencia T1.8, devuelta por auditoría y sin resolver, es el bloqueo de fondo, y la falla de auth se repite en los últimos intentos.",
+ "steps": [
+  "Confirma primero que T1.8 pasa `npm run cuentas:test-integracion-ui` de punta a punta; si no pasa, detente y repórtalo.",
+  "Haz que la configuración de auth de `next start` venga de las variables de `verifier.env_file` o se fije dentro del propio script `cuentas:test-integracion-ui`, no de la shell.",
+  "No cambies los criterios de aceptación ni el comando de verificación; la ejecución no debe llegar a `/login?error=auth-unavailable`."
+ ],
+ "option": "retry_with_note",
+ "note": "First confirm that predecessor T1.8 passes `npm run cuentas:test-integracion-ui` end to end; if it does not, stop and report it. Then make the production server's auth configuration (the variables read by `next start`) come from the verifier.env_file variables or be set inside the cuentas:test-integracion-ui script itself, never from the shell environment, since the verifier sandbox has an empty environment. The run must not navigate to /login?error=auth-unavailable. Do not change the acceptance criteria or the verification command.",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-28T08:39:51",
+ "seconds": 15.8
+}

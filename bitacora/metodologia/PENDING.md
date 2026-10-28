@@ -222,3 +222,4 @@ _None_
 <!-- 2026-10-28: T1.8 passed; T1.8b running. Router audit-quality metric counts findings as failure (fix + Gemini recall benchmark proposed). claude-work token expired -->
 <!-- 2026-10-28: SP-1 accepted. Open: T2.6 PREDECESSOR_NEEDS_RESOLUTION (2 conflicting files) awaiting owner choice; SP-1 publication evidence unavailable; provider cyber-flag risk on audits -->
 <!-- 2026-10-28: D-142 done. Open: T2.6 resolution (owner picks recovery-enable, rework or manual) now doable from the SP-2 «Ejecución» tab; SP-1 version publication evidence unavailable; run a single check on demand from the web -->
+<!-- 2026-10-28: D-143 applied (SP-2 rebuilt on audited SP-1). Open: T3.2 approval by owner; SP-3 ordering vs M1; refused starts should not burn attempts -->

@@ -1,11 +1,6 @@
 {
  "attention": [
   {
-   "kind": "blocked_task",
-   "reason": "m5:start_rejected_predecessor_needs_resolution",
-   "task_id": "T2.6"
-  },
-  {
    "kind": "composition_waiting",
    "reason": "unpublished_subplan_version:SP-1;unpublished_subplan_version:SP-2",
    "task_id": "T91"
@@ -22,20 +17,20 @@
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-28T13:39:19+00:00",
+ "heartbeat_at": "2026-10-28T13:43:50+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
-  "revision": 11,
-  "sha256": "e0cf6400d86b9ead2850597bcd5e1751cd283e4830d4eecdd630712b70ad6f7c"
+  "revision": 13,
+  "sha256": "e51cd70f5c61ee38c31280c3c2fe88c21dbd04f49f4a6c837c3d4dd90be058c6"
  },
- "projected_at": "2026-10-28T13:39:19+00:00",
+ "projected_at": "2026-10-28T13:43:50+00:00",
  "projection": true,
  "req": "REQ-021",
  "scheduler_status": "running",
- "sessions": 58,
+ "sessions": 60,
  "stage": {
   "complete": false,
-  "joining": 12,
+  "joining": null,
   "outside": [
    "SP-4",
    "SP-5",
@@ -48,7 +43,7 @@
    "SP-12",
    "SP-13"
   ],
-  "revision": 11,
+  "revision": 13,
   "subplans": [
    "SP-1",
    "SP-2",
@@ -69,7 +64,7 @@
    "commit": null,
    "id": "SP-2",
    "manifest_sha256": null,
-   "status": "blocked",
+   "status": "open",
    "version": null
   },
   {
@@ -535,36 +530,37 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
-    "T1.4"
+    "T1.4",
+    "T1.8b"
    ],
-   "attempts": 2,
-   "attempts_used": 2,
+   "attempts": 3,
+   "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
-   "evidence": "m6://result/32541a712f5bbc315a445b4712071f8d15d70e5f2e79fb1a7920364ac78f3351",
-   "executor": "route:m2:v1:dda73c120a613a269b1fd3f17bc167c71c5e5f2e75c44144ec017c408333f2a3:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "evidence": "",
+   "executor": "route:m2:v1:3a560a19a7b37562cf308a5e9ef8c14c7b550495bea2310ddec2c27819076207:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T2.2",
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793140537.1243305",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "55.0",
-   "quota_valid_until": "1793147737.1243305",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 1,
+   "retries_remaining": 2,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "active",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "in_progress",
    "title": "Account APIs: activation, reset, notice acceptance, own password and the administration of accounts and roles",
    "unreachable": false
   },
@@ -575,7 +571,7 @@
     "T2.2"
    ],
    "attempts": 1,
-   "attempts_used": 1,
+   "attempts_used": 0,
    "complexity": "medium",
    "effort": "high",
    "evidence": "m6://result/7f2cfbfb62977f314df9d1f7cccf94b8e6efba76f3e33a4ef42105a08c1342df",
@@ -593,13 +589,13 @@
    "quota_valid_until": "1793147737.1243305",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 2,
+   "retries_remaining": 3,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Sign-in, invitation activation, password reset and notice re-acceptance screens",
    "unreachable": false
   },
@@ -610,7 +606,7 @@
     "T2.2"
    ],
    "attempts": 1,
-   "attempts_used": 1,
+   "attempts_used": 0,
    "complexity": "medium",
    "effort": "high",
    "evidence": "m6://result/29b29f1667e7579393f1f8a36cecd781b92b1501a54b991a34e8bed5a2d84294",
@@ -628,13 +624,13 @@
    "quota_valid_until": "1793148998.6773512",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 2,
+   "retries_remaining": 3,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Account menu on every signed-in page and the Mi cuenta page",
    "unreachable": false
   },
@@ -645,7 +641,7 @@
     "T2.2"
    ],
    "attempts": 1,
-   "attempts_used": 1,
+   "attempts_used": 0,
    "complexity": "medium",
    "effort": "high",
    "evidence": "m6://result/ba6c28e332df5d3be41ec96e2177bad28a4cc6970fd3c32c46ac8f056477ed74",
@@ -663,18 +659,18 @@
    "quota_valid_until": "1793148998.6773512",
    "reason": "",
    "repo": "pictures",
-   "retries_remaining": 2,
+   "retries_remaining": 3,
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "completed",
+   "scheduler_state": "pending",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "done",
+   "status": "todo",
    "title": "Administration screens: accounts list, invitations, account actions and the role editor",
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "",
    "after": [
     "T2.3",
     "T2.4",
@@ -682,36 +678,36 @@
     "T1.8b"
    ],
    "attempts": 13,
-   "attempts_used": 1,
+   "attempts_used": 0,
    "complexity": "medium",
-   "effort": "high",
+   "effort": "",
    "evidence": "",
    "executor": "route:m2:v1:691be8c7b46c120a293588c03e1e82aa73ad288d599ae34fcce7395487d20ae5:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T2.6",
    "max_attempts": 3,
    "milestone": "M1",
-   "model": "gpt-6-luna",
-   "profile": "codex-2",
-   "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "model": "",
+   "profile": "",
+   "provider": "",
+   "quota_observed_at": "",
    "quota_reason": "",
-   "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
-   "reason": "m5:start_rejected_predecessor_needs_resolution",
+   "quota_state": "",
+   "quota_used_percent": "",
+   "quota_valid_until": "",
+   "reason": "analyst_not_the_task:aff5b5ddd8872b32b769652c47c9ece64b2923cc55190c553a1d8527437551dc",
    "repo": "pictures",
-   "retries_remaining": 2,
+   "retries_remaining": 3,
    "retry_exhausted": false,
    "route_reason": "",
-   "route_status": "assigned",
-   "scheduler_state": "blocked",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "blocked",
+   "route_status": "unplanned",
+   "scheduler_state": "pending",
+   "selection_reason": "",
+   "status": "todo",
    "title": "Browser end-to-end: invite, activate, sign in and change plan on a production build",
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T2.6"
    ],
@@ -725,13 +721,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -742,10 +738,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-2 visual review against the cuentas-admin@v1 contract",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T2.7"
    ],
@@ -759,13 +755,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -776,28 +772,28 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-2 audit: account screens, administration APIs and the data notice",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [],
-   "attempts": 1,
+   "attempts": 2,
    "attempts_used": 1,
    "complexity": "medium",
    "effort": "high",
    "evidence": "",
-   "executor": "route:m2:v1:351093fde72d60f06b1dd5d4929addbfcb47885573491e43e06b123f45434d13:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
+   "executor": "route:m2:v1:9250ed25a02feceb1e8a45158a930c1667c574fd9e0ea0db009a42c15f154bc7:406c660fbbf7c79cc1e15b46501c82ca19ca208312160d7bef450eb73340cb31",
    "id": "T3.2",
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 2,
@@ -805,7 +801,7 @@
    "route_reason": "",
    "route_status": "assigned",
    "scheduler_state": "active",
-   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_sparse;task_ambiguous;tokens_measured",
+   "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;history_no_verified_samples;task_ambiguous;tokens_measured",
    "status": "in_progress",
    "title": "Research new Backing structures and table types, write the validated proposal and get the owner's approval",
    "unreachable": false
@@ -819,7 +815,7 @@
    "attempts_used": 1,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
+   "evidence": "m6://result/7aa1e15fed0506cb5193ba09b1fac232c2899c7793e4a4c5b39d88bfdb2dd5db",
    "executor": "route:m2:v1:0af2b5a4a2ee993690af106ec88f8641208e40d087c148812b0ba04969ec4b44:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T3.3",
    "max_attempts": 3,
@@ -838,9 +834,9 @@
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;duration_measured;estimated_duration;task_ambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "done",
    "title": "Make the table, piece and Backing registries exhaustive and add the Backing extension points",
    "unreachable": false
   },
@@ -861,11 +857,11 @@
    "model": "gemini-3.8-flash-low",
    "profile": "antigravity",
    "provider": "antigravity",
-   "quota_observed_at": "1793193758.7841449",
+   "quota_observed_at": "1793194775.4305868",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
    "quota_used_percent": "0.0",
-   "quota_valid_until": "1793200958.7841449",
+   "quota_valid_until": "1793201975.4305868",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -879,7 +875,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.3",
     "T3.4"
@@ -894,13 +890,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -914,7 +910,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.3",
     "T3.4"
@@ -929,13 +925,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -949,7 +945,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.6"
    ],
@@ -963,13 +959,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -983,7 +979,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.5",
     "T3.7"
@@ -998,13 +994,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1018,7 +1014,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.8"
    ],
@@ -1032,13 +1028,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1052,7 +1048,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.9"
    ],
@@ -1066,13 +1062,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1086,7 +1082,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.8"
    ],
@@ -1100,13 +1096,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1120,7 +1116,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.10",
     "T3.11"
@@ -1135,13 +1131,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1155,7 +1151,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.12"
    ],
@@ -1169,13 +1165,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1189,7 +1185,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T3.13"
    ],
@@ -1203,13 +1199,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1223,7 +1219,7 @@
    "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T91"
    ],
@@ -1237,13 +1233,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1254,10 +1250,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Copy the owner-approved planes@v1 contract into the repository",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.1"
    ],
@@ -1271,13 +1267,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1288,10 +1284,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Public plans page: the four plans from the plan catalogue, prices by language",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.2"
    ],
@@ -1305,13 +1301,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1322,10 +1318,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Plans links on the sign-in screen and in the account menu",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.3"
    ],
@@ -1339,13 +1335,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1356,10 +1352,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Browser end-to-end of the plans section on a production build",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.4"
    ],
@@ -1373,13 +1369,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1390,10 +1386,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-14 visual review against the planes@v1 contract",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.5"
    ],
@@ -1407,13 +1403,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6.1-sol",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1424,10 +1420,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "SP-14 audit: catalogue use, public route and copy",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T1.8",
     "T2.8",
@@ -1443,13 +1439,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1460,10 +1456,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "M1 composition check: first administrator to an Entusiasta user on the integrated tree",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T94",
     "T3.15"
@@ -1478,13 +1474,13 @@
    "max_attempts": 3,
    "milestone": "M2",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1495,10 +1491,10 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Composition check CG-2: accounts, plans section and Taller essentials",
-   "unreachable": true
+   "unreachable": false
   },
   {
-   "account_ref": "acct:ea9690a433f4c93823bdcf4841413954f1b20800cdcdef11118546a202f60289",
+   "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
    "after": [
     "T14.6"
    ],
@@ -1512,13 +1508,13 @@
    "max_attempts": 3,
    "milestone": "M1",
    "model": "gpt-6-luna",
-   "profile": "codex-2",
+   "profile": "codex-luis",
    "provider": "codex",
-   "quota_observed_at": "1793193700.7920487",
+   "quota_observed_at": "1793194669.0432897",
    "quota_reason": "quota_fresh",
    "quota_state": "fresh",
-   "quota_used_percent": "15.0",
-   "quota_valid_until": "1793200900.7920487",
+   "quota_used_percent": "47.0",
+   "quota_valid_until": "1793201869.0432897",
    "reason": "",
    "repo": "pictures",
    "retries_remaining": 3,
@@ -1529,7 +1525,7 @@
    "selection_reason": "route_policy_preferred",
    "status": "todo",
    "title": "Composition check CG-4: access plans from the plans section to the accounts screen",
-   "unreachable": true
+   "unreachable": false
   },
   {
    "account_ref": "acct:c9cc72603018815633bd541db0b92aa34bca20bdde2e68bca129c7f558825c74",
