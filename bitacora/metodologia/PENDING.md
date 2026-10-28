@@ -216,3 +216,5 @@ _None_
 <!-- 2026-10-28: boot PATH fix done (5e9e9e024). Open: router silent when it proposes nothing (add an attention item for ready tasks with no live attempt); claude-work token expired (http_401) -->
 <!-- 2026-10-28: round 14 open for SP-3 (owner to answer). Engine defects: `round new` overwrote answered round 13 (restored from git); subplan view lacks a link to its open questions -->
 <!-- 2026-10-28: D-140 done (auto assumption rounds, round numbering, Planner revival). Open: owner confirms SP-3; claude-work token expired -->
+<!-- 2026-10-28: SP-3 stage refused (PLAN_INVALID + COMPOSITION_MISSING); Planner asked to fix. Idea: surface the stage_problem text in the panel as a persistent card, not only a one-off message -->
+<!-- 2026-10-28: D-141 done. Open: owner reconfirms SP-3; an end-to-end test with a multi-subplan plan and gates over future subplans (would catch engine interaction bugs); show the readiness reason next to each subplan in the list -->

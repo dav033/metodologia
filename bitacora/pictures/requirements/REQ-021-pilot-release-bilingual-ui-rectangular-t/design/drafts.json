@@ -7830,11 +7830,26 @@
      "status": "drafting"
     },
     {
+     "axes": {
+      "colour": "Exact Pictures background/surface/text/accent and semantic state tokens; workshop-visor surface for the scene. Control edges use the sibling texto-tenue alias. No new palette.",
+      "components": "Installed shadcn/Base UI Button and Input, Skeleton and Animate UI Dialog; native selects/account disclosure, semantic project rows and a local illustrative scene SVG.",
+      "concept": "A scene workbench for reopening saved work: a persistent project index, derived scene view and selected-project inspector inside the established Pictures shell.",
+      "density": "Compact divided project records beside a dominant scene and a sparse reading inspector. Existing 32px sheet, 18px field and pill control shapes; 24px desktop and 20px phone insets.",
+      "layout": "One continuous sheet with 276px / flexible / 238px columns; tablet keeps the index beside a stacked scene/detail area; phone stacks index, scene and detail.",
+      "motion": "Spatial indexHinge 620ms cubic-bezier(.22,.85,.3,1.08), lateral inspectorDock, 775ms sceneDolly, 65ms rowDepth stagger, statusRegister, shared spring marker and 180ms hover/press. Natural/subtle scale timing; Quieto/still/reduce eliminate movement.",
+      "navigation": "Shared horizontal Taller 3D / Proyectos guardados routes; local pressed-state project selection followed by explicit Open project; phone anchors connect project list and scene preview.",
+      "typography": "Existing local Geist Sans and Geist Mono; 24px page title, 20px inspector, 16px index heading, 14–15px body and 12–13px metadata. No new family."
+     },
      "delegation": "D-20261028-063848-de38",
      "id": "b",
+     "json_sha256": "c14de45c1fef91f7fca8fc153333b689d55ee61746f89e6dbc3e5e8742840334",
+     "name": "Mesa de escenas",
+     "note_sha256": "34477b142c4b88efa3129ff5bb461e91aed4c6634b043ce765e878029ab359ef",
      "revision": 11,
      "seed": "Spatial: the same product shell with a different arrangement of the changed area (panels, inspector, canvas), alternative in-page navigation, spatial transitions.",
-     "status": "drafting"
+     "sha256": "fdb6dbc9425219ea4658ed0c352d85851ba235a75d111855352514bfca564b77",
+     "status": "ready",
+     "tsx_sha256": "e6c87a73c4ea96b11e288d720f08539e42e7405b715a371c071021ef0f334cbe"
     },
     {
      "delegation": "D-20261028-063848-d056",

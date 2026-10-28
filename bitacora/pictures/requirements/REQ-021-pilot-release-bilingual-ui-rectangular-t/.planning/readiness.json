@@ -1,0 +1,104 @@
+{
+ "digest": "3c4985fd0e691118603ca2debf120e4a6810a9e41cc4ee4f1dacf2ce254ccf1b",
+ "rows": [
+  {
+   "subplan": "SP-3",
+   "tasks": 13,
+   "ok": true,
+   "problem": "",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-4",
+   "tasks": 10,
+   "ok": true,
+   "problem": "",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-5",
+   "tasks": 6,
+   "ok": true,
+   "problem": "",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-6",
+   "tasks": 7,
+   "ok": true,
+   "problem": "",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-7",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-8",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-9",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-10",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-11",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-12",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  },
+  {
+   "subplan": "SP-13",
+   "tasks": 0,
+   "ok": false,
+   "problem": "sin tareas: todavía no está definido",
+   "depends_on_unfinished": "",
+   "errors": [],
+   "new_errors": []
+  }
+ ]
+}

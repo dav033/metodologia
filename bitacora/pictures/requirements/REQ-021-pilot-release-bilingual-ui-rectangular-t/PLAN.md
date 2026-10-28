@@ -6,9 +6,9 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 15/66 · generado: 2026-10-28T06:26:56-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 13/68 · generado: 2026-10-28T06:58:16-05:00
 
-**M1 — Accounts, access plans and the plans section** · dificultad alta · 15/28
+**M1 — Accounts, access plans and the plans section** · dificultad alta · 13/28
 
 **SP-1 — Accounts, sessions and server-side permissions**
 
@@ -18,14 +18,14 @@ created: 2026-10-26
 | T1.2 | Permission catalogue, the plan catalogue, the six system roles and the route permission map | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.3 | Account service: invitations, activation, sign-in with lockout, reset links, roles and the one-time commands | alta | completada | gpt-6-luna | codex-luis | 2 |
 | T1.4 | Server sessions and the permission guard in the proxy and the sign-in API, replacing APP_PASSWORD | alta | completada | gpt-6-luna | codex-2 | 1 |
-| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-2 | 2 |
+| T1.5 | Local no-restrictions mode that refuses to start outside next dev on loopback | media | completada | gpt-6-luna | codex-1 | 3 |
 | T1.6 | Apply the permission guard to every API handler and move the existing suites to a shared test session | baja | completada | gpt-6-luna | codex-luis | 1 |
-| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | completada | gpt-6-luna | codex-1 | 5 |
-| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | en curso | gpt-6.1-sol | codex-luis | 9 |
+| T1.7 | End-to-end check of accounts and permissions on a production build, and the SP-1 suites in CI | media | verificando | gpt-6-luna | codex-2 | 6 |
+| T1.8 | SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | gpt-6.1-sol | codex-luis | 9 |
 | T1.8b | Cross-check audit of T1.8: SP-1 security audit: accounts, sessions, permissions, local mode and the one-time commands | alta | pendiente | — | — | 0 |
 | T1.9 | Remediate T1.8 findings F1, F2, F3, F4 | media | completada | gpt-6-luna | codex-2 | 1 |
 | T1.10 | Remediate T1.8 findings F6 | alta | completada | gpt-6-luna | codex-2 | 3 |
-| T1.11 | Remediate T1.8 findings F16, F17 | media | completada | gpt-6-luna | codex-2 | 1 |
+| T1.11 | Remediate T1.8 findings F16, F17 | media | pendiente | gpt-6-luna | codex-2 | 1 |
 
 **SP-2 — Sign-in, invitation and administration screens**
 
@@ -58,7 +58,7 @@ created: 2026-10-26
 | T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
 | T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 0/38
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 0/40
 
 **SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
@@ -120,8 +120,10 @@ created: 2026-10-26
 
 | Tarea | Título | Dificultad | Estado | Modelo | Cuenta | Intentos |
 |---|---|---|---|---|---|---|
-| T92 | Composition check CG-2: accounts, Taller essentials, saved decorations and AI spend | media | pendiente | — | — | 0 |
+| T92 | Composition check CG-2: accounts, plans section and Taller essentials | media | pendiente | — | — | 0 |
 | T93 | Composition check CG-3: accounts and saved projects | media | pendiente | — | — | 0 |
+| T95 | Composition check CG-5: saved decorations on the integrated candidate | media | pendiente | — | — | 0 |
+| T96 | Composition check CG-6: AI spend per account on the integrated candidate | media | pendiente | — | — | 0 |
 
 **M3 — English / Spanish** · dificultad — · 0/0
 
@@ -201,7 +203,7 @@ the A-1 table below.
 | Where | Before | After |
 |---|---|---|
 | Milestones | M1 «Accounts, access plans and Taller essentials» with SP-3 | M1 «Accounts, access plans and the plans section» (SP-1, SP-2, SP-14); M2 «Saved work, Taller essentials, spend per user and the chat tools» adds SP-3 |
-| Gate chain | CG-1 → CG-2 [SP-1, SP-2, SP-3] → CG-4 [+SP-14] → CG-3 [+SP-4] | CG-1 [SP-1, SP-2] → CG-4 [SP-1, SP-2, SP-14] (closes M1, T94 after T14.6, which follows T91) → CG-2 [+SP-3, SP-5, SP-6] (M2, T92 after T94, T3.15) → CG-3 [+SP-4] (T93 after T92, T4.9) |
+| Gate chain | CG-1 → CG-2 [SP-1, SP-2, SP-3] → CG-4 [+SP-14] → CG-3 [+SP-4] | CG-1 [SP-1, SP-2] → CG-4 [SP-1, SP-2, SP-14] (closes M1, T94 after T14.6, which follows T91) → CG-2 [+SP-3] (M2, T92 after T94, T3.15) → CG-3 [+SP-4] (T93 after T92, T4.9) → CG-5 [+SP-5] (T95 after T93, T5.6) → CG-6 [+SP-6] (T96 after T95, T6.7) |
 | SP-4 start | T4.1 after T92 (SP-3's audit) | T4.1 after T94 and T3.3 (taller-scene@1 consumed as a contract) |
 | SP-3 tasks | T3.1–T3.13 | T3.2–T3.13 and T3.15: research and approval record split (T3.2, T3.4), registries first (T3.3), existing card/group patterns in Taller UI tasks, every-type GLB (T3.11) separate from the Blender harness (T3.12); no design contract or visual review |
 
@@ -642,14 +644,14 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
 <!-- CG-2 tasks -->
 
-  Composition gate CG-2: SP-1, SP-2, SP-14, SP-3, SP-5 (cumulative, after CG-4).
+  Composition gate CG-2: SP-1, SP-2, SP-14, SP-3 (cumulative, after CG-4). Split on 2026-10-28 so SP-3 can be staged with M1 alone; saved decorations and AI spend moved to CG-5.
 
-- [ ] T92 — Composition check CG-2: accounts, Taller essentials, saved decorations and AI spend · repo: pictures · after: T94, T3.15, T5.6, T6.7 · verify: `npm run taller:test-composicion-esenciales && npm run decoraciones:test-integracion && npm run gasto:test-integracion` · files: .evidence/REQ-021/CG-2.integration.json, .evidence/REQ-021/SP-5.integration.json, .evidence/REQ-021/SP-6.integration.json · resources: candidate:CG-2 · covers: R2, R9, R10, R11 · kind: test · ui: no
+- [ ] T92 — Composition check CG-2: accounts, plans section and Taller essentials · repo: pictures · after: T94, T3.15 · verify: `npm run taller:test-composicion-esenciales` · files: .evidence/REQ-021/CG-2.integration.json · resources: candidate:CG-2 · covers: R2, R9, R10, R11 · kind: test · ui: no
 
   Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
   Execute the composition mode authored by T3.12 (`taller:test-composicion-esenciales`) on the integrated candidate. Record candidate/tree identity; no harness authoring or repairs here.
 
-  - Acceptance / integration: The integrated candidate passes Master Designer table, Backing and GLB operations and Entusiasta direct access denial, plus account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial; staff-only spend totals attribute representative text and image calls from Next and ai-api to an authenticated account and session. Check: `npm run taller:test-composicion-esenciales`
+  - Acceptance / integration: The integrated candidate passes Master Designer table, Backing and GLB operations and Entusiasta direct access denial. Check: `npm run taller:test-composicion-esenciales`
 
 <!-- /CG-2 tasks -->
 
@@ -697,6 +699,7 @@ Each signed-in user saves and reopens projects and decorations from any browser,
   Execute the checkpoint runner authored by T4.3 against the isolated database; write exact observed API/database outcomes and tree identity. Stop downstream UI work on failure; no source repairs in this task.
 
   - Acceptance / integration: Before UI work, the real project service and API checks pass atomic stale-write rejection, account isolation, validation, import retry keys and the project-save/account-delete race. Check: `npm run proyectos:test-checkpoint`
+  - Acceptance / integration: With expected statuses written from the SPEC, a Usuario gets 404 on GET, PUT and DELETE of another account's project, an account without taller.usar gets 403 on POST, staff get 403 on PUT and DELETE of a foreign original, and cross-origin POST, PUT and DELETE get 403, none of them changing the stored project. Check: `npm run proyectos:test-checkpoint -- --solo denegaciones`
 
 - [ ] T4.4 — Implement the project list and conflict-safe Taller saving · repo: pictures · after: T4.31 · verify: `npx tsx scripts/test/test-proyectos-cliente.ts` · files: src/app/proyectos/page.tsx, src/components/proyectos/ListaProyectos.tsx, src/components/proyectos/EstadoGuardado.tsx, src/components/proyectos/ConflictoProyecto.tsx, src/components/proyectos/useProyecto.ts, src/components/proyectos/textos-proyectos.ts, src/components/tres-d/Taller3D.tsx, src/app/3d/page.tsx, src/lib/proyectos/borrador-local.ts, scripts/test/test-proyectos-cliente.ts, src/app/proyectos/[id]/page.tsx · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: yes
 
@@ -715,6 +718,7 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
   - Acceptance / functional: The first named save is explicit and later edits autosave; a project list search finds authorized matches beyond the first loaded page, filter changes reset pagination and obsolete query responses cannot replace current results. Check: `npx tsx scripts/test/test-proyectos-cliente.ts`
   - Acceptance / functional: «Escena nueva», a template or «Abrir en Escena» start a new unsaved project: the open project keeps its last saved revision (its pending edits are saved first, or the user is asked before a never-saved scene is discarded), the new scene is linked to no project and nothing reaches the server until its first named save. Check: `npx tsx scripts/test/test-proyectos-cliente.ts`
+  - Acceptance / functional: When the server refuses a save because of a forged owner id, a malformed or oversized scene, a stale revision or a cross-origin request, the Taller shows the refusal, keeps the unsent local scene and never marks it saved. Check: `npx tsx scripts/test/test-proyectos-cliente.ts --solo abuso`
 
 - [ ] T4.5 — Implement a lossless and idempotent legacy-scene import · repo: pictures · after: T4.4 · verify: `npx tsx scripts/test/test-proyectos-importacion.ts` · files: src/lib/proyectos/importar-local.ts, src/components/proyectos/ImportarEscenaLocal.tsx, src/components/tres-d/guardado-escena.ts, src/components/proyectos/useProyecto.ts, scripts/test/test-proyectos-importacion.ts · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: yes
 
@@ -746,6 +750,7 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
   - Acceptance / integration: A user saves, lists, reopens and continues Taller projects stored under their account; employees and administrators open anyone's; a later save never silently overwrites an earlier one; scenes saved in the browser are offered for import on first sign-in without loss. Check: `npm run proyectos:test-integracion`
   - Acceptance / integration: A real production build passes persistence across fresh browser contexts, per-account denial, staff read/copy, competing-save conflict, import retry and account-switch isolation checks on the REQ-021 database. Check: `npm run proyectos:test-integracion`
+  - Acceptance / integration: On the production build, with expected statuses taken from the SPEC, a Usuario's GET, PUT and DELETE of another account's project and a staff PUT on a foreign original are refused, and the stored project is byte-identical afterwards. Check: `npm run proyectos:test-integracion -- --solo denegaciones`
 
 - [ ] T4.8 — Review the rendered project and import interfaces · repo: pictures · after: T4.7 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-4.visual.findings.json` · files: .evidence/REQ-021/SP-4.visual.md, .evidence/REQ-021/SP-4.visual.findings.json · resources: ledger:T4.8 · covers: R6, R7 · kind: audit · subplan: SP-4 · ui: no
 
@@ -832,6 +837,30 @@ Each signed-in user saves and reopens projects and decorations from any browser,
   - Acceptance / integration: The integrated candidate passes account-scoped project save/reopen with every table type and every Backing prop, staff read/copy, conflict rejection and account deletion refusal. Check: `npm run proyectos:test-composicion`
 
 <!-- /CG-3 tasks -->
+<!-- CG-5 tasks -->
+
+  Composition gate CG-5: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5 (cumulative, after CG-3).
+
+- [ ] T95 — Composition check CG-5: saved decorations on the integrated candidate · repo: pictures · after: T93, T5.6 · verify: `npm run decoraciones:test-integracion` · files: .evidence/REQ-021/CG-5.integration.json · resources: candidate:CG-5, db:personal-decorations · covers: R8 · kind: test · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 35 minutes.
+  Execute the SP-5 integration mode (authored by T5.4) on the integrated candidate. Record candidate/tree identity; no harness authoring or repairs here.
+
+  - Acceptance / integration: The integrated candidate passes account-owned saved-decoration persistence across browsers, placement into a project, staff read-only access and owner-only mutation and cross-account denial. Check: `npm run decoraciones:test-integracion`
+
+<!-- /CG-5 tasks -->
+<!-- CG-6 tasks -->
+
+  Composition gate CG-6: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6 (cumulative, after CG-5).
+
+- [ ] T96 — Composition check CG-6: AI spend per account on the integrated candidate · repo: pictures · after: T95, T6.7 · verify: `npm run gasto:test-integracion` · files: .evidence/REQ-021/CG-6.integration.json · resources: candidate:CG-6, db:ai-usage · covers: R4, R5 · kind: test · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 35 minutes.
+  Execute the SP-6 integration mode (authored by T6.5) on the integrated candidate. Record candidate/tree identity; no harness authoring or repairs here.
+
+  - Acceptance / integration: The integrated candidate records account/session-attributed usage for representative text and image calls from Next and ai-api; project calls roll up under the project with conversation detail, known billable provider-error usage is partial/error, staff see totals, and Usuario is denied. Check: `npm run gasto:test-integracion`
+
+<!-- /CG-6 tasks -->
 
 ### M3 — English / Spanish
 The interface follows the browser language on the first visit and the account's choice afterwards; the Taller 3D and navigation are fully in English first, then product texts, the remaining screens and the AI replies.

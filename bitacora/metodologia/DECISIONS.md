@@ -1354,3 +1354,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** remove the `ensure` calls and `_revive_planners`; behaviour returns to Planner-only rounds.
 - **Evidence:** `tests/test_input_rounds.py` (9), commit `4cd2ed0a1`; round 14 answered via web and applied by the revived Planner.
 
+## D-141 — Stage readiness is a standing gate, not a button surprise
+
+- **Date:** 2026-10-28 · **Status:** Accepted
+- **Context:** REQ-021's SP-3 was confirmed by the owner, but «Ejecutar subplan» was refused with three plan errors (evidence citing a later subplan's task, a composition gate that also composes unstaged subplans). The gate that decides it, `stage_problem`, ran only on the button; the full-plan check drowns those errors among the ones of unfinished subplans.
+- **Decision:** `bt_plan_adapter.stage_readiness` walks every next stage in plan order (a subplan without tasks ends the chain); `bt_stage_readiness` caches it by PLAN.json/PLAN.md/SPEC.md content, `bt_planning_flow.problems` disables the confirm button with the reason, `plan-json check` prints `ERROR STAGE`, and `plan-json stages` shows the table. Planner instructions: run it after every edit.
+- **Consequences:** + structure errors reach the Planner and the owner when they arise; − a subplan cannot be confirmed while its stage is structurally refused (header and environment errors excluded); the test checks structure, not code quality.
+- **Rollback:** remove the `problem_for` call in `bt_planning_flow.problems` and the check lines in `bt_cli_plan`.
+- **Evidence:** `tests/test_stage_readiness.py`, `tests/test_stage_readiness_gate.py` (9); live run: SP-3..SP-6 pass; commits 0c0aab046, 3ee99ae62.
+

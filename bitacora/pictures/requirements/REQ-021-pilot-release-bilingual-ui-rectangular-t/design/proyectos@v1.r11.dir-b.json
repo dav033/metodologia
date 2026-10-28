@@ -1,0 +1,39 @@
+{
+  "name": "Mesa de escenas",
+  "axes": {
+    "concept": "A scene workbench for reopening saved work: a persistent project index, derived scene view and selected-project inspector inside the established Pictures shell.",
+    "layout": "One continuous sheet with 276px / flexible / 238px columns; tablet keeps the index beside a stacked scene/detail area; phone stacks index, scene and detail.",
+    "navigation": "Shared horizontal Taller 3D / Proyectos guardados routes; local pressed-state project selection followed by explicit Open project; phone anchors connect project list and scene preview.",
+    "typography": "Existing local Geist Sans and Geist Mono; 24px page title, 20px inspector, 16px index heading, 14–15px body and 12–13px metadata. No new family.",
+    "density": "Compact divided project records beside a dominant scene and a sparse reading inspector. Existing 32px sheet, 18px field and pill control shapes; 24px desktop and 20px phone insets.",
+    "components": "Installed shadcn/Base UI Button and Input, Skeleton and Animate UI Dialog; native selects/account disclosure, semantic project rows and a local illustrative scene SVG.",
+    "colour": "Exact Pictures background/surface/text/accent and semantic state tokens; workshop-visor surface for the scene. Control edges use the sibling texto-tenue alias. No new palette.",
+    "motion": "Spatial indexHinge 620ms cubic-bezier(.22,.85,.3,1.08), lateral inspectorDock, 775ms sceneDolly, 65ms rowDepth stagger, statusRegister, shared spring marker and 180ms hover/press. Natural/subtle scale timing; Quieto/still/reduce eliminate movement."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".project-index",
+      ".preview-column",
+      ".project-inspector"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".project-rows",
+      ".project-row[aria-pressed=\"true\"]"
+    ],
+    "typography": [
+      ".heading h1",
+      ".project-inspector h2",
+      ".index-title h2",
+      ".count"
+    ],
+    "motion": [
+      ".project-index",
+      ".scene-art",
+      ".project-inspector",
+      ".project-row",
+      ".status"
+    ]
+  }
+}
