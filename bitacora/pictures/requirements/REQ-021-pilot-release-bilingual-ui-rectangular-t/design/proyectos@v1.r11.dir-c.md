@@ -217,7 +217,11 @@ The complete scripted mockup walkthrough passed 12 checks with zero page errors:
 
 `compare_directions.py` measured A/B/C: overall `ok=true`, selector evidence passes, no missing evidence. A–C layout similarity **0.114**, B–C **0.156**; both pairs have different motion; B–C also has different density. Shared route navigation intentionally remains the same. These measurements are visual distinction evidence, not proof of production behavior or owner approval.
 
-Final snapshot audit: running; no final snapshot result claimed yet.
+Final snapshot audit (after the component-identity and pending-navigation corrections): **672 renders / 672 planned, 17,388 text measurements, 1,963 focus stops**, at 1280/390/768px in both themes, exit 0. No combinations were sampled away.
+
+`RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`
+
+Two additional final-file checks passed: Escena nueva and navigation to Proyectos each wait for an in-flight mock save acknowledgement. There were zero external HTTP(S) requests. At 150ms, expressive startup had three active animations; OS reduced motion and `?still=1` each had zero. Final contrast and A/B/C comparison were rerun on the built final file and passed. The final source/HTML hashes below match this tested snapshot.
 
 ## 12. Open question and assumptions
 

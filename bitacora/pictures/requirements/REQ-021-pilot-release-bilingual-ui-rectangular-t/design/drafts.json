@@ -7823,11 +7823,26 @@
    ],
    "directions": [
     {
+     "axes": {
+      "colour": "Exact Pictures globals.css light/dark tokens, inherited SP-2/SP-14 role aliases and rounded shapes. Accent on primary action, semantic success/warning/error on actual status. Input and outline-control boundaries use texto-tenue.",
+      "components": "Installed shadcn/Base UI Button, Input, Skeleton, Animate UI Dialog and AlertDialog; native role/owner/language selectors and account details; no ornamental card grid.",
+      "concept": "Operational project register: names, owners, true save state and opening remain aligned in one working surface.",
+      "density": "One continuous 28px-inset paper, 24px ruled rows, 20px phone insets, 44px actions. Desktop groups owner/status/open on the name baseline; phone stacks identity above owner and status beside Open.",
+      "layout": "Pictures/Sempertex shell and horizontal route rule above one full-width ruled list; Taller preserves its toolbar, tool rail, canvas and inspector; import is an inline first-sign-in prompt above the list.",
+      "motion": "Precise registration: 360ms cubic-bezier(.77,0,.175,1) paper 8px, row 10px with 28ms offsets, feedback -6px, status -5px; 150ms button lift/press/arrow/focus. Saving rotates and skeleton compresses; reduced/still settles instantly, hidden-tab animations pause.",
+      "navigation": "Shared account disclosure and Proyectos/Taller routes; rows open directly without a detail rail; owner filter and name search share a bar; contextual name/load/leave dialogs.",
+      "typography": "Existing local Geist Sans: 24px page title, 20px section title, 17px project names, 14px actions and 12–13px supporting data; Geist Mono limited to existing metadata/count roles."
+     },
      "delegation": "D-20261028-063847-bad7",
      "id": "a",
+     "json_sha256": "182dea6921b22c294c330a2e24803992a76b9c176694d19e824579daa938d951",
+     "name": "Registro de proyectos",
+     "note_sha256": "6458eb4b80d57a92629901a1f99841d4d280cc75de0fb0b461980ee3d22c57f6",
      "revision": 11,
      "seed": "Operational: dense working information in the existing shell; hierarchy by type scale and grouping, precise quick transitions.",
-     "status": "drafting"
+     "sha256": "8ff2ecb057ccabdde81a89c4e68357038f2c6fc1f45baa5e03ca186fd5e544ad",
+     "status": "ready",
+     "tsx_sha256": "0b430dd7ba50e890b3d7d98c82f07336bd6bff8db3be6c7f2ddd08c8828105c4"
     },
     {
      "axes": {
