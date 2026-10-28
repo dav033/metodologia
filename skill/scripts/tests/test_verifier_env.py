@@ -99,6 +99,29 @@ class ForRun(unittest.TestCase):
         sent = dict(_environment(ambient))
         self.assertEqual((sent["PICTURES_FLAG"], sent["MODE"]), ("1", "test"))    # reaches the check; the explicit value wins
 
+    def test_a_legacy_fingerprint_the_owner_listed_is_accepted_and_nothing_else_is(self):
+        import json
+        import tempfile as tf
+        from pathlib import Path as P
+        import bt_scheduler_executor_wiring as wiring
+        import bt_scheduler_quality_owner_adapter as adapter
+        from bt_scheduler_quality import reuse
+        from bt_scheduler_quality.policy import QualityPolicy
+        with tf.TemporaryDirectory() as tmp:
+            (P(tmp) / wiring.LEGACY_FILE).write_text(json.dumps({"fingerprints": ["151b329d1689a325ffd13aa4", "bad", 7]}), encoding="utf-8")
+            legacy = wiring._legacy_fingerprints(P(tmp))
+            self.assertEqual(legacy, ("151b329d1689a325ffd13aa4",))
+            self.assertEqual(wiring._legacy_fingerprints(P(tmp) / "nowhere"), ())
+        plain = QualityPolicy(environment=(("MODE", "test"),))
+        policy = QualityPolicy(environment=(("MODE", "test"),), accepted_environment_fingerprints=legacy)
+        current = reuse.environment_fingerprint(plain)
+        self.assertTrue(adapter.environment_fingerprint_matches(policy, {}, None, current))
+        self.assertTrue(adapter.environment_fingerprint_matches(policy, {}, None, "151b329d1689a325ffd13aa4"))
+        self.assertFalse(adapter.environment_fingerprint_matches(plain, {}, None, "151b329d1689a325ffd13aa4"))
+        self.assertFalse(adapter.environment_fingerprint_matches(policy, {}, None, "0" * 24))
+        with self.assertRaises(ValueError):
+            QualityPolicy(accepted_environment_fingerprints=("nope",))
+
     def test_inherit_env_is_off_by_default(self):
         from unittest.mock import patch
         with patch("bt_config.get", side_effect=lambda key, default=None: default):

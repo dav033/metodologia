@@ -136,6 +136,23 @@ def _with_owner_notes(rdir, plan, base):
     return notes
 
 
+
+LEGACY_FILE = "RUN.environment-legacy.json"
+
+
+def _legacy_fingerprints(rdir: Path) -> tuple[str, ...]:
+    """Environment fingerprints the owner accepts next to the current one (`RUN.environment-legacy.json`: {"fingerprints": [...],
+    "reason": ...}): results produced while the verifier environment was different on purpose keep verifying for composition."""
+    import json
+    import re
+    try:
+        data = json.loads((Path(rdir) / LEGACY_FILE).read_text(encoding="utf-8"))
+        found = data.get("fingerprints") if isinstance(data, dict) else None
+    except (OSError, ValueError):
+        return ()
+    return tuple(f for f in found if isinstance(f, str) and re.fullmatch(r"[0-9a-f]{24}", f)) if isinstance(found, list) else ()
+
+
 def wire(rdir: Path, *, project: str, assignment=None, verification=None, recovery=None, config=None,
          executor_config: api.m3.Config | None = None, resolver: api.m3.RouteResolver | None = None,
          m2_lookup: api.M2_LOOKUP | None = None, m2_ledger: Path | str | None = None, allow_direct: bool | None = None,
@@ -192,9 +209,11 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
         environment, secrets = bt_verifier_env.for_run(project, rdir)
         ambient, ambient_secrets = bt_verifier_env.ambient_for_run(project, {name for name, _ in environment})
         secrets = tuple(dict.fromkeys((*secrets, *ambient_secrets)))
+        legacy = _legacy_fingerprints(rdir)
         quality_runtime_policy = QualityPolicy(**{**{k: v for k, v in configured.items() if isinstance(v, (bool, int))},
                                                   **({"environment": environment, "ambient_environment": ambient,
                                                       "secret_values": secrets} if environment or ambient else {}),
+                                                  **({"accepted_environment_fingerprints": legacy} if legacy else {}),
                                                   **dict(quality_policy or {})})
     if m2_ledger is not None and m2_lookup is None:
         m2_lookup = api.m2_ledger_lookup(m2_ledger)

@@ -130,7 +130,8 @@ def environment_fingerprint_matches(policy, contract_identities: Mapping[str, st
     """Compare M6's recorded fingerprint with the value M6 derives from this verification identity."""
     if policy is None or not isinstance(observed, str) or not observed or len(observed) > 128:
         return False
-    return observed == expected_environment_fingerprint(policy, contract_identities, environment_identity)
+    return (observed == expected_environment_fingerprint(policy, contract_identities, environment_identity)
+            or observed in getattr(policy, "accepted_environment_fingerprints", ()))
 
 
 def verified_result_identity(store, reference: str, *, plan_id: str, revision: int, task_id: str,
