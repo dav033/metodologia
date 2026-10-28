@@ -1,0 +1,18 @@
+# The durable runtime's engine (REQ-030): DBOS executor, recovery on start, orphan reaper.
+# Install: ~/.config/systemd/user/bt-durable.service, then `systemctl --user enable --now bt-durable`.
+[Unit]
+Description=Metodologia durable runtime engine (bt_durable)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/dev/metodologia
+ExecStart=%h/.local/bin/uv run --project %h/dev/metodologia bt-durable engine
+Restart=always
+RestartSec=5
+# give running steps time to checkpoint; agents live in their own units and survive an engine stop
+TimeoutStopSec=60
+KillMode=mixed
+
+[Install]
+WantedBy=default.target
