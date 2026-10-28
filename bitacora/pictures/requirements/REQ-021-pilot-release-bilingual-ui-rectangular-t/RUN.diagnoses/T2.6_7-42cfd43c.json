@@ -1,0 +1,22 @@
+{
+ "request": "T2.6:7",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "La verificación de T2.6 falla: el login responde auth-unavailable en la sandbox",
+ "origin": "`npm run cuentas:test-integracion-ui` sale con exit code 1 y el navegador queda en `http://127.0.0.1:41215/login?error=auth-unavailable`, en los tres intentos. La sandbox del verificador no recibe las variables de entorno del dueño, salvo las del `verifier.env_file` (probablemente `~/.config/metodologia/verifier-pictures.env`), así que el servidor de producción arranca sin la configuración de autenticación. El log de arranque no muestra qué variable falta, por eso la confianza es media y no alta. Es un fallo de entorno de verificación, no de la lógica de invitación o cambio de plan, que nunca llega a ejecutarse.",
+ "steps": [
+  "Revisa el `verifier.env_file` de pictures (probablemente `~/.config/metodologia/verifier-pictures.env`) y añade las variables de autenticación que lee el login del servidor (busca en el código de login de pictures qué variables requiere).",
+  "Confirma que el problema desaparece: ejecuta `npm run cuentas:test-integracion-ui` con esas variables cargadas y comprueba que no aparece `error=auth-unavailable`.",
+  "Cuando el verificador tenga esas variables, reintenta T2.6 desde la terminal con `bitacora.py --project pictures scheduler-op REQ-021 decide <id> retry --reason \"env verificador corregido\"`."
+ ],
+ "option": "stop",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-27T19:52:44",
+ "seconds": 18.6
+}

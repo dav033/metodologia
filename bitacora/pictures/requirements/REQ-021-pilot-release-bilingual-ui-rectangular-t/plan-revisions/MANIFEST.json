@@ -111,6 +111,41 @@
    "sha256": "8abfe493bdf2e7d5a07cc1b21b7339fc8b2402a231d5718e3c336d4792c7043e",
    "frozen_at": "2026-10-27T18:53:55",
    "source": "remediation"
+  },
+  {
+   "revision": 8,
+   "sha256": "0c9812123c13e38287842d8095d00706069816cdb261625d8b54a37184cce2e8",
+   "frozen_at": "2026-10-27T20:07:06",
+   "source": "remediation"
+  },
+  {
+   "revision": 9,
+   "sha256": "16e00173998148f16ef7a9242e58c596be4997a3e13a892d658f7c6409f63b36",
+   "frozen_at": "2026-10-27T20:12:20",
+   "source": "approval",
+   "stage": {
+    "subplans": [
+     "SP-1",
+     "SP-2",
+     "SP-14"
+    ],
+    "pending_subplans": [
+     "SP-3",
+     "SP-4",
+     "SP-5",
+     "SP-6",
+     "SP-7",
+     "SP-8",
+     "SP-9",
+     "SP-10",
+     "SP-11",
+     "SP-12",
+     "SP-13"
+    ],
+    "complete": false,
+    "requirements_sha256": "62c2221a5c270575f1134b899db9ca583078a6969627bfe4c6511036bde4da82",
+    "plan_md_sha256": "fa682dc41cf6373db14a959443dcc1a81a171daeee6f158116f1eb368cea3acb"
+   }
   }
  ]
 }

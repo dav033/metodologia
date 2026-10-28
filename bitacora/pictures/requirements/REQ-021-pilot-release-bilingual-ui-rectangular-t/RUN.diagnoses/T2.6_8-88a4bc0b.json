@@ -1,0 +1,23 @@
+{
+ "request": "T2.6:8",
+ "state": "done",
+ "kind": "environment",
+ "label": "Entorno",
+ "tone": "info",
+ "headline": "T2.6 falla en verificación: el login responde auth-unavailable en el sandbox",
+ "origin": "El servidor de producción arranca contra el esquema privado de REQ-021, pero el test del navegador acaba en `navigated to \"http://127.0.0.1:41193/login?error=auth-unavailable\"`. Eso indica que la autenticación no estaba disponible durante la verificación. El verificador corre con un entorno vacío y solo las variables de `verifier.env_file` (por ejemplo `~/.config/metodologia/verifier-pictures.env`), así que es probable que falte una variable de autenticación o de base de datos que la app necesita. El mismo error se repite en los tres intentos, por lo que el código del agente no parece la causa principal.",
+ "steps": [
+  "Localiza en el código dónde se produce `auth-unavailable` y qué variables de autenticación lee la app al arrancar.",
+  "Compara esas variables con `~/.config/metodologia/verifier-pictures.env` y añade las que falten, usando valores de prueba de REQ-021 y sin copiar secretos de producción.",
+  "Ejecuta `npm run cuentas:test-integracion-ui` en local con ese env y confirma que el login ya no redirige a `auth-unavailable`.",
+  "Reintenta T2.6 con `python ~/.claude/skills/metodologia/scripts/bitacora.py --project pictures scheduler-op REQ-021 decide <id> retry --reason \"env de verificación corregido\"`. No reintentes antes de corregir el env, porque repetiría el mismo fallo."
+ ],
+ "option": "retry",
+ "note": "",
+ "confidence": "media",
+ "source": "agente · haiku",
+ "model": "haiku",
+ "profile": "claude",
+ "at": "2026-10-27T20:04:26",
+ "seconds": 16.2
+}

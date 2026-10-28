@@ -1,5 +1,5 @@
 {
- "actions": 6,
+ "actions": 8,
  "analyst_stops": {
   "T1.8:4cc86cbe32172485751a006ee746f0f236f6069d7c9b993af67db08bcf85d445": {
    "attempt": "att-0036",
@@ -12,9 +12,47 @@
   "T1.8:c468d094528353b9eba22393cb8a7a7e05505ed8fbc90b7c554431b7b13b2be4": {
    "attempt": "att-0022",
    "task": "T1.8"
+  },
+  "T1.8:dddbe39dc30251f737beb82cf5fef76e361fc028bfbe603415dffb3db89ff38a": {
+   "attempt": "",
+   "task": "T1.8"
   }
  },
  "cases": {
+  "0309361100103f2f": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 0 failures: T1.8 is correctly failing, and the defect is outside its own work. The ledger check fails because two high findings are still real in the current source. F16: src/lib/cuentas/modo-local.ts:23-38 `dire"
+   ],
+   "first_at": 1793148955.878,
+   "history": [],
+   "id": "0309361100103f2f",
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "T1.8 already had 3 automatic plan repairs"
+  },
+  "3cfbf5e7566addd7": {
+   "applied": 1,
+   "at": 1793148765.623,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: lost: the supervising shim vanished without an exit record",
+    "reason code: m5:attempts_exhausted"
+   ],
+   "first_at": 1793148744.946,
+   "history": [
+    {
+     "at": 1793148765.623,
+     "repair": "retry (recommended, nothing placed the stop)",
+     "result": "fixed"
+    }
+   ],
+   "id": "3cfbf5e7566addd7",
+   "repair": "retry (recommended, nothing placed the stop)",
+   "status": "applied",
+   "task": "T2.6"
+  },
   "3f417222a1572a32": {
    "applied": 1,
    "at": 1793146135.111,
@@ -75,8 +113,9 @@
    ],
    "id": "412dfd2e86c898cb",
    "repair": "retry (transient)",
-   "status": "applied",
-   "task": "T1.8"
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "the same failure came back after its repair"
   },
   "68594766a62ed6e7": {
    "applied": 1,
@@ -173,6 +212,19 @@
    "status": "failed",
    "task": "T1.10"
   },
+  "85b7e45fa734b8de": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 0 failures: T1.8 es una auditoría de solo lectura cuya verificación `bitacora.py audit-ledger check .evidence/REQ-021/SP-1.findings.json` exige cero hallazgos high abiertos. El ledger del snapshot 4f4234993f1902c"
+   ],
+   "first_at": 1793148924.772,
+   "history": [],
+   "id": "85b7e45fa734b8de",
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "T1.8 already had 3 automatic plan repairs"
+  },
   "b3881870b07f9253": {
    "applied": 0,
    "blocker": "producer_remediation_required",
@@ -187,6 +239,41 @@
    "repair": "none",
    "status": "unrepairable",
    "task": "T1.8"
+  },
+  "d80355426ef6e253": {
+   "applied": 1,
+   "at": 1793149470.724,
+   "class": "unknown",
+   "evidence": [
+    "unplaced error: m6://result/beba124c7a22f75a11b7e3af4b16dc92aa02101307dd5567f313dd7ae9aced68",
+    "reason code: m5:same_cause_limit"
+   ],
+   "first_at": 1793149449.749,
+   "history": [
+    {
+     "at": 1793149470.724,
+     "repair": "model diagnosis: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+     "result": "failed"
+    }
+   ],
+   "id": "d80355426ef6e253",
+   "repair": "model diagnosis: SchedulerError: OWNER_ACTIVE: another Scheduler or legacy owner is starting",
+   "status": "exhausted",
+   "task": "T2.6",
+   "why": "the same failure came back after its repair"
+  },
+  "e183741af7e98937": {
+   "applied": 0,
+   "class": "regression",
+   "evidence": [
+    "independent analysis after 0 failures: El auditor no falla por error de la tarea T1.8: el gate `audit-ledger check` bloquea porque el ledger de att-0029 (`.evidence/REQ-021/SP-1.findings.json`) tiene dos hallazgos high abiertos. F16 es rea"
+   ],
+   "first_at": 1793148991.808,
+   "history": [],
+   "id": "e183741af7e98937",
+   "status": "exhausted",
+   "task": "T1.8",
+   "why": "T1.8 already had 3 automatic plan repairs"
   }
  }
 }

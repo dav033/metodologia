@@ -1,7 +1,7 @@
 {
   "schema_version": "1.3.0",
   "plan_id": "REQ-021",
-  "revision": 7,
+  "revision": 8,
   "spec_ref": "SPEC.md",
   "composition_gates": [
     {
@@ -3010,7 +3010,8 @@
       "after": [
         "T2.3",
         "T2.4",
-        "T2.5"
+        "T2.5",
+        "T1.8b"
       ],
       "complexity": "medium",
       "scope": "small_change",

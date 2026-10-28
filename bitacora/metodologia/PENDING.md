@@ -212,3 +212,4 @@ _None_
 <!-- 2026-10-27: metodologia commits 89e2c76ed + 2ab5f7946 made; bitácora commit + push to main pending (gitleaks scan) -->
 <!-- 2026-10-27: pushed to main. Open: M6 idle-output timeout proposal (owner decision); give T1.10 the pool-max-2 test diagnosis; SP-3 contract removal check -->
 <!-- 2026-10-27: D-138 idle detection done. Open: verify T1.10 completes after T2.2; SP-3 contract removal by the Planner; SP-14 contract and confirmation -->
+<!-- 2026-10-27: D-139 done. Open: engine reload after a commit should not cancel/count attempts; analyses should expire when the plan revises; T2.6 retry after r8 join; new audits should include the proxy/real-login path -->

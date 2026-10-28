@@ -1336,3 +1336,12 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** `verifier.max_idle_seconds = 0`.
 - **Evidence:** `bt_scheduler_quality/tests/test_runner.py` (hang fails, busy silent passes, off switch), 98 quality tests; commit `9e3c81a73`.
 
+## D-139 — The failure analyst never judges an audit that rejects, and checks may inherit the environment
+
+- **Date:** 2026-10-27 · **Status:** Accepted
+- **Context:** REQ-021 T1.8's re-audit was cancelled after seconds, six times, by the failure analyst: `failures()` counted cancelled attempts and the audit's own `audit gate:` rejections, so three legitimate rejections made the analyst call the audit "not the task" and stop every re-run. Separately, checks started with an empty environment and cost runs whenever a variable was missing.
+- **Decision:** (1) `bt_attempt_analyst.failures` excludes cancelled attempts and rejections whose text starts `audit gate:`. (2) Remediation tasks do not inherit tool-level resources (`package.json…`). (3) New `verifier.inherit_env` (name globs, `["*"]` = all) hands checks the owner's environment and every secret-file variable; sandbox-protected names stay refused, secret-looking values redacted.
+- **Consequences:** + audits can always run and judge; + remediation can run beside unrelated work; − with `["*"]` code under test can see the owner's secrets (narrow it with globs).
+- **Rollback:** `verifier.inherit_env = []`; restore the old `failures()` filter.
+- **Evidence:** tests in `test_attempt_analyst`, `test_remediation`, `test_verifier_env`; T1.8 att-0039 completed and produced a real verdict; commits e3d851c96, 6c8da1103, 9dd7c38b0.
+
