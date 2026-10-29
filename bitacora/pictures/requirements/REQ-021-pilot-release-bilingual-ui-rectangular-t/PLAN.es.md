@@ -683,39 +683,39 @@ Cada usuario que inicia sesión guarda y vuelve a abrir proyectos y decoraciones
 - [ ] T3.15 — Auditar los elementos esenciales de Taller y la compatibilidad de exportación · repo: pictures · después de: T3.13 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json` · archivos: .evidence/REQ-021/SP-3.audit.md, .evidence/REQ-021/SP-3.findings.json · recursos: ledger:T3.15 · cubre: R9, R10, R11 · tipo: audit · subplan: SP-3 · ui: no
 
   Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 90 minutos.
-  Revisar R9/R10/R11, las piezas modeladas frente a la aprobación registrada y la propuesta, los identificadores antiguos de muebles y las escenas guardadas, los recuentos reales de sillas, las pruebas de exportación por tipo y la ausencia de llamadas pagadas. Ejecutar lint, compilaciones del workspace, comprobaciones de tipos y compilación de las aplicaciones, además de las suites afectadas de muebles, catálogo, lectura de fotos y exportación, según exige AGENTS.md; mantener separados los fallos de referencia.
+  Revisar R9/R10/R11, las piezas modeladas frente a la aprobación registrada y la propuesta, los identificadores de muebles antiguos y las escenas guardadas, las cantidades reales de sillas, las evidencias de exportación por tipo y la ausencia de llamadas de pago. Ejecutar lint, compilaciones del workspace, comprobaciones de tipos y compilación de la aplicación, además de las suites afectadas de muebles, catálogo, lectura de fotos y exportación, según exige AGENTS.md; separar los fallos preexistentes.
 
-  - Aceptación / estática: Una auditoría independiente de especificaciones y estándares de SP-3 no tiene hallazgos críticos ni altos abiertos, vincula cada defecto con la tarea que lo introduce, comprueba las piezas modeladas frente a docs/req021/aprobacion-backing-mesas.json y la propuesta, y distingue las pruebas estructurales de GLB de las pruebas reales de Blender y del responsable. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json`
+  - Aceptación / estática: Una auditoría independiente de especificación y estándares de SP-3 no tiene hallazgos críticos o altos abiertos, vincula cada defecto con la tarea que lo introdujo, verifica las piezas modeladas frente a docs/req021/aprobacion-backing-mesas.json y la propuesta, y distingue las evidencias estructurales de GLB de las evidencias reales de Blender y del propietario. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-3.findings.json`
 
 <!-- /SP-3 tasks -->
 
 <!-- CG-2 tasks -->
 
-  Compuerta de composición CG-2: SP-1, SP-2, SP-14, SP-3 (acumulativa, después de CG-4). Se dividió el 2026-10-28 para que SP-3 pueda prepararse solo con M1; las decoraciones guardadas y el gasto de IA se trasladaron a CG-5.
+  Puerta de composición CG-2: SP-1, SP-2, SP-14, SP-3 (acumulativa, después de CG-4). Se dividió el 2026-10-28 para que SP-3 pueda prepararse solo con M1; las decoraciones guardadas y el gasto de IA se trasladaron a CG-5.
 
-- [ ] T92 — Comprobación de composición CG-2: cuentas, sección de planes y elementos esenciales del Taller · repo: pictures · después de: T94, T3.15 · verificar: `npm run taller:test-composicion-esenciales` · archivos: .evidence/REQ-021/CG-2.integration.json · recursos: candidate:CG-2 · cubre: R2, R9, R10, R11 · tipo: test · ui: no
+- [ ] T92 — Comprobación de composición CG-2: cuentas, sección de planes y elementos esenciales de Taller · repo: pictures · después de: T94, T3.15 · verificar: `npm run taller:test-composicion-esenciales` · archivos: .evidence/REQ-021/CG-2.integration.json · recursos: candidate:CG-2 · cubre: R2, R9, R10, R11 · tipo: test · ui: no
 
   Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 45 minutos.
-  Ejecutar en la versión candidata integrada el modo de composición creado por T3.12 (`taller:test-composicion-esenciales`). Registrar la identidad de la versión candidata y del árbol; aquí no se crea ni se repara el arnés.
+  Ejecutar en el candidato integrado el modo de composición creado por T3.12 (`taller:test-composicion-esenciales`). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el harness.
 
-  - Aceptación / integración: La versión candidata integrada supera las operaciones de tablas, Backing y GLB de Master Designer, y deniega el acceso directo a Entusiasta. Comprobación: `npm run taller:test-composicion-esenciales`
+  - Aceptación / integración: El candidato integrado supera las operaciones de tabla de Master Designer, Backing y GLB, y deniega el acceso directo de Entusiasta. Comprobación: `npm run taller:test-composicion-esenciales`
 
 <!-- /CG-2 tasks -->
 
-- **SP-4 — Proyectos guardados** (UI: `proyectos@v1`): Un usuario guarda, lista, vuelve a abrir y continúa proyectos del Taller almacenados en su cuenta; los empleados y administradores pueden abrir los de cualquier persona; un guardado posterior nunca sobrescribe en silencio uno anterior; las escenas guardadas en el navegador se ofrecen para importar al iniciar sesión por primera vez, sin pérdida. Cubre R6, R7.
+- **SP-4 — Proyectos guardados** (UI: `proyectos@v1`): Un usuario guarda, consulta, vuelve a abrir y continúa proyectos de Taller almacenados en su cuenta; los empleados y administradores pueden abrir los proyectos de cualquier persona; un guardado posterior nunca sobrescribe silenciosamente uno anterior; las escenas guardadas en el navegador se ofrecen para importar en el primer inicio de sesión, sin pérdida. Cubre R6, R7.
 
 <!-- SP-4 tasks -->
 
-  El comportamiento y el desglose de tareas reflejan las respuestas del responsable a la ronda 9. La confirmación del subplan y la del diseño siguen siendo acciones independientes del responsable; el foco se mantiene en SP-2.
+  El comportamiento y el desglose de tareas reflejan las respuestas del propietario a la ronda 9. La confirmación del subplan y del diseño siguen siendo acciones independientes del propietario; el foco se mantiene en SP-2.
 
 - [ ] T4.1 — Copiar el contrato de diseño aprobado para proyectos guardados · repo: pictures · después de: T94, T3.3 · verificar: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"` · archivos: design/contracts/proyectos@v1.md · recursos: design:T4.1 · cubre: R6, R7 · tipo: design · subplan: SP-4 · ui: no
 
   Clasificación: complejidad baja; alcance small_change; riesgo bajo; acoplamiento medio; confianza media; estimación: 20 minutos.
-  Copiar el contrato aprobado por el responsable y fijado, sin reescribirlo. Comienza después de CG-4 (M1 cerrado) y de T3.3, que define taller-scene@1; SP-4 ya no espera la auditoría de SP-3.
+  Copiar el contrato aprobado por el propietario y fijado, sin reescribirlo. Comienza después de CG-4 (M1 cerrado) y de T3.3, que define taller-scene@1; SP-4 ya no espera la auditoría de SP-3.
 
-  - Aceptación / estática: El contrato del repositorio es idéntico byte por byte al artefacto proyectos@v1 aprobado por el responsable. Comprobación: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"`
+  - Aceptación / estática: El contrato del repositorio es idéntico byte por byte al artefacto proyectos@v1 aprobado por el propietario. Comprobación: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"`
 
-- [ ] T4.2 — Implementar el almacenamiento versionado de proyectos y la validación de escenas · repo: pictures · después de: T4.1 · verificar: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts` · archivos: scripts/migrations/038_proyectos.sql, src/lib/proyectos/contrato.ts, src/lib/proyectos/servicio.ts, src/lib/proyectos/repositorio.ts, src/lib/proyectos/validar-escena.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-proyectos-servicio.ts · recursos: proyectos:document · cubre: R6, R7 · tipo: implement · subplan: SP-4 · ui: no
+- [ ] T4.2 — Implementar almacenamiento versionado de proyectos y validación de escenas · repo: pictures · después de: T4.1 · verificar: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts` · archivos: scripts/migrations/038_proyectos.sql, src/lib/proyectos/contrato.ts, src/lib/proyectos/servicio.ts, src/lib/proyectos/repositorio.ts, src/lib/proyectos/validar-escena.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-proyectos-servicio.ts · recursos: proyectos:document · cubre: R6, R7 · tipo: implement · subplan: SP-4 · ui: no
 
   Clasificación: complejidad alta; alcance funcionalidad completa; riesgo alto; acoplamiento alto; confianza baja; estimación: 170 minutos.
   Usa getRagPool y el helper de esquema aislado de SP-1. La migración 038 crea proyectos con id UUID, FK de propietario con RESTRICT, nombre, schema_version=1, scene JSONB, revision >=1, marcas de tiempo de creación y actualización, e índice por propietario y actualización. Regístralo como trabajo en dependientes.ts. El nombre debe tener entre 1 y 120 caracteres tras quitar espacios al inicio y al final; límite del documento UTF-8: 2 MiB. Aplica MAX_NODOS=150 y los límites de sala existentes; completa las variantes y referencias de Pieza mediante validación en tiempo de ejecución, nunca uses el guard de tipos heredado y superficial como validación del servidor. Un esquema no compatible debe producir un error estable y recuperable; no descartes campos en silencio ni normalices eliminando trabajo del usuario.

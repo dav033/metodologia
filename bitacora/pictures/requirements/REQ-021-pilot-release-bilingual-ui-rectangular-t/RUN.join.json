@@ -1,0 +1,36 @@
+{
+ "run": {
+  "project": "pictures",
+  "req": "REQ-021",
+  "plan_id": "REQ-021",
+  "revision": 18,
+  "plan_sha256": "b67731626ad5ded067159ba04e2d4ecb2785e9549a00cca7d57113a059b4cdcb",
+  "plan_path": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/plan-revisions/PLAN.r18.json"
+ },
+ "since": 1793293527.2334354,
+ "by": "bt-durable join",
+ "confirm": false,
+ "settings": {
+  "max_parallel": 2,
+  "poll_seconds": 15.0,
+  "run_poll_seconds": 300.0,
+  "owner_wait_seconds": 86400.0,
+  "budget": {
+   "max_attempts": 4,
+   "max_same_signature": 2,
+   "max_elapsed_seconds": 21600,
+   "max_tokens": 8000000,
+   "max_route_changes": 2,
+   "max_environment_repairs": 1,
+   "max_consecutive_regressions": 2,
+   "max_waits": 6
+  },
+  "agent_limits": {
+   "memory_max_bytes": 8589934592,
+   "tasks_max": 4096,
+   "runtime_max_seconds": 7200
+  },
+  "max_agent_memory_bytes": 17179869184
+ },
+ "owner_paused": false
+}

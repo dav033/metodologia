@@ -4126,6 +4126,7 @@
    "ui_digest": "04b1c41557084c57"
   },
   "decoraciones@v1": {
+   "approved": "2026-10-29T12:05:23-05:00",
    "attempt": 3,
    "auto_runs": 1,
    "before": null,
@@ -7164,7 +7165,7 @@
    "selected_sha256": "5275c3628551b64348b7fee6b7bff475310cc82629c985fd1b32d77c0c098078",
    "sha256": "db859bfd2d38212378ec714473ce86433b34163763a164392975ce9b04c69fd2",
    "started": "2026-10-29T11:30:17-05:00",
-   "status": "ready",
+   "status": "approved",
    "subplan_id": "SP-5",
    "summary": "Finalised the owner's chosen direction b «Espacio de composición» as the draft decoraciones@v1 contract (12 sections) and rebuilt its canonical HTML from the unchanged r3 dir-b TSX with the current offline builder. Composition, motion, views and states are preserved; the contract stays draft and unapproved.",
    "ui_digest": "e0815163c3cdc7cb"
