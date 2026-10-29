@@ -97,19 +97,20 @@ def panel(ctx: dict, sub: dict) -> str:
 
 
 def flow_frame(ctx: dict, sub: dict) -> str:
-    """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) framed under its «Ejecución»: the module map,
-    the messages and each task's route, live. A direct child of the detail block with `data-persist`, so the Plan tab's
-    refresh keeps the frame (and its own live stream) instead of reloading it every few seconds. It comes first in the
-    tab: a subplan's task list runs to thousands of pixels and buried it (pictures REQ-021 SP-3)."""
+    """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) while its «Ejecución» is open: the module map,
+    the messages and each task's route, live. Above the plan's three columns at full width (inside the centre column
+    it was cramped, and under a long task list it was buried), collapsible; its own block, whose HTML depends only on
+    the subplan, so the Plan tab's refresh never reloads it. planning-live.js sizes the frame to the Flow's height and
+    remembers whether the owner left it open."""
     if not counts(ctx).get(sub["id"]):
         return ""
     scope = f'subplan:{ctx["project"]}/{ctx["rid"]}/{sub["id"]}'
     src = "/flow?" + urlencode({"scope": scope, "embed": "1"})
-    return (f'<section class="pp-flowframe" data-persist="flow-{e(sub["id"])}" aria-label="Flujo de {e(sub["id"])}">'
-            f'<div class="pp-flowframe-head"><h2>Flujo de {e(sub["id"])}</h2><span class="muted">Mensajes entre módulos y '
-            f'recorrido de cada tarea, en vivo</span><a href="{e("/flow?" + urlencode({"scope": scope}))}" target="_blank" '
-            f'rel="noopener">Abrir en grande ↗</a></div>'
-            f'<iframe src="{e(src)}" title="Flujo de {e(sub["id"])}" loading="lazy"></iframe></section>')
+    return (f'<details class="pp-flowtop" data-k="flowtop-{e(sub["id"])}" open><summary><span class="pp-flowtop-title">'
+            f'Flujo de {e(sub["id"])}</span><span class="pp-meta">Mensajes entre módulos y recorrido de cada tarea, en '
+            f'vivo</span><a class="pp-flowtop-open" href="{e("/flow?" + urlencode({"scope": scope}))}" target="_blank" '
+            f'rel="noopener">Abrir en su página ↗</a></summary><div class="pp-flowtop-body"><iframe class="pp-flowtop-frame" '
+            f'src="{e(src)}" title="Flujo de {e(sub["id"])}"></iframe></div></details>')
 
 
 def _row(plans, task: dict, asks: dict, base: str, token: str, back: str) -> str:
