@@ -61,6 +61,26 @@ class Directions(unittest.TestCase):
             self.assertIn("FRESH START", order["task"])
         self.assertTrue(any("elige una dirección" in p for p in drafts.readiness(self.rdir)))
 
+    def test_an_exploration_applies_its_comments_and_a_new_focus_does_not_explore_again(self):
+        """pictures REQ-021 SP-5: a comment given to the exploration stayed pending after the directions were ready, so
+        moving the focus to the subplan (D-146) explored again over the three directions the owner was choosing from."""
+        drafts.add_feedback("demo", self.rdir, "checkout@v1", "Keep the totals on the right", "web")
+        self.explored()
+        row = drafts.rows(self.rdir)[0]
+        self.assertEqual((row["status"], row["pending_feedback"]), ("choosing", 0))
+        launched = len(self.orders)
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], reason="focus"), [])
+        self.assertEqual(len(self.orders), launched)
+        with drafts._locked(self.rdir) as data:              # an entry recorded before the fix: still nothing pending
+            for f in data["drafts"]["checkout@v1"]["feedback"]:
+                f.pop("consumed", None)
+        self.assertEqual(drafts.rows(self.rdir)[0]["pending_feedback"], 0)
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], reason="focus"), [])
+        drafts.add_feedback("demo", self.rdir, "checkout@v1", "Start over with a list", "web")   # a NEW comment still counts
+        row = drafts.rows(self.rdir)[0]
+        self.assertGreater(len(self.orders), launched)                # it started a new exploration
+        self.assertIn("Start over with a list", [f["text"] for f in row["feedback"] if not f.get("consumed")])
+
     def test_failed_sibling_does_not_lose_other_directions(self):
         drafts.request("demo", self.rdir)
         self.finish(0)

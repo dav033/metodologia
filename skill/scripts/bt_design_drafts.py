@@ -254,6 +254,12 @@ def rows(rdir: Path) -> list[dict]:
         return _rows(rdir, data)
 
 
+def _batched(entry: dict, item: dict) -> bool:
+    """A comment the finished exploration was given: applied, even in an entry recorded before explorations marked it so
+    (pictures REQ-021 SP-5 explored again over ready directions because such a comment still counted as pending)."""
+    return entry.get("status") == "choosing" and (item.get("id") or item.get("when")) in (entry.get("feedback_batch") or [])
+
+
 def _rows(rdir: Path, data: dict) -> list[dict]:
     """`rows` over drafts.json already loaded under the lock."""
     ui = [s for s in subplans(rdir) if s["ref"]]
@@ -268,7 +274,7 @@ def _rows(rdir: Path, data: dict) -> list[dict]:
         late = bool(entry) and behind(entry, s)
         out.append({**s, **{k: v for k, v in entry.items() if k not in ("feedback", "digest", "ui_digest", "amend")},
                     "status": entry.get("status", "none"), "feedback": feedback,
-                    "pending_feedback": sum(1 for f in feedback if not f.get("consumed")),
+                    "pending_feedback": sum(1 for f in feedback if not f.get("consumed") and not _batched(entry, f)),
                     "stale": entry.get("status") in ("ready", "approved", "choosing") and late,
                     "amend": bt_design_amend.mode(rdir, s["ref"], entry) if late else None})
     return out
