@@ -360,7 +360,7 @@ def _detail(ctx: dict) -> str:
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
             f'</h2><span class="pp-state {e(cls)}">{e(label)}</span>{_design_buttons(ctx, row)}</header>'
             f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
-            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}{frame}</section>')
+            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{frame}{body}</section>')
 
 
 def _design_buttons(ctx: dict, row: dict | None) -> str:

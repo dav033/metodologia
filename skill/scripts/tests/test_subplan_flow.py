@@ -122,9 +122,10 @@ class RunFrame(unittest.TestCase):
         self.assertIn('data-persist="flow-SP-2"', frame)
         self.assertIn('src="/flow?scope=subplan%3Ademo%2FREQ-001%2FSP-2&amp;embed=1"', frame)
         self.assertIn("Abrir en grande", frame)
-        # a direct child of the detail block, after the run panel (planning-live.js keeps it across refreshes)
-        self.assertLess(html.index("<h2>Tareas</h2>"), html.index('class="pp-flowframe"'))
-        self.assertIn("</iframe></section></section>", html)
+        # a direct child of the detail block, first in the tab, before the run panel's long task list (it was buried
+        # under SP-3's fifteen tasks); planning-live.js keeps it across refreshes
+        self.assertLess(html.index('class="pp-flowframe"'), html.index("<h2>Tareas</h2>"))
+        self.assertIn('</nav><section class="pp-flowframe"', html)
 
 
 if __name__ == "__main__":

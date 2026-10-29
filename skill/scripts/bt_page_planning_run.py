@@ -99,7 +99,8 @@ def panel(ctx: dict, sub: dict) -> str:
 def flow_frame(ctx: dict, sub: dict) -> str:
     """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) framed under its «Ejecución»: the module map,
     the messages and each task's route, live. A direct child of the detail block with `data-persist`, so the Plan tab's
-    refresh keeps the frame (and its own live stream) instead of reloading it every few seconds."""
+    refresh keeps the frame (and its own live stream) instead of reloading it every few seconds. It comes first in the
+    tab: a subplan's task list runs to thousands of pixels and buried it (pictures REQ-021 SP-3)."""
     if not counts(ctx).get(sub["id"]):
         return ""
     scope = f'subplan:{ctx["project"]}/{ctx["rid"]}/{sub["id"]}'
