@@ -6,7 +6,7 @@ disallowedTools: NotebookEdit
 codex_sandbox: danger-full-access
 model: opus
 effort: high
-codex_model: gpt-6.1-sol
+codex_model: gpt-6.1-terra
 codex_effort: high
 color: magenta
 ---

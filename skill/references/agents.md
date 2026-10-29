@@ -43,6 +43,7 @@ Provider-native installed roles pin the approved configuration for their host pr
 | `opus` — Opus 5.5 | Claude Code | 2 (`--effort high`) | architecture, hard debugging, audits of risky changes |
 | `gpt-6-luna` — GPT-6 Luna | Codex | 0 (`medium`; docs `low`) | fast subagent work: well-specified modules, tests, docs, exploration |
 | `gpt-6.1-sol` — GPT-6.1 Sol | Codex | 1 (`medium`), 2 (`high`) | implementation that needs judgment, independent audits, architecture |
+| `gpt-6.1-terra` — GPT-6.1 Terra | Codex | role choice only | the Designer's fallback when Opus has no quota (D-151; quota weight estimated, not measured) |
 | `gemini-3.8-flash-low` — Gemini 3.8 Flash low | Antigravity CLI (`agy`, Google AI Pro) | 0–1 | **default auditor** (D-004); reserve builder when Claude and Codex are exhausted; not for interactive or urgent work |
 | `gemini-3.8-flash-medium` | Antigravity CLI | 2 (only on escalation) | long-horizon agentic work; not measured, 2.5× slower than low |
 | `gemini-3.8-flash-high` | Antigravity CLI | never automatic | avoid: timed out (900 s) twice on a task that low solved |

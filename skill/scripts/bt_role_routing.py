@@ -117,8 +117,10 @@ def candidates(project, pool, tier, kind, role, configured=None, avoid_providers
     def key(row):
         score = family[row['agent']]
         high_pressure = score[2] >= quota_policy.HIGH_PRESSURE
-        # High complexity follows the owner's order for the role (Implementer: Sonnet first) while quota allows it.
-        complexity_priority = row['_priority'] if policy.high_complexity(complexity) else 0
+        # High complexity, and the roles the owner ordered (Designer: Opus first, D-151), follow the owner's order for
+        # the role while quota allows it (Implementer: Sonnet first when complex)
+        ordered = policy.high_complexity(complexity) or role in policy.ORDERED_ROLES
+        complexity_priority = row['_priority'] if ordered else 0
         return (row['_blocked'], row['_busy'], row['_avoid'],
                 row['_pressure'] is not None and row['_pressure'] >= quota_policy.HIGH_PRESSURE,
                 score[0], score[1], high_pressure,

@@ -14,7 +14,7 @@ class RolePolicyTests(unittest.TestCase):
         expected = {
             "planner": [("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")],
             "reviewer": [("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")],
-            "designer": [("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")],
+            "designer": [("claude", "opus", "high"), ("codex", "gpt-6.1-terra", "high")],
             "explorer": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")],
             "implementer": [("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")],
             "researcher": [("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")],
@@ -47,7 +47,8 @@ class RolePolicyTests(unittest.TestCase):
                 self.assertEqual(policy.options(role, label), policy.options(role))
 
     def test_no_unselected_provider_or_model(self):
-        allowed = {"codex": {"gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna"}, "claude": {"sonnet", "opus"}}
+        # gpt-6.1-terra: the Designer's fallback, selected by the owner on 2026-10-29 (D-151)
+        allowed = {"codex": {"gpt-6-astra", "gpt-6.1-sol", "gpt-6-luna", "gpt-6.1-terra"}, "claude": {"sonnet", "opus"}}
         for role in policy.ROLES:
             for complexity in (None, "high"):
                 for provider, model, effort in policy.options(role, complexity):
