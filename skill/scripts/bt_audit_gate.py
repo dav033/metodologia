@@ -20,6 +20,7 @@ import hashlib
 import json
 import re
 import unicodedata
+from pathlib import Path
 from dataclasses import dataclass
 
 from bt_audit_evidence import DIGEST, evidence_gate, evidence_outputs, evidence_paths, tree_digest
@@ -34,6 +35,17 @@ MAX_BYTES = 1 << 20
 MAX_FINDINGS = 200
 MAX_TEXT = 600
 SEMANTIC_FINGERPRINT = re.compile(r"^[0-9a-f]{64}$")
+
+def evidence_help(rdir, task_id: str) -> str:
+    """Where an auditor keeps its screenshots, logs and other evidence: outside the repository, in the requirement's
+    evidence folder. Inside the repository an audit writes only its report and ledger; a visual audit that saved its
+    captures next to its report was rejected for files it did not declare and audited again (pictures REQ-021 T2.7,
+    then T5.5 with 16 captures, 2026-10-29)."""
+    folder = Path(rdir) / "evidence" / task_id
+    return (f"Inside the repository write only the report and the ledger. Keep screenshots, captures, logs and any other "
+            f"evidence OUTSIDE it, in `{folder}` (create it), and cite them in the report by that path; any other file "
+            "you leave in the repository makes the audit be rejected and run again.")
+
 
 def ledger_help(path: str | None = None) -> str:
     """The instruction an auditor reads: where to write the ledger (its declared path) and in which format."""
