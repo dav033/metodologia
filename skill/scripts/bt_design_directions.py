@@ -224,12 +224,15 @@ def settle(rdir: Path, ref: str, entry: dict) -> None:
         return
     entry.update(status="choosing", finished=drafts._now())
     entry["comparison"] = compare(rdir, ref, ready)
+    # the comments the batch was given are applied, by an exploration as by an iteration: left pending, the next request
+    # (moving the focus, D-146) took them for new ones and explored again over directions the owner was about to choose
+    # between (pictures REQ-021 SP-5, 2026-10-29)
+    for f in entry.get("feedback", []):
+        if (f.get("id") or f["when"]) in entry.get("feedback_batch", []) and not f.get("consumed"):
+            f["consumed"] = ready[0]["delegation"]
     if not iterated:
         drafts._event(rdir, "Designer", f"{ref}: direcciones listas para comparar y elegir", entry)
         return
-    for f in entry.get("feedback", []):
-        if f.get("id") in entry.get("feedback_batch", []) and not f.get("consumed"):
-            f["consumed"] = ready[0]["delegation"]
     entry.pop("iterate_from")
     entry["failures"] = 0
     drafts._event(rdir, "Designer", f"{ref}: dirección {ready[0]['id'].upper()} iterada", entry)
