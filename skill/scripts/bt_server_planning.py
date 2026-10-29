@@ -51,7 +51,7 @@ class PlanningActions:
         elif action == "planning-confirm":                # one click: confirmed, and sent to run or to the queue
             msg = flow.confirm(project, rdir, sid, "owner")
             if (flow.state(rdir)["subplans"].get(sid) or {}).get("state") == "confirmed":
-                msg += " " + self.run_confirmed(project, req_id(rdir), rdir, sid)
+                msg += " " + self.run_confirmed(project, req_id(rdir), rdir, sid, reconfirmed=True)
         elif action == "design-answer":
             import bt_planning_notes as notes
             question = form.get("question", "")
@@ -174,21 +174,25 @@ class PlanningActions:
             msg = self.run_confirmed(project, rid, rdir, sid)
         return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sid)}&msg={quote(msg)}"
 
-    def run_confirmed(self, project: str, rid: str, rdir: Path, sid: str) -> str:
+    def run_confirmed(self, project: str, rid: str, rdir: Path, sid: str, *, reconfirmed: bool = False) -> str:
         """Send a confirmed subplan to the Scheduler: it runs now, or waits in the queue for the earlier subplans it needs
-        (`bt_stage_queue`). A subplan already in the approved stage or in the queue is left as it is."""
+        (`bt_stage_queue`). A subplan in the queue is left as it is; one already in the approved stage too, unless the
+        owner has just confirmed it again after it changed: then the stage is approved again with the change and the run
+        joins it (pictures REQ-021 SP-7, 2026-10-29: T7.4 typed its dependency on CG-6 after SP-7 was running)."""
         from bt_server import ROOT, commit
         import bt_stages
         if self.client_address[0] not in ("127.0.0.1", "::1"):
             return "La ejecución solo se lanza desde esta máquina."
         info = bt_stages.info(rdir)
-        if sid in info["held"]:
+        if sid in info["held"] and not reconfirmed:
             return f"{sid} ya está en ejecución en la etapa r{info['revision']}."
         if sid in info["queued"]:
             return f"{sid} ya está en cola: espera a {', '.join(info['queued'][sid]['after'])}."
         try:
             msg = bt_stages.run(project, rdir, [sid], by="owner", via="web")
         except bt_stages.StageError as exc:
+            if reconfirmed and exc.code == "STAGE_SUBPLAN_UNCONFIRMED":     # other changed subplans of the stage first
+                return f"La etapa se vuelve a aprobar cuando confirmes también lo que falta: {exc.message}"
             return f"No se pudo ejecutar {sid}: {exc.message} [{exc.code}]"
         commit(ROOT, f"{project}: {rid} stage run {sid} (web)", push=False)
         self.tell_planner(project, rid, f"On the web the owner ran {sid} through the Scheduler: {msg} "
