@@ -1659,9 +1659,14 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   Operator actions the same day: SP-6's seven summary checks split into one check per criterion with the same command
   (`keep_confirmed` re-pinned the owner's confirmation); the Planner restarted on claude-luis with the missing tests as
   its first job.
-- **Consequences:** + the owner can order stages ahead; + the Planner no longer dies silently with its account;
-  − a Planner moved to an account that never accepted Claude Code's bypass-permissions prompt waits on it until the
-  owner accepts it once (the operator may not accept it for him).
+  The Planner only runs where it can run unattended (`planner_route`): Claude accounts whose settings accept
+  bypass-permissions mode (`skipDangerousModePermissionPrompt`, set only by the owner: claude-work and the default
+  account have it, claude-luis does not), else the first Codex route of the ranking (the owner's Codex homes never ask),
+  starting from `planning resume`; a notice that finds it on an owner-only prompt tells the owner where instead of
+  typing into it. Live at 12:53 the Planner moved to codex-luis `gpt-6.1-sol` high.
+- **Consequences:** + the owner can order stages ahead; + the Planner no longer dies silently with its account nor
+  waits on a prompt only the owner answers; − on Codex it starts a new conversation from its saved notes (its Claude
+  conversation stays on record and resumes when a Claude account can run it).
 - **Source:** owner, 2026-10-29 («me gustaría poder ejecutar sp8 pero que espere la ejecución y aprobación de sp7»;
   «de SP-9 para arriba faltan pruebas, eso debería hacerse automáticamente»).
 - **Evidence:** `test_stage_queue` (6), `test_planner_account` (4); live: `stage_problem` for [SP-8] refused, for

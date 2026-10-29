@@ -202,6 +202,29 @@
         "SP-12"
       ],
       "task": "T102"
+    },
+    {
+      "id": "CG-13",
+      "subplans": [
+        "SP-1",
+        "SP-2",
+        "SP-14",
+        "SP-3",
+        "SP-4",
+        "SP-5",
+        "SP-6",
+        "SP-7",
+        "SP-8",
+        "SP-9",
+        "SP-10",
+        "SP-11",
+        "SP-12",
+        "SP-13"
+      ],
+      "task": "T103",
+      "criteria": [
+        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check."
+      ]
     }
   ],
   "interfaces": [
@@ -1295,15 +1318,85 @@
     },
     {
       "acceptance_criteria": [
-        "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded."
+        "The cleanup CLI defaults to a read-only inventory, refuses an unknown database identity or an unreviewed test-account id, and applies a reviewed inventory only with a verified private backup and successful restore rehearsal; it deletes only the listed test accounts and their test projects, personal decorations, sessions, invitations and spend, keeps the owner administrator and public catalogue/English texts, and preserves advisor/shared-quote data outside the pilot cleanup.",
+        "Cleanup is atomic and idempotent under a release maintenance window: an injected failure rolls back every deletion, retry does not remove additional rows, a changed inventory or newly found account stops before mutation, and no secret, activation link or database contents appear in logs or repository artifacts.",
+        "The VPS deployment workflow and Compose configuration publish only ai-api at the exact checked SHA, retain its authentication and public route, never start the retired web container on deploy or rollback, preserve the old web data volume, and verify ai-api health instead of the retired web root. A malformed SHA or forged deployment request is refused before any container starts, and rollback cannot enable the retired web service.",
+        "The release harness starts the production Next entrypoint and ai-api against the isolated REQ-021 database, drives invitation, activation, plan denials, project and personal-decoration save/reopen, attributed fixture spend and GLB download, and rejects forged owner ids, cross-origin writes, expired sessions, a shared-password session and AUTH_LOCAL_SIN_RESTRICCIONES in a production build.",
+        "The production smoke harness accepts only the pinned Pictures production origin and release identity, uses the scoped piloto-e2e account without any paid AI request or test-only provider endpoint, verifies authenticated spend access with truthful empty-state handling, and removes only its own synthetic work and account after success or failure; incomplete cleanup remains a reported failure.",
+        "The release runbook and pilot-release@1 manifest name the checked source SHA, Vercel deployment identity, ai-api release, ordered migrations, retained administrator id, reviewed cleanup inventory hash, private backup receipt and restore-rehearsal receipt, legal readiness receipt, disabled-preview evidence, cut list and matching verification-policy authorization; missing or mismatched receipts prevent the release rehearsal from passing.",
+        "A real local release rehearsal passes the full invite-to-GLB flow and negative permission cases, restores a private backup into a disposable database, proves reviewed cleanup keeps the administrator and unrelated data, repeats cleanup without additional deletions, and records the same release-manifest identity for every check. Expected statuses come from SPEC, not implementation responses: an Entusiasta POST to the project-save API is denied with 403, a Master Designer POST to the account-administration API is denied with 403, and cross-origin project writes are refused without changing stored work.",
+        "An independent pre-release security audit checks the cleanup target and rollback, local-auth refusal, first-administrator bootstrap, retired VPS web and preview isolation against the local rehearsal; its SP-13 readiness findings ledger has no open critical or high finding before any production mutation.",
+        "After the operator follows the audited runbook and the owner runs cuentas:primer-admin when needed, the pinned production deployment passes the no-paid-AI invite-to-save-and-GLB smoke, only the retained administrator remains after synthetic cleanup, old shared-password access fails, no enabled preview can use production data, the VPS web is unavailable and ai-api remains healthy; absent operator policy or unresolved legal readiness is BLOCKED_EXTERNAL, never a pass. Expected statuses come from SPEC, not implementation responses: the synthetic Master Designer POST to the account-administration API is denied with 403, and its project and decoration POST/PUT/DELETE operations affect only its own synthetic work.",
+        "An independent final audit binds the production smoke and cleanup receipts to the published release, records the shipped and deferred subplans against the never-cut list and owner cut order, and leaves no open critical or high finding in the SP-13 final ledger; owner verification of every shipped subplan remains required."
       ],
       "covers": [
         "R14"
       ],
       "id": "SP-13",
       "milestone_id": "M5",
-      "outcome": "Every approved subplan is published to production with its migrations, the first administrator is created, an end-to-end flow (invite → activate → save project and decoration → spend appears → export GLB) passes against production, and the cut list is recorded.",
-      "title": "Pilot release in production"
+      "outcome": "The owner-approved pilot runs only on demo-decoracion.vercel.app with invited accounts, a retained owner administrator, backed-up and reviewed test-data cleanup, disabled Vercel previews and a retired VPS web while ai-api remains healthy; a local full-flow rehearsal, independent security audit and a no-paid-AI production smoke bind the published version and any owner-approved cuts.",
+      "title": "Pilot release in production",
+      "integration_test_task": "T13.5",
+      "audit_task": "T13.8",
+      "checkpoints": [
+        {
+          "task": "T13.5",
+          "purpose": "A real local release rehearsal passes the full invite-to-GLB flow and negative permission cases, restores a private backup into a disposable database, proves reviewed cleanup keeps the administrator and unrelated data, repeats cleanup without additional deletions, and records the same release-manifest identity for every check. Expected statuses come from SPEC, not implementation responses: an Entusiasta POST to the project-save API is denied with 403, a Master Designer POST to the account-administration API is denied with 403, and cross-origin project writes are refused without changing stored work."
+        },
+        {
+          "task": "T13.6",
+          "purpose": "An independent pre-release security audit checks the cleanup target and rollback, local-auth refusal, first-administrator bootstrap, retired VPS web and preview isolation against the local rehearsal; its SP-13 readiness findings ledger has no open critical or high finding before any production mutation."
+        }
+      ],
+      "consumes": [
+        {
+          "from": "SP-1",
+          "contract": "session-guard",
+          "version": 1,
+          "dependency": "implementation",
+          "verified_by": [
+            "T13.5",
+            "T13.7"
+          ]
+        },
+        {
+          "from": "SP-3",
+          "contract": "taller-scene",
+          "version": 1,
+          "dependency": "implementation",
+          "verified_by": [
+            "T13.5",
+            "T13.7"
+          ]
+        },
+        {
+          "from": "SP-4",
+          "contract": "project-document",
+          "version": 1,
+          "dependency": "implementation",
+          "verified_by": [
+            "T13.5",
+            "T13.7"
+          ]
+        },
+        {
+          "from": "SP-6",
+          "contract": "ai-usage",
+          "version": 1,
+          "dependency": "implementation",
+          "verified_by": [
+            "T13.5",
+            "T13.7"
+          ]
+        }
+      ],
+      "produces": [
+        {
+          "contract": "pilot-release",
+          "version": 1,
+          "defined_by": "T13.4"
+        }
+      ]
     }
   ],
   "tasks": [
@@ -13915,6 +14008,911 @@
         "R13"
       ],
       "kind": "test"
+    },
+    {
+      "id": "T13.1",
+      "milestone_id": "M5",
+      "title": "Guarded pilot test-data cleanup and backup-restore checks",
+      "objective": "Implement an inventory-first cleanup CLI and tests; require explicit target identity, retained administrator id, reviewed row inventory/hash and verified backup/restore receipts before applying. Backup creation and restore rehearsal run outside the short deletion transaction. Serialize with the release maintenance lock; refuse concurrent changes, wildcard deletion, unknown accounts and non-pilot schemas. Never use normal account-deletion APIs to bypass the saved-work rule. Register piloto:test-limpieza and piloto:limpieza package scripts.",
+      "repository": "pictures",
+      "after": [
+        "T102"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 150,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 150 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        "scripts/piloto/limpieza.ts",
+        "scripts/piloto/respaldo.ts",
+        "scripts/test/test-piloto-limpieza.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:pilot-release",
+        "database:pilot-cleanup"
+      ],
+      "acceptance_criteria": [
+        "The cleanup CLI defaults to a read-only inventory, refuses an unknown database identity or an unreviewed test-account id, and applies a reviewed inventory only with a verified private backup and successful restore rehearsal; it deletes only the listed test accounts and their test projects, personal decorations, sessions, invitations and spend, keeps the owner administrator and public catalogue/English texts, and preserves advisor/shared-quote data outside the pilot cleanup.",
+        "Cleanup is atomic and idempotent under a release maintenance window: an injected failure rolls back every deletion, retry does not remove additional rows, a changed inventory or newly found account stops before mutation, and no secret, activation link or database contents appear in logs or repository artifacts."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:test-limpieza -- --caso limites",
+          "purpose": "The cleanup CLI defaults to a read-only inventory, refuses an unknown database identity or an unreviewed test-account id, and applies a reviewed inventory only with a verified private backup and successful restore rehearsal; it deletes only the listed test accounts and their test projects, personal decorations, sessions, invitations and spend, keeps the owner administrator and public catalogue/English texts, and preserves advisor/shared-quote data outside the pilot cleanup.",
+          "created_by": "T13.1",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run piloto:test-limpieza -- --caso fallo-y-reintento",
+          "purpose": "Cleanup is atomic and idempotent under a release maintenance window: an injected failure rolls back every deletion, retry does not remove additional rows, a changed inventory or newly found account stops before mutation, and no secret, activation link or database contents appear in logs or repository artifacts.",
+          "created_by": "T13.1",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks: high reasoning covers transactional deletion boundaries, backup provenance, interrupted reruns and account/work retention; bounded to the pilot schema rather than generic backup infrastructure.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks has a provisional 150-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Guarded pilot test-data cleanup and backup-restore checks follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.2",
+      "milestone_id": "M5",
+      "title": "Keep ai-api deploys from reopening the retired VPS web",
+      "objective": "Change the checked workflow and compose deployment to ai-api only, and version an ai-only deploy entrypoint for the operator to install at cutover. Remove the default web-start path, including remote forced-command and rollback behavior. Keep separate ai upstream routing/authentication, immutable SHA images and the existing web volume. Add command-adapter tests for deploy/rollback, wrong SHA, missing health and attempted web startup; register piloto:test-despliegue. No VPS mutation in this implementation task.",
+      "repository": "pictures",
+      "after": [
+        "T13.1"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 120,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 120 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".github/workflows/deploy.yml",
+        "compose.vps.yml",
+        "scripts/ops/deploy-ai-api.sh",
+        "scripts/test/test-piloto-despliegue.ts"
+      ],
+      "shared_resources": [
+        "contract:pilot-release",
+        "deploy:advin-ai"
+      ],
+      "acceptance_criteria": [
+        "The VPS deployment workflow and Compose configuration publish only ai-api at the exact checked SHA, retain its authentication and public route, never start the retired web container on deploy or rollback, preserve the old web data volume, and verify ai-api health instead of the retired web root. A malformed SHA or forged deployment request is refused before any container starts, and rollback cannot enable the retired web service."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:test-despliegue",
+          "purpose": "The VPS deployment workflow and Compose configuration publish only ai-api at the exact checked SHA, retain its authentication and public route, never start the retired web container on deploy or rollback, preserve the old web data volume, and verify ai-api health instead of the retired web root. A malformed SHA or forged deployment request is refused before any container starts, and rollback cannot enable the retired web service.",
+          "created_by": "T13.2",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web: high reasoning coordinates workflow, the installed remote entrypoint, reverse-proxy routing and rollback without resurrecting legacy authentication.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web has a provisional 120-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Keep ai-api deploys from reopening the retired VPS web follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.3",
+      "milestone_id": "M5",
+      "title": "Release rehearsal and scoped production smoke harness",
+      "objective": "Implement the production-entrypoint local rehearsal and deployed smoke, with trusted target/release pinning, bounded deadlines and synthetic-account ownership. Local mode uses isolated Postgres and stub provider usage; production mode never enables a test provider or sends paid AI calls and never records synthetic billing. Expected denied-role/write/expiry values come from SPEC. Register piloto:test-harness, piloto:ensayo and piloto:smoke; no production invocation in this task.",
+      "repository": "pictures",
+      "after": [
+        "T13.2"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 180,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 180 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        "scripts/piloto/manifest.ts",
+        "scripts/e2e/piloto/local.ts",
+        "scripts/e2e/piloto/produccion.ts",
+        "scripts/test/test-piloto-harness.ts"
+      ],
+      "shared_resources": [
+        "package.json scripts",
+        "contract:pilot-release",
+        "contract:session-guard",
+        "contract:ai-usage"
+      ],
+      "acceptance_criteria": [
+        "The release harness starts the production Next entrypoint and ai-api against the isolated REQ-021 database, drives invitation, activation, plan denials, project and personal-decoration save/reopen, attributed fixture spend and GLB download, and rejects forged owner ids, cross-origin writes, expired sessions, a shared-password session and AUTH_LOCAL_SIN_RESTRICCIONES in a production build.",
+        "The production smoke harness accepts only the pinned Pictures production origin and release identity, uses the scoped piloto-e2e account without any paid AI request or test-only provider endpoint, verifies authenticated spend access with truthful empty-state handling, and removes only its own synthetic work and account after success or failure; incomplete cleanup remains a reported failure."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:test-harness -- --caso ensayo",
+          "purpose": "The release harness starts the production Next entrypoint and ai-api against the isolated REQ-021 database, drives invitation, activation, plan denials, project and personal-decoration save/reopen, attributed fixture spend and GLB download, and rejects forged owner ids, cross-origin writes, expired sessions, a shared-password session and AUTH_LOCAL_SIN_RESTRICCIONES in a production build.",
+          "created_by": "T13.3",
+          "category": "functional",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        },
+        {
+          "type": "command",
+          "value": "npm run piloto:test-harness -- --caso produccion-simulada",
+          "purpose": "The production smoke harness accepts only the pinned Pictures production origin and release identity, uses the scoped piloto-e2e account without any paid AI request or test-only provider endpoint, verifies authenticated spend access with truthful empty-state handling, and removes only its own synthetic work and account after success or failure; incomplete cleanup remains a reported failure.",
+          "created_by": "T13.3",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "implement",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Release rehearsal and scoped production smoke harness: high reasoning spans browser activation/session transitions, two real services, persisted work, cleanup on failure and a paid-provider prohibition; the harness is implementation work, not a command-only test task.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Release rehearsal and scoped production smoke harness is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Release rehearsal and scoped production smoke harness has a provisional 180-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Release rehearsal and scoped production smoke harness guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Release rehearsal and scoped production smoke harness shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Release rehearsal and scoped production smoke harness follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.4",
+      "milestone_id": "M5",
+      "title": "Versioned pilot publication, legal gate and rollback runbook",
+      "objective": "Write docs/req021/pilot-release.md and a pilot-release@1 manifest template validated by T13.3. Document backwards from Nov 16: release candidate by Nov 13, rehearsal/restore/security audit Nov 13-14, operator cutover/smoke Nov 15, reserve Nov 16. Preserve owner cut dates Nov 9/11/12; a cut requires a new owner-approved plan amendment and dependency rewiring, never silent task omission. List exact source-quality commands, additive migrations, backup then private restore rehearsal, maintenance window, owner bootstrap command (never capture its link), reviewed cleanup, preview disablement including existing previews, VPS web retirement and authenticated ai-api health. Record the deployed-version rollback and preserve compatible schema; database restore after real usage needs a separate owner decision and must never reopen legacy shared-password access. Legal placeholders are not legal approval.",
+      "repository": "pictures",
+      "after": [
+        "T13.3"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 60 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        "docs/req021/pilot-release.md",
+        "docs/req021/pilot-release.template.json"
+      ],
+      "shared_resources": [
+        "contract:pilot-release"
+      ],
+      "acceptance_criteria": [
+        "The release runbook and pilot-release@1 manifest name the checked source SHA, Vercel deployment identity, ai-api release, ordered migrations, retained administrator id, reviewed cleanup inventory hash, private backup receipt and restore-rehearsal receipt, legal readiness receipt, disabled-preview evidence, cut list and matching verification-policy authorization; missing or mismatched receipts prevent the release rehearsal from passing."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:test-harness -- --caso recibos",
+          "purpose": "The release runbook and pilot-release@1 manifest name the checked source SHA, Vercel deployment identity, ai-api release, ordered migrations, retained administrator id, reviewed cleanup inventory hash, private backup receipt and restore-rehearsal receipt, legal readiness receipt, disabled-preview evidence, cut list and matching verification-policy authorization; missing or mismatched receipts prevent the release rehearsal from passing.",
+          "created_by": "T13.3",
+          "category": "functional"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "docs",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook: medium reasoning turns existing owner decisions into one bounded operator sequence; tooling and receipt validation are owned by earlier tasks, not hidden in documentation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook has a provisional 60-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind docs -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Versioned pilot publication, legal gate and rollback runbook follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.5",
+      "milestone_id": "M5",
+      "title": "Run the isolated production-entrypoint pilot rehearsal",
+      "objective": "Run piloto:ensayo on the exact integrated candidate with the isolated REQ-021 database and fake providers. Record real entrypoint readiness, browser outcomes, backup/restore and interrupted-cleanup cases. Do not create or repair harness code, mutate production or approve scope; a failure returns to its owning implementation task.",
+      "repository": "pictures",
+      "after": [
+        "T13.4"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 60 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".evidence/REQ-021/SP-13.rehearsal.json"
+      ],
+      "shared_resources": [
+        "contract:pilot-release",
+        "database:req021-test"
+      ],
+      "acceptance_criteria": [
+        "A real local release rehearsal passes the full invite-to-GLB flow and negative permission cases, restores a private backup into a disposable database, proves reviewed cleanup keeps the administrator and unrelated data, repeats cleanup without additional deletions, and records the same release-manifest identity for every check. Expected statuses come from SPEC, not implementation responses: an Entusiasta POST to the project-save API is denied with 403, a Master Designer POST to the account-administration API is denied with 403, and cross-origin project writes are refused without changing stored work."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:ensayo",
+          "purpose": "A real local release rehearsal passes the full invite-to-GLB flow and negative permission cases, restores a private backup into a disposable database, proves reviewed cleanup keeps the administrator and unrelated data, repeats cleanup without additional deletions, and records the same release-manifest identity for every check. Expected statuses come from SPEC, not implementation responses: an Entusiasta POST to the project-save API is denied with 403, a Master Designer POST to the account-administration API is denied with 403, and cross-origin project writes are refused without changing stored work.",
+          "created_by": "T13.3",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal: medium reasoning executes and reports the established release harness; fixtures, browser orchestration and cleanup behavior were implemented in T13.1-T13.3.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal has a provisional 60-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Run the isolated production-entrypoint pilot rehearsal follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.6",
+      "milestone_id": "M5",
+      "title": "Independent pilot security and recovery readiness audit",
+      "objective": "Read-only audit of the cleanup transaction/inventory, backup restore, deployment lifecycle and local production-entrypoint evidence before external work. Verify malformed/forged/cross-origin/expired/denied-role cases use SPEC oracles. Check legal and operator authorization receipts are still explicit release gates. Findings name only the introducing tasks and necessary dependents.",
+      "repository": "pictures",
+      "after": [
+        "T13.5"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 75,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 75 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".evidence/REQ-021/SP-13.readiness.md",
+        ".evidence/REQ-021/SP-13.readiness.findings.json"
+      ],
+      "shared_resources": [
+        "ledger:SP-13-readiness",
+        "contract:pilot-release"
+      ],
+      "acceptance_criteria": [
+        "An independent pre-release security audit checks the cleanup target and rollback, local-auth refusal, first-administrator bootstrap, retired VPS web and preview isolation against the local rehearsal; its SP-13 readiness findings ledger has no open critical or high finding before any production mutation."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-13.readiness.findings.json",
+          "purpose": "An independent pre-release security audit checks the cleanup target and rollback, local-auth refusal, first-administrator bootstrap, retired VPS web and preview isolation against the local rehearsal; its SP-13 readiness findings ledger has no open critical or high finding before any production mutation.",
+          "created_by": "T13.6",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "audit",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Independent pilot security and recovery readiness audit: high reasoning challenges destructive cleanup, rollback compatibility and authentication gates across the deployed boundary; this independent audit is separate from implementation and command execution.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Independent pilot security and recovery readiness audit is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Independent pilot security and recovery readiness audit has a provisional 75-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Independent pilot security and recovery readiness audit guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Independent pilot security and recovery readiness audit shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Independent pilot security and recovery readiness audit follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.7",
+      "milestone_id": "M5",
+      "title": "Verify the operator-published pilot without paid AI",
+      "objective": "Wait for operator publication using the audited runbook, explicit mutation authority, legal completion and the matching production verification policy. This test task runs only the established deployed smoke and records results. It cannot merge, deploy, configure services, create the first administrator for the owner, manufacture spend or waive a gate. Report blocked external inputs for retry, not source failure or approval. Smoke teardown deletes only its own reviewed synthetic rows; never repeat the pre-pilot bulk cleanup after real invitations. The owner creates the piloto-e2e invitation and privately supplies its short-lived activation/password material; no administrator credentials are given to the smoke. Staff spend-view access is an owner attestation, while the smoke checks the synthetic user is denied staff APIs.",
+      "repository": "pictures",
+      "after": [
+        "T13.6"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 60 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".evidence/REQ-021/SP-13.production.json"
+      ],
+      "shared_resources": [
+        "contract:pilot-release",
+        "deploy:pictures-production"
+      ],
+      "acceptance_criteria": [
+        "The operator records legal completion, disabled previews, checked-SHA publication, a verified private backup/restore rehearsal and reviewed cleanup; the owner privately runs the first-administrator command if needed. Production mutations have their explicit operator/owner authorization before the smoke starts.",
+        "After the operator follows the audited runbook and the owner runs cuentas:primer-admin when needed, the pinned production deployment passes the no-paid-AI invite-to-save-and-GLB smoke, only the retained administrator remains after synthetic cleanup, old shared-password access fails, no enabled preview can use production data, the VPS web is unavailable and ai-api remains healthy; absent operator policy or unresolved legal readiness is BLOCKED_EXTERNAL, never a pass. Expected statuses come from SPEC, not implementation responses: the synthetic Master Designer POST to the account-administration API is denied with 403, and its project and decoration POST/PUT/DELETE operations affect only its own synthetic work."
+      ],
+      "verification": [
+        {
+          "type": "manual",
+          "value": "Operator release receipts and owner bootstrap attestation",
+          "purpose": "The operator records legal completion, disabled previews, checked-SHA publication, a verified private backup/restore rehearsal and reviewed cleanup; the owner privately runs the first-administrator command if needed. Production mutations have their explicit operator/owner authorization before the smoke starts.",
+          "expected": "The operator records legal completion, disabled previews, checked-SHA publication, a verified private backup/restore rehearsal and reviewed cleanup; the owner privately runs the first-administrator command if needed. Production mutations have their explicit operator/owner authorization before the smoke starts.",
+          "category": "product",
+          "environment": "human_attestation"
+        },
+        {
+          "type": "command",
+          "value": "npm run piloto:smoke -- --base https://demo-decoracion.vercel.app",
+          "purpose": "After the operator follows the audited runbook and the owner runs cuentas:primer-admin when needed, the pinned production deployment passes the no-paid-AI invite-to-save-and-GLB smoke, only the retained administrator remains after synthetic cleanup, old shared-password access fails, no enabled preview can use production data, the VPS web is unavailable and ai-api remains healthy; absent operator policy or unresolved legal readiness is BLOCKED_EXTERNAL, never a pass. Expected statuses come from SPEC, not implementation responses: the synthetic Master Designer POST to the account-administration API is denied with 403, and its project and decoration POST/PUT/DELETE operations affect only its own synthetic work.",
+          "created_by": "T13.3",
+          "category": "integration",
+          "environment": "production",
+          "requires": [
+            "service:pictures-production",
+            "service:advin-ai",
+            "PICTURES_PILOT_SMOKE_CREDENTIALS"
+          ],
+          "authorization_needed": "Owner-authorized REQ-021 pilot smoke on demo-decoracion.vercel.app using only piloto-e2e synthetic data, no paid AI, scoped cleanup after the smoke; operator must install the matching verification policy."
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "test",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Verify the operator-published pilot without paid AI: medium reasoning executes an existing scoped smoke after trusted receipts; operator publication and first-admin bootstrap remain separate explicit actions.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Verify the operator-published pilot without paid AI is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Verify the operator-published pilot without paid AI has a provisional 60-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Verify the operator-published pilot without paid AI guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Verify the operator-published pilot without paid AI shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Verify the operator-published pilot without paid AI follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T13.8",
+      "milestone_id": "M5",
+      "title": "Final pilot evidence and cut-order audit",
+      "objective": "Independently review local and deployed evidence plus the owner/operator release receipts. Bind source SHA, deployment identity, migrations and backup/cleanup results; check all never-cut items, exact cuts and owner approvals. Do not infer a successful release from process exit, a local rehearsal or an empty report. Produce the final findings ledger; D-131 owner verification remains outside this audit.",
+      "repository": "pictures",
+      "after": [
+        "T13.7"
+      ],
+      "complexity": "high",
+      "scope": "small_change",
+      "estimated_minutes": 60,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 60 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".evidence/REQ-021/SP-13.audit.md",
+        ".evidence/REQ-021/SP-13.findings.json"
+      ],
+      "shared_resources": [
+        "ledger:SP-13",
+        "contract:pilot-release"
+      ],
+      "acceptance_criteria": [
+        "An independent final audit binds the production smoke and cleanup receipts to the published release, records the shipped and deferred subplans against the never-cut list and owner cut order, and leaves no open critical or high finding in the SP-13 final ledger; owner verification of every shipped subplan remains required."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-13.findings.json",
+          "purpose": "An independent final audit binds the production smoke and cleanup receipts to the published release, records the shipped and deferred subplans against the never-cut list and owner cut order, and leaves no open critical or high finding in the SP-13 final ledger; owner verification of every shipped subplan remains required.",
+          "created_by": "T13.8",
+          "category": "static"
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "audit",
+      "subplan_id": "SP-13",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Final pilot evidence and cut-order audit: high reasoning verifies production provenance, external blockers and cut-dependent compatibility across all shipped subplans without approving for the owner.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Final pilot evidence and cut-order audit is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Final pilot evidence and cut-order audit has a provisional 60-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Final pilot evidence and cut-order audit guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Final pilot evidence and cut-order audit shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Final pilot evidence and cut-order audit follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
+    },
+    {
+      "id": "T103",
+      "milestone_id": "M5",
+      "title": "Final composition CG-13: pilot candidate and publication identity",
+      "objective": "Run the established pilot rehearsal in CG-13 mode on the final integrated tree; compare the audited release receipt to the same manifest, without production mutation or paid AI.",
+      "repository": "pictures",
+      "after": [
+        "T13.8"
+      ],
+      "complexity": "medium",
+      "scope": "small_change",
+      "estimated_minutes": 30,
+      "risk": "high",
+      "coupling": "medium",
+      "confidence": "medium",
+      "estimate_rationale": "Provisional agent estimate: 30 minutes for this bounded deliverable and its local verification. History returned unknown with no comparable duration/retry samples; this is not human effort or a calendar promise.",
+      "expected_paths": [
+        ".evidence/REQ-021/CG-13.integration.json"
+      ],
+      "shared_resources": [
+        "candidate:CG-13",
+        "contract:pilot-release"
+      ],
+      "acceptance_criteria": [
+        "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check."
+      ],
+      "verification": [
+        {
+          "type": "command",
+          "value": "npm run piloto:ensayo -- --modo CG-13",
+          "purpose": "The final cumulative pilot candidate passes the local invite-to-save-and-GLB integration with role denials and truthful fixture spend, and its release manifest matches the independently audited production receipt; no cut is inferred from a missing task or failed check.",
+          "created_by": "T13.3",
+          "category": "integration",
+          "requires": [
+            "PICTURES_REQ021_DATABASE_URL"
+          ]
+        }
+      ],
+      "covers": [
+        "R14"
+      ],
+      "kind": "test",
+      "classification_evidence": {
+        "complexity": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity: medium reasoning executes the existing cumulative entrypoint check and compares pinned publication identities.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "scope": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity is limited to the listed release files and evidence; no earlier product subplan is rebuilt.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "duration": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity has a provisional 30-minute agent estimate including focused verification; comparable history remains unknown.",
+          "evidence": [
+            "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples"
+          ]
+        },
+        "risk": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity guards production authentication or private data; a missed release check can expose accounts or lose test-cleanup boundaries.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "coupling": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity shares the pilot release manifest and the audited release candidate with its explicit prerequisites.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        },
+        "confidence": {
+          "justification": "Final composition CG-13: pilot candidate and publication identity follows inspected deployment and migration boundaries; the new release harness and operator receipts still require implementation.",
+          "evidence": [
+            "file:compose.vps.yml",
+            "file:.github/workflows/deploy.yml",
+            "file:scripts/migrate.ts",
+            "spec:SPEC.md#clarifications"
+          ]
+        }
+      }
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
- "digest": "34033fa9d380ef6204482fd8edf4461b522e6682039843d76a78a7904a94da8e",
+ "digest": "a490c596e09d712aa985f1657c85ed14d6dc0a0778185e67953a168fe1c718a1",
  "rows": [
   {
    "subplan": "SP-7",
@@ -57,9 +57,9 @@
   },
   {
    "subplan": "SP-13",
-   "tasks": 0,
-   "ok": false,
-   "problem": "sin tareas: todavía no está definido",
+   "tasks": 8,
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
    "errors": [],
    "new_errors": []
