@@ -41,12 +41,25 @@ def _port(call):
 
 
 def plan(run: RunRef):
-    """The validated Plan for a run: rebuilt from the checkpointed approved text, cached per process."""
+    """The validated Plan for a run, for use INSIDE a step: rebuilt from the approved text, cached per process."""
     key = (run.run_id, run.plan_sha256)
     if key not in _PLANS:
         from ..legacy import load_plan
         _PLANS[key] = load_plan(plan_text(run.model_dump(mode="json")), approved_sha256=run.plan_sha256,
                                 plan_id=run.plan_id, revision=run.revision)
+    return _PLANS[key]
+
+
+def workflow_plan(run: RunRef):
+    """The Plan for a workflow BODY: the `bt.plan_text` step runs (or replays) every time, whatever this process has
+    cached. With `plan()` there, the step was recorded only when the cache was cold, so a run workflow recovered after
+    a task workflow of the same run had warmed the cache skipped its first step and failed with
+    DBOSUnexpectedStepError (found by tests/test_durable_upgrade.py, REQ-030 iteration 2)."""
+    from ..legacy import load_plan
+    text = plan_text(run.model_dump(mode="json"))
+    key = (run.run_id, run.plan_sha256)
+    if key not in _PLANS:
+        _PLANS[key] = load_plan(text, approved_sha256=run.plan_sha256, plan_id=run.plan_id, revision=run.revision)
     return _PLANS[key]
 
 

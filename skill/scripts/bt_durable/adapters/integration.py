@@ -149,11 +149,14 @@ class GitLineIntegrator:
         repo = self._repo(role)
         self._run_line(run, role)                       # a fresh run: the line and its base pin exist from here on
         report: dict[str, dict] = {}
+        try:
+            base = self.line_base(run, role)
+        except RuntimeError as error:                   # a line made by an engine before the pin: the operator pins it
+            return {"error": str(error)}
         for subplan_id, entries in items.items():
             ref = self.subplan_ref(run, role, subplan_id)
             tip = self._tip(repo, ref)
             if not tip:
-                base = self.line_base(run, role)
                 created = _git(repo, "update-ref", ref, base, "", check=False)
                 tip = base if created.returncode == 0 else self._tip(repo, ref)
             applied, conflicts = [], {}

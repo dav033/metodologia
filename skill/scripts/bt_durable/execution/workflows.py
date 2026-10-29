@@ -66,7 +66,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     plan order, so dependents build on them; reconcilable ones are verified again before they count."""
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
     legacy = LegacyProgress.model_validate(legacy_data)
-    plan = steps.plan(run)
+    plan = steps.workflow_plan(run)
     states: dict[str, str] = {}
     results: dict[str, dict] = {}
     reconcile = legacy.of("reconcile")
@@ -104,11 +104,16 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         if lines_on:
             accepted = _accepted_snapshots(states, results, inherit)
             if frozenset(accepted) != synced or not synced:
+                complete = True
                 for role, items in _line_items(plan, accepted).items():
                     report = steps.sync_lines(run_data, role, items)
-                    if any(item["conflicts"] for item in report.values()):
+                    if "error" in report:               # e.g. LINE_BASE_UNKNOWN: reported, tried again next turn
+                        complete = False
+                        steps.emit("subplan_lines_unavailable", {"run_id": run.run_id, "role": role,
+                                                                 "reason": report["error"]})
+                    elif any(item["conflicts"] for item in report.values()):
                         steps.emit("subplan_line_conflict", {"run_id": run.run_id, "report": report})
-                synced = frozenset(accepted)
+                synced = frozenset(accepted) if complete else frozenset()
             for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
                 built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
                                                           for sp in gate.subplans})
@@ -548,22 +553,17 @@ def agent_workflow(attempt_data: dict, route_data: dict, base: str, note: str, l
     report = steps.read(attempt_data, route_data, process)
     snapshot = steps.capture(attempt_data, material)
     steps.release(attempt_data)
+    spec = frontier.task(steps.workflow_plan(AttemptRef.model_validate(attempt_data).run),
+                         AttemptRef.model_validate(attempt_data).task_id)
     return {"prepared": material, "process": process, "agent": report, "snapshot": snapshot,
-            "requires": _requires(attempt_data), "paths": _paths(attempt_data)}
+            "requires": _requires(spec), "paths": list(spec.expected_paths)}
 
 
-def _requires(attempt_data: dict) -> list[str]:
-    ref = AttemptRef.model_validate(attempt_data)
-    task = frontier.task(steps.plan(ref.run), ref.task_id)
+def _requires(task) -> list[str]:
     names = []
     for check in task.verification:
         names += [r for r in check.get("requires", ()) if isinstance(r, str) and not r.startswith("service:")]
     return names
-
-
-def _paths(attempt_data: dict) -> list[str]:
-    ref = AttemptRef.model_validate(attempt_data)
-    return list(frontier.task(steps.plan(ref.run), ref.task_id).expected_paths)
 
 
 @DBOS.workflow(name="bt.verify")
