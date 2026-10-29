@@ -30,12 +30,9 @@ class StageError(Exception):
         self.code, self.message = code, message
 
 
-DURABLE_REFUSAL = ("Este plan corre en el runtime durable, que todavía no suma etapas nuevas a un run en marcha: "
-                   "no se aprobó ninguna etapa. Las tareas de este subplan quedan para cuando exista esa unión.")
-
-
 def durable_owner(rdir: Path) -> bool:
-    """The run belongs to the durable runtime (`RUN.owner.json` backend dbos), which cannot join a later stage yet."""
+    """The run belongs to the durable runtime (`RUN.owner.json` backend dbos): a stage joins it with `bt-durable join`
+    (bt_durable.stage_join, D-149), never through the legacy Scheduler, which refuses such a run."""
     import bt_run_owner
     try:
         return bt_run_owner.backend(rdir) == "dbos"
@@ -191,7 +188,30 @@ def _start_owner(project: str, req: str, rdir: Path) -> bool:
     return ops.ensure_watch(project, req, rdir)
 
 
-def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path], bool] | None = None) -> str:
+def _durable_join(project: str, rdir: Path, join: Callable[[], dict] | None) -> str:
+    """The run the durable runtime owns continues in the latest approved stage (`bt-durable join`, D-149)."""
+    import bt_durable_panel
+    from bt_core import ROOT
+    try:
+        outcome = join() if join else bt_durable_panel.run_cli(["join", project, _req(rdir)], root=Path(ROOT))
+    except RuntimeError as error:
+        raise StageError("DURABLE_JOIN_FAILED", str(error)) from error
+    counts = outcome.get("counts") or {}
+    if outcome.get("status") == "joined":
+        return (f"El runtime durable sigue en la etapa ({outcome.get('to')}): {counts.get('inherit', 0)} tareas aceptadas "
+                f"se conservan sin repetirse, {counts.get('reconcile', 0)} se reanudan desde su último trabajo y "
+                f"{counts.get('redo', 0)} empiezan.")
+    if outcome.get("status") == "waiting":
+        live = ", ".join(outcome.get("live") or [])
+        return (f"El run quedó en pausa hasta que terminen los intentos en curso ({live}); en cuanto acaben, el motor "
+                "lo une a la etapa solo.")
+    if outcome.get("status") == "current":
+        return "La ejecución ya corre la etapa aprobada."
+    raise StageError(str(outcome.get("code") or "DURABLE_JOIN_REFUSED"), str(outcome.get("message") or outcome))
+
+
+def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path], bool] | None = None,
+                  join: Callable[[], dict] | None = None) -> str:
     """Make the Scheduler run the latest approved stage: a new run, an immediate join of an idle run, or a join at the
     running owner's next quiet point. Never cancels a live attempt."""
     import bt_plan_adapter
@@ -201,7 +221,7 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
 
     req = _req(rdir)
     if durable_owner(rdir):
-        raise StageError("DURABLE_OWNER", DURABLE_REFUSAL)
+        return _durable_join(project, rdir, join)
     start = start or _start_owner
     authority = sa.authority(rdir)
     if authority == "legacy":
@@ -228,12 +248,11 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
 
 
 def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str = "web",
-        start: Callable[[str, str, Path], bool] | None = None) -> str:
-    """«Ejecutar subplan»: approve the stage with `add`, then have the Scheduler run it. Raises StageError."""
-    if durable_owner(rdir):          # refused before anything is frozen: the legacy Scheduler may not take a durable run
-        raise StageError("DURABLE_OWNER", DURABLE_REFUSAL)
+        start: Callable[[str, str, Path], bool] | None = None, join: Callable[[], dict] | None = None) -> str:
+    """«Ejecutar subplan»: approve the stage with `add`, then have the Scheduler run it (a durable run: continue it in
+    the stage). Raises StageError."""
     entry = freeze(project, rdir, add)
-    message = start_or_join(project, rdir, start=start)
+    message = start_or_join(project, rdir, start=start, join=join)
     stage = entry.get("stage") or {}
     held = ", ".join(stage.get("subplans") or approved(rdir))
     pending = len(stage.get("pending_subplans") or [])

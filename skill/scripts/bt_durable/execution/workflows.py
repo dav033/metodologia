@@ -89,6 +89,11 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         item = inherit.get(task.id)
         if item is None:
             continue
+        if item.integrated:     # a later stage (stage_join): its copied lines hold it already; no step, so a run started
+            states[task.id] = "inherited"           # from an older input replays exactly the steps it recorded
+            results[task.id] = {"task_id": task.id, "status": "inherited", "provenance": item.provenance,
+                                "snapshot_sha": item.snapshot_sha}
+            continue
         snapshot = Snapshot(snapshot_sha=item.snapshot_sha, base_sha=item.base_sha, manifest_path=item.manifest_path)
         merged = _enqueue(engine.INTEGRATE, f"bt:{run.run_id}:seed:{task.id}", integrate_workflow, run_data, task.id,
                           snapshot.model_dump(mode="json"))

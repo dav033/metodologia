@@ -3,6 +3,8 @@
   engine                                  run the engine service (systemd: deploy/bt-durable.service)
   start PROJECT REQ                       start the latest frozen revision of a NEW run under the durable runtime
   migrate PROJECT REQ [--apply|--rollback]  move a legacy run (dry run by default; see bt_durable.migrate)
+  join PROJECT REQ [--dry-run] [--confirm]  the latest frozen stage continues the durable run (bt_durable.stage_join);
+                                          JSON out: joined | waiting (paused until live attempts end) | refused
   status PROJECT REQ                      run summary, task states, open decisions
   project PROJECT REQ                     rebuild the panels' projection of the run from DBOS (bt_durable.projection)
   remote PROJECT REQ  < request.json      a remote panel command, checked against a fresh projection (JSON out)
@@ -192,6 +194,34 @@ def cmd_migrate(args) -> int:
     return 0
 
 
+def cmd_join(args) -> int:
+    """«Ejecutar subplan» on a durable run (D-149): exit 0 joined/waiting/dry run, 3 refused (JSON on stdout)."""
+    from bt_scheduler_executor_adapter import repositories
+
+    from . import stage_join
+    from .adapters.telemetry import JsonlTelemetry
+    rdir = requirement_dir(args.project, args.req)
+    try:
+        new = latest_frozen(rdir, args.project, args.req)
+        if not args.dry_run:
+            preflight(new, rdir)
+    except SystemExit as refused:                       # the stage's plan is refused before anything moves
+        print(json.dumps({"status": "refused", "code": "PLAN_PREFLIGHT", "message": str(refused)}, ensure_ascii=False))
+        return 3
+    client = _client()
+    try:
+        outcome = stage_join.join(client, rdir, state_dir=Path(bt_core.STATE) / "durable", new=new,
+                                  repositories=repositories(args.project), confirm=args.confirm, dry_run=args.dry_run,
+                                  emit=JsonlTelemetry(Path(bt_core.STATE) / "durable" / "telemetry.jsonl").emit)
+    except stage_join.JoinRefused as refused:
+        print(json.dumps({"status": "refused", "code": refused.code, "message": refused.message}, ensure_ascii=False))
+        return 3
+    finally:
+        client.close()
+    print(json.dumps(outcome, ensure_ascii=False, default=str))
+    return 0
+
+
 def cmd_status(args) -> int:
     client = _client()
     try:
@@ -311,6 +341,11 @@ def main(argv: list[str] | None = None) -> int:
     group = m.add_mutually_exclusive_group()
     group.add_argument("--apply", action="store_true")
     group.add_argument("--rollback", action="store_true")
+    j = sub.add_parser("join")
+    j.add_argument("project")
+    j.add_argument("req")
+    j.add_argument("--dry-run", action="store_true")
+    j.add_argument("--confirm", action="store_true", help="also when the stage changes accepted tasks (they run again)")
     a = sub.add_parser("answer")
     for name in ("project", "req", "task", "request_id"):
         a.add_argument(name)
@@ -328,7 +363,7 @@ def main(argv: list[str] | None = None) -> int:
         r.add_argument(name)
     r.add_argument("--note", default="")
     args = parser.parse_args(argv)
-    handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "status": cmd_status,
+    handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "join": cmd_join, "status": cmd_status,
                 "answer": cmd_answer, "attest": cmd_attest, "pause": cmd_command, "resume": cmd_command,
                 "retry-task": cmd_command, "cancel": cmd_cancel, "project": cmd_project, "remote": cmd_remote}
     return handlers[args.cmd](args)

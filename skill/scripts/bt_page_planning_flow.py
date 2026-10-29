@@ -123,10 +123,6 @@ def _run_button(ctx: dict, s: dict) -> str:
     item = ctx["flow"]["subplans"].get(s["id"]) or {}
     if item.get("state") != "confirmed" or not s.get("tasks"):
         return ""
-    import bt_stages
-    if bt_stages.durable_owner(ctx["rdir"]):
-        return ('<span class="pp-chip warn" title="El runtime durable que corre este plan todavía no suma etapas nuevas a '
-                'un run en marcha">Ejecutar subplan: aún no disponible en el runtime durable</span>')
     return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], "stage-run")}" class="pp-inline">'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(s["id"])}">'
             f'<input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}"><button type="submit" class="outline" '

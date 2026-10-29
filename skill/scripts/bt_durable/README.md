@@ -118,6 +118,30 @@ uv run bt-durable migrate pictures REQ-021 --rollback # cancel the durable workf
   `SHA256SUMS`. Re-applying with the same inventory is a no-op; ownership moves by compare-and-swap.
 - Refused while a legacy owner process or a live legacy attempt exists.
 
+## Later stages of a durable run (stage join, D-149)
+
+A durable run is bound to one frozen revision (`RunRef`: line refs, attempt keys and compositions carry `r<N>`). When
+«Ejecutar subplan» approves a later stage (D-134), `bitacora.py` freezes it as before and asks `bt-durable join PROJECT
+REQ` (`bt_durable.stage_join`) to continue the run there; the legacy Scheduler never takes a durable run.
+
+```sh
+uv run bt-durable join pictures REQ-021 --dry-run    # per task: inherit | reconcile | redo, live attempts, redone work
+uv run bt-durable join pictures REQ-021              # joined | waiting | refused (JSON)
+```
+
+- The run of the new revision starts where the current one is: its run lines, base pins and subplan lines are copied
+  (`r<old>` → `r<new>`, create-only), so accepted work and anything an operator committed on a line are kept.
+- Accepted tasks whose specification did not change are inherited without a step (`LegacyTask.integrated`); a task with
+  a captured snapshot that was not accepted is reconciled (verified again, then continued from its snapshot); the rest
+  runs. Composition gates compose again from the copied subplan lines, under the new revision's namespace.
+- A stage that changes accepted tasks is refused (`JOIN_NEEDS_CONFIRM`) unless `--confirm`.
+- With live attempts the current run is paused and `RUN.join.json` records the request; the engine's reaper pass
+  completes it once they end (a refusal is written into the file).
+- Then the current run's workflows are cancelled (its open owner decisions end with it), `RUN.owner.json` moves by
+  compare-and-swap and the new run starts with the current run's settings; `RUN.durable-run.json` moves last, so an
+  interrupted join is finished by asking again.
+- No running workflow changes its step sequence: only a new run's input can carry `integrated`, so no patch is needed.
+
 ## Recovery and rollback
 
 - Engine crash/kill: systemd restarts it; DBOS recovers this executor's PENDING workflows. An agent that kept running
