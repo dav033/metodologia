@@ -198,7 +198,9 @@ class Panel(unittest.TestCase):
                                                            "servers": {"web": True}, "log": ""}):
             html = page._servers({**ctx}, ROW) if servers.recipe(ctx["root"], "proj") else ""
             body = wait.page(Path("/r"), "proj", "REQ-021", Path("/r/x"), "SP-1")
-        self.assertIn("location.replace(s.url)", body)
+        self.assertIn('<script src="/static/verify-run.js"></script>', body)       # a file: the panel's CSP refuses inline
+        script = (Path(__file__).resolve().parents[2] / "assets" / "verify-run.js").read_text()
+        self.assertIn("location.replace(viaPanel(", script)
         self.assertIn("Lista: abriendo la versión", body)
 
 
@@ -220,8 +222,8 @@ class UrlsToTest(unittest.TestCase):
         ready = {"state": "ready", "url": "http://localhost:3002/", "servers": {"web": True}, "log": ""}
         with patch.object(servers, "status", return_value=ready):
             html = page._urls(dict(ctx), ROW, ["/login", "/3d"])
-        self.assertIn('href="http://localhost:3002/3d"', html)
-        self.assertIn("<strong>http://localhost:3002</strong>", html)
+        self.assertIn('data-vport="3002" data-vpath="/3d"', html)                  # verify-run.js sends it through the panel
+        self.assertIn("puerto 3002", html)
         with patch.object(servers, "status", return_value={"state": "stopped", "url": "", "servers": {}, "log": ""}):
             html = page._urls(dict(ctx), ROW, ["/login"])
         self.assertIn("<code>/login</code>", html)

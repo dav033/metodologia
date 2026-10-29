@@ -25,16 +25,7 @@ def page(root: Path, project: str, rid: str, rdir: Path, sid: str) -> str:
             f'<ul id="vrun-servers">{_rows(now)}</ul><pre id="vrun-log">{e(now.get("log") or "")}</pre>'
             f'<p class="pp-meta">Esta pestaña se abrirá sola en la versión cuando todos los servidores respondan. '
             f'<a href="{back}">Volver a «Probar»</a></p></section>'
-            '<script>(function(){var sp=document.querySelector(".pp-vrun").dataset.sp;'
-            'function tick(){fetch(location.pathname+"?format=json&sp="+encodeURIComponent(sp)).then(function(r){return r.json()})'
-            '.then(function(s){if(s.state==="ready"&&s.url){location.replace(s.url);return}'
-            'document.getElementById("vrun-state").textContent=s.state==="stopped"?'
-            '"Los servidores no están en marcha: vuelve a «Probar» y pulsa «Probar esta versión».":s.state==="failed"?'
-            '"Un servidor se detuvo al arrancar; abajo está su salida.":"Preparando la versión…";'
-            'document.getElementById("vrun-log").textContent=s.log||"";'
-            'var ul=document.getElementById("vrun-servers");ul.innerHTML="";Object.keys(s.servers||{}).forEach(function(n){'
-            'var li=document.createElement("li");li.textContent=n+": "+(s.servers[n]?"responde":"arrancando…");ul.appendChild(li)});'
-            'if(s.state==="preparing")setTimeout(tick,2000)}).catch(function(){setTimeout(tick,3000)})}tick()})();</script>')
+            '<script src="/static/verify-run.js"></script>')
     return layout(f"Probar {sid}", body)
 
 
