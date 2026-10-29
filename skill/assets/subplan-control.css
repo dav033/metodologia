@@ -104,3 +104,20 @@
 .pp-flowtop-frame { display: block; width: 100%; min-height: 640px; border: 0; border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   background: var(--bg); }
 @media (prefers-reduced-motion: reduce) { .pp-flowtop > summary::before { transition: none; } }
+
+/* A subplan's tasks under «Ejecución»: one line each, the full detail in a modal (bt_page_planning_run._row). */
+.pp-trow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+.pp-trow-open { flex: 1 1 260px; min-width: 0; display: flex; align-items: baseline; gap: 10px; padding: 4px 6px; margin: -4px -6px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.pp-trow-open:hover { background: var(--code); }
+.pp-trow-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pp-trow-open .tid { flex: none; font: 600 12.5px var(--mono); color: var(--accent); }
+.pp-trow-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-tdialog { width: min(920px, 94vw); max-height: 86vh; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface); color: var(--text); overflow: auto; }
+.pp-tdialog::backdrop { background: rgb(0 0 0 / .55); }
+.pp-tdialog > header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: var(--surface); border-bottom: 1px solid var(--border); }
+.pp-tdialog > header h3 { flex: 1; min-width: 0; margin: 0; font-size: 15px; }
+.pp-tdialog > .task { margin: 0; padding: 14px 16px; border: 0; }
+@media (max-width: 640px) { .pp-trow-title { white-space: normal; } }

@@ -168,6 +168,8 @@
     }
     var close = ev.target.closest('[data-close]');
     if (close) { var d = close.closest('dialog'); if (d) d.close(); return; }
+    // a task's detail modal also closes on its backdrop (the click lands on the dialog itself, outside its content)
+    if (ev.target.matches && ev.target.matches('dialog.pp-tdialog')) { ev.target.close(); return; }
     var reply = ev.target.closest('[data-reply]');
     if (reply) {
       var scope = reply.closest('.pp-detail, .pp-review') || root;

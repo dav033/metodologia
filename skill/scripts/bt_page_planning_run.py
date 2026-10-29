@@ -114,13 +114,26 @@ def flow_frame(ctx: dict, sub: dict) -> str:
 
 
 def _row(plans, task: dict, asks: dict, base: str, token: str, back: str) -> str:
-    """The task as the run page shows it, plus a one-click retry when it is stuck."""
-    stuck = task["state"] in ("blocked", "rejected", "cancelled") or task["id"] in asks
-    retry = (f'<form method="post" action="{base}/retry-task" class="opt" style="margin:6px 0">'
+    """One line per task (id, title, attempts, state, a one-click retry when it is stuck); the full detail the run page
+    shows — objective, criteria, checks, attempts — opens in a modal, so fifteen tasks no longer run to thousands of
+    pixels (pictures REQ-021 SP-3)."""
+    tid = str(task["id"])
+    stuck = task["state"] in ("blocked", "rejected", "cancelled") or tid in asks
+    retry = (f'<form method="post" action="{base}/retry-task" class="pp-inline">'
              f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="back" value="{e(back)}">'
-             f'<input type="hidden" name="task" value="{e(task["id"])}">'
-             f'<button type="submit">Reintentar {e(task["id"])} ahora</button></form>') if stuck else ""
-    return plans._task(task, asks) + retry
+             f'<input type="hidden" name="task" value="{e(tid)}">'
+             f'<button type="submit" class="outline sm">Reintentar</button></form>') if stuck else ""
+    live = '<i class="dot info live" title="trabajando"></i>' if (task.get("attempt") or {}).get("live") else ""
+    dialog = f"tdlg-{tid}"
+    return (f'<div class="pp-trow"><button type="button" class="pp-trow-open" data-open="{e(dialog)}" aria-haspopup="dialog"'
+            f' title="Ver el detalle de {e(tid)}"><span class="tid">{e(tid)}</span><span class="pp-trow-title">'
+            f'{plans.inline(task["title"])}</span></button>{live}'
+            f'<span class="chip">{task["attempts"]} intento{"s" if task["attempts"] != 1 else ""}</span>'
+            f'{plans.state_badge(task["state"])}{retry}</div>'
+            f'<dialog id="{e(dialog)}" class="pp-tdialog" aria-labelledby="{e(dialog)}-h"><header>'
+            f'<h3 id="{e(dialog)}-h">{e(tid)} · {plans.inline(task["title"])}</h3>'
+            f'<button type="button" class="outline sm" data-close aria-label="Cerrar">✕</button></header>'
+            f'{plans._task(task, asks)}</dialog>')
 
 
 def _rework(tasks: list[dict], base: str, token: str, back: str) -> str:

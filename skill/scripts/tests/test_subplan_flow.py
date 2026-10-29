@@ -127,6 +127,13 @@ class RunFrame(unittest.TestCase):
         self.assertLess(html.index('class="pp-flowtop"'), html.index('class="pp-grid"'))
         self.assertNotIn("pp-flowtop", html.split('class="pp-detail"')[1])
         self.assertNotIn("pp-flowtop", self.page(sp="SP-2", view="tasks"))   # only while «Ejecución» is open
+        # each task is one line; its full detail opens in a modal (SP-3's fifteen detailed tasks ran to 13,000 px)
+        row = html.split('<div class="pp-trow">')[1].split("<dialog")[0]
+        self.assertIn('data-open="tdlg-T2"', row)
+        self.assertNotIn('class="task"', row)
+        dialog = html.split('<dialog id="tdlg-T2"')[1].split("</dialog>")[0]
+        self.assertIn('class="task"', dialog)
+        self.assertIn("data-close", dialog)
 
 
 if __name__ == "__main__":
