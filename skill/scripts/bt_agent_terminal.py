@@ -157,11 +157,25 @@ LIMITED = re.compile(r"hit your (?:weekly |usage |session )?limit|usage limit re
 OWNER_PROMPT = re.compile(r"Bypass Permissions mode.*Yes, I accept", re.S)
 
 
-def planner_account(project: str, avoid: str = "") -> str:
-    """CLAUDE_CONFIG_DIR of the Claude account the Planner runs on: the owner's override; else the Claude account the
-    router ranks first for the planner role (quota headroom, not blocked) other than `avoid`; else ~/.claude-work."""
+def unattended(config_dir: str) -> bool:
+    """Can Claude Code run under this account without asking the owner first? Only when its settings accept
+    bypass-permissions mode (`skipDangerousModePermissionPrompt`), which only the owner sets."""
+    base = Path(config_dir) if config_dir else Path.home() / ".claude"
+    try:
+        return json.loads((base / "settings.json").read_text(encoding="utf-8")).get("skipDangerousModePermissionPrompt") is True
+    except (OSError, UnicodeError, ValueError, AttributeError):
+        return False
+
+
+def planner_route(project: str, avoid: str = "") -> dict[str, str]:
+    """Where the Planner runs, {provider, home, model, effort}: the owner's override; else the Claude account the router
+    ranks first for the planner role that can run unattended, other than `avoid` (it keeps its conversation); else the
+    first Codex route of that ranking (the owner's codex homes never ask: a new conversation from `planning resume` and
+    the saved notes); else ~/.claude-work as before. A Planner moved to an account that asks the owner first waited there
+    with every notice lost (claude-luis, 2026-10-29)."""
     if override := os.environ.get("BITACORA_PLANNER_CLAUDE_CONFIG_DIR"):
-        return override
+        return {"provider": "claude", "home": override, "model": "opus", "effort": "high"}
+    codex: dict[str, str] | None = None
     try:
         import bt_agents
         import bt_profiles
@@ -170,29 +184,58 @@ def planner_account(project: str, avoid: str = "") -> str:
         routes, _ = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan", allow_explore=False,
                                          role="planner")
         for route in routes:
-            if route.get("agent") != "claude":
-                continue
             env = (profiles.get(route.get("profile")) or {}).get("env") or {}
-            path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
-            if path != avoid:
-                return path
+            if route.get("agent") == "claude":
+                path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
+                if path != avoid and unattended(path):
+                    return {"provider": "claude", "home": path, "model": "opus", "effort": "high"}
+            elif route.get("agent") == "codex" and codex is None:
+                home = env.get("CODEX_HOME") or str(Path.home() / ".codex")
+                if home != avoid:
+                    codex = {"provider": "codex", "home": home, "model": str(route.get("model") or ""),
+                             "effort": str(route.get("effort") or "high")}
     except Exception:  # noqa: BLE001 - no ranking: the account it always used
         pass
+    if codex:
+        return codex
     work = Path.home() / ".claude-work"
-    return str(work) if work.is_dir() and str(work) != avoid else ""
+    return {"provider": "claude", "home": str(work) if work.is_dir() and str(work) != avoid else "", "model": "opus",
+            "effort": "high"}
+
+
+def _prompt_file(project: str, name: str, text: str) -> Path:
+    path = Path.home() / ".local" / "share" / "bitacora-sessions" / project / f"{name}.prompt.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    return path
 
 
 def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, avoid: str = "",
                   message: str = "") -> tuple[bool, str]:
-    """Start the dedicated Planner in tmux, on the Claude account with quota (`planner_account`). It picks up its own
+    """Start the dedicated Planner in tmux where it can run unattended (`planner_route`). On Claude it picks up its own
     earlier CONVERSATION (`claude --resume`) when that exists, copied to that account when it lived in another one, so
-    killing it and starting another loses nothing; `fresh` or a missing transcript starts a new conversation that
-    relies on `planning resume` and the saved notes. `message` is told on start (a notice that found it out of quota)."""
+    killing it and starting another loses nothing; `fresh`, a missing transcript or Codex starts a new conversation that
+    relies on `planning resume` and the saved notes. `message` is told on start (a notice that found it unable to run)."""
     req = re.match(r"REQ-\d+", Path(rdir).name)
     name = name_for(project, req.group(0) if req else Path(rdir).name, "planner")
     if exists(name):
         return False, f"Ya hay un Planner en marcha para este plan ({name})."
-    account = planner_account(project, avoid)
+    route = planner_route(project, avoid)
+    account = route["home"]
+    extra = f"\n\n{message}" if message else ""
+    if route["provider"] == "codex":
+        prompt_file = _prompt_file(project, name, planner_prompt(project, rdir) + extra)
+        model = f"-m {shlex.quote(route['model'])} " if route["model"] else ""
+        command = (f"codex --dangerously-bypass-approvals-and-sandbox {model}-c "
+                   f"model_reasoning_effort={shlex.quote(route['effort'])} \"$(cat {shlex.quote(str(prompt_file))})\"")
+        try:
+            start(name, Path(root), command, {"CODEX_HOME": account})
+        except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
+            return False, str(exc)
+        _save_record(rdir, {**_record(rdir), "provider": "codex", "codex_home": account, "cwd": str(root),
+                            "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "resumed": False})
+        return True, (f"Planner abierto ({name}) en Codex {route['model']}: ninguna cuenta de Claude con cuota puede correr "
+                      "sin pedirte permiso, así que empezó desde el plan y sus notas guardadas.")
     env = {"CLAUDE_CONFIG_DIR": account} if account else {}
     flags = "--model opus --effort high --dangerously-skip-permissions"
     prior = {} if fresh else _record(rdir)
@@ -204,22 +247,19 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, 
             new.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(old, new)
     resumed = bool(sid) and transcript(account, str(root), sid).is_file()
-    restart = RESTART_MESSAGE + (f"\n\n{message}" if message else "")
     if resumed:
-        command = f'claude --resume {shlex.quote(sid)} {flags} {shlex.quote(restart)}'
+        command = f'claude --resume {shlex.quote(sid)} {flags} {shlex.quote(RESTART_MESSAGE + extra)}'
         how = "retomó su conversación anterior"
     else:
         sid = str(uuid.uuid4())
-        prompt_file = Path.home() / ".local" / "share" / "bitacora-sessions" / project / f"{name}.prompt.md"
-        prompt_file.parent.mkdir(parents=True, exist_ok=True)
-        prompt_file.write_text(planner_prompt(project, rdir) + (f"\n\n{message}" if message else ""), encoding="utf-8")
+        prompt_file = _prompt_file(project, name, planner_prompt(project, rdir) + extra)
         command = f'claude --session-id {sid} {flags} "$(cat {shlex.quote(str(prompt_file))})"'
         how = "empezó una conversación nueva (leerá el plan y sus notas guardadas)"
     try:
         start(name, Path(root), command, env)
     except (RuntimeError, ValueError, OSError, subprocess.SubprocessError) as exc:
         return False, str(exc)
-    _save_record(rdir, {**_record(rdir), "session_id": sid, "config_dir": account, "cwd": str(root),
+    _save_record(rdir, {**_record(rdir), "provider": "claude", "session_id": sid, "config_dir": account, "cwd": str(root),
                         "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "resumed": resumed})
     return True, f"Planner abierto ({name}): {how}."
 
@@ -240,7 +280,8 @@ def notify_planner(project: str, req: str, text: str) -> bool:
         from bt_core import ROOT
         rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
         if rdir is not None:
-            avoid = _record(rdir).get("config_dir", "")
+            record = _record(rdir)
+            avoid = record.get("codex_home", "") if record.get("provider") == "codex" else record.get("config_dir", "")
             kill(name)
             return start_planner(Path(ROOT), project, rdir, avoid=avoid, message=notice)[0]
     return send(name, notice) == "Enviado."
