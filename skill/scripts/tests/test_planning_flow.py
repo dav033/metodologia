@@ -90,16 +90,43 @@ class FlowTests(unittest.TestCase):
         self.assertIn("Confirmar esqueleto", html)
         self.assertEqual(flow.approval_problems(self.rdir), ["falta confirmar el esqueleto"])
 
-    def test_designer_waits_for_the_skeleton_and_follows_the_focus(self):
+    def test_designer_waits_for_the_skeleton_then_designs_every_subplan_with_tasks(self):
         flow.start(self.rdir)
         drafts.request("demo", self.rdir, ["nope@v1"])  # turn drafts on without starting anything
         self.assertEqual(drafts.sync("demo", self.rdir), [])  # no Designer before the skeleton is confirmed
+        # SP-1 (no UI) is the focus; SP-2 already has tasks, so its Designer starts without waiting for its turn
+        self.assertIn("El Designer empezó checkout@v1", flow.confirm_outline("demo", self.rdir))
+        self.assertEqual(len(self.orders), 1)
+        self.assertEqual(drafts.sync("demo", self.rdir), [])  # already drafting: never a second batch for SP-2
+        self.assertIn("Ya se está", flow.focus("demo", self.rdir, "SP-1"))
+        self.assertEqual(flow.state(self.rdir)["subplans"]["SP-2"]["state"], "pending")
+
+    def test_a_subplan_without_tasks_waits_for_its_focus(self):
+        self.write_plan({**SKELETON, "tasks": [t for t in PLAN["tasks"] if t["subplan_id"] == "SP-1"]})
+        flow.start(self.rdir)
         self.assertIn("Ahora se define SP-1", flow.confirm_outline("demo", self.rdir))
-        self.assertEqual(self.orders, [])  # SP-1 has no UI
-        self.assertEqual(drafts.sync("demo", self.rdir), [])  # SP-2 is not in focus yet
+        self.assertEqual(self.orders, [])
+        drafts.request("demo", self.rdir, ["nope@v1"])
+        self.assertEqual(drafts.sync("demo", self.rdir), [])  # SP-2 has no tasks and is not in focus
         self.assertIn("El Designer empezó checkout@v1", flow.focus("demo", self.rdir, "SP-2"))
         self.assertEqual(len(self.orders), 1)
         self.assertEqual(flow.state(self.rdir)["subplans"]["SP-2"]["state"], "defining")
+
+    def test_designers_of_different_subplans_work_in_parallel(self):
+        profile = {"id": "SP-3", "milestone_id": "M1", "title": "Profile screen", "outcome": "The buyer edits the profile.",
+                   "ui": {"contract": "profile", "version": 1, "design_task": "T4", "visual_review_task": "T5"}}
+        self.write_plan({**PLAN, "subplans": PLAN["subplans"] + [profile], "tasks": PLAN["tasks"] + [
+            {"id": "T4", "title": "Design profile", "subplan_id": "SP-3", "kind": "design",
+             "acceptance_criteria": ["Contract approved."]},
+            {"id": "T5", "title": "Build profile", "subplan_id": "SP-3", "kind": "implement", "ui": True,
+             "acceptance_criteria": ["Profile saves."]}]})
+        flow.start(self.rdir)
+        self.assertIn("El Designer empezó checkout@v1, profile@v1", flow.confirm_outline("demo", self.rdir))
+        self.assertEqual(len(self.orders), 2)
+        self.assertEqual({r["ref"]: r["status"] for r in drafts.rows(self.rdir)},
+                         {"checkout@v1": "drafting", "profile@v1": "drafting"})
+        self.assertEqual(flow.design_scope(self.rdir), {"checkout@v1", "profile@v1"})
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], force=True), [])  # one batch per subplan
 
     def test_confirmation_needs_tasks_criteria_inputs_and_a_ready_design(self):
         self.spec("pending")

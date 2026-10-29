@@ -194,16 +194,18 @@ class Amend(unittest.TestCase):
         row = drafts.rows(self.rdir)[0]
         self.assertEqual((row["status"], row["chosen"], row["amend"]), ("failed", "a", "contract"))
 
-    def test_amend_refuses_while_another_batch_is_active_or_without_chosen_work(self):
+    def test_amend_refuses_while_its_own_designer_works_or_without_chosen_work(self):
         self.finalised()
         self.change_plan()
         with drafts._locked(self.rdir) as data:
-            data["drafts"]["other@v1"] = {"status": "drafting", "feedback": []}
-        with self.assertRaisesRegex(SystemExit, "Otro Designer"):
+            entry = data["drafts"][REF]
+            saved = {k: entry.get(k) for k in ("status", "delegation")}
+            entry.update(status="drafting", delegation="D-busy")
+        with self.assertRaisesRegex(SystemExit, f"ya está trabajando en {REF}"):
             amend.start("demo", self.rdir, REF, "", "cli")
         self.assertEqual(len(self.orders), 4)
         with drafts._locked(self.rdir) as data:
-            data["drafts"].pop("other@v1")
+            data["drafts"][REF].update(saved)
             data["drafts"][REF]["chosen"] = None
         with self.assertRaisesRegex(SystemExit, "no tiene un diseño elegido"):
             amend.start("demo", self.rdir, REF, "", "cli")
@@ -277,9 +279,9 @@ class Amend(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(bt_cli_design.dispatch(args, Path(self.tmp.name), "demo"), 1)
-        self.assertIn("Otro Designer", out.getvalue())
+        self.assertIn(f"ya está trabajando en {REF}", out.getvalue())
 
-    def test_plan_tab_banner_offers_the_update_with_the_diff_and_disables_it_while_busy(self):
+    def test_plan_tab_banner_offers_the_update_with_the_diff_while_other_subplans_are_designed(self):
         import bt_page_design_amend as page
         import bt_page_planning
         self.finalised()
@@ -293,7 +295,8 @@ class Amend(unittest.TestCase):
         row = drafts.rows(self.rdir)[0]
         ctx = {"project": "demo", "rid": "REQ-001", "token": "t", "rdir": self.rdir, "opts": opts,
                "rows": {REF: row, "other@v1": {"status": "drafting"}}}
-        self.assertIn("disabled", page.banner(ctx, row))
+        self.assertNotIn("disabled", page.banner(ctx, row))  # another subplan's Designer never blocks this one
+        self.assertEqual(page.banner(ctx, {**row, "status": "amending"}), "")
         self.assertEqual(page.banner(ctx, {**row, "amend": None}), "")
 
 

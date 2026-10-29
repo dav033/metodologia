@@ -81,8 +81,8 @@ def start(project: str, rdir: Path, ref: str, comments: str, via: str, *, auto: 
     with drafts._locked(rdir) as data:
         for name, other in data["drafts"].items():
             drafts._settle(rdir, name, other)
-        if any(e.get("status") in drafts.ACTIVE for e in data["drafts"].values()):
-            raise SystemExit("Otro Designer está trabajando en este requerimiento; actualiza el diseño cuando termine.")
+        if (data["drafts"].get(ref) or {}).get("status") in drafts.ACTIVE:
+            raise SystemExit(f"El Designer ya está trabajando en {ref}; actualiza el diseño cuando termine.")
         entry = data["drafts"].get(ref) or {}
         if entry.get("status") == "approved":
             raise SystemExit(f"{ref} ya fue aprobado con el plan; los cambios van en una versión nueva del contrato.")

@@ -265,13 +265,13 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
 3. **Subplanes, one at a time.** The focus starts on the first subplan. With the owner, define its behavior, edge
    cases, design decisions, inputs (credentials, keys, hosts, paths, accounts: SPEC `## Inputs` with its `Subplan`
    column, locations only, never values) and then its tasks with acceptance criteria. When the subplan has a UI, the
-   Designer drafts it in the background as soon as it is in focus, and only then (`design_scope`), from the
-   subplan's UI brief (write its `ui_brief`: flows, screens/states, existing surface to change, must-not-change;
+   Designer drafts it in the background as soon as it is in focus or has tasks, in parallel with the other
+   subplans' Designers (one batch per subplan, `design_scope`; owner, 2026-10-29), from the subplan's UI brief (write its `ui_brief`: flows, screens/states, existing surface to change, must-not-change;
    `plan-contract.md`): relay its
    questions, fold the answers into the plan, send owner comments with `design feedback`. The owner confirms the
    subplan («Confirmar subplan», or `planning confirm REQ-NNN SP-n --by owner` only when they say so in the chat);
    confirmation is refused while it has no tasks, a task without criteria, a pending input or a design that is not
-   ready. The focus then moves to the next subplan and its Designer starts. `planning focus REQ-NNN SP-n` (or
+   ready. The focus then moves to the next subplan and its Designer starts if it had not already. `planning focus REQ-NNN SP-n` (or
    «Definir ahora») jumps. Any later change to a confirmed subplan (its PLAN.json part, tasks, inputs or design)
    reopens it.
    Each subplan also needs its `## Pruebas` rows in SPEC (where to try it when built: local, production and every external

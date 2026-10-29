@@ -47,7 +47,7 @@ mockup with mock data, a switch for every declared state and responsive layouts)
 the plan as it stands. In `--fresh` mode compose anew from requirements and unresolved feedback; preserve history.
 Otherwise revise the current draft, address every owner feedback item listed,
 and record undecided points as open questions (section 12 and `Q:` lines in the report) rather than reporting
-`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. On the collaborative planning flow you are started for the subplan in focus while the owner and the Planner are still defining it: its tasks may be few or missing, so design from its outcome, covered requirements and SPEC, and ask in `Q:` lines what they have not decided. Write only those two files. The owner approves the draft together with the plan; the run then copies it
+`BLOCKED`. Report `DONE` once both files are written: approval comes later, with the plan. On the collaborative planning flow you are started for the subplan in focus, and for every other unconfirmed subplan that already has tasks (subplans are designed in parallel), while the owner and the Planner are still defining it: its tasks may be few or missing, so design from its outcome, covered requirements and SPEC, and ask in `Q:` lines what they have not decided. Write only those two files. The owner approves the draft together with the plan; the run then copies it
 unchanged into `design/contracts/`. Exploration briefs override the canonical output pair and require direction-specific
 files; finalization briefs restore the canonical pair. Never write another direction's files.
 An amendment brief (the plan changed after the owner chose a design) gives the previous and the new UI brief and
