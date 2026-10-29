@@ -1,0 +1,169 @@
+{
+ "runtime": "durable",
+ "wall_seconds": 32.4,
+ "launches": [
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T1-a1-5667e64e-8180dbb210f0c70f",
+   "scenario": "ok",
+   "pid": 2065139,
+   "task": "T1",
+   "seen": [],
+   "at": 1793235897.972338,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T2-a1-06dc8a35-16810c817e481392",
+   "scenario": "fixlater",
+   "pid": 2065140,
+   "task": "T2",
+   "seen": [],
+   "at": 1793235897.9820268,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T2-a2-8612e895-abc2f64d7e023280",
+   "scenario": "fixlater",
+   "pid": 2065484,
+   "task": "T2",
+   "seen": [],
+   "at": 1793235902.1546235,
+   "remediation": false,
+   "has_note": true
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T3-a1-1793c60f-4341c90157cd0879",
+   "scenario": "ok",
+   "pid": 2065568,
+   "task": "T3",
+   "seen": [],
+   "at": 1793235903.185794,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T4-a1-5784d734-0608f7d1bdf9f2f4",
+   "scenario": "quotaonce",
+   "pid": 2065815,
+   "task": "T4",
+   "seen": [],
+   "at": 1793235907.3347538,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T5-a1-7d9c3b96-e348e1d6b4863cfb",
+   "scenario": "ok",
+   "pid": 2066002,
+   "task": "T5",
+   "seen": [],
+   "at": 1793235910.2290611,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T4-a2-244a828e-89796c8f34782002",
+   "scenario": "quotaonce",
+   "pid": 2066137,
+   "task": "T4",
+   "seen": [],
+   "at": 1793235911.278533,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T6-a1-d15f363b-acf1fd2f27b5cdc5",
+   "scenario": "neverfix",
+   "pid": 2066310,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235915.4291637,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T6-a2-e5d3bb22-59e21dd239919406",
+   "scenario": "neverfix",
+   "pid": 2066634,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235918.4188137,
+   "remediation": false,
+   "has_note": true
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench3/durable/lab/state/attempts-root/ws/proj/worktrees/proj-REQ-900-r1-T6-a3-f9652d0d-4e5ec57ec6d1508a",
+   "scenario": "neverfix",
+   "pid": 2066820,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235922.4533458,
+   "remediation": true,
+   "has_note": true
+  }
+ ],
+ "task_states": {
+  "T1": "completed",
+  "T2": "completed",
+  "T3": "completed",
+  "T4": "completed",
+  "T5": "completed",
+  "T6": "blocked"
+ },
+ "recovery_decisions": [
+  {
+   "task_id": "T2",
+   "action": "retry",
+   "code": "CHECK_FAILED",
+   "failure_class": "implementation",
+   "limit_hit": ""
+  },
+  {
+   "task_id": "T3",
+   "action": "repair_environment",
+   "code": "VERIFIER_OOM",
+   "failure_class": "environment",
+   "limit_hit": ""
+  },
+  {
+   "task_id": "T4",
+   "action": "wait",
+   "code": "ROUTE_LIMIT",
+   "failure_class": "quota",
+   "limit_hit": ""
+  },
+  {
+   "task_id": "T6",
+   "action": "retry",
+   "code": "CHECK_FAILED",
+   "failure_class": "implementation",
+   "limit_hit": ""
+  },
+  {
+   "task_id": "T6",
+   "action": "remediate",
+   "code": "CHECK_FAILED",
+   "failure_class": "implementation",
+   "limit_hit": ""
+  },
+  {
+   "task_id": "T6",
+   "action": "escalate",
+   "code": "CHECK_FAILED",
+   "failure_class": "implementation",
+   "limit_hit": "max_same_signature"
+  }
+ ],
+ "owner_decisions": [
+  {
+   "request": "T6:d1",
+   "answer": "stop"
+  }
+ ],
+ "recovery_seconds": {
+  "T2": 4.3,
+  "T3": 2.2,
+  "T4": 6.5
+ }
+}

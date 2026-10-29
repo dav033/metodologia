@@ -1381,3 +1381,66 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Rollback:** a new revision without `T1.8b` in T2.2's `after`.
 - **Evidence:** `git merge-tree` of the two final trees (2 conflicts); plan r12, stage r13, rework of T2.2–T2.5; analyst fix commit `fd29501fb`.
 
+
+## D-144 — Retire the legacy runtime's duplicated infrastructure only behind proven equivalence (proposal)
+
+- **Date:** 2026-10-28 · **Status:** Proposed (REQ-030 item 9; nothing is removed by this decision)
+- **Context:** the durable runtime (`bt_durable` on DBOS + `bt_supervisor`) now owns pictures REQ-021; the legacy
+  runtime still owns pictures REQ-020 (29 completed, 2 pending, 1 blocked, no live attempt) and the finished runs
+  REQ-019, metodologia REQ-027 and REQ-029. M0 counted ~4–5k lines of generic infrastructure the durable runtime
+  replaces. The comparable benchmark (REQ-030 evidence `iter2/bench-runtimes.md`) shows the durable side needed fewer
+  agent launches and owner interventions on the same plan and failures, but REQ-021's first live durable attempts were
+  orphaned by a supervisor defect (fixed in `366cbf372`): equivalence on a real plan is not yet shown.
+- **Decision:** each group below is removed in its own commit, with the full regression, only when its condition holds;
+  until then it stays and keeps serving legacy-owned runs.
+
+| Group (legacy) | Durable equivalent | Evidence of equivalence | Condition to remove |
+|---|---|---|---|
+| Hard-coded REQ-021 repairs (`bt_scheduler_monitor_repairs.py`, the T3.2 option in `bt_scheduler_decisions.py`) | none needed: REQ-021 is `dbos`-owned and the legacy owner refuses it (`OWNED_BY_DBOS`) | ownership record + refusal test | REQ-021 completes on the durable runtime (its `migrate --rollback` window closes) |
+| Watchdog and per-run services (`bt_scheduler_watch`, `metodologia-run-*`, `metodologia-monitor-*`) | `bt-durable.service` `Restart=always` + DBOS recovery | engine SIGKILL and PostgreSQL outage e2e (0 duplicate launches) | the durable runtime finishes one real plan (REQ-021) with no owner intervention caused by infrastructure, AND no legacy-owned run is unfinished |
+| Hold file (`RUN.hold`, `ops.on_hold`) | `bt-durable pause/resume` (`RunCommand`, request ids) | stale/duplicate command tests | Pause gap closed in REQ-030 iteration 2 (`325905fe4`, patch `bt-task-respects-pause`, `test_durable_e2e.test_a_paused_run_starts_no_retry_until_it_is_resumed`). Remove when no legacy-owned run can still be held (same condition as the outboxes row) |
+| Outboxes and second state machine (M1 dispatch outbox, M3 ledger/loop/recovery/shim/procinfo, M4 incident outbox, M5 checkpoints, M6 request outbox) | DBOS steps/child workflows, `bt_supervisor` (systemd units, cgroup kill) | e2e: one process per attempt key across crashes, cancellation stops every writer, one verdict per verify key | no legacy-owned run is unfinished (REQ-020 migrated with `bt-durable migrate` or closed) AND `execution.backend` defaults to `dbos` |
+| Healing ×4, ready-monitor, watch restarts | classifier (10 classes) + bounded policy | benchmark: a verifier heap limit cost legacy 2 redundant agent attempts and an owner decision; durable repaired it with 0 extra launches | same as the outboxes row |
+| `bt_lock.central_lock`, `bt_integration_lock`, legacy integration line writer | integration by compare-and-swap on refs (`GitLineIntegrator`) | concurrent integration tests, subplan lines e2e | same as the outboxes row |
+
+- **Procedure (per group):** `bt-durable status` for every `dbos` run; `python3 -c` scan of `RUN.owner.json` and
+  `.state/scheduler/*.db` for unfinished legacy-owned runs (must be none for rows 2, 4–6); remove the group; run the
+  full regression (only the 5 baseline failures allowed); deploy with the usual backup + smoke.
+- **Consequences:** + no duplicate engines once the conditions hold; − both runtimes are maintained until REQ-020 is
+  migrated or closed; the hold-file gap is a real difference, not a formality.
+- **Rollback:** the removal commits are independent; reverting one restores that group.
+- **Evidence:** REQ-030 `REPORT.md`, `evidence/iter2/bench-runtimes.md`, `evidence/iter2/orphan-units-20261028.txt`.
+
+## D-145 — Durable runtime: subplans and gates, legacy briefs, manual receipts, pause for retries (REQ-030 iteration 2)
+
+- **Date:** 2026-10-28 · **Status:** Accepted (REQ-030 items 1–3; branch `req030-iter2-wip`)
+- **Context:** the durable runtime ran pictures REQ-021 (plan 1.3.0, 4 subplans, 3 composition gates) on one line,
+  with a basic brief (no owner notes: T2.6's a1 prompt lacked `RUN.notes/T2.6.md`), and without the M6 attestation port
+  (T3.2's valid receipt was invisible, so its reconciliation launched an agent). A paused run still let running task
+  workflows launch retries.
+- **Decision:**
+  - Subplans reuse the legacy definitions (core `Plan.subplans`, `bt_integration_line.scoped_task_ids`) and the
+    composition engine (`bt_composition` via its adapter); lines are `refs/bt/subplan/<project>/<req>/r<rev>/<role>/<SP>`
+    from the run line's pinned base, merged by CAS; a gate task starts on the engine's candidate when its members are
+    complete. Durable composition ids/refs/store are namespaced (`<req>.bt-r<rev>`). Not ported: publishing a
+    composition with an M6 proof bound to the candidate's exact tree (the gate passes when its task is accepted on a
+    snapshot built on the candidate).
+  - Briefs are built by the legacy `owner_notes`/`contract_notes` (shared, so the runtimes cannot drift); the durable
+    verifier writes the same `RUN.notes` history/verify notes. Legacy fix: its design contract notes were dropped.
+  - Manual checks: M6 gets the run's `bt_attestation` lookup; a missing receipt is a `MANUAL_EVIDENCE_REQUIRED` owner
+    decision with `reverify` (same snapshot, no agent), `bt-durable attest` seals and answers it.
+  - Pause gates retries in running task workflows.
+  - Every workflow-body plan read goes through the `bt.plan_text` step (`steps.workflow_plan`): the per-process cache
+    made a recovered run skip its first step (`DBOSUnexpectedStepError`) — a latent defect that a restart of the live
+    engine could have hit.
+  - Each step-sequence change sits behind a patch placed before a plain step: `bt-run-subplans`,
+    `bt-task-reconcile-asks-owner`, `bt-task-owner-reverify`, `bt-task-respects-pause`; proven by
+    `tests/test_durable_upgrade.py` (previous engine code from git → current code, same database).
+- **Alternatives rejected:** rewriting the subplan/composition logic for DBOS (duplicates CONSERVAR logic); one line per
+  run with subplans as labels (a member would start on unrelated subplans' work); restarting REQ-021 as a new run
+  (loses its recorded history and inherited proofs).
+- **Consequences:** + REQ-021 keeps its workflows and gains subplan lines after an operator pins
+  `refs/bt/line/pictures/REQ-021/r15/pictures-base` (`fa101a47`); − four patches to deprecate once no workflow can be on
+  the old path; − the composition proof is weaker than the legacy one (documented in the README).
+- **Evidence:** `test_durable_subplans`, `test_durable_briefs`, `test_durable_attestations`, `test_durable_upgrade`,
+  `test_durable_e2e.test_a_paused_run_starts_no_retry_until_it_is_resumed`; REQ-030 `REPORT.md`.

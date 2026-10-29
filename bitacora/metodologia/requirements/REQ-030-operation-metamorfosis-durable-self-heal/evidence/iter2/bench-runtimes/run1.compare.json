@@ -1,0 +1,91 @@
+{
+ "plan": [
+  "T1 ok",
+  "T2 fixlater",
+  "T3 ok",
+  "T4 quotaonce",
+  "T5 ok",
+  "T6 neverfix"
+ ],
+ "injected": {
+  "T2": "implementation",
+  "T3": "environment",
+  "T4": "quota",
+  "T6": "unfixable"
+ },
+ "unavoidable_launches": {
+  "T1": 1,
+  "T2": 2,
+  "T3": 1,
+  "T4": 2,
+  "T5": 1
+ },
+ "tokens_per_launch": 120,
+ "legacy": {
+  "runtime": "legacy",
+  "agent_launches": 12,
+  "launches_per_task": {
+   "T1": 1,
+   "T2": 2,
+   "T3": 3,
+   "T4": 2,
+   "T5": 1,
+   "T6": 3
+  },
+  "redundant_launches": {
+   "T3": 2
+  },
+  "redundant_total": 2,
+  "launches_before_owner_asked_T6": 3,
+  "owner_interventions": 2,
+  "tokens": 1440,
+  "recovery_seconds": {
+   "T2": 1.6,
+   "T4": 5.0
+  },
+  "completed": [
+   "T1",
+   "T2",
+   "T4",
+   "T5"
+  ],
+  "not_completed": {
+   "T3": "blocked",
+   "T6": "blocked"
+  },
+  "wall_seconds": 9.1
+ },
+ "durable": {
+  "runtime": "durable",
+  "agent_launches": 10,
+  "launches_per_task": {
+   "T1": 1,
+   "T2": 2,
+   "T3": 1,
+   "T4": 2,
+   "T5": 1,
+   "T6": 3
+  },
+  "redundant_launches": {},
+  "redundant_total": 0,
+  "launches_before_owner_asked_T6": 3,
+  "owner_interventions": 1,
+  "tokens": 1200,
+  "recovery_seconds": {
+   "T2": 4.1,
+   "T3": 3.1,
+   "T4": 6.1
+  },
+  "completed": [
+   "T1",
+   "T2",
+   "T3",
+   "T4",
+   "T5"
+  ],
+  "not_completed": {
+   "T6": "blocked"
+  },
+  "wall_seconds": 31.4
+ }
+}

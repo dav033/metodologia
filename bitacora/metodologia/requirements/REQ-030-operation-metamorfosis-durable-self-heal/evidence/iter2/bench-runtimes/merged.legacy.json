@@ -1,0 +1,275 @@
+{
+ "runtime": "legacy",
+ "wall_seconds": 9.0,
+ "exit_code": 0,
+ "launches": [
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0001-3c9f5c1f520fafa0",
+   "scenario": "ok",
+   "pid": 2269196,
+   "task": "T1",
+   "seen": [],
+   "at": 1793238626.1511443,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0002-328a4d00ea51e13f",
+   "scenario": "fixlater",
+   "pid": 2269211,
+   "task": "T2",
+   "seen": [],
+   "at": 1793238626.3247561,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0003-b8ba89a21cf1b666",
+   "scenario": "ok",
+   "pid": 2269217,
+   "task": "T3",
+   "seen": [],
+   "at": 1793238626.3676648,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0004-6c689221dc39750a",
+   "scenario": "fixlater",
+   "pid": 2269448,
+   "task": "T2",
+   "seen": [],
+   "at": 1793238628.1353974,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0005-00f46831fa37eae0",
+   "scenario": "ok",
+   "pid": 2269458,
+   "task": "T3",
+   "seen": [],
+   "at": 1793238628.2615967,
+   "remediation": false,
+   "has_note": true,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0006-70b90034a65c40a5",
+   "scenario": "quotaonce",
+   "pid": 2269485,
+   "task": "T4",
+   "seen": [],
+   "at": 1793238628.4198277,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0007-4c47262da9f79b95",
+   "scenario": "ok",
+   "pid": 2269900,
+   "task": "T5",
+   "seen": [],
+   "at": 1793238629.55518,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0008-63dd3e9053cdc061",
+   "scenario": "neverfix",
+   "pid": 2269990,
+   "task": "T6",
+   "seen": [],
+   "at": 1793238629.6749544,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0009-47aae6171acb0690",
+   "scenario": "ok",
+   "pid": 2270068,
+   "task": "T3",
+   "seen": [],
+   "at": 1793238629.9818532,
+   "remediation": false,
+   "has_note": true,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0010-30f6531a74dd5dac",
+   "scenario": "neverfix",
+   "pid": 2270539,
+   "task": "T6",
+   "seen": [],
+   "at": 1793238631.1349173,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0011-93543d95aa6f4b57",
+   "scenario": "quotaonce",
+   "pid": 2270923,
+   "task": "T4",
+   "seen": [],
+   "at": 1793238632.5527081,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench-merged/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793238625296/ws/worktrees/att-0012-85261ea2a67dd572",
+   "scenario": "neverfix",
+   "pid": 2270980,
+   "task": "T6",
+   "seen": [],
+   "at": 1793238632.8642228,
+   "remediation": false,
+   "has_note": false,
+   "account": "/home/david/.claude-luis"
+  }
+ ],
+ "task_states": {
+  "T1": "completed",
+  "T2": "completed",
+  "T3": "blocked",
+  "T4": "completed",
+  "T5": "completed",
+  "T6": "blocked"
+ },
+ "task_reasons": {
+  "T3": "m5:attempts_exhausted",
+  "T6": "m5:attempts_exhausted"
+ },
+ "attempts": [
+  {
+   "task_id": "T1",
+   "number": 1,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793238625.7727823,
+   "updated_at": 1793238627.0137541
+  },
+  {
+   "task_id": "T2",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/18205ad0d921975295218fff53e75e482effe2b0b260a6d5343a56e1efe1e8f3",
+   "budget_consumed": true,
+   "created_at": 1793238625.7936094,
+   "updated_at": 1793238627.1589305
+  },
+  {
+   "task_id": "T3",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/2db3c44ac426ee7dcf4ce5a72f069bf50d691415e7c1d2c5a40a5477e39b11a1",
+   "budget_consumed": true,
+   "created_at": 1793238625.8169677,
+   "updated_at": 1793238627.3115997
+  },
+  {
+   "task_id": "T2",
+   "number": 2,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793238627.682056,
+   "updated_at": 1793238628.891672
+  },
+  {
+   "task_id": "T3",
+   "number": 2,
+   "state": "rejected",
+   "failure": "m6://result/24f5d11c36c088501a8744e2f8daa0714dffeeb1c73e8f5583274eeda48be9f7",
+   "budget_consumed": true,
+   "created_at": 1793238627.7044058,
+   "updated_at": 1793238629.3708029
+  },
+  {
+   "task_id": "T4",
+   "number": 1,
+   "state": "failed",
+   "failure": "quota_exhausted",
+   "budget_consumed": true,
+   "created_at": 1793238627.7289338,
+   "updated_at": 1793238628.7086263
+  },
+  {
+   "task_id": "T5",
+   "number": 1,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793238628.9838219,
+   "updated_at": 1793238630.29342
+  },
+  {
+   "task_id": "T6",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/6793c66f7b3db09f64b363672dc68190fba8e6c2ddfa90f8a2a464d60fb6099b",
+   "budget_consumed": true,
+   "created_at": 1793238629.0053887,
+   "updated_at": 1793238630.6362216
+  },
+  {
+   "task_id": "T3",
+   "number": 3,
+   "state": "rejected",
+   "failure": "m6://result/b2d69a83690a1273251aebbf16081629144fdfb6fff22175341495443443d082",
+   "budget_consumed": true,
+   "created_at": 1793238629.6107774,
+   "updated_at": 1793238631.217613
+  },
+  {
+   "task_id": "T6",
+   "number": 2,
+   "state": "rejected",
+   "failure": "m6://result/5149b60b7fd50ade8a9c2cd3fe5d95fcfc640d02cc28232c746140e83a496925",
+   "budget_consumed": true,
+   "created_at": 1793238630.7448375,
+   "updated_at": 1793238632.1212928
+  },
+  {
+   "task_id": "T4",
+   "number": 2,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793238632.15405,
+   "updated_at": 1793238633.42288
+  },
+  {
+   "task_id": "T6",
+   "number": 3,
+   "state": "rejected",
+   "failure": "m6://result/857dfe3e9a463ee1169e1d7bc199b685bba7cc6099ca40da67449c2e7c469e23",
+   "budget_consumed": true,
+   "created_at": 1793238632.4523816,
+   "updated_at": 1793238633.614599
+  }
+ ],
+ "owner_decisions": [
+  {
+   "task": "T3",
+   "state": "blocked"
+  },
+  {
+   "task": "T6",
+   "state": "blocked"
+  }
+ ],
+ "recovery_seconds": {
+  "T2": 1.7,
+  "T4": 4.7
+ }
+}

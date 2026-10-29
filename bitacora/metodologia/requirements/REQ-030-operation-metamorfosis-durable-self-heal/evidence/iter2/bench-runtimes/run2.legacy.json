@@ -1,0 +1,263 @@
+{
+ "runtime": "legacy",
+ "wall_seconds": 8.2,
+ "exit_code": 0,
+ "launches": [
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0001-3c9f5c1f520fafa0",
+   "scenario": "ok",
+   "pid": 2060436,
+   "task": "T1",
+   "seen": [],
+   "at": 1793235842.1220582,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0002-328a4d00ea51e13f",
+   "scenario": "fixlater",
+   "pid": 2060454,
+   "task": "T2",
+   "seen": [],
+   "at": 1793235842.2368162,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0003-b8ba89a21cf1b666",
+   "scenario": "ok",
+   "pid": 2060465,
+   "task": "T3",
+   "seen": [],
+   "at": 1793235842.3883061,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0004-6c689221dc39750a",
+   "scenario": "quotaonce",
+   "pid": 2060645,
+   "task": "T4",
+   "seen": [],
+   "at": 1793235843.288768,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0005-00f46831fa37eae0",
+   "scenario": "fixlater",
+   "pid": 2060673,
+   "task": "T2",
+   "seen": [],
+   "at": 1793235843.5938263,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0006-70b90034a65c40a5",
+   "scenario": "ok",
+   "pid": 2060713,
+   "task": "T3",
+   "seen": [],
+   "at": 1793235843.8932834,
+   "remediation": false,
+   "has_note": true
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0007-4c47262da9f79b95",
+   "scenario": "ok",
+   "pid": 2060805,
+   "task": "T5",
+   "seen": [],
+   "at": 1793235844.438051,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0008-63dd3e9053cdc061",
+   "scenario": "neverfix",
+   "pid": 2060832,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235844.7329125,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0009-47aae6171acb0690",
+   "scenario": "ok",
+   "pid": 2061080,
+   "task": "T3",
+   "seen": [],
+   "at": 1793235845.6604657,
+   "remediation": false,
+   "has_note": true
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0010-30f6531a74dd5dac",
+   "scenario": "neverfix",
+   "pid": 2061104,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235846.026887,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0011-93543d95aa6f4b57",
+   "scenario": "neverfix",
+   "pid": 2061291,
+   "task": "T6",
+   "seen": [],
+   "at": 1793235847.4344058,
+   "remediation": false,
+   "has_note": false
+  },
+  {
+   "cwd": "/home/david/.local/tmp/claude-1000/-home-david-dev-metodologia/858645a4-36f5-433e-8705-323f0911caca/scratchpad/bench2/legacy/bitacora/.state/executor/proj-REQ-900-r1-b5a0f6ff-1793235841366/ws/worktrees/att-0012-85261ea2a67dd572",
+   "scenario": "quotaonce",
+   "pid": 2061327,
+   "task": "T4",
+   "seen": [],
+   "at": 1793235847.7357626,
+   "remediation": false,
+   "has_note": false
+  }
+ ],
+ "task_states": {
+  "T1": "completed",
+  "T2": "completed",
+  "T3": "blocked",
+  "T4": "completed",
+  "T5": "completed",
+  "T6": "blocked"
+ },
+ "task_reasons": {
+  "T3": "m5:attempts_exhausted",
+  "T6": "m5:attempts_exhausted"
+ },
+ "attempts": [
+  {
+   "task_id": "T1",
+   "number": 1,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793235841.771037,
+   "updated_at": 1793235842.9268827
+  },
+  {
+   "task_id": "T2",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/695a13cb3141321906838440c63077b998eb30522f91cac2955878b103a9bde9",
+   "budget_consumed": true,
+   "created_at": 1793235841.790531,
+   "updated_at": 1793235843.0289695
+  },
+  {
+   "task_id": "T3",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/cb5d6a5220ec626e43a1954c32ae70bc1b6c27d6e267de0f2e0ab723b952007f",
+   "budget_consumed": true,
+   "created_at": 1793235841.8105814,
+   "updated_at": 1793235843.2094212
+  },
+  {
+   "task_id": "T4",
+   "number": 1,
+   "state": "failed",
+   "failure": "quota_exhausted",
+   "budget_consumed": true,
+   "created_at": 1793235842.9714344,
+   "updated_at": 1793235843.7271326
+  },
+  {
+   "task_id": "T2",
+   "number": 2,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793235843.2483225,
+   "updated_at": 1793235844.277392
+  },
+  {
+   "task_id": "T3",
+   "number": 2,
+   "state": "rejected",
+   "failure": "m6://result/ee93b83a80e4390a2d0c0306dbb6beda5cfe58d90aea07c16b4ad0141bce7428",
+   "budget_consumed": true,
+   "created_at": 1793235843.512157,
+   "updated_at": 1793235844.9959097
+  },
+  {
+   "task_id": "T5",
+   "number": 1,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793235844.0203345,
+   "updated_at": 1793235845.3464198
+  },
+  {
+   "task_id": "T6",
+   "number": 1,
+   "state": "rejected",
+   "failure": "m6://result/dfbb5be4ee7c1e5870133ced69eb7d3d13e5c3011feb3b6390074a4e8b17b156",
+   "budget_consumed": true,
+   "created_at": 1793235844.3566768,
+   "updated_at": 1793235845.5717936
+  },
+  {
+   "task_id": "T3",
+   "number": 3,
+   "state": "rejected",
+   "failure": "m6://result/16b14ea087d7a187c1023fee83658004c06e867d60508d1cdbc0d1dbb5c8abcc",
+   "budget_consumed": true,
+   "created_at": 1793235845.1521342,
+   "updated_at": 1793235846.5685365
+  },
+  {
+   "task_id": "T6",
+   "number": 2,
+   "state": "rejected",
+   "failure": "m6://result/563fc1dfece6af11235560b6306a5a09e4242a9867ddbeb573bc6f14063b7552",
+   "budget_consumed": true,
+   "created_at": 1793235845.690102,
+   "updated_at": 1793235846.6602929
+  },
+  {
+   "task_id": "T6",
+   "number": 3,
+   "state": "rejected",
+   "failure": "m6://result/ff824ffc362a4c7ebf3fccdbd60a268bd016a4f49826c04792effbe6c5643841",
+   "budget_consumed": true,
+   "created_at": 1793235847.0985053,
+   "updated_at": 1793235848.2109485
+  },
+  {
+   "task_id": "T4",
+   "number": 2,
+   "state": "accepted",
+   "failure": "",
+   "budget_consumed": true,
+   "created_at": 1793235847.3843126,
+   "updated_at": 1793235848.8561234
+  }
+ ],
+ "owner_decisions": [
+  {
+   "task": "T3",
+   "state": "blocked"
+  },
+  {
+   "task": "T6",
+   "state": "blocked"
+  }
+ ],
+ "recovery_seconds": {
+  "T2": 1.2,
+  "T4": 5.1
+ }
+}

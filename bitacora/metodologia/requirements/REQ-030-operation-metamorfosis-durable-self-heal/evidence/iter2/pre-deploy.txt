@@ -1,0 +1,2 @@
+previous release (engine code before REQ-030 iteration 2): 9865150006b2166a1b73840e32c033eef3fc18b3 metodologia: session b4d5d9f9 end; DBOS backup /home/david/bitacora/.state/durable/backups/bt_durable-20261028-201838.dump
+fa101a4759feb3f435c2500b3b2bc9684ff2f482
