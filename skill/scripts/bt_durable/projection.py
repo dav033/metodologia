@@ -393,6 +393,40 @@ def _announce(run: RunRef) -> None:
         pass
 
 
+def _announce_blocked(source, workflow_id: str, run: RunRef, plan) -> None:
+    """A run that settled blocked because composition gates were rejected tells the owner once what stopped it and what
+    to press (pictures REQ-021 r19 settled blocked with CG-3, CG-5 and CG-6 rejected and no decision to answer). Never
+    fails the pass."""
+    try:
+        summary = _event(source, workflow_id, "summary") or {}
+        rejected = dict(sorted(((summary.get("gates") or {}).get("rejected") or {}).items()))
+        if not rejected:
+            return
+        rdir = requirement_dir(run)
+        marker = rdir / "RUN.blocked-notice.json"
+        key = {"run_id": run.run_id, "rejected": rejected}
+        try:
+            if json.loads(marker.read_text(encoding="utf-8")) == key:
+                return
+        except (OSError, ValueError):
+            pass
+        tasks = {gate.id: gate.task for gate in (getattr(plan, "composition_gates", None) or ())}
+        folder = Path(os.environ.get("BITACORA_ROOT") or Path.home() / "bitacora") / ".state" / "durable" / "composition" / "resolutions"
+        pending = sorted(p.with_suffix(".diff3").name for p in folder.glob("*.json") if not p.with_suffix(".resolved").exists())
+        gates = ", ".join(f"{g} ({tasks.get(g, '?')})" for g in rejected)
+        text = (f"El run se detuvo: la composición de {gates} tiene conflictos de texto entre subplanes. "
+                + (f"Cada conflicto está en {folder}: {', '.join(pending[:4])}; escribe el contenido final del archivo en el "
+                   f".resolved de la misma clave y pulsa «Reintentar» en la tarea de la puerta." if pending else
+                   "Pulsa «Reintentar» en la tarea de la puerta para componerla otra vez."))
+        import bt_planning_activity as activity
+        import bt_runutil
+        activity.record(rdir, "Motor", text[:600], kind="flow")
+        bt_runutil.notify("El run se detuvo", text[:300])
+        marker.write_text(json.dumps(key, sort_keys=True) + "\n", encoding="utf-8")
+    except Exception:  # noqa: BLE001 - observing a run must never break it
+        pass
+
+
 class EngineProjector:
     """The engine's periodic refresh: live runs every pass, a finished run once more after it settles."""
 
@@ -416,8 +450,10 @@ class EngineProjector:
                 continue
             if run.run_id not in self._plans:
                 self._plans[run.run_id] = load_plan(run)
-            project(self.source, run, self._plans[run.run_id])
+            document = project(self.source, run, self._plans[run.run_id])
             _announce(run)
+            if document.get("status") == "blocked":
+                _announce_blocked(self.source, row.workflow_id, run, self._plans[run.run_id])
             if row.status not in LIVE:
                 self._settled[row.workflow_id] = row.status
             written.append(run.run_id)
