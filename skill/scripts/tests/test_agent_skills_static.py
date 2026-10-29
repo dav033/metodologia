@@ -172,7 +172,7 @@ class InstallerPrivateSkillTests(unittest.TestCase):
             invoke()
             self.assertTrue((real_claude / "designer.md").is_file())
             self.assertTrue((real_codex / "designer.toml").is_file())
-            self.assertIn('model = "gpt-6.1-sol"',
+            self.assertIn('model = "gpt-6.1-terra"',
                           (real_codex / "designer.toml").read_text(encoding="utf-8"))
             self.assertEqual(len(list(real_claude.glob("*.md"))), 8)
             self.assertTrue((real_antigravity / "planner" / "agent.md").is_file())

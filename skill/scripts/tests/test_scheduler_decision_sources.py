@@ -40,7 +40,7 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
                              (("gpt-6.1-sol", "medium"),))
             self.assertEqual(m2_adapter._route_options("claude", tier, "design"), (("opus", "high"),))
             self.assertEqual(m2_adapter._route_options("codex", tier, "design"),
-                             (("gpt-6.1-sol", "high"),))
+                             (("gpt-6.1-terra", "high"),))
         for complexity in ("high", "L", "high_complexity"):
             self.assertEqual(m2_adapter._route_options("claude", 0, "audit", complexity),
                              (("sonnet", "high"),))
@@ -68,7 +68,7 @@ class MethodologyDecisionSourceTests(unittest.TestCase):
         self.assertEqual(kind, "design")
         self.assertEqual(m2_adapter._route_role(kind, {}), "designer")
         self.assertEqual(m2_adapter._route_options("claude", 0, kind), (("opus", "high"),))
-        self.assertEqual(m2_adapter._route_options("codex", 0, kind), (("gpt-6.1-sol", "high"),))
+        self.assertEqual(m2_adapter._route_options("codex", 0, kind), (("gpt-6.1-terra", "high"),))
 
     def test_schema_1_3_is_supported_without_changing_legacy_capabilities(self):
         self.assertEqual(m2_adapter.PLAN_SCHEMA_CAPABILITIES,
