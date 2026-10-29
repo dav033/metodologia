@@ -286,8 +286,13 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
    confirmed or changed since, pins the designs and launches.
 
 `planning status REQ-NNN` prints the phase, the focus and what each subplan still lacks. A subplan that is better built with the owner at the keyboard gets a hands-on session (D-132): the «Sesión» tab of the subplan, or `bitacora.py sessions start|status|finish REQ-NNN SP-n [--model sonnet|opus]`, starts an interactive Claude Code agent (in a tmux session the web can read and type into, D-133) in a worktree outside the repos (`~/.local/share/bitacora-sessions/`) on a branch `session/<req>-<sp>` created from `origin/main`, with the subplan's outcome, criteria and the SPEC lines it covers as the first message. It never pushes, merges or deploys; `finish` records the branch head and the Planner plans the subplan's tasks around it. `planning resume REQ-NNN` is for a session that takes over (a new Planner after the old one stopped or was replaced): it prints where the flow stands, the Planner's saved notes (`planning note`, kept in `.planning/notes.jsonl`), the latest answered round in the owner's words, the subplans without a `## Pruebas` row, recent activity and one NEXT line. The state is all files, so any session can continue; only the previous session's reasoning is lost, so re-read the code. Close the old Planner before opening a new one. The Plan tab can open the dedicated Planner itself (it pins the conversation id in `.planning/planner.json`, so opening or restarting it resumes the same conversation; a lost transcript falls back to a fresh one that relies on the notes) and lets the owner type to it and see its screen (`tmux -L bitacora attach -t bit-<project>-<REQ>-planner` to attach by hand). The tab also shows the
-selected subplan (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios;
-Entradas), "lo que cambió en la conversación" (`.planning/activity.jsonl`), a design review per subplan, the whole plan
+selected subplan with its control block on top (D-147, `bt_subplan_status`: the flow Definir → Diseñar → Confirmar →
+Ejecutar → Probar → Aprobado, «Te toca a ti» with the action at hand — open round questions, a design to choose, inputs,
+confirmation, sending it to run, run decisions of its tasks or gates, a version to try —, what blocks it and who resolves
+it, which agent works on it now, its changes marked «nuevo» since this browser's last visit, and the decisions taken),
+its tabs (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios; Entradas), the
+subplan list with a count of what waits for the owner in each, "lo que cambió" in the open subplan without translation
+noise (switch «Todo el plan»; `.planning/activity.jsonl`), a design review per subplan, the whole plan
 in English, Spanish or both, and the approval dialog; it updates itself while you edit SPEC/PLAN. The Stop hook keeps
 the Designer and the Spanish translation (`bitacora.py translate REQ-NNN`) following the conversation with no page
 open.

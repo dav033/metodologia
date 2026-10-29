@@ -37,6 +37,36 @@
     });
   }
   function render(n) { if (window.renderMarkdown) window.renderMarkdown(n); setWidth(n); }
+  // «nuevo» since the owner's last visit, per subplan, remembered by this browser only (bt_page_subplan_control).
+  var SEEN = 'bt-sc-seen:' + location.pathname, baseline = {};
+  function seen() { try { return JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (err) { return null; } }
+  function remember(map) { try { localStorage.setItem(SEEN, JSON.stringify(map)); } catch (err) { /* private mode */ } }
+  function marks() {
+    var map = seen(), first = map === null, block = root.querySelector('.sc[data-sc-sp]');
+    map = map || {};
+    if (first) {          // first visit ever: what exists now is not news
+      root.querySelectorAll('[data-sc-latest]').forEach(function (n) { if (n.dataset.scLatest) map[n.dataset.scSp] = n.dataset.scLatest; });
+    }
+    var open = block ? block.dataset.scSp : '';
+    if (block) {
+      if (!(open in baseline)) baseline[open] = map[open] || '';
+      var since = baseline[open], count = 0;
+      block.querySelectorAll('.sc-news li[data-at]').forEach(function (li) {
+        var fresh = !!since && li.dataset.at > since;
+        li.classList.toggle('is-new', fresh);
+        if (fresh) count++;
+      });
+      var badge = block.querySelector('[data-sc-newcount]');
+      if (badge) { badge.hidden = !count; badge.textContent = count === 1 ? '1 nueva' : count + ' nuevas'; }
+      var latest = block.dataset.scLatest || '';
+      if (latest && latest > (map[open] || '')) map[open] = latest;
+    }
+    remember(map);
+    root.querySelectorAll('.sc-fresh[data-sc-sp]').forEach(function (n) {
+      var latest = n.dataset.scLatest || '';
+      n.hidden = n.dataset.scSp === open || !latest || latest <= (map[n.dataset.scSp] || '');
+    });
+  }
   function apply(html, force) {
     var t = document.createElement('template');
     t.innerHTML = html;
@@ -46,6 +76,7 @@
       if (!force && old.some(busy)) return;
       root.replaceChildren(t.content);
       render(root);
+      marks();
       return;
     }
     fresh.forEach(function (n, i) {
@@ -56,9 +87,12 @@
       o.replaceWith(n);
       Array.prototype.forEach.call(n.querySelectorAll('details'), function (d, j) { if (keep[j]) d.open = true; });
       render(n);
-      // live status blocks (the agent strip, its text box, the Designer's progress card) change every few seconds: no flash
-      if (['bar', 'agent', 'agent-say'].indexOf(n.dataset.k) < 0 && !n.querySelector('.pp-dprog')) flash(n);
+      // live status blocks (the agent strip, its text box, the Designer's progress card, the subplan's control block)
+      // change every few seconds: no flash
+      if (['bar', 'agent', 'agent-say'].indexOf(n.dataset.k) < 0 && n.dataset.k.indexOf('control-') !== 0 &&
+          !n.querySelector('.pp-dprog')) flash(n);
     });
+    marks();
   }
   function load(force) {
     var asked = current;
@@ -132,6 +166,7 @@
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closePops(null); });
   window.addEventListener('popstate', function () { go(location.href, false); });
   render(root);
+  marks();
   setInterval(function () { if (!document.hidden) load(false); }, 4000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(false); });
 })();
