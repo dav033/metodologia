@@ -48,6 +48,7 @@ OWNER_FIRST = frozenset({FailureClass.PRODUCT_DECISION, FailureClass.PERMISSION}
 PATCH_OWNER_REVERIFY = "bt-task-owner-reverify"
 PATCH_RECONCILE_ASKS_OWNER = "bt-task-reconcile-asks-owner"
 PATCH_RUN_SUBPLANS = "bt-run-subplans"
+PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 
 
 def run_workflow_id(run: RunRef) -> str:
@@ -95,6 +96,10 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     composed: dict[str, str] = {}
     rejected: dict[str, str] = {}
     synced: frozenset = frozenset()
+    # milestone audits (REQ-030 item 4): an accepted audit's ledger is judged; blocking findings become coordinated
+    # repairs (one per group of related findings), then the audit runs again, at most `remediation_rounds` times
+    audits_on = False
+    remediations: dict[str, dict] = {}
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
         if not lines_on and subplans.enabled(plan) and DBOS.patch(PATCH_RUN_SUBPLANS):
@@ -143,6 +148,15 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             outcome = TaskOutcome.model_validate(message["outcome"])
             states[outcome.task_id] = outcome.status.value
             results[outcome.task_id] = outcome.model_dump(mode="json")
+            repaired = next((audit for audit, entry in remediations.items() if entry["running"] == outcome.task_id), None)
+            if repaired is not None:
+                _repair_settled(run, repaired, outcome, remediations[repaired], states, results, rounds, settings)
+            elif outcome.status == TaskStatus.COMPLETED and _is_audit(plan, outcome.task_id) \
+                    and (audits_on or DBOS.patch(PATCH_RUN_AUDITS)):
+                audits_on = True
+                verdict = steps.audit_gate(run_data, outcome.task_id, outcome.snapshot_sha or "",
+                                           outcome.snapshot_base or "")
+                _audit_judged(run, outcome.task_id, verdict, remediations, states, results, rounds, settings)
             continue
         try:
             command = RunCommand.model_validate(message)
@@ -157,6 +171,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         elif command.kind == "resume":
             paused = False
         elif command.kind == "retry_task" and command.task_id and states.get(command.task_id) in frontier.STOPPED:
+            if command.task_id in remediations:         # the owner retrying a blocked audit grants it one more round
+                remediations[command.task_id]["extra"] += 1
             rounds[command.task_id] = rounds.get(command.task_id, 1) + 1
             _start_task(run, command.task_id, rounds[command.task_id], settings, note=command.note)
             states[command.task_id] = "running"
@@ -168,6 +184,78 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     DBOS.set_event("summary", summary)
     steps.emit("run_settled", {"run_id": run.run_id, "status": summary["status"]})
     return summary
+
+
+def _is_audit(plan, task_id: str) -> bool:
+    return str(plan.task(task_id).meta.get("kind") or "") == "audit"
+
+
+def _audit_judged(run: RunRef, audit: str, verdict: dict, remediations: dict, states: dict, results: dict,
+                  rounds: dict, settings: Settings) -> None:
+    """What an accepted audit's judgement means for the run (deterministic: `verdict` is the step's checkpoint)."""
+    if not verdict.get("audit") or verdict.get("ok"):
+        steps.emit("audit_passed", {"run_id": run.run_id, "task_id": audit, "skipped": verdict.get("skipped", "")})
+        return
+    entry = remediations.setdefault(audit, {"round": 0, "queue": [], "running": "", "extra": 0, "findings": []})
+    limit = int(verdict.get("rounds") or 0) + entry["extra"]
+    repairs = list(verdict.get("repairs") or ())
+    steps.emit("audit_blocked", {"run_id": run.run_id, "task_id": audit, "round": entry["round"], "limit": limit,
+                                 "problems": verdict.get("problems", []),
+                                 "findings": [f["id"] for f in verdict.get("blocking", ())],
+                                 "repairs": [{"owner": r["owner"], "findings": r["findings"]} for r in repairs]})
+    if verdict.get("structural"):
+        _audit_stuck(audit, "the plan must change: " + "; ".join(verdict.get("problems", ())), states, results)
+        return
+    if entry["round"] >= limit:
+        _audit_stuck(audit, f"{len(verdict.get('blocking', ()))} blocking finding(s) or problems remain after "
+                            f"{entry['round']} remediation round(s) (limit {limit}): {verdict.get('summary', '')}",
+                     states, results)
+        return
+    entry["round"] += 1
+    if verdict.get("problems"):                   # the audit itself is unusable: it runs again, told what was wrong
+        note = ("Your previous audit could not be used: " + "; ".join(verdict["problems"])[:3000] +
+                ". Audit again and write the declared report and findings ledger only.")
+        _start_round(run, audit, note, rounds, states, settings)
+        return
+    if not verdict.get("remediate") or not repairs or any(not repair["owner"] for repair in repairs):
+        _audit_stuck(audit, "blocking findings that cannot be repaired automatically (remediation off, or a finding "
+                            f"names no task of the plan): {verdict.get('summary', '')}", states, results)
+        return
+    entry["queue"] = repairs[1:]
+    entry["findings"] = [f["id"] for f in verdict.get("blocking", ())]
+    entry["running"] = repairs[0]["owner"]
+    states[audit] = "remediating"
+    _start_round(run, repairs[0]["owner"], repairs[0]["note"], rounds, states, settings)
+
+
+def _repair_settled(run: RunRef, audit: str, outcome: TaskOutcome, entry: dict, states: dict, results: dict,
+                    rounds: dict, settings: Settings) -> None:
+    """One coordinated repair ended: the next one of the round, or the audit again once all are in."""
+    entry["running"] = ""
+    if outcome.status != TaskStatus.COMPLETED:
+        _audit_stuck(audit, f"the coordinated repair {outcome.task_id} ended {outcome.status.value}", states, results)
+        return
+    if entry["queue"]:
+        repair = entry["queue"].pop(0)
+        entry["running"] = repair["owner"]
+        _start_round(run, repair["owner"], repair["note"], rounds, states, settings)
+        return
+    note = (f"Re-audit after remediation round {entry['round']}: the findings {', '.join(entry['findings'])} were "
+            "repaired in the tree you start from. Check every earlier finding again and record each one's status "
+            "(`fixed` only with the command you ran and its result as evidence), and keep auditing everything else.")
+    _start_round(run, audit, note, rounds, states, settings)
+
+
+def _start_round(run: RunRef, task_id: str, note: str, rounds: dict, states: dict, settings: Settings) -> None:
+    rounds[task_id] = rounds.get(task_id, 0) + 1
+    _start_task(run, task_id, rounds[task_id], settings, note=note)
+    states[task_id] = "running"
+
+
+def _audit_stuck(audit: str, reason: str, states: dict, results: dict) -> None:
+    """The audit's dependents stay waiting; the owner sees why (`retry-task` grants one more round)."""
+    states[audit] = "blocked"
+    results[audit] = {**(results.get(audit) or {}), "status": "blocked", "audit": reason[:1000]}
 
 
 def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,
@@ -522,7 +610,8 @@ def _finish(run: RunRef, task_id: str, status: TaskStatus, outcomes: list[Attemp
     outcome = TaskOutcome(run_id=run.run_id, task_id=task_id, status=status, attempts=len(outcomes),
                           snapshot_sha=last.snapshot.snapshot_sha if last and last.snapshot else None,
                           integrated_ref=last.integrated_ref if last else None, decision=decision,
-                          verdict_ref=last.verify.result_ref if last and last.verify else "")
+                          verdict_ref=last.verify.result_ref if last and last.verify else "",
+                          snapshot_base=last.snapshot.base_sha if last and last.snapshot else None)
     DBOS.set_event("state", {"task_id": task_id, "state": status.value})
     steps.emit("task_settled", {"run_id": run.run_id, "task_id": task_id, "status": status.value,
                                 "attempts": len(outcomes)})

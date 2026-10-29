@@ -81,6 +81,12 @@ class Integrator(Protocol):
 
 
 @runtime_checkable
+class Auditor(Protocol):
+    """Judges an accepted audit's findings ledger and compiles the coordinated repairs of its blocking findings."""
+    def judge(self, run: RunRef, plan: Plan, task: TaskSpec, snapshot_sha: str, *, base_sha: str = "") -> dict: ...
+
+
+@runtime_checkable
 class Composer(Protocol):
     """Composition gates: subplan versions and the gate's candidate (idempotent per member versions)."""
     def compose(self, run: RunRef, gate_id: str, evidence: dict[str, list[dict]]) -> dict: ...
@@ -103,3 +109,4 @@ class Ports:
     integrator: Integrator
     telemetry: Telemetry
     composer: Composer | None = None            # plan 1.3.0 composition gates
+    auditor: Auditor | None = None              # milestone audits: findings ledger -> coordinated remediation

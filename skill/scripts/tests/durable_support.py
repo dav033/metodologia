@@ -34,6 +34,9 @@ CHECKS = {
 }
 
 
+REAL_AUDIT_POLICY = {"audit_ledger_required": True, "audit_read_only": True}   # bt_config's defaults
+
+
 def git(cwd, *args) -> str:
     done = subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@t", "-c", "core.hooksPath=/dev/null", *args],
                           cwd=str(cwd), capture_output=True, text=True, check=False)
@@ -95,7 +98,17 @@ class Lab:
         self.rdir = self.bitacora / "proj" / "requirements" / "REQ-900-lab"
         self.rdir.mkdir(parents=True, exist_ok=True)
         self.database_override: str | None = None
+        # the lab's audit tasks are placeholders (no findings ledger, they write outside a report): the audit gate is
+        # told so explicitly; suites about audits call `configure(gates=REAL_AUDIT_POLICY)` (the legacy defaults)
+        if not (self.bitacora / ".state" / "config.json").exists():      # the engine's own Lab must not reset it
+            self.configure(gates={"audit_ledger_required": False, "audit_read_only": False})
         self.unit_prefix = f"bt-test-{hashlib.sha256(str(self.root).encode()).hexdigest()[:6]}-"
+
+    def configure(self, **sections) -> None:
+        """The machine configuration (bt_config) the engine of this lab reads: <lab bitácora>/.state/config.json."""
+        path = self.bitacora / ".state" / "config.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(sections))
 
     # ---------------------------------------------------------------------------------------------- plan
     def freeze(self, tasks, revision=1, *, schema="1.0.0", **extra) -> dict:

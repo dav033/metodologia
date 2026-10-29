@@ -112,8 +112,15 @@ template for proving an upgrade. When no workflow can still be on the old path, 
   crashes (adoption), one integration per snapshot (CAS + ancestry check), one M6 verdict per verify key.
 - The router used by the engine is the static ordered route list with an optional capacity callback; the M2 decision
   engine and live quota preflight are not wired into the durable runtime yet.
-- Milestone audits and audit-driven remediation revisions of the legacy flow are not part of the durable workflows;
-  remediation here is the coordinated repair attempt of one task.
+- Milestone audits (REQ-030 item 4): an accepted `kind: audit` task is judged by its findings ledger with the legacy
+  gate (`bt_audit_gate`: open critical/high findings block; a missing ledger or a change outside the audit's declared
+  files is a problem of the audit). Related blocking findings are grouped as `bt_remediation` groups them and each group
+  is ONE coordinated repair: a new round of the first task it names, whose brief lists every finding with the probes
+  (the named tasks' check commands); then the audit runs again. At most `gates.remediation_rounds` rounds per audit
+  (`retry-task` on a blocked audit grants one more); dependents wait meanwhile. Not ported: the legacy plan revision
+  that adds remediation tasks to the frozen plan (the durable repair is a round of an existing task, so its checks are
+  that task's own; the other named tasks' probes are in the brief and the re-audit judges them), and the audit evidence
+  cross-check of `quality_audit_evidence`. Behind `DBOS.patch("bt-run-audit-remediation")`.
 - The remote panel and web UI read legacy projections; durable runs are visible through `bt-durable status` and the
   run workflow's `summary` event, not yet in the phone panel.
 - The process-group fallback enforces only the runtime limit (see `bt_supervisor/README.md`).

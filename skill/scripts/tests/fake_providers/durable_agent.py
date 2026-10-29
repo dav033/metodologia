@@ -42,6 +42,23 @@ elif scenario == "own":                         # leaves a file of its own, so e
     Path(f"{task_id}.task").write_text(f"{task_id}\n")
     Path("out.txt").write_text("good\n")
     done()
+elif scenario == "fixk":                        # scenario K: the defect is fixed only by a coordinated repair
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
+    if "REMEDIATION" in prompt:
+        Path("fixed-k.txt").write_text("F1 and F2 fixed together\n")
+    done()
+elif scenario in ("auditk", "auditnever"):       # a read-only audit: its report and findings ledger, nothing else
+    fixed = scenario == "auditk" and Path("fixed-k.txt").exists()
+    findings = [{"id": f"F{n}", "severity": "high", "summary": summary, "tasks": ["T1"],
+                 **({"status": "fixed", "evidence": "$ test -f fixed-k.txt -> exit 0"} if fixed else
+                    {"status": "open", "evidence": "$ test -f fixed-k.txt -> exit 1"})}
+                for n, summary in ((1, "the session is not invalidated on logout"),
+                                   (2, "the same session survives a password change"))]
+    Path("docs").mkdir(exist_ok=True)
+    Path(f"docs/{task_id}.md").write_text(f"# Audit {task_id}\n\n{'fixed' if fixed else 'two related defects'}\n")
+    Path(f"docs/{task_id}.findings.json").write_text(json.dumps({"schema": "audit-findings/1", "findings": findings}))
+    done()
 elif scenario == "fixlater":                    # wrong first, right when it continues from its own snapshot
     if Path("attempt-marker.txt").exists():
         Path("out.txt").write_text("good\n")

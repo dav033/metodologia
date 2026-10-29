@@ -196,6 +196,7 @@ class TaskOutcome(Contract):
     decision: RecoveryDecision | None = None
     provenance: str = Field(default="", max_length=500)
     verdict_ref: str = Field(default="", max_length=200)     # the M6 evidence of the accepted snapshot (m6://result/…)
+    snapshot_base: GitSha | None = None                       # what the accepted attempt started from (its own changes)
 
 
 class LegacyTask(Contract):

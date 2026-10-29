@@ -168,6 +168,17 @@ def sync_lines(run: dict, role: str, items: dict) -> dict:
     return _port(lambda: engine.ports().integrator.sync(ref, role, {k: [tuple(e) for e in v] for k, v in items.items()}))
 
 
+@DBOS.step(name="bt.audit_gate", retries_allowed=True, max_attempts=3, interval_seconds=2)
+def audit_gate(run: dict, task_id: str, snapshot_sha: str, base_sha: str = "") -> dict:
+    """Judge an accepted audit's findings ledger and compile the coordinated repairs (adapters/audit.py)."""
+    ref = RunRef.model_validate(run)
+    auditor = engine.ports().auditor
+    if auditor is None:
+        return {"audit": False, "skipped": "no audit port is wired"}
+    return _port(lambda: auditor.judge(ref, plan(ref), frontier.task(plan(ref), task_id), snapshot_sha,
+                                       base_sha=base_sha))
+
+
 @DBOS.step(name="bt.compose", retries_allowed=True, max_attempts=3, interval_seconds=2)
 def compose(run: dict, gate_id: str, evidence: dict) -> dict:
     """Publish the gate's member subplan versions and build its candidate (idempotent per member versions)."""
