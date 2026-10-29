@@ -112,19 +112,28 @@ class RunFrame(unittest.TestCase):
     def test_the_subplans_execution_frames_its_flow_once_it_is_in_the_run(self):
         self.spec("location given")
         self.started()
-        self.assertNotIn("data-persist", self.page(sp="SP-2", view="run"))   # not in a run yet: nothing to show
+        self.assertNotIn("pp-flowtop", self.page(sp="SP-2", view="run"))   # not in a run yet: nothing to show
         run = {"run": {"status": "running"}, "decisions": [], "milestones": [{"tasks": [
             {**ROW, "id": "T2", "state": "completed", "title": "Design"},
             {**ROW, "id": "T3", "state": "running", "title": "Build", "after": ["T2"]}]}]}
         with patch("bt_page_planning_run._status", return_value=run):
             html = self.page(sp="SP-2", view="run")
-        frame = html.split('class="pp-flowframe"')[1]
-        self.assertIn('data-persist="flow-SP-2"', frame)
-        self.assertIn('src="/flow?scope=subplan%3Ademo%2FREQ-001%2FSP-2&amp;embed=1"', frame)
-        self.assertIn("Abrir en grande", frame)
-        # a direct child of the detail block, after the run panel (planning-live.js keeps it across refreshes)
-        self.assertLess(html.index("<h2>Tareas</h2>"), html.index('class="pp-flowframe"'))
-        self.assertIn("</iframe></section></section>", html)
+        block = html.split('<details class="pp-flowtop"')[1].split("</details>")[0]
+        self.assertIn('data-k="flowtop-SP-2"', block)
+        self.assertIn(" open>", block.split(">")[0] + ">")                 # open by default; the page remembers a close
+        self.assertIn('src="/flow?scope=subplan%3Ademo%2FREQ-001%2FSP-2&amp;embed=1"', block)
+        self.assertIn("Abrir en su página", block)
+        # full width above the plan's columns: never inside the subplan detail, where it was cramped or buried
+        self.assertLess(html.index('class="pp-flowtop"'), html.index('class="pp-grid"'))
+        self.assertNotIn("pp-flowtop", html.split('class="pp-detail"')[1])
+        self.assertNotIn("pp-flowtop", self.page(sp="SP-2", view="tasks"))   # only while «Ejecución» is open
+        # each task is one line; its full detail opens in a modal (SP-3's fifteen detailed tasks ran to 13,000 px)
+        row = html.split('<div class="pp-trow">')[1].split("<dialog")[0]
+        self.assertIn('data-open="tdlg-T2"', row)
+        self.assertNotIn('class="task"', row)
+        dialog = html.split('<dialog id="tdlg-T2"')[1].split("</dialog>")[0]
+        self.assertIn('class="task"', dialog)
+        self.assertIn("data-close", dialog)
 
 
 if __name__ == "__main__":

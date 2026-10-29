@@ -140,6 +140,11 @@ def fragment(project: str, rid: str, rdir: Path, status: str | None, token: str,
         import bt_page_planning_asks as asks_view
         centre = _stamp(asks_view.asks(ctx)) if opts["view"] == "asks" else _stamp(_detail(ctx))
         body = ['<div class="pp-grid">', _stamp(_list(ctx)), centre, _stamp(_feed(ctx)), "</div>"]
+        if opts["view"] == "run":                       # the subplan's Flow, full width above the columns (D-150)
+            import bt_page_planning_run as run_view
+            sub = next(item for item in ctx["subplans"] if item["id"] == opts["sp"])
+            if (flow_block := run_view.flow_frame(ctx, sub)):
+                body.insert(0, _stamp(flow_block))
     steps = _stamp(flow_view.steps(ctx)) if phase else ""
     import bt_page_planning_agent as agent_view
     import bt_page_planning_asks as asks_view
@@ -323,7 +328,6 @@ def _detail(ctx: dict) -> str:
                       if row["pending"])
         tabs.append(("inputs", f"Entradas{f' · faltan {pending}' if pending else ''}"))
     import bt_page_subplan_control as control
-    frame = ""
     import bt_page_planning_run as run_view
     if run_view.counts(ctx).get(s["id"]):
         tabs.append(("run", run_view.tab_label(ctx, s["id"])))
@@ -339,7 +343,6 @@ def _detail(ctx: dict) -> str:
         body = flow_view.inputs_panel(ctx, s)
     elif opts["view"] == "run":
         body = run_view.panel(ctx, s)
-        frame = run_view.flow_frame(ctx, s)
     elif opts["view"] == "verify":
         body = verify_view.panel(ctx, s)
     elif opts["view"] == "session":
@@ -360,7 +363,7 @@ def _detail(ctx: dict) -> str:
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
             f'</h2><span class="pp-state {e(cls)}">{e(label)}</span>{_design_buttons(ctx, row)}</header>'
             f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
-            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}{frame}</section>')
+            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}</section>')
 
 
 def _design_buttons(ctx: dict, row: dict | None) -> str:

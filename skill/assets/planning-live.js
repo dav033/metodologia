@@ -36,20 +36,27 @@
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   }
-  function render(n) { if (window.renderMarkdown) window.renderMarkdown(n); setWidth(n); }
-  // a block holding a [data-persist] child (the subplan's framed Flow) keeps that child: moving or replacing an iframe
-  // reloads it, so its siblings and the block's attributes change around it instead
-  function swap(o, n) {
-    var keep = o.querySelector(':scope > [data-persist]'), next = n.querySelector(':scope > [data-persist]');
-    if (!keep || !next || keep.dataset.persist !== next.dataset.persist) { o.replaceWith(n); return n; }
-    Array.prototype.forEach.call(n.attributes, function (a) { o.setAttribute(a.name, a.value); });
-    Array.prototype.slice.call(o.childNodes).forEach(function (c) { if (c !== keep) o.removeChild(c); });
-    var before = true;
-    Array.prototype.slice.call(n.childNodes).forEach(function (c) {
-      if (c === next) { before = false; return; }
-      if (before) o.insertBefore(c, keep); else o.appendChild(c);
+  function render(n) { if (window.renderMarkdown) window.renderMarkdown(n); setWidth(n); flowFrames(n); }
+  // the subplan's Flow (bt_page_planning_run.flow_frame): as tall as the Flow itself, open or closed as left
+  var FLOW_OPEN = 'bt-flowtop-open';
+  function flowFrames(scope) {
+    Array.prototype.forEach.call(scope.querySelectorAll('details.pp-flowtop'), function (d) {
+      if (d.dataset.wired) return;
+      d.dataset.wired = '1';
+      try { if (localStorage.getItem(FLOW_OPEN) === '0') d.open = false; } catch (err) { /* private mode */ }
+      d.addEventListener('toggle', function () {
+        try { localStorage.setItem(FLOW_OPEN, d.open ? '1' : '0'); } catch (err) { /* private mode */ }
+      });
+      var frame = d.querySelector('iframe.pp-flowtop-frame');
+      if (!frame) return;
+      frame.addEventListener('load', function () {
+        var doc = frame.contentDocument;
+        if (!doc || !window.ResizeObserver) return;
+        var fit = function () { frame.style.height = doc.documentElement.scrollHeight + 'px'; };
+        new ResizeObserver(fit).observe(doc.body);
+        fit();
+      });
     });
-    return o;
   }
   // «nuevo» since the owner's last visit, per subplan, remembered by this browser only (bt_page_subplan_control).
   var SEEN = 'bt-sc-seen:' + location.pathname, baseline = {};
@@ -98,7 +105,7 @@
       if (o.dataset.h === n.dataset.h) { o.classList.remove('pl-waiting'); return; }
       if (busy(o)) { o.classList.add('pl-waiting'); return; }
       var keep = opened(o);
-      n = swap(o, n);
+      o.replaceWith(n);
       Array.prototype.forEach.call(n.querySelectorAll('details'), function (d, j) { if (keep[j]) d.open = true; });
       render(n);
       // live status blocks (the agent strip, its text box, the Designer's progress card, the subplan's control block)
@@ -161,6 +168,8 @@
     }
     var close = ev.target.closest('[data-close]');
     if (close) { var d = close.closest('dialog'); if (d) d.close(); return; }
+    // a task's detail modal also closes on its backdrop (the click lands on the dialog itself, outside its content)
+    if (ev.target.matches && ev.target.matches('dialog.pp-tdialog')) { ev.target.close(); return; }
     var reply = ev.target.closest('[data-reply]');
     if (reply) {
       var scope = reply.closest('.pp-detail, .pp-review') || root;
@@ -181,6 +190,7 @@
   window.addEventListener('popstate', function () { go(location.href, false); });
   render(root);
   marks();
+  flowFrames(root);
   setInterval(function () { if (!document.hidden) load(false); }, 4000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(false); });
 })();

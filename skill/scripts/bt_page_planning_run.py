@@ -97,28 +97,43 @@ def panel(ctx: dict, sub: dict) -> str:
 
 
 def flow_frame(ctx: dict, sub: dict) -> str:
-    """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) framed under its «Ejecución»: the module map,
-    the messages and each task's route, live. A direct child of the detail block with `data-persist`, so the Plan tab's
-    refresh keeps the frame (and its own live stream) instead of reloading it every few seconds."""
+    """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) while its «Ejecución» is open: the module map,
+    the messages and each task's route, live. Above the plan's three columns at full width (inside the centre column
+    it was cramped, and under a long task list it was buried), collapsible; its own block, whose HTML depends only on
+    the subplan, so the Plan tab's refresh never reloads it. planning-live.js sizes the frame to the Flow's height and
+    remembers whether the owner left it open."""
     if not counts(ctx).get(sub["id"]):
         return ""
     scope = f'subplan:{ctx["project"]}/{ctx["rid"]}/{sub["id"]}'
     src = "/flow?" + urlencode({"scope": scope, "embed": "1"})
-    return (f'<section class="pp-flowframe" data-persist="flow-{e(sub["id"])}" aria-label="Flujo de {e(sub["id"])}">'
-            f'<div class="pp-flowframe-head"><h2>Flujo de {e(sub["id"])}</h2><span class="muted">Mensajes entre módulos y '
-            f'recorrido de cada tarea, en vivo</span><a href="{e("/flow?" + urlencode({"scope": scope}))}" target="_blank" '
-            f'rel="noopener">Abrir en grande ↗</a></div>'
-            f'<iframe src="{e(src)}" title="Flujo de {e(sub["id"])}" loading="lazy"></iframe></section>')
+    return (f'<details class="pp-flowtop" data-k="flowtop-{e(sub["id"])}" open><summary><span class="pp-flowtop-title">'
+            f'Flujo de {e(sub["id"])}</span><span class="pp-meta">Mensajes entre módulos y recorrido de cada tarea, en '
+            f'vivo</span><a class="pp-flowtop-open" href="{e("/flow?" + urlencode({"scope": scope}))}" target="_blank" '
+            f'rel="noopener">Abrir en su página ↗</a></summary><div class="pp-flowtop-body"><iframe class="pp-flowtop-frame" '
+            f'src="{e(src)}" title="Flujo de {e(sub["id"])}"></iframe></div></details>')
 
 
 def _row(plans, task: dict, asks: dict, base: str, token: str, back: str) -> str:
-    """The task as the run page shows it, plus a one-click retry when it is stuck."""
-    stuck = task["state"] in ("blocked", "rejected", "cancelled") or task["id"] in asks
-    retry = (f'<form method="post" action="{base}/retry-task" class="opt" style="margin:6px 0">'
+    """One line per task (id, title, attempts, state, a one-click retry when it is stuck); the full detail the run page
+    shows — objective, criteria, checks, attempts — opens in a modal, so fifteen tasks no longer run to thousands of
+    pixels (pictures REQ-021 SP-3)."""
+    tid = str(task["id"])
+    stuck = task["state"] in ("blocked", "rejected", "cancelled") or tid in asks
+    retry = (f'<form method="post" action="{base}/retry-task" class="pp-inline">'
              f'<input type="hidden" name="token" value="{e(token)}"><input type="hidden" name="back" value="{e(back)}">'
-             f'<input type="hidden" name="task" value="{e(task["id"])}">'
-             f'<button type="submit">Reintentar {e(task["id"])} ahora</button></form>') if stuck else ""
-    return plans._task(task, asks) + retry
+             f'<input type="hidden" name="task" value="{e(tid)}">'
+             f'<button type="submit" class="outline sm">Reintentar</button></form>') if stuck else ""
+    live = '<i class="dot info live" title="trabajando"></i>' if (task.get("attempt") or {}).get("live") else ""
+    dialog = f"tdlg-{tid}"
+    return (f'<div class="pp-trow"><button type="button" class="pp-trow-open" data-open="{e(dialog)}" aria-haspopup="dialog"'
+            f' title="Ver el detalle de {e(tid)}"><span class="tid">{e(tid)}</span><span class="pp-trow-title">'
+            f'{plans.inline(task["title"])}</span></button>{live}'
+            f'<span class="chip">{task["attempts"]} intento{"s" if task["attempts"] != 1 else ""}</span>'
+            f'{plans.state_badge(task["state"])}{retry}</div>'
+            f'<dialog id="{e(dialog)}" class="pp-tdialog" aria-labelledby="{e(dialog)}-h"><header>'
+            f'<h3 id="{e(dialog)}-h">{e(tid)} · {plans.inline(task["title"])}</h3>'
+            f'<button type="button" class="outline sm" data-close aria-label="Cerrar">✕</button></header>'
+            f'{plans._task(task, asks)}</dialog>')
 
 
 def _rework(tasks: list[dict], base: str, token: str, back: str) -> str:
