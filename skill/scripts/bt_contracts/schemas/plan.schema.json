@@ -1,0 +1,1804 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bitacora.invalid/contract/plan.schema.json",
+  "title": "Bitácora PLAN.json, schema 1.0.0 / 1.1.0 / 1.2.0 / 1.3.0",
+  "description": "Generated from the Pydantic models of bt_contracts/plan.py; do not edit. Rules across objects (unique ids, references that resolve, an acyclic `after`, consumed contracts produced by the subplan they name, a stage listing the revision's subplans, text that is not blank, relative paths) are enforced by the models' validators and are not all expressible here. Text and evidence quality, coverage totality, task roles and ordering remain the planner's authoring rules.",
+  "$defs": {
+    "Checkpoint": {
+      "additionalProperties": false,
+      "properties": {
+        "task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "purpose": {
+          "pattern": "\\S",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task",
+        "purpose"
+      ],
+      "type": "object"
+    },
+    "ClassificationEvidence": {
+      "additionalProperties": false,
+      "description": "Every classification argued per dimension (schema 1.1.0 and later).",
+      "properties": {
+        "complexity": {
+          "$ref": "#/$defs/DimensionEvidence"
+        },
+        "scope": {
+          "$ref": "#/$defs/DimensionEvidence"
+        },
+        "duration": {
+          "$ref": "#/$defs/DimensionEvidence"
+        },
+        "risk": {
+          "$ref": "#/$defs/DimensionEvidence"
+        },
+        "coupling": {
+          "$ref": "#/$defs/DimensionEvidence"
+        },
+        "confidence": {
+          "$ref": "#/$defs/DimensionEvidence"
+        }
+      },
+      "required": [
+        "complexity",
+        "scope",
+        "duration",
+        "risk",
+        "coupling",
+        "confidence"
+      ],
+      "type": "object"
+    },
+    "CompositionGate": {
+      "additionalProperties": false,
+      "description": "Subplans whose published versions are composed and tested together before dependent work continues.",
+      "properties": {
+        "id": {
+          "pattern": "^CG-[1-9][0-9]*$",
+          "type": "string"
+        },
+        "subplans": {
+          "items": {
+            "pattern": "^SP-[1-9][0-9]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "audit_task": {
+          "anyOf": [
+            {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "subplans",
+        "task",
+        "criteria"
+      ],
+      "type": "object"
+    },
+    "ConsumedContract": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "from": {
+          "pattern": "^(?:SP-[1-9][0-9]*|external)$",
+          "type": "string"
+        },
+        "dependency": {
+          "enum": [
+            "contract",
+            "implementation",
+            "publication"
+          ],
+          "type": "string"
+        },
+        "verified_by": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "contract",
+        "version",
+        "from",
+        "dependency"
+      ],
+      "type": "object"
+    },
+    "DimensionEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "justification": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "description": "kind:value, kind in file, command, precedent, spec, task, assumption",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "justification",
+        "evidence"
+      ],
+      "type": "object"
+    },
+    "ExistingSurface": {
+      "additionalProperties": false,
+      "properties": {
+        "routes": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "paths": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "components": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "screenshots": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "Interface": {
+      "additionalProperties": false,
+      "description": "A cross-task interface (schema 1.2.0): who produces it, who consumes it, what must hold.",
+      "properties": {
+        "id": {
+          "pattern": "^IF-[1-9][0-9]*$",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "owner": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "producer_task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "consumer_tasks": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "integration_task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "outputs": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "invariants": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "integration_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "owner",
+        "producer_task",
+        "consumer_tasks",
+        "inputs",
+        "outputs",
+        "invariants",
+        "integration_criteria"
+      ],
+      "type": "object"
+    },
+    "Milestone": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^M[0-9]+$",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "acceptance_criteria"
+      ],
+      "type": "object"
+    },
+    "Plan100": {
+      "additionalProperties": false,
+      "description": "A frozen PLAN.json revision, schema 1.0.0: milestones and classified tasks.",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0",
+          "type": "string"
+        },
+        "plan_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "spec_ref": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "milestones": {
+          "items": {
+            "$ref": "#/$defs/Milestone"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task100"
+          },
+          "maxItems": 10000,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_paths": {
+          "items": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "generated_command": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "maxProperties": 256,
+              "minProperties": 1,
+              "patternProperties": {
+                "^[A-Za-z0-9._-]{1,128}$": {
+                  "maxLength": 4096,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "revision",
+        "spec_ref",
+        "milestones",
+        "tasks"
+      ],
+      "type": "object"
+    },
+    "Plan110": {
+      "additionalProperties": false,
+      "description": "Schema 1.1.0: every classification is argued in classification_evidence.",
+      "properties": {
+        "schema_version": {
+          "const": "1.1.0",
+          "type": "string"
+        },
+        "plan_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "spec_ref": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "milestones": {
+          "items": {
+            "$ref": "#/$defs/Milestone"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task110"
+          },
+          "maxItems": 10000,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_paths": {
+          "items": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "generated_command": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "maxProperties": 256,
+              "minProperties": 1,
+              "patternProperties": {
+                "^[A-Za-z0-9._-]{1,128}$": {
+                  "maxLength": 4096,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "revision",
+        "spec_ref",
+        "milestones",
+        "tasks"
+      ],
+      "type": "object"
+    },
+    "Plan120": {
+      "additionalProperties": false,
+      "description": "Schema 1.2.0: requirement coverage, task kind, verification categories and interfaces.",
+      "properties": {
+        "schema_version": {
+          "const": "1.2.0",
+          "type": "string"
+        },
+        "plan_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "spec_ref": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "milestones": {
+          "items": {
+            "$ref": "#/$defs/Milestone"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task120"
+          },
+          "maxItems": 10000,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_paths": {
+          "items": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "generated_command": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "maxProperties": 256,
+              "minProperties": 1,
+              "patternProperties": {
+                "^[A-Za-z0-9._-]{1,128}$": {
+                  "maxLength": 4096,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "requirements": {
+          "items": {
+            "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "interfaces": {
+          "items": {
+            "$ref": "#/$defs/Interface"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "revision",
+        "spec_ref",
+        "milestones",
+        "tasks",
+        "requirements"
+      ],
+      "type": "object"
+    },
+    "Plan130": {
+      "additionalProperties": false,
+      "description": "Schema 1.3.0: functional subplans, composition gates, UI contracts, verification environments, stages.",
+      "properties": {
+        "schema_version": {
+          "const": "1.3.0",
+          "type": "string"
+        },
+        "plan_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "revision": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "spec_ref": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "milestones": {
+          "items": {
+            "$ref": "#/$defs/Milestone"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "tasks": {
+          "items": {
+            "$ref": "#/$defs/Task130"
+          },
+          "maxItems": 10000,
+          "minItems": 1,
+          "type": "array"
+        },
+        "generated_paths": {
+          "items": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 256,
+          "type": "array"
+        },
+        "generated_command": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "maxProperties": 256,
+              "minProperties": 1,
+              "patternProperties": {
+                "^[A-Za-z0-9._-]{1,128}$": {
+                  "maxLength": 4096,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          ]
+        },
+        "requirements": {
+          "items": {
+            "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "interfaces": {
+          "items": {
+            "$ref": "#/$defs/Interface"
+          },
+          "type": "array"
+        },
+        "subplans": {
+          "items": {
+            "$ref": "#/$defs/Subplan"
+          },
+          "maxItems": 64,
+          "type": "array"
+        },
+        "composition_gates": {
+          "items": {
+            "$ref": "#/$defs/CompositionGate"
+          },
+          "maxItems": 32,
+          "type": "array"
+        },
+        "stage": {
+          "$ref": "#/$defs/Stage"
+        }
+      },
+      "required": [
+        "schema_version",
+        "plan_id",
+        "revision",
+        "spec_ref",
+        "milestones",
+        "tasks",
+        "requirements"
+      ],
+      "type": "object"
+    },
+    "ProducedContract": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "defined_by": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "interfaces": {
+          "items": {
+            "pattern": "^IF-[1-9][0-9]*$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "contract",
+        "version",
+        "defined_by"
+      ],
+      "type": "object"
+    },
+    "ScopeException": {
+      "additionalProperties": false,
+      "description": "Only with `scope: full_system`, which must otherwise be decomposed.",
+      "properties": {
+        "reason": {
+          "pattern": "\\S",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason"
+      ],
+      "type": "object"
+    },
+    "Stage": {
+      "additionalProperties": false,
+      "description": "D-134: this revision is a stage, the projection of the draft onto these subplans.",
+      "properties": {
+        "version": {
+          "description": "stage contract version; this reader knows 1 (a strict int: Literal[1] would also accept true)",
+          "maximum": 1,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "subplans": {
+          "items": {
+            "pattern": "^SP-[1-9][0-9]*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "version",
+        "subplans"
+      ],
+      "type": "object"
+    },
+    "Subplan": {
+      "additionalProperties": false,
+      "description": "A functional slice of a 1.3.0 plan with its own integration test and audit.",
+      "properties": {
+        "id": {
+          "pattern": "^SP-[1-9][0-9]*$",
+          "type": "string"
+        },
+        "milestone_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "outcome": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "covers": {
+          "items": {
+            "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "integration_test_task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "audit_task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "produces": {
+          "items": {
+            "$ref": "#/$defs/ProducedContract"
+          },
+          "type": "array"
+        },
+        "consumes": {
+          "items": {
+            "$ref": "#/$defs/ConsumedContract"
+          },
+          "type": "array"
+        },
+        "checkpoints": {
+          "items": {
+            "$ref": "#/$defs/Checkpoint"
+          },
+          "type": "array"
+        },
+        "ui": {
+          "$ref": "#/$defs/SubplanUI"
+        },
+        "ui_brief": {
+          "$ref": "#/$defs/UIBrief"
+        }
+      },
+      "required": [
+        "id",
+        "milestone_id",
+        "title",
+        "outcome",
+        "covers",
+        "acceptance_criteria",
+        "integration_test_task",
+        "audit_task"
+      ],
+      "type": "object"
+    },
+    "SubplanUI": {
+      "additionalProperties": false,
+      "properties": {
+        "contract": {
+          "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+          "type": "string"
+        },
+        "version": {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "design_task": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "visual_review_task": {
+          "pattern": "\\S",
+          "type": "string"
+        }
+      },
+      "required": [
+        "contract",
+        "version",
+        "design_task",
+        "visual_review_task"
+      ],
+      "type": "object"
+    },
+    "Task100": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^T[0-9]+(?:\\.[0-9]+)?[a-z]?$",
+          "type": "string"
+        },
+        "milestone_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "objective": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "after": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "complexity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "extreme"
+          ],
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "isolated_fix",
+            "small_change",
+            "large_change",
+            "full_feature",
+            "full_system"
+          ],
+          "type": "string"
+        },
+        "estimated_minutes": {
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "coupling": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "estimate_rationale": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected_paths": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shared_resources": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "verification": {
+          "items": {
+            "$ref": "#/$defs/Verification100"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "scope_exception": {
+          "$ref": "#/$defs/ScopeException"
+        },
+        "recovery_task": {
+          "type": "boolean"
+        },
+        "recovery_case_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "recovery_owner_tasks": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bootstrap": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "milestone_id",
+        "title",
+        "objective",
+        "repository",
+        "after",
+        "complexity",
+        "scope",
+        "estimated_minutes",
+        "risk",
+        "coupling",
+        "confidence",
+        "estimate_rationale",
+        "expected_paths",
+        "shared_resources",
+        "acceptance_criteria",
+        "verification"
+      ],
+      "type": "object"
+    },
+    "Task110": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^T[0-9]+(?:\\.[0-9]+)?[a-z]?$",
+          "type": "string"
+        },
+        "milestone_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "objective": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "after": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "complexity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "extreme"
+          ],
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "isolated_fix",
+            "small_change",
+            "large_change",
+            "full_feature",
+            "full_system"
+          ],
+          "type": "string"
+        },
+        "estimated_minutes": {
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "coupling": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "estimate_rationale": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected_paths": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shared_resources": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "verification": {
+          "items": {
+            "$ref": "#/$defs/Verification100"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "scope_exception": {
+          "$ref": "#/$defs/ScopeException"
+        },
+        "recovery_task": {
+          "type": "boolean"
+        },
+        "recovery_case_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "recovery_owner_tasks": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bootstrap": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "classification_evidence": {
+          "$ref": "#/$defs/ClassificationEvidence"
+        }
+      },
+      "required": [
+        "id",
+        "milestone_id",
+        "title",
+        "objective",
+        "repository",
+        "after",
+        "complexity",
+        "scope",
+        "estimated_minutes",
+        "risk",
+        "coupling",
+        "confidence",
+        "estimate_rationale",
+        "expected_paths",
+        "shared_resources",
+        "acceptance_criteria",
+        "verification",
+        "classification_evidence"
+      ],
+      "type": "object"
+    },
+    "Task120": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^T[0-9]+(?:\\.[0-9]+)?[a-z]?$",
+          "type": "string"
+        },
+        "milestone_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "objective": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "after": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "complexity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "extreme"
+          ],
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "isolated_fix",
+            "small_change",
+            "large_change",
+            "full_feature",
+            "full_system"
+          ],
+          "type": "string"
+        },
+        "estimated_minutes": {
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "coupling": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "estimate_rationale": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected_paths": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shared_resources": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "verification": {
+          "items": {
+            "$ref": "#/$defs/Verification120"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "scope_exception": {
+          "$ref": "#/$defs/ScopeException"
+        },
+        "recovery_task": {
+          "type": "boolean"
+        },
+        "recovery_case_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "recovery_owner_tasks": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bootstrap": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "classification_evidence": {
+          "$ref": "#/$defs/ClassificationEvidence"
+        },
+        "covers": {
+          "items": {
+            "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "implement",
+            "test",
+            "docs",
+            "audit",
+            "research"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "milestone_id",
+        "title",
+        "objective",
+        "repository",
+        "after",
+        "complexity",
+        "scope",
+        "estimated_minutes",
+        "risk",
+        "coupling",
+        "confidence",
+        "estimate_rationale",
+        "expected_paths",
+        "shared_resources",
+        "acceptance_criteria",
+        "verification",
+        "classification_evidence",
+        "covers",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "Task130": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^T[0-9]+(?:\\.[0-9]+)?[a-z]?$",
+          "type": "string"
+        },
+        "milestone_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "title": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "objective": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "repository": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "after": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "complexity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "extreme"
+          ],
+          "type": "string"
+        },
+        "scope": {
+          "enum": [
+            "isolated_fix",
+            "small_change",
+            "large_change",
+            "full_feature",
+            "full_system"
+          ],
+          "type": "string"
+        },
+        "estimated_minutes": {
+          "maximum": 100000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "risk": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "coupling": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "type": "string"
+        },
+        "estimate_rationale": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected_paths": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "shared_resources": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "acceptance_criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "verification": {
+          "items": {
+            "$ref": "#/$defs/Verification130"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "scope_exception": {
+          "$ref": "#/$defs/ScopeException"
+        },
+        "recovery_task": {
+          "type": "boolean"
+        },
+        "recovery_case_id": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "recovery_owner_tasks": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "bootstrap": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "classification_evidence": {
+          "$ref": "#/$defs/ClassificationEvidence"
+        },
+        "covers": {
+          "items": {
+            "pattern": "^[A-Z][A-Z0-9]{0,7}-?[0-9]{1,4}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "implement",
+            "test",
+            "docs",
+            "audit",
+            "research",
+            "design"
+          ],
+          "type": "string"
+        },
+        "subplan_id": {
+          "pattern": "^SP-[1-9][0-9]*$",
+          "type": "string"
+        },
+        "ui": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "milestone_id",
+        "title",
+        "objective",
+        "repository",
+        "after",
+        "complexity",
+        "scope",
+        "estimated_minutes",
+        "risk",
+        "coupling",
+        "confidence",
+        "estimate_rationale",
+        "expected_paths",
+        "shared_resources",
+        "acceptance_criteria",
+        "verification",
+        "classification_evidence",
+        "covers",
+        "kind"
+      ],
+      "type": "object"
+    },
+    "UIBrief": {
+      "additionalProperties": false,
+      "description": "Optional Planner hand-off to the Designer for a UI subplan.",
+      "properties": {
+        "flows": {
+          "items": {
+            "anyOf": [
+              {
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/UIFlow"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "screens_states": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "existing_surface": {
+          "$ref": "#/$defs/ExistingSurface"
+        },
+        "must_not_change": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "copy_rules": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "criteria": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "UIFlow": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "Verification100": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "command",
+            "manual"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "purpose": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "required (non-blank) for a manual check"
+        },
+        "created_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "the task that creates a check that does not exist yet"
+        }
+      },
+      "required": [
+        "type",
+        "value",
+        "purpose"
+      ],
+      "type": "object"
+    },
+    "Verification120": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "command",
+            "manual"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "purpose": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "required (non-blank) for a manual check"
+        },
+        "created_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "the task that creates a check that does not exist yet"
+        },
+        "category": {
+          "enum": [
+            "static",
+            "functional",
+            "integration",
+            "regression",
+            "product"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "value",
+        "purpose",
+        "category"
+      ],
+      "type": "object"
+    },
+    "Verification130": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "command",
+            "manual"
+          ],
+          "type": "string"
+        },
+        "value": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "purpose": {
+          "pattern": "\\S",
+          "type": "string"
+        },
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "required (non-blank) for a manual check"
+        },
+        "created_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "the task that creates a check that does not exist yet"
+        },
+        "category": {
+          "enum": [
+            "static",
+            "functional",
+            "integration",
+            "regression",
+            "product"
+          ],
+          "type": "string"
+        },
+        "environment": {
+          "enum": [
+            "sandbox",
+            "external_authorized",
+            "production",
+            "human_attestation"
+          ],
+          "type": "string"
+        },
+        "requires": {
+          "description": "resource names, never secret values",
+          "items": {
+            "pattern": "^(?:[A-Z][A-Z0-9_]{1,63}|service:[a-z0-9][a-z0-9-]{0,63})$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "authorization_needed": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "value",
+        "purpose",
+        "category"
+      ],
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "1.0.0": "#/$defs/Plan100",
+      "1.1.0": "#/$defs/Plan110",
+      "1.2.0": "#/$defs/Plan120",
+      "1.3.0": "#/$defs/Plan130"
+    },
+    "propertyName": "schema_version"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Plan100"
+    },
+    {
+      "$ref": "#/$defs/Plan110"
+    },
+    {
+      "$ref": "#/$defs/Plan120"
+    },
+    {
+      "$ref": "#/$defs/Plan130"
+    }
+  ]
+}

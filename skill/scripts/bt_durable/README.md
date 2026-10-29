@@ -25,7 +25,7 @@ legacy core and executor are reached only through their adapters (`bt_durable/le
   the integration line (now compare-and-swap), owner decisions.
 - **New Metodología logic**: evidence-based classifier, bounded recovery policy (re-verify instead of re-run for
   environment limits, durable quota waits, one coordinated remediation, escalation with options), migration bridge,
-  plan pre-flight (`bt_planner.preflight`).
+  plan pre-flight: the typed plan contract (`bt_contracts.plan`, `PLAN_CONTRACT`) then `bt_planner.preflight`.
 
 ## Install (Linux)
 
@@ -54,9 +54,31 @@ uv run bt-durable retry-task pictures REQ-031 T2 --note "…"
 ```
 
 `execution.backend` (`legacy` default | `dbos`) names the runtime for new runs; `execution.routes`
-(`provider:profile:model`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency` the queue
-sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a run
-owned by the durable runtime (`OWNED_BY_DBOS`).
+(`provider:profile:model[:effort]`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency`
+the queue sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a
+run owned by the durable runtime (`OWNED_BY_DBOS`).
+
+## Routing
+
+`execution.router` (`m2` default | `static`). With `m2` each routing decision asks the M2 decision engine (through its
+one door, `bt_scheduler_decision_adapter.durable_route_ranking`) to rank the allowed routes for the task: the list is the
+authorization and the baseline order, the live subscription reading (`LiveQuota`, bt_quota_live, cached 60 s) is the
+capacity. M2 applies its hard filters (profile authorization and work gate, runtime on PATH, sign-in, capacity,
+cooldown marks when no live reading says otherwise), its route policy (baseline order kept except for docs tasks, which
+prefer headroom) and one candidate per account.
+
+- A route refused for a known reason (exhausted, cooling down, unauthorized, signed out, no runtime) is never chosen:
+  no attempt is spent on it.
+- A route whose capacity cannot be read runs only when no route has known capacity, in the operator's order (the
+  static list's old behaviour; the agent's own usage-limit answer is then classified `quota` and waited for).
+- Nothing can run: a durable `wait` until the earliest known reset or cooldown end, otherwise `unavailable` (the owner
+  decides). A full window whose reset already passed is unknown, not full. No quota is ever invented.
+- Every decision is a `route_decision` telemetry event: chosen route and basis (`m2` | `unknown_capacity` | `none`),
+  ranked candidates and rejected ones with M2's reason codes and account references, each route's capacity reading,
+  the M2 batch id and input hash, policy versions. The decision is the `bt.route` step's checkpointed result, so a
+  recovered workflow replays it instead of deciding again.
+- If M2 cannot be built (it refuses a route's identity, an import fails), the engine starts on the static list and
+  emits `router_fallback` with the reason.
 
 ## Migration of legacy runs
 
@@ -105,13 +127,15 @@ template for proving an upgrade. When no workflow can still be on the old path, 
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
 | the engine does not start | `journalctl --user -u bt-durable`; the state directory must be private (0700) |
 | metrics | `python -m bt_durable.bench durable <state>/durable/telemetry.jsonl` |
+| an attempt left a source file over 500 lines | telemetry event `file_guard` (written at capture, whatever tool wrote the file); the same findings are `snapshot.oversized` (`new`/`crossed`/`grew`), and `adapters/size_guard.note()` turns them into text for the next note |
 
 ## Verified limitations (not claimed)
 
 - Exactly-once for external effects is NOT claimed. What is proven: one agent process per attempt key across engine
   crashes (adoption), one integration per snapshot (CAS + ancestry check), one M6 verdict per verify key.
-- The router used by the engine is the static ordered route list with an optional capacity callback; the M2 decision
-  engine and live quota preflight are not wired into the durable runtime yet.
+- The M2 router decides per task from the allowed list; it does not reserve accounts or apply per-account concurrency
+  limits (none is configured anywhere today), does not persist decisions to an M2 ledger (telemetry is the record) and
+  does not use Laya.
 - Milestone audits (REQ-030 item 4): an accepted `kind: audit` task is judged by its findings ledger with the legacy
   gate (`bt_audit_gate`: open critical/high findings block; a missing ledger or a change outside the audit's declared
   files is a problem of the audit). Related blocking findings are grouped as `bt_remediation` groups them and each group

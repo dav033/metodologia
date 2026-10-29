@@ -48,6 +48,7 @@ OWNER_FIRST = frozenset({FailureClass.PRODUCT_DECISION, FailureClass.PERMISSION}
 PATCH_OWNER_REVERIFY = "bt-task-owner-reverify"
 PATCH_RECONCILE_ASKS_OWNER = "bt-task-reconcile-asks-owner"
 PATCH_RUN_SUBPLANS = "bt-run-subplans"
+PATCH_TASK_PAUSE = "bt-task-respects-pause"
 PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 
 
@@ -313,15 +314,16 @@ def task_workflow(run_data: dict, task_id: str, round_no: int, settings_data: di
                   parent_id: str, legacy_data: dict | None = None) -> dict:
     run, settings = RunRef.model_validate(run_data), Settings.model_validate(settings_data)
     legacy = LegacyTask.model_validate(legacy_data) if legacy_data else None
-    outcome = _run_task(run, task_id, round_no, settings, note, legacy)
+    outcome = _run_task(run, task_id, round_no, settings, note, legacy, parent_id)
     DBOS.send(parent_id, {"kind": "task_done", "outcome": outcome.model_dump(mode="json")}, TOPIC_RUN,
               idempotency_key=f"{DBOS.workflow_id}:done")
     return outcome.model_dump(mode="json")
 
 
 def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,
-              legacy: LegacyTask | None = None) -> TaskOutcome:
+              legacy: LegacyTask | None = None, parent_id: str = "") -> TaskOutcome:
     budget = settings.budget
+    pause_on = False
     started = steps.now()
     outcomes: list[AttemptOutcome] = []
     exclude: list[str] = []
@@ -350,7 +352,16 @@ def _run_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note
             note = answer.note or note
     while True:
         DBOS.set_event("state", {"task_id": task_id, "state": "routing", "attempts": len(outcomes)})
+        if not pause_on and parent_id and DBOS.patch(PATCH_TASK_PAUSE):
+            pause_on = True                     # right before a plain step (bt.now); old histories hold bt.now here
         at = steps.now()
+        if pause_on:
+            # a paused run starts no agent attempt at all: neither a new task nor a retry of a running one
+            summary = DBOS.get_event(parent_id, "summary", timeout_seconds=0)
+            if isinstance(summary, dict) and summary.get("status") == "paused":
+                DBOS.set_event("state", {"task_id": task_id, "state": "paused", "attempts": len(outcomes)})
+                DBOS.sleep(settings.run_poll_seconds)
+                continue
         choice = RouteDecision.model_validate(steps.route(run.model_dump(mode="json"), task_id, exclude, at))
         if choice.kind == "wait":
             waits += 1

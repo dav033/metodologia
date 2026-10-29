@@ -6,7 +6,7 @@ created: 2026-10-26
 # Plan — Pilot release: accounts and access plans, saved work, AI spend, Taller essentials, English, modules and chat
 
 <!-- bitacora:status:begin -->
-> Bloque generado, no editar a mano. Plan: draft · ejecución: running · hitos 0/5 · tareas 28/92 · generado: 2026-10-28T14:43:39-05:00
+> Bloque generado, no editar a mano. Plan: draft · ejecución: paused · hitos 0/5 · tareas 29/92 · generado: 2026-10-28T17:13:37-05:00
 
 **M1 — Accounts, access plans and the plans section** · dificultad alta · 18/29
 
@@ -59,7 +59,7 @@ created: 2026-10-26
 | T91 | M1 composition check: first administrator to an Entusiasta user on the integrated tree | media | pendiente | — | — | 0 |
 | T94 | Composition check CG-4: access plans from the plans section to the accounts screen | media | pendiente | — | — | 0 |
 
-**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 10/54
+**M2 — Saved work, Taller essentials, spend per user and the chat tools** · dificultad alta · 11/54
 
 **SP-3 — Taller essentials: researched and modelled Backing and table types, type cards and every-type Blender export**
 
@@ -75,8 +75,8 @@ created: 2026-10-26
 | T3.7 | Teach photo reading the approved new Backing structures | media | completada | gpt-6-luna | codex-luis | 1 |
 | T3.8 | Checkpoint: run the registry and modelling suites before Taller UI and export work | baja | completada | gpt-6-luna | codex-2 | 5 |
 | T3.9 | One creation card per table type in Fondos y muebles | media | completada | gpt-6-luna | codex-2 | 1 |
-| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | en curso | sonnet | claude-luis | 1 |
-| T3.11 | Verify and repair the GLB export of every scene element type | alta | en curso | gpt-6-luna | codex-2 | 2 |
+| T3.10 | Backing group in Fondos y muebles with the seven existing and the new Backing props | baja | completada | sonnet | claude-luis | 1 |
+| T3.11 | Verify and repair the GLB export of every scene element type | alta | lista | gpt-6-luna | codex-2 | 2 |
 | T3.12 | Implement the Taller browser and Blender verification harness for every element type | alta | pendiente | — | — | 0 |
 | T3.13 | Run the real Taller essentials integration scenario | media | pendiente | — | — | 0 |
 | T3.15 | Audit Taller essentials and export compatibility | media | pendiente | — | — | 0 |

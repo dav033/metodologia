@@ -26,6 +26,7 @@ from ..legacy import m3 as _m3
 
 m3 = _m3.model
 
+from . import size_guard
 from .files import atomic_write
 
 DEFAULT_TIMEOUT = 2 * 3600
@@ -47,6 +48,8 @@ def start_request(attempt: AttemptRef, task: TaskSpec, *, base_ref: str, timeout
 
 class M3Attempts:
     """One object for the three attempt ports, sharing the workspace manager and the attempt directories."""
+
+    telemetry = None            # set by the wiring: where the capture-time file guard reports (adapters/size_guard)
 
     def __init__(self, *, root: Path, repositories_for: Callable[[str], Mapping[str, Path] | Callable[[str], Path | None]],
                  plan_for: Callable[[AttemptRef], Plan], driver_for: Callable[[str], object],
@@ -142,8 +145,10 @@ class M3Attempts:
                                    when=when, patch_max=PATCH_MAX, mode="snapshot",
                                    declared_paths=tuple(task.expected_paths))
         changed = tuple(line.split("\t", 1)[-1] for line in manifest.get("changed", ()) if isinstance(line, str))
+        oversized = size_guard.check(attempt, prepared.repository, prepared.base_sha, manifest.get("snapshot_sha"),
+                                     self.telemetry)
         return Snapshot(snapshot_sha=manifest.get("snapshot_sha"), base_sha=prepared.base_sha, changed_paths=changed[:500],
-                        manifest_path=prepared.attempt_dir / "handoff" / "manifest.json")
+                        manifest_path=prepared.attempt_dir / "handoff" / "manifest.json", oversized=oversized)
 
 
 def _continuation(ws) -> str:

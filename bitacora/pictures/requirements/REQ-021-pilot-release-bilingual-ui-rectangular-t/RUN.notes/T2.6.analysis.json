@@ -1,6 +1,17 @@
 {
+ "at": "2026-10-28T14:44:04",
+ "cause": "En el código actual ya están corregidas las causas históricas: la activación espera `/asistente` (`destinoPorDefecto` devuelve `/asistente` para designer_plus, que no tiene `taller_3d`), el campo es `Nueva contraseña` con `locale: \"es-CO\"` (`textos-acceso.ts:21`), `createBuildEnvironment` fija `NODE_OPTIONS=4096` y HOME aislado, y el script `cuentas:test-integracion-ui` existe en `package.json:289`. El último fallo (att-0095) no muestra el assertion: el verificador recortó la primera línea del error (`${safe}\nServer diagnostic tail:` en `test-integracion-cuentas-ui.ts:282`) y solo quedaron logs de `/api/taller/hoja-armado`, así que el paso exacto que falla es desconocido. Además, la verificación en sandbox no recibe variables de entorno; `resolveTestDatabaseTarget` (`base-prueba.ts:25`) falla sin `PICTURES_REQ021_DATABASE_URL` (att-0068/0071), y la nota del owner indica que T1.8 fue devuelta por auditoría, lo que puede invalidar esta tarea.",
+ "confidence": "baja",
  "failures": 15,
- "started": 1793216515.3975203,
- "state": "running",
+ "model": "haiku",
+ "not_the_task": false,
+ "profile": "claude",
+ "seconds": 129.4,
+ "solution": "1. Ejecutar `npm run cuentas:test-integracion-ui 2>&1 | tee /tmp/t26.log` con `PICTURES_REQ021_DATABASE_URL` del entorno disponible, y leer solo las primeras líneas de `/tmp/t26.log` para identificar el assertion o el `page.*` que falla.\n2. Añadir un `process.stdout.write` con el nombre del paso antes de cada navegación o espera de `productionIntegration` (activación, login, `/asistente`, `/api/cotizacion-profesional`, `/3d`, cambio de rol), sin cambiar assertions, para que el fallo quede identificado sin depender del tail del servidor.\n3. Confirmar con el owner que el verificador recibe `PICTURES_REQ021_DATABASE_URL` como base desechable; si no lo recibe, la verificación fallará siempre en `resolveTestDatabaseTarget` y eso queda fuera de esta tarea.\n4. Confirmar que T1.8 fue rehecha tras la devolución de auditoría, porque esta tarea depende de ella; si no, T2.6 no puede cerrarse.\n5. Repetir el check tras corregir la causa identificada, sin relajar assertions ni `CI`/`APP_ENV`, y revisar que `.evidence/REQ-021/SP-2.integration.json` se escribe solo al pasar.",
+ "source_attempt": "att-0095",
+ "source_available": true,
+ "source_directory": "/home/david/.local/tmp/bt-analyst-wuw79vw4/source",
+ "source_snapshot": "04a0d7676dcdf109466bc913dec5c6fd57ca4bde",
+ "state": "done",
  "task": "T2.6"
 }
