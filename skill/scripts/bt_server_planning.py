@@ -48,8 +48,10 @@ class PlanningActions:
             msg = flow.confirm_outline(project, rdir, "owner")
         elif action == "planning-focus":
             msg = flow.focus(project, rdir, sid, "owner")
-        elif action == "planning-confirm":
+        elif action == "planning-confirm":                # one click: confirmed, and sent to run or to the queue
             msg = flow.confirm(project, rdir, sid, "owner")
+            if (flow.state(rdir)["subplans"].get(sid) or {}).get("state") == "confirmed":
+                msg += " " + self.run_confirmed(project, req_id(rdir), rdir, sid)
         elif action == "design-answer":
             import bt_planning_notes as notes
             question = form.get("question", "")
@@ -163,24 +165,35 @@ class PlanningActions:
         return f"{base}?tab=plan&msg={quote(msg)}"
 
     def stage_post(self, project: str, rid: str, rdir: Path, form: dict, base: str) -> str:
-        from bt_server import ROOT, commit
         """«Ejecutar subplan» (D-134): approve the confirmed subplan as part of the next stage and have the Scheduler run
         it. Loopback only: it starts the Scheduler's agents."""
-        import bt_stages
         sid = form.get("anchor", "")
-        if self.client_address[0] not in ("127.0.0.1", "::1"):
-            msg = "La ejecución solo se lanza desde esta máquina."
-        elif not re.fullmatch(r"SP-[1-9][0-9]{0,3}", sid):
+        if not re.fullmatch(r"SP-[1-9][0-9]{0,3}", sid):
             msg, sid = "Subplan no válido.", ""
         else:
-            try:
-                msg = bt_stages.run(project, rdir, [sid], by="owner", via="web")
-                commit(ROOT, f"{project}: {rid} stage run {sid} (web)", push=False)
-                self.tell_planner(project, rid, f"On the web the owner ran {sid} through the Scheduler: {msg} "
-                                  "Keep defining the other subplans; do not edit the approved ones without telling him.")
-            except bt_stages.StageError as exc:
-                msg = f"No se pudo ejecutar {sid}: {exc.message} [{exc.code}]"
+            msg = self.run_confirmed(project, rid, rdir, sid)
         return f"{base}?tab=plan&lang={quote(form.get('lang', ''))}&sp={quote(sid)}&msg={quote(msg)}"
+
+    def run_confirmed(self, project: str, rid: str, rdir: Path, sid: str) -> str:
+        """Send a confirmed subplan to the Scheduler: it runs now, or waits in the queue for the earlier subplans it needs
+        (`bt_stage_queue`). A subplan already in the approved stage or in the queue is left as it is."""
+        from bt_server import ROOT, commit
+        import bt_stages
+        if self.client_address[0] not in ("127.0.0.1", "::1"):
+            return "La ejecución solo se lanza desde esta máquina."
+        info = bt_stages.info(rdir)
+        if sid in info["held"]:
+            return f"{sid} ya está en ejecución en la etapa r{info['revision']}."
+        if sid in info["queued"]:
+            return f"{sid} ya está en cola: espera a {', '.join(info['queued'][sid]['after'])}."
+        try:
+            msg = bt_stages.run(project, rdir, [sid], by="owner", via="web")
+        except bt_stages.StageError as exc:
+            return f"No se pudo ejecutar {sid}: {exc.message} [{exc.code}]"
+        commit(ROOT, f"{project}: {rid} stage run {sid} (web)", push=False)
+        self.tell_planner(project, rid, f"On the web the owner ran {sid} through the Scheduler: {msg} "
+                          "Keep defining the other subplans; do not edit the approved ones without telling him.")
+        return msg
 
     def session_post(self, project: str, rid: str, rdir: Path, action: str, form: dict, base: str) -> str:
         from bt_server import ROOT

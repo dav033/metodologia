@@ -161,7 +161,13 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
     own = [t for t in tasks.values() if t.get("subplan_id") == sid]
     staged = sid in shared["held"] or (flow is None and any(t.get("attempts") for t in own))
     executing = staged                                        # before that, waiting on other work is not news
-    if flow is not None and state == "confirmed" and not staged and s["tasks"]:
+    queued = shared["queued"].get(sid)
+    if queued and not staged:
+        waits = ", ".join(queued["after"])
+        blockers.append({"who": "Ejecución", "text": f"En cola: se ejecuta solo cuando {waits} se haya ejecutado y lo "
+                                                     "apruebes en «Probar»" + (f". Último intento: {queued['error']}"
+                                                                              if queued.get("error") else "")})
+    elif flow is not None and state == "confirmed" and not staged and s["tasks"]:
         you.append({"kind": "run", "text": "Mandarlo a ejecutar: aprobarlo como etapa", "action": "run", "view": ""})
     waits: dict[str, list[str]] = {}
     for t in own:
@@ -216,13 +222,13 @@ def status(ctx: dict, s: dict, shared: dict) -> dict:
             "latest": news[0].get("at", "") if news else "", "tasks": {"done": done_tasks, "total": len(own)}}
 
 
-def _held(ctx: dict) -> set[str]:
-    """Subplans of the latest approved stage (D-134): the ones sent to execution."""
+def _stages(ctx: dict) -> dict:
+    """The approved stages (D-134) and the queued ones."""
     try:
         import bt_page_planning_flow as flow_view
-        return set(flow_view.stage_info(ctx)["held"])
+        return flow_view.stage_info(ctx)
     except Exception:  # noqa: BLE001 - a stage that cannot be read only hides the «send to run» hint
-        return set()
+        return {}
 
 
 def statuses(ctx: dict) -> dict[str, dict]:
@@ -241,8 +247,10 @@ def statuses(ctx: dict) -> dict[str, dict]:
         inputs = {}
     decisions = [d for d in (run or {}).get("decisions") or [] if isinstance(d, dict)]
     ver = verification.state(rdir) if verification.applies(rdir) else {"subplans": []}
+    stages = _stages(ctx)
     shared = {"rounds": _rounds(rdir), "inputs": inputs, "run": run, "tasks": _tasks_by_id(run), "gates": _gates(rdir),
-              "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": _held(ctx),
+              "decisions": decisions, "decided": {d.get("task") for d in decisions}, "held": set(stages.get("held") or ()),
+              "queued": stages.get("queued") or {},
               "verified": {r["id"]: r for r in ver["subplans"]}, "events": activity.events(rdir, 300)}
     ctx["subplan_status"] = {s["id"]: status(ctx, s, shared) for s in ctx["subplans"]}
     return ctx["subplan_status"]

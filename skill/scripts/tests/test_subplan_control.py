@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import unittest
+import unittest.mock
 from unittest.mock import patch
+from urllib.parse import unquote
 
 import bt_design_drafts as drafts
 import bt_page_planning
@@ -162,6 +164,66 @@ class ControlTests(unittest.TestCase):
         news = self.page(sp="SP-2").split('data-k="control-SP-2"')[1]
         self.assertIn(f'data-at="{newest}"', news)
         self.assertIn("Changed the checkout tasks", news)
+
+    def handler(self, address: str = "127.0.0.1"):
+        from types import SimpleNamespace
+        import bt_server
+        handler = SimpleNamespace(client_address=(address, 50000), tell_planner=unittest.mock.Mock())
+        handler.run_confirmed = lambda *args: bt_server.Handler.run_confirmed(handler, *args)
+        return handler
+
+    def test_confirming_on_the_web_also_sends_the_subplan_to_run(self):
+        import bt_server
+        import bt_stages
+        self.spec("location given")
+        self.started()
+        form = {"anchor": "SP-2", "lang": "es"}
+        handler = self.handler()
+        with patch.object(bt_server, "commit"), \
+                patch.object(bt_stages, "run", return_value="Etapa r1 aprobada con SP-2. El Scheduler empezó la ejecución.") as run:
+            refused = bt_server.Handler.planning_post(handler, "demo", self.rdir, "planning-confirm", form, "/p/demo/req/REQ-001")
+            run.assert_not_called()                              # not ready yet: nothing to run
+            self.assertIn("no se puede confirmar", unquote(refused))
+            self.finish("D-1")
+            url = bt_server.Handler.planning_post(handler, "demo", self.rdir, "planning-confirm", form, "/p/demo/req/REQ-001")
+        run.assert_called_once_with("demo", self.rdir, ["SP-2"], by="owner", via="web")
+        self.assertIn("SP-2 confirmado", unquote(url))
+        self.assertIn("El Scheduler empezó la ejecución", unquote(url))
+        self.assertIn("planning-confirm", self.page(sp="SP-1"))
+        self.assertIn("Confirmar y ejecutar", self.page(sp="SP-1"))
+
+    def test_a_confirmation_from_another_machine_does_not_start_agents(self):
+        import bt_server
+        import bt_stages
+        self.spec("location given")
+        self.started()
+        self.finish("D-1")
+        with patch.object(bt_server, "commit"), patch.object(bt_stages, "run") as run:
+            url = bt_server.Handler.planning_post(self.handler("10.0.0.7"), "demo", self.rdir, "planning-confirm",
+                                                  {"anchor": "SP-2"}, "/p/demo/req/REQ-001")
+        run.assert_not_called()
+        self.assertIn("SP-2 confirmado", unquote(url))
+        self.assertIn("solo se lanza desde esta máquina", unquote(url))
+
+    def test_a_queued_subplan_says_what_it_waits_for_instead_of_asking_to_run_it(self):
+        import bt_server
+        import bt_stage_queue
+        import bt_stages
+        self.spec("location given")
+        self.started()
+        self.finish("D-1")
+        flow.confirm("demo", self.rdir, "SP-2")
+        bt_stage_queue.queue(self.rdir, ["SP-2"], ["SP-1"], by="owner", via="web")
+        st = self.status("SP-2")
+        self.assertNotIn("run", [i["kind"] for i in st["you"]])
+        self.assertTrue(any(b["text"].startswith("En cola: se ejecuta solo cuando SP-1") for b in st["blockers"]))
+        html = self.page(sp="SP-2")
+        self.assertIn("En cola · espera SP-1", html)
+        self.assertNotIn("stage-run", html)
+        with patch.object(bt_server, "commit"), patch.object(bt_stages, "run") as run:
+            said = bt_server.Handler.run_confirmed(self.handler(), "demo", "REQ-001", self.rdir, "SP-2")
+        run.assert_not_called()                                  # a second click does not queue it twice
+        self.assertEqual(said, "SP-2 ya está en cola: espera a SP-1.")
 
 
 if __name__ == "__main__":

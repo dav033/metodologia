@@ -52,7 +52,9 @@ def _href(ctx: dict, sid: str, view: str) -> str:
 def _action(ctx: dict, s: dict, item: dict, run_form: str) -> str:
     if item["action"] == "confirm":
         import bt_page_planning_flow as flow_view
-        return flow_view._form(ctx, "planning-confirm", "Confirmar subplan", sp=s["id"])
+        return flow_view._form(ctx, "planning-confirm", "Confirmar y ejecutar", sp=s["id"],
+                               title="Lo confirma y lo manda al Scheduler: se ejecuta ya, o queda en cola hasta que los "
+                                     "subplanes que necesita se ejecuten y los apruebes en «Probar»")
     if item["action"] == "run":
         return run_form
     nav = "" if item["view"] == "req-run" else " data-nav"

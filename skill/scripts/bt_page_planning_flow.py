@@ -1,7 +1,7 @@
 """Plan tab blocks of the collaborative planning flow (bt_planning_flow, D-130).
 
 The phase stepper (Requisitos · Esqueleto · Subplanes n/m · Aprobación), the interview and skeleton views, a subplan's
-flow actions (Definir ahora / Confirmar subplan) and its inputs. Pure functions of the context built by
+flow actions (Definir ahora / Confirmar y ejecutar) and its inputs. Pure functions of the context built by
 `bt_page_planning.fragment`, which carries the flow state in `ctx["flow"]`.
 """
 from __future__ import annotations
@@ -22,11 +22,13 @@ HINT = {"interview": "El Planner hace en la conversación solo las preguntas ini
         "ready": "Todos los subplanes están confirmados: aprueba el plan para lanzarlo."}
 
 
-def _form(ctx: dict, action: str, label: str, *, sp: str = "", cls: str = "", disabled: bool = False) -> str:
+def _form(ctx: dict, action: str, label: str, *, sp: str = "", cls: str = "", disabled: bool = False,
+          title: str = "") -> str:
+    hint = f' title="{e(title)}"' if title else ""
     return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-inline">'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="lang" '
             f'value="{e(ctx["opts"]["lang"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
-            f'<button type="submit"{f" class={cls}" if cls else ""}{" disabled" if disabled else ""}>{e(label)}'
+            f'<button type="submit"{f" class={cls}" if cls else ""}{hint}{" disabled" if disabled else ""}>{e(label)}'
             "</button></form>")
 
 
@@ -109,7 +111,8 @@ def stage_info(ctx: dict) -> dict:
 
 def _run_button(ctx: dict, s: dict) -> str:
     """«Ejecutar subplan» next to the confirmation (D-134): the Scheduler runs this confirmed subplan as part of the
-    approved stage while the rest of the plan is still being defined; once it is in a stage, a link to the run."""
+    approved stage while the rest of the plan is still being defined; once it is in a stage, a link to the run; while it
+    waits in the queue for earlier subplans (`bt_stage_queue`), what it waits for."""
     import bt_subplan_sessions as sessions
     import bt_page_planning as planning
     live = sessions.active(ctx["rdir"], s["id"])
@@ -120,6 +123,11 @@ def _run_button(ctx: dict, s: dict) -> str:
     if s["id"] in info["held"]:
         return (f'<a class="pp-chip ok" href="{e(purl(ctx["project"], "req", ctx["rid"]))}?tab=run" '
                 f'title="El Scheduler la ejecuta en la etapa r{info["revision"]}">En ejecución · etapa r{info["revision"]} → ver</a>')
+    if (queued := info.get("queued", {}).get(s["id"])):
+        waits = ", ".join(queued["after"])
+        why = f'Se ejecuta solo cuando {waits} se haya ejecutado y lo apruebes en «Probar».'
+        return (f'<span class="pp-chip {"warn" if queued.get("error") else "info"}" title="{e(why)}'
+                f'{e(" Último intento: " + queued["error"]) if queued.get("error") else ""}">En cola · espera {e(waits)}</span>')
     item = ctx["flow"]["subplans"].get(s["id"]) or {}
     if item.get("state") != "confirmed" or not s.get("tasks"):
         return ""
