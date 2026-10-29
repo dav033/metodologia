@@ -362,3 +362,22 @@
 {"at": "2026-10-29T06:43:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 15 secciones traducidas", "diff": ""}
 {"at": "2026-10-29T06:55:44-05:00", "who": "Tú", "kind": "flow", "sp": "SP-4", "text": "Confirmaste SP-4 en la web; sigue SP-5", "diff": ""}
 {"at": "2026-10-29T06:55:48-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-29T06:56:18-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 6 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T06:57:44-05:00", "who": "Planner", "kind": "plan", "sp": "SP-3", "text": "Actualizó SP-3", "diff": ""}
+{"at": "2026-10-29T06:57:44-05:00", "who": "Planner", "kind": "plan", "sp": "SP-5", "text": "Actualizó SP-5 (resultado, criterios, tareas)", "diff": "+ Migration 039 creates an account-owned personal-decoration table in Postgres without changing the legacy SQLite global catalogue, and a saved item keeps its name, occasion, thumbnail and validated composition exactly as sent."}
+{"at": "2026-10-29T06:57:44-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M2 — Saved work, Taller essentials, spend per user and the chat tools» cambió", "diff": ""}
+{"at": "2026-10-29T06:58:22-05:00", "who": "Tú → Designer", "kind": "feedback", "sp": "SP-5", "text": "decoraciones@v1: Planner (plan reworked 2026-10-29 to match owner rounds 7 and 11): there is NO import of the browser-local library; legacy entries of taller3d:biblioteca-propia:v1 stay in a separate group «En este na", "diff": ""}
+{"at": "2026-10-29T07:01:03-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 74 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:08:04-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 3 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:08:08-05:00", "who": "Designer", "kind": "design", "sp": "SP-6", "text": "gasto-ia@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-29T07:08:09-05:00", "who": "Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-29T07:14:56-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-29T07:15:14-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: explorando 3 direcciones", "diff": ""}
+{"at": "2026-10-29T07:17:15-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 41 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:20:06-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 13 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:24:16-05:00", "who": "Designer", "kind": "design", "sp": "SP-6", "text": "gasto-ia@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-29T07:27:34-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 61 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:31:33-05:00", "who": "Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-29T07:32:17-05:00", "who": "Designer", "kind": "design", "sp": "SP-5", "text": "decoraciones@v1: direcciones listas para comparar y elegir", "diff": ""}
+{"at": "2026-10-29T07:32:28-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 28 secciones traducidas", "diff": ""}
+{"at": "2026-10-29T07:34:07-05:00", "who": "Traducción", "kind": "translate", "sp": "", "text": "Español al día · 16 secciones traducidas", "diff": ""}

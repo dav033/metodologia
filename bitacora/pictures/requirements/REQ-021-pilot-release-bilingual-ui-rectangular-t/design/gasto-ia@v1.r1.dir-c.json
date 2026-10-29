@@ -1,0 +1,19 @@
+{
+  "name": "Desglose en el lugar",
+  "axes": {
+    "concept": "Read-only spend ledger with direct manipulation of filters and in-place disclosure; records themselves cannot be edited.",
+    "layout": "One continuous rounded working paper beneath the existing masthead and horizontal administration navigation; inline filters precede a 1.2:1 total strip and full-width expandable groups, with no permanent side inspector.",
+    "navigation": "Preserved administration route rule; three local grouping buttons switch session, project/conversation and user totals. A group's disclosure and each call's native details reveal metadata in place. Tool filtering is progressively disclosed.",
+    "typography": "Embedded production Geist Sans with the existing 24px page heading, 20px group identity and 12–15px supporting scale; Geist Mono and tabular numerals align USD amounts. No replacement font family.",
+    "density": "28px desktop/20px phone working-paper insets, 24px group separation, 44px controls and one expanded group at a time. Phone stacks the same record's identity, tokens and amount without horizontal tables.",
+    "components": "Installed shadcn/Base UI Button and Skeleton, production ring-and-dot brand mark, native selects and details, rounded panels and pill controls. Totals use plain type and rules rather than KPI cards.",
+    "colour": "Exact Pictures light/dark globals.css tokens mapped to kit semantic roles. Neutral grouping controls; accent for the existing brand and focus; existing success/warning/error tokens mark recorded outcomes. Unknown amounts remain muted.",
+    "motion": "Tactile compression and settle: 520ms band registration, 55ms stagger, 520ms total/disclosure seating and 170ms press feedback using cubic-bezier(.34,1.4,.64,1). Natural/subtle profiles shorten timings; OS reduced motion, Quieto and still=1 show the same final states immediately; hidden tabs pause CSS animation. The band trigger also uses the installed Motion profile spring."
+  },
+  "evidence": {
+    "layout": [".paper", ".filter-workbench", ".total-strip", ".spend-stack", ".band-body"],
+    "navigation": [".route-nav", ".group-tabs", ".band-toggle", ".more-filters", ".call summary"],
+    "typography": [".heading h1", ".group-title", ".total-value", ".cost", ".call-subtitle"],
+    "motion": [".usage-band", ".total-value", ".band-body", ".band-toggle", ".btn"]
+  }
+}

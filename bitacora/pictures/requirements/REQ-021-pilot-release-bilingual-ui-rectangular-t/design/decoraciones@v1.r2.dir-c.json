@@ -1,0 +1,19 @@
+{
+  "name": "Edición en el lugar",
+  "axes": {
+    "concept": "Save a selected piece or the whole scene without leaving the existing Taller; reveal metadata editing next to the chosen decoration.",
+    "layout": "Keep the shared masthead, horizontal routes, tool rail, canvas and scene inspector. Attach a three-column thumbnail shelf below the canvas; the selected item unfolds a preview and editable metadata beneath the shelf. Two columns at tablet width and one on phone.",
+    "navigation": "Select the piece on the canvas to unfold its save form in the inspector. Thumbnail buttons open and close the same in-page detail. Browser-only entries and colour/balloon filters use native disclosures; global Taller/Proyectos navigation stays unchanged.",
+    "typography": "Embedded product Geist Sans: 24px Taller heading, 20px library heading, 18px detail heading, 15px item names, 14px controls and 12–13px supporting data. Geist Mono only for the inherited Sempertex wordmark.",
+    "density": "Compact peer tiles pair 88px scene thumbnails with identity and a view-details action. An editing form occupies space only when invoked. The existing large canvas remains the working anchor; local items remain collapsed in a separate group.",
+    "components": "Installed shadcn/Base UI Button, Input, Skeleton and Animate UI AlertDialog. Recompose them as an attached save form, expandable thumbnail buttons and inline name/occasion form; native selects and details preserve the existing filter vocabulary.",
+    "colour": "Use the exact Pictures globals.css light/dark tokens and sibling Geist/shape vocabulary. Accent identifies save/placement and the selected tile; neutral horizontal navigation and semantic success/error text retain their product meanings.",
+    "motion": "Tactile press and settle: 180ms repeated controls, finite 480ms tile settle staggered by 50ms, top-hinged detail/save reveal and a finite success stamp. Natural/subtle profiles shorten them. Reduced motion, Quieto and still=1 remove travel without removing content or outcomes. Hidden tabs pause CSS animations."
+  },
+  "evidence": {
+    "layout": [".studio-body", ".library-grid", ".inspector"],
+    "navigation": [".route-nav", ".canvas-piece", ".tile", ".browser-group > summary", ".extra-filters > summary"],
+    "typography": [".heading h1", ".library-header h2", ".tile strong", ".company"],
+    "motion": [".tile", ".inline-save"]
+  }
+}

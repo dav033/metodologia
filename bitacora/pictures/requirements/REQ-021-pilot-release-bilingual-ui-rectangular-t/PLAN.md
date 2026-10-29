@@ -812,45 +812,61 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
 <!-- /SP-4 tasks -->
 
-- **SP-5 — Saved decorations** (UI: `decoraciones@v1`): A signed-in Master Designer saves a named scene composition or selected piece to a server-side personal library, sees it across browsers, places it into projects, and keeps existing browser-library entries local, while employees and administrators may open server-saved decorations read-only and only the owner can change or delete them. Covers R8.
+- **SP-5 — Saved decorations** (UI: `decoraciones@v1`): A signed-in Master Designer (and staff) saves a named scene composition or selected piece to a server-side personal decoration library and places it into projects from any browser; Empleado interno and Administrador open another account's items read-only and only the owner updates or deletes them; an account with saved decorations cannot be deleted, only deactivated; existing browser-local library entries stay local and are not imported in the pilot. Covers R8.
 
 <!-- SP-5 tasks -->
 
-- [ ] T5.1 — Copy the approved personal-decoration library UI contract · repo: pictures · after: T94 · verify: `test -s design/contracts/decoraciones@v1.md` · files: design/contracts/decoraciones@v1.md · resources: design:decoraciones@v1 · covers: R8 · kind: design · subplan: SP-5 · ui: no
+  SP-5 tasks (rounds 7 and 11; reworked 2026-10-29). Round 11: no import of the browser-local library (`taller3d:biblioteca-propia:v1`), staff read-only access to other accounts' items, owner-only update and delete. Round 7: an account with saved decorations cannot be deleted (registered in `src/lib/cuentas/dependientes.ts`). The personal library uses permission `taller.usar` (Master Designer and staff) and stays separate from the global SQLite decorations catalogue of /admin.
+  DAG: T5.1 (design) ∥ T5.2 (storage and API) → T5.3 (Taller library on the API) → T5.4 integration → T5.5 visual review → T5.6 audit. Consumes account-service@1, session-guard@1 (SP-1) and taller-scene@1 (SP-3); composition gate CG-5 adds SP-5 after CG-3.
 
-  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes. Copy the planning-approved snapshot byte for byte.
+- [ ] T5.1 — Copy the approved personal-decoration library UI contract · repo: pictures · after: T94, T3.3 · verify: `test -s design/contracts/decoraciones@v1.md` · files: design/contracts/decoraciones@v1.md · resources: design:decoraciones@v1 · covers: R8 · kind: design · subplan: SP-5 · ui: no
 
-  - Acceptance / static: The repository has the exact approved contract. Check: `test -s design/contracts/decoraciones@v1.md`
+  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
+  The scheduler supplies the plan-approved draft; the task copies it unchanged.
 
-- [ ] T5.2 — Add account-owned validated storage and protected personal-decoration API · repo: pictures · after: T94 · verify: `npm run decoraciones:test-api` · files: scripts/migrations/039_decoraciones_personales.sql, src/lib/decoraciones-personales/repositorio.ts, src/app/api/decoraciones-personales/route.ts, src/app/api/decoraciones-personales/[id]/route.ts, src/lib/cuentas/dependientes.ts · resources: postgres:account-data, contract:account-service@1, contract:session-guard@1 · covers: R8 · kind: implement · subplan: SP-5 · ui: no
+  - Acceptance / static: The owner-approved decoraciones@v1 contract is copied byte for byte into design/contracts/decoraciones@v1.md. Check: `test -s design/contracts/decoraciones@v1.md`
 
-  Classification: complexity high; scope full_feature; risk high; coupling high; confidence medium; estimate 210 minutes. Keep the personal library separate from the global/admin decorations catalogue. Add a migration and owner-scoped list/create/update/delete API with payload bounds and validation. Register dependent-data deletion behavior. Deny guessed IDs without revealing another account’s record.
+- [ ] T5.2 — Account-owned personal-decoration storage and its protected API · repo: pictures · after: T94, T3.3 · verify: `npm run decoraciones:test-api -- --test-name-pattern=almacen` · files: scripts/migrations/039_decoraciones_personales.sql, src/lib/decoraciones-personales/repositorio.ts, src/lib/decoraciones-personales/esquema.ts, src/app/api/decoraciones-personales/route.ts, src/app/api/decoraciones-personales/[id]/route.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-decoraciones-personales-api.ts · resources: package.json scripts, contract:session-guard, contract:taller-scene · covers: R8 · kind: implement · subplan: SP-5 · ui: no
 
-  - Acceptance / functional: The personal library is stored separately from the global catalogue; owner and staff reads follow the accepted policy, while only owners mutate/delete. Check: `npm run decoraciones:test-api`
+  Classification: complexity medium; scope full_feature; risk high; coupling medium; confidence high; estimate 120 minutes.
+  Table `decoraciones_personales` (id, cuenta_id REFERENCES cuentas ON DELETE RESTRICT, nombre ≤ 120, ocasion, miniatura ≤ 512 KB, composicion jsonb ≤ 2 MB validated with the taller-scene@1 schema, creada_en, actualizada_en). Routes require `taller.usar`; staff reads use `proyectos.ver_todos`; another Usuario's item answers 404. `dependientes.ts` registers the table as account work. npm script `decoraciones:test-api` = `tsx --conditions=react-server --test scripts/test/test-decoraciones-personales-api.ts`.
 
-- [ ] T5.3 — Connect Taller save, place and idempotent browser-library import flows · repo: pictures · after: T5.1, T5.2 · verify: `npm run decoraciones:test-ui -- --solo persistencia` · files: src/components/tres-d/Biblioteca.tsx, src/components/tres-d/Taller3D.tsx, scripts/test/test-biblioteca-personal-ui.ts · resources: design:decoraciones@v1, postgres:account-data, contract:account-service@1 · covers: R8 · kind: implement · subplan: SP-5 · ui: yes
+  - Acceptance / functional: Migration 039 creates an account-owned personal-decoration table in Postgres without changing the legacy SQLite global catalogue, and a saved item keeps its name, occasion, thumbnail and validated composition exactly as sent. Check: `npm run decoraciones:test-api -- --test-name-pattern=almacen`
+  - Acceptance / functional: With expected statuses written from the SPEC, the owner lists and opens their items, Empleado interno and Administrador open another account's items read-only, a Usuario gets 404 on another account's item, and an account without taller.usar gets 403 on every personal-decoration API. Check: `npm run decoraciones:test-api -- --test-name-pattern=lectura`
+  - Acceptance / functional: With expected statuses written from the SPEC, PUT and DELETE succeed only for the owner; staff and other accounts get 403 or 404 on PUT and DELETE, a cross-origin POST is refused, and a malformed or oversized composition is refused with 400 without a partial write. Check: `npm run decoraciones:test-api -- --test-name-pattern=escritura`
+  - Acceptance / functional: Personal decorations are registered as account work in src/lib/cuentas/dependientes.ts, so deleting an account that owns one is refused with CUENTA_CON_TRABAJO. Check: `npm run decoraciones:test-api -- --test-name-pattern=borrar-cuenta`
+  - Acceptance / regression: The personal library never writes to the global decorations catalogue or its /api/decoraciones routes, and no personal item appears to another Usuario. Check: `npm run decoraciones:test-api -- --test-name-pattern=separada`
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 180 minutes. Replace browser-only source of truth with the account API. Preserve local records until acknowledged, make retries idempotent, and clear remote-derived in-memory state on sign-out/account switch.
+- [ ] T5.3 — Taller personal library on the account API: save, place, staff read-only and account switch · repo: pictures · after: T5.1, T5.2 · verify: `npm run decoraciones:test-ui -- --solo guardar` · files: src/components/tres-d/Biblioteca.tsx, src/components/tres-d/biblioteca/BibliotecaPersonal.tsx, src/components/tres-d/biblioteca/textos-biblioteca.ts, scripts/test/test-biblioteca-personal-ui.ts · resources: package.json scripts · covers: R8 · kind: implement · subplan: SP-5 · ui: yes
 
-  - Acceptance / functional: A saved scene or selected piece appears in the owner’s library after reload and from another browser; legacy items import idempotently and remain local until acknowledged. Check: `npm run decoraciones:test-ui -- --solo persistencia`
+  Classification: complexity medium; scope full_feature; risk high; coupling medium; confidence medium; estimate 150 minutes.
+  The server list comes first; legacy entries appear under a separate «En este navegador» group with no import action. Placing a staff-opened item adds a copy to the staff member's own scene. npm script `decoraciones:test-ui` = `tsx scripts/test/test-biblioteca-personal-ui.ts`.
 
-- [ ] T5.4 — Verify cross-browser persistence, placement and ownership isolation · repo: pictures · after: T5.3 · verify: `npm run decoraciones:test-integracion` · files: scripts/test/test-integracion-decoraciones-personales.ts, .evidence/REQ-021/SP-5.integration.json · resources: postgres:account-data, contract:session-guard@1 · covers: R8 · kind: test · subplan: SP-5 · ui: yes
+  - Acceptance / functional: From the Taller a person saves the current scene or the selected piece with a name and occasion, sees saved only after the server confirms, and finds the item after a reload and in another browser of the same account. Check: `npm run decoraciones:test-ui -- --solo guardar`
+  - Acceptance / functional: A saved item can be searched and placed into the open project, and the existing name, occasion, thumbnail and filter controls keep working. Check: `npm run decoraciones:test-ui -- --solo colocar`
+  - Acceptance / functional: When staff open another account's item it is clearly read-only: rename, edit and delete controls are absent and placing it adds a copy to the staff member's own project. Check: `npm run decoraciones:test-ui -- --solo personal`
+  - Acceptance / functional: Entries already in the browser key taller3d:biblioteca-propia:v1 stay in that browser's local list untouched, nothing imports them, and switching or signing out never shows the previous account's server items. Check: `npm run decoraciones:test-ui -- --solo local-y-cambio`
 
-  Classification: complexity high; scope large_change; risk high; coupling high; confidence medium; estimate 100 minutes. Use two authenticated contexts and the isolated REQ-021 database.
+- [ ] T5.4 — Browser end-to-end: saved decorations across browsers, placement and ownership · repo: pictures · after: T5.3 · verify: `npm run decoraciones:test-integracion` · files: scripts/test/test-integracion-decoraciones-personales.ts, .evidence/REQ-021/SP-5.integration.json · resources: package.json scripts · covers: R8 · kind: test · subplan: SP-5
 
-  - Acceptance / integration: A can reload, reopen and place saved items from a second browser; B cannot list, fetch, update or delete them, including through direct API requests. Check: `npm run decoraciones:test-integracion`
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 90 minutes.
+  npm script `decoraciones:test-integracion` = `tsx scripts/test/test-integracion-decoraciones-personales.ts`; CG-5 reuses it.
 
-- [ ] T5.5 — Review the rendered personal-library UI against its contract · repo: pictures · after: T5.3, T5.4 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.visual.findings.json` · files: .evidence/REQ-021/SP-5.visual.md, .evidence/REQ-021/SP-5.visual.findings.json · resources: ledger:SP-5-visual, design:decoraciones@v1 · covers: R8 · kind: audit · subplan: SP-5 · ui: no
+  - Acceptance / integration: On a production build against the REQ-021 database, with expected results written from the SPEC, account A saves a composition, reloads, opens it in a second browser and places it into a project; staff open it read-only and their direct PUT and DELETE are refused; another Usuario cannot see it; and a legacy browser item stays local. Check: `npm run decoraciones:test-integracion`
 
-  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes. Review phone and desktop UI states, keyboard behavior and truthful save/error status.
+- [ ] T5.5 — SP-5 visual review against the decoraciones@v1 contract · repo: pictures · after: T5.4 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.visual.findings.json` · files: .evidence/REQ-021/SP-5.visual.md, .evidence/REQ-021/SP-5.visual.findings.json · resources: ledger:SP-5-visual · covers: R8 · kind: audit · subplan: SP-5
 
-  - Acceptance / static: The personal-library UI matches the approved contract and visual findings identify the task that repairs each mismatch. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.visual.findings.json`
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
 
-- [ ] T5.6 — Audit personal-decoration ownership and import recovery · repo: pictures · after: T5.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.findings.json` · files: .evidence/REQ-021/SP-5.audit.md, .evidence/REQ-021/SP-5.findings.json · resources: ledger:SP-5 · covers: R8 · kind: audit · subplan: SP-5 · ui: no
+  - Acceptance / static: The rendered personal-library save, list, read-only, empty, loading, retry and error states match the approved decoraciones@v1 contract at phone and desktop widths, and every finding is recorded with the task to redo in the SP-5 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.visual.findings.json`
 
-  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 60 minutes. Audit API ownership, staff read-only access, owner mutations, account switching and deletion policy.
+- [ ] T5.6 — SP-5 audit: ownership of personal decorations, account switch and the deletion rule · repo: pictures · after: T5.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.findings.json` · files: .evidence/REQ-021/SP-5.audit.md, .evidence/REQ-021/SP-5.findings.json · resources: ledger:SP-5 · covers: R8 · kind: audit · subplan: SP-5
 
-  - Acceptance / static: The independent audit records confirmed defects against repair tasks and leaves no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.findings.json`
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 60 minutes.
+  Checks at least: owner filter in every query, staff read-only on every method, 404 for other Usuarios, account-switch clearing, CUENTA_CON_TRABAJO.
+
+  - Acceptance / static: An independent audit of SP-5 checks owner and staff boundaries for every method, account-switch isolation and the deletion rule, records every confirmed defect with the task that must redo it in the SP-5 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-5.findings.json`
 
 <!-- /SP-5 tasks -->
 

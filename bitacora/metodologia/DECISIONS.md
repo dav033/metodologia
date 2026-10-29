@@ -1464,3 +1464,25 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Evidence:** `test_planning_flow` (`test_designer_waits_for_the_skeleton_then_designs_every_subplan_with_tasks`,
   `test_a_subplan_without_tasks_waits_for_its_focus`, `test_designers_of_different_subplans_work_in_parallel`),
   `test_design_amend`, `test_design_directions`; red on `main` `2d354a955`, green on branch `designer-parallel`.
+
+## D-147 — Each subplan has a control block: flow, what waits for the owner, blockers, work, news, decisions
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-130, D-142
+- **Context:** the subplan view showed one line («pendiente — para confirmarlo falta …») and a plan-wide feed dominated by
+  translation events; run decisions, gate waits, versions to try and open round questions of a subplan lived in other
+  tabs, so the owner had to open each one not to miss anything (pictures REQ-021: T94's decision blocked SP-4's T4.1 and
+  nothing on SP-4 said so).
+- **Decision:** above the subplan tabs a fixed control block (`bt_subplan_status` data, `bt_page_subplan_control`
+  render) shows the subplan's flow (Definir, Diseñar, Confirmar, Ejecutar, Probar, Aprobado), «Te toca a ti» with the
+  action at hand, «Falta para avanzar» with who resolves each item (Planner, Designer, the owner, the run), «Trabajando
+  ahora», the subplan's news (marked «nuevo» since the last visit, remembered by the browser only) and the decisions
+  taken (confirmations, chosen direction, answered round questions tagged «SP-n:», verdicts). The subplan list counts
+  what waits for the owner per subplan and marks news; the right column follows the open subplan without translation
+  events, with «Todo el plan» to see everything. Built directly on the existing components and reviewed live (owner
+  choice), no design contract.
+- **Consequences:** + one place per subplan to see everything that needs attention; − round questions are tied to a
+  subplan only by their «SP-n:» prefix (or a single-subplan coverage), and «nuevo» is per browser.
+- **Source:** owner, 2026-10-29 («quiero que este sea el panel de control absoluto … que no me pierda nada»; options
+  chosen: fixed block, feed filtered to the subplan, build directly and review live, «nuevo» marks and list counts).
+- **Evidence:** `test_subplan_control` (7); Playwright run on a copy of REQ-021 (desktop/phone, dark/light, keyboard,
+  «nuevo» across visits, feed switch, action links, no horizontal overflow).

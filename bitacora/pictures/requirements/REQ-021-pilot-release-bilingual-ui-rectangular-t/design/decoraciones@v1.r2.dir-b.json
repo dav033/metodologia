@@ -1,0 +1,36 @@
+{
+  "name": "Bandeja de escena",
+  "axes": {
+    "concept": "Keep the current Taller as the working surface: choose a saved decoration below the canvas, inspect it beside the canvas, then place a copy into the current scene.",
+    "layout": "Existing Pictures masthead, heading and Taller 3D / Proyectos route rule; changed workshop area has a 56px tool rail, flexible canvas above a library tray, and a 280px detail inspector. Below 768px the inspector follows the tray; below 640px the rail disappears.",
+    "navigation": "Local Mi biblioteca / En este navegador pressed-button navigation changes the tray scope without leaving the Taller; staff also have a labelled Propietario native selector. Selecting a thumbnail changes the inspector; on phone selection focuses and reveals that inspector.",
+    "typography": "Inherited embedded Geist Sans body 15px, H1 24px/600, inspector and library headings 18px/600, tile names 14px/600, metadata 12–13px. Geist Mono remains in Sempertex masthead metadata.",
+    "density": "Three compact thumbnail peers per tray row at desktop; two at 768–1099px and on phones, with generous 24px desktop / 20px phone panel insets. One inspector carries the detailed actions instead of repeating them on every thumbnail.",
+    "components": "Real shadcn/Base UI Button, Input, Skeleton, Animate UI-backed Dialog and AlertDialog; native scope buttons, native selects and the inherited account disclosure. Inline SVG illustrates scene/piece thumbnails, never a fake renderer.",
+    "colour": "Exact Pictures globals.css light/dark tokens mapped to kit roles, including fondo, superficie, texto, acento and Taller canvas/panel roles. Primary colour identifies placing/saving; control edges use the inherited texto-tenue accessible alias.",
+    "motion": "Finite spatial entrance: library tray rises 24px, inspector enters from 32px right, selected preview seats with scale/rotation, placement springs into the canvas. Expressive 520ms elastic settling and 170ms control gestures; natural/subtle scale down. OS reduced motion, Quieto and still=1 settle immediately; CSS effects pause in hidden tabs."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".scene-column",
+      ".library-tray",
+      ".detail-inspector"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".scope-nav",
+      ".filters"
+    ],
+    "typography": [
+      ".heading h1",
+      ".thumb-name",
+      ".panel-label"
+    ],
+    "motion": [
+      ".library-tray",
+      ".detail-inspector",
+      ".detail-preview"
+    ]
+  }
+}

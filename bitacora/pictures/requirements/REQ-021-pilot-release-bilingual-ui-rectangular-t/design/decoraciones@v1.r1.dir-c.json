@@ -1,0 +1,19 @@
+{
+  "name": "Manipulación directa",
+  "axes": {
+    "concept": "Manipulación directa sobre el Taller existente: guardar se despliega en el propio inspector junto a la pieza elegida, y cada decoración guardada se abre, se renombra, se quita o se arrastra al visor desde su fila de «Mi biblioteca», sin pantallas nuevas.",
+    "layout": "Shell del Taller de proyectos@v1 (riel 60px · panel Añadir 300–340px · visor · inspector 280px). «Mi biblioteca» es un segmento del panel Añadir con filas que se expanden en sitio (vista, datos, acciones); el formulario de guardar se abre dentro del inspector. Tablet: inspector a todo el ancho bajo el visor; teléfono: apilado, con el orden según la tarea (guardar: visor→inspector→biblioteca; biblioteca: panel primero).",
+    "navigation": "Cabecera, idioma, menú de cuenta y navegación Taller 3D/Proyectos heredados. En el panel, segmentos Estructuras·Decoraciones·Utilería·Ideas·Mi biblioteca (aria-pressed) con contador; filas con aria-expanded (una abierta); «Ver en Mi biblioteca» lleva el foco a la fila recién guardada; para personal, selector nativo «Biblioteca de».",
+    "typography": "Geist del producto: título 24px, título del panel 15px, nombre de fila 14px/600, metadatos 12px; cifras de globos/piezas en Geist Mono 12px; mismo escalado que proyectos@v1.",
+    "density": "Filas compactas de 64px con miniatura 52×44; una sola fila expandida revela vista 120px, datos y acciones; el grupo «En este navegador» queda plegado; inspector con formulario corto (nombre, ocasión, destino).",
+    "components": "shadcn Button/Input/Skeleton/Dialog y AlertDialog reales (Base UI); motion.button con spring del perfil en filas y renombrar; selects nativos (ocasión, biblioteca de, idioma, inspectores); details nativo para lo local; filas arrastrables con alternativa de botón.",
+    "colour": "Solo tokens de Pictures/Taller: acento en la acción primaria y en el borde de la fila abierta/zona de soltar; éxito en el recibo y en «Añadida a tu escena»; error en rechazos; sin paleta nueva.",
+    "motion": "Gramática táctil de presión/asentamiento: filas row-settle (translateY 8px, .985→1.004→1) con 45ms de escalonado; fila nueva row-drop desde -14px; miniatura .9→1.04→1; detalle y formulario se despliegan con scaleY .92→1.012→1; renombrar field-seat scaleX; recibo rota -16°→6°→0; contador salta 1.3→.92→1; chip de colocación cae y asienta; presión .96–.975 con spring del perfil. Expresivo 480/160ms, natural 300/130ms, sutil 150/90ms; Quieto/?still=1/reduced sin animaciones."
+  },
+  "evidence": {
+    "layout": [".studio-body", ".lib-panel", ".lib-row[data-open=\"true\"] .row-detail", ".save-form"],
+    "navigation": [".route-nav", ".lib-seg", ".row-toggle"],
+    "typography": [".heading h1", ".row-name", ".row-meta"],
+    "motion": [".lib-row", ".lib-row[data-open=\"true\"] .row-mini", ".save-form", ".row-detail"]
+  }
+}

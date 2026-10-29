@@ -1,0 +1,36 @@
+{
+  "name": "Mesa editable",
+  "axes": {
+    "concept": "Mesa editable: act on measurements, material prices and decoration previews where their effect is seen, keeping the existing Pictures product shell.",
+    "layout": "Desktop counter is a 1.45:1 working paper with a schematic/measurement surface beside the shopping result; calculator is full-width editable rows followed by an inline totals band; gallery uses expandable horizontal object bands, not a card grid. Home uses two columns with the first tool spanning both.",
+    "navigation": "Inherited neutral horizontal routes, three in-place counting-method buttons, an explicit measures disclosure, inline expense disclosure and single-expanded decoration preview; each home card still opens its own existing/new tool page.",
+    "typography": "Existing embedded Geist Sans / Geist Mono. The inherited page heading is 24px, object headings 20px, body 15px, supporting copy 12–14px and count 28px with tabular figures; no font or identity change.",
+    "density": "28px working insets and 20–28px gaps; a continuous professional quote with ruled input rows; gallery bands disclose one full preview at a time. Phone uses 20px insets, stacked fields and full-width object flow.",
+    "components": "Installed shadcn/Base UI Button, Input, Skeleton and Animate UI Dialog, recomposed as in-place measurement controls, editable material rows and expandable decoration bands; native selectors/details preserve the sibling vocabulary.",
+    "colour": "Exact Pictures fondo/superficie/texto/acento and Taller surface tokens; existing sibling texto-tenue alias for control edges. Primary colour marks one main action, navigation remains neutral. Both existing themes are mapped to kit roles.",
+    "motion": "Tactile press/settle: 520ms compressed-paper/object registration with 35ms offsets, 170ms press feedback, 2px/0.965 pressed buttons; diagram settle and preview hinge use cubic-bezier(.34,1.4,.64,1). Natural/subtle use 320/140 and 160/100ms. Motion spring uses the installed profile. Reduced/still removes travel and retains every control; hidden/offscreen repeating effects pause."
+  },
+  "evidence": {
+    "layout": [
+      ".tool-home",
+      ".counter-work",
+      ".price-row",
+      ".deco-preview"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".method-tabs",
+      ".ruler-control"
+    ],
+    "typography": [
+      ".heading h1",
+      ".tool-copy h2"
+    ],
+    "motion": [
+      ".tool-card",
+      ".drawing svg",
+      ".deco-preview",
+      ".btn"
+    ]
+  }
+}

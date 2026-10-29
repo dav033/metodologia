@@ -1,0 +1,35 @@
+{
+  "name": "Registro de biblioteca",
+  "axes": {
+    "concept": "An operational personal-decoration register inside the existing Taller: identify a scene or piece, inspect it and place a copy without leaving the work surface.",
+    "layout": "Preserved Pictures/Sempertex masthead and horizontal Taller/Proyectos routes; 52px tool rail, 390px library and flexible scene/detail workspace. At phone width, Biblioteca/Escena exposes one workspace panel at a time.",
+    "navigation": "Existing product routes remain horizontal and neutral. Mi biblioteca is the owner entry; Otra cuenta and its owner selector appear only in the staff fixture. Search, type and occasion narrow the register; Filtros reveals colour and balloon controls.",
+    "typography": "Existing Geist Sans: 24px page title, 20px library and selected-item headings, 14px item names, 13px controls and 12px provenance. Existing Geist Mono is limited to Sempertex.",
+    "density": "Ruled compact records with 66px thumbnail columns and 16px vertical insets; no repeated large cards. Colour and balloon filters are disclosed on demand, with browser-local records in a separately labelled group.",
+    "components": "Installed shadcn/Base UI Button, Input and Skeleton; Animate UI-backed Dialog for name/occasion and AlertDialog for deletion. Existing native filter selects and details/account disclosure; custom static scene SVG is labelled Mockup.",
+    "colour": "Exact Pictures globals.css and finalised sibling token mappings: fondo/superficie/texto/acento plus existing Taller, success and error roles. No new palette or font; texto-tenue supplies accessible input edges.",
+    "motion": "Precise lateral registration: rows move 12px over 220ms with 40ms offsets and cubic-bezier(.77,0,.175,1); feedback enters laterally and confirmation marks settle over 360ms. Natural 170/24ms, subtle 120/12ms, 150ms hover/press. Reduced motion and still show final content immediately; hidden tabs pause CSS animation."
+  },
+  "evidence": {
+    "layout": [
+      ".studio",
+      ".library",
+      ".workspace",
+      ".decoration-row"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".local-nav"
+    ],
+    "typography": [
+      ".heading h1",
+      ".library-top h2",
+      ".decoration-row strong",
+      ".row-meta"
+    ],
+    "motion": [
+      ".decoration-row",
+      ".btn"
+    ]
+  }
+}

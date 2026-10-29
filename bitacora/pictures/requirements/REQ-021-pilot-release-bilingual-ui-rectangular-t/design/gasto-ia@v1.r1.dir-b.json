@@ -1,0 +1,19 @@
+{
+  "name": "Sesiones e inspector",
+  "axes": {
+    "concept": "Inspect the paid calls behind a spend group while preserving project and conversation attribution.",
+    "layout": "One working paper with a shared filter strip, a 330px left register and fluid right inspector; phone uses one active list or detail pane.",
+    "navigation": "Local group-by navigation for session, work item, user, kind and tool; pressed register rows drive the adjacent inspector and phone back restores row focus.",
+    "typography": "Production Geist Sans, 24px page title, 20px group title, 28px selected amount, 12–13px metadata; existing Geist Mono for identifiers and models.",
+    "density": "28px desktop and 20px phone paper insets, ruled 18px register rows and 20px call spacing; progressive disclosure for attribution and remaining calls.",
+    "components": "Real installed shadcn/Base UI Button and Skeleton with native selects/details and custom register/inspector arrangements; sibling rounded panels and pill controls.",
+    "colour": "Exact Pictures light/dark tokens mapped to kit roles; neutral navigation, existing primary focus and warning tokens only for partial/error records.",
+    "motion": "Spatial inspector seating from +22px through −2px; left register rows and vertical call settling, 460/300/160ms profile timing, 45ms offsets and cubic-bezier(.23,1,.32,1); still/reduced parity and hidden-tab pause."
+  },
+  "evidence": {
+    "layout": [".workspace", ".register", ".inspector", ".filters"],
+    "navigation": [".group-nav", ".group-row[aria-pressed='true']", ".call summary", ".route-nav"],
+    "typography": [".heading h1", ".selected-amount", ".call h4", ".mono"],
+    "motion": [".inspector", ".group-row", ".call", ".paper"]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Registro operativo",
+  "axes": {
+    "concept": "Review known estimated AI spend as a compact operational ledger within the existing staff administration surface.",
+    "layout": "One full-width rounded paper: user/kind filters, a ruled three-value totals strip, five grouping controls, then aligned records; session and work details replace only the paper contents.",
+    "navigation": "Retain the sibling masthead and neutral administration route rule. Five in-page grouping buttons use one moving underline; session and work rows drill into contextual detail with a summary return. Employee fixture omits unrelated account-management destinations.",
+    "typography": "Existing embedded Geist Sans: 24px page title, 18–20px section headings, 14px records, 12–13px metadata, and tabular 28–32px totals. Geist Mono is confined to technical identifiers.",
+    "density": "Compact ruled rows in one shared panel rather than KPI cards or a separate inspector. Desktop filters use 2:1:auto columns; at 640–1099px they wrap; below 640px rows reflow into labelled value pairs and the estimated cost spans the totals strip.",
+    "components": "Installed shadcn/Base UI Button and Skeleton composed with labelled native selects, semantic tables, details/summary conversation disclosures and the existing account disclosure vocabulary.",
+    "colour": "Exact Pictures globals.css tokens mapped to kit roles in both themes, including the sibling accessible texto-tenue input edge. Accent marks drill-in actions; neutral underline identifies grouping; warning/error tokens identify partial/billable-error metadata.",
+    "motion": "Precise quick registration: finite 320ms paper and 10px row movements with 28ms offsets, 160ms controls, 180ms moving group marker; natural/subtle profiles shorten timings. Reduced motion, Quieto and still show settled content; hidden tabs pause CSS motion."
+  },
+  "evidence": {
+    "layout": [".paper", ".filter-row", ".totals", ".table"],
+    "navigation": [".route-nav", ".group-nav", ".row-link", ".breakdown summary"],
+    "typography": [".heading h1", ".metric dd", ".table", ".mono"],
+    "motion": [".paper", ".data-row", ".metric dd", ".group-marker"]
+  }
+}

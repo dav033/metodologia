@@ -1,0 +1,39 @@
+{
+  "name": "Lienzo e inspector",
+  "axes": {
+    "concept": "Lienzo e inspector: keep the decoration between its inputs and its engine result, within the existing Pictures shell.",
+    "layout": "Desktop three-pane workspace, 260px input / flexible scene / 270px inspector. Gallery uses filters / grouped results / preview. Home has an account fixture column and offset tool cards.",
+    "navigation": "Existing horizontal route navigation, tool cards at Inicio, in-page method buttons and quotation section anchors; Taller-local Decoraciones link.",
+    "typography": "Existing Geist Sans: 24px page title, 18–20px tool headings, 14–15px content, 12–13px metadata; 30px tabular count or total. Existing Geist Mono only for Sempertex.",
+    "density": "Permanent input and result panes at desktop; central illustration absorbs spare room. Tablet places the inspector below the workspace; phone stacks all panes with 20px insets.",
+    "components": "Real shadcn/Base UI Button and Input, Skeleton, Animate UI AlertDialog. Existing pill controls, paper panels and native account disclosure are rearranged around the scene; SVG scene is explicitly a fixture.",
+    "colour": "Exact Pictures globals.css and sibling contract tokens, including accessible control edges, both themes and Taller scene surface. Accent on primary action and illustrative balloon data; neutral route navigation.",
+    "motion": "Opposing lateral panel entrances (input −30px, inspector +36px), central 18px lift with .985 scale, 620ms cubic-bezier(.16,1,.3,1); home 65ms stagger; quick 180ms hover/press. Motion profile drives shared numeral spring; reduced/still and hidden-tab parity."
+  },
+  "evidence": {
+    "layout": [
+      ".workspace",
+      ".gallery-layout",
+      ".tool-home"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".modes button",
+      ".section-tabs",
+      ".entry-panel a"
+    ],
+    "typography": [
+      ".heading h1",
+      ".entry-panel h2",
+      ".grand-total strong",
+      ".company"
+    ],
+    "motion": [
+      ".entry-panel",
+      ".result-panel",
+      ".canvas",
+      ".tool-card",
+      ".gallery-card"
+    ]
+  }
+}
