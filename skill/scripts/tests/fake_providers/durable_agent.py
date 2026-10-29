@@ -1,7 +1,8 @@
 """A fake `claude` CLI for the durable-runtime tests (real process, real files, real git worktree).
 
 Behaviour comes from `SCENARIO:<name>` in the prompt (the last argument). Every start appends one line to
-$FAKE_COUNT, so a test can prove an attempt was launched exactly once even across engine crashes.
+$FAKE_COUNT, so a test can prove an attempt was launched exactly once even across engine crashes, and on which
+account (its CLAUDE_CONFIG_DIR) it ran.
 """
 from __future__ import annotations
 
@@ -24,7 +25,8 @@ if count:
         # `seen`: the task files already in the tree it started from (which line or candidate it was given)
         stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(), "task": task_id,
                                  "seen": sorted(p.name for p in Path(".").glob("*.task")), "at": time.time(),
-                                 "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt}) + "\n")
+                                 "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt,
+                                 "account": os.environ.get("CLAUDE_CONFIG_DIR", "")}) + "\n")
 
 
 def done(text: str = "done") -> None:

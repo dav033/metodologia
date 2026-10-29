@@ -95,6 +95,8 @@ class Lab:
         self.rdir = self.bitacora / "proj" / "requirements" / "REQ-900-lab"
         self.rdir.mkdir(parents=True, exist_ok=True)
         self.database_override: str | None = None
+        self.routes = ["claude::sonnet"]              # execution.routes of the lab engine ("provider:profile:model")
+        self.quota = self.root / "quota.json"         # what LiveQuota reads in the engine (bt_quota_live rows)
         self.unit_prefix = f"bt-test-{hashlib.sha256(str(self.root).encode()).hexdigest()[:6]}-"
 
     # ---------------------------------------------------------------------------------------------- plan
@@ -108,6 +110,38 @@ class Lab:
         return {"project": "proj", "req": "REQ-900", "plan_id": "REQ-900", "revision": revision,
                 "plan_sha256": hashlib.sha256(text.encode()).hexdigest(), "plan_path": str(path)}
 
+    # ------------------------------------------------------------------------------------ accounts, quota
+    def use_accounts(self, *profiles: str, model: str = "sonnet") -> None:
+        """Claude accounts as named profiles (each its own CLAUDE_CONFIG_DIR) and the routes over them, in order."""
+        state = self.bitacora / ".state"
+        state.mkdir(parents=True, exist_ok=True)
+        spec = {}
+        for pid in profiles:
+            folder = self.root / f"cfg-{pid}"
+            folder.mkdir(exist_ok=True)
+            spec[pid] = {"provider": "claude", "env": {"CLAUDE_CONFIG_DIR": str(folder)}, "work_only": False,
+                         "bin": "claude"}
+        (state / "profiles.json").write_text(json.dumps(spec, indent=1))
+        self.routes = [f"claude:{pid}:{model}" for pid in profiles]
+
+    def set_quota(self, rows: list[dict]) -> None:
+        """Live quota readings, shaped as bt_quota_live rows; the engine reads the file on every routing decision."""
+        tmp = self.quota.with_suffix(".tmp")
+        tmp.write_text(json.dumps(rows))
+        tmp.replace(self.quota)
+
+    def read_quota(self) -> list[dict]:
+        try:
+            return json.loads(self.quota.read_text())
+        except OSError:
+            return []
+
+    def telemetry(self) -> list[dict]:
+        try:
+            return [json.loads(line) for line in (self.state / "telemetry.jsonl").read_text().splitlines() if line]
+        except OSError:
+            return []
+
     def env(self) -> dict:
         return {"BITACORA_ROOT": str(self.bitacora), "PATH": f"{self.bin}:{os.environ.get('PATH', '')}",
                 "FAKE_COUNT": str(self.count), "PYTHONPATH": f"{SCRIPTS}:{HERE}",
@@ -116,7 +150,7 @@ class Lab:
     def write_config(self, **settings) -> Path:
         path = self.root / "lab.json"
         path.write_text(json.dumps({"root": str(self.root), "backend": self.backend, "settings": settings,
-                                    "database_url": self.database_override}))
+                                    "database_url": self.database_override, "routes": self.routes}))
         return path
 
     def launches(self) -> list[dict]:
@@ -135,15 +169,17 @@ class Lab:
     def ports(self):
         """Real ports for the lab (call only in a process whose BITACORA_ROOT points at the lab)."""
         from bt_contracts.execution import Route
+        from bt_durable.adapters.routes import LiveQuota
         from bt_durable.adapters.runtime import SupervisorRuntime
         from bt_durable.service import operator_verifier, wire
         from bt_scheduler_executor_adapter import MethodologyDriver
 
         cfg = self.engine_config()
         runtime = SupervisorRuntime(self.state / "supervisor", backend=self.backend, unit_prefix=self.unit_prefix)
+        routes = [Route(provider=p, profile=f, model=m) for p, f, m in (r.split(":") for r in self.routes)]
         return cfg, wire(cfg, repositories_for=lambda project: {"app": self.repo},
-                         driver_for=lambda project: MethodologyDriver(project),
-                         routes=[Route(provider="claude", model="sonnet")], runtime=runtime,
+                         driver_for=lambda project: MethodologyDriver(project), routes=routes, runtime=runtime,
+                         capacity=LiveQuota(reader=self.read_quota),
                          verifier=operator_verifier(self.state / "m6-quality.sqlite3"))
 
     def engine_config(self):
@@ -188,6 +224,7 @@ def _serve(config_path: str) -> None:
     data = json.loads(Path(config_path).read_text())
     lab = Lab(Path(data["root"]), backend=data["backend"])
     lab.database_override = data.get("database_url")
+    lab.routes = data.get("routes") or lab.routes
     from bt_durable.service import serve
     cfg, ports = lab.ports()
     serve(cfg, ports, reap_seconds=2.0)
