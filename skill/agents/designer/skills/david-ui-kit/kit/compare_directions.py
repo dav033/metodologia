@@ -108,17 +108,30 @@ def measure(paths: list[Path]) -> dict:
                 page.wait_for_timeout(150)
                 dna = page.evaluate(PROBE)       # the first screen is what the layout/navigation/type measures read
                 claims = page.evaluate(EVIDENCE, evidence)
-                # A claim may live on another screen (a dock that only shows in the app views): it holds when it is
-                # visible in ANY view, so walk the view select and keep the best result per selector.
-                views = page.eval_on_selector("#view", "s => [...s.options].filter(o => !o.disabled).map(o => o.value)") \
-                    if page.query_selector("#view") else []
-                for view in views:
-                    page.select_option("#view", view)
+                # A claim may live on another screen (a dock that only shows in the app views) or in one state of it (a
+                # count total in the counter's result, a scan while loading: pictures REQ-021 SP-7, SP-12): it holds when
+                # it is visible in ANY view and state, so walk both selects and keep the best result per selector.
+                # First every view as it opens (choosing a state can change what a view shows by itself), then every
+                # view in every state.
+                def options(select: str) -> list[str]:
+                    return page.eval_on_selector(select, "s => [...s.options].filter(o => !o.disabled).map(o => o.value)") \
+                        if page.query_selector(select) else []
+
+                def measure() -> None:
                     page.wait_for_timeout(60)
-                    more = page.evaluate(EVIDENCE, evidence)
-                    for axis, rows in more.items():
+                    for axis, rows in page.evaluate(EVIDENCE, evidence).items():
                         for old_row, new_row in zip(claims[axis], rows):
                             old_row["ok"] = old_row["ok"] or new_row["ok"]
+                views, states = options("#view"), options("#state")
+                for view in views:
+                    page.select_option("#view", view)
+                    measure()
+                for view in (views or [None]) if states else []:
+                    if view is not None:
+                        page.select_option("#view", view)
+                    for state in states:
+                        page.select_option("#state", state)
+                        measure()
                 if errors or dna["density"] < 3:
                     raise ValueError(f"{path.name}: mockup crashed or rendered nothing: {errors[:1]}")
                 dna.update(id=path.name, evidence=claims)
