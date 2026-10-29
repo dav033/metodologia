@@ -15,7 +15,8 @@ test("reopened ready tasks keep recovery controls and send the authoritative sta
   assert.match(page, /const canRecover = task\.reopenedForRecovery === true/);
   assert.match(page, /\{canRecover && <RoutesPanel/);
   assert.match(page, /\{canRecover && <form className="recovery-form" onSubmit=\{editBriefForm/);
-  assert.match(page, /precondition: \{ state: task\.state/);
+  assert.match(page, /precondition: \{ state: task\.state, \.\.\.\(typeof task\.revision === "number" \? \{ revision: task\.revision \}/);
+  assert.match(page, /commandForm\("reopen", \{ kind: "task"[^)]*\}, task\.state, task\.revision,/);
   assert.match(page, /reopenable\(task\.state\) && !task\.reopenedForRecovery \? <form onSubmit=\{commandForm\("reopen", \{ kind: "task"[\s\S]*?Reabrir/);
   assert.match(page, /REOPENABLE_TASK_STATES/);
 });

@@ -190,7 +190,15 @@ def exec_status(root: Path, project: str, req: str) -> dict[str, Any]:
 
 
 def open_decisions(rdir: Path) -> list[dict[str, Any]]:
-    """What the run asks its owner now (D-020); a plan without a readable scheduler run asks nothing."""
+    """What the run asks its owner now (D-020); a plan without a readable scheduler run asks nothing. A run owned by
+    the durable runtime asks through its projection (bt_durable_panel), whatever legacy files remain."""
+    import bt_durable_panel
+    if bt_durable_panel.owned(rdir):
+        requests = bt_durable_panel.decisions(rdir)
+        for r in requests:
+            r["diagnosis_html"] = ""
+            r["note_prefill"] = ""
+        return requests
     if not (rdir / scheduler_.PROJECTION).is_file():
         return []
     try:
@@ -220,8 +228,19 @@ def open_rounds(rdir: Path) -> list[int]:
 
 def decide(root: Path, project: str, req: str, request_id: str, option: str, reason: str, by: str = "web") -> str:
     """Answer one decision request from the plan page; the request must still be open and offer that option."""
+    import bt_durable_panel
     import bt_scheduler_decisions
     rdir = req_dir(root, project, req)
+    if bt_durable_panel.owned(rdir):              # a durable run: one DBOS answer keyed by the request and its round
+        try:
+            sent = bt_durable_panel.dispatch(project, req, rdir, "answer-decision",
+                                             {"request_id": request_id, "option": option, "reason": reason or ""},
+                                             key=f"{by}-{request_id}-{option}"[:120], by=by)
+        except bt_durable_panel.DurableRejected as exc:
+            raise PlanError(f"No se aplicó: {exc}. Recarga la página: la petición pudo cambiar.") from exc
+        except (ValueError, TypeError, RuntimeError) as exc:
+            raise PlanError(str(exc)) from exc
+        return f"Decisión {request_id} → {option}: " + "; ".join(sent["messages"])
     try:
         lines = bt_scheduler_decisions.answer(project, req, rdir, request_id, option, reason, by=by)
     except ValueError as exc:
@@ -234,7 +253,11 @@ def decide(root: Path, project: str, req: str, request_id: str, option: str, rea
 def diagnose(root: Path, project: str, req: str, request_id: str) -> str:
     """Ask the diagnosing agent (again) about one open request; it answers in the background."""
     import bt_block_agent
+    import bt_durable_panel
     rdir = req_dir(root, project, req)
+    if bt_durable_panel.owned(rdir):
+        raise PlanError("El diagnóstico por agente no está disponible para ejecuciones durables: la decisión ya "
+                        "lleva el fallo clasificado y su evidencia.")
     if request_id not in {r["id"] for r in open_decisions(rdir)}:
         raise PlanError(f"No hay una decisión abierta {request_id}. Recarga la página.")
     if (bt_block_agent.cached(rdir, request_id) or {}).get("state") == "running":
@@ -349,6 +372,9 @@ def cancel_plan(root: Path, project: str, req: str, confirm: str, by: str = "web
         raise PlanError("El plan ya estaba cancelado.")
     authority = status["run"]["authority"]
     note = ""
+    if authority == "dbos" and status["run"]["active"]:
+        raise PlanError("La ejecución durable sigue activa: cancélala primero con `bt-durable cancel "
+                        f"{project} {rid}` (irreversible) y después cancela el plan.")
     if authority == "scheduler":
         try:
             scheduler_.apply_control(rdir, "stop", by=by)

@@ -88,6 +88,7 @@ py-modules = [
   "bt_delegate_modes",
   "bt_diagram",
   "bt_driver",
+  "bt_durable_panel",
   "bt_efficiency",
   "bt_engine_benchmark",
   "bt_entrypoints",
@@ -323,6 +324,7 @@ bt_scheduler_recovery = ["README.md"]
 bt_scheduler_quality = ["api-contract.json", "README.md"]
 bt_composition = ["README.md"]
 bt_durable = ["README.md", "deploy/*.service"]
+bt_contracts = ["schemas/*.json"]
 bt_supervisor = ["README.md"]
 bitacora_resources = [
   "SKILL.md", "templates/*", "templates/**/*", "assets/*", "assets/vendor/**/*", "agents/*", "agents/**/*",

@@ -15,7 +15,7 @@ from pathlib import Path
 import psutil
 
 from . import tee
-from .model import MARKER_ENV
+from .model import MARKER_ENV, SUPERVISOR_ENV
 
 CGROUP_ROOT = Path("/sys/fs/cgroup")
 boot_id = tee.boot_id
@@ -41,9 +41,12 @@ def same_incarnation(pid: int | None, start: float | None) -> bool:
     return start is not None and start_time(pid, allow_zombie=True) == start
 
 
-def marked(key: str) -> dict[int, float]:
+def marked(key: str, supervisor_id: str | None = None) -> dict[int, float]:
     """Live processes of this user whose environment carries `BT_ATTEMPT_KEY=<key>` (catches `setsid` escapers).
-    Limits: a process that rewrote or cleared its initial environment block is not recognised."""
+    With `supervisor_id`, a process marked by ANOTHER supervisor (`BT_SUPERVISOR_ID`) is not ours even when its key
+    matches: two engines, or two test labs, may use the same attempt key, and this list is a kill list (REQ-030 iter 2:
+    a lab's escape scan terminated another lab's healthy agent). Processes without the field (started before it
+    existed) still count. Limits: a process that rewrote or cleared its initial environment block is not recognised."""
     found: dict[int, float] = {}
     uid, me = os.getuid(), os.getpid()
     for proc in psutil.process_iter(["uids", "status"]):
@@ -53,7 +56,10 @@ def marked(key: str) -> dict[int, float]:
         if info.get("status") in (psutil.STATUS_ZOMBIE, psutil.STATUS_DEAD):
             continue
         try:
-            if proc.environ().get(MARKER_ENV) != key:
+            environ = proc.environ()
+            if environ.get(MARKER_ENV) != key:
+                continue
+            if supervisor_id and environ.get(SUPERVISOR_ENV, supervisor_id) != supervisor_id:
                 continue
         except (psutil.Error, OSError):
             continue

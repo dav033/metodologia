@@ -1,0 +1,319 @@
+"""Plan 1.3.0 subplans and composition gates in the durable runtime (REQ-030 item 1), end to end: real git, the real
+provider driver with a fake `claude`, systemd units (or process groups), the M6 sandbox and DBOS on SQLite.
+
+The plan: SP-1 (T1, audit T1A), SP-2 (T2 after T1, audit T2A), SP-3 (T3, unrelated, audit T3A), gate CG-1 over SP-1 and
+SP-2 run by G1, and T9 after the gate. Each fake agent leaves `<task>.task`, and records which task files were already in
+the tree it was given, so the test reads which line or candidate every task started from."""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import unittest
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE))
+
+import durable_support as lab_support
+from bt_contracts.execution import RunRef
+from durable_support import gate, subplan, task
+from test_durable_e2e import FAST, EngineCase
+
+SERIAL = FAST.model_copy(update={"max_parallel": 1})
+
+
+def plan_tasks():
+    return [task("T1", scenario="own", subplan="SP-1", kind="implement"),
+            task("T3", scenario="own", subplan="SP-3", kind="implement"),
+            task("T1A", scenario="own", subplan="SP-1", kind="audit", after=["T1"]),
+            task("T2", scenario="own", subplan="SP-2", kind="implement", after=["T1"]),
+            task("T2A", scenario="own", subplan="SP-2", kind="audit", after=["T2"]),
+            task("T3A", scenario="own", subplan="SP-3", kind="audit", after=["T3"]),
+            task("G1", scenario="own", kind="test", after=["T1A", "T2A"]),
+            task("T9", scenario="own", kind="implement", after=["G1"])]
+
+
+class DurableSubplans(EngineCase):
+    def freeze_subplan_plan(self):
+        return RunRef.model_validate(self.lab.freeze(
+            plan_tasks(), schema="1.3.0",
+            subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-2", "T2", "T2A"), subplan("SP-3", "T3", "T3A")],
+            composition_gates=[gate("CG-1", ["SP-1", "SP-2"], "G1")]))
+
+    def files(self, ref: str) -> set[str]:
+        out = lab_support.git(self.lab.repo, "ls-tree", "--name-only", ref)
+        return {name for name in out.splitlines() if name.endswith(".task")}
+
+    def test_subplan_lines_and_a_gate(self):
+        run = self.freeze_subplan_plan()
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        launches = {item["task"]: item for item in self.lab.launches()}
+        self.assertEqual(len(self.lab.launches()), 8, self.lab.launches())        # one agent per task, no retries
+
+        # per-subplan lines: each holds its scope (members + their frozen-plan ancestors) and nothing else
+        prefix = "refs/bt/subplan/proj/REQ-900/r1/app"
+        self.assertEqual(self.files(f"{prefix}/SP-1"), {"T1.task", "T1A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-2"), {"T1.task", "T2.task", "T2A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-3"), {"T3.task", "T3A.task"})
+        self.assertEqual(self.files("refs/bt/line/proj/REQ-900/r1/app"),
+                         {f"{t}.task" for t in ("T1", "T3", "T1A", "T2", "T2A", "T3A", "G1", "T9")})
+
+        # a member starts from its own subplan line: T2 ran after T3 was accepted, without T3's work in its tree
+        self.assertLess(launches["T3"]["at"], launches["T2"]["at"])
+        self.assertEqual(launches["T2"]["seen"], ["T1.task"])
+        # the gate task starts on the composition candidate of SP-1 + SP-2 (not SP-3), after both are complete
+        self.assertEqual(set(launches["G1"]["seen"]), {"T1.task", "T1A.task", "T2.task", "T2A.task"})
+        self.assertGreater(launches["G1"]["at"], max(launches[t]["at"] for t in ("T1", "T1A", "T2", "T2A")))
+        candidates = lab_support.git(self.lab.repo, "for-each-ref", "--format=%(refname)",
+                                     "refs/compositions/REQ-900.bt-r1/candidates/")
+        self.assertTrue(candidates.strip(), "the gate's candidate is a ref of the composition engine")
+        versions = lab_support.git(self.lab.repo, "for-each-ref", "--format=%(refname)", "refs/subplans/REQ-900.bt-r1/")
+        self.assertEqual(sorted(versions.split()), ["refs/subplans/REQ-900.bt-r1/SP-1/v1", "refs/subplans/REQ-900.bt-r1/SP-2/v1"])
+        # work after the gate never starts before the gate passed
+        g1_settled = self._settled_at("G1")
+        self.assertGreater(launches["T9"]["at"], g1_settled)
+        self.assertEqual(status["summary"]["gates"]["composed"], {"CG-1": "C1"})
+
+    def test_migrated_progress_keeps_the_line_of_each_subplan(self):
+        """A run continued from earlier progress (the migration bridge's LegacyProgress, here made by a first run of the
+        same plan's first half) rebuilds every subplan line from the inherited snapshots without running them again."""
+        import json
+
+        from bt_contracts.execution import LegacyProgress, LegacyTask
+        first_tasks = [t for t in plan_tasks() if t["id"] in ("T1", "T3", "T1A")]
+        first = RunRef.model_validate(self.lab.freeze(
+            first_tasks, schema="1.3.0", revision=1,
+            subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-3", "T3", "T3")]))
+        self.start_engine()
+        self.client.start(first, SERIAL)
+        self.assertEqual(self.settled(first, timeout=300)["summary"]["status"], "completed")
+        inherited = []
+        for task_id in ("T1", "T3", "T1A"):
+            manifest = next(self.lab.state.glob(f"attempts-root/attempts/*r1-{task_id}-a1-*/handoff/manifest.json"))
+            data = json.loads(manifest.read_text())
+            inherited.append(LegacyTask(task_id=task_id, verdict="inherit", snapshot_sha=data["snapshot_sha"],
+                                        base_sha=data["base_sha"], repository=Path(data["repository"]),
+                                        attempt_dir=manifest.parent.parent, manifest_path=manifest,
+                                        provenance=f"legacy first-run-{task_id}"))
+        second = RunRef.model_validate(self.lab.freeze(
+            plan_tasks(), schema="1.3.0", revision=2,
+            subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-2", "T2", "T2A"), subplan("SP-3", "T3", "T3A")],
+            composition_gates=[gate("CG-1", ["SP-1", "SP-2"], "G1")]))
+        self.client.start(second, SERIAL, LegacyProgress(tasks=tuple(inherited)))
+        status = self.settled(second, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        for task_id in ("T1", "T3", "T1A"):
+            self.assertEqual(status["summary"]["tasks"][task_id], "inherited")
+        second_launches = [item["task"] for item in self.lab.launches()[3:]]
+        self.assertEqual(sorted(second_launches), ["G1", "T2", "T2A", "T3A", "T9"])    # inherited work never re-ran
+        prefix = "refs/bt/subplan/proj/REQ-900/r2/app"
+        self.assertEqual(self.files(f"{prefix}/SP-1"), {"T1.task", "T1A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-2"), {"T1.task", "T2.task", "T2A.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-3"), {"T3.task", "T3A.task"})
+        for task_id, item in zip(("T1", "T3", "T1A"), inherited, strict=True):   # each inherited snapshot is in its lines
+            for line in {"T1": ("SP-1", "SP-2"), "T3": ("SP-3",), "T1A": ("SP-1",)}[task_id]:
+                subprocess.run(["git", "-C", str(self.lab.repo), "merge-base", "--is-ancestor", item.snapshot_sha,
+                                f"{prefix}/{line}"], check=True)
+
+    def _settled_at(self, task_id: str) -> float:
+        import json
+        for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines():
+            row = json.loads(line)
+            if row.get("event") == "task_settled" and row.get("task_id") == task_id and row.get("status") == "completed":
+                return row["ts"]
+        raise AssertionError(f"{task_id} never settled")
+
+
+class SubplanFrontier(unittest.TestCase):
+    """The gate rules alone (pure): what may start, and why not."""
+
+    def plan(self):
+        import hashlib
+        import json
+
+        from bt_durable.legacy import load_plan
+        text = json.dumps({"schema_version": "1.3.0", "plan_id": "REQ-900", "revision": 1, "tasks": plan_tasks(),
+                           "subplans": [subplan("SP-1", "T1", "T1A"), subplan("SP-2", "T2", "T2A"),
+                                        subplan("SP-3", "T3", "T3A")],
+                           "composition_gates": [gate("CG-1", ["SP-1", "SP-2"], "G1")]})
+        return load_plan(text, approved_sha256=hashlib.sha256(text.encode()).hexdigest(), plan_id="REQ-900", revision=1)
+
+    def test_a_gate_task_waits_for_complete_members_and_a_candidate(self):
+        from bt_durable.control import frontier, subplans
+        plan = self.plan()
+        done = {t: "completed" for t in ("T1", "T1A", "T2", "T2A", "T3", "T3A")}
+        no_candidate = frontier.compute(plan, done, max_parallel=4, gates=subplans.Gates())
+        self.assertNotIn("G1", no_candidate.ready)
+        self.assertEqual([g.id for g in subplans.to_compose(plan, done, subplans.Gates())], ["CG-1"])
+        ready = frontier.compute(plan, done, max_parallel=4, gates=subplans.Gates(composed={"CG-1": "C1"}))
+        self.assertEqual(ready.ready, ("G1",))
+        rejected = subplans.Gates(rejected={"CG-1": "git_text_conflict"})
+        self.assertIn("candidate rejected", subplans.held(plan, done, rejected, "G1"))
+        # an incomplete member (its audit not done) holds the gate even with its dependencies met
+        partial = {**done, "T2A": "running"}
+        self.assertIn("not complete", subplans.held(plan, {k: v for k, v in partial.items() if k != "T2A"},
+                                                    subplans.Gates(composed={"CG-1": "C1"}), "G1"))
+
+    def test_scopes_are_the_legacy_subplan_line_scopes(self):
+        from bt_durable.control import subplans
+        from bt_durable.legacy import scoped_task_ids
+        plan = self.plan()
+        self.assertEqual(subplans.scopes(plan)["SP-2"], scoped_task_ids(plan, "SP-2"))
+        self.assertEqual(subplans.scopes(plan)["SP-2"], frozenset({"T1", "T2", "T2A"}))
+        self.assertEqual(subplans.lines_of(plan, "T1"), ("SP-1", "SP-2"))
+        self.assertEqual(subplans.home(plan, "G1"), "gate:CG-1")
+        self.assertEqual(subplans.home(plan, "T9"), "")
+
+    def test_a_plan_without_subplans_keeps_the_old_frontier(self):
+        from bt_durable.control import frontier, subplans
+        plan = self.plan()
+        self.assertFalse(subplans.enabled(type("P", (), {"schema_version": "1.0.0", "subplans": ()})()))
+        done = {t: "completed" for t in ("T1", "T1A", "T2", "T2A", "T3", "T3A")}
+        self.assertIn("G1", frontier.compute(plan, done, max_parallel=4).ready)    # gates=None: pre-patch behaviour
+
+
+class AtomicLines(unittest.TestCase):
+    """A snapshot goes into the run line and its subplan lines together or not at all: a writer that moves any of the
+    lines between the merge and the move (the run's `sync` seeding the same subplan line) leaves every line as it was,
+    and the step's retry starts again from the new tips (review of 3cdace8f4, finding 2). Real git."""
+
+    def setUp(self):
+        import tempfile
+        from types import SimpleNamespace
+
+        from bt_durable.adapters.integration import GitLineIntegrator
+        self.repo = Path(tempfile.mkdtemp(prefix="bt-lines-", dir=os.environ.get("BT_LAB_DIR") or None))
+        self.addCleanup(__import__("shutil").rmtree, self.repo, True)
+        lab_support.git(self.repo, "init", "-q", "-b", "main")
+        self.commit("base.txt", "base")
+        self.run_ref = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                              plan_sha256="0" * 64)
+        self.task = SimpleNamespace(id="T1", repository="app")
+        self.lines = GitLineIntegrator({"app": self.repo})
+        self.lines.sync(self.run_ref, "app", {"SP-1": []})          # run line, its base pin and the SP-1 line
+        self.run_line = self.lines.line_ref(self.run_ref, "app")
+        self.sp_line = self.lines.subplan_ref(self.run_ref, "app", "SP-1")
+
+    def commit(self, name: str, text: str) -> str:
+        (self.repo / name).write_text(text)
+        lab_support.git(self.repo, "add", name)
+        lab_support.git(self.repo, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", name)
+        return lab_support.git(self.repo, "rev-parse", "HEAD").strip()
+
+    def tip(self, ref: str) -> str:
+        return lab_support.git(self.repo, "rev-parse", ref).strip()
+
+    def snapshot(self, name: str):
+        from bt_contracts.execution import Snapshot
+        base = self.tip(self.run_line)
+        lab_support.git(self.repo, "checkout", "-q", "--detach", base)
+        sha = self.commit(name, name)
+        lab_support.git(self.repo, "checkout", "-q", "main")
+        return Snapshot(snapshot_sha=sha, base_sha=base, manifest_path=self.repo / "none.json")
+
+    def test_a_line_moved_in_between_leaves_every_line_as_it_was(self):
+        from bt_durable.adapters import integration
+        snap = self.snapshot("t1.txt")
+        before_run, other = self.tip(self.run_line), self.snapshot("other.txt").snapshot_sha
+        merge = self.lines._merge
+
+        def racing(repo, tip, snapshot, message):           # the last line's merge is done: then a writer moves it
+            out = merge(repo, tip, snapshot, message)
+            if "(SP-1)" in message:
+                lab_support.git(self.repo, "update-ref", self.sp_line, other)
+            return out
+        self.lines._merge = racing
+        with self.assertRaises(integration.LineMoved):
+            self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
+        self.assertEqual(self.tip(self.run_line), before_run)        # the run line did not move without its subplan line
+        self.assertEqual(self.tip(self.sp_line), other)
+        self.lines._merge = merge                                    # the step's retry, on the new tips: both move
+        new_tip, conflict = self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
+        self.assertEqual((new_tip, conflict), (self.tip(self.run_line), ""))
+        for ref in (self.run_line, self.sp_line):
+            lab_support.git(self.repo, "merge-base", "--is-ancestor", snap.snapshot_sha, ref)    # raises if not in
+
+
+class StepFailureInTheRun(EngineCase):
+    """A step the run workflow calls itself can fail after its retries; the run reports it and tries again on a later
+    turn instead of ending in ERROR (DBOS never recovers an ERROR workflow). The failure here is a real one: a stale ref
+    lock, as a crashed git leaves it, on a subplan line, so `bt.sync_lines` cannot move that line until it is removed
+    (review of 3cdace8f4, finding 1)."""
+
+    def telemetry(self) -> list[dict]:
+        import json
+        path = self.lab.state / "telemetry.jsonl"
+        return [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+
+    def test_a_stale_ref_lock_on_a_subplan_line_does_not_kill_the_run(self):
+        import os
+        os.environ["FAKE_SLOW_SECONDS"] = "20"                # T2 still runs when the lock goes away
+        self.addCleanup(os.environ.pop, "FAKE_SLOW_SECONDS", None)
+        tasks = [task("T1", scenario="own", subplan="SP-1", kind="implement"),
+                 task("T2", scenario="slow", subplan="SP-1", kind="implement", after=["T1"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0", subplans=[subplan("SP-1", "T1", "T2")]))
+        common = Path(lab_support.git(self.lab.repo, "rev-parse", "--path-format=absolute", "--git-common-dir").strip())
+        lock = common / "refs/bt/subplan/proj/REQ-900/r1/app/SP-1.lock"
+        lock.parent.mkdir(parents=True, exist_ok=True)
+        lock.write_text("")
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        failed = lab_support.wait_until(
+            lambda: next((row for row in self.telemetry() if row.get("event") == "subplan_lines_unavailable"), None),
+            240, interval=0.5, what="the run to report the subplan line it cannot move")
+        self.assertIn("sync_lines", failed["reason"])
+        lock.unlink()                                         # the operator removes the stale lock
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        rows = self.client.workflows(f"bt:{run.run_id}")
+        self.assertFalse([r.workflow_id for r in rows if r.status == "ERROR"], [(r.workflow_id, r.status) for r in rows])
+        line = "refs/bt/subplan/proj/REQ-900/r1/app/SP-1"
+        self.assertIn("T1.task", self.files(line))                 # seeded once the lock was gone
+        lab_support.git(self.lab.repo, "merge-base", "--is-ancestor",     # T2 (slow: writes a heartbeat) went in too
+                        status["summary"]["results"]["T2"]["snapshot_sha"], line)
+        self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])     # no agent run twice
+
+    def test_a_missing_line_base_pin_at_composition_does_not_kill_the_run(self):
+        """`compose` reads the run line's base pin; a line made before pins existed has none until the operator pins it.
+        The gate is composed again on a later turn (at most COMPOSE_TURNS), not lost with the run."""
+        tasks = [task("T1", scenario="own", subplan="SP-1", kind="implement"),
+                 task("T1A", scenario="own", subplan="SP-1", kind="audit", after=["T1"]),
+                 task("T2", scenario="own", subplan="SP-2", kind="implement"),
+                 task("T2A", scenario="own", subplan="SP-2", kind="audit", after=["T2"]),
+                 task("G1", scenario="own", kind="test", after=["T1A", "T2A"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0",
+                                                    subplans=[subplan("SP-1", "T1", "T1A"), subplan("SP-2", "T2", "T2A")],
+                                                    composition_gates=[gate("CG-1", ["SP-1", "SP-2"], "G1")]))
+        pin = "refs/bt/line/proj/REQ-900/r1/app-base"
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        base = lab_support.wait_until(lambda: self.tip(pin), 120, interval=0.2, what="the run line's base pin")
+        lab_support.git(self.lab.repo, "update-ref", "-d", pin)          # as on a line created before the pin
+        failed = lab_support.wait_until(
+            lambda: next((row for row in self.telemetry() if row.get("event") == "gate_compose_failed"), None),
+            240, interval=0.3, what="the run to report the composition it cannot build")
+        self.assertIn("compose", failed["reason"])
+        lab_support.git(self.lab.repo, "update-ref", pin, base)          # the operator pins it
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(status["summary"]["gates"]["composed"], {"CG-1": "C1"})
+        rows = self.client.workflows(f"bt:{run.run_id}")
+        self.assertFalse([r.workflow_id for r in rows if r.status == "ERROR"], [(r.workflow_id, r.status) for r in rows])
+        self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["G1", "T1", "T1A", "T2", "T2A"])
+
+    def tip(self, ref: str) -> str:
+        done = subprocess.run(["git", "-C", str(self.lab.repo), "rev-parse", "-q", "--verify", ref], capture_output=True,
+                              text=True, check=False)
+        return done.stdout.strip()
+
+    files = DurableSubplans.files
+
+
+if __name__ == "__main__":
+    unittest.main()
+

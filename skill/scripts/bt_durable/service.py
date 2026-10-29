@@ -9,17 +9,21 @@ from __future__ import annotations
 import logging
 import signal
 import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
 from bt_contracts.execution import AttemptRef, Route
 from dbos import DBOS
 
+from .adapters.audit import AuditGate
+from .adapters.briefs import DurableBriefs
+from .adapters.composition import CompositionComposer
 from .adapters.integration import GitLineIntegrator
 from .adapters.m3 import M3Attempts
 from .adapters.m6 import M6Verifier
 from .adapters.plans import FilePlans
-from .adapters.routes import StaticRouter
+from .adapters.routes import build_router
 from .adapters.runtime import SupervisorRuntime
 from .adapters.telemetry import JsonlTelemetry
 from .execution import engine, steps
@@ -32,19 +36,24 @@ TERMINAL = frozenset({"SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EX
 
 def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver_for: Callable[[str], object],
          routes: list[Route], verifier: M6Verifier | None = None, runtime=None, capacity=None,
-         briefs_for=None) -> Ports:
+         briefs_for=None, router: str = "m2") -> Ports:
+    """`router`: `m2` ranks the allowed routes with the M2 decision engine (static list if it cannot be built),
+    `static` keeps the ordered list. Either way `capacity` is the live quota signal."""
     cfg.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     cfg.state_dir.chmod(0o700)                             # M6 and the supervisor refuse a shared directory
     plans = FilePlans()
     attempts = M3Attempts(root=cfg.state_dir / "attempts-root", repositories_for=repositories_for,
                           plan_for=lambda attempt: steps.plan(attempt.run), driver_for=driver_for,
-                          briefs_for=briefs_for)
+                          briefs_for=briefs_for or DurableBriefs(repositories_for=repositories_for))
 
-    integrator = _ProjectIntegrator(repositories_for)
-    return Ports(plans=plans, router=StaticRouter(routes, capacity), preparer=attempts,
-                 runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
+    integrator = _ProjectIntegrator(repositories_for, cfg.state_dir)
+    telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
+    attempts.telemetry = telemetry                           # capture-time file guard events (adapters/size_guard.py)
+    return Ports(plans=plans, router=build_router(router, routes, capacity, telemetry=telemetry.emit),
+                 preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
-                 integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"))
+                 integrator=integrator, telemetry=telemetry, composer=integrator,
+                 auditor=AuditGate(repositories_for))
 
 
 def requirement_dir(run) -> Path:
@@ -52,31 +61,57 @@ def requirement_dir(run) -> Path:
 
 
 def operator_verifier(store_path: Path) -> M6Verifier:
-    """M6 with the operator's per-run policy and authorization callbacks (shared with the legacy owner)."""
+    """M6 with the operator's per-run policy, authorization callbacks and coordinator receipts for manual checks, and
+    the notes trail the legacy owner keeps (`RUN.notes/<task>.history.jsonl`, `<task>.verify.md`)."""
     from bt_scheduler_executor_wiring import operator_quality_policy
     from bt_scheduler_verification_authority import owner_verification_authority
+
+    from .legacy import attestations
     return M6Verifier(store_path=store_path,
                       policy_for=lambda run: operator_quality_policy(run.project, requirement_dir(run)),
-                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project))
+                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project),
+                      attestations_for=lambda run: attestations(requirement_dir(run)),
+                      on_verdict=record_verdict)
+
+
+def record_verdict(attempt: AttemptRef, outcome) -> None:
+    """What the legacy quality port writes after a verdict: a FAIL's digest becomes the last-failure note and one line
+    of the task's history; a PASS clears the note. A verdict that is not about the code (needs review) writes nothing."""
+    from .legacy import record_history, write_verify_notes
+    rdir = requirement_dir(attempt.run)
+    if outcome.status.value == "FAIL" and outcome.digest:
+        write_verify_notes(rdir, attempt.task_id, outcome.digest)
+        record_history(rdir, attempt.task_id, attempt.attempt_key, outcome.digest)
+    elif outcome.status.value == "PASS":
+        write_verify_notes(rdir, attempt.task_id, "")
 
 
 class _ProjectIntegrator:
-    """Integration lines are per project; the run tells which project's repositories to use."""
+    """Integration lines and composition gates are per project; the run tells which project's repositories to use."""
 
-    def __init__(self, repositories_for: Callable[[str], object]):
+    def __init__(self, repositories_for: Callable[[str], object], state_dir: Path):
         self.repositories_for = repositories_for
+        self.state_dir = Path(state_dir)
         self._lines: dict[str, GitLineIntegrator] = {}
 
     def _for(self, project: str) -> GitLineIntegrator:
         if project not in self._lines:
-            self._lines[project] = GitLineIntegrator(self.repositories_for(project))
+            line = GitLineIntegrator(self.repositories_for(project))
+            line.composer = CompositionComposer(self.state_dir, lines=line, plan_for=steps.plan)
+            self._lines[project] = line
         return self._lines[project]
 
-    def base_ref(self, run, task):
-        return self._for(run.project).base_ref(run, task)
+    def base_ref(self, run, task, *, home=""):
+        return self._for(run.project).base_ref(run, task, home=home)
 
-    def integrate(self, run, task, snapshot):
-        return self._for(run.project).integrate(run, task, snapshot)
+    def integrate(self, run, task, snapshot, *, lines=()):
+        return self._for(run.project).integrate(run, task, snapshot, lines=lines)
+
+    def sync(self, run, role, items):
+        return self._for(run.project).sync(run, role, items)
+
+    def compose(self, run, gate_id, evidence):
+        return self._for(run.project).composer.compose(run, gate_id, evidence)
 
 
 def reap_once(prefix: str = "") -> list[str]:
@@ -112,17 +147,35 @@ class _KeyRef:
         self.workflow_id = f"bt:{key}:agent"
 
 
-def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, stop: threading.Event | None = None) -> None:
+def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, project_seconds: float = 5.0,
+          stop: threading.Event | None = None, marker: Path | None = None) -> None:
+    """Run the engine until SIGTERM/SIGINT: reap orphan units and refresh the panels' projections of every run
+    (`bt_durable.projection`; a read model the workflows never read back). `marker` (default
+    `<state>/engine.json`) tells operator tools which message features this engine's workflows understand."""
+    from .projection import EngineProjector
+    from .remote import write_marker
     stop = stop or threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
     engine.start(cfg, ports)
+    write_marker(marker or cfg.state_dir / "engine.json")
+    projector = EngineProjector(DBOS)
+    tick = max(0.2, min(reap_seconds, project_seconds))
+    last_reap = time.monotonic()
     try:
-        while not stop.wait(reap_seconds):
+        while True:
             try:
-                reap_once()
-            except Exception as error:  # noqa: BLE001
-                LOG.warning("reaper pass failed: %s", error)
+                projector.refresh()
+            except Exception as error:  # noqa: BLE001 - the panels show the last projection until the next pass
+                LOG.warning("projection pass failed: %s", error)
+            if stop.wait(tick):
+                break
+            if time.monotonic() - last_reap >= reap_seconds:
+                last_reap = time.monotonic()
+                try:
+                    reap_once()
+                except Exception as error:  # noqa: BLE001
+                    LOG.warning("reaper pass failed: %s", error)
     finally:
         engine.stop()
 

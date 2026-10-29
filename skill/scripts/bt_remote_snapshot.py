@@ -3,6 +3,10 @@
 The shape is the canonical RemoteSnapshot contract (skill/scripts/bt_contracts/remote.py, published as
 remote/contract/snapshot.schema.json): camelCase only, and every nested record projected to its contract fields, so
 page-only data (rendered diagnosis HTML, form prefills, free-form round keys) never reaches the phone. Stdlib only.
+
+Durable runs (RUN.owner.json backend `dbos`) come from their projection (bt_durable_panel) through the same plan
+status: their states are mapped to the snapshot vocabulary, `revision` (run and task) is the projection sequence at
+which that subject last changed, and their open decisions carry the task round in the id (`T2:d1@k3`).
 """
 
 from __future__ import annotations
@@ -91,10 +95,13 @@ def build_snapshot(root) -> dict:
             history = task["history"]
             review = next((item for item in reversed(history) if item.get("state") in {"failed", "rejected"}), None)
             current = task.get("attempt")
-            tasks.append({"id": task["id"], "title": task["title"], "state": task["state"],
-                          "activeAttempt": _attempt(current) if current and current.get("live") else None,
-                          "reviewAttempt": _attempt(review),
-                          "history": [_attempt(item) for item in history]})
+            shown = {"id": task["id"], "title": task["title"], "state": task["state"],
+                     "activeAttempt": _attempt(current) if current and current.get("live") else None,
+                     "reviewAttempt": _attempt(review),
+                     "history": [_attempt(item) for item in history]}
+            if isinstance(task.get("revision"), int):   # durable runs: the task's precondition revision
+                shown["revision"] = task["revision"]
+            tasks.append(shown)
         state = run.get("status") or ("running" if run.get("active") else "idle")
         # `status` is the deprecated alias window of `state` for gateways deployed before the contract (v2 drops it).
         runs.append({"id": run["run"], "project": run["project"], "req": run["req_id"], "state": state,

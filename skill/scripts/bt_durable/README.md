@@ -25,7 +25,7 @@ legacy core and executor are reached only through their adapters (`bt_durable/le
   the integration line (now compare-and-swap), owner decisions.
 - **New Metodología logic**: evidence-based classifier, bounded recovery policy (re-verify instead of re-run for
   environment limits, durable quota waits, one coordinated remediation, escalation with options), migration bridge,
-  plan pre-flight (`bt_planner.preflight`).
+  plan pre-flight: the typed plan contract (`bt_contracts.plan`, `PLAN_CONTRACT`) then `bt_planner.preflight`.
 
 ## Install (Linux)
 
@@ -53,10 +53,52 @@ uv run bt-durable pause|resume|cancel pictures REQ-031
 uv run bt-durable retry-task pictures REQ-031 T2 --note "…"
 ```
 
+## Panels and remote control (M7)
+
+`bt_durable.projection` derives one JSON read model per run from DBOS only (workflow statuses, inputs/outputs, the
+`summary`/`state`/`decision` events): `<root>/.state/durable/projections/<project>/<REQ>-r<N>.json` (0600 file, 0700
+directories; `bt_durable_panel.path`). The engine refreshes it every 5 s (`serve(project_seconds=…)`) and
+`bt-durable project PROJECT REQ` rebuilds it; no workflow reads it back. `sequence` is monotonic (+1 per change, a
+rebuild without the file starts at the current time in ms); `status_seq` / `tasks[].seq` / `decisions[].seq` are the
+sequence of each subject's last change. Task states: `pending queued waiting_quota running verifying recovering
+needs_decision blocked failed completed cancelled`; run: `running paused completed blocked failed cancelled`.
+
+The stdlib panels read it through `bt_durable_panel` (stdlib only): `bt_planstatus` (plan pages, list, flow, now),
+the run tab, `bt_remote_snapshot` (states mapped to the snapshot vocabulary: queued/waiting_quota → `ready`,
+recovering/needs_decision → `rejected`, failed → `blocked`; `revision` = the subject's sequence; decision ids name
+the task round, `T2:d1@k3`). Remote `pause`/`resume`/`reopen`/`retry` (no route pins)/`answer-decision` go through the
+ledger to `bt-durable remote PROJECT REQ` (JSON on stdin; `execution.durable_cli` overrides how it is reached): it
+rebuilds the projection, refuses a stale command (`expect.revision`/`state` differ, decision no longer open, command
+not applicable) and sends a DBOS message keyed by the ledger's idempotency key, carrying `expect_paused` /
+`expect_round`, which `bt.run` checks again on receipt (`command_refused` in telemetry). Commands without those
+fields (every message recorded before M7) take exactly their old path.
+
 `execution.backend` (`legacy` default | `dbos`) names the runtime for new runs; `execution.routes`
-(`provider:profile:model`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency` the queue
-sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a run
-owned by the durable runtime (`OWNED_BY_DBOS`).
+(`provider:profile:model[:effort]`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency`
+the queue sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a
+run owned by the durable runtime (`OWNED_BY_DBOS`).
+
+## Routing
+
+`execution.router` (`m2` default | `static`). With `m2` each routing decision asks the M2 decision engine (through its
+one door, `bt_scheduler_decision_adapter.durable_route_ranking`) to rank the allowed routes for the task: the list is the
+authorization and the baseline order, the live subscription reading (`LiveQuota`, bt_quota_live, cached 60 s) is the
+capacity. M2 applies its hard filters (profile authorization and work gate, runtime on PATH, sign-in, capacity,
+cooldown marks when no live reading says otherwise), its route policy (baseline order kept except for docs tasks, which
+prefer headroom) and one candidate per account.
+
+- A route refused for a known reason (exhausted, cooling down, unauthorized, signed out, no runtime) is never chosen:
+  no attempt is spent on it.
+- A route whose capacity cannot be read runs only when no route has known capacity, in the operator's order (the
+  static list's old behaviour; the agent's own usage-limit answer is then classified `quota` and waited for).
+- Nothing can run: a durable `wait` until the earliest known reset or cooldown end, otherwise `unavailable` (the owner
+  decides). A full window whose reset already passed is unknown, not full. No quota is ever invented.
+- Every decision is a `route_decision` telemetry event: chosen route and basis (`m2` | `unknown_capacity` | `none`),
+  ranked candidates and rejected ones with M2's reason codes and account references, each route's capacity reading,
+  the M2 batch id and input hash, policy versions. The decision is the `bt.route` step's checkpointed result, so a
+  recovered workflow replays it instead of deciding again.
+- If M2 cannot be built (it refuses a route's identity, an import fails), the engine starts on the static list and
+  emits `router_fallback` with the reason.
 
 ## Migration of legacy runs
 
@@ -95,6 +137,16 @@ such a wait has no checkpoint at the patch position yet, takes the patch, and it
 records are (`DBOSUnexpectedStepError`, reproduced on DBOS 3.3.0 and 3.4.0). `tests/test_durable_versioning.py` is the
 template for proving an upgrade. When no workflow can still be on the old path, `deprecate_patch`, then remove it.
 
+Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures` (run workflow);
+`bt-task-respects-pause`, `bt-task-owner-reverify`, `bt-task-reconcile-asks-owner` (task workflow).
+
+Steps the run workflow calls itself (`bt.sync_lines`, `bt.compose`, `bt.audit_gate`) must not end the run when their
+retries are spent: DBOS never recovers a workflow in ERROR. Behind `bt-run-survives-step-failures` such a failure is
+reported (`subplan_lines_unavailable`, `gate_compose_failed`, `audit_gate_failed`) and the run goes on: lines are synced
+again next turn, a composition is tried again for `COMPOSE_TURNS` turns before the gate counts as rejected, and an audit
+the gate could not judge is held as blocked (`retry-task` runs it again). Work that runs in child workflows needs no
+such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
+
 ## Troubleshooting
 
 | Symptom | Look at |
@@ -105,17 +157,30 @@ template for proving an upgrade. When no workflow can still be on the old path, 
 | an agent seems stuck | `python -m bt_supervisor show <attempt key>`; `systemctl --user status bt-att-*` |
 | the engine does not start | `journalctl --user -u bt-durable`; the state directory must be private (0700) |
 | metrics | `python -m bt_durable.bench durable <state>/durable/telemetry.jsonl` |
+| an attempt left a source file over 500 lines | telemetry event `file_guard` (written at capture, whatever tool wrote the file); the same findings are `snapshot.oversized` (`new`/`crossed`/`grew`), and `adapters/size_guard.note()` turns them into text for the next note |
 
 ## Verified limitations (not claimed)
 
 - Exactly-once for external effects is NOT claimed. What is proven: one agent process per attempt key across engine
-  crashes (adoption), one integration per snapshot (CAS + ancestry check), one M6 verdict per verify key.
-- The router used by the engine is the static ordered route list with an optional capacity callback; the M2 decision
-  engine and live quota preflight are not wired into the durable runtime yet.
-- Milestone audits and audit-driven remediation revisions of the legacy flow are not part of the durable workflows;
-  remediation here is the coordinated repair attempt of one task.
-- The remote panel and web UI read legacy projections; durable runs are visible through `bt-durable status` and the
-  run workflow's `summary` event, not yet in the phone panel.
+  crashes (adoption), one integration per snapshot (CAS + ancestry check; the run line and the snapshot's subplan
+  lines move in one `git update-ref --stdin` transaction), one M6 verdict per verify key.
+- The subplan lines of a migrated run hold a superset of their scope: seeding merges each legacy snapshot with its
+  history, which carries whatever the legacy line held when that snapshot was made.
+- The M2 router decides per task from the allowed list; it does not reserve accounts or apply per-account concurrency
+  limits (none is configured anywhere today), does not persist decisions to an M2 ledger (telemetry is the record) and
+  does not use Laya.
+- Milestone audits (REQ-030 item 4): an accepted `kind: audit` task is judged by its findings ledger with the legacy
+  gate (`bt_audit_gate`: open critical/high findings block; a missing ledger or a change outside the audit's declared
+  files is a problem of the audit). Related blocking findings are grouped as `bt_remediation` groups them and each group
+  is ONE coordinated repair: a new round of the first task it names, whose brief lists every finding with the probes
+  (the named tasks' check commands); then the audit runs again. At most `gates.remediation_rounds` rounds per audit
+  (`retry-task` on a blocked audit grants one more); dependents wait meanwhile. Not ported: the legacy plan revision
+  that adds remediation tasks to the frozen plan (the durable repair is a round of an existing task, so its checks are
+  that task's own; the other named tasks' probes are in the brief and the re-audit judges them), and the audit evidence
+  cross-check of `quality_audit_evidence`. Behind `DBOS.patch("bt-run-audit-remediation")`.
+- The panels show durable runs from a projection refreshed every few seconds: they can lag DBOS by one refresh, which
+  is why every command is checked against a fresh build first. Route pins, cancel-attempt, revise and edit-brief are
+  not offered for durable runs (refused with a reason); cancelling a durable run stays `bt-durable cancel`.
 - The process-group fallback enforces only the runtime limit (see `bt_supervisor/README.md`).
 - Real provider CLIs were not run under the durable runtime during REQ-030 (the lab uses a fake `claude` through the real
   driver); the first real run should be a small plan.

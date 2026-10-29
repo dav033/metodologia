@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -30,6 +31,7 @@ from bt_scheduler_quality.store import QualityStore
 
 from ..legacy import TaskSpec
 
+LOG = logging.getLogger("bt_durable.m6")
 RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
 _HEAP = re.compile(r"--max-old-space-size=(\d+)")
 
@@ -55,13 +57,18 @@ class M6Verifier:
     """`policy_for(run)` / `authority_for(run)` give each run its operator policy (verifier env, requires, accepted
     fingerprints) and its authorization callbacks, the same ones the legacy owner uses."""
 
-    def __init__(self, *, store_path: Path, policy_for=None, authority_for=None, attestations=None):
+    def __init__(self, *, store_path: Path, policy_for=None, authority_for=None, attestations=None,
+                 attestations_for=None, on_verdict=None):
         Path(store_path).parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         Path(store_path).parent.chmod(0o700)                 # the M6 store refuses a directory others can read
         self.store = QualityStore(Path(store_path))
         self.policy_for = policy_for or (lambda run: QualityPolicy())
         self.authority_for = authority_for or (lambda run: None)
-        self.attestations = attestations
+        # `attestations_for(run)`: the run's coordinator receipts (bt_attestation.lookup of its requirement folder);
+        # a valid receipt settles only its own manual check, command checks still have to pass
+        self.attestations_for = attestations_for or (lambda run: attestations)
+        # `on_verdict(attempt, outcome)`: the shared notes trail (RUN.notes history and last verification failure)
+        self.on_verdict = on_verdict
         self._engines: dict[tuple[str, str], QualityEngine] = {}
 
     def _engine(self, run, profile: str) -> QualityEngine:
@@ -70,7 +77,7 @@ class M6Verifier:
             policy = self.policy_for(run)
             policy = relaxed(policy) if profile == "relaxed" else policy
             self._engines[key] = QualityEngine(policy, self.store, verification_authority=self.authority_for(run),
-                                               attestations=self.attestations)
+                                               attestations=self.attestations_for(run))
         return self._engines[key]
 
     def close(self) -> None:
@@ -83,6 +90,8 @@ class M6Verifier:
         if not snapshot.snapshot_sha or snapshot.manifest_path is None:
             return VerifyOutcome(status=VerifyStatus.NEEDS_REVIEW, reason_code="SNAPSHOT_INVALID",
                                  digest="the attempt left no snapshot to verify")
+        # profiles: standard | relaxed (bounded environment repair) | owner<N> (the owner asked for a new verdict of the
+        # same snapshot, e.g. after attesting a manual check: same policy, its own request key so M6 runs it again)
         key = attempt.verify_key if profile == "standard" else f"{attempt.verify_key}:{profile}"
         # the trusted handoff manifest names the attempt that produced the snapshot (a legacy one when reconciling)
         producer = json.loads(snapshot.manifest_path.read_text(encoding="utf-8")).get("attempt_id") or attempt.attempt_key
@@ -91,8 +100,14 @@ class M6Verifier:
                  "acceptance_criteria": list(task.acceptance_criteria), "verification": [dict(v) for v in task.verification]}
         source = SnapshotSource(producer, prepared.repository, prepared.attempt_dir, snapshot.manifest_path,
                                 snapshot.base_sha, snapshot.snapshot_sha, prepared.worktree)
-        result = self._engine(attempt.run, profile).verify(order, source)
-        return outcome_of(result, self.store)
+        result = self._engine(attempt.run, "relaxed" if profile == "relaxed" else "standard").verify(order, source)
+        outcome = outcome_of(result, self.store)
+        if self.on_verdict is not None:
+            try:
+                self.on_verdict(attempt, outcome)
+            except Exception as error:  # noqa: BLE001 - the notes trail informs; it never changes a verdict
+                LOG.warning("notes for %s not written: %s", attempt.attempt_key, error)
+        return outcome
 
 
 def outcome_of(result: dict, store) -> VerifyOutcome:
@@ -110,5 +125,12 @@ def outcome_of(result: dict, store) -> VerifyOutcome:
         from bitacora_platform.quality_delivery import QualityDeliveryMethods
         digest = QualityDeliveryMethods._failure_digest(SimpleNamespace(store=store), result) or ""
     ref = str(result.get("evidence_manifest") or "")
+    issues = tuple(dict.fromkeys(str(item.get("code")) for item in result.get("issues") or ()
+                                 if isinstance(item, dict) and item.get("code")))
+    # the result's criteria name what is still unproven ({criterion, status, evidence}); when the only doubt is manual
+    # evidence (CRITERION_MANUAL), those are exactly the manual checks a receipt must cover
+    manual = tuple(str(c.get("criterion")) for c in result.get("criteria") or ()
+                   if isinstance(c, dict) and c.get("status") != "pass") if "CRITERION_MANUAL" in issues else ()
     return VerifyOutcome(status=VerifyStatus(status), reason_code=reason[:80], result_ref=ref[:200],
-                         failing_checks=failing[:50], passing_checks=passing[:50], digest=digest[:12000])
+                         failing_checks=failing[:50], passing_checks=passing[:50], digest=digest[:12000],
+                         issue_codes=issues[:20], manual_checks=manual[:20])

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -26,11 +27,13 @@ from ..legacy import m3 as _m3
 
 m3 = _m3.model
 
+from . import size_guard
 from .files import atomic_write
 
 DEFAULT_TIMEOUT = 2 * 3600
 # the engine's own configuration (the DBOS database URL carries its password) never reaches an agent
 ENGINE_ONLY_PREFIXES = ("BT_DURABLE_", "DBOS_")
+ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")       # bt_supervisor.model.ENV_NAME_PATTERN
 PATCH_MAX = 16 << 20
 OUTPUT_READ_MAX = 8 << 20
 
@@ -48,9 +51,11 @@ def start_request(attempt: AttemptRef, task: TaskSpec, *, base_ref: str, timeout
 class M3Attempts:
     """One object for the three attempt ports, sharing the workspace manager and the attempt directories."""
 
+    telemetry = None            # set by the wiring: where the capture-time file guard reports (adapters/size_guard)
+
     def __init__(self, *, root: Path, repositories_for: Callable[[str], Mapping[str, Path] | Callable[[str], Path | None]],
                  plan_for: Callable[[AttemptRef], Plan], driver_for: Callable[[str], object],
-                 briefs_for: Callable[[Plan], object] | None = None, prompt_rtk: bool = False):
+                 briefs_for: Callable[[AttemptRef, Plan, str], object] | None = None, prompt_rtk: bool = False):
         self.root = Path(root)
         self.repositories_for = repositories_for
         self.plan_for = plan_for
@@ -84,14 +89,15 @@ class M3Attempts:
         workspaces.check(request)
         ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
-        brief = self._brief(attempt, request, note)
+        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws), note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
         atomic_write(adir / "workspace.json", json.dumps(ws.to_dict(), sort_keys=True).encode(), 0o600)
         launch = self.driver(attempt.run.project).prepare(_m3_route(route), prompt, ws, float(timeout))
+        # names a process environment may hold but an agent's cannot (an exported bash function: BASH_FUNC_x%%)
         env = {k: v for k, v in os.environ.items()
-               if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES)}
+               if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
         env.update(dict(launch.env_set))
         env_file = adir / "agent.env.json"
         atomic_write(env_file, _env_file(env), 0o600)            # secrets live only in this 0600 file
@@ -105,8 +111,8 @@ class M3Attempts:
 
     def _brief(self, attempt: AttemptRef, request: m3.StartRequest, note: str) -> m3.Brief:
         plan = self.plan_for(attempt)
-        if self.briefs_for is not None:
-            brief = self.briefs_for(plan).brief(request)
+        if self.briefs_for is not None:                  # the legacy owner's sections (adapters/briefs.py)
+            brief = self.briefs_for(attempt, plan, note).brief(request)
         else:
             spec = next(t for t in plan.tasks if t.id == attempt.task_id)
             brief = m3.Brief(title=str(spec.meta.get("title", spec.id)), objective=str(spec.meta.get("objective", "")),
@@ -142,8 +148,25 @@ class M3Attempts:
                                    when=when, patch_max=PATCH_MAX, mode="snapshot",
                                    declared_paths=tuple(task.expected_paths))
         changed = tuple(line.split("\t", 1)[-1] for line in manifest.get("changed", ()) if isinstance(line, str))
+        oversized = size_guard.check(attempt, prepared.repository, prepared.base_sha, manifest.get("snapshot_sha"),
+                                     self.telemetry)
         return Snapshot(snapshot_sha=manifest.get("snapshot_sha"), base_sha=prepared.base_sha, changed_paths=changed[:500],
-                        manifest_path=prepared.attempt_dir / "handoff" / "manifest.json")
+                        manifest_path=prepared.attempt_dir / "handoff" / "manifest.json", oversized=oversized)
+
+
+def _continuation(ws) -> str:
+    """What the legacy retry continuation tells an agent whose tree is an earlier attempt's snapshot (`m3 snapshot
+    <attempt>` commits, written by `handoff.capture`): its files are kept and must be checked, not redone."""
+    import subprocess
+    done = subprocess.run(["git", "-C", str(ws.repo), "log", "-1", "--format=%s", ws.base_sha], capture_output=True,
+                          text=True, check=False)
+    subject = done.stdout.strip() if done.returncode == 0 else ""
+    if not subject.startswith("m3 snapshot "):
+        return ""
+    return (f"Continue the preserved files of this task's earlier attempt {subject.split()[-1]} (snapshot "
+            f"{ws.base_sha[:12]}): your tree starts from its result. Fix what the notes say failed, keep what is "
+            "correct, and recheck the complete frozen acceptance and verification instructions. No private "
+            "conversation or agent reasoning is transferred.")
 
 
 def _m3_route(route: Route) -> m3.Route:

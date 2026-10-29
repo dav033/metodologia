@@ -46,8 +46,9 @@ In a **new project**, these standards plus the default stack apply directly.
   lines, split it by responsibility **first** — that's in scope even on "hazlo directo": put your new code in its
   own module and move the part it belongs to with it. Only a one-line fix may leave the split as a Proposal. Aim
   for files well under 300; functions over ~50 lines are a smell too. The user strongly dislikes giant files; a
-  post-edit hook warns you when a file crosses the line. Edit files with the Edit/Write tools, not shell heredocs
-  or redirections, so the hooks see the change.
+  hook warns you when a file crosses the line (after every edit, and after shell commands inside a git work tree).
+  Prefer the Edit/Write tools for code anyway: the shell check compares with HEAD and cannot see a change you
+  commit in the same command.
 - **Abstraction yes, over-engineering no.** Abstract when it removes real duplication or hides real complexity
   behind a smaller interface. Don't add layers, interfaces, factories, generics or config "for the future". A
   seam with one implementation is usually hypothetical; two real implementations make it real. Ask yourself:
@@ -272,4 +273,6 @@ existing one, use what's there and list what's missing as a proposal in your fin
   claiming done.
 - **CI** running the verify command on every push.
 
-The `metodologia` skill also installs a post-edit hook that warns when an edited file passes 500 lines.
+The `metodologia` skill also installs a hook (`file_guard.py`) that warns when a source file passes 500 lines: after
+edits, and after shell commands for files git shows over the limit that were not over it at HEAD (or grew while
+already over). Durable runs apply the same rule to each attempt's snapshot commit.

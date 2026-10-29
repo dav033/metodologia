@@ -479,12 +479,13 @@ export type SnapshotRun = {
   id: string;
   project: string;
   req: string;
-  /** M1 run status (running, paused, completed, blocked, cancelled) for Scheduler runs; legacy runs report their own status, or idle/running when they have none. */
+  /** M1 run status (running, paused, completed, blocked, cancelled) for Scheduler runs; durable runs use the same words plus failed (their run workflow ended in error); legacy runs report their own status, or idle/running when they have none. */
   state: string;
   /** Deprecated alias window of `state` for older gateways; removed in v2. */
   status: string | null;
   title: string | null;
   active: boolean | null;
+  /** Precondition token for run commands: for durable runs the projection sequence at which the run state last changed; null for other runs. */
   revision: number | null;
   updatedAt: string | null;
   activeAttempt: Attempt | null;
@@ -501,6 +502,8 @@ export type SnapshotTask = {
   /** Latest failed or rejected attempt, for the failure review. */
   reviewAttempt: Attempt | null;
   history: Attempt[];
+  /** Durable runs: the projection sequence at which this task last changed; task commands send it as `precondition.revision` so a command built against an older view is refused. Absent for other runs. */
+  revision?: number | null;
 };
 
 export type SystemSubject = {

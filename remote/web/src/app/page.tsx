@@ -236,7 +236,7 @@ export default function HomePage() {
     const values = new FormData(event.currentTarget);
     void sendCommand(event, { schemaVersion: 1, idempotencyKey: `web-${crypto.randomUUID()}`, type: "retry",
       target: { kind: "task", project: run.project, req: run.req, taskId: task.id },
-      precondition: { state: task.state },
+      precondition: { state: task.state, ...(typeof task.revision === "number" ? { revision: task.revision } : {}) },
       route: { routeId: route.routeId, provider: route.provider, model: route.model, account: route.profile },
       reason: String(values.get("reason") ?? "").trim() }, `${run.req}-${task.id}-retry`);
   }
@@ -289,7 +289,7 @@ export default function HomePage() {
     </form>}
     <div className="actions">
       {(reopenable(task.state) || reviewAttemptId) && <Link className="review-back feed-route" href={`/review?project=${encodeURIComponent(run.project)}&req=${encodeURIComponent(run.req)}&taskId=${encodeURIComponent(task.id)}${reviewAttemptId ? `#attempt-${encodeURIComponent(reviewAttemptId)}` : ""}`}>Ver intento fallido</Link>}
-      {reopenable(task.state) && !task.reopenedForRecovery ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, undefined, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
+      {reopenable(task.state) && !task.reopenedForRecovery ? <form onSubmit={commandForm("reopen", { kind: "task", project: run.project, req: run.req, taskId: task.id }, task.state, task.revision, `${run.req}-${task.id}-reopen`)}><button disabled={!!working}>Reabrir</button></form> : null}
       {task.activeAttempt?.id && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, taskId: task.id, attemptId: task.activeAttempt.id ?? "" }, task.activeAttempt.state ?? task.state, undefined, `${run.req}-${task.id}-cancel`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
     </div>
   </article>;
@@ -313,7 +313,7 @@ export default function HomePage() {
           {run.state === "paused" ? <form onSubmit={commandForm("resume", { kind: "run", project: run.project, req: run.req }, run.state, run.revision, `${run.req}-resume`)}><button disabled={!!working}>Reanudar</button></form> : null}
           {(() => {
             const reopen = runReopen(run);
-            return reopen ? <form onSubmit={commandForm("reopen", reopen.target, reopen.precondition.state, undefined, `${run.req}-reopen`)}><button disabled={!!working}>Reabrir ejecución · {reopen.target.taskId}</button></form> : null;
+            return reopen ? <form onSubmit={commandForm("reopen", reopen.target, reopen.precondition.state, reopen.precondition.revision, `${run.req}-reopen`)}><button disabled={!!working}>Reabrir ejecución · {reopen.target.taskId}</button></form> : null;
           })()}
           {run.activeAttempt?.id && !run.tasks.some((task) => task.activeAttempt?.id === run.activeAttempt?.id) && <form className="cancel-form" onSubmit={commandForm("cancel-attempt", { kind: "attempt", project: run.project, req: run.req, attemptId: run.activeAttempt.id ?? "" }, run.activeAttempt.state ?? run.state, undefined, `${run.req}-cancel-attempt`, { reason })}><label>Motivo <input required value={reason} onChange={(event) => setReason(event.target.value)} maxLength={2000} /></label><button disabled={!!working || !reason.trim()}>Cancelar intento</button></form>}
         </div>

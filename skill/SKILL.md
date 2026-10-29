@@ -151,8 +151,9 @@ current session's profile highlighted, and today's tokens/cost per model, with z
 ## Hooks installed
 
 In `~/.claude/settings.json`: SessionStart / Stop / SessionEnd → `scripts/bitacora.py hook …` (bitácora), and
-PostToolUse on edits → `scripts/file_guard.py` (warns when a source file passes 500 lines). Hooks never fail the
-session on their own errors; if one seems silent, run the script by hand to see why.
+PostToolUse on edits and shell commands → `scripts/file_guard.py` (warns when a source file passes 500 lines; after a
+shell command it compares what git shows changed with HEAD, once per file and session; durable runs check each
+snapshot). Hooks never fail the session on their own errors; if one seems silent, run the script by hand to see why.
 
 ## Subagents installed
 

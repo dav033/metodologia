@@ -32,6 +32,8 @@ CODEX_HOME = HOME / ".codex"
 SKILL_LINK = CLAUDE_HOME / "skills" / "metodologia"
 SCRIPTS = SKILL_LINK.as_posix() + "/scripts"
 MARK = "metodologia"  # any hook whose command mentions this is ours and gets replaced
+# file_guard: edit tools name their file; after a shell command it asks git what changed (Codex: no matcher, all tools)
+GUARD_MATCHER = "Edit|Write|MultiEdit|Bash|PowerShell"
 
 
 def say(msg: str) -> None:
@@ -98,7 +100,7 @@ def claude_hooks(config: Path = CLAUDE_HOME) -> None:
                           "hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "start"), "timeout": 20}]}],
         "Stop": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "stop"), "timeout": 20}]}],
         "SessionEnd": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "end"), "timeout": 15}]}],
-        "PostToolUse": [{"matcher": "Edit|Write|MultiEdit",
+        "PostToolUse": [{"matcher": GUARD_MATCHER,
                          "hooks": [{"type": "command", "command": _cmd("file_guard.py"), "timeout": 10}]}],
     }
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -176,7 +178,7 @@ def _claude_hooks_value() -> dict:
                           "hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "start"), "timeout": 20}]}],
         "Stop": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "stop"), "timeout": 20}]}],
         "SessionEnd": [{"hooks": [{"type": "command", "command": _cmd("bitacora.py", "hook", "end"), "timeout": 15}]}],
-        "PostToolUse": [{"matcher": "Edit|Write|MultiEdit",
+        "PostToolUse": [{"matcher": GUARD_MATCHER,
                          "hooks": [{"type": "command", "command": _cmd("file_guard.py"), "timeout": 10}]}],
     }
 

@@ -251,6 +251,18 @@ An approved revision is immutable, but the work reveals things. Two mechanisms, 
   added, removed}`. The web shows each amended value as `~~medium~~ → high` with who and when, and a timeline of revisions
   and amendments on the plan page.
 
+## Typed contract (REQ-030)
+
+`bt_contracts/plan.py` holds the canonical, versioned Pydantic models of a PLAN.json (1.0.0 to 1.3.0, one per version,
+chosen by `schema_version`); `bt_contracts/schemas/plan.schema.json` is generated from them (`uv run python -m
+bt_contracts.schemas`, a test fails when stale). It decides structure only: closed objects (a renamed key such as
+`req_id` is refused, never ignored), exact types, required fields, enumerations, unique ids, references that resolve,
+an acyclic `after`, consumed contracts produced by the subplan they name, a field only from the version that introduced
+it. Text and evidence quality, coverage totality, task roles and ordering stay with the planner, which remains the
+stdlib adapter (hooks and the bitácora CLI cannot import pydantic). `bt-durable start` and `migrate --apply` refuse a
+frozen plan that breaks it (`PLAN_CONTRACT`) before any owner record, workflow or agent exists.
+`tests/test_plan_contract_models.py` compares every frozen plan of the bitácora with the planner and the runtime loader.
+
 ## Verify
 
 `cd skill/scripts && python3 -m unittest discover -s bt_planner/tests` (the module alone, isolated copy included) and the

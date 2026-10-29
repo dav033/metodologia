@@ -10,6 +10,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from ..legacy import Config, Plan, TaskSpec, claims_for, conflict
+from . import subplans
 
 DONE = frozenset({"completed", "inherited"})
 STOPPED = frozenset({"blocked", "cancelled"})
@@ -24,8 +25,11 @@ class Frontier:
     finished: bool                   # every task is done (nothing left to run)
 
 
-def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config: Config | None = None) -> Frontier:
-    """`states` maps task id -> one of completed|inherited|blocked|cancelled|running (absent = not started)."""
+def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config: Config | None = None,
+            gates: subplans.Gates | None = None) -> Frontier:
+    """`states` maps task id -> one of completed|inherited|blocked|cancelled|running (absent = not started).
+    With `gates` (a 1.3.0 plan whose subplan support is on), composition gates hold their task and what follows it
+    (`subplans.held`); without it the frontier is exactly the pre-subplan one (workflows recorded before the patch)."""
     config = config or Config(max_parallel_tasks=max(1, max_parallel), unknown_surface="allow")
     by_id = {t.id: t for t in plan.tasks}
     running = [by_id[t] for t, s in states.items() if s == "running" and t in by_id]
@@ -40,6 +44,9 @@ def compute(plan: Plan, states: Mapping[str, str], *, max_parallel: int, config:
         if state is not None or task.id in unreachable:
             continue
         if not all(states.get(dep) in DONE for dep in task.after):
+            waiting.append(task.id)
+            continue
+        if gates is not None and subplans.held(plan, states, gates, task.id):
             waiting.append(task.id)
             continue
         wanted = claims_for(task, config)

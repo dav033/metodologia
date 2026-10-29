@@ -231,10 +231,10 @@ def _build(data: object, digest: str, want_id: str | None, want_revision: int | 
             verification = []
         if schema_1_2:
             allowed_kinds = TASK_KINDS_13 if schema_1_3 else TASK_KINDS
-            if item.get("kind") not in allowed_kinds:
+            if not isinstance(item.get("kind"), str) or item["kind"] not in allowed_kinds:
                 issues.append(f"{tid}: kind must be one of {', '.join(sorted(allowed_kinds))}")
             for check_index, check in enumerate(verification):
-                if check.get("category") not in VERIFICATION_CATEGORIES:
+                if not isinstance(check.get("category"), str) or check["category"] not in VERIFICATION_CATEGORIES:
                     issues.append(f"{tid}: verification[{check_index}].category must be one of "
                                   f"{', '.join(sorted(VERIFICATION_CATEGORIES))}")
         if schema_1_3:

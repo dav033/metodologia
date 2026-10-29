@@ -1,12 +1,14 @@
 """A fake `claude` CLI for the durable-runtime tests (real process, real files, real git worktree).
 
 Behaviour comes from `SCENARIO:<name>` in the prompt (the last argument). Every start appends one line to
-$FAKE_COUNT, so a test can prove an attempt was launched exactly once even across engine crashes.
+$FAKE_COUNT, so a test can prove an attempt was launched exactly once even across engine crashes, and on which
+account (its CLAUDE_CONFIG_DIR) it ran.
 """
 from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -15,11 +17,16 @@ from pathlib import Path
 
 prompt = sys.argv[-1] if len(sys.argv) > 1 else ""
 scenario = next((w.split(":", 1)[1].strip(".,;") for w in prompt.split() if w.startswith("SCENARIO:")), "ok")
+found = re.search(r"## Task (\S+?):", prompt)
+task_id = found.group(1) if found else ""
 count = os.environ.get("FAKE_COUNT")
 if count:
     with open(count, "a", encoding="utf-8") as stream:
-        stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(),
-                                 "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt}) + "\n")
+        # `seen`: the task files already in the tree it started from (which line or candidate it was given)
+        stream.write(json.dumps({"cwd": os.getcwd(), "scenario": scenario, "pid": os.getpid(), "task": task_id,
+                                 "seen": sorted(p.name for p in Path(".").glob("*.task")), "at": time.time(),
+                                 "remediation": "REMEDIATION" in prompt, "has_note": "Decisive lines" in prompt,
+                                 "account": os.environ.get("CLAUDE_CONFIG_DIR", "")}) + "\n")
 
 
 def done(text: str = "done") -> None:
@@ -33,7 +40,29 @@ if scenario == "ok":
     Path("out.txt").write_text("good\n")
     time.sleep(float(os.environ.get("FAKE_DELAY", "0.2")))
     done()
+elif scenario == "own":                         # leaves a file of its own, so each line's content is visible
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
+    done()
+elif scenario == "fixk":                        # scenario K: the defect is fixed only by a coordinated repair
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
+    if "REMEDIATION" in prompt:
+        Path("fixed-k.txt").write_text("F1 and F2 fixed together\n")
+    done()
+elif scenario in ("auditk", "auditnever"):       # a read-only audit: its report and findings ledger, nothing else
+    fixed = scenario == "auditk" and Path("fixed-k.txt").exists()
+    findings = [{"id": f"F{n}", "severity": "high", "summary": summary, "tasks": ["T1"],
+                 **({"status": "fixed", "evidence": "$ test -f fixed-k.txt -> exit 0"} if fixed else
+                    {"status": "open", "evidence": "$ test -f fixed-k.txt -> exit 1"})}
+                for n, summary in ((1, "the session is not invalidated on logout"),
+                                   (2, "the same session survives a password change"))]
+    Path("docs").mkdir(exist_ok=True)
+    Path(f"docs/{task_id}.md").write_text(f"# Audit {task_id}\n\n{'fixed' if fixed else 'two related defects'}\n")
+    Path(f"docs/{task_id}.findings.json").write_text(json.dumps({"schema": "audit-findings/1", "findings": findings}))
+    done()
 elif scenario == "fixlater":                    # wrong first, right when it continues from its own snapshot
+    time.sleep(float(os.environ.get("FAKE_FIXLATER_DELAY", "0")))
     if Path("attempt-marker.txt").exists():
         Path("out.txt").write_text("good\n")
     else:
