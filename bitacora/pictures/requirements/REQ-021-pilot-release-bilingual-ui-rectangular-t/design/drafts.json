@@ -2633,6 +2633,49 @@
    "summary": "Finalized the owner-selected Parte de acceso (a), r14, as the complete twelve-section cuentas-admin@v1 draft and rebuilt its canonical HTML using the current offline builder. Composition and motion are preserved; independent contract approval remains outstanding.",
    "ui_digest": "04b1c41557084c57"
   },
+  "decoraciones@v1": {
+   "attempt": 1,
+   "behavior": "decoraciones@v1.r1.behavior.md",
+   "chosen": null,
+   "comparison": null,
+   "continuation_choice": null,
+   "delegation": "D-20261029-065548-465a",
+   "digest": "f47a7057a2efce5d",
+   "directions": [
+    {
+     "delegation": "D-20261029-065548-465a",
+     "id": "a",
+     "revision": 1,
+     "seed": "Operational: dense working information in the existing shell; hierarchy by type scale and grouping, precise quick transitions.",
+     "status": "drafting"
+    },
+    {
+     "delegation": "D-20261029-065548-0646",
+     "id": "b",
+     "revision": 1,
+     "seed": "Spatial: the same product shell with a different arrangement of the changed area (panels, inspector, canvas), alternative in-page navigation, spatial transitions.",
+     "status": "drafting"
+    },
+    {
+     "delegation": "D-20261029-065548-6fc6",
+     "id": "c",
+     "revision": 1,
+     "seed": "Direct manipulation: the same product shell with in-place editing, progressive disclosure and tactile press/settle feedback on the changed controls.",
+     "status": "drafting"
+    }
+   ],
+   "error": "",
+   "feedback": [],
+   "feedback_batch": [],
+   "fresh": false,
+   "iterate_from": null,
+   "phase": "explore",
+   "reason": "focus",
+   "started": "2026-10-29T06:55:44-05:00",
+   "status": "drafting",
+   "subplan_id": "SP-5",
+   "ui_digest": "70f7add31e4b1bff"
+  },
   "planes@v1": {
    "approved": "2026-10-27T18:48:34-05:00",
    "attempt": 4,
@@ -9261,12 +9304,14 @@
      "when": "2026-10-26T19:36:03-05:00"
     },
     {
+     "consumed": "D-20261029-063007-3e47",
      "id": "96a5b6dfff3718af",
      "text": "Rebuild the mockup on the david-ui stand-in kit, as the owner asked: read agents/designer/skills/david-ui-kit/SKILL.md and compose every screen from the kit's snippets (kit/components/*), inline the kit with kit/inline.py, keep the view/state/scene/theme selects, keep the contract's behavior, views, states and criteria. Then run kit/audit_mockup.py and fix what it reports until it passes (or say AUDIT NOT RUN). Owner complaints to resolve: off-centre blocks (footer on another x than a centred form), cramped padding, dark-theme contrast incl. control edges and native checkboxes.",
      "via": "cli",
      "when": "2026-10-26T21:01:40-05:00"
     },
     {
+     "consumed": "D-20261029-063007-3e47",
      "direction": null,
      "id": "9474e736e49409e4",
      "text": "Owner verdict on round 1 (all three contracts): the directions differ in structure, but they share the same purple-on-near-white look and calm motion, which reads as a safe SaaS default. Redo EVERY direction as a distinct visual world, taking real risks: (1) its own colour logic and palette per direction (no shared accent across A/B/C, not the Pictures purple by default; avoid cream+terracotta, purple gradients, acid-green-on-black); (2) its own type pairing with character per direction (different families, a display face with personality, scale used expressively); (3) its own shape, material and texture language (derived from the product world: Sempertex balloons, event decoration, tactility, inflatable/foil/latex, party light; not generic cards); (4) motion as a first-class part of the design: page-load choreography, view-to-view transitions, hover/press/focus micro-interactions, state-change transitions, ambient or scroll motion, at least six distinct animated behaviours per direction, each direction with its own motion language (easing family, timing, choreography), expressive profile by default, full prefers-reduced-motion degradation and AA contrast mid-animation. Do not carry over round-1 structure unless it earns its place; the previous round stays in history. Use the anti-slop guidance and direction library in the kit (huashu-style six-thumbnails-to-three, emil-kowalski motion craft, taste/impeccable tells). The mockups must still pass kit/audit_mockup.py and compare_directions.py.",
@@ -9278,7 +9323,7 @@
     "96a5b6dfff3718af",
     "9474e736e49409e4"
    ],
-   "finished": "2026-10-28T08:40:52-05:00",
+   "finished": "2026-10-29T06:40:55-05:00",
    "fresh": false,
    "history": [
     {
@@ -9305,6 +9350,11 @@
      "at": "2026-10-26T19:49:07-05:00",
      "rev": 5,
      "summary": "Rebuilt the saved-projects mockup visual layer to address the owner’s 19:36 feedback while preserving all views, states, flows and existing criteria. Updated the twelve-section proyectos@v1 draft with screen questions, visual decisions, consumer impact and ten additional visual criteria. The draft awaits owner approval with the plan."
+    },
+    {
+     "at": "2026-10-29T06:40:55-05:00",
+     "rev": 6,
+     "summary": "Finalized the owner's selected Edición en contexto (c) as the canonical proyectos@v1 twelve-section draft and rebuilt HTML. Composition and motion are preserved; the contract is not approved."
     }
    ],
    "iterate_from": null,
@@ -9315,13 +9365,13 @@
    "queued": "2026-10-26T21:35:06-05:00",
    "reason": "focus",
    "report": "claimed",
-   "revision": 5,
+   "revision": 6,
    "selected_sha256": "403ac3672d0c14edf9f280ba26368b971bc09ce8227acd9ea9649db9236b465f",
-   "sha256": "230bbe8df3b8f8206fed1376fdc0f9c13a826d7d07c6dab42ec8ecc59d9d9e10",
+   "sha256": "0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897",
    "started": "2026-10-29T06:30:07-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-4",
-   "summary": "the delegation's process died before writing an outcome (killed, for instance by restarting the service that started it)",
+   "summary": "Finalized the owner's selected Edición en contexto (c) as the canonical proyectos@v1 twelve-section draft and rebuilt HTML. Composition and motion are preserved; the contract is not approved.",
    "ui_digest": "efc4338fbf71ccd6"
   }
  },

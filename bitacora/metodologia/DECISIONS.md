@@ -1444,3 +1444,23 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   the old path; − the composition proof is weaker than the legacy one (documented in the README).
 - **Evidence:** `test_durable_subplans`, `test_durable_briefs`, `test_durable_attestations`, `test_durable_upgrade`,
   `test_durable_e2e.test_a_paused_run_starts_no_retry_until_it_is_resumed`; REQ-030 `REPORT.md`.
+
+## D-146 — The Designer drafts every subplan with tasks in parallel, not only the one in focus
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-130 (its «Designer only on the focused UI subplan»)
+- **Context:** on pictures REQ-021 the owner chose SP-4's direction and opened SP-5, whose tasks were written, but no
+  Designer started: the flow only drafted the focused subplan, and `bt_design_drafts.request` allowed one Designer batch
+  per requirement, so SP-5..SP-7 would each have waited for the previous design and for the owner's confirmation.
+- **Decision:** under collaborative planning the Designer works by itself, in parallel, on the subplan in focus and on
+  every other unconfirmed UI subplan that already has tasks (`bt_planning_flow.design_scope`); confirming the skeleton,
+  confirming a subplan or moving the focus starts all of them at once (`_design`). A subplan without tasks still waits
+  for its focus (there is nothing settled to design yet). The concurrency limit is one Designer batch per subplan, never
+  per requirement: requesting, iterating, amending and owner feedback wait only for the same subplan's Designer.
+- **Consequences:** + the owner reviews designs as soon as subplans are defined, without waiting one by one;
+  − several direction batches can run at once (more quota at the same time); `.planning/designers.paused` still stops
+  every automatic run.
+- **Source:** owner, 2026-10-29 («¿por qué un Designer tendría que quedar libre? Perfectamente pueden paralelizar …
+  quiero que sea el comportamiento normal»).
+- **Evidence:** `test_planning_flow` (`test_designer_waits_for_the_skeleton_then_designs_every_subplan_with_tasks`,
+  `test_a_subplan_without_tasks_waits_for_its_focus`, `test_designers_of_different_subplans_work_in_parallel`),
+  `test_design_amend`, `test_design_directions`; red on `main` `2d354a955`, green on branch `designer-parallel`.

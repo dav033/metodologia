@@ -5,362 +5,302 @@ status: draft
 subplan: SP-4
 requirements: [R6, R7]
 owner: David
-designer: Codex
-date: 2026-10-26
+author: Designer (Codex)
+date: 2026-10-29
+direction: c
+name: Edición en contexto
+source_revision: r12
+source_behavior: proyectos@v1.r12.behavior.md
+plan_revision: 15
 ---
 
-# proyectos@v1 — Saved projects
+# proyectos@v1 — Edición en contexto
 
 ## 1. Identity and traceability
 
-Planning draft for REQ-021 / M2 / SP-4, covering R6, R7 and US-3. **Not approved for implementation.** The owner approves this draft with the plan; the Designer grants no approval. This is the first version, with no approved predecessor; this revision preserves the existing planning draft and the accepted round 9 answers. This revision addresses the owner’s 2026-10-26 21:01 feedback: rebuild every view from the david-ui stand-in template and component snippets, retaining the agreed flows, views, states and criteria. Project colors map onto kit roles; component CSS/JS is inlined unchanged. Alignment, padding, dark control edges and the ownership checkbox are explicit review targets. The earlier pending-save and dialog-focus corrections remain in place. SP-2 remains the planning focus: this work neither confirms SP-4 nor changes plan approval. The companion `proyectos@v1.html` is a self-contained planning mockup, not `design/preview/` or a product implementation. No network requests, external fonts or images, backend or real customer data are used.
+Canonical planning **draft; not approved for implementation**. The owner chose direction c, “Edición en contexto”, through the web comparison. Direction choice authorizes this finalization; it does not approve the contract, subplan or plan. This is version 1, with no approved predecessor being changed. The only design outputs of this task are `design/proyectos@v1.md` and `design/proyectos@v1.html`; the required delegation RESULT is administrative evidence. No exploration, history, SPEC, PLAN, production file, contract changelog or preview is changed.
 
-Source snapshot read on 2026-10-26:
+Scope: REQ-021 / M2 / SP-4 “Saved projects”, R6/R7 and US-3, from current SPEC (status ready), PLAN.json revision 15, `proyectos@v1.r12.behavior.md` and the chosen r12 direction's Markdown, TSX and HTML. SPEC § “Behavior — SP-3 and SP-4 (round 9 answered)” settles explicit first save followed by autosave, scene/name persistence, foreign-original read-only access, lossless import, collection-wide search and new-unsaved-project transitions. This contract specifies their UI, not a new persistence or authorization API.
 
-| Input | Revision / SHA-256 |
-|---|---|
-| SPEC.md, status ready | `65b1e5ecc06f20d97fe6151dacc30d0bec0d7d0736aaa95db7a1c9af1b44f5e4` |
-| PLAN.md, status draft | `cc7e53f2abf3c23c1bb8cde797cabf6005719d2dd8183295595a0a2bf5c18ca3` |
-| PLAN.json, schema 1.3.0, revision 1 | `7a2c833a7e711508d0a3bc96edb2d3f0d42ff6fe57a6370f62ce0d438338ffc8` |
+| Requirement | Contract coverage | Consuming tasks |
+|---|---|---|
+| R6 — save under account, reopen unchanged; staff/admin open authorized projects | V1–V4, F1–F6, save/list/conflict/recovery states and UI-AC-01–19, 24–29 | T4.4; visual review T4.8 |
+| R7 — explicit browser-scene import without loss | V5, D6, F7, import states and UI-AC-20–23 | T4.5; visual review T4.8 |
 
-Exact consumer: SP-4 `ui.contract=proyectos`, `ui.version=1`, `design_task=T4.1`, `visual_review_task=T4.8`. UI consumers: **T4.4** (V1–V4, D1–D3, saving and local drafts) and **T4.5** (V5 import). T4.2/T4.3 own versioned project-document@1, validation, authorization, durable mutation/import receipts and paginated APIs; T4.31 is the required storage checkpoint before UI work. T4.6/T4.7 exercise real cross-browser integration, T4.8 independently reviews visual fidelity and T4.9 audits spec/standards. These tasks remain draft; round 9 behavior is settled, while design/subplan approval remains pending. SP-1 owns authentication and permission semantics; SP-2 owns the shared account menu. SP-6/SP-12 consume project identity, not this UI contract automatically. SP-8/SP-10 own language rollout. SP-5's library remains separate. SP-13 consumes the accepted saved-work release flow.
+Exact PLAN consumers: SP-4 `ui.contract=proyectos`, `ui.version=1`, `design_task=T4.1`, `visual_review_task=T4.8`; UI implementation tasks T4.4 (list, saving, new scene, conflict, read-only) and T4.5 (import). T4.1 copies the owner-approved artifact only after independent approval. T4.2/T4.3 and T4.31 own/check storage and authorization; T4.6/T4.7 verify the real cross-browser behavior; T4.9 audits spec and standards. SP-6/SP-12 consuming project identity does not make them consumers of this visual contract.
 
-Version record, embedded because this delegation permits only the two named design files: **2026-10-26, owner feedback 21:01 — kit reconstruction.** Compatibility: **compatible visual change** against this unapproved draft: same product permissions, navigation, flows F1–F6, six view variants, 26 states and D1–D3. The shell, cards, fields, selectors, buttons, alerts, badges, checkbox, dialogs and notifications now use the kit anatomy. New project-specific layout/illustration/native-modal proposals preserve the declared breakpoints. Import destination, consent and retention/download footnote share one left edge within the same readable column. Primary action occurs once per active view; the empty library no longer repeats it in its heading. Impact: T4.4, T4.5 and T4.8; T4.1 must copy the owner-approved snapshot. T4.2/T4.3 storage/query contracts are unchanged. Approval remains with the owner; this is not an approved implementation dependency. Prior draft revision records follow. **2026-10-26, owner feedback 19:36 — full visual-layer rebuild**. Compatibility: **compatible visual change** against this unapproved draft: V1–V5/V4b and D1–D3 retain their content, destinations, permissions, interaction model, state vocabulary and breakpoint structure. Neutral shell/navigation, flat ruled notices and import/conflict groups, compact sentence-case typography, consistent inline SVG, and right-aligned tabular save figures replace the earlier tinted chrome, uppercase eyebrows, nested cards and decorative empty-state glyph. Existing semantic palette remains unchanged. Affected consumers: SP-4 T4.4 (V1–V4b/D1–D3), T4.5 (V5), and independent T4.8 rendered review; T4.1 copies this exact draft after owner approval. No API/storage change or new dependency is implied for T4.2/T4.3; T4.6/T4.7 still own real runtime evidence. No approved implementation is claimed compatible without T4.8 review. Required action: owner approval together with the plan, then implementation/rendered review. Earlier revision record retained: current inspection revision — no product behavior or layout change; the mockup now applies the existing dirty/pending/unknown departure guard to “Nuevo proyecto” and keeps the originating focus target across D2 → D1/D3, with an in-context fallback if that target no longer exists. D3 now displays its existing pending/unknown/offline reason beside the disabled save-and-continue action. Compatibility: **compatible correction against this same draft contract**; affected UI consumer T4.4, F4 and D1–D3. T4.8 must verify both behaviors in production implementation. Markdown table continuity is repaired for all states and visual criteria. Previous draft revision record follows unchanged: 2026-10-26 — preserve the initial draft and static mockup; revise after 18:53 owner/Planner feedback. Compatibility: **breaking behavior relative to the prior planning mockup** for V1/V2 search/pagination, now modeled across more than 50 fixtures with normalized query boundaries, filter reset, late-response rejection and next-page recovery. Resolving provisional save/content/copy copy preserves the intended V3–V5/D1–D3 design. **Undetermined** against production: server persistence is new; no approved consumer exists to migrate. Exact affected consumers: SP-4 T4.4 (V1/V2 queries, V3/V4 save/copy states and D1), T4.5 (V5 complete-scene import explanation), T4.6/T4.7 (integration evidence) and T4.8 (rendered review); T4.2/T4.3 supply the settled document/query contracts. Shared tokens, breakpoints and unaffected layouts remain unchanged. Required action: owner approval of this draft with the plan, T4.1 byte-identical copy, then implementation and independent T4.8 review of full-staff and read-only custom-role variants. No separate CHANGELOG or PLAN edits are authorized in this delegation; this record carries the required draft impact assessment. Do not promote this draft to approved.
+**Impact:** composition is breaking relative to the superseded, unapproved canonical draft: stacked expandable bands, contextual details and inline name editing require T4.4 adaptation and T4.8 rendered review. Import presentation affects T4.5/T4.8. Relative to selected r12 c the composition, navigation and motion are preserved; the current builder incorporates kit runtime updates. No source-level behavioral change was required. Compatibility with any approved production implementation is undetermined; none is claimed. Do not redirect plan references, publish into `design/contracts/`, approve, or implement this draft in this delegation.
+
+Read-only product evidence: t12 `src/app/globals.css`, `layout.tsx`, `/3d/page.tsx`, `Taller3D.tsx` and `guardado-escena.ts`, plus the supplied UI brief and sibling `cuentas-admin@v1` / `planes@v1` contracts. Existing Taller already has an inline scene name, local save status, tools and a 500 ms browser-save debounce. Project storage/list/identity/import/conflicts are new. Existing browser save text is not proof of account persistence. The selected TSX is rebuilt unchanged using the installed offline builder, not copied from its older generated HTML.
 
 ## 2. Purpose and users
 
-| View | User / goal | Observable success |
-|---|---|---|
-| V1 My projects | A signed-in account with own-project access finds saved work | Opens the chosen server project and continues the same scene on another browser |
-| V2 All projects | An employee/admin, or custom role with the corresponding permission, finds another account's project | Owner is explicit in every row/card and the selected project opens without changing its owner |
-| V3 Own project in Taller | An authorized owner saves and continues work | Server acknowledgment identifies the saved project and time; failure never appears as saved |
-| V4 Another owner's project, read-only | Authorized staff inspect saved work | Owner and viewing mode remain visible; foreign original remains read-only and a personal copy requires `taller.usar` |
-| V5 Browser import review | A signed-in person decides whether a local scene belongs to them | Explicit import creates an account-owned server project; original browser data survives every outcome |
+V1 answers “Which saved scene do I want to continue?” V3 answers “What is this project called, and are these changes saved to my account?” Editing the name, checking the save boundary and resolving a failure keep the scene visible in context. Success is reopening the complete saved scene under the same account in another browser, while clearly distinguishing pending local work from confirmed account data.
 
-Each screen has one question and one main job; these decisions drive its largest block and primary action:
+Owners list, search, save and continue their own projects. Employees/administrators with `proyectos.ver_todos` may filter authorized owners and open foreign originals read-only; `taller.usar` additionally permits an owned copy. A custom role with read-all but without Taller permission remains read-only and cannot copy. A person using a shared browser chooses explicitly whether its legacy scene should enter the currently signed-in account. Opening or previewing a foreign project never changes its owner.
 
-| Screen | One question | Main job / visual answer |
-|---|---|---|
-| V1 | “Which decoration project do I want to continue?” | Find and open a saved scene from the project grid; “Nuevo proyecto” is the single colored action. |
-| V2 | “Whose project am I looking for?” | Search/filter authorized projects with the owner visible on each peer card. |
-| V3 | “Are my scene changes saved in my account?” | Continue the scene with a persistent truthful save status beside its save action. |
-| V4 / V4b | “Whose scene is this, and what can I do with it?” | Inspect the original read-only; only eligible accounts can create a personal copy. |
-| V5 | “Is this browser scene mine, and which account will receive it?” | Review source and destination, then explicitly consent to import. |
-| D1 | “What will this project be called in my account?” | Name and save it, with the destination account visible. |
-| D2 | “How do I preserve my work when another version was saved?” | Compare two plainly labelled version rows and choose a safe resolution. |
-| D3 | “How can I leave without losing these changes?” | Save, keep an account-scoped local draft, or stay; disabled choices explain why. |
-
-V4b is the same read-only project view for a custom role with `proyectos.ver_todos` but without `taller.usar`: no Taller navigation, own-project actions or copy action.
-
-R6 maps to V1–V4 (including V4b), F1–F4 and UI-AC-01–15. R7 maps to V1/V5, F5 and UI-AC-16–19. Concurrency maps to D2/F3; permission changes to S8/F4. Names, account names and dates in the mockup are fictional fixtures.
+Only the project name and complete scene travel between browsers, including room, environment, salon, materials and scene-node relationships. The AI conversation and generated images remain in their browser. Existing Taller tools, shell, navigation and identity remain outside the redesign. No delete, transfer, merge, public sharing or version-history interface is added.
 
 ## 3. Information architecture and hierarchy
 
-Project library: shared Pictures shell → section navigation → title and one primary action (“Nuevo proyecto”) → optional browser-import notice → name search (and owner filter in V2) → result count/order → projects. Each project shows a nonessential scene illustration, name, last server-save time, owner in V2, and “Abrir proyecto”. Most recent save first (`updatedAt DESC`, then `id DESC`); no unsupported business metrics or prices. A missing thumbnail uses a neutral scene placeholder; it never blocks opening. No thumbnail-generation AI is implied.
+Keep the Pictures/Sempertex masthead, language/account controls, title/action row and neutral horizontal route rule established by the sibling contracts. The route destinations are Taller 3D and Proyectos; this scope does not replace the application's global navigation. In V3 retain the Taller toolbar, panel rail, scene/IA inspector, undo/redo, realistic-photo and shopping-list vocabulary as existing context.
 
-Taller: back to library → project name and owner/mode → truthful save status → “Guardar proyecto” / “Guardar ahora” → existing workspace. Keep scene objects, dimensions and placement as the work, not an extra project dashboard. “Guardar decoración” belongs to SP-5 and must remain distinctly labelled; it cannot serve as the project-save action. Project metadata stays outside the 3D canvas and is available to assistive technology.
+V1/V2 order: title and Escena nueva; route navigation; labelled project-name search and, only for authorized staff, owner filter; import review/recovery entry when applicable; authorized project bands; pagination status/retry/load-more. Do not infer an owner filter from a client-selected role: server authorization determines the available scope.
 
-Import review: provenance (“Solo en este navegador”) → destination signed-in account → local scene name and validation result → explicit ownership checkbox → import action → result and recovery. Never suggest that a scene on a shared browser necessarily belongs to the current account.
+Projects are full-width collapsible bands. Name, owner/save/read-only metadata and Ver escena/Abrir remain in the band header. Ver escena reveals its scene and account-versus-browser explanation inside that same band; a second preview closes the first. At most one is open. Preserve the selected composition's first authorized project initially expanded; if there is no result, none is expanded. Changing search or owner closes the preview and resets pagination. A preview is a local presentation aid and does not mark a project open for editing.
 
-No deletion, sharing, folders, collaboration, project history browser, global publication or bulk actions are introduced. Existing in-scene name editing remains; no separate rename flow is added.
+In desktop expanded bands, scene and explanation form a 1.8:1 layout; on phone they stack. “Qué se guarda” reveals the detailed persistence boundary at the point of use. In V3, the scene name itself becomes the input in the same header location. The current save state is adjacent to the identity, with first-save/Save now controls, and contextual failures appear immediately above the scene. In V4 the owner/read-only banner precedes the scene and optional owned-copy action. Import consent is a dialog, reached from V5's notice or list entry.
+
+The selected candidate is the in-place band composition from r12 c. Candidate alternatives are historical inputs, not additional screens or deliverables. The canonical HTML retains native Vista/Estado/Diálogo/Tema/Movimiento inspectors outside the product shell. Their labels, revision marker and Mockup data notices identify a planning artifact, not production UI requirements.
 
 ## 4. Design system and visual language
 
-Read-only evidence: `t12` HEAD `fb872bce` and `pictures`/asesor HEAD `fa101a47`, `src/app/globals.css`, `src/app/layout.tsx`, `src/components/tres-d/{Taller3D.tsx,ui-taller.ts,DialogoTaller.tsx,guardado-escena.ts,archivo-escena.ts}` and shared `src/components/ui/shell/CabeceraApp.tsx`. Both repositories use the same semantic palette. Existing product design takes precedence over desktop preferences. The accounts draft `cuentas-admin@v1` is a consistency reference, not an approved dependency.
 
-| Existing token | Light | Dark | Role |
-|---|---|---|---|
-| `--fondo`, `--superficie` | #faf9fc / #ffffff | #0b0c10 / #16181f | canvas, panels |
-| `--superficie-suave`, `--superficie-2` | #faf8fd / #efe9f8 | #1c1e26 / #242733 | inset areas, secondary fill |
-| `--texto`, `--texto-suave`, `--texto-tenue` | #1c1425 / #6b6178 / #766c85 | #f4f5f7 / #9aa1ad / #8a91a0 | text hierarchy |
-| `--borde`, `--borde-suave` | #e3daef / #efe9f8 | #383c48 / #2a2d38 | panel borders, dividers |
-| `--acento`, `--acento-hover`, `--acento-suave` | #6d3fe0 / #5530b8 / #ece3fb | #9479ff / #a58dff / #241f3d | actions, hover, selection |
-| `--sobre-acento` | #ffffff | #120b24 | text on primary; do not use white in dark library buttons |
-| `--exito`, `--exito-suave` | #1f7a55 / #dcf5e9 | #78d6a8 / #173b31 | acknowledged save/import |
-| `--error`, `--error-suave` | #b23a45 / #ffeaec | #ff979f / #43252a | error |
-| `--aviso`, `--aviso-suave` | #8f5f12 / #fff3d8 | #f7c46b / #3f311c | unsaved, offline, conflict |
-| `--overlay` | rgb(28 20 37 / .4) | rgb(0 0 0 / .6) | modal backdrop |
+Project tokens are mapped onto the real kit's semantic roles; there is no new palette or font family.
 
-The production source remains read-only. Production typography remains Geist sans (`--font-sans`, `--font-geist-sans`); the offline mockup uses the kit's system sans fallback, with mono only for identifiers. Existing `.taller-3d` scoped `--taller-*` tokens and `DialogoTaller` semantics remain production references; this static contract does not rewrite the 3D editor or shared components.
-
-The planning HTML starts from `kit/templates/mockup.html`, keeps `.mockup-bar`, its labelled native view/state/scene/theme selects and “Mockup” label, and inlines the current `tokens.css`, `components.css` and `kit.js` using the kit's `inline.py`. A single project style block follows the kit. It maps the following semantic roles; components retain their kit anatomy, padding and state rules.
-
-| Kit role | Existing Pictures source / mapping | Reason |
+| Project source | Kit responsibility | Light / dark |
 |---|---|---|
-| `--background`, `--foreground` | `--fondo`, `--texto` | Canvas and primary text |
-| `--card`, `--popover`, corresponding foregrounds | `--superficie`, `--texto` | Working surfaces and floating layers |
-| `--primary`, `--primary-hover`, `--primary-foreground`, `--ring` | `--acento`, `--acento-hover`, `--sobre-acento`, `--acento` | One primary action; dark primary uses dark text, never white |
-| `--secondary`, `--muted`, `--accent` | `--superficie-2` | Neutral secondary fill and selection; accent here is a kit interaction role, not Pictures' brand-accent token |
-| `--secondary-foreground`, `--accent-foreground` | `--texto` | Neutral readable actions and navigation |
-| `--muted-foreground` | `--texto-suave` | Supporting text, including dark mode |
-| `--border` | `--borde` | Decorative separation, not a control-identification edge |
-| `--input` | proposed control-border alias to `--texto-tenue`: light #766c85; dark #8a91a0 | ≥3:1 meaningful control edge; the source decorative border alone cannot identify a control |
-| `--success`, `--warning`, `--destructive` | `--exito`, `--aviso`, `--error` | State text with an explicit status word |
-| `--info` | `--acento` | Informational status |
-| `--primary-soft`, `--success-soft`, `--warning-soft`, `--destructive-soft`, `--info-soft` | `--fondo` | Neutral notices/groups preserved from previous owner feedback |
-| `--destructive-foreground` | light #ffffff; dark #3a0f13, as in source | Text on error actions; destructive hover retains the same measured fill |
-| `--sidebar`, `--sidebar-foreground`, `--sidebar-accent`, `--sidebar-accent-foreground`, `--sidebar-border`, `--sidebar-ring` | `--fondo`, `--texto`, `--superficie-2`, `--texto`, `--borde`, `--acento` | Quiet navigation; active item has a neutral fill |
-| `--radius`, `--spacing` | .8rem; kit .25rem spacing unit | Existing Pictures radius; 4px rhythm |
-| `--control-h`, `--control-h-sm`, `--control-h-lg` | proposed 2.75rem for project actions | Preserve the existing contract's 44px targets at every width |
+| `--fondo` | background | #faf9fc / #0b0c10 |
+| `--superficie` | card, popover | #ffffff / #16181f |
+| `--superficie-suave` | subtle local group | #faf8fd / #1c1e26 |
+| `--superficie-2` | secondary, muted, accent | #efe9f8 / #242733 |
+| `--texto` | foregrounds | #1c1425 / #f4f5f7 |
+| `--texto-suave` | supporting copy | #6b6178 / #9aa1ad |
+| `--texto-tenue` | accessible control edge, inherited sibling alias | #766c85 / #8a91a0 |
+| `--acento`, `--sobre-acento` | primary / text on primary | #6d3fe0, #ffffff / #9479ff, #120b24 |
+| `--acento-hover` | primary hover role | #5530b8 / #a58dff |
+| `--borde`, `--borde-suave` | decorative outline / divider | #e3daef, #efe9f8 / #383c48, #2a2d38 |
+| `--exito`, `--exito-suave` | success roles | #1f7a55, #dcf5e9 / #78d6a8, #173b31 |
+| `--aviso`, `--aviso-suave` | warning roles | #8f5f12, #fff3d8 / #f7c46b, #3f311c |
+| `--error`, `--error-suave` | error roles | #b23a45, #ffeaec / #ff979f, #43252a |
+| `--taller-visor`, `--taller-panel`, `--taller-encima` | existing workshop scene context | #ebe7f1, #faf9fc, #f3eefb / #1a1722, #16131d, #231e2e |
 
-Use the kit typography hierarchy: H1 24px/1.25; H2 20px/1.3; card title 16px; body 14px/1.5; metadata 12px. Sentence case, no tracked uppercase headings. Save figures use tabular numerals. Gaps come from `.stack-sm` (8px), `.row` (12px), `.stack`/`.grid` (16px), `.stack-lg` (24px), `.stack-xl` (32px). Card content/header/footer padding is 24px, 20px at phone widths; default control height is token-mapped to 44px. Kit borders, rather than shadows, frame nonfloating cards; floating dialogs/menus/toasts keep kit shadows. No bespoke margins or component skins. Inline SVG icons supplement labels and are hidden from AT.
+Geist Sans and Geist Mono are embedded from the existing local Next WOFF2 assets. Mono remains limited to inherited metadata/wordmark treatment. Panel/field/pill radii 32/18/999px and 24px inset match the siblings. Desktop band padding is 28px; phone padding is 20px; modal padding is 28px desktop and 24px phone. Colour identifies primary action and real save/error states. It does not recolour route navigation.
 
-Component inventory (catalog names and exact snippet examples):
+| Axis | Observable direction |
+|---|---|
+| concept | Edición en contexto: abrir una escena dentro de su propia fila, renombrar en la cabecera y desplegar únicamente la explicación o recuperación necesaria. |
+| layout | Una pila de bandas horizontales a todo el ancho. La banda abierta contiene escena y explicación en proporción 1.8:1; no existe un panel maestro-detalle lateral ni una cuadrícula permanente de tarjetas. |
+| navigation | Cabecera y navegación horizontal compartidas; Ver escena/Ocultar escena expande el proyecto en su propio lugar, Abrir lleva al Taller o a solo lectura. Qué se guarda despliega la explicación junto al estado. |
+| typography | Geist Sans del producto: título 24px, proyecto 20px, sección 16–18px, cuerpo 14–15px, metadatos 12–13px. Geist Mono solo en la identificación Sempertex heredada. |
+| density | Proyectos cerrados de una fila y una única escena abierta. La información secundaria se revela a demanda; 28px de margen interior en escritorio y 20px en teléfono. |
+| components | Button/Input/Skeleton/Dialog reales de shadcn y Base UI/Animate UI. Composición propia de bandas expandibles y renombrado in situ; botones con presión táctil, selector de propietario nativo y disclosure de cuenta heredado. |
+| colour | Exactamente Pictures: fondo/superficie/texto/acento y tokens Taller para el visor; roles accesibles de borde de control heredados de cuentas-admin y planes. No hay nueva paleta ni familia tipográfica. |
+| motion | Asentamiento táctil: bandas se comprimen .985 y asientan con 55ms de secuencia; escena .965→1.008→1; estado rota -14°→5°→0; avisos se asientan verticalmente; presión .965 con spring 220/16; hover de iconos y nombre editable. Expresivo 520/170ms, natural 320/140ms, sutil 160/100ms; reducción sin desplazamiento. |
 
-| Name · variant / state | Snippet | Use |
-|---|---|---|
-| Sidebar · state=expanded · parts=header/group/menu-button | `kit/components/sidebar.html#expanded` | Desktop shell; neutral current item |
-| Button · variant=default/outline/ghost · state=normal/disabled/loading/focus-visible | `kit/components/button.html#variants`, `#states` | One primary per active view/dialog, secondary actions outlined, supporting actions ghost |
-| Card · parts=header/title/description/content/footer · size=default | `kit/components/card.html#actions` | Peer project cards; scene preview within padded content |
-| Field · orientation=vertical · state=default/error; Input · type=text/search | `kit/components/field.html#vertical`, `kit/components/input.html#types` | Search and project name; associated error and description |
-| Select · native · state=default | `kit/components/select.html#native` | Owner filter and planning toolbar |
-| Checkbox · state=unchecked/checked/disabled | `kit/components/checkbox.html#list`, `#states` | Explicit ownership consent; `.choice` label and `.checkbox` input, never an unstyled native square |
-| Badge · variant=secondary/success/warning/destructive | `kit/components/badge.html#variants` | Read-only/save state, with words |
-| Alert · variant=default/success/warning/destructive · action | `kit/components/alert.html#variants` | Import offer, save/recovery/error feedback; neutral mapped fills |
-| Empty · variant=default · parts=title/description/content | `kit/components/empty.html#no-results` | Empty/no-match/denied states, no decorative media tile |
-| Skeleton · shape=line | `kit/components/skeleton.html#card` | Loading content; no false empty result |
-| Dialog · size=default · parts=header/title/description/footer/close | `kit/components/dialog.html#open` | D1–D3 within a native modal host for focus/inertness |
-| DropdownMenu · item variant=default; Avatar · tone=muted | `kit/components/dropdown-menu.html#trigger`, `kit/components/avatar.html#media` | Shared account entry, fictional account identity |
-| Toast · type=info · parts=title/description | `kit/components/toast.html#stack` | Explicitly labelled mockup action results |
+Actual components, with import evidence:
 
-**Proposals outside the kit:** `project-shell/rail/tabs` adapts app layout to the established 200px desktop rail and visible wrapping navigation below 1024px; `project-grid` preserves three/two/one project columns; `project-filters/source/workspace` lays out project-specific content at the existing breakpoints; `project-modal` is a transparent native-dialog host around the unchanged Dialog snippet; `scene-preview` is a noninteractive SVG illustration with role-token fills, clearly labelled “Escena ilustrativa”. These proposals add layout/illustration semantics, not replacements for kit controls. Reflow adapters may allow long status text and action labels to wrap where fixed kit sizing would clip them; such adaptations must retain role colors, padding, focus and 44px targets. Illustrations convey no saved-state truth and are not a 3D round-trip claim. Actual object colors remain scene data, not these illustrative role colors.
+| Component name | Source and use |
+|---|---|
+| `shadcn:button default default/hover/focus/pressed/disabled/loading` | `@/components/ui/button`; account save, import and owned copy |
+| `shadcn:button outline default/hover/focus/pressed/disabled` | Same import; preview, navigation, retry and cancellation |
+| `shadcn:input text empty/filled/focus/invalid/disabled` | `@/components/ui/input`; search, inline name and named save |
+| `shadcn:skeleton record loading` | `@/components/ui/skeleton`; list skeleton bands |
+| `shadcn:dialog project open/closed/validating/busy` | `@/components/ui/dialog`; actual installed Animate UI/Base UI dialog with focus containment |
+| `custom:project-band band collapsed/expanded` | Semantic article and button with aria-expanded/aria-controls; no invented library attribution |
+| `custom:account-disclosure native closed/open/focus` | Shared native details/summary with Escape/outside dismissal |
+| `custom:owner-filter native all/mine/other` | Labelled native select; staff-only |
+| `custom:scene-preview SVG illustrative` | Inline SVG depicting a neutral mock scene, not a WebGL renderer or stored thumbnail contract |
+| `kit:motion expressive/natural/subtle active/reduced` | `@kit/motion` profile; `motion.button` from `motion/react`, spring from useMotionProfile |
+| `kit:planning-controls native selected/focus` | `mountMockup/useMockup` from `@kit/mockup`; native view/state/scene/theme/motion selectors |
 
-The scene-led recognition from the earlier draft remains the distinctive emphasis; there are no KPIs or decorative dashboard widgets. Import destination, source, consent, actions and retention/download footnote share the same readable column and left axis. Default notices, account avatar and navigation use neutral tokens. Focus uses the kit's 2px `--ring` outline with 2px offset. Keep the template's subtle/natural/expressive motion selector and reduced-motion support; project transitions answer interactions only. The kit loading skeleton uses its standard pulse; reduced motion removes it. No decorative scene animation.
 
 ## 5. Navigation and interaction model
 
-The library and editable deep-link paths follow T4.4; the remaining query/dialog destinations describe UI routing within that surface. Permission keys and API contracts belong to SP-1/SP-4 tasks.
 
-| View / dialog | Proposed destination / entry | Exit |
-|---|---|---|
-| V1 | `/proyectos`, navigation “Mis proyectos”, Taller “Mis proyectos” | Open → V3; New → unsaved V3; review local scene → V5 |
-| V2 | `/proyectos?ambito=todos`, permission-filtered “Todos los proyectos” | Open own → V3, another owner's → V4; “Mis proyectos” → V1 |
-| V3 | `/3d?proyecto=<id>` or `/3d` for a new unsaved scene | Library, new/open action and navigation pass F4 dirty guard |
-| V4 / V4b | `/proyectos/<id>` | Authorized read-only page; copy only when `taller.usar` is also granted; never bypass `/3d` permission |
-| V5 | `/proyectos?importar=navegador`, notice after first sign-in and persistent local-scene link | “Ahora no” → V1; successful “Abrir proyecto” → V3 |
-| D1 Save first project / copy | “Guardar proyecto” for a new scene, or “Guardar una copia” | Submit → V3 success; Cancel/Escape returns to unchanged workspace |
-| D2 Save conflict | A save receives a newer server revision | “Guardar una copia” → D1; “Abrir versión guardada” → D3 if dirty; “Seguir aquí” retains unsaved local work |
-| D3 Unsaved departure | Open another project, new project or leave library with dirty scene | “Guardar y continuar”, “Conservar borrador y salir”, “Seguir aquí” |
+The list opens own projects in Taller and foreign projects in read-only view. The product destinations remain `/proyectos` for the list, `/proyectos/[id]` for opening a saved project and `/3d` for the Taller, as named by the UI brief. The HTML simulates navigation locally, with no network request. View changes focus H1; disclosures keep focus on the invoking control. Preview buttons expose expanded state and a target id. First save and copy require a trimmed non-empty name. Dialog Escape/cancel return to the exact surviving invoking control; there is a name/button/H1 fallback after the source view is replaced. Closed details explicitly hide their bodies, preserving disclosure visibility and measurement.
 
-Shared account menu/theme control follows SP-2 and existing shell. Do not create separate sign-in, account, catalogue or decoration screens here. The mockup marks these destinations as outside SP-4 when activated; actual product navigation uses their existing routes. Missing own-project access hides project navigation; direct requests still return a permission-denied response. List data and owner filters come only from authorized results, never from client-side filtering of everyone's records.
+Motion grammar is tactile, finite and legible throughout. Expressive uses 520ms settle / 170ms controls / 55ms band offsets with cubic-bezier(.34,1.4,.64,1). Natural is 320/140/30ms and subtle 160/100/12ms. Distinct behaviors present in the artifact:
 
-Enter submits save forms; search applies after a short debounce and Enter applies immediately. Search filters project names across the **entire authorized server collection**, before pagination. V2 owner filter is independent, initially “Todas las cuentas”; preserve both filters while opening/backing from a project. T4.3 accepts `q` (trimmed literal name substring, at most 120 characters; `%` and `_` are literal characters), `scope=mine|all` (default `mine`), and `ownerId` (UUID, only with authorized `all`). Never send `ownerId` from V1. `all` requires `proyectos.ver_todos`. Owner choices come only from authorized project-owner metadata across the permitted collection, including owners whose matches are beyond the current page; never enumerate unrelated accounts or derive choices only from the loaded page. Do not reinterpret the UI as a global account directory.
+1. Band load/view choreography compresses .985, lifts briefly and settles; each subsequent band offsets 55ms.
+2. The expanded scene seats from .965 through 1.008 to 1 without hiding its text.
+3. Notices settle with a short vertical compression, independently of the scene.
+4. Save status icons rotate -14° through 5° to zero and settle in scale.
+5. Inline edit fields seat from scaleX(.96) through 1.01 to 1, anchored at the text edge.
+6. Button hover raises its icon; press compresses to .965. The name control uses the installed Motion spring, stiffness 220/damping 16 for expressive.
+7. Pending save/import has a rotating icon only while pending; keyboard feedback remains a static high-contrast outline.
 
-The server returns metadata only, at most 50 rows, ordered by `updatedAt DESC` then `id DESC`. A validated opaque cursor is bound to normalized `scope/q/ownerId`; cursor/filter mismatch returns 400. On any name/owner/scope/account change: invalidate old request identities immediately (before debounce), reset rows and cursor, then request the first page of the new normalized query. Retain the typed filters and show S23 in the results region; rows from the prior query never masquerade as current matches. Responses may update the UI only when their account, normalized filters and request generation are current. An obsolete response causes no visible status/title/row change and no toast. Clearing filters starts a fresh first-page request. A cursor mismatch shows “La lista cambió. Vuelve a cargarla.” / “Recargar lista”, restarts at page one, and never loops the rejected cursor.
+Reduced OS preference, Quieto and `?still=1` remove travel, animated transitions and spinning while retaining every state, control and status word. Hidden-tab CSS animations are paused in the product; there is no persistent decorative ambient effect. Entrance motion uses transforms without layout changes, opacity reduction or mid-animation colour changes.
 
-Show a **loaded** count (“50 proyectos cargados”), not an invented total, and “Cargar más proyectos” only while a next cursor exists. While the next page is pending, retain current-query rows, announce “Cargando más proyectos…” and disable repeated pagination. On next-page failure keep rows, filters and retryable cursor with “Reintentar carga”; retry appends without duplicates. On a changed query, those old rows/cursor are discarded. Never fetch full scene documents for filtering or claim a loaded page represents the whole library. F6/S13/S23–S26 and UI-AC-41–51 govern these transitions.
+
+
+Additional navigation rules: opening an owned row restores its name and complete scene; foreign rows go to V4. The HTML simulates these destinations; production `/proyectos/[id]` must use authorized data. Returning to the list, creating a scene, selecting a template and opening a library scene must pass the same pending-work guard. Do not replace the scene or project identity on a failed, conflicted or unfinished save. A pristine saved scene may proceed directly. Account-menu destinations remain owned by SP-2/planes; retained contextual tools in the mockup display a scope notice.
+
+The inline name accepts up to the existing 120-character limit. Enter/check confirms a trimmed non-empty name, Escape/Cancelar restores the prior name and returns focus. A blank inline name remains in editing without committing; first-save/copy blank names show the explicit field error in D1/D2. Renaming a never-saved scene does not create an account project or enable autosave. Renaming an owned saved project becomes a pending change and follows the same save/refusal rules as scene edits. Foreign originals have no rename control.
 
 ## 6. Flows
 
-**F1 — First save and continue (R6; owner round 9 q5).** 1) New scene has “Sin guardar en tu cuenta”. 2) “Guardar proyecto” opens D1 with the existing scene name. 3) Require a trimmed name, 1–120 characters (same limit as existing Taller name input); duplicate display names do not identify a project and do not replace one. 4) “Guardar en mi cuenta” disables repeated submission while pending. 5) Only confirmed server success shows “Guardado en tu cuenta · 26 oct, 14:32” and a persistent project identity. Failure retains scene/name and offers retry; unknown outcome is reconciled before retry, not blindly duplicated. 6) After the first named save: serialize automatic account saves 500ms after the last edit, with “Guardar ahora” available; show “Cambios sin guardar” until the corresponding edit generation is acknowledged. Keep one request in flight and queue the latest scene behind it. An older response never clears newer dirty work: while a submitted generation is pending, subsequent edits show “Guardando cambios anteriores · hay cambios nuevos sin guardar”, remain editable and wait behind that request. Any response is bound to account, project and request identity. After switching projects, a previous completion must not change the current title, canvas, dirty state, revision, conversation identity or undo history. There is no product success toast for a project that is no longer active; reconciliation of the old request stays scoped to that old project. F4 governs departure even when only pending edits remain. The owner confirmed explicit first named save followed by autosave and visible status; 500ms is the Planner technical default, not an owner-specified timing. The static mockup freezes these states for inspection; its state selector simulates pending/success instead of running a background upload timer.
+**F1 — First named save and autosave (R6).** Build or open a new unsaved scene in V3. Show “Escena nueva” and “Sin guardar todavía”; no account upload occurs. Guardar proyecto opens D1. Cancel leaves the scene intact; a blank trimmed name keeps D1 open with “Escribe un nombre para el proyecto.” Submit displays Guardando… and disables duplicate submission. Only confirmation of the current account, project identity and submitted edit generation may show “Guardado en tu cuenta”. Later edits autosave; Guardar ahora requests the same guarded save. The inherited 500 ms debounce is a technical default, not an additional owner promise. A late acknowledgement of an older generation never marks newer edits saved.
 
-**F2 — Reopen (R6).** 1) Enter V1 or authorized V2. 2) Search/filter; open a specific named project. 3) If current scene is dirty, resolve F4 first. 4) Show project loading, then replace workspace only after data validation/loading succeeds. 5) Restore name and the complete scene, including room, environment, salon, materials, scene-node relationships, placements, dimensions, colors and all valid fields/references, without silently converting away unsupported data. Failure leaves the prior workspace intact and explains whether retry is possible; no “empty scene” success fallback. Reset the undo stack and scene-conversation identity at the successful project boundary; never display the previous project’s AI thread in the new one. The separately stored AI conversation/generated images remain local and are not promised on another browser. Preserve existing local data; scene-node references are part of the scene even when they refer to media. No valid field/reference may be dropped to enforce the separate-AI-data boundary.
+**F2 — Start a new project (R6).** Escena nueva, a template and Abrir en Escena use the same guard. If an owned project has pending edits, save them successfully before replacement; while saving, keep the destination pending. Failure/offline/conflict retains the scene and blocks replacement. A never-saved scene opens D3 with Guardar y continuar, Descartar escena y continuar, and Cancelar (visible artifact wording: “Descartar escena y continuar”). Save opens D1 and continues only after confirmation; explicit discard starts the requested scene without modifying a saved original. The result is “Escena nueva” with no saved project identity and no upload until first named save. Leaving to Proyectos uses D4 and continues to the original requested destination after save, rather than creating a fresh scene.
 
-**F3 — Concurrent save (R6 edge case).** 1) Another session changes the project after this session's read. 2) Save refuses a stale revision; D2 says “Hay una versión más reciente” and shows last server save and author only when returned by authorized data. 3) Keep local work and the newer server scene. 4) Stop the autosave queue on a 409 until explicit resolution. Recovery: save local work as a new project, or explicitly open the newer version through D3. No overwrite/force-save action or automatic field merge. A server compare-and-save check is required; the modal alone cannot enforce concurrency safety.
+**F3 — Search and reopen (R6).** In another authenticated browser, enter V1 or authorized V2. Search names across the entire authorized server collection, including beyond the first loaded page. Owner filtering applies before pagination. Changing query/scope resets cursors and ignores obsolete responses. Loading more preserves existing rows; failure places a reason and Reintentar below them. Empty account and no-match search are distinct. Abrir restores the saved name and complete scene. Foreign originals use F6. A missing or unauthorized resource shows non-disclosing feedback without cached names/owners/scene content.
 
-**F4 — Leave / permission change.** 1) A dirty local scene or an unconfirmed in-flight save triggers D3 before in-app replacement/navigation. 2) Save-and-continue resumes the intended action only after acknowledged success; conflict/failure cancels the departure and preserves local work. 3) “Conservar borrador y salir” retains the unsent scene as an account/project-scoped local recovery draft (new unsaved scenes use a separate temporary identity), changes no server revision, and then continues; never delete the legacy import source. On return by the same account offer “Recuperar borrador” before replacing saved data, and reconcile its base revision. Other accounts must not enumerate or open it. If browser storage is full or blocked, show “No pudimos conservar el borrador en este navegador”; stay in the current project and retain the scene in memory. The keep-draft departure completes only after local persistence succeeds, and never labels the server state as saved. 4) Full-tab close uses the browser's native unsaved prompt when available, without promising reliable custom text or guaranteed persistence. 5) A revoked session goes to SP-2 sign-in with a safe return path; removed resource permission shows S8 without owner/title metadata and must not retry writes or copy account data to a different signed-in account. Clear visible scene state and query caches on sign-out/auth loss, ignore prior-identity completions and offer retained recovery only to the same account. These are boundaries in T4.4; the accepted autosave cadence grants no permission to disclose drafts.
+**F4 — Competing save (R6).** A stale revision yields conflict, stops autosave, keeps the unsent local scene and shows both Cargar versión del servidor and Guardar una copia. Normal save stays disabled. D5 explains that loading replaces the displayed scene while retaining the local recovery draft; cancel leaves local work visible. No automatic merge or silent overwrite occurs. Owned-copy D2 creates a separate project in the current account and does not write the original. If copy fails, local work remains available; only a confirmed copy becomes the active saved project.
 
-**F5 — Browser import (R7).** 1) Detect raw `taller3d:escena:v1` after first sign-in without mutating it; repository evidence is one current scene, not an invented multi-project browser library. 2) Offer only on the first authenticated Taller visit with local data (T4.5), not inside the login handler. An account without Taller access retains the source until access is granted. Offer “Hay una escena en este navegador” / “Revisar importación”; do not auto-assign it. 3) V5 shows signed-in destination account, local scene name when safely readable and an unchecked “Esta escena es mía y quiero guardarla en esta cuenta”. 4) “Importar a mi cuenta” enables only after confirmation and valid supported data; importing is explicit. 5) Preserve the raw legacy source before any normal Taller autosave can replace it; read-only detection must not call the normal loader that normalizes/discards malformed content. 6) Server acknowledgment creates a new project and a per-account/source import receipt; repeated review shows the existing result rather than duplicating it. 7) “Ahora no” defers without hiding the persistent review entry; no source deletion after success. 8) Unsupported/corrupt source remains local, with a truthful reason and “Descargar copia original” (raw JSON, not a claim that it can open). No empty-project substitution. Copy explains “Se guardan el nombre y la escena completa. La conversación y las imágenes de IA siguen en este navegador.” This excludes only the separately stored AI data, not valid scene fields or references.
+**F5 — Offline, refusal and recovery (R6).** Show “Sin guardar · Sin conexión” or “Sin guardar · Error”, keep the scene/name and explain retry. Retry returns to Guardando… until confirmation; do not imply that local browser backup equals account save. A server refusal, including invalid/oversized data or forbidden mutation, preserves pending work and gives recovery guidance. Browser-backup failure explicitly asks the user to keep the view open and retry backup. Account-scoped recovery offers Recuperar borrador; loading a recovery draft makes it unsaved/pending. Session expiry directs sign-in with the same account; account/project switch never exposes another account's drafts or receipts. No cross-account local recovery is offered.
 
-**F6 — Search and paginate (R6; Planner resolution of Q4).** 1) Open V1 or authorized V2 with the first ≤50 metadata rows. 2) Type a literal name, optionally select an authorized owner in V2; reset pagination and show S23 while querying the entire authorized collection. 3) Show returned matches even when they were beyond row 50 of the unfiltered list; no-results S14 is a successful empty query, not an empty account. 4) Load more only with the current filter-bound cursor (S25). 5) On page failure retain rows and retry (S13); a filter change invalidates the failed cursor. 6) A slow obsolete query must not replace current rows or filters; S24 is an inspection fixture for this otherwise silent rejection. The mockup simulates the server over an in-memory collection with >50 owned fixtures, 50-row pages and generation-bound query application; it makes no network requests and is not API evidence.
+**F6 — Staff opens a foreign original (R6).** V2 filters permitted owners; Abrir leads to V4 with owner and Solo lectura. No editing tools, editable name or save-original action exists. With `taller.usar`, Guardar una copia opens D2, explains destination/current account and original retention, requests a name and creates an owned project after confirmation. Without the permission, the copy action is absent. Back returns to the authorized list; opening itself never transfers ownership.
+
+**F7 — Import browser scene (R7).** On first authenticated entry with raw `taller3d:escena:v1` data, V5 offers review for the current account. D6 identifies the destination and warns that shared-device data may belong to someone else. Importar a mi cuenta is explicit consent; Ahora no/Escape dismisses without uploading or modifying the source, and a list entry allows returning later. Pending import disables duplicate submission. Acceptance creates exactly one owned project per account/raw source even after response loss and retry; production uses the existing specified account-plus-source deduplication. Confirmation says “Escena importada”, “Se ha creado un proyecto en tu cuenta” and that the original remains. Error allows safe retry and original download. Invalid JSON, unsupported schema or incompatible data explains why nothing was imported and exposes Descargar original without an import submit. Success, refusal and failure all preserve the raw source unchanged. Another account receives its own consent, not a previous account's receipt. AI conversation/images are explicitly excluded.
 
 ## 7. View specifications
 
-**V1 — Mis proyectos.** H1 “Mis proyectos”; lead “Retoma tu trabajo desde cualquier navegador.”; primary “Nuevo proyecto” when `taller.usar` is granted. Optional import notice precedes search. Labelled input “Buscar proyecto”, count “50 proyectos cargados” for a full first page, sort text “Guardados más recientes primero”. Cards: “Quince años · Valentina”, “Boda · Jardín Botánico”, “Lanzamiento · Coral”; timestamp “Guardado el 26 oct 2026, 14:32”; visible button “Abrir proyecto” with accessible name including title. A cursor shows “Cargar más proyectos”; S13 covers next-page failure with previously loaded results retained. Illustrations are optional/decorative. Empty uses “Aún no tienes proyectos guardados” / “Crea un proyecto en el Taller 3D y guárdalo en tu cuenta.” / “Nuevo proyecto”. Zero search results differ: “No encontramos ese proyecto” / “Limpiar filtros”. F1/F2/F5; S1–S5/S8/S10/S13/S14/S23–S26.
+| View | Route / purpose | Structure, copy and actions | Responsive / flow |
+|---|---|---|---|
+| V1 `projects` | `/proyectos`, own saved scenes | Proyectos title, Escena nueva; Buscar por nombre; browser-import entry; full-width project bands showing name, Mi cuenta and confirmed account status; Ver/Ocultar escena, Abrir; Cargar más or retry/end state. Expanded band: scene, Escena completa, scene/name persistence explanation, Qué se guarda disclosure. | Same band identity at every width; detail stacks on phone; F2/F3/F7. |
+| V2 `staff` | `/proyectos`, authorized all-owner scope | V1 vocabulary plus labelled Propietario selector: Todas las cuentas, Mi cuenta and authorized owners. Foreign bands show owner + Solo lectura; search covers this authorized collection. The artifact uses neutral Cuenta de ejemplo fixtures rather than real identities. | Filters wrap before bands; F3/F6. |
+| V3 `workshop` | `/3d` and an owned saved project's editing destination | Existing Taller context; inline scene-name control, visible save status, Qué se guarda, Guardar proyecto or Guardar ahora. Failure/recovery/import notices precede the canvas. Existing tools remain contextual, not redesigned. Footer creation/template/library entries share the guard. | Header/status/actions wrap; scene retains available width; F1/F2/F4/F5/F7. |
+| V4 `readonly` | Authorized foreign `/proyectos/[id]` | Project title, owner and Solo lectura banner; complete scene; optional Guardar una copia; explanatory save boundary and Volver a proyectos. No editing or save-original controls. | Banner/actions wrap; scene scales within frame; F6. |
+| V5 import presentation | Contextual notice in V1/V3; D6, not a new route | Escena guardada en este navegador, current-account explanation and shared-device warning; Revisar importación. Invalid/error/success variants preserve context and original-download recovery. V5 is represented by view+state, not a fifth Vista option. | Notice and dialog actions stack on phone; F7. |
 
-Components: Sidebar · expanded; Card · default (`card.html#actions`); Input · search / Field · vertical; Button · default/outline; Alert · default; Empty · default; Skeleton · line.
+| Dialog (`scene`) | Contents and outcomes |
+|---|---|
+| D1 `first-save` | Guardar proyecto; labelled Nombre del proyecto, existing 120-character limit; scene/name-only explanation; Guardar proyecto/Cancelar; associated empty-name error; Guardando… and disabled duplicate submit. |
+| D2 `copy` | Guardar una copia; current-account destination and unchanged original; editable proposed copy name; copy/Cancelar; same validation/busy rules as D1. |
+| D3 `new-scene` | Antes de abrir una escena nueva; pending account-save explanation; Guardar y continuar; explicit discard only for never-saved scene; Cancelar. Failure/conflict/pending save prevents replacement. |
+| D4 `leave` | Guardar proyecto title in the selected artifact, pending-change explanation; Guardar y continuar, explicit discard only when never saved, Cancelar. Successful save continues to the requested list destination. |
+| D5 `server-version` | Cargar versión del servidor; explains retained local draft and replacement of displayed scene; explicit load/Cancelar; no merging. |
+| D6 `import` | Importar escena del navegador; current-account destination, shared-device warning, scene-only scope and raw-source retention; Importar a mi cuenta/Ahora no; invalid/error explanation plus Descargar original; pending submit disabled. |
 
+The empty scene inspector means no dialog. Modal background is inert; focus stays inside, then returns to the surviving trigger (or scene name/heading fallback after navigation). Busy save/import controls prevent duplicate actions and accidental replacement while a submission is pending.
 
-**V2 — Todos los proyectos.** H1 “Todos los proyectos”; support “Consulta los proyectos guardados de cada cuenta.”; same structure as V1 plus owner filter and visible owner per card (“Lucía Torres · Eventos Lila”, “Mateo Ruiz · Montajes Norte”). Fixture account in this view is an employee, not an ordinary user with an exposed role toggle. Only V2 and V4 present staff identity in the mockup. No create-on-behalf action or ownership transfer. F2/F4; S1–S5/S8/S10/S13/S14/S23–S26.
-
-Components: the V1 list plus Select · native (`select.html#native`) and Card description for explicit owner metadata.
-
-
-**V3 — Project workspace.** Library link, project title, textual account-save status and save action stay visible outside the canvas. Show saved time, not relative-only “hace poco”; dates use active locale and labelled local timezone if an exact comparison is shown. Main region is existing Taller canvas, scene tree and inspector; mockup intentionally represents them as labelled illustration/context, not a functional 3D engine. “Simular edición” is a mockup-only control. New project starts with “Proyecto sin título”, never appears in V1 before server success. Save action is disabled with a nearby reason when unchanged, loading or pending. F1–F4; S1/S2/S4–S12.
-
-Components: Button · default/outline/ghost; Badge · success/warning; Alert · default/success/warning/destructive; proposal `project-workspace` / `scene-preview`.
-
-
-**V4 — Read-only foreign project view (owner round 9 q7).** Separate `/proyectos/<id>` read-only scene page with persistent “Proyecto de Mateo Ruiz” and “Solo lectura”. No editable scene controls or update-original action. “Guardar una copia en mi cuenta” opens D1 and explicitly changes destination ownership to the current account; copy requires `taller.usar` and creates a new project owned by the signed-in account; it never updates or transfers the original. Copy stays disabled while loading, after a read error or offline, with the corresponding loading/error/connectivity reason visible. V4b omits the copy button and Taller/own-project navigation when `taller.usar` is absent, while retaining account menu, owner and “Todos los proyectos”. F2/F4; S1/S2/S4/S6/S8/S10/S17. Loading and failure describe reading, never saving; no account-save success banner appears on a foreign original. Never imply that opening grants write permission.
-
-Components: Badge · secondary; Button · default/disabled (copy where permitted); Alert · default; proposal read-only `project-workspace` / `scene-preview`. V4b has no copy control.
-
-
-**V5 — Revisar importación.** H1 “Trae tu escena a tu cuenta”; subtitle “La encontramos en este navegador. Revisa que sea tuya antes de importarla.” Show destination “Lucía Torres · lucia@example.test”, source “Este navegador”, scene name and status. Checkbox from F5; primary “Importar a mi cuenta”; secondary “Ahora no”; recovery “Descargar copia original”. Success shows “Escena importada a tu cuenta”, confirmed project name and “Abrir proyecto”; source-retention message remains. Already imported source shows “Esta escena ya está en tu cuenta” and opens the previously confirmed project. F5; S1–S8/S10/S11/S16/S21. “Esta escena ya está en tu cuenta” is distinct from a newly acknowledged import; its receipt belongs to the currently signed-in account. Another account gets a fresh unchecked consent, never the prior project association.
-
-Components: Checkbox · unchecked/checked/disabled (`checkbox.html#list`); Button · default/outline/ghost; Badge · secondary; Alert · success/destructive; proposal `project-source`.
-
-
-**D1 — Guardar proyecto / Guardar una copia.** Native modal with heading, “Nombre del proyecto”, 120-character limit, destination account, “Cancelar” and “Guardar en mi cuenta”. Copy starts with “[original name] · copia”. Inline blank-name message “Escribe un nombre para el proyecto.”; keep user input on failure. Pending says “Guardando…” and prevents repeated submits. Close/Escape during a pending request does not claim cancellation of an operation already sent; background result must still reconcile. No form nested inside another form.
-
-Components: Dialog · default (`dialog.html#open`); Field · vertical / Input · text, default/error; Button · default/outline, normal/pending/disabled; native-modal host proposal.
-
-
-**D2 — Hay una versión más reciente.** Explain “Otra sesión guardó cambios después de que abriste este proyecto. Tu trabajo sigue aquí.” Show two labelled rows: “Tu trabajo · sin guardar” and “En tu cuenta · 26 oct 2026, 14:36”. Actions “Guardar una copia”, “Abrir versión guardada”, “Seguir aquí”. No ambiguous “Aceptar”, destructive default, automatic reload or forced overwrite. First focus is heading.
-
-Components: Dialog · default; Separator and Row for two version groups; Button · default/outline; no nested Card.
-
-
-**D3 — Tienes cambios sin guardar.** Explain that a retained local draft is visible only to this account on this browser; buttons “Guardar y continuar” (primary), “Conservar borrador y salir” (secondary), “Seguir aquí” (secondary, initial focus). A failed/pending/conflicted save cannot complete the intended departure. When “Guardar y continuar” is disabled, D3 itself explains the pending acknowledgment, unknown result or offline condition; do not rely on a status hidden behind the modal. Closing/Escape equals “Seguir aquí”.
-
-Components: Dialog · default; Button · default/outline, disabled where required; Alert · destructive for failed local backup.
-
+Spanish is the SP-4 production copy baseline. New strings belong in planned `src/components/proyectos/textos-proyectos.ts`; SP-8 owns language rollout and account preference. The mockup language control offers ES/EN for expansion checks, not a new implementation of language persistence. Project names are data and remain untranslated. Examples are marked mock: neutral scene/project/account names and an illustrative inline SVG. It is not a WebGL renderer, a server thumbnail field, a thumbnail-generation feature or evidence of persisted scene fidelity.
 
 ## 8. States
 
-The mockup exposes native selects `view`, `state`, `scene`, `theme` with visible labels “Vista”, “Estado”, “Diálogo”, “Tema”. Views are V1–V5 plus permission variant V4b (`foreign-limited`). Scene values are `none`, `save`, `copy` (D1 copy variant), `conflict`, `leave`. Inapplicable inspection combinations normalize to the applicable view; they must never turn a read-only original into an editable project. Theme values are `light`, `dark`. The template additionally keeps `motion` (subtle/natural/expressive). Kit `data-show-view/state/scene` bindings govern the generated view frame, loading regions and dialog contents. Local JavaScript supplies fixture queries, account/query-generation isolation, dependent-selector normalization and native modal transitions that simple visibility switches cannot express. State values below are exact integration vocabulary. Selecting a state with a specific context takes the mockup to that context; this is planning navigation, not a product state transition.
+Native Estado exposes every id below; Vista selects V1/V2/V3/V4 and Diálogo independently reaches D1–D6. State/view pairs are meaningful only as listed; selecting an unrelated pair keeps the normal surface instead of inventing another business rule. Named dialogs can be inspected independently, including validation through submission. Status and failures use visible words plus semantic status/alert roles, never colour alone.
 
-| ID / switch value | Applies | Visible result and recovery |
+| State id | Applicable view | Visible presentation, available action and transition |
 |---|---|---|
-| S1 `ready` | all | Loaded library/workspace; reviewable local source. Product actions enabled according to permission/dirty state |
-| S2 `loading` | all | Skeleton plus “Cargando proyectos…” / “Abriendo proyecto…” / “Revisando escena…”; `aria-busy`; do not render an empty success or activate writes |
-| S3 `empty` | V1/V2/V5 | True library empty state, or “No hay escenas para importar en este navegador”; useful return/create action. Selector moves editor to V1 |
-| S4 `error` | all / D1 | “No pudimos cargar los proyectos” or “No pudimos guardar el proyecto”; inline reason, “Reintentar”; preserve existing scene and form. Failed reopen does not replace scene |
-| S5 `success` | V1/V2/V3/V5 | Confirmed save/import message with title and time; no fake confirmation before response. Opening itself is a loaded state, not a save success |
-| S6 `disabled` | V3/V4/V5 | Unchanged own scene (“No hay cambios para guardar”), foreign read-only, or missing ownership confirmation; reason is visible, not just opacity |
-| S7 `validation` | D1 or V5 | Name error in D1, or unsupported/corrupt local source with preserved original; field error announced and associated. Mockup selects V3/D1 by default |
-| S8 `permission-denied` | all | “No tienes acceso a estos proyectos” without title/owner/thumbnail; “Volver al inicio” and account navigation; controls cannot bypass guard |
-| S9 `stale` | V3 / D2 | Conflicting server revision; both scenes retained; see F3. Selector opens V3/D2 |
-| S10 `offline` | all | “Sin conexión. No podemos confirmar el guardado en tu cuenta.” Local editing remains enabled; account writes stay disabled until an explicit retry/reconciliation. Local work stays; list only shows explicitly identified already-loaded data, not a fabricated cache. “Reintentar conexión”; no automatic account queue |
-| S11 `pending` | V3/V5/D1 | “Guardando en tu cuenta…” / “Importando…”; repeated mutation disabled. Timeout with unknown result says “No pudimos confirmar el resultado”; reconcile before resubmission. Mockup selects V3 |
-| S12 `dirty` | V3 / D3 | “Cambios sin guardar”; save enabled; leave requires D3. Local backup success must not change this label |
-| S13 `partial` | V1/V2 | The next page failed; previously loaded projects remain, with loaded count, reason and “Reintentar carga”. Cursor retry does not repeat existing rows. Selector opens V1 unless already in V2 |
-| S14 `no-results` | V1/V2 | Name/owner filters have zero matches; show active filter and “Limpiar filtros”; never offer import as if no projects exist |
-| S15 `recovery` | V3 | “Hay un borrador de esta cuenta en este navegador” with “Recuperar borrador”; recovery marks dirty and checks the stored base revision before writing. Selector opens V3 |
-| S16 `unknown` | V3/V5/D1 | “No pudimos confirmar el resultado”; preserve local work, disable a new mutation and offer “Comprobar guardado” to reconcile the existing mutation/import receipt before retry. Selector opens V3 unless already in V5 |
-| S17 `unavailable` | V3/V4/V4b | “Proyecto no disponible”; inaccessible and missing items share this 404 presentation, without title, owner or thumbnail; return to authorized list |
-| S18 `too-large` | V3/D1 | “El proyecto supera el límite de 2 MiB”; unsent scene/name retained, never retry unchanged automatically; return to editing before another save |
-| S19 `draft-error` | V3/D3 | “No pudimos conservar el borrador en este navegador”; keep current work visible and remain here; “Reintentar respaldo” retries only local persistence and completes the stored departure only if it succeeds |
-| S20 `late-response` | V3 | Inspection fixture: after switching from Valentina to Boda, an obsolete Valentina completion leaves Boda’s title/scene and “Cambios sin guardar” unchanged. Explanation is mockup-only; product stays quiet |
-| S21 `already-imported` | V5 | “Esta escena ya está en tu cuenta”; open the existing receipt-bound project, no second import; original remains; consent and receipt never cross accounts |
-| S22 `pending-newer` | V3 | “Guardando cambios anteriores · hay cambios nuevos sin guardar”; save stays disabled while serialized request is in flight, scene editing remains available; older acknowledgment cannot label all edits saved |
-| S23 `query-loading` | V1/V2 | Filters remain usable; results region shows “Buscando proyectos…” with `aria-busy`, prior-query rows removed, no empty-result claim; latest query replaces this pending state |
-| S24 `query-late-response` | V1/V2 | Inspection fixture: current query “Horizonte” still shows “Ceremonia · Horizonte”, originally beyond unfiltered row 50, after a simulated old “Boda” response; only the mockup explains the ignored response, product remains quiet |
-| S25 `page-loading` | V1/V2 | Current rows/count remain, “Cargando más proyectos…” announced and load-more disabled; success appends, failure transitions to S13 |
-| S26 `cursor-invalid` | V1/V2 | “La lista cambió. Vuelve a cargarla.” retains visible current-query rows; “Recargar lista” restarts at page one with the same filters, never retries the rejected cursor |
+| `normal` | V1–V4 | Authorized project bands or confirmed account-save text; preview/open/name/copy as permissions allow. No pending edit is represented by saved text in production. |
+| `loading` | V1/V2 | Skeleton bands and polite Cargando proyectos…; no fabricated results/counts. |
+| `empty` | V1/V2 | Todavía no tienes proyectos; explains creating and naming a scene; Escena nueva remains the next action. |
+| `no-results` | V1/V2 | No hay coincidencias; try another name/owner; Limpiar búsqueda restores the permitted list scope. |
+| `next-page` | V1/V2 | Additional rows appended; end state No hay más proyectos disables load-more. |
+| `next-page-error` | V1/V2 | Existing rows retained; No se cargó la siguiente página and Reintentar below them. |
+| `unsaved` | V3 | Escena nueva / Sin guardar todavía; first save opens D1. Renaming alone does not create a saved identity. |
+| `saving` | V3/D1/D2 | Guardando… and busy submission controls. Save or guarded transition waits; acknowledgement must match current project/account/edit generation. |
+| `offline` | V1/V2/V3 | List: Sin conexión and Reintentar. Taller: Sin guardar · Sin conexión, scene retained and retry-when-connected action. No account-save claim. |
+| `error` | V1/V2/V3 | Could not load/save explanation; visible retry; pending scene retained. Production mutation refusals use this recovery vocabulary without exposing implementation/security details. |
+| `conflict` | V3 | Conflicto de guardado; autosave stopped and local draft retained; server-load/copy actions; Guardar ahora disabled. |
+| `no-taller` | V4 | Foreign original remains readable to read-all permission holder; edit and copy actions absent. |
+| `import-offer` | V1/V3/V5 | Legacy scene notice, current-account/shared-device explanation and Revisar importación. No automatic import. |
+| `import-invalid` | V1/V3/D6 | Incompatible data/version explanation, Ver explicación and Descargar original; D6 has no import submit. Source unchanged. |
+| `importing` | D6 with V1/V3 context | Importando…; duplicate import and dismissal actions disabled during the pending operation. This inspector is a static pending illustration, not a backend job. |
+| `imported` | V1/V3/V5 | Escena importada, one-owned-project confirmation and original-retention message; Ver proyectos. |
+| `import-error` | V1/V3/D6 | Failed confirmation explanation; safe import retry and original download. A retry does not create an extra project. |
+| `recovery` | V3 | Account-scoped local draft notice, Recuperar borrador; recovered work becomes pending rather than account-saved. |
+| `local-error` | V3 | No pudimos conservar el borrador en este navegador; keep view open and Reintentar respaldo. No false backup/account confirmation. |
+| `permission-denied` | All | Access refusal; no project names/owners/scene content; recovery to authorized projects. |
+| `unavailable` | All | Proyecto no disponible; non-disclosing recovery, with no foreign metadata. |
+| `session-expired` | All | Tu sesión ha terminado; same-account sign-in guidance, no scene/project data exposed. |
 
-Offline durable upload queue, live multi-user presence, background AI generation status and project deletion states are inapplicable: no such feature is assigned to SP-4. Thumbnails are optional; failure displays a placeholder, never a fatal project error. A malformed scene is an error, never silently dropped into an empty project. Session expiry reuses SP-2, not a new login dialog. A partial state is not used to fabricate a partly loaded scene.
+Controls also cover default, hover, pressed, focus, disabled and busy. D1/D2 invalid names expose labelled `aria-invalid` fields and associated errors; cancellation preserves prior work. Inline rename cancellation keeps its prior name. Pending/local-unsent work is the applicable stale-data presentation; conflict is the stale-server-version recovery. There is no separate optimistic “saved” state. Offline list data are not labelled freshly loaded; if production retains earlier rows on refresh, their stale/loading status must be explicit.
+
+Not applicable: purchase/plan changes, delete/transfer/history/merge confirmations, bulk selection, public sharing and publishing to the global decorations library. They are outside R6/R7. Dialogs need no additional consent checkbox: Importar a mi cuenta and Ahora no are explicit affirmative/refusal actions. Existing WebGL, AI-generation, undo/redo and shopping-list internal states are owned by their existing surfaces; their mockup controls are context and show an explanatory Mockup notice.
 
 ## 9. Responsive behavior
 
-Supported width starts at the product's existing 320px minimum. Content breakpoints align with existing Tailwind `sm` (640), `md` (768), `lg` (1024) and Taller's narrow/landscape behavior. Test 320, 390, 768, 1024 and 1440px, plus 844×390 landscape.
+Supported design range is 360px upward; primary rendered checkpoints are 390px phone, 768px tablet and 1280px desktop in both themes. Layout follows the selected TSX's exact boundaries:
 
-| Range | Library / import | Taller / dialogs |
-|---|---|---|
-| 320–639px | Compact header, horizontally wrapping section navigation; H1/action stack; labelled filters one column; cards one column, full names wrap; 16px gutters | Save status on its own wrapping row, explicit labelled save action; canvas then contextual scene summary; dialog spans viewport width with a naturally sized, internally scrolling kit Dialog body; all actions remain in normal flow |
-| 640–767px | Navigation above content; 24px gutters; two-card grid if available width fits; filters wrap | Dialog centered ≤560px, max-height 92dvh; editor context remains below canvas |
-| 768–1023px | Two-card grid, filter search/owner on one line; import readable max-width 760px | Canvas and scene summary fit side by side; header wraps rather than clipping |
-| ≥1024px | 200px section nav rail, main max-width 1200px, three-card grid; filters full row | Existing Taller rail and canvas/inspector layout retained; centered dialogs |
+- **360–639px:** 20px outer gutter; masthead/account/language wrap; heading and action stack. Search/filter are full width. Band title/metadata precede wrapped preview/open actions; scene then explanation stack inside the same band. Band header padding 24px 20px, detail 0 20px 24px. Taller identity/name/status/save controls wrap; rail and inspector hide, existing phone tool context remains. Canvas stays inside the scene frame. Dialog width is viewport minus 40px, padding 24px, actions stack; vertical scrolling keeps every action reachable.
+- **640–1099px:** 24px outer gutter; wrapping masthead; search/filter toolbar becomes one column with actions aligned at start. Expanded band is 1.3:1 with a 240px minimum explanation column; the Taller inspector hides, rail and canvas remain. Do not turn the project list into cards or a sidebar.
+- **1100px and above:** 40px outer gutter within a 1520px maximum shell; band header identity/actions share a row; detail is 1.8:1 with a 260px minimum explanation column, 28px detail inset/gap. Taller rail/canvas/260px inspector remain visible. Dialog max width 580px, padding 28px.
 
-At ≤1023px landscape and height ≤540px, prioritize canvas space and put context beside it if content fits; do not force a tall mobile bottom panel. At zoom/reflow 320 CSS px, stack again. No page-wide horizontal scrolling. Long names wrap at safe opportunities; ellipsis is permitted only where full name is otherwise available to touch/keyboard, never only a hover tooltip. Dialog actions wrap; no fixed footer covers content; body has overscroll containment. EN expansion up to roughly 35% is a layout stress case, not a translation guarantee. ES copy is specified here; SP-8/SP-10 wire account language and complete translations. No RTL support is declared by this pilot.
+Buttons remain at least 44px high. Long names and Spanish/English controls wrap, without horizontal page scrolling or truncating the save reason. Dialogs cap height at viewport minus 48px with internal vertical scrolling. Page content may scroll vertically; no hidden primary action is justified by a short viewport. At zoom/reflow the corresponding narrow composition applies. The real Taller's canvas interactions remain unchanged by this contract.
 
 ## 10. Accessibility targets
 
-Target WCAG 2.2 AA; conformance awaits rendered product review. Use header/nav/main landmarks, one H1, semantic project list, labelled inputs/selects, real buttons/links and a skip link. Accessible open names include the project name. Scene illustration is `aria-hidden`; all project/save data exists in text. Account identity is never conveyed solely by an avatar/color.
+Target applicable WCAG 2.2 AA; this draft and mockup checks do not certify conformance. Preserve semantic heading order, navigation/current-route state, project articles and labelled search/owner/language controls. Every control has an accessible name; decorative icons/SVG shapes are hidden, scene illustrations have descriptive container labels. Preview buttons expose `aria-expanded`/`aria-controls`; disclosures retain keyboard Enter/Space and hide closed bodies.
 
-Use native modal dialog semantics (or the existing accessible equivalent), labelled title/description, trapped focus, Escape, and focus return to trigger. For D2 → D1/D3, retain the original page trigger through the dialog transition; if that trigger no longer exists after rendering, focus the conflict-resolution control or current view heading, never the document body or a hidden dialog control. Initial focus: D1 name; D2 heading; D3 “Seguir aquí”. On validation focus first invalid field; on permission/data loading completion move focus to the page heading only after actual navigation. Do not repeatedly steal focus on save-status updates. Background is inert while modal. Saving status uses polite live region; actionable errors use an alert once. Offline/stale/disabled/success labels include words as well as color.
+Name fields have programmatic labels. D1/D2 validation uses `aria-invalid` and an associated error, preserves the entered value and keeps the task open. Save/load/import status is polite live feedback; actionable failures use alerts and a visible retry/recovery action. Do not repeatedly announce unchanged autosave text. Page/view changes move focus to H1; disclosure toggles retain invoking focus. Inline name confirmation/cancel returns focus to the name control. Dialogs have a programmatic title/description, inert background, keyboard containment, Escape/cancel and invocation-focus return; a surviving scene name/button/H1 provides fallback when navigation removes the trigger. During pending submission, do not let dismissal cause scene replacement or discard.
 
-All new clickable targets ≥44×44 CSS px; existing narrow Taller controls are outside this mockup redesign but the added save/library controls meet that target. Standard keyboard activation, logical DOM/tab order, no drag-only project action, no hover-only menu. Text contrast ≥4.5:1 (large text ≥3:1); meaningful controls/focus indicators ≥3:1. Decorative panel borders are not control affordances. Preserve 200% text zoom and 400% reflow; no hidden focus under sticky headers. Honor reduced motion. Contrast must be measured for actual foreground/background pairs in both themes; a token name is not evidence. 3D engine keyboard access is existing scope, but every added project action must be usable without operating its canvas.
+Focus is a 3px accent outline, 4px offset; focus and control edges target ≥3:1 against their adjacent surface. Body/support text targets ≥4.5:1 in both themes (large-text minimum ≥3:1); use texto-tenue for meaningful control edges and decorative borde only for nonessential rules. State is communicated with text/icon plus colour. Interactive targets in this artifact are at least 44px high, meeting the applicable 24px target minimum with spacing. Reflow, enlarged copy, short viewport access and bilingual labels must remain usable.
 
-## 11. Visual acceptance criteria
+Reduced OS motion, Quieto and `?still=1` remove travel, spinning and transitions while preserving all words/actions; no flashing or animation-only message. Hidden-tab CSS effects pause; there is no heavy ambient animation. The installed Motion profile controls the name press spring and kit dialog motion. Rendered contrast/focus/layout checks and interaction probes are evidence about this HTML only; screen-reader behavior, 200–400% zoom, production WebGL keyboard access and all actual API/persistence/security guarantees still require their independent implementation reviews.
+
+## 11. Visual acceptance criteria and verification
+
+“All” below means the supported 360px+ range, checked at least at 390/768/1280px where applicable, in light and dark. Inspectors reach the named state/view/dialog; functional persistence claims require the real SP-4 integration evidence, not the fixture.
 
 | ID | Breakpoint | State | Observable expectation |
 |---|---|---|---|
-| UI-AC-01 | ≥1024px | ready / V1 | The library displays three columns of project cards beside the section rail. |
-| UI-AC-02 | 320–639px | ready / V1 | Cards, search and the new-project action fit one column without horizontal page scrolling. |
-| UI-AC-03 | 640–1023px | ready / V1 | The project grid has two columns and navigation sits above content. |
-| UI-AC-04 | 320–1440px | ready / V2 | Every project card shows its owner as visible text. |
-| UI-AC-05 | 320–1440px | no-results | A clear-filters action is shown with the zero-results explanation. |
-| UI-AC-06 | 320–1440px | empty / V1 | “Aún no tienes proyectos guardados” appears with “Nuevo proyecto”. |
-| UI-AC-07 | 320–1440px | loading | Skeletons and a loading label appear instead of an empty-library success. |
-| UI-AC-08 | 320–1440px | dirty / V3 | “Cambios sin guardar” is visible adjacent to the enabled save action outside the canvas. |
-| UI-AC-09 | 320–1440px | success / V3 | Account-save confirmation includes the saved time in visible text. |
-| UI-AC-10 | 320–1440px | validation / D1 | Submitting a blank name keeps the modal open and associates its error with the name input. |
-| UI-AC-11 | 320–1440px | pending / D1 | The submit button reads “Guardando…” and cannot issue a second save. |
-| UI-AC-12 | 320–1440px | stale / D2 | Both local-unsaved and server-saved versions are labelled without a force-overwrite action. |
-| UI-AC-13 | 320–639px | dirty / D3 | All three departure choices remain reachable through vertical scrolling. |
-| UI-AC-14 | 320–1440px | disabled / V4 | Owner and “Solo lectura” are visible and no update-original action is offered. |
-| UI-AC-15 | 320–1440px | permission-denied | Restricted project names, owners and thumbnails are absent from the denied view. |
-| UI-AC-16 | 320–1440px | ready / V5 | Import shows the signed-in destination account above the unchecked ownership confirmation. |
-| UI-AC-17 | 320–1440px | disabled / V5 | Import is disabled until the ownership checkbox is checked. |
-| UI-AC-18 | 320–1440px | validation / V5 | An incompatible source shows its reason and the original-copy download action. |
-| UI-AC-19 | 320–1440px | success / V5 | Confirmed import shows an open-project action and says the browser original is retained. |
-| UI-AC-20 | 320–1440px | partial / V1 | Previously loaded cards remain visible beside a next-page retry control. |
-| UI-AC-21 | 320–1440px | offline | The account-save status explicitly says that saving cannot be confirmed. |
-| UI-AC-22 | 320–1440px | error | A labelled retry control appears without replacing existing scene contents with an empty scene. |
-| UI-AC-23 | 320–1440px | ready / D1–D3 | Escape closes the dialog and restores focus to the activating control. |
-| UI-AC-24 | 320–1440px | ready / both themes | Focus on each project/save control is visible against its actual background. |
-| UI-AC-25 | 844×390px | dirty / V3 | Save controls and status remain reachable while the workspace reflows for the low-height viewport. |
-| UI-AC-26 | 320–1440px | ready / dark | Generic primary buttons use `--sobre-acento` rather than white. |
-| UI-AC-27 | 320px at reflow | ready / V1 | Long project names wrap without requiring a hover tooltip to read them. |
-| UI-AC-28 | 320–1440px | ready / V4b | The read-only custom-role view has no copy or Taller action. |
-| UI-AC-29 | 320–1440px | recovery / V3 | The recovery banner identifies this account and exposes an explicit recover action. |
-| UI-AC-30 | 320–1440px | unknown | An outcome-reconciliation action appears while new mutations are disabled. |
-| UI-AC-31 | 320–1440px | late-response / V3 | The Boda project title remains visible with “Cambios sin guardar” after the mocked previous-project completion. |
-| UI-AC-32 | 320–1440px | pending-newer / V3 | The save badge explicitly distinguishes submitted changes from newer unsaved edits. |
-| UI-AC-33 | 320–1440px | offline / V3 | The mockup’s edit control remains enabled while account saving is unavailable. |
-| UI-AC-34 | 320–1440px | already-imported / V5 | The existing-import message offers opening a project without another import submission. |
-| UI-AC-35 | 320–1440px | ready / V5 | Changing the fixture account clears ownership consent and never reveals another account’s import result. |
-| UI-AC-36 | 320–1440px | error / V4b | The failure describes loading the project and offers no save or copy action. |
-| UI-AC-37 | 320–1440px | unavailable | The unavailable-project screen contains no project title, owner or scene illustration. |
-| UI-AC-38 | 320–1440px | draft-error | A failed local backup leaves the current project visible and offers retrying the local backup. |
-| UI-AC-39 | 320–1440px | too-large | The size-limit message states 2 MiB and does not claim successful saving. |
-| UI-AC-40 | 320–1440px | stale / D1 copy | The copy dialog names the current destination account and never offers overwriting the original. |
-| UI-AC-41 | 320–1440px | ready / V1 | Searching “Horizonte” finds “Ceremonia · Horizonte” before loading page two of the unfiltered fixture collection. |
-| UI-AC-42 | 320–1440px | ready / V1 | The initial 50-row fixture page shows “50 proyectos cargados”. |
-| UI-AC-43 | 320–1440px | ready / V1 | “Cargar más proyectos” appends the next page without duplicate cards. |
-| UI-AC-44 | 320–1440px | query-loading / V1/V2 | The results region displays “Buscando proyectos…” while the labelled filters remain operable. |
-| UI-AC-45 | 320–1440px | query-late-response / V1/V2 | “Horizonte” and its matching card remain after the mock obsolete “Boda” response. |
-| UI-AC-46 | 320–1440px | partial / V1/V2 | Changing a filter removes the failed old page's retry control and starts a first-page query. |
-| UI-AC-47 | 320–1440px | ready / V2 | The owner selector includes the authorized fixture owners Lucía, Mateo and Ana. |
-| UI-AC-48 | 320–1440px | page-loading / V1/V2 | “Cargando más proyectos…” appears below retained cards with a disabled pagination button. |
-| UI-AC-49 | 320–1440px | ready / V1 | After loading page two, changing the name filter resets pagination to at most 50 matching rows. |
-| UI-AC-50 | 320–1440px | ready / V5 | Import explains that the complete scene is saved and separately stored AI conversation/images remain in this browser. |
-| UI-AC-51 | 320–1440px | cursor-invalid / V1/V2 | “Recargar lista” restarts the first page while preserving the visible name/owner filters. |
-| UI-AC-52 | 320–1440px | pending / unknown / V3 | Choosing “Nuevo proyecto” opens D3 and retains the current title until departure is resolved. |
-| UI-AC-53 | 320–1440px | stale / D2 → D1 or D3 | Cancelling the second dialog restores focus to the original page trigger or the current conflict-resolution control. |
-| UI-AC-54 | 320–1440px | pending / pending-newer / unknown / offline / D3 | A visible explanation inside D3 states why “Guardar y continuar” is disabled. |
-| UI-AC-55 | 320–1440px | ready / V1–V5 / both themes | Active section navigation has neutral surface/text tokens, without an accent fill or colored rail. |
-| UI-AC-56 | 320–1440px | ready / V1–V5 / both themes | Default notices, account avatar and destination groups have no accent-colored background. |
-| UI-AC-57 | 320–1440px | ready / V1/V2 | Every card save date is right-aligned and uses tabular figures. |
-| UI-AC-58 | 320–1440px | ready / V1–V5 | Page headings and supporting section labels use sentence case without tracked uppercase eyebrows. |
-| UI-AC-59 | 320–1440px | ready / D2 | Local-work and account-version details are separated by rules instead of nested cards. |
-| UI-AC-60 | 1440×1000px | ready / V1/V2 | The first project row includes visible titles, save dates, owner where applicable and opening actions within the viewport. |
-| UI-AC-61 | 320–1440px | empty / V1/V2 | The empty-state instruction and next action appear without a decorative icon tile. |
-| UI-AC-62 | 320–1440px | ready / V1–V5 | Nonfloating peer cards and scene panels have borders without shadows. |
-| UI-AC-63 | 320–1440px | ready / V1/V2 | The loaded count is right-aligned at the end of the result summary and uses tabular figures. |
-| UI-AC-64 | 320–1440px | success / V3 | The visible save time matches the selected project’s save timestamp in the library. |
-| UI-AC-65 | 320–1440px | ready / V5 / both themes | Destination, consent and retention/download group share the import column's left content edge. |
-| UI-AC-66 | 320–1440px | ready / V5 / dark | Ownership consent uses the kit Checkbox with an identifiable ≥3:1 unchecked edge and a visible checked state. |
-| UI-AC-67 | 320–1440px | ready / both themes | Input and Select edges use the measured `--input` role and remain distinguishable from adjacent surfaces. |
-| UI-AC-68 | 320–1440px | ready / V1/V2 | Project card titles, content and footer use the kit's 24px content padding, reduced to 20px on phones. |
-| UI-AC-69 | 320–1440px | all | Visible labelled Vista, Estado, Diálogo and Tema selectors and the Mockup label remain available for inspection. |
+| UI-AC-01 | All | All | The Pictures/Sempertex masthead and shared Geist/account/navigation vocabulary are preserved. |
+| UI-AC-02 | 1100px+ | V1/V2 normal, expanded | The expanded scene sits inside its full-width project band with explanation beside it. |
+| UI-AC-03 | 360–639px | V1/V2 normal, expanded | Scene and explanation stack inside the same band without horizontal page overflow. |
+| UI-AC-04 | All | V1/V2 normal | The first authorized band initially has its preview expanded. |
+| UI-AC-05 | All | V1/V2 expanded/collapsed | Ver/Ocultar escena updates the selected band's expanded state and permits at most one preview. |
+| UI-AC-06 | All | V1/V2 loading | Loading displays skeleton bands and Cargando proyectos status. |
+| UI-AC-07 | All | V1/V2 empty | Todavía no tienes proyectos explains creating a named scene, with Escena nueva available. |
+| UI-AC-08 | All | V1/V2 no-results | No hay coincidencias includes a clear-search recovery action. |
+| UI-AC-09 | All | V1/V2 next-page-error | Already loaded rows remain visible above the next-page error and Reintentar. |
+| UI-AC-10 | All | V2 normal | The owner filter is labelled Propietario and foreign entries show owner plus Solo lectura. |
+| UI-AC-11 | All | V3 inline rename | The name control becomes an input in the same header position and returns focus on confirm/Escape. |
+| UI-AC-12 | All | D1/D2 invalid | Empty-name submission keeps the dialog open and exposes the associated name error. |
+| UI-AC-13 | All | V3 saving | Guardando… remains visible while save is pending. |
+| UI-AC-14 | All | V3 unsaved after F2 | The new scene displays Escena nueva and Sin guardar todavía. |
+| UI-AC-15 | All | D3/D4 unsaved | Cancel preserves the current scene; explicit discard is visibly separate from saving. |
+| UI-AC-16 | All | V3 conflict | Server-load and owned-copy actions appear together while normal save is disabled. |
+| UI-AC-17 | All | V3 offline/error | The unsaved reason appears with the scene context and an explicit retry. |
+| UI-AC-18 | All | V4 normal | The foreign original has no editable name, editing tools or save-original action. |
+| UI-AC-19 | All | V4 no-taller | Guardar una copia is absent. |
+| UI-AC-20 | All | D6 import-offer | Current-account destination and shared-device warning appear before explicit import/refusal. |
+| UI-AC-21 | All | D6 import-invalid | Explanation and original download are available, with no import submit. |
+| UI-AC-22 | All | V5 importing | Importando feedback and disabled duplicate submit are visible. |
+| UI-AC-23 | All | V5 imported | One-project confirmation explicitly states browser-original retention. |
+| UI-AC-24 | 390/768px | D1–D6 | Modal content stays within its viewport frame and actions remain reachable by vertical scrolling. |
+| UI-AC-25 | All | Keyboard dialogs | Escape/cancel returns focus to the surviving invoking control or declared navigation fallback. |
+| UI-AC-26 | All | Reduced/Quieto/still | State words and actions remain visible with no travel/spinning. |
+| UI-AC-27 | All | Expressive normal | Bands and previews use the chosen finite press/settle choreography without hiding content. |
+| UI-AC-28 | All | Permission/session/unavailable | The refusal surface exposes no project metadata or scene. |
+| UI-AC-29 | 640–1099px | V1/V2/V3 normal | The toolbar wraps and Taller inspector hides while the scene remains inside the content width. |
+
+Evidence below belongs to the **canonical HTML rebuilt in this finalization**, not the exploration's historical audit. The selected TSX remained byte-identical; no behavioral source edit, fallback, package installation, network fetch or production change was required.
+
+| Check | Actual observation |
+|---|---|
+| Installed kit | `installed=True built=True entries ok=96/96`. |
+| Current offline build | Exit 0; 648 KB, 2,126 source files; real React/shadcn/Animate UI/Base UI controls with inlined CSS, JS and local fonts. |
+| `contrast.py` | Exit 0: `contrast: 158 pairs checked in light and dark, all pass`. |
+| Offline rendered audit | Exit 0: 672 renders / 672 planned combinations; 17,388 text measurements and 1,959 focus stops at 1280, 390 and 768px in both themes. No sampling. |
+| Focused interaction walkthrough | Exit 0: `INTERACTIONS: PASS 17 groups`; zero page errors and zero external HTTP(S) requests. Covers native inspectors, keyboard search, single preview, owner filter/pagination reset, page retry, inline name confirm/Escape/focus, first-save validation/pending/confirmation, conflict copy/modal focus, offline retry, foreign read-only/copy permission, template guard, invalid import/download/Escape, explicit refusal/acceptance, pending-save guard, save-before-list navigation and English copy. |
+| Motion probes | At 120ms: 3 active expressive animations; 0 with OS reduced motion; 0 with `?still=1`. |
+| Visual inspection | In-memory screenshots inspected: 1280px dark project bands, 1280px light Taller, 390px dark conflict, 390px light invalid-import dialog. No screenshot files written. |
+
+`RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`
+
+Reproducible required commands (absolute paths are intentional):
+
+```text
+python3 /home/david/.agents/skills/metodologia/scripts/bitacora.py components status
+python3 /home/david/.agents/skills/metodologia/scripts/bitacora.py components mockup build /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.r12.dir-c.tsx --out /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.html
+python3 /home/david/.agents/skills/metodologia/agents/designer/skills/david-ui-kit/kit/contrast.py /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.html
+UV_OFFLINE=1 uv run --offline --with playwright python /home/david/.agents/skills/metodologia/agents/designer/skills/david-ui-kit/kit/audit_mockup.py /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.html --widths 1280,390,768 --max-combos 240
+```
+
+The optional probes ran as inline Playwright scripts without saved test artifacts. Earlier probes had a diagnostic-expression typo, an ambiguous template-control locator and an immediate assertion before dialog dismissal settled; their expressions/locator/wait were corrected, with no HTML/TSX mutation. The final consolidated 17-group command completed successfully. These checks support this planning artifact's rendered behavior; they do not approve it or establish production storage/security conformance.
 
 ## 12. Open questions and assumptions
 
-**Open questions for the owner: none.** Q1–Q3 are resolved by the accepted round 9 q5–q7 answers; Q4 is resolved by the Planner's technical ruling and T4.3/T4.4/T4.6. The design and subplan remain unapproved; SP-2 remains the planning focus. No repeated owner confirmation is requested for these settled behaviors.
+**Open product questions:** none prevents finalization under the supplied brief and owner-selected direction. The r12 note asked whether to start with the first preview expanded; this finalization preserves exactly that visible selected composition, as instructed. This is a carried presentation assumption, not a claim that the owner separately answered that question. Any later change must be an explicit draft amendment, not an implementer invention.
 
-| Resolved decision | Authority | Effective contract |
-|---|---|---|
-| Q1 — Save mode | Owner, round 9 q5 | First explicit named save; subsequent autosave with visible state and “Guardar ahora”. 500ms debounce remains the Planner technical default. Account/project draft isolation and truthful pending/offline/conflict handling remain. |
-| Q2 — Foreign originals | Owner, round 9 q7 | Staff/admin with read-all access inspect originals read-only. “Guardar una copia en mi cuenta” requires `taller.usar` and creates a caller-owned project. No original update or ownership transfer. |
-| Q3 — Saved content | Owner, round 9 q6 | Name plus complete scene including room/environment/salon/materials/scene-node relationships. Separately stored AI conversation/generated images remain local. No local erasure or dropped valid scene field/reference. |
-| Q4 — Search/filter scope | Planner ruling, T4.3/T4.4/T4.6 | Global authorized server filtering before 50-row cursor pagination, literal trimmed `q` ≤120, `mine|all`, authorized UUID `ownerId`, filter-bound cursor mismatch 400, metadata-only owner choices, reset/late-response/page-retry handling in F6. |
+**Confirmed decisions:** first named explicit save then autosave; never-saved new-project identity; same guard for Escena nueva/templates/Abrir en Escena; server-confirmed current-revision status; conflict retains local work; foreign-original read-only and copy gated by Taller; only name/complete scene sync; explicit retry-safe lossless import for the current account. These come from SPEC/brief and are not reopened.
 
-Confirmed: users see their own projects; authorized staff can open everyone's; browser scenes are offered for explicit import; original data must not be lost; later saves must not silently overwrite earlier concurrent saves. Saving requires server acknowledgment. Plan 3 includes own Taller projects; custom roles are evaluated by actual permissions, not display names.
+**Fixture limits / follow-up owners:** save/import timings, filtering, scene illustration and transitions are in-memory mock data. The downloaded `escena-original.mock.json` demonstrates a recovery control; it is not actual legacy recovery. No backend, storage, atomic revision validation, idempotency, full-collection server query, cross-browser scene fidelity, real permission enforcement or account-switch draft isolation is implemented or proven by this artifact. T4.2–T4.7 and the independent reviews own those checks. The current HTML preserves r12's title/footer provenance and contextual existing-tool placeholders; neither is production copy. ES/EN layout simulation does not claim full product translation or persisted language selection. No preview directory is produced.
 
-Presentation assumptions retained from the prior draft: one detected current browser scene from the evidenced key; no delete/share/history UI; optional nonessential scene illustrations; ES copy with translation rollout in SP-8/SP-10; search debounce is a UI implementation timing, not a new owner decision. The self-contained mockup uses system fonts, fictional metadata and illustrative scenes; save/import states remain manually inspectable and do not write real storage. Search/pagination alone simulate asynchronous responses locally. Source receipt/deduplication and raw-source preservation remain implementation requirements for lossless import. T4.2/T4.3 specify project-document@1, trimmed names of 1–120 characters, 2 MiB limit, complete scene validation, atomic revision compare-and-save and account-scoped durable mutation/import receipts.
+**CONCERNS:** `RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems`. No fallback/toolchain blocker. The artifact remains an unapproved draft; production behavior and independent acceptance are unverified here, and the initially expanded first preview is carried from the selected composition as described above.
 
-Authoritative errors: missing/inaccessible item 404 (generic “Proyecto no disponible” without metadata), collection-scope denial 403, unauthenticated 401 (SP-2), conflict 409, too-large 413 (retain scene and explain 2 MiB limit), cursor/filter mismatch 400 (restart the list as specified in section 5). CSS illustrations and simulated queries cannot prove identical 3D round trips, database pagination, concurrency, access control, storage retention, import idempotency or accessibility compliance. Those need task-level integration tests and independent rendered review. No preview setting is required for these explicitly requested planning files.
+**Approval:** David/independent approver must approve this exact draft through the planning workflow before T4.1 copies it for consumption. Designer grants no approval. Canonical finalization is complete; implementation and independent acceptance remain with their assigned tasks.
 
-Planning artifact verification for the 21:01 kit revision (2026-10-26):
+### Input/artifact identity
 
-- `python3 /home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit/kit/inline.py <HTML>`: current kit inlined; no network reference, external font or image. The native labelled view/state/scene/theme selects and the Mockup label remain present.
-- `python3 /home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit/kit/contrast.py <HTML>`: **158 pairs checked in light and dark, all pass**.
-- `uv run --with playwright python /home/david/dev/metodologia/skill/agents/designer/skills/david-ui-kit/kit/audit_mockup.py <HTML> --max-combos 720`: **720 renders / 720 planned combinations**, widths 1280 and 390px, both themes; **37,406 text measurements and 1,029 focus stops**. **RESULT: PASS — no contrast, non-text, focus, alignment, padding or overflow problems.** The final full matrix was not sampled and emitted no warnings. Earlier audit failures were corrected: long pending-newer status now wraps beside a compact badge, consent has its own semantic group, and generic denied/unavailable pages use the standard app content width rather than the import form width. Native dialog content identifies its modal semantics for rendered measurement; native modal behavior provides inertness and focus containment.
-- Supplementary Playwright reflow inspection recorded **1,560 cases** across 320/640/768/1024/1440px and both themes: zero horizontal overflow or page exceptions. This inspection preceded the final axis/binding refinements; the subsequent complete kit audit above covers the final HTML at 1280/390px.
-- **46 interaction assertions passed**: global name search beyond row 50; 50→56 owned-fixture pagination without duplicates; query-reset/late-response behavior; authorized owner filter; read-only foreign view/copy destination and restricted-role controls; blank-name validation and named saving; departure guard and focus return across conflict→copy; pending/offline disabled saving with local editing; explicit import consent, original-retention copy and per-account receipt isolation; denied/unavailable metadata suppression. Zero page exceptions or external requests were observed.
-- Supplementary rendering measured **30 cases** for dialogs and checked consent at 320×900, 390×900 and 844×390 in both themes; no contrast, control-edge, alignment, padding or overflow findings. A complete keyboard cycle across both libraries in six list states and both themes checked **24 cases / 1,404 focus stops**, with no failed indicators. This includes controls below the first 50 project cards.
-- In-memory screenshots were visually inspected for the desktop library at 1440×1000 (first row's opening actions within the viewport), dark phone import and dark phone first-save dialog. No extra screenshot or preview files were written. Import destination, consent group and retention/download group use the same content axis; sticky-header focus clearance is a project layout proposal.
-
-These checks attest only the planning mockup. Earlier draft evidence is superseded. Product lint/types/build, real persistence/authorization, lossless 3D round trips, database concurrency/import idempotency and full WCAG conformance were not run or established; T4.6–T4.9 and owner plan/design approval remain pending. No production repository, SPEC, PLAN or other bitácora content was edited by this task.
+| Input / artifact | SHA-256 |
+|---|---|
+| `SPEC.md` | `7f99f01dd99318864a66f99d85902e4b3de4b07ab0694b873125aee8a8331660` |
+| `PLAN.json` | `63c04b811e851a3b056671e9c26e999228c6bb91c84bddf3497c91be8d109462` |
+| `design/proyectos@v1.r12.behavior.md` | `1d89ee0c436645cf1af3f8ac62d888d9ad089801f688870a48344d862c1c2b65` |
+| `design/proyectos@v1.r12.dir-c.md` | `880305b825c2859e469a88965c336f2c60aff7f1018f01e901bdb2a9e0321186` |
+| `design/proyectos@v1.r12.dir-c.tsx` | `4de35ec0f1c7fbe4964d4d3b9c706dd96b721137ab503ddc32a3e6464c729b4f` |
+| `design/proyectos@v1.r12.dir-c.html` | `403ac3672d0c14edf9f280ba26368b971bc09ce8227acd9ea9649db9236b465f` |
+| `design/proyectos@v1.html` | `906852d5a0d4d04bd724e05302eab6ade35e65eae40ee2ebf4b230ed36b1a0b6` |
