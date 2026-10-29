@@ -46,6 +46,7 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
 
     integrator = _ProjectIntegrator(repositories_for, cfg.state_dir)
     telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
+    attempts.telemetry = telemetry                           # capture-time file guard events (adapters/size_guard.py)
     return Ports(plans=plans, router=build_router(router, routes, capacity, telemetry=telemetry.emit),
                  preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),

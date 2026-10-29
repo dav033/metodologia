@@ -13,7 +13,14 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    model_serializer,
+    model_validator,
+)
 
 CONTRACT_VERSION = "1.0.0"
 
@@ -132,12 +139,30 @@ class AgentReport(Contract):
     total_tokens: int | None = None
 
 
+class OversizedFile(Contract):
+    """A source file the snapshot left over the size limit (file_guard): `new` (absent at the base), `crossed`
+    (within the limit at the base) or `grew` (already over it at the base, and longer now)."""
+    path: str = Field(min_length=1, max_length=1000)
+    lines: int = Field(ge=0)
+    base_lines: int | None = Field(default=None, ge=0)
+    kind: Literal["new", "crossed", "grew"]
+
+
 class Snapshot(Contract):
     """The deterministic handoff commit of the attempt's final files."""
     snapshot_sha: GitSha | None
     base_sha: GitSha
     changed_paths: tuple[str, ...] = ()
     manifest_path: Path | None = None
+    oversized: tuple[OversizedFile, ...] = ()       # advisory, from the capture-time file guard
+
+    @model_serializer(mode="wrap")
+    def _omit_no_findings(self, handler):
+        # without findings the dump is the one earlier releases wrote, so a checkpoint stays readable by them
+        data = handler(self)
+        if isinstance(data, dict) and not data.get("oversized"):
+            data.pop("oversized", None)
+        return data
 
 
 class VerifyStatus(StrEnum):
