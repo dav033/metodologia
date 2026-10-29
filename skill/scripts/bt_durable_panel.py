@@ -136,6 +136,10 @@ def reason_of(raw: dict) -> str | None:
     if state == "waiting_quota":
         until = iso(raw.get("until"))
         return f"esperando cuota{' hasta ' + until if until else ''}"
+    if raw.get("durable_state") == "remediating":
+        return "auditoría con hallazgos bloqueantes: reparación coordinada en curso"
+    if raw.get("audit"):
+        return f"auditoría bloqueada: {raw['audit']}"
     if state == "recovering":
         until = iso(raw.get("until"))
         return f"recuperándose{' hasta ' + until if until else ''}"

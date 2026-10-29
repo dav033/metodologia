@@ -10,11 +10,13 @@ from __future__ import annotations
 
 import bt_attempt_history as _history
 import bt_attestation as _attestation
+import bt_audit_gate as _audit_gate
 import bt_composition_adapter as _composition
 import bt_config as _config
 import bt_design_approval as _design_approval
 import bt_design_drafts as _design_drafts
 import bt_integration_line as _line
+import bt_remediation as _remediation
 import bt_scheduler_adapter as _sched
 import bt_scheduler_decision_adapter as _m2
 import bt_scheduler_decisions as _decisions
@@ -62,3 +64,14 @@ scoped_task_ids = _line.scoped_task_ids
 create_composition_engine = _composition.create_engine
 
 decision = _m2                      # durable_route_ranking: M2's ranking of the durable runtime's allowed routes
+
+# milestone audits: the ledger judgement and the remediation grouping of the legacy gate (bt_audit_gate, bt_remediation)
+audit_gate = _audit_gate
+
+
+def audit_policy():
+    """The operator's audit gate policy, read at each judgement (never cached)."""
+    return _audit_gate.policy_from(_config.get)
+
+
+remediation_groups = _remediation._groups                        # related findings travel together (shared task/path)

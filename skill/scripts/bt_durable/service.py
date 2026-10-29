@@ -16,6 +16,7 @@ from pathlib import Path
 from bt_contracts.execution import AttemptRef, Route
 from dbos import DBOS
 
+from .adapters.audit import AuditGate
 from .adapters.briefs import DurableBriefs
 from .adapters.composition import CompositionComposer
 from .adapters.integration import GitLineIntegrator
@@ -51,7 +52,8 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
     return Ports(plans=plans, router=build_router(router, routes, capacity, telemetry=telemetry.emit),
                  preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
-                 integrator=integrator, telemetry=telemetry, composer=integrator)
+                 integrator=integrator, telemetry=telemetry, composer=integrator,
+                 auditor=AuditGate(repositories_for))
 
 
 def requirement_dir(run) -> Path:
