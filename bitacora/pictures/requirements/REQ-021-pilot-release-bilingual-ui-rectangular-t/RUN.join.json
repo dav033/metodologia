@@ -7,8 +7,8 @@
   "plan_sha256": "b67731626ad5ded067159ba04e2d4ecb2785e9549a00cca7d57113a059b4cdcb",
   "plan_path": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/plan-revisions/PLAN.r18.json"
  },
- "since": 1793293527.2334354,
- "by": "bt-durable join",
+ "since": 1793293570.989826,
+ "by": "engine stage join",
  "confirm": false,
  "settings": {
   "max_parallel": 2,
