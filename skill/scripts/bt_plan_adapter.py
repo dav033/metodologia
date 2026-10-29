@@ -11,6 +11,7 @@ import bt_planner as planner
 from bt_plan_adapter_evidence import verify_command
 from bitacora_platform.plan_command_checks import ignore_resolver
 from bt_planner import cli as planner_cli
+from bt_planner import command_checks as planner_command_checks
 from bt_planner import contract as planner_contract
 from bt_planner import quality as planner_quality
 from bt_planner import revisions as planner_revisions
@@ -265,6 +266,31 @@ def mapping_problem(rdir: Path) -> str | None:
             "pass --force to approve anyway, or set planner.require_mapped_checks=false)")
 
 
+
+def host_path_lines(plan: dict, frozen: tuple[dict, dict] | None) -> str | None:
+    """Approval gate: a new or changed sandbox check that names a host path fails on every attempt
+    (`command_checks.host_paths`). A check frozen exactly so was approved before this gate and is not re-gated."""
+    kept = {(t.get("id"), c.get("value")) for t in (frozen[1].get("tasks") or [] if frozen else [])
+            if isinstance(t, dict) for c in t.get("verification") or [] if isinstance(c, dict)}
+    lines = [f"{c['task_id']}.verification[{c['verification_index']}] «{c['path']}»"
+             for c in planner_command_checks.host_paths(plan) if (c["task_id"], c["value"]) not in kept]
+    if not lines:
+        return None
+    more = f" (+{len(lines) - 4} more)" if len(lines) > 4 else ""
+    return ("PLAN_CHECK_HOST_PATH: the verifier runs checks in a sandbox holding only a copy of the repository, so these "
+            "would fail on every attempt: " + "; ".join(lines[:4]) + more + "; use a repository path, or pin the content "
+            "(e.g. its sha256 with `node -e`)")
+
+
+def host_path_problem(rdir: Path) -> str | None:
+    try:
+        plan = planner.load(Path(rdir) / planner.PLAN_JSON)
+        found = planner.stages.latest(rdir)
+    except Exception:  # noqa: BLE001 - an unreadable plan or store is the validity check's to report
+        return None
+    return host_path_lines(plan, found)
+
+
 def git_facts(roots: dict[str, Path], ref: str = "HEAD"):
     """(exists, read) callbacks over the repositories at `ref`, for bt_planner.preflight (which reads no repository)."""
     import subprocess
@@ -336,7 +362,7 @@ def publishable_problem(rdir: Path, *, compatibility_report: dict[str, object] |
         return (f"PLAN_CHECK_FAILED: the plan cannot be approved, PLAN.json could not be checked "
                 f"({type(exc).__name__}); run `bitacora.py plan-json check {plan_id(rdir)}`")
     if report.ok:
-        return preflight_problem(rdir) or (None if allow_unmapped else mapping_problem(rdir))
+        return preflight_problem(rdir) or host_path_problem(rdir) or (None if allow_unmapped else mapping_problem(rdir))
     more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
     return ("PLAN_INVALID: the plan cannot be approved while PLAN.json has errors: " + "; ".join(report.errors[:5]) +
             more + f" (bitacora.py plan-json check {plan_id(rdir)})")
@@ -373,6 +399,8 @@ def stage_problem(rdir: Path, subplans: list[str], *, compatibility_report: dict
         more = f" (+{len(report.errors) - 5} more)" if len(report.errors) > 5 else ""
         return "PLAN_INVALID: the stage cannot be approved: " + "; ".join(report.errors[:5]) + more
     if (problem := second_auditor_lines(projection)):       # what the run would refuse, refused at approval
+        return problem
+    if (problem := host_path_lines(projection, planner.stages.latest(rdir))):     # what the sandbox can never run
         return problem
     return None if allow_unmapped else _mapping_lines(projection, plan_id(rdir))
 
