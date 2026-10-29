@@ -1,117 +1,175 @@
 # REQ-030 — Operation Metamorfosis: report
 
-Date: 2026-10-28. Branch `metamorfosis` in the worktree `~/dev/metodologia-metamorfosis` (not merged into `main`, not
-pushed). Raw requirement: [REQUEST.raw.md](REQUEST.raw.md). Baseline and map: [M0-ARCHAEOLOGY.md](M0-ARCHAEOLOGY.md).
-Package documentation: `skill/scripts/bt_durable/README.md` on the branch.
+Date: 2026-10-28. Iteration 1: branch `metamorfosis` (fast-forwarded into `main` at `003b7d6fc`). Iteration 2 (the ten
+pending items of [CONTINUE.md](CONTINUE.md)): branch `req030-final` at ``e5ba3758b``, merged into `main` as ``3519eec09` (pushed; deployed 22:12)`.
+Raw requirement: [REQUEST.raw.md](REQUEST.raw.md). Baseline and map: [M0-ARCHAEOLOGY.md](M0-ARCHAEOLOGY.md). Package
+documentation: `skill/scripts/bt_durable/README.md`. Commands below run from `~/dev/metodologia` with
+`PYTHONPATH=skill/scripts:skill/scripts/tests uv run python -m unittest <module>` and `BT_LAB_DIR` set to a scratch
+directory.
 
-## Milestones
+## Two runtimes, one owner per run
 
-| Milestone | State | What exists |
+| | Legacy runtime (Scheduler owner, stdlib) | Durable runtime (DBOS + systemd + Pydantic) |
 |---|---|---|
-| M0 archaeology + baseline | done | responsibility map and matrix, baseline 244 test files (5 pre-existing failures, 1 flaky) |
-| M1 contracts | done for the new runtime and the remote contract | `bt_contracts.execution/failure/owner/remote`; JSON Schema and phone TS generated and checked |
-| M2 DBOS | done (one realistic flow) | run → task → agent/verify/integrate workflows, 4 load-class queues, durable owner decisions |
-| M3 Linux supervisor | done | `bt_supervisor`: systemd user units on cgroup v2 + process-group fallback |
-| M4 queues, isolation | done | agents/verify/integrate/runs queues; legacy resource claims; worktree per attempt; CAS integration line |
-| M5 self-repair | done within one task | 10-class evidence classifier, bounded policy, re-verify repair, durable quota wait, coordinated remediation |
-| M6 pre-flight | done | `bt_planner.preflight` in the approval gate and before a durable start |
-| M7 remote/observability | remote findings fixed; telemetry JSONL | F4, F10, F11, F16, F17, F21, F22, F33, F39, F41 fixed; durable runs not yet in the phone panel |
-| M8 migration | done, tested; not applied to a live run | inventory/diff/backup/claim/rollback; inherited work seeds the new line; reconcile re-verifies |
-| M9 chaos | scenarios B, C, D, E, F, H, I, J, L, M(*), N, O executed | see below; A and G covered by unit tests; K partially |
-| M10 benchmark | evidence per mechanism | `python -m bt_durable.bench`; legacy REQ-021 numbers from its own records |
+| Owns | pictures REQ-020 (29 completed, 2 pending, 1 blocked) and the finished REQ-019, REQ-027, REQ-029 | pictures REQ-021 r15 (`RUN.owner.json` backend `dbos`) |
+| Processes | watchdog + monitor services per run, outboxes, hold file | `bt-durable.service` (one engine), PostgreSQL `metodologia-dbos-pg`, one systemd unit per agent attempt |
+| Changes in iteration 2 | none to its behaviour (the design-notes change was reverted there, 73eb93b3c); file guard after shell commands (item 8) | items 1–8 below, plus the fixes of the review |
+| Removal | proposed in `DECISIONS.md` D-144 (nothing removed) | — |
 
-## Acceptance criteria (only checked with evidence)
+A run has exactly one owner: `RUN.owner.json` is claimed by compare-and-swap at migration and the legacy owner refuses a
+run the durable runtime owns.
 
-- [x] DBOS integrated and used by a complete realistic flow — `test_durable_e2e`: a 3-task dependent plan, real git
-  worktrees, the real provider driver (fake `claude` binary), systemd units, M6 bubblewrap verification, integration.
-- [x] Main contracts validated with Pydantic — execution/failure/owner/remote models; remote producers validated against
-  them (`test_remote_contracts`, 14 tests). Legacy plan validation stays the planner's hand-written rules (see debt).
-- [x] Agent processes supervised by a Linux runtime — `bt_supervisor`, 30 tests on both backends.
-- [x] Recovery with real interruptions — engine SIGKILL mid-attempt: DBOS recovered 3 workflows, 1 agent launch;
-  PostgreSQL stopped 6 s mid-attempt: run completed, 0 engine restarts needed, 1 launch.
-- [x] Reconciliation of external effects — idempotent launch per attempt key (adoption after crash), integration by
-  CAS with an ancestry check, one M6 verdict per verify key; exactly-once is not claimed.
-- [x] Concurrency and worktrees protected — resource claims serialize overlapping paths; one worktree per attempt;
-  stragglers are terminated before capture; cancellation stops every writer (heartbeat stops, no marked process).
-- [x] Retries and self-repair with limits — Hypothesis: 500 failure sequences never loop past the budget.
-- [x] Preventive plan verification — `bt_planner.preflight` (7 tests) in the approval gate and `bt-durable start`.
-- [ ] Remote control compatible with the new runtime — the remote contract and findings are fixed, but the phone
-  panel does not show durable runs yet (CLI and `summary` event only).
-- [x] Migration of legacy plans tested — unit (6) + e2e (inherited not re-run, dependents build on it; reconcile
-  re-verified); dry run on real pictures REQ-021: 28 inherit, 1 reconcile, 16 redo, blocked only by the live att-0094.
-- [x] Safe workflow versioning — `test_durable_versioning` (real processes, SIGKILL between versions); placement rule.
-- [x] Adversarial tests executed — listed below.
-- [x] Existing regressions controlled — full suite on the merged branch: only the 5 pre-existing failures remain
-  (plus 3 package isolation tests that pass under the system interpreter they target, fail under the uv venv).
-- [x] Dependencies registered and locked — `pydantic`, `psutil`, `dbos==3.3.0` (+ dev `hypothesis`, `ruff`) in `uv.lock`.
-- [x] Linux installation documented — README "Install"; `deploy/bt-durable.service`.
-- [x] Recovery and rollback documented — README "Recovery and rollback", "Migration".
-- [x] Comparative metrics obtained or limits reported — below; workloads differ, stated explicitly.
-- [x] No new critical regressions known — see the regression note above.
-- [x] No completeness claimed for unvalidated parts — "Not done / debt" below.
+## Iteration 2: the ten items
 
-## Chaos and adversarial evidence (commands: `uv run python -m unittest <module>` with `PYTHONPATH=skill/scripts:skill/scripts/tests`)
+| # | Item | State | Evidence |
+|---|---|---|---|
+| 1 | Subplans and composition gates (1.3.0) | done | `test_durable_subplans` (8): per-subplan lines hold their scope, a member starts from its line, the gate task starts from the composition candidate (bt_composition) and work after the gate waits for it; the migration keeps each subplan's line; atomic multi-line integration; the run survives a failing line sync or composition. Live: REQ-021 turned subplans on at its first turn after the 22:12 restart (`subplans_enabled` 22:16: SP-1, SP-2, SP-14, SP-3; gates CG-1, CG-4, CG-2) and created its four subplan lines from the pin `fa101a47` with no conflict |
+| 2 | Brief parity with legacy | done | `test_durable_briefs` (3): no section of the legacy prompt is missing from the durable one; the live REQ-021 T2.6 brief carries `RUN.notes/T2.6.md`. The legacy runtime keeps its prompt (design-contract notes stay out of it, 73eb93b3c); the durable brief carries them |
+| 3 | Manual checks with attestations | done | `test_durable_attestations` (2): a valid receipt settles the manual check without asking; a missing one is a decision with `reverify` and `bt-durable attest` passes the same snapshot. Live: REQ-021 T3.2 completed at 22:19 by `bt-durable answer pictures REQ-021 T3.2 T3.2:d1@k1 reverify`: the owner's receipt bound to legacy att-0059 settled its manual check on re-verification, no agent run |
+| 4 | Milestone audit → coordinated remediation (scenario K) | done | `test_durable_audits` (3 e2e + 2 pure): related findings become one repair with probes, re-audit, bounded rounds, panels show a held audit; `test_durable_audits_upgrade` (2): an engine upgrade replays an old audit unjudged and judges a new one. REQ-021's five audits declare their ledgers; live policy `ledger_required`, `read_only`, `remediate`, 2 rounds |
+| 5 | Router with the M2 decision engine, LiveQuota as capacity | done | `test_durable_router` (13): an account without quota is never chosen and the other runs without spending an attempt; the decision is the `route_decision` telemetry event |
+| 6 | Panels show durable runs; remote commands as durable messages | done | `test_durable_remote` (9): projection sequencing, a stale command refused at the ledger and by the run workflow, an old recorded pause replays; `test_remote_contracts` (15) validates the snapshot of a real durable run. Live: the web dashboard (`/api/plans/pictures/REQ-021`) shows REQ-021 with authority `dbos`, status `running`, T2.6 and T3.11 running with their attempt ids; the remote snapshot built by the deployed release validates against `RemoteSnapshot` with REQ-021 in it |
+| 7 | Plan/subplan contracts in Pydantic | done | `test_plan_contract_models` (15): every frozen plan of the bitácora gets the same verdict from the runtime loader and the planner; each known defect (`req`/`req_id`, array/object, unknown state) is refused before anything is enqueued; generated JSON Schema is fresh |
+| 8 | File guard for shell writes | done where reliable | `test_file_guard` (10): git-based crossing check after shell commands, once per session; `test_durable_file_guard` (4): capture-time check in the durable runtime (`file_guard` event, `Snapshot.oversized`). Not covered: writes outside a git work tree |
+| 9 | Retire duplicated legacy infrastructure | proposed, nothing removed | `DECISIONS.md` D-144: six groups with their durable equivalent, evidence and removal condition; the hold file is not yet equivalent. Removal waits until REQ-020 is migrated or closed and REQ-021 completes on the durable runtime |
+| 10 | Comparable benchmark | done | `evidence/iter2/bench-runtimes.md`: same plan, failures and agent process; legacy 12 launches / 2 owner interventions / 4 of 5 fixable tasks, durable 10 / 1 / 5 of 5; durable ~3× slower in wall time on tiny tasks |
+
+## Review of the integrated branch and its fixes
+
+An independent review of `3cdace8f4` ([evidence/iter2/review-3cdace8f4.md](evidence/iter2/review-3cdace8f4.md)) checked
+replay safety against the live REQ-021 histories (queried read-only), the multi-line integration and launches while
+paused. Found and fixed in `a6a2706c9`, each with a test that fails on `3cdace8f4`:
+
+- a step the run workflow calls itself (`bt.sync_lines`, `bt.compose`, `bt.audit_gate`) failing after its retries
+  ended the run in ERROR, which DBOS never recovers. Now behind `DBOS.patch("bt-run-survives-step-failures")` it is
+  reported and retried next turn (`StepFailureInTheRun`: a stale ref lock, a missing line-base pin);
+- the run line could move without its subplan lines when another writer moved one of them in between; now one
+  `git update-ref --stdin` transaction (`AtomicLines`, real git);
+- a subplan line that could not be created produced a fake empty "conflict" and a run without that line; now
+  `SUBPLAN_LINE_UNWRITABLE`, retried;
+- a run that stopped with a gate task never started was reported `completed`; now `completed` only when every task of
+  the plan is done.
+
+Verified in the same review: the live `bt.run` history starts with `bt.plan_text`; `T2.6:k1`/`T3.2:k1` replay on the
+new code (each new patch meets a recorded step and returns False); nothing launches an agent while a run is paused.
+
+## Acceptance criteria of REQUEST.raw.md (only checked with evidence)
+
+- [x] DBOS integrated and used by a complete realistic flow — `test_durable_e2e`; with subplans, gates, attestations
+  and audits: `test_durable_subplans`, `test_durable_attestations`, `test_durable_audits`.
+- [x] Main contracts validated with Pydantic — runtime, remote and now plan/subplan contracts (`test_plan_contract_models`).
+- [x] Agent processes supervised by a Linux runtime — `bt_supervisor` (systemd units, process-group fallback); kill
+  lists scoped to their own supervisor (e2d961ee5); the engine's own unit variables never reach an agent (366cbf372).
+- [x] Recovery with real interruptions — engine SIGKILL mid-attempt (0 duplicate launches), PostgreSQL outage, engine
+  upgrade mid-run from the live engine's code (`test_durable_upgrade`, `test_durable_audits_upgrade`).
+- [x] Reconciliation of external effects — adoption per attempt key, CAS integration (one transaction across lines),
+  one M6 verdict per verify key. Exactly-once is NOT claimed.
+- [x] Concurrency and worktrees protected — resource claims, one worktree per attempt, cancellation stops writers.
+- [x] Retries and self-repair with limits — Hypothesis budget property; audit remediation rounds bounded.
+- [x] Preventive plan verification — `bt_planner.preflight` and the Pydantic plan contract before `bt-durable start`.
+- [x] Remote control compatible with the new runtime — durable runs in the remote panel and web dashboard, commands as
+  durable messages with request id and precondition (item 6).
+- [x] Migration of legacy plans tested — unit + e2e; applied to pictures REQ-021 (28 inherited).
+- [x] Safe workflow versioning — `test_durable_versioning`; every iteration-2 change to `bt.run`/`bt.task` is behind a
+  patch placed before a plain step, proven by the upgrade tests.
+- [x] Adversarial tests executed — chaos table below.
+- [x] Existing regressions controlled — full suite before integrating (below).
+- [x] Dependencies registered and locked — `uv.lock` (dbos 3.3.0, pydantic, psutil; dev hypothesis, ruff).
+- [x] Linux installation, recovery and rollback documented — `bt_durable/README.md`.
+- [x] Comparative metrics — item 10 (same plan in both runtimes) and the per-mechanism comparison of iteration 1.
+- [x] No completeness claimed for unvalidated parts — "Not done / remaining debt" below.
+
+## Chaos and adversarial evidence
 
 | Scenario | Test | Result |
 |---|---|---|
 | B agent running when the engine dies | `test_engine_sigkill_mid_attempt_recovers_without_a_duplicate_launch` | 1 launch, run completed |
-| C work done, checkpoint missing | supervisor `launch` adoption tests + B | adopts the unit, no second process |
-| D step recorded, then crash | B (DBOS replays recorded steps) | step 1 not re-run (DBOS probe, 1 execution) |
-| E duplicate concurrent commands | `test_duplicate_concurrent_answers_start_one_attempt` | 4 answers → 1 attempt; stale ids refused |
+| C work done, checkpoint missing | supervisor adoption tests + B | adopts the unit, no second process |
+| D step recorded, then crash | B | recorded steps not re-run |
+| E duplicate concurrent commands | `test_duplicate_concurrent_answers_start_one_attempt`, `test_remote_commands_are_durable_idempotent_and_refuse_stale_views` | one attempt; stale ids and stale views refused |
 | F cancel while writing | `test_cancelling_a_run_stops_every_writer` | writer stops, no marked process |
 | H database outage | `test_durable_postgres` | completed, 1 launch |
-| I workflow version change | `test_durable_versioning` | past-patch workflows keep v1 steps |
-| J repeated migration | `test_claim_is_idempotent…`, `inventory…stable…` | no-op, legacy stores untouched |
-| L quota exhausted | `test_no_capacity_waits_durably_for_the_reset_then_runs` | durable wait, then 1 retry |
-| M worktree reused by another attempt | `GitWorkspaces` manifest check (kept) | refuses (`WORKSPACE_ERROR`) |
-| N permission | classifier/policy tests | always escalated, never retried |
-| O infra vs code | `test_an_environment_failure_is_repaired_without_a_new_agent_attempt` vs `…retried_from_its_snapshot…` | re-verify (1 launch) vs retry with decisive lines (2 launches) |
+| I workflow version change | `test_durable_versioning`, `test_durable_upgrade`, `test_durable_audits_upgrade` | old histories keep their steps; new paths only past the patch |
+| J repeated migration | migration tests | no-op, legacy stores untouched |
+| K audit with related findings | `test_durable_audits` | one coordinated repair for F1+F2, re-audit passes; never-clearing audit stops at its round limit |
+| L quota exhausted | `test_no_capacity_waits_durably_for_the_reset_then_runs`, `test_an_account_without_quota_is_never_chosen_and_the_other_runs` | durable wait; the other account runs |
+| M worktree reused | `GitWorkspaces` manifest check | refused (`WORKSPACE_ERROR`) |
+| N permission | classifier/policy tests | always escalated |
+| O infra vs code | environment repair vs retry tests | re-verify (1 launch) vs retry (2 launches) |
+| step failure inside the run | `StepFailureInTheRun` (2) | run survives, retried next turn, completes |
+| concurrent writer on a line | `AtomicLines` | no line moves alone |
 | A, G | frontier tests (Hypothesis) | ready tasks never conflict; nothing restarts a known task |
-| K | `test_repeated_failure_escalates…` | retry → one remediation → owner; legacy audit remediation not ported |
+
+## Regression before integrating
+
+[evidence/iter2/regression-final.txt](evidence/iter2/regression-final.txt): every test file in its own process
+(own `BITACORA_ROOT`/`BT_LAB_DIR`), on `a6a2706c9`: 268 files, 5 fail. Four are baseline failures
+(`test_plan_boundary` with the same planner imports as `main`, `test_real_designer_kit`, `test_recovery_views`,
+`test_remote_panel`); `test_plan_schema_13_compat` and `test_platform` no longer fail. The fifth,
+`test_durable_postgres`, was a race of the test under load (enqueue before the engine finished the DBOS schema): it
+passed alone twice and passes since the test retries the idempotent start (`e5ba3758b`). `test_stdlib_boundary`
+passes. The earlier run on `req030-item4` is [evidence/iter2/regression-item4.txt](evidence/iter2/regression-item4.txt).
 
 ## Benchmark (no invented numbers)
 
-Legacy, pictures REQ-021 (`python -m bt_durable.bench legacy ~/bitacora pictures REQ-021`): 71 attempts, 34 verify
-failures (47.9 %), 198,088,200 tokens reported, T2.6 alone 24 attempts, 9 owner decisions + 20 manual interventions,
-296 minutes lost recorded.
+Iteration 2, same plan in both runtimes ([evidence/iter2/bench-runtimes.md](evidence/iter2/bench-runtimes.md)), three
+runs on `main` and one on the integrated code, counts identical in all four:
 
-Durable lab (`python -m bt_durable.bench durable …` over every lab run): 0 duplicate launches in all runs; owner
-decisions only where the budget or design requires them (repeated failure, stop).
+| Metric | Legacy | Durable |
+|---|---|---|
+| Agent launches | 12 | 10 |
+| Launches beyond the unavoidable ones | 2 (T3 ×3, then blocked `m5:attempts_exhausted`) | 0 |
+| Owner interventions | 2 | 1 |
+| Fixable tasks completed | 4 of 5 | 5 of 5 |
+| Tokens (fake agent, 120 per launch) | 1,440 | 1,200 |
+| Recovery T2 / T3 / T4, s | ~1.2–1.7 / never / ~4.6–5.1 | ~4.1–4.3 / ~2.1–3.1 / ~5.3–6.5 |
+| Wall time, s | 8.2–9.1 | 28.8–32.4 |
 
-Mechanism-level comparison (same failure, both runtimes):
-- verifier Node heap OOM: legacy att-0088 consumed a full agent attempt; durable re-verifies the same snapshot with a
-  bounded larger heap — 0 extra agent attempts.
-- decisive failure line: legacy notes dropped it (24 T2.6 attempts); the shared digest now keeps it (both runtimes).
-- engine crash mid-attempt: legacy relies on the watchdog and shim adoption; durable recovery proven with 0 duplicates.
-
-These are not a throughput benchmark on identical workloads; the first real plan on the durable runtime is the next
-measurement.
+Observed: the whole difference in launches and interventions is the environment failure (verifier heap OOM), which
+legacy treats as a code failure. Observed: durable is ~3–3.5× slower on six tiny tasks. Hypothesis (not measured per
+mechanism): polling and one systemd unit per attempt. Iteration 1's legacy REQ-021 numbers (71 attempts, 34 verify
+failures, T2.6 alone 24 attempts) stay as recorded in its own stores.
 
 ## Live state at the end
 
-Owner approval on 2026-10-28 ("sí a todo", and migrate REQ-021 to the new contracts and runtime):
+Deploy of 2026-10-28 22:11–22:30 ([evidence/iter2/pre-deploy.txt](evidence/iter2/pre-deploy.txt)):
 
-- `main` fast-forwarded to the branch (`003b7d6fc`, then ops commits) and pushed; the uncommitted Codex scheduler
-  fixes are kept in branch `backup/main-wip-20261028`.
-- Remote deployed: laptop remote API pinned at `~/.local/share/bitacora-remote/003b7d6fc…` (drop-in backup
-  `exec.conf.bak.20261028-a5854d5f`); gateway on advin `current → releases/003b7d6fc…`, `previous → ee62d2e8…`
-  (`/healthz` reports the new SHA; live smoke identical to before); phone built by Vercel from `main`
-  (rollback target `flow-remote-cja7mw2iw-dav033s-projects.vercel.app`). Local web dashboard restarted.
-- Durable runtime: PostgreSQL `metodologia-dbos-pg` (127.0.0.1:5435, volume `metodologia-dbos-pg`, password only in
-  `~/.config/bitacora/durable*.env`, 0600); `bt-durable.service` enabled with the legacy launcher's PATH and root;
-  routes codex-luis / codex-1 / codex-2 (gpt-6-luna high), then claude-luis (sonnet medium), live quota as capacity.
-- pictures REQ-021 migrated: att-0094 was settled by the legacy owner under pause (T3.11 rejected → ready), then
-  the run was held, its watchdog and monitor services stopped and disabled, and `migrate --apply` moved ownership
-  (`RUN.owner.json` backend dbos, backup `.state/durable/migrations/pictures-REQ-021-r15-8e0f865109bd`).
-  Inventory: 28 inherited (all 28 integrated into `refs/bt/line/pictures/REQ-021/r15/pictures` without a conflict),
-  3 reconciled (T2.6 from att-0095, T3.11 from att-0094, T3.2 re-verified), 14 to run.
+- Safety step: DBOS dump `~/bitacora/.state/durable/backups/bt_durable-20261028-221114.dump` (sha256 `a8e299b9…`,
+  `pg_restore --list` readable); previous `main` `646cb7126`, previous remote API release `003b7d6fc`; rollback
+  procedure in the same file.
+- `main` → `3519eec09` (merge of `req030-final`), pushed. `bt-durable.service` restarted 22:12:48: DBOS recovered the
+  3 REQ-021 workflows, none ended in ERROR. `bitacora-web.service` restarted. Remote API release
+  `~/.local/share/bitacora-remote/3519eec09…` (drop-in backup `exec.conf.bak.20261028-003b7d6f`). Vercel rebuilt the
+  phone from `main` (success). Gateway unchanged (its code did not change; the schema change is additive).
+- Smoke: engine log without errors; REQ-021 projection written; web API and remote snapshot show REQ-021 (above);
+  `remote/deploy/smoke.py --live`: same result as the previous release (`partial`: probes that need the owner's
+  session or Telegram credentials not run; negative paths pass).
+
+pictures REQ-021 r15 — durable runtime, running:
+
+- 22:18:54 owner answered `T3.2:d1@k1 reverify` → T3.2 completed 22:19:01 (attestation, item 3).
+- 22:19:22 owner answered `T2.6:d1@k1 retry`; 22:19 `bt-durable resume pictures REQ-021`.
+- T3.11: its legacy snapshot (att-0094) re-verified and rejected, then attempt a1 started 22:20:45; T2.6: attempt a2
+  started 22:24:26 from its legacy snapshot (att-0095, `04a0d767`), its brief carrying `RUN.notes/T2.6.md`
+  (item 2). Both routed by M2 (`route_policy_preferred` → `codex:codex-luis:gpt-6-luna`, item 5).
+- Agent processes carry their own unit's `INVOCATION_ID` and `BT_SUPERVISOR_ID`, and no `BT_DURABLE_*`/`DBOS_*`.
+- 29 of 45 tasks done (28 inherited + T3.2), 2 running (T2.6, T3.11), 14 not started, including the audits T2.7, T2.8, T3.15, T14.5, T14.6 (item 4
+  judges them when they finish) and the gate tasks T91, T94, T92 (item 1 composes their candidates).
+
+Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
+stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 
 ## Not done / remaining debt
 
-- Plan/subplan contracts are still the planner's hand-written validators; only the runtime contracts are Pydantic.
-- The durable router is a static ordered route list; the M2 decision engine and live quota signals are not wired in.
-- Milestone audits and audit-driven plan revisions are not ported; remediation is a per-task coordinated attempt.
-- Durable runs are not shown in the web UI / phone panel.
-- The legacy runtime still has its 17 retry mechanisms; nothing was removed (ELIMINAR waits for equivalence on real plans).
-- `file_guard.py` still does not see shell writes (no reliable interception was added).
-- No real Claude/Codex session was run under the durable runtime.
+- Audit-driven plan revisions (new remediation tasks in the frozen plan) are not ported: the durable repair is a new
+  round of an existing task. The `quality_audit_evidence` cross-check is not ported.
+- The legacy publication of a composition requires an M6 proof bound to the candidate's exact tree; the durable gate
+  passes when its gate task is accepted on a snapshot built on the candidate.
+- The M2 router does not reserve accounts or apply per-account concurrency limits and does not persist an M2 ledger
+  (telemetry is the record).
+- The file guard does not see writes outside a git work tree.
+- Nothing legacy was removed; D-144 proposes what to retire and when.
+- A task waiting on a pause, and the run workflow itself, record a few operations per poll: long pauses lengthen
+  replays (no measured impact yet).
+- The subplan lines of a migrated run hold a superset of their scope (legacy snapshots bring their history).
+- Exactly-once for external effects is not claimed.

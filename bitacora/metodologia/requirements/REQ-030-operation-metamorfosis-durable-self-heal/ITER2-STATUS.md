@@ -1,22 +1,14 @@
-# REQ-030 iteration 2 — status at interruption (2026-10-28, usage limit)
+# REQ-030 iteration 2 — status (2026-10-28 22:35, closed)
 
-- REQ-021 durable run PAUSED (`bt-durable pause`, request fff43cd3…). T2.6:k1 and T3.2:k1 wait on owner decisions d1
-  (runtime defect). Do not answer them until the WIP below is finished and deployed.
-- Live bug found and fixed on main (366cbf372): the engine (a systemd service) passed its own INVOCATION_ID and
-  BT_DURABLE_DATABASE_URL to agent units → a1 attempts of T2.6/T3.2 orphaned (LAUNCH_CONFLICT). Evidence:
-  evidence/iter2/orphan-units-20261028.txt. Engine NOT restarted yet with the fix.
-- T3.2 already has a valid owner receipt (RUN.attestations/T3.2, bound to att-0059): with item 3 it reconciles to PASS
-  (answer d1 `reverify` after deploy).
-- WIP branch `req030-iter2-wip` (2ed7493ac), not merged:
-  - item 2: `adapters/briefs.py` (legacy `owner_notes`/`contract_notes`, history across runtimes), continuation note;
-    legacy wiring fix (design contract notes were dropped by `executor.briefs.notes = ...`). Parity test NOT written.
-  - item 3: M6Verifier `attestations_for` + `on_verdict` (RUN.notes), classifier MANUAL_EVIDENCE_REQUIRED, owner
-    `reverify` loop (patch bt-task-owner-reverify), reconcile asks owner first (patch bt-task-reconcile-asks-owner),
-    `bt-durable attest`. E2E NOT written.
-  - item 1: control/subplans.py, subplan lines refs/bt/subplan/..., adapters/composition.py (bt_composition),
-    bt.run behind patch bt-run-subplans. test_durable_subplans: 3 pure tests pass; e2e fails — first sync runs before
-    the run line's `-base` pin exists (LINE_BASE_UNKNOWN). Fix: create the run line + pin in `sync` when missing.
-    REQ-021 needs `refs/bt/line/pictures/REQ-021/r15/pictures-base` = fa101a47 pinned before deploy.
-- Subagents launched in worktrees for items 5 (M2 router), 6 (panel/projection), 7 (Pydantic plan contracts),
-  8 (shell file guard): their branches must be reviewed and merged.
-- Pending: items 4, 9, 10; full regression; deploy (backup + smoke); resume REQ-021; REPORT.md.
+All ten items of CONTINUE.md meet their criteria (item 9 as a proposal, D-144, by design: nothing is removed without
+the owner's decision). Integrated in `main` `3519eec09` after a full regression, deployed 22:12 with a DBOS backup
+first and a smoke after. pictures REQ-021 r15 runs on the durable runtime with subplans, the owner's notes in its
+briefs, attestations (T3.2 completed by re-verification) and milestone audits armed for its five audit tasks; the web
+dashboard and the remote snapshot show it. Details, evidence and the exact state of both runtimes: [REPORT.md](REPORT.md).
+
+The session that shared this iteration (metodologia-b1) ended at ~21:25 before the final merge; session
+metodologia-6d reviewed its integrated branch (`evidence/iter2/review-3cdace8f4.md`), fixed what the review found
+(`a6a2706c9`), ran the regression, deployed and resumed REQ-021.
+
+Watch next: T2.6 a2 and T3.11 a1 (running), then the SP-2 audits T2.7/T2.8 (first real judgement of item 4) and the
+first composition gate CG-1 (T91).
