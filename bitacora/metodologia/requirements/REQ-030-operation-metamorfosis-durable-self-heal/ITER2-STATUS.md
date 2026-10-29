@@ -15,3 +15,7 @@ third deploy (23:34, `bc7425690`): the engine-owned ledger check of every audit,
 (`VK_DRIVER_FILES`, the engine's DB URL) leaking into checks. T2.6, T3.2 and T3.11 are accepted; T2.7 (visual audit)
 was judged live three times and is held blocked at its round limit: it needs an owner decision (a test-database
 credential for visual-audit agents, or the owner's own review). T3.12 runs; every gate depends on T2.7/T2.8.
+
+Update 01:35: two more live findings fixed and deployed (subplan members accepted in their own lines, `ae9665a76`;
+an owner's retry reopens a run that ended blocked, `f0df69300`). SP-3 complete (T3.15 audit passed). REQ-021 ended
+`blocked` on T2.7; `retry-task` now reopens it (checked live on a throwaway fork of its real history).

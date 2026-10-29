@@ -23,7 +23,7 @@ run the durable runtime owns.
 
 | # | Item | State | Evidence |
 |---|---|---|---|
-| 1 | Subplans and composition gates (1.3.0) | done | `test_durable_subplans` (8): per-subplan lines hold their scope, a member starts from its line, the gate task starts from the composition candidate (bt_composition) and work after the gate waits for it; the migration keeps each subplan's line; atomic multi-line integration; the run survives a failing line sync or composition. Live: REQ-021 turned subplans on at its first turn after the 22:12 restart (`subplans_enabled` 22:16: SP-1, SP-2, SP-14, SP-3; gates CG-1, CG-4, CG-2) and created its four subplan lines from the pin `fa101a47` with no conflict |
+| 1 | Subplans and composition gates (1.3.0) | done | `test_durable_subplans` (8): per-subplan lines hold their scope, a member starts from its line, the gate task starts from the composition candidate (bt_composition) and work after the gate waits for it; the migration keeps each subplan's line; atomic multi-line integration; the run survives a failing line sync or composition; a member conflicting only with another subplan's work on the run line is accepted in its own line, as in the legacy runtime. Live: REQ-021 turned subplans on at its first turn after the 22:12 restart (`subplans_enabled` 22:16: SP-1, SP-2, SP-14, SP-3; gates CG-1, CG-4, CG-2) and created its four subplan lines from the pin `fa101a47` with no conflict |
 | 2 | Brief parity with legacy | done | `test_durable_briefs` (3): no section of the legacy prompt is missing from the durable one; the live REQ-021 T2.6 brief carries `RUN.notes/T2.6.md`. The legacy runtime keeps its prompt (design-contract notes stay out of it, 73eb93b3c); the durable brief carries them |
 | 3 | Manual checks with attestations | done | `test_durable_attestations` (2): a valid receipt settles the manual check without asking; a missing one is a decision with `reverify` and `bt-durable attest` passes the same snapshot. Live: REQ-021 T3.2 completed at 22:19 by `bt-durable answer pictures REQ-021 T3.2 T3.2:d1@k1 reverify`: the owner's receipt bound to legacy att-0059 settled its manual check on re-verification, no agent run |
 | 4 | Milestone audit → coordinated remediation (scenario K) | done | `test_durable_audits` (3 e2e + 2 pure): related findings become one repair with probes, re-audit, bounded rounds, panels show a held audit; `test_durable_audits_upgrade` (2): an engine upgrade replays an old audit unjudged and judges a new one. REQ-021's audits declare their ledgers; live policy `ledger_required`, `read_only`, `remediate`, 2 rounds. Live: REQ-021 T2.7 judged three times, its findings grouped into coordinated repairs (T2.3, T2.4, T2.5), held blocked at the round limit with its reason in the panel; the engine-owned ledger check fixed on the way (`992d1706d`) |
@@ -169,13 +169,25 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
   T2.4←F2, T2.5←F3). The findings were in fact one environment limitation (the harness needs the REQ-021 test database,
   which no agent receives in either runtime): the three repairs made no change (snapshot = base) and the audit runs
   again (round 2, a101), bounded by `remediation_rounds = 2`. Decision for the owner below.
+- 00:16 T3.12 (SP-3) passed its checks but conflicted with SP-2's work on the run line (both appended npm scripts to
+  `package.json`); no retry could fix it (it starts from the SP-3 line every time). The legacy runtime integrates a
+  member only into its subplan line (`SubplanLineRouter`) and leaves cross-subplan conflicts to composition; the durable
+  integrator now does the same for members and reports the run-line conflict (`ae9665a76`, e2e `MembersAcrossSubplans`).
 - 00:10 T2.7's third audit still could not render: blocked at its round limit (2 rounds, 6 repair attempts that changed
   nothing, 3 audits), held with its reason; the web panel shows it `blocked` with "auditoría bloqueada: 3 blocking
   finding(s) … after 2 remediation round(s) (limit 2)". The run goes on: T3.12 (SP-3) running.
-- State at 00:15: 31 of 45 tasks done (25 inherited + T3.2, T2.6, T3.11 and the no-change repairs of T2.3, T2.4, T2.5),
-  T2.7 blocked, T3.12 running. The composition gates (CG-1 → T91, CG-4 → T94, CG-2 → T92) all depend on T2.7/T2.8, so
-  no candidate can be composed until the owner decides on T2.7 (see "Blocked"); composition itself is proven end to end
-  in `test_durable_subplans`.
+- 00:51–01:01 T3.12 (retried with the note to restore its own a1 work) accepted in one minute, then T3.13; T3.15,
+  the SP-3 audit, judged and passed (`audit_passed`, 01:00). SP-3 is complete.
+- 01:01 every remaining task depends on T2.7: the run workflow ended (`SUCCESS`, `blocked`). A `retry-task` sent to an
+  ended workflow is never read, so the owner could not have continued the run: fourth live finding, fixed
+  (`f0df69300`, `bt-run-reopened`: an owner's retry forks the ended run into `bt:<run>@N`, which waits for the command;
+  e2e `test_durable_reopen`; regression `evidence/iter2/regression-reopen.txt`, 270 files, only the 4 baseline
+  failures; fifth deploy 01:28, backup first, `main` `1fc3a3e94`). Checked live without changing the run: a throwaway
+  fork of REQ-021 replayed its 417 recorded operations on the new code, reached `run_reopened` and waited; cancelled.
+- State at 01:35 (web panel): run `blocked` (authority `dbos`), 34 tasks completed (25 inherited + T3.2, T2.6, T3.11,
+  T3.12, T3.13, T3.15 and the no-change repairs of T2.3, T2.4, T2.5), T2.7 blocked with its reason; T2.8, T91, T14.x,
+  T94 and T92 not started (all depend on T2.7). No composition gate could be composed yet (all three wait for T2.7/T2.8);
+  composition is proven end to end in `test_durable_subplans`.
 
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
@@ -186,8 +198,13 @@ stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchan
   `PICTURES_REQ021_DATABASE_URL` (the dedicated REQ-021 test database), which the verifier receives (operator env file)
   but no agent does, in either runtime. Reason it is not decided here: it gives agents a database credential. Procedure
   for the owner: either add `PICTURES_REQ021_DATABASE_URL` to the environment visual-audit agents receive (the durable
-  M3 adapter's agent environment), then `bt-durable retry-task pictures REQ-021 T2.7` (one more round); or review the
+  M3 adapter's agent environment), then `uv run bt-durable retry-task pictures REQ-021 T2.7 --note '…'` (it reopens
+  the ended run and grants one more round); or review the
   SP-2 screens yourself and record the ledger's findings as `accepted` with `accepted_by: owner` and a reason.
+  Tried by the operator and refused by the session's permission system (an agent may not be authorized to use a
+  credential on the operator's word): `PICTURES_REQ021_DATABASE_URL` lives in `~/.config/flow/secrets.env`; the
+  prepared note (authorize only that variable, never print or store it, re-check F1–F3, anything still blocked as
+  a finding with `"tasks": []` so it goes to the owner) is in the session scratchpad as `T2.7-note2.txt`.
   Lesson recorded: the operator's note told the auditor to record states it could not capture as open findings, so
   the gate would not read an empty ledger as a pass; the gate then sent an environment limitation to product tasks as
   repairs (harmless here: no change, but 6 attempts). An audit that cannot capture should stop as an owner decision,

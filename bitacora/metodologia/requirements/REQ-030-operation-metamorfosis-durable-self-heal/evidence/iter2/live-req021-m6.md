@@ -36,3 +36,30 @@
   (`1906e83b`) passes through the real M6 runner (exit 0, 314 s, every element `[PASS]`).
 - Not changed: the legacy runtime's verifier (`bt_verifier_env.ambient_for_run`) inherits the same names; its WebGL
   checks fail the same way (att-0094). Proposal for the owner: the same filter there, or narrow `verifier.inherit_env`.
+
+## T3.12: a cross-subplan conflict on the run line that no retry could fix (00:16)
+
+- Live: T3.12 (SP-3) a1 passed its checks, then `INTEGRATION_CONFLICT` "conflicts with accepted work in: package.json";
+  the single attempt had used the task's token budget (8.8 M input tokens, mostly cached), so the runtime asked the owner.
+- Both sides appended npm scripts at the end of `scripts`: T3.12 the `taller:*` entries (on the SP-3 line), SP-2's
+  T2.x the `cuentas:*` entries (on the run line). A retry starts from the SP-3 line again, so it would conflict again.
+- Reference: in a 1.3.0 legacy run the integration line IS `bt_integration_line.SubplanLineRouter` (wired in
+  `bt_scheduler_executor_wiring`): a member goes only into its subplan line and subplans meet at a composition gate.
+  The durable integrator (item 1) also merged every member into the run line and failed on that merge.
+- Fix `ae9665a76`: a member counts once its subplan lines take it (one transaction, as before); the run line takes it
+  when it merges cleanly, otherwise the `run_line_conflict` event is emitted inside the `bt.integrate` step (no change
+  to any workflow's step sequence). Tasks without subplan lines keep the fatal conflict. E2e
+  `MembersAcrossSubplans`: red on `main` (the run waits on a decision), green with the fix; `test_durable_subplans` 9/9.
+
+## SP-3 completed, and a run that ended blocked could not be continued (00:53–01:01)
+
+- T3.12 a2, retried with the operator's note to restore its own a1 work, was accepted in one minute (SP-3, with the
+  `run_line_conflict` event for package.json); T3.13 likewise; T3.15, the SP-3 audit, was judged by the gate and
+  passed (`audit_passed`, 01:00). Every remaining task depends on T2.7.
+- With only blocked work left the run workflow ended (`SUCCESS`, summary `blocked`). A `retry-task` sent to it would
+  never be read: the procedure given to the owner for T2.7 could not continue the run (in the legacy runtime a blocked
+  run stays open for the owner).
+- Fix `f0df69300`: `Client.reopen` forks the ended incarnation at its last summary event into `bt:<run>@N` (DBOS
+  `fork_workflow` with a chosen id); the fork replays the history and, behind `DBOS.patch("bt-run-reopened")`, waits
+  for the owner's command instead of ending; `Client.command` reopens before a `retry_task`; status, commands and the
+  panels' projection follow the current incarnation. E2e `test_durable_reopen` (2).
