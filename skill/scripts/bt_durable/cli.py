@@ -36,16 +36,17 @@ ENV_FILE = Path.home() / ".config" / "bitacora" / "durable.env"   # 0600; the en
 
 
 def database_url() -> str:
-    """BT_DURABLE_DATABASE_URL (environment, or ~/.config/bitacora/durable.env) > execution.database_url > SQLite.
-    The PostgreSQL password lives only in that 0600 file, never in the shared config."""
+    """BT_DURABLE_DATABASE_URL (environment) > execution.database_url of THIS bitácora root's config >
+    ~/.config/bitacora/durable.env > SQLite. The PostgreSQL password lives only in that 0600 file, never in the shared
+    config. A root that names its own database (a lab, a test) always gets it: the per-user file is the live engine's
+    and must never be reached from another root (a lab's remote bridge once read the live database through it)."""
     import os
-    url = os.environ.get("BT_DURABLE_DATABASE_URL", "")
+    url = os.environ.get("BT_DURABLE_DATABASE_URL", "") or bt_config.get("execution.database_url", "")
     if not url and ENV_FILE.is_file():
         for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
             if line.startswith("BT_DURABLE_DATABASE_URL="):
                 url = line.split("=", 1)[1].strip().strip('"')
-    configured = url or bt_config.get("execution.database_url", "")
-    return configured or f"sqlite:///{(Path(bt_core.STATE) / 'durable' / 'dbos.sqlite3').resolve()}"
+    return url or f"sqlite:///{(Path(bt_core.STATE) / 'durable' / 'dbos.sqlite3').resolve()}"
 
 
 def engine_config() -> EngineConfig:
