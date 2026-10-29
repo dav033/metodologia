@@ -55,6 +55,7 @@ PATCH_RUN_SUBPLANS = "bt-run-subplans"
 PATCH_TASK_PAUSE = "bt-task-respects-pause"
 PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
+PATCH_RUN_REOPENED = "bt-run-reopened"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -62,6 +63,7 @@ COMPOSE_TURNS = 3                        # turns a gate's composition may fail b
 
 
 def run_workflow_id(run: RunRef) -> str:
+    """The run's first incarnation; `bt-durable reopen` forks an ended run into `<this>@<N>` (client.reopen)."""
     return f"bt:{run.run_id}"
 
 
@@ -111,6 +113,9 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     audits_on = False
     remediations: dict[str, dict] = {}
     compose_failures: dict[str, int] = {}
+    # an incarnation forked by `reopen` from a run that ended blocked waits for the owner's command that reopened it
+    # (a retry) instead of ending again at once; the original run never takes this path
+    reopened = awaiting_command = False
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
         if not lines_on and subplans.enabled(plan) and DBOS.patch(PATCH_RUN_SUBPLANS):
@@ -165,8 +170,13 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         if front.finished:
             break
         retrying = [g for g in compose_failures if g not in composed and g not in rejected]
-        if not paused and not any(s == "running" for s in states.values()) and not front.ready and not retrying:
-            break                                   # only blocked work and its dependents remain
+        if not paused and not any(s == "running" for s in states.values()) and not front.ready and not retrying \
+                and not awaiting_command:
+            if not reopened and DBOS.workflow_id != run_workflow_id(run) and DBOS.patch(PATCH_RUN_REOPENED):
+                reopened = awaiting_command = True
+                steps.emit("run_reopened", {"run_id": run.run_id, "workflow_id": DBOS.workflow_id})
+            else:
+                break                               # only blocked work and its dependents remain
         message = DBOS.recv(TOPIC_RUN, timeout_seconds=settings.run_poll_seconds)
         if message is None:
             continue
@@ -198,6 +208,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         if command.request_id in seen_commands:
             continue                                # an idempotent repeat of a command already applied
         seen_commands.add(command.request_id)
+        awaiting_command = False
         stale = _stale_command(command, paused, rounds)
         if stale:                                   # built against a state the run has left: never applied
             steps.emit("command_refused", {"run_id": run.run_id, "request_id": command.request_id,
