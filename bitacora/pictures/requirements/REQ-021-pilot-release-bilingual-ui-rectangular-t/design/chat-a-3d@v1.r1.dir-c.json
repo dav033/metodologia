@@ -1,0 +1,36 @@
+{
+  "name": "Escena en el mensaje",
+  "axes": {
+    "concept": "Edición en contexto: las recomendaciones forman parte del mensaje; ampliar una escena y ajustar la necesidad ocurre en el mismo lugar.",
+    "layout": "Columna de conversación de 880px con tarjetas en bandas apiladas; miniatura de 168px junto a nombre y cantidad; expansión debajo de su propia tarjeta. Shell ancho compartido.",
+    "navigation": "Navegación horizontal heredada; Ver escena/Ocultar escena abre una sola vista en el mensaje; Ajustar revela el campo local; Abrir en el Taller lleva al deep link autorizado.",
+    "typography": "Geist y Geist Mono locales del producto: título 24px, nombres 18px/16px en móvil, cantidad 18px, cuerpo 15px y metadatos 12–13px.",
+    "density": "Bandas cerradas compactas de 176px aprox. en escritorio; una sola escena expandida, sin panel lateral permanente. Insets 24px escritorio y 20px teléfono.",
+    "components": "Button, Input, Skeleton y AlertDialog reales; enlaces nativos para abrir, disclosure de cuenta heredado y composición propia de tarjeta/edición en sitio.",
+    "colour": "Tokens Pictures exactos de globals.css y los alias accesibles de hermanos; acento en apertura y envío, navegación neutra, visor con taller-visor. Dos temas sin paleta nueva.",
+    "motion": "Asentamiento táctil .975→1.006→1 en 540ms con 65ms de secuencia; expansión vertical .94→1.012→1; presión .965, hover 1.025 y spring del perfil. Reducción inmediata y pausa de animación CSS en pestaña oculta."
+  },
+  "evidence": {
+    "layout": [
+      ".conversation",
+      ".recommendation-head",
+      ".preview-mini"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".expand-control",
+      ".open-link",
+      "#restart-chat"
+    ],
+    "typography": [
+      ".heading h1",
+      ".recommendation h3",
+      ".count strong"
+    ],
+    "motion": [
+      ".recommendation",
+      ".btn",
+      ".open-control"
+    ]
+  }
+}

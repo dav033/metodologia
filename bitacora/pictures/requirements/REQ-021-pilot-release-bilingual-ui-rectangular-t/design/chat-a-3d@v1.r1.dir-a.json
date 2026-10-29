@@ -1,0 +1,38 @@
+{
+  "name": "Mesa de recomendaciones",
+  "axes": {
+    "concept": "Mesa operativa: necesidad y dos o tres decoraciones listas se consultan simultáneamente dentro del chat existente.",
+    "layout": "Rejilla de trabajo con conversación y compositor a la izquierda, panel de recomendaciones a la derecha; cada decoración ocupa una fila con vista, nombre, conteo y apertura. En móvil, título de tarjeta a todo el ancho y vista/conteo/acción debajo.",
+    "navigation": "Shell horizontal heredado y dos anclas locales Conversación / Decoraciones 3D; apertura contextual como proyecto nuevo y retorno al chat, sin otro nivel de navegación global.",
+    "typography": "Geist Sans del producto; H1 24px, H2 20px, nombre 16px/15px móvil; conteo tabular 26px/24px. Geist Mono 11–12px reservado para metadatos.",
+    "density": "Densidad operativa con dos columnas de proporción .82:1.35, separación 24px y filas de pares. Inset 24px escritorio/20px móvil; formas heredadas de 32/24/18px y botones píldora de 44px mínimo.",
+    "components": "Button, Textarea, Skeleton y AlertDialog reales del workspace instalado. Tarjetas propias compuestas como filas; details de cuenta, selects nativos y marca anillo/punto heredados.",
+    "colour": "Tokens Pictures de globals.css, idénticos a los contratos hermanos; acento para apertura y foco, superficies neutras para conversación y filas. Borde de control usa texto-tenue como los hermanos; sin nueva paleta.",
+    "motion": "Registro breve por capas: tablero 8px vertical, encabezados 4px vertical, tarjetas 18px horizontal y desfase de 65ms; 380ms expressive, 280ms natural, 160ms subtle, easing productivo cubic-bezier(.23,1,.32,1). Controles 140ms/90ms. Carga respira a 1.3s; se suspende fuera de vista y en pestaña oculta. Reduced/Quieto/still elimina movimiento sin eliminar información."
+  },
+  "evidence": {
+    "layout": [
+      ".working-board",
+      ".recommendation-card",
+      ".composer"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".jump-links",
+      ".recommendation-card [data-destination]"
+    ],
+    "typography": [
+      ".heading h1",
+      ".card-copy h3",
+      ".balloon-count",
+      ".meta"
+    ],
+    "motion": [
+      ".board-register",
+      ".recommendation-card",
+      ".section-top",
+      ".button",
+      ".loading-scan"
+    ]
+  }
+}

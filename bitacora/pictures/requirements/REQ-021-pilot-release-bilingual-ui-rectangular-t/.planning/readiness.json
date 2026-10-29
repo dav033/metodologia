@@ -1,15 +1,6 @@
 {
- "digest": "69fa2030174b704e6058b84927db7c6db8d48defc17ffa95f51440f4c4eba3fa",
+ "digest": "9f63b1f10e387bfe6dbd097782ab1984ab5909b3437ffebe9f4f109b2506ff2e",
  "rows": [
-  {
-   "subplan": "SP-4",
-   "tasks": 10,
-   "ok": true,
-   "problem": "",
-   "depends_on_unfinished": "",
-   "errors": [],
-   "new_errors": []
-  },
   {
    "subplan": "SP-5",
    "tasks": 6,
@@ -48,36 +39,36 @@
   },
   {
    "subplan": "SP-9",
-   "tasks": 0,
-   "ok": false,
-   "problem": "sin tareas: todavía no está definido",
+   "tasks": 6,
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
    "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-10",
-   "tasks": 0,
-   "ok": false,
-   "problem": "sin tareas: todavía no está definido",
+   "tasks": 6,
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
    "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-11",
-   "tasks": 0,
-   "ok": false,
-   "problem": "sin tareas: todavía no está definido",
+   "tasks": 4,
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
    "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-12",
-   "tasks": 0,
-   "ok": false,
-   "problem": "sin tareas: todavía no está definido",
+   "tasks": 6,
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
    "errors": [],
    "new_errors": []

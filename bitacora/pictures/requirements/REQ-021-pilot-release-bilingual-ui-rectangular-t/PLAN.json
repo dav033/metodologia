@@ -87,9 +87,6 @@
    "task": "T96"
   },
   {
-   "criteria": [
-    "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view."
-   ],
    "id": "CG-7",
    "subplans": [
     "SP-1",
@@ -101,7 +98,10 @@
     "SP-6",
     "SP-7"
    ],
-   "task": "T97"
+   "task": "T97",
+   "criteria": [
+    "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view."
+   ]
   },
   {
    "criteria": [
@@ -120,6 +120,88 @@
     "SP-8"
    ],
    "task": "T98"
+  },
+  {
+   "id": "CG-9",
+   "subplans": [
+    "SP-1",
+    "SP-2",
+    "SP-14",
+    "SP-3",
+    "SP-4",
+    "SP-5",
+    "SP-6",
+    "SP-7",
+    "SP-8",
+    "SP-9"
+   ],
+   "task": "T99",
+   "criteria": [
+    "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names."
+   ]
+  },
+  {
+   "id": "CG-10",
+   "subplans": [
+    "SP-1",
+    "SP-2",
+    "SP-14",
+    "SP-3",
+    "SP-4",
+    "SP-5",
+    "SP-6",
+    "SP-7",
+    "SP-8",
+    "SP-9",
+    "SP-10"
+   ],
+   "task": "T100",
+   "criteria": [
+    "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish."
+   ]
+  },
+  {
+   "id": "CG-11",
+   "subplans": [
+    "SP-1",
+    "SP-2",
+    "SP-14",
+    "SP-3",
+    "SP-4",
+    "SP-5",
+    "SP-6",
+    "SP-7",
+    "SP-8",
+    "SP-9",
+    "SP-10",
+    "SP-11"
+   ],
+   "task": "T101",
+   "criteria": [
+    "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account."
+   ]
+  },
+  {
+   "id": "CG-12",
+   "subplans": [
+    "SP-1",
+    "SP-2",
+    "SP-14",
+    "SP-3",
+    "SP-4",
+    "SP-5",
+    "SP-6",
+    "SP-7",
+    "SP-8",
+    "SP-9",
+    "SP-10",
+    "SP-11",
+    "SP-12"
+   ],
+   "task": "T102",
+   "criteria": [
+    "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag."
+   ]
   }
  ],
  "interfaces": [
@@ -917,40 +999,40 @@
    "audit_task": "T7.11",
    "checkpoints": [
     {
-     "purpose": "Prove tool gating, the counter API and per-tool spend tags on a running server before any screen is built.",
-     "task": "T7.4"
+     "task": "T7.4",
+     "purpose": "Prove tool gating, the counter API and per-tool spend tags on a running server before any screen is built."
     }
    ],
    "consumes": [
     {
      "contract": "session-guard",
-     "dependency": "contract",
+     "version": 1,
      "from": "SP-1",
-     "version": 1
+     "dependency": "contract"
     },
     {
      "contract": "permission-map",
-     "dependency": "contract",
+     "version": 1,
      "from": "SP-1",
-     "version": 1
+     "dependency": "contract"
     },
     {
      "contract": "plan-catalogue",
-     "dependency": "contract",
+     "version": 1,
      "from": "SP-1",
-     "version": 1
+     "dependency": "contract"
     },
     {
      "contract": "taller-scene",
-     "dependency": "contract",
+     "version": 1,
      "from": "SP-3",
-     "version": 1
+     "dependency": "contract"
     },
     {
      "contract": "ai-usage",
-     "dependency": "contract",
+     "version": 1,
      "from": "SP-6",
-     "version": 1
+     "dependency": "contract"
     }
    ],
    "covers": [
@@ -964,8 +1046,8 @@
    "title": "Assisted chat as three tools and the decorations explorer",
    "ui": {
     "contract": "herramientas-chat",
-    "design_task": "T7.1",
     "version": 1,
+    "design_task": "T7.1",
     "visual_review_task": "T7.10"
    },
    "ui_brief": {
@@ -1002,7 +1084,14 @@
      "Calculator: empty, imported from counter, editing, calculating, totals, quote error",
      "Gallery: loading, results, no results for a filter, unknown decoration link, opening with unsaved work in the Taller"
     ]
-   }
+   },
+   "produces": [
+    {
+     "contract": "galeria-index",
+     "version": 1,
+     "defined_by": "T7.8"
+    }
+   ]
   },
   {
    "acceptance_criteria": [
@@ -1057,67 +1146,152 @@
   },
   {
    "acceptance_criteria": [
-    "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator."
+    "Migration 041 creates a Postgres table of English texts keyed by kind, source id and field with the Spanish source text, the English text and its origin (ia or admin), and a lookup returns the English text in English and the Spanish source when no English exists.",
+    "npm run textos:validar accepts the generated English files only when every catalogue product, variant colour or size name and ready-made decoration in the repository snapshot has a non-empty English name and description where a Spanish one exists, product codes and brand names are unchanged, and no English text equals its Spanish source unless the pair is listed as a brand or code.",
+    "npm run textos:sembrar loads the generated files into the database idempotently: a second run changes nothing, and a text whose origin is admin is never overwritten.",
+    "Nothing regenerates an English text after it is stored: a later change of the Spanish source only marks the text «la fuente cambió» in the administration list, and products added later show Spanish until an administrator writes English.",
+    "With the language set to English, every serialization boundary that sends product or decoration names to the browser (catalogue pages and APIs, Taller search, shopping list, chat product results, gallery index and the Taller idea library) sends the English text, falling back to Spanish, and with Spanish sends exactly what it sends today.",
+    "An administrator with textos.corregir finds a text in the «Textos en inglés» administration tab by name or id, filters by pendiente, IA, corregido or la fuente cambió, saves a correction that becomes origin admin, and accounts without the permission get 403 from its API.",
+    "On a production build against the REQ-021 database with the seeded English texts, an English session sees English product and decoration names in the catalogue, the Taller library, the shopping list and the gallery; an administrator's correction appears there on the next request; and a Spanish session sees today's Spanish names."
    ],
    "covers": [
     "R12"
    ],
    "id": "SP-9",
    "milestone_id": "M3",
-   "outcome": "English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator.",
+   "outcome": "English names and descriptions for the 1,615 catalogue products, their variant colour and size names and the 448 ready-made decorations are generated once with AI, stored in Postgres, shown when the language is English with the Spanish text as fallback, never regenerated automatically, and corrected by an administrator in a «Textos en inglés» tab; texts written by people (project and personal decoration names) are never translated.",
    "title": "Product and decoration texts in English",
-   "ui": {
-    "contract": "textos-producto",
-    "version": 1
-   }
+   "integration_test_task": "T9.5",
+   "audit_task": "T9.6",
+   "produces": [
+    {
+     "contract": "textos-ingles",
+     "version": 1,
+     "defined_by": "T9.1"
+    }
+   ],
+   "consumes": [
+    {
+     "contract": "idioma",
+     "version": 1,
+     "from": "SP-8",
+     "dependency": "contract"
+    },
+    {
+     "contract": "permission-map",
+     "version": 1,
+     "from": "SP-1",
+     "dependency": "contract"
+    }
+   ]
   },
   {
    "acceptance_criteria": [
-    "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language."
+    "The guided chat and its components (src/components/guiado, src/components/propuesta) and the structure-plan views (src/components/plan) pass the coverage guard and render in English with no Spanish string left, while Spanish rendering is unchanged.",
+    "The home, counter, calculator and professional quote (src/components/herramientas, src/components/cotizacion), the catalogue (src/components/catalogo, src/app/catalogo), the gallery and the saved-project and personal-library screens pass the coverage guard and render in English with no Spanish string left.",
+    "Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt.",
+    "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9.",
+    "Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list.",
+    "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens."
    ],
    "covers": [
     "R12"
    ],
    "id": "SP-10",
    "milestone_id": "M3",
-   "outcome": "The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language.",
+   "outcome": "Every screen an external user reaches beyond the Taller and the navigation (home, guided chat, counter, calculator and professional quote, catalogue, gallery, saved projects and personal library, account) is complete in English, the chat tools and the Taller scene AI reply in the user's language while catalogue searches keep using the Spanish catalogue, and staff-only screens stay in Spanish.",
    "title": "Remaining screens and AI replies in English",
-   "ui": {
-    "contract": "idioma-resto",
-    "version": 1
-   }
+   "integration_test_task": "T10.5",
+   "audit_task": "T10.6",
+   "consumes": [
+    {
+     "contract": "idioma",
+     "version": 1,
+     "from": "SP-8",
+     "dependency": "contract"
+    },
+    {
+     "contract": "textos-ingles",
+     "version": 1,
+     "from": "SP-9",
+     "dependency": "contract"
+    }
+   ]
   },
   {
    "acceptance_criteria": [
-    "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update."
+    "Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema.",
+    "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count.",
+    "A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry.",
+    "Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values.",
+    "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged."
    ],
    "covers": [
     "R15"
    ],
    "id": "SP-11",
    "milestone_id": "M4",
-   "outcome": "A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update.",
+   "outcome": "A person edits the spacing between quartets and the thickness of columns, arches and garlands in the Taller 3D (beyond the type, format, inflation and per-balloon colour already editable), and the counts, shopping list and assembly sheet update; saved projects keep the values and existing scenes are unchanged.",
    "title": "Editable modules and quartets",
-   "ui": {
-    "contract": "modulos-editables",
-    "version": 1
-   }
+   "integration_test_task": "T11.3",
+   "audit_task": "T11.4",
+   "consumes": [
+    {
+     "contract": "taller-scene",
+     "version": 1,
+     "from": "SP-3",
+     "dependency": "contract"
+    },
+    {
+     "contract": "project-document",
+     "version": 1,
+     "from": "SP-4",
+     "dependency": "contract"
+    }
+   ]
   },
   {
    "acceptance_criteria": [
-    "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine."
+    "Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits.",
+    "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard.",
+    "The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan.",
+    "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it."
    ],
    "covers": [
     "R13"
    ],
    "id": "SP-12",
    "milestone_id": "M4",
-   "outcome": "In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine.",
+   "outcome": "In two or three messages the guided chat defines the need and shows two or three ready-made 3D decorations from the gallery with preview, name and balloon count to every plan; Master Designer and staff can open one in the Taller 3D as a new project, other plans see the recommendation without the button; names and counts come only from the gallery and the engine.",
    "title": "Normal chat recommends ready-made 3D decorations",
    "ui": {
     "contract": "chat-a-3d",
-    "version": 1
-   }
+    "version": 1,
+    "design_task": "T12.1",
+    "visual_review_task": "T12.5"
+   },
+   "integration_test_task": "T12.4",
+   "audit_task": "T12.6",
+   "consumes": [
+    {
+     "contract": "galeria-index",
+     "version": 1,
+     "from": "SP-7",
+     "dependency": "contract"
+    },
+    {
+     "contract": "textos-ingles",
+     "version": 1,
+     "from": "SP-9",
+     "dependency": "contract"
+    },
+    {
+     "contract": "permission-map",
+     "version": 1,
+     "from": "SP-1",
+     "dependency": "contract"
+    }
+   ]
   },
   {
    "acceptance_criteria": [
@@ -8091,46 +8265,46 @@
    "estimate_rationale": "Agent estimate in minutes: 10 to copy the pinned file; the design itself is done during planning.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Placing the approved tools contract in design/contracts takes no design judgement.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.5"
-     ],
-     "justification": "Placing the approved tools contract in design/contracts takes no design judgement."
+     ]
     },
     "scope": {
+     "justification": "Adds only herramientas-chat@v1.md and nothing else.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.6"
-     ],
-     "justification": "Adds only herramientas-chat@v1.md and nothing else."
+     ]
     },
     "duration": {
+     "justification": "About ten minutes to place the tools contract and match its hash.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind design -> status unknown, no comparable samples",
       "task:T7.7"
-     ],
-     "justification": "About ten minutes to place the tools contract and match its hash."
+     ]
     },
     "risk": {
+     "justification": "A mismatched tools contract only holds the four screens at the hash gate.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.8"
-     ],
-     "justification": "A mismatched tools contract only holds the four screens at the hash gate."
+     ]
     },
     "coupling": {
+     "justification": "The home, counter, calculator and gallery screens read this contract.",
      "evidence": [
       "task:T7.5",
       "task:T7.8"
-     ],
-     "justification": "The home, counter, calculator and gallery screens read this contract."
+     ]
     },
     "confidence": {
+     "justification": "The tools draft is pinned at plan approval, so the step has no unknowns.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.10"
-     ],
-     "justification": "The tools draft is pinned at plan approval, so the step has no unknowns."
+     ]
     }
    },
    "expected_paths": [
@@ -8177,46 +8351,46 @@
    "estimate_rationale": "Agent estimate in minutes: 20 tool catalogue + 60 removing costing tools and price text per permission in the guided route and engine + 30 spend tags through the x-vista path into ai-usage + 40 tests = 150.",
    "classification_evidence": {
     "complexity": {
+     "justification": "The guided route mixes model tools, rule answers and engine costing, so prices can leak through more than one path.",
      "evidence": [
       "file:src/app/api/asistente-guiado/route.ts",
       "file:src/lib/ia/guiado/prompt-guiado.ts"
-     ],
-     "justification": "The guided route mixes model tools, rule answers and engine costing, so prices can leak through more than one path."
+     ]
     },
     "scope": {
+     "justification": "Touches the guided route, its prompt, the costing helper, the request tagging and the route map.",
      "evidence": [
       "file:src/app/api/asistente-guiado/route.ts",
       "file:src/lib/registro/cliente.ts"
-     ],
-     "justification": "Touches the guided route, its prompt, the costing helper, the request tagging and the route map."
+     ]
     },
     "duration": {
+     "justification": "Twenty, sixty, thirty and forty minutes make one hundred fifty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "file:src/app/api/asistente-guiado/route.ts"
-     ],
-     "justification": "Twenty, sixty, thirty and forty minutes make one hundred fifty."
+     ]
     },
     "risk": {
+     "justification": "A leaked price gives away a paid plan's tool; a wrong tag misreports spend per tool.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "file:src/lib/guiada-motor/costear-idea-elegida.ts"
-     ],
-     "justification": "A leaked price gives away a paid plan's tool; a wrong tag misreports spend per tool."
+     ]
     },
     "coupling": {
+     "justification": "Reads contract:permission-map and writes contract:ai-usage tags that SP-6 and the screens rely on.",
      "evidence": [
       "task:T1.2",
       "task:T6.2"
-     ],
-     "justification": "Reads contract:permission-map and writes contract:ai-usage tags that SP-6 and the screens rely on."
+     ]
     },
     "confidence": {
+     "justification": "The guided route and tagging code were read; every place that can print a price is not yet listed.",
      "evidence": [
       "file:src/app/api/asistente-guiado/route.ts",
       "assumption:costear_decoracion and abrir_accion_plan costear are the only costing paths of the guided chat"
-     ],
-     "justification": "The guided route and tagging code were read; every place that can print a price is not yet listed."
+     ]
     }
    },
    "expected_paths": [
@@ -8244,15 +8418,15 @@
      "type": "command",
      "value": "npm run herramientas:test-gating -- --test-name-pattern=catalogo",
      "purpose": "One tool catalogue names the home, normal chat, balloon counter, cost calculator and decorations gallery with the permission and spend tag of each, and every page and API of the four tools is mapped to exactly that permission.",
-     "created_by": "T7.2",
-     "category": "functional"
+     "category": "functional",
+     "created_by": "T7.2"
     },
     {
      "type": "command",
      "value": "npm run herramientas:test-gating -- --test-name-pattern=sin-precios",
      "purpose": "For an account without costos.usar the guided chat never calls a costing tool, never answers with a price, total or quote, and its costing and professional-quote APIs answer 403 SIN_PERMISO, without naming which plan includes costs.",
-     "created_by": "T7.2",
      "category": "functional",
+     "created_by": "T7.2",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8261,8 +8435,8 @@
      "type": "command",
      "value": "npm run herramientas:test-gating -- --test-name-pattern=etiquetas",
      "purpose": "Every paid model call of the chat, counter and calculator is recorded in the AI usage ledger under its own tool tag (chat, contador, calculadora) with the signed-in account and session.",
-     "created_by": "T7.2",
      "category": "functional",
+     "created_by": "T7.2",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8271,8 +8445,8 @@
      "type": "command",
      "value": "npm run herramientas:test-gating -- --test-name-pattern=abuso",
      "purpose": "A forged x-herramienta header, a client-supplied account or session id and a cross-origin POST to the gated tool APIs never grant access and never change the account a spend row belongs to.",
-     "created_by": "T7.2",
      "category": "functional",
+     "created_by": "T7.2",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8304,46 +8478,46 @@
    "estimate_rationale": "Agent estimate in minutes: 25 schema + 30 form path over estimar-conteo + 30 phrase extraction with a missing-measure question + 15 photo path over conteo-referencia + 20 tests = 120.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Three inputs reach two existing Python engines; the phrase path must ask rather than guess a measure.",
      "evidence": [
       "file:src/lib/ia/nucleo/python-adapter.ts",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Three inputs reach two existing Python engines; the phrase path must ask rather than guess a measure."
+     ]
     },
     "scope": {
+     "justification": "A route, a counting module, a schema and tests, verifiable end to end.",
      "evidence": [
       "file:src/lib/ia/nucleo/python-adapter.ts",
       "task:T7.2"
-     ],
-     "justification": "A route, a counting module, a schema and tests, verifiable end to end."
+     ]
     },
     "duration": {
+     "justification": "Twenty-five, thirty, thirty, fifteen and twenty minutes add to one hundred twenty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "file:src/lib/ia/nucleo/python-adapter.ts"
-     ],
-     "justification": "Twenty-five, thirty, thirty, fifteen and twenty minutes add to one hundred twenty."
+     ]
     },
     "risk": {
+     "justification": "A wrong count reaches decorators who buy balloons with it.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "file:src/lib/ia/nucleo/python-adapter.ts"
-     ],
-     "justification": "A wrong count reaches decorators who buy balloons with it."
+     ]
     },
     "coupling": {
+     "justification": "Writes contract:ai-usage rows under the contador tag set by T7.2.",
      "evidence": [
       "task:T7.2",
       "task:T6.2"
-     ],
-     "justification": "Writes contract:ai-usage rows under the contador tag set by T7.2."
+     ]
     },
     "confidence": {
+     "justification": "The Python estimar-conteo and conteo-referencia adapters exist; which structures the form must offer is partly assumed.",
      "evidence": [
       "file:src/lib/ia/nucleo/python-adapter.ts",
       "assumption:the form offers the structures estimar-conteo already accepts"
-     ],
-     "justification": "The Python estimar-conteo and conteo-referencia adapters exist; which structures the form must offer is partly assumed."
+     ]
     }
    },
    "expected_paths": [
@@ -8366,22 +8540,22 @@
      "type": "command",
      "value": "npm run contador:test-api -- --test-name-pattern=formulario",
      "purpose": "POST /api/contador with a structure, its measures, balloon sizes and colours returns the balloon count per size and colour and the shopping list without prices, equal to the engine's estimate for the same input.",
-     "created_by": "T7.3",
-     "category": "functional"
+     "category": "functional",
+     "created_by": "T7.3"
     },
     {
      "type": "command",
      "value": "npm run contador:test-api -- --test-name-pattern=frase",
      "purpose": "POST /api/contador with a phrase extracts the structure and measures with the model and then counts with the engine; when the phrase lacks a measure it asks for it instead of guessing a number.",
-     "created_by": "T7.3",
-     "category": "functional"
+     "category": "functional",
+     "created_by": "T7.3"
     },
     {
      "type": "command",
      "value": "npm run contador:test-api -- --test-name-pattern=foto",
      "purpose": "POST /api/contador with a photo returns the existing photo count of services/ai-api conteo-referencia with its tolerance, labelled as an estimate from the photo, and refuses a non-image or oversized file.",
-     "created_by": "T7.3",
-     "category": "functional"
+     "category": "functional",
+     "created_by": "T7.3"
     }
    ],
    "covers": [
@@ -8409,46 +8583,46 @@
    "estimate_rationale": "Agent estimate in minutes: 15 server start + 30 Entusiasta and Designer Plus calls + 15 evidence = 60.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Starts the server with two seeded accounts and checks statuses and ledger rows together.",
      "evidence": [
       "task:T7.2",
       "task:T7.3"
-     ],
-     "justification": "Starts the server with two seeded accounts and checks statuses and ledger rows together."
+     ]
     },
     "scope": {
+     "justification": "One test script and its evidence file.",
      "evidence": [
       "task:T7.3",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "One test script and its evidence file."
+     ]
     },
     "duration": {
+     "justification": "Fifteen, thirty and fifteen minutes make sixty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
       "task:T7.3"
-     ],
-     "justification": "Fifteen, thirty and fifteen minutes make sixty."
+     ]
     },
     "risk": {
+     "justification": "Catches a price leak or an untagged call before four screens are built on it.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.2"
-     ],
-     "justification": "Catches a price leak or an untagged call before four screens are built on it."
+     ]
     },
     "coupling": {
+     "justification": "Exercises the T7.2 gating and the T7.3 counter together.",
      "evidence": [
       "task:T7.2",
       "task:T7.3"
-     ],
-     "justification": "Exercises the T7.2 gating and the T7.3 counter together."
+     ]
     },
     "confidence": {
+     "justification": "Reuses the SP-1 test-session helper and the isolated schema.",
      "evidence": [
       "task:T1.6",
       "task:T7.3"
-     ],
-     "justification": "Reuses the SP-1 test-session helper and the isolated schema."
+     ]
     }
    },
    "expected_paths": [
@@ -8466,8 +8640,8 @@
      "type": "command",
      "value": "npm run herramientas:test-checkpoint",
      "purpose": "Before any screen is built, with expected statuses written from the SPEC, the real tool, counter and gating APIs pass on a running server against the REQ-021 database: Entusiasta counts by form, phrase and photo, its POST to the professional quote and costing APIs gets 403, and each call lands in the usage ledger under its tool tag.",
-     "created_by": "T7.4",
      "category": "integration",
+     "created_by": "T7.4",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8499,46 +8673,46 @@
    "estimate_rationale": "Agent estimate in minutes: 30 home page + 45 removing the 2,100-line classic page and its now-unused components + 20 navigation links + 25 tests = 120.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Removing the classic page must keep every component the guided chat and the Taller still import.",
      "evidence": [
       "file:src/app/page.tsx",
       "file:src/components/ui/shell/CabeceraApp.tsx"
-     ],
-     "justification": "Removing the classic page must keep every component the guided chat and the Taller still import."
+     ]
     },
     "scope": {
+     "justification": "Replaces a 2,100-line page with a small home and prunes components only it used.",
      "evidence": [
       "file:src/app/page.tsx",
       "task:T7.2"
-     ],
-     "justification": "Replaces a 2,100-line page with a small home and prunes components only it used."
+     ]
     },
     "duration": {
+     "justification": "Thirty, forty-five, twenty and twenty-five minutes make one hundred twenty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "file:src/app/page.tsx"
-     ],
-     "justification": "Thirty, forty-five, twenty and twenty-five minutes make one hundred twenty."
+     ]
     },
     "risk": {
+     "justification": "Deleting a component still imported elsewhere breaks the build of the whole app.",
      "evidence": [
       "file:src/app/page.tsx",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Deleting a component still imported elsewhere breaks the build of the whole app."
+     ]
     },
     "coupling": {
+     "justification": "Reads contract:plan-catalogue tool names and the T7.2 tool catalogue.",
      "evidence": [
       "task:T1.2",
       "task:T7.2"
-     ],
-     "justification": "Reads contract:plan-catalogue tool names and the T7.2 tool catalogue."
+     ]
     },
     "confidence": {
+     "justification": "The page and the shell were read; which components only the classic page uses is not yet listed.",
      "evidence": [
       "file:src/app/page.tsx",
       "assumption:the build and tsc reveal every orphaned import"
-     ],
-     "justification": "The page and the shell were read; which components only the classic page uses is not yet listed."
+     ]
     }
    },
    "expected_paths": [
@@ -8561,8 +8735,8 @@
      "type": "command",
      "value": "npm run herramientas:test-ui-portada",
      "purpose": "The home page / shows only the tools the signed-in account's role grants, each opening its own page; the classic chat page is gone while /api/chat keeps serving the guided chat's plan agent.",
-     "created_by": "T7.5",
      "category": "functional",
+     "created_by": "T7.5",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8595,46 +8769,46 @@
    "estimate_rationale": "Agent estimate in minutes: 45 form + 20 phrase and question loop + 20 photo upload + 15 result and hand-off button + 20 tests = 120.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Three input modes share one result view and a follow-up question for missing measures.",
      "evidence": [
       "task:T7.3",
       "file:src/components/cotizacion/CotizacionProfesional.tsx"
-     ],
-     "justification": "Three input modes share one result view and a follow-up question for missing measures."
+     ]
     },
     "scope": {
+     "justification": "A new page with three components and a test.",
      "evidence": [
       "task:T7.3",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "A new page with three components and a test."
+     ]
     },
     "duration": {
+     "justification": "Forty-five, twenty, twenty, fifteen and twenty minutes make one hundred twenty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "task:T7.3"
-     ],
-     "justification": "Forty-five, twenty, twenty, fifteen and twenty minutes make one hundred twenty."
+     ]
     },
     "risk": {
+     "justification": "Showing a price here would break the plan rule of round 15.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.2"
-     ],
-     "justification": "Showing a price here would break the plan rule of round 15."
+     ]
     },
     "coupling": {
+     "justification": "Calls only the T7.3 counter API and hands its result to the calculator.",
      "evidence": [
       "task:T7.3",
       "task:T7.7"
-     ],
-     "justification": "Calls only the T7.3 counter API and hands its result to the calculator."
+     ]
     },
     "confidence": {
+     "justification": "The API is defined by T7.3; layout depends on the pending contract.",
      "evidence": [
       "task:T7.3",
       "assumption:the contract keeps one page with three input tabs"
-     ],
-     "justification": "The API is defined by T7.3; layout depends on the pending contract."
+     ]
     }
    },
    "expected_paths": [
@@ -8655,8 +8829,8 @@
      "type": "command",
      "value": "npm run contador:test-ui",
      "purpose": "The balloon counter page counts by form, by phrase or by photo and shows counts per size and colour and the shopping list without any price, and offers «Calcular costo» only to accounts with costos.usar.",
-     "created_by": "T7.6",
      "category": "functional",
+     "created_by": "T7.6",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8688,46 +8862,46 @@
    "estimate_rationale": "Agent estimate in minutes: 40 page around CotizacionProfesional + 20 counter hand-off and manual materials + 30 tests = 90.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Wraps an existing component; the hand-off from the counter must map counts to catalogue products.",
      "evidence": [
       "file:src/components/cotizacion/CotizacionProfesional.tsx",
       "file:src/lib/cotizacion/profesional.ts"
-     ],
-     "justification": "Wraps an existing component; the hand-off from the counter must map counts to catalogue products."
+     ]
     },
     "scope": {
+     "justification": "One page and one wrapper reusing the existing professional quote.",
      "evidence": [
       "file:src/components/cotizacion/CotizacionProfesional.tsx",
       "task:T7.6"
-     ],
-     "justification": "One page and one wrapper reusing the existing professional quote."
+     ]
     },
     "duration": {
+     "justification": "Forty, twenty and thirty minutes make ninety.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "file:src/components/cotizacion/CotizacionProfesional.tsx"
-     ],
-     "justification": "Forty, twenty and thirty minutes make ninety."
+     ]
     },
     "risk": {
+     "justification": "Wrong prices in a quote reach a customer.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "file:src/lib/cotizacion/profesional.ts"
-     ],
-     "justification": "Wrong prices in a quote reach a customer."
+     ]
     },
     "coupling": {
+     "justification": "Reads the counter hand-off of T7.6 and the existing quote API.",
      "evidence": [
       "task:T7.6",
       "task:T7.2"
-     ],
-     "justification": "Reads the counter hand-off of T7.6 and the existing quote API."
+     ]
     },
     "confidence": {
+     "justification": "The professional quote component and schema were read; its use outside the chat is assumed straightforward.",
      "evidence": [
       "file:src/components/cotizacion/CotizacionProfesional.tsx",
       "assumption:CotizacionProfesional needs no chat context to render"
-     ],
-     "justification": "The professional quote component and schema were read; its use outside the chat is assumed straightforward."
+     ]
     }
    },
    "expected_paths": [
@@ -8747,8 +8921,8 @@
      "type": "command",
      "value": "npm run calculadora:test-ui",
      "purpose": "The cost calculator page takes the counter's result or materials typed by hand, lets the person edit balloon prices and add labour, transport, indirect costs and margin, and shows per-product prices from the real catalogue and the professional quote totals.",
-     "created_by": "T7.7",
      "category": "functional",
+     "created_by": "T7.7",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8780,46 +8954,46 @@
    "estimate_rationale": "Agent estimate in minutes: 30 gallery index over both idea sets + 50 page with search, filters and preview + 30 deep link handling in the Taller + 40 tests = 150.",
    "classification_evidence": {
     "complexity": {
+     "justification": "The deep link must open a scene as new without touching an open project, in a component other subplans also edit.",
      "evidence": [
       "file:src/components/tres-d/Taller3D.tsx",
       "file:src/lib/globos3d/ideas-asistente/index.ts"
-     ],
-     "justification": "The deep link must open a scene as new without touching an open project, in a component other subplans also edit."
+     ]
     },
     "scope": {
+     "justification": "A new page, an index module, gallery components and a link handler in the Taller.",
      "evidence": [
       "file:src/lib/globos3d/ideas-sempertex/index.ts",
       "task:T7.4"
-     ],
-     "justification": "A new page, an index module, gallery components and a link handler in the Taller."
+     ]
     },
     "duration": {
+     "justification": "Thirty, fifty, thirty and forty minutes make one hundred fifty.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
       "file:src/components/tres-d/Taller3D.tsx"
-     ],
-     "justification": "Thirty, fifty, thirty and forty minutes make one hundred fifty."
+     ]
     },
     "risk": {
+     "justification": "Opening over an unsaved project would lose a user's work.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "file:src/components/tres-d/Taller3D.tsx"
-     ],
-     "justification": "Opening over an unsaved project would lose a user's work."
+     ]
     },
     "coupling": {
+     "justification": "Reads contract:taller-scene and shares Taller3D.tsx with the saved-projects work.",
      "evidence": [
       "task:T3.3",
       "task:T4.4"
-     ],
-     "justification": "Reads contract:taller-scene and shares Taller3D.tsx with the saved-projects work."
+     ]
     },
     "confidence": {
+     "justification": "Both idea sets and the open-in-scene path were read; occasion and size metadata per idea is partly assumed.",
      "evidence": [
       "file:src/lib/globos3d/ideas-asistente/index.ts",
       "assumption:each idea has an occasion or one can be derived from its batch"
-     ],
-     "justification": "Both idea sets and the open-in-scene path were read; occasion and size metadata per idea is partly assumed."
+     ]
     }
    },
    "expected_paths": [
@@ -8832,7 +9006,8 @@
    ],
    "shared_resources": [
     "package.json scripts",
-    "contract:taller-scene"
+    "contract:taller-scene",
+    "contract:galeria-index"
    ],
    "acceptance_criteria": [
     "The decorations gallery at /3d/decoraciones lists every Ideas del asistente and Ideas Sempertex item with search, occasion and size filters and a preview, and «Abrir como proyecto nuevo» opens /3d?decoracion=<id> as a new unsaved scene.",
@@ -8843,8 +9018,8 @@
      "type": "command",
      "value": "npm run galeria:test-ui -- --solo galeria",
      "purpose": "The decorations gallery at /3d/decoraciones lists every Ideas del asistente and Ideas Sempertex item with search, occasion and size filters and a preview, and «Abrir como proyecto nuevo» opens /3d?decoracion=<id> as a new unsaved scene.",
-     "created_by": "T7.8",
      "category": "functional",
+     "created_by": "T7.8",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8853,8 +9028,8 @@
      "type": "command",
      "value": "npm run galeria:test-ui -- --solo permisos",
      "purpose": "The gallery and its deep link are reachable only with decoraciones.explorar; other accounts get the no-access page, and an unknown decoration id shows a not-found message without changing the open scene.",
-     "created_by": "T7.8",
      "category": "functional",
+     "created_by": "T7.8",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8889,46 +9064,46 @@
    "estimate_rationale": "Agent estimate in minutes: 15 build + 55 three-account flow + 20 evidence = 90.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Three accounts, a photo upload, a hand-off and ledger checks need careful sequencing.",
      "evidence": [
       "task:T7.6",
       "task:T7.8"
-     ],
-     "justification": "Three accounts, a photo upload, a hand-off and ledger checks need careful sequencing."
+     ]
     },
     "scope": {
+     "justification": "Adds the tools Playwright script and the SP-7 integration evidence only.",
      "evidence": [
       "task:T7.7",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Adds the tools Playwright script and the SP-7 integration evidence only."
+     ]
     },
     "duration": {
+     "justification": "Fifteen, fifty-five and twenty minutes make ninety.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
       "task:T7.5"
-     ],
-     "justification": "Fifteen, fifty-five and twenty minutes make ninety."
+     ]
     },
     "risk": {
+     "justification": "Last barrier before the audit for the tools pilot users reach first.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.11"
-     ],
-     "justification": "Last barrier before the audit for the tools pilot users reach first."
+     ]
     },
     "coupling": {
+     "justification": "Exercises every SP-7 task and the SP-1, SP-3 and SP-6 contracts together.",
      "evidence": [
       "task:T7.2",
       "task:T6.2"
-     ],
-     "justification": "Exercises every SP-7 task and the SP-1, SP-3 and SP-6 contracts together."
+     ]
     },
     "confidence": {
+     "justification": "Playwright and the SP-1 helpers exist; photo fixtures come from the repository's reference photos.",
      "evidence": [
       "task:T1.6",
       "assumption:a repository reference photo has a known count within tolerance"
-     ],
-     "justification": "Playwright and the SP-1 helpers exist; photo fixtures come from the repository's reference photos."
+     ]
     }
    },
    "expected_paths": [
@@ -8946,8 +9121,8 @@
      "type": "command",
      "value": "npm run herramientas:test-integracion",
      "purpose": "On a production build against the REQ-021 database, with expected results written from the SPEC, an Entusiasta sees chat and counter on the home page, counts by form and photo without prices and is refused the calculator; a Designer Plus sends the counter result to the calculator and gets totals with margin; a Master Designer opens a gallery decoration as a new project; and the usage ledger holds one row per paid call with its tool tag.",
-     "created_by": "T7.9",
      "category": "integration",
+     "created_by": "T7.9",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -8978,46 +9153,46 @@
    "estimate_rationale": "Agent estimate in minutes: 40 screenshots and comparison of four screens at three widths + 20 ledger = 60.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Judging four tool screens against their contract needs care, not new design.",
      "evidence": [
       "task:T7.1",
       "task:T7.9"
-     ],
-     "justification": "Judging four tool screens against their contract needs care, not new design."
+     ]
     },
     "scope": {
+     "justification": "Writes the SP-7 visual report and ledger and no product file.",
      "evidence": [
       "task:T7.9",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Writes the SP-7 visual report and ledger and no product file."
+     ]
     },
     "duration": {
+     "justification": "Forty minutes for four screens at three widths and twenty for the visual ledger.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
       "task:T7.6"
-     ],
-     "justification": "Forty minutes for four screens at three widths and twenty for the visual ledger."
+     ]
     },
     "risk": {
+     "justification": "A missed mismatch reaches pilot users as a confusing tool page.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.5"
-     ],
-     "justification": "A missed mismatch reaches pilot users as a confusing tool page."
+     ]
     },
     "coupling": {
+     "justification": "Its ledger:SP-7-visual can send T7.5 to T7.8 back.",
      "evidence": [
       "task:T7.5",
       "task:T7.8"
-     ],
-     "justification": "Its ledger:SP-7-visual can send T7.5 to T7.8 back."
+     ]
     },
     "confidence": {
+     "justification": "Four known tool screens and one contract bound this review.",
      "evidence": [
       "task:T7.9",
       "task:T7.1"
-     ],
-     "justification": "Four known tool screens and one contract bound this review."
+     ]
     }
    },
    "expected_paths": [
@@ -9035,8 +9210,8 @@
      "type": "command",
      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json",
      "purpose": "The rendered home, counter, calculator and gallery screens match the approved herramientas-chat@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-7 visual ledger.",
-     "created_by": "T7.10",
-     "category": "static"
+     "category": "static",
+     "created_by": "T7.10"
     }
    ],
    "covers": [
@@ -9063,46 +9238,46 @@
    "estimate_rationale": "Agent estimate in minutes: 30 price-leak paths of the guided chat + 20 counting sources and tags + 25 ledger = 75.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Tracing every path that can print a price or a count needs careful reading of the guided route.",
      "evidence": [
       "task:T7.2",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Tracing every path that can print a price or a count needs careful reading of the guided route."
+     ]
     },
     "scope": {
+     "justification": "Produces the SP-7 audit report and findings ledger, changing no source.",
      "evidence": [
       "task:T7.10",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Produces the SP-7 audit report and findings ledger, changing no source."
+     ]
     },
     "duration": {
+     "justification": "Thirty, twenty and twenty-five minutes make seventy-five.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
       "task:T7.2"
-     ],
-     "justification": "Thirty, twenty and twenty-five minutes make seventy-five."
+     ]
     },
     "risk": {
+     "justification": "A missed price leak gives paid tools away and wrong counting reaches balloon purchases.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.3"
-     ],
-     "justification": "A missed price leak gives paid tools away and wrong counting reaches balloon purchases."
+     ]
     },
     "coupling": {
+     "justification": "Its ledger:SP-7 can send T7.2 to T7.8 back.",
      "evidence": [
       "task:T7.2",
       "task:T7.8"
-     ],
-     "justification": "Its ledger:SP-7 can send T7.2 to T7.8 back."
+     ]
     },
     "confidence": {
+     "justification": "Bounded by two API tasks and four screens with tests.",
      "evidence": [
       "task:T7.9",
       "task:T7.10"
-     ],
-     "justification": "Bounded by two API tasks and four screens with tests."
+     ]
     }
    },
    "expected_paths": [
@@ -9120,8 +9295,8 @@
      "type": "command",
      "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json",
      "purpose": "An independent audit of SP-7 records every confirmed defect with the task that must redo it in the SP-7 findings ledger, and the ledger has no open critical or high finding.",
-     "created_by": "T7.11",
-     "category": "static"
+     "category": "static",
+     "created_by": "T7.11"
     }
    ],
    "covers": [
@@ -9961,6 +10136,2027 @@
    ],
    "kind": "audit",
    "subplan_id": "SP-8"
+  },
+  {
+   "id": "T9.1",
+   "milestone_id": "M3",
+   "title": "English-text storage and the lookup with Spanish fallback",
+   "objective": "Postgres keeps one English text per product, variant option or decoration field, and one lookup returns it for English requests and the Spanish source otherwise.",
+   "repository": "pictures",
+   "after": [
+    "T8.8"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 15 migration + 30 repository and batched per-request lookup + 30 tests = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "A batched lookup per request must avoid one query per product on long lists.",
+     "evidence": [
+      "file:src/lib/rag/db.ts",
+      "file:src/lib/shopify/persistir-catalogo.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One migration, two modules and their test.",
+     "evidence": [
+      "file:scripts/migrations/036_shared_taller_quotes.sql",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen, thirty and thirty minutes make seventy-five.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/rag/db.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A slow lookup slows every catalogue page; a wrong fallback shows blanks.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/lib/shopify/persistir-catalogo.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Every display boundary of T9.3 and the admin tab of T9.4 read contract:textos-ingles.",
+     "evidence": [
+      "task:T8.1",
+      "task:T8.8"
+     ]
+    },
+    "confidence": {
+     "justification": "The catalogue storage and the Postgres pool were read.",
+     "evidence": [
+      "file:src/lib/shopify/persistir-catalogo.ts",
+      "file:src/lib/rag/db.ts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/migrations/041_textos_ingles.sql",
+    "src/lib/textos-ingles/repositorio.ts",
+    "src/lib/textos-ingles/consulta.ts",
+    "scripts/test/test-textos-ingles.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:textos-ingles"
+   ],
+   "acceptance_criteria": [
+    "Migration 041 creates a Postgres table of English texts keyed by kind, source id and field with the Spanish source text, the English text and its origin (ia or admin), and a lookup returns the English text in English and the Spanish source when no English exists."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:test -- --test-name-pattern=almacen",
+     "purpose": "Migration 041 creates a Postgres table of English texts keyed by kind, source id and field with the Spanish source text, the English text and its origin (ia or admin), and a lookup returns the English text in English and the Spanish source when no English exists.",
+     "category": "functional",
+     "created_by": "T9.1",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-9",
+   "ui": false
+  },
+  {
+   "id": "T9.2",
+   "milestone_id": "M3",
+   "title": "One-time English generation with Haiku 5.5, its validator and the idempotent seed",
+   "objective": "The repository holds validated English texts for every product, variant option and ready-made decoration, generated once, and a seed loads them without touching administrator corrections.",
+   "repository": "pictures",
+   "after": [
+    "T9.1"
+   ],
+   "complexity": "medium",
+   "scope": "large_change",
+   "estimated_minutes": 180,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 40 batching script with a balloon glossary + 60 running about 2,100 items in batches of 40 through the Claude CLI with retries + 30 validator + 20 seed + 30 tests = 180; the model run time depends on usage limits.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Batching, a domain glossary and validation of model output need care to avoid silent gaps.",
+     "evidence": [
+      "file:src/lib/shopify/persistir-catalogo.ts",
+      "file:src/lib/globos3d/ideas-asistente/index.ts"
+     ]
+    },
+    "scope": {
+     "justification": "Four scripts, three data files and their tests.",
+     "evidence": [
+      "file:src/lib/shopify/persistir-catalogo.ts",
+      "task:T9.1"
+     ]
+    },
+    "duration": {
+     "justification": "Forty, sixty, thirty, twenty and thirty minutes make one hundred eighty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/globos3d/ideas-sempertex/index.ts"
+     ]
+    },
+    "risk": {
+     "justification": "Bad translations of product names confuse English customers but are correctable by an administrator.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T9.4"
+     ]
+    },
+    "coupling": {
+     "justification": "Writes rows of contract:textos-ingles that the display and admin tasks read.",
+     "evidence": [
+      "task:T9.1",
+      "task:T8.1"
+     ]
+    },
+    "confidence": {
+     "justification": "The catalogue snapshot and both idea sets were counted; CLI throughput under usage limits is unknown.",
+     "evidence": [
+      "file:src/lib/globos3d/ideas-asistente/index.ts",
+      "assumption:the owner's Claude accounts allow about 60 Haiku calls within one session"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/textos/traducir.ts",
+    "scripts/textos/glosario.ts",
+    "scripts/textos/validar.ts",
+    "scripts/textos/sembrar.ts",
+    "data/textos-ingles/productos.json",
+    "data/textos-ingles/variantes.json",
+    "data/textos-ingles/ideas.json",
+    "scripts/textos/test-textos-scripts.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:textos-ingles"
+   ],
+   "acceptance_criteria": [
+    "npm run textos:validar accepts the generated English files only when every catalogue product, variant colour or size name and ready-made decoration in the repository snapshot has a non-empty English name and description where a Spanish one exists, product codes and brand names are unchanged, and no English text equals its Spanish source unless the pair is listed as a brand or code.",
+    "npm run textos:sembrar loads the generated files into the database idempotently: a second run changes nothing, and a text whose origin is admin is never overwritten."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:validar",
+     "purpose": "npm run textos:validar accepts the generated English files only when every catalogue product, variant colour or size name and ready-made decoration in the repository snapshot has a non-empty English name and description where a Spanish one exists, product codes and brand names are unchanged, and no English text equals its Spanish source unless the pair is listed as a brand or code.",
+     "category": "static",
+     "created_by": "T9.2"
+    },
+    {
+     "type": "command",
+     "value": "npm run textos:test-scripts -- --test-name-pattern=sembrar",
+     "purpose": "npm run textos:sembrar loads the generated files into the database idempotently: a second run changes nothing, and a text whose origin is admin is never overwritten.",
+     "category": "functional",
+     "created_by": "T9.2",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-9",
+   "ui": false
+  },
+  {
+   "id": "T9.3",
+   "milestone_id": "M3",
+   "title": "Show English product and decoration texts at every boundary that sends them to the browser",
+   "objective": "English sessions receive English product, option and decoration names wherever the server sends them, and Spanish sessions receive exactly today's output.",
+   "repository": "pictures",
+   "after": [
+    "T9.2"
+   ],
+   "complexity": "medium",
+   "scope": "large_change",
+   "estimated_minutes": 150,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 shared apply helper + 70 wiring the catalogue, Taller search, shopping list, chat results, gallery and idea library + 50 boundary tests = 150.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Names flow through several server paths; each must translate once and keep Spanish byte-identical.",
+     "evidence": [
+      "file:src/lib/globos3d/biblioteca.ts",
+      "file:src/app/api/taller/buscar/route.ts"
+     ]
+    },
+    "scope": {
+     "justification": "Edits the catalogue pages and APIs, the shopping list builder, the chat tool results and the gallery index.",
+     "evidence": [
+      "file:src/lib/ia/herramientas/registro-herramientas.ts",
+      "task:T7.8"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, seventy and fifty minutes make one hundred fifty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/globos3d/biblioteca.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A missed boundary leaves Spanish names in an English screen; Spanish must not change at all.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/lib/globos3d/biblioteca.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads contract:textos-ingles and contract:idioma and touches files of the Taller and chat subplans.",
+     "evidence": [
+      "task:T9.1",
+      "task:T8.1"
+     ]
+    },
+    "confidence": {
+     "justification": "The main boundaries were located by exploration; a test lists them so a new one cannot be missed silently.",
+     "evidence": [
+      "file:src/app/api/taller/buscar/route.ts",
+      "assumption:no other route sends product names to the browser"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/textos-ingles/aplicar.ts",
+    "src/app/catalogo/page.tsx",
+    "src/app/catalogo/[handle]/page.tsx",
+    "src/app/api/catalogo/repositorios/route.ts",
+    "src/app/api/taller/buscar/route.ts",
+    "src/lib/globos3d/biblioteca.ts",
+    "src/lib/globos3d/galeria-decoraciones.ts",
+    "src/lib/ia/herramientas/registro-herramientas.ts",
+    "scripts/test/test-textos-fronteras.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:textos-ingles",
+    "contract:idioma"
+   ],
+   "acceptance_criteria": [
+    "With the language set to English, every serialization boundary that sends product or decoration names to the browser (catalogue pages and APIs, Taller search, shopping list, chat product results, gallery index and the Taller idea library) sends the English text, falling back to Spanish, and with Spanish sends exactly what it sends today."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:test-fronteras",
+     "purpose": "With the language set to English, every serialization boundary that sends product or decoration names to the browser (catalogue pages and APIs, Taller search, shopping list, chat product results, gallery index and the Taller idea library) sends the English text, falling back to Spanish, and with Spanish sends exactly what it sends today.",
+     "category": "functional",
+     "created_by": "T9.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-9",
+   "ui": false
+  },
+  {
+   "id": "T9.4",
+   "milestone_id": "M3",
+   "title": "«Textos en inglés» administration tab and its protected API",
+   "objective": "An administrator finds, filters and corrects any English text, and nobody else can change one.",
+   "repository": "pictures",
+   "after": [
+    "T9.2"
+   ],
+   "complexity": "medium",
+   "scope": "full_feature",
+   "estimated_minutes": 120,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 API with search, filters and pagination + 50 tab following the existing admin tabs + 40 tests = 120.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "A paged list over about 4,000 texts with four filters and inline correction.",
+     "evidence": [
+      "file:src/components/admin/AdminTabs.tsx",
+      "task:T9.1"
+     ]
+    },
+    "scope": {
+     "justification": "One tab, one API route, a map entry and tests.",
+     "evidence": [
+      "file:src/components/admin/AdminTabs.tsx",
+      "task:T9.1"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, fifty and forty minutes make one hundred twenty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/components/admin/AdminTabs.tsx"
+     ]
+    },
+    "risk": {
+     "justification": "A missing permission check lets any account rewrite product names.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T1.2"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads contract:textos-ingles and contract:permission-map.",
+     "evidence": [
+      "task:T9.1",
+      "task:T1.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The admin tabs were read and the permission textos.corregir exists in SP-1.",
+     "evidence": [
+      "file:src/components/admin/AdminTabs.tsx",
+      "task:T1.2"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/components/admin/TextosInglesTab.tsx",
+    "src/components/admin/AdminTabs.tsx",
+    "src/app/api/admin/textos-ingles/route.ts",
+    "src/lib/cuentas/mapa-rutas.ts",
+    "scripts/test/test-admin-textos-ingles.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:textos-ingles",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "An administrator with textos.corregir finds a text in the «Textos en inglés» administration tab by name or id, filters by pendiente, IA, corregido or la fuente cambió, saves a correction that becomes origin admin, and accounts without the permission get 403 from its API.",
+    "Nothing regenerates an English text after it is stored: a later change of the Spanish source only marks the text «la fuente cambió» in the administration list, and products added later show Spanish until an administrator writes English."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:test-admin -- --solo correccion",
+     "purpose": "An administrator with textos.corregir finds a text in the «Textos en inglés» administration tab by name or id, filters by pendiente, IA, corregido or la fuente cambió, saves a correction that becomes origin admin, and accounts without the permission get 403 from its API.",
+     "category": "functional",
+     "created_by": "T9.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    },
+    {
+     "type": "command",
+     "value": "npm run textos:test-admin -- --solo fuente-cambio",
+     "purpose": "Nothing regenerates an English text after it is stored: a later change of the Spanish source only marks the text «la fuente cambió» in the administration list, and products added later show Spanish until an administrator writes English.",
+     "category": "functional",
+     "created_by": "T9.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-9",
+   "ui": false
+  },
+  {
+   "id": "T9.5",
+   "milestone_id": "M3",
+   "title": "Browser end-to-end: English catalogue, Taller and gallery names with an administrator correction",
+   "objective": "Real browsers prove English names where people read them, an administrator correction reaching them, and Spanish unchanged.",
+   "repository": "pictures",
+   "after": [
+    "T9.3",
+    "T9.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build and seed + 40 English and Spanish flows with one correction + 20 evidence = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Seeds texts, switches language and checks four surfaces plus one correction.",
+     "evidence": [
+      "task:T9.3",
+      "task:T9.4"
+     ]
+    },
+    "scope": {
+     "justification": "Adds the English-texts Playwright script and SP-9 evidence only.",
+     "evidence": [
+      "task:T9.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen, forty and twenty minutes make seventy-five.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T9.3"
+     ]
+    },
+    "risk": {
+     "justification": "Last barrier before English customers read product names.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T9.6"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises T9.2 seed, T9.3 boundaries and T9.4 corrections together.",
+     "evidence": [
+      "task:T9.2",
+      "task:T9.4"
+     ]
+    },
+    "confidence": {
+     "justification": "Reuses the SP-8 language helpers and the SP-1 sessions.",
+     "evidence": [
+      "task:T8.7",
+      "task:T1.6"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/test/test-integracion-textos-ingles.ts",
+    ".evidence/REQ-021/SP-9.integration.json"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "On a production build against the REQ-021 database with the seeded English texts, an English session sees English product and decoration names in the catalogue, the Taller library, the shopping list and the gallery; an administrator's correction appears there on the next request; and a Spanish session sees today's Spanish names."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:test-integracion",
+     "purpose": "On a production build against the REQ-021 database with the seeded English texts, an English session sees English product and decoration names in the catalogue, the Taller library, the shopping list and the gallery; an administrator's correction appears there on the next request; and a Spanish session sees today's Spanish names.",
+     "category": "integration",
+     "created_by": "T9.5",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-9"
+  },
+  {
+   "id": "T9.6",
+   "milestone_id": "M3",
+   "title": "SP-9 audit: English texts, fallback, no regeneration and correction permissions",
+   "objective": "An independent read-only review confirms SP-9 against R12 for product and decoration texts and records each confirmed defect with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T9.5"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 65,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 45 reviewing the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission + 20 ledger and report = 65.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reviewing the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission needs independent judgement across the subplan.",
+     "evidence": [
+      "task:T9.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "Writes the SP-9 audit report and ledger and no product file.",
+     "evidence": [
+      "task:T9.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "45 minutes for the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission and twenty for the SP-9 ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T9.5"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect in the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission reaches pilot users of SP-9.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T9.1"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-9 can send T9.1, T9.2, T9.3, T9.4 back.",
+     "evidence": [
+      "task:T9.1",
+      "task:T9.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The SP-9 tasks and their tests bound this review of the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission.",
+     "evidence": [
+      "task:T9.5",
+      "task:T9.4"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-9.audit.md",
+    ".evidence/REQ-021/SP-9.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-9"
+   ],
+   "acceptance_criteria": [
+    "An independent audit of SP-9 checks the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission, records every confirmed defect with the task that must redo it in the SP-9 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-9.findings.json",
+     "purpose": "An independent audit of SP-9 checks the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission, records every confirmed defect with the task that must redo it in the SP-9 findings ledger, and the ledger has no open critical or high finding.",
+     "category": "static",
+     "created_by": "T9.6"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-9"
+  },
+  {
+   "id": "T10.1",
+   "milestone_id": "M3",
+   "title": "Guided chat and structure-plan views in English",
+   "objective": "The guided chat, its proposal steps and the structure-plan views read every string from bilingual dictionaries.",
+   "repository": "pictures",
+   "after": [
+    "T9.6"
+   ],
+   "complexity": "low",
+   "scope": "large_change",
+   "estimated_minutes": 240,
+   "risk": "medium",
+   "coupling": "high",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: about 510 literals across 118 files at roughly 0.35 minute each plus 40 for client message builders and 20 for checks = 240.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Mechanical extraction with care for sentences built from counts in the client messages.",
+     "evidence": [
+      "file:src/lib/guiada-motor/mensajes-cliente.ts",
+      "file:src/lib/estado/pasos-asistente.ts"
+     ]
+    },
+    "scope": {
+     "justification": "About one hundred eighteen component files change in one uniform edit.",
+     "evidence": [
+      "file:src/lib/estado/pasos-asistente.ts",
+      "task:T8.3"
+     ]
+    },
+    "duration": {
+     "justification": "Five hundred ten literals plus message builders and checks make two hundred forty minutes.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/guiada-motor/mensajes-cliente.ts"
+     ]
+    },
+    "risk": {
+     "justification": "VistaGuiada is very large and shared by the chat tools; a slip breaks the normal chat.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/lib/estado/pasos-asistente.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Edits files the chat-tools subplan changed and reads contract:idioma.",
+     "evidence": [
+      "task:T7.2",
+      "task:T8.1"
+     ]
+    },
+    "confidence": {
+     "justification": "Literal counts were measured on origin/main with the same grep the guard formalises.",
+     "evidence": [
+      "command:git grep JSX literals -> guiado 179, plan 325",
+      "file:src/lib/estado/pasos-asistente.ts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/components/guiado/**/*.tsx",
+    "src/components/propuesta/**/*.tsx",
+    "src/components/plan/**/*.tsx",
+    "src/components/guiado/textos/chat-guiado.ts",
+    "src/components/plan/textos/planes-estructura.ts",
+    "src/lib/estado/pasos-asistente.ts",
+    "src/lib/guiada-motor/mensajes-cliente.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:idioma"
+   ],
+   "acceptance_criteria": [
+    "The guided chat and its components (src/components/guiado, src/components/propuesta) and the structure-plan views (src/components/plan) pass the coverage guard and render in English with no Spanish string left, while Spanish rendering is unchanged."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-cobertura -- src/components/guiado src/components/propuesta src/components/plan",
+     "purpose": "The guided chat and its components (src/components/guiado, src/components/propuesta) and the structure-plan views (src/components/plan) pass the coverage guard and render in English with no Spanish string left, while Spanish rendering is unchanged.",
+     "category": "static",
+     "created_by": "T8.3"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-10",
+   "ui": false
+  },
+  {
+   "id": "T10.2",
+   "milestone_id": "M3",
+   "title": "Tools, catalogue, gallery, saved projects and personal library in English",
+   "objective": "Every external screen outside the chat and the Taller reads its strings from bilingual dictionaries.",
+   "repository": "pictures",
+   "after": [
+    "T9.6"
+   ],
+   "complexity": "low",
+   "scope": "large_change",
+   "estimated_minutes": 150,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: about 60 literals in cotizacion and catalogue plus the English halves of five text modules written by earlier subplans, 40 checks = 150.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Mostly filling the English half of text modules that earlier subplans created.",
+     "evidence": [
+      "file:src/components/cotizacion/CotizacionProfesional.tsx",
+      "task:T7.6"
+     ]
+    },
+    "scope": {
+     "justification": "Edits text modules and two directories of components.",
+     "evidence": [
+      "file:src/components/cotizacion/CotizacionProfesional.tsx",
+      "task:T7.7"
+     ]
+    },
+    "duration": {
+     "justification": "Sixty literals, five modules and forty minutes of checks make one hundred fifty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/components/cotizacion/CotizacionProfesional.tsx"
+     ]
+    },
+    "risk": {
+     "justification": "An untranslated quote screen confuses an English customer reading prices.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T7.7"
+     ]
+    },
+    "coupling": {
+     "justification": "Edits text modules owned by the chat-tools subplan and reads contract:idioma.",
+     "evidence": [
+      "task:T7.5",
+      "task:T8.1"
+     ]
+    },
+    "confidence": {
+     "justification": "The quote component was read and the earlier subplans keep strings in modules.",
+     "evidence": [
+      "file:src/components/cotizacion/CotizacionProfesional.tsx",
+      "task:T7.8"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/components/herramientas/**/*.ts",
+    "src/components/herramientas/**/*.tsx",
+    "src/components/cotizacion/**/*.tsx",
+    "src/components/catalogo/**/*.tsx",
+    "src/app/catalogo/page.tsx",
+    "src/app/catalogo/[handle]/page.tsx",
+    "src/components/tres-d/galeria/textos-galeria.ts",
+    "src/components/proyectos/textos-proyectos.ts",
+    "src/components/tres-d/biblioteca/textos-biblioteca.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:idioma"
+   ],
+   "acceptance_criteria": [
+    "The home, counter, calculator and professional quote (src/components/herramientas, src/components/cotizacion), the catalogue (src/components/catalogo, src/app/catalogo), the gallery and the saved-project and personal-library screens pass the coverage guard and render in English with no Spanish string left."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-cobertura -- src/components/herramientas src/components/cotizacion src/components/catalogo src/app/catalogo src/components/tres-d/galeria src/components/proyectos src/components/tres-d/biblioteca",
+     "purpose": "The home, counter, calculator and professional quote (src/components/herramientas, src/components/cotizacion), the catalogue (src/components/catalogo, src/app/catalogo), the gallery and the saved-project and personal-library screens pass the coverage guard and render in English with no Spanish string left.",
+     "category": "static",
+     "created_by": "T8.3"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-10",
+   "ui": false
+  },
+  {
+   "id": "T10.3",
+   "milestone_id": "M3",
+   "title": "AI replies in the user's language with catalogue searches kept in Spanish",
+   "objective": "The guided chat, the plan agent, the counter and the Taller scene AI answer in the request's language, and their catalogue searches keep working on the Spanish catalogue.",
+   "repository": "pictures",
+   "after": [
+    "T9.6"
+   ],
+   "complexity": "medium",
+   "scope": "large_change",
+   "estimated_minutes": 150,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 30 locating every reply-language instruction in Next and ai-api + 50 threading the language through prompt builders and the signed internal context + 20 search-in-Spanish tool instruction + 50 stub-provider tests = 150.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "The language must cross from Next to ai-api in the signed context and reach several prompt builders.",
+     "evidence": [
+      "file:src/lib/ia/guiado/prompt-guiado.ts",
+      "file:src/lib/ia/nucleo/python-adapter.ts"
+     ]
+    },
+    "scope": {
+     "justification": "Touches four prompt builders, the Python adapter, the ai-api entry and tests on both sides.",
+     "evidence": [
+      "file:src/lib/ia/omoikane/prompt-sistema.ts",
+      "file:services/ai-api/app/main.py"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, fifty, twenty and fifty minutes make one hundred fifty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/ia/guiado/prompt-guiado.ts"
+     ]
+    },
+    "risk": {
+     "justification": "Changing a prompt can change Spanish answers; Spanish prompts must stay byte-identical.",
+     "evidence": [
+      "file:src/lib/ia/guiado/prompt-guiado.ts",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads contract:idioma and edits prompts the chat-tools subplan also touched.",
+     "evidence": [
+      "task:T7.2",
+      "task:T8.1"
+     ]
+    },
+    "confidence": {
+     "justification": "The prompt files were located; which ai-api prompts set language is not fully listed.",
+     "evidence": [
+      "file:src/lib/ia/omoikane/prompt-sistema.ts",
+      "assumption:ai-api prompt text that sets the reply language lives in a few modules reachable from main.py"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/ia/guiado/prompt-guiado.ts",
+    "src/lib/ia/omoikane/prompt-sistema.ts",
+    "src/lib/ia/escena/entorno-escena.ts",
+    "src/lib/ia/herramientas/herramientas.ts",
+    "src/lib/contador/contar.ts",
+    "src/lib/ia/nucleo/python-adapter.ts",
+    "services/ai-api/app/main.py",
+    "scripts/test/test-idioma-respuestas-ia.ts",
+    "services/ai-api/tests/test_idioma_respuesta.py"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:idioma"
+   ],
+   "acceptance_criteria": [
+    "Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt.",
+    "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-respuestas -- --test-name-pattern=prompt",
+     "purpose": "Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt.",
+     "category": "functional",
+     "created_by": "T10.3"
+    },
+    {
+     "type": "command",
+     "value": "npm run idioma:test-respuestas -- --test-name-pattern=busqueda",
+     "purpose": "With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9.",
+     "category": "functional",
+     "created_by": "T10.3"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-10",
+   "ui": false
+  },
+  {
+   "id": "T10.4",
+   "milestone_id": "M3",
+   "title": "Explicit list of staff screens that stay in Spanish",
+   "objective": "The coverage guard knows which staff screens are deliberately Spanish, so the scan of external screens is complete and nothing is skipped by accident.",
+   "repository": "pictures",
+   "after": [
+    "T10.1",
+    "T10.2",
+    "T10.3"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 15 list from the route map's internal-tools entries + 25 test = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Derives the staff list from the internal-tools permission of the route map.",
+     "evidence": [
+      "task:T1.2",
+      "task:T8.3"
+     ]
+    },
+    "scope": {
+     "justification": "One list module and its test.",
+     "evidence": [
+      "task:T8.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen and twenty-five minutes make forty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "task:T8.3"
+     ]
+    },
+    "risk": {
+     "justification": "A wrong list would hide an untranslated external screen behind the staff exclusion.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T10.2"
+     ]
+    },
+    "coupling": {
+     "justification": "Feeds the integration scan of T10.5.",
+     "evidence": [
+      "task:T10.5",
+      "task:T8.3"
+     ]
+    },
+    "confidence": {
+     "justification": "The internal-tools permission already marks every staff page in the route map.",
+     "evidence": [
+      "task:T1.2",
+      "task:T8.3"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/idioma/pantallas-personal.ts",
+    "scripts/idioma/test-pantallas-personal.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-personal",
+     "purpose": "Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list.",
+     "category": "functional",
+     "created_by": "T10.4"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-10",
+   "ui": false
+  },
+  {
+   "id": "T10.5",
+   "milestone_id": "M3",
+   "title": "Browser end-to-end: external screens and one live AI turn in English",
+   "objective": "Real browsers prove every external screen in English, one live chat turn answering in English, and Spanish unchanged.",
+   "repository": "pictures",
+   "after": [
+    "T10.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 90,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build + 50 two accounts over every external screen and one live turn + 25 evidence = 90.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Scans every external page and runs one paid model turn with a language check.",
+     "evidence": [
+      "task:T10.1",
+      "task:T10.3"
+     ]
+    },
+    "scope": {
+     "justification": "Adds the remaining-screens Playwright script and SP-10 evidence only.",
+     "evidence": [
+      "task:T10.2",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen, fifty and twenty-five minutes make ninety.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T10.2"
+     ]
+    },
+    "risk": {
+     "justification": "Last barrier before English users meet the chat and tools.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T10.6"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises T10.1 to T10.4 with the SP-8 mechanism and SP-9 names.",
+     "evidence": [
+      "task:T10.4",
+      "task:T9.5"
+     ]
+    },
+    "confidence": {
+     "justification": "Reuses the SP-8 integration helpers.",
+     "evidence": [
+      "task:T8.7",
+      "task:T1.6"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/test/test-integracion-idioma-resto.ts",
+    ".evidence/REQ-021/SP-10.integration.json"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-integracion-resto",
+     "purpose": "On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens.",
+     "category": "integration",
+     "created_by": "T10.5",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-10"
+  },
+  {
+   "id": "T10.6",
+   "milestone_id": "M3",
+   "title": "SP-10 audit: external screens and AI replies in English",
+   "objective": "An independent read-only review confirms SP-10 against R12 and records each confirmed defect with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T10.5"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 65,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 45 reviewing external-screen coverage, unchanged Spanish prompts and English replies + 20 ledger and report = 65.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reviewing external-screen coverage, unchanged Spanish prompts and English replies needs independent judgement across the subplan.",
+     "evidence": [
+      "task:T10.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "Writes the SP-10 audit report and ledger and no product file.",
+     "evidence": [
+      "task:T10.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "45 minutes for external-screen coverage, unchanged Spanish prompts and English replies and twenty for the SP-10 ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T10.5"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect in external-screen coverage, unchanged Spanish prompts and English replies reaches pilot users of SP-10.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T10.1"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-10 can send T10.1, T10.2, T10.3, T10.4 back.",
+     "evidence": [
+      "task:T10.1",
+      "task:T10.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The SP-10 tasks and their tests bound this review of external-screen coverage, unchanged Spanish prompts and English replies.",
+     "evidence": [
+      "task:T10.5",
+      "task:T10.4"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-10.audit.md",
+    ".evidence/REQ-021/SP-10.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-10"
+   ],
+   "acceptance_criteria": [
+    "An independent audit of SP-10 checks external-screen coverage, unchanged Spanish prompts and English replies, records every confirmed defect with the task that must redo it in the SP-10 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-10.findings.json",
+     "purpose": "An independent audit of SP-10 checks external-screen coverage, unchanged Spanish prompts and English replies, records every confirmed defect with the task that must redo it in the SP-10 findings ledger, and the ledger has no open critical or high finding.",
+     "category": "static",
+     "created_by": "T10.6"
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-10"
+  },
+  {
+   "id": "T11.1",
+   "milestone_id": "M4",
+   "title": "Optional spacing and thickness in the quartet engine and the scene schema",
+   "objective": "Columns, arches and garlands accept their own spacing and thickness, counts follow the spacing, and pieces without them stay exactly as today.",
+   "repository": "pictures",
+   "after": [
+    "T100"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 120,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 30 engine options + 20 piece types and schema + 20 assembly sheet + 50 tests including goldens = 120.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Spacing changes the number of quartet levels, which drives counts and the assembly sheet.",
+     "evidence": [
+      "file:src/lib/globos3d/trenza.ts",
+      "file:src/lib/globos3d/piezas.ts"
+     ]
+    },
+    "scope": {
+     "justification": "Two optional fields through engine, types, schema and the assembly sheet.",
+     "evidence": [
+      "file:src/lib/globos3d/trenza.ts",
+      "file:src/lib/globos3d/esquema-escena.ts"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, twenty, twenty and fifty minutes make one hundred twenty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/lib/globos3d/trenza.ts"
+     ]
+    },
+    "risk": {
+     "justification": "A default that drifts changes every existing column and arch customers already quoted.",
+     "evidence": [
+      "file:src/lib/globos3d/trenza.ts",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "coupling": {
+     "justification": "Extends contract:taller-scene, which saved projects validate against.",
+     "evidence": [
+      "task:T3.3",
+      "task:T4.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The trenza constants and the piece types were read on origin/main.",
+     "evidence": [
+      "file:src/lib/globos3d/trenza.ts",
+      "file:src/lib/globos3d/piezas.ts"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/globos3d/trenza.ts",
+    "src/lib/globos3d/piezas.ts",
+    "src/lib/globos3d/esquema-escena.ts",
+    "src/lib/globos3d/hoja-armado-estructura.ts",
+    "scripts/test/test-trenza-separacion.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:taller-scene"
+   ],
+   "acceptance_criteria": [
+    "Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema.",
+    "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto",
+     "purpose": "Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema.",
+     "category": "functional",
+     "created_by": "T11.1"
+    },
+    {
+     "type": "command",
+     "value": "npm run trenza:test-separacion -- --test-name-pattern=conteos",
+     "purpose": "Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count.",
+     "category": "functional",
+     "created_by": "T11.1"
+    }
+   ],
+   "covers": [
+    "R15"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-11",
+   "ui": false
+  },
+  {
+   "id": "T11.2",
+   "milestone_id": "M4",
+   "title": "Spacing and thickness controls in the column, arch and garland editor",
+   "objective": "A person moves two controls in the existing editor and sees the structure, counts and shopping list change, with undo and a reset.",
+   "repository": "pictures",
+   "after": [
+    "T11.1"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 30 two sliders with centimetre readout and reset + 15 bilingual strings + 30 tests = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Two sliders following the editor's existing slider pattern.",
+     "evidence": [
+      "file:src/components/tres-d/ParametrosPieza.tsx",
+      "task:T11.1"
+     ]
+    },
+    "scope": {
+     "justification": "One editor component, its strings and a test.",
+     "evidence": [
+      "file:src/components/tres-d/ParametrosPieza.tsx",
+      "task:T11.1"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty, fifteen and thirty minutes make seventy-five.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/components/tres-d/ParametrosPieza.tsx"
+     ]
+    },
+    "risk": {
+     "justification": "A slider that skips undo loses a person's previous structure.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/components/tres-d/ParametrosPieza.tsx"
+     ]
+    },
+    "coupling": {
+     "justification": "Edits the editor and the bilingual dictionary the language work created.",
+     "evidence": [
+      "task:T8.5",
+      "task:T11.1"
+     ]
+    },
+    "confidence": {
+     "justification": "EditorTrenzaCompleto was read and already has sliders for height and inflation.",
+     "evidence": [
+      "file:src/components/tres-d/ParametrosPieza.tsx",
+      "task:T11.1"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/components/tres-d/ParametrosPieza.tsx",
+    "src/components/tres-d/textos/taller-edicion.ts",
+    "scripts/test/test-ui-separacion-trenza.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values.",
+    "A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run trenza:test-ui -- --solo controles",
+     "purpose": "Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values.",
+     "category": "functional",
+     "created_by": "T11.2"
+    },
+    {
+     "type": "command",
+     "value": "npm run trenza:test-ui -- --solo guardar-y-exportar",
+     "purpose": "A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry.",
+     "category": "functional",
+     "created_by": "T11.2",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R15"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-11",
+   "ui": false
+  },
+  {
+   "id": "T11.3",
+   "milestone_id": "M4",
+   "title": "Browser end-to-end: edit spacing and thickness, save, reopen and export",
+   "objective": "Real browsers prove the edit, the updated counts, the saved values across browsers and the GLB export together.",
+   "repository": "pictures",
+   "after": [
+    "T11.2"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 60,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build + 30 edit, save, reopen and export flow + 15 evidence = 60.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Chains an edit, a project save in one browser, a reopen in another and a GLB read.",
+     "evidence": [
+      "task:T11.2",
+      "task:T4.7"
+     ]
+    },
+    "scope": {
+     "justification": "Adds the spacing Playwright script and SP-11 evidence only.",
+     "evidence": [
+      "task:T11.2",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen, thirty and fifteen minutes make sixty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T11.2"
+     ]
+    },
+    "risk": {
+     "justification": "Last barrier before decorators quote with edited structures.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T11.4"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises the engine, the editor, saved projects and the GLB export together.",
+     "evidence": [
+      "task:T11.1",
+      "task:T3.11"
+     ]
+    },
+    "confidence": {
+     "justification": "Reuses the saved-project and GLB helpers of earlier subplans.",
+     "evidence": [
+      "task:T4.6",
+      "task:T3.11"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/test/test-integracion-separacion-trenza.ts",
+    ".evidence/REQ-021/SP-11.integration.json"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run trenza:test-integracion",
+     "purpose": "On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged.",
+     "category": "integration",
+     "created_by": "T11.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R15"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-11"
+  },
+  {
+   "id": "T11.4",
+   "milestone_id": "M4",
+   "title": "SP-11 audit: quartet spacing and thickness, counts and compatibility",
+   "objective": "An independent read-only review confirms SP-11 against R15 and records each confirmed defect with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T11.3"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 55,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 35 reviewing the spacing and thickness ranges, count updates and unchanged existing scenes + 20 ledger and report = 55.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reviewing the spacing and thickness ranges, count updates and unchanged existing scenes needs independent judgement across the subplan.",
+     "evidence": [
+      "task:T11.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "Writes the SP-11 audit report and ledger and no product file.",
+     "evidence": [
+      "task:T11.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "35 minutes for the spacing and thickness ranges, count updates and unchanged existing scenes and twenty for the SP-11 ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T11.3"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect in the spacing and thickness ranges, count updates and unchanged existing scenes reaches pilot users of SP-11.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T11.1"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-11 can send T11.1, T11.2 back.",
+     "evidence": [
+      "task:T11.1",
+      "task:T11.2"
+     ]
+    },
+    "confidence": {
+     "justification": "The SP-11 tasks and their tests bound this review of the spacing and thickness ranges, count updates and unchanged existing scenes.",
+     "evidence": [
+      "task:T11.3",
+      "task:T11.2"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-11.audit.md",
+    ".evidence/REQ-021/SP-11.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-11"
+   ],
+   "acceptance_criteria": [
+    "An independent audit of SP-11 checks the spacing and thickness ranges, count updates and unchanged existing scenes, records every confirmed defect with the task that must redo it in the SP-11 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json",
+     "purpose": "An independent audit of SP-11 checks the spacing and thickness ranges, count updates and unchanged existing scenes, records every confirmed defect with the task that must redo it in the SP-11 findings ledger, and the ledger has no open critical or high finding.",
+     "category": "static",
+     "created_by": "T11.4"
+    }
+   ],
+   "covers": [
+    "R15"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-11"
+  },
+  {
+   "id": "T12.1",
+   "milestone_id": "M4",
+   "title": "Copy the owner-approved chat-a-3d@v1 contract into the repository",
+   "objective": "The repository holds the exact owner-approved chat-a-3d@v1 contract before the recommendation cards are built.",
+   "repository": "pictures",
+   "after": [
+    "T101"
+   ],
+   "complexity": "low",
+   "scope": "isolated_fix",
+   "estimated_minutes": 10,
+   "risk": "low",
+   "coupling": "medium",
+   "confidence": "high",
+   "estimate_rationale": "Agent estimate in minutes: 10 to place the pinned chat-a-3d contract.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Placing the approved chat-a-3d contract takes no design reasoning.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.3"
+     ]
+    },
+    "scope": {
+     "justification": "Adds chat-a-3d@v1.md under design/contracts only.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.3"
+     ]
+    },
+    "duration": {
+     "justification": "Ten minutes to place the chat-a-3d contract and match its hash.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind design -> status unknown, no comparable samples",
+      "task:T12.3"
+     ]
+    },
+    "risk": {
+     "justification": "A mismatched chat-a-3d contract only holds its screens at the hash gate.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.3"
+     ]
+    },
+    "coupling": {
+     "justification": "The chat-a-3d screens and their visual review read this contract.",
+     "evidence": [
+      "task:T12.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "confidence": {
+     "justification": "The chat-a-3d draft is pinned at plan approval, so nothing here is unknown.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.3"
+     ]
+    }
+   },
+   "expected_paths": [
+    "design/contracts/chat-a-3d@v1.md"
+   ],
+   "shared_resources": [
+    "design:chat-a-3d@v1"
+   ],
+   "acceptance_criteria": [
+    "The owner-approved chat-a-3d@v1 contract is copied byte for byte into design/contracts/chat-a-3d@v1.md."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "test -s design/contracts/chat-a-3d@v1.md",
+     "purpose": "The owner-approved chat-a-3d@v1 contract is copied byte for byte into design/contracts/chat-a-3d@v1.md.",
+     "category": "static"
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "design",
+   "subplan_id": "SP-12",
+   "ui": false
+  },
+  {
+   "id": "T12.2",
+   "milestone_id": "M4",
+   "title": "Deterministic 3D decoration recommender and its guided-chat tool",
+   "objective": "The guided chat can ask for two or three gallery decorations that fit the brief and can only present what the recommender returned.",
+   "repository": "pictures",
+   "after": [
+    "T101"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 120,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 45 ranking over the gallery index + 30 chat tool and prompt line + 15 final-text guard for names and counts + 30 tests = 120.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Ranking by occasion, colour and size must be explainable and refuse weak matches.",
+     "evidence": [
+      "file:src/lib/globos3d/ideas-asistente/index.ts",
+      "file:src/app/api/asistente-guiado/route.ts"
+     ]
+    },
+    "scope": {
+     "justification": "One ranking module, a tool in the guided route, a prompt line and tests.",
+     "evidence": [
+      "file:src/app/api/asistente-guiado/route.ts",
+      "task:T7.8"
+     ]
+    },
+    "duration": {
+     "justification": "Forty-five, thirty, fifteen and thirty minutes make one hundred twenty.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "file:src/app/api/asistente-guiado/route.ts"
+     ]
+    },
+    "risk": {
+     "justification": "An invented name or count breaks the rule that the chat never invents numbers.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "file:src/lib/ia/guiado/prompt-guiado.ts"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads contract:galeria-index and edits the guided route the chat-tools and language subplans changed.",
+     "evidence": [
+      "task:T7.8",
+      "task:T10.3"
+     ]
+    },
+    "confidence": {
+     "justification": "The idea sets carry shopping lists; occasion metadata comes from the gallery index.",
+     "evidence": [
+      "file:src/lib/globos3d/ideas-asistente/index.ts",
+      "task:T7.8"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/lib/recomendaciones-3d/recomendar.ts",
+    "src/app/api/asistente-guiado/route.ts",
+    "src/lib/ia/guiado/prompt-guiado.ts",
+    "scripts/test/test-recomendaciones-3d.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:galeria-index"
+   ],
+   "acceptance_criteria": [
+    "Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits.",
+    "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run recomendaciones:test -- --test-name-pattern=ranking",
+     "purpose": "Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits.",
+     "category": "functional",
+     "created_by": "T12.2"
+    },
+    {
+     "type": "command",
+     "value": "npm run recomendaciones:test -- --test-name-pattern=herramienta",
+     "purpose": "Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard.",
+     "category": "functional",
+     "created_by": "T12.2"
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-12",
+   "ui": false
+  },
+  {
+   "id": "T12.3",
+   "milestone_id": "M4",
+   "title": "Recommendation cards in the guided chat with a plan-gated open button",
+   "objective": "Every plan sees the recommended decorations as cards, and only accounts with the explorer open them in the Taller.",
+   "repository": "pictures",
+   "after": [
+    "T12.1",
+    "T12.2"
+   ],
+   "complexity": "low",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 35 card with preview, name and count + 10 bilingual strings + 30 tests = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "One card component reusing the gallery preview and the deep link of SP-7.",
+     "evidence": [
+      "task:T7.8",
+      "task:T12.2"
+     ]
+    },
+    "scope": {
+     "justification": "One component, its strings and a test.",
+     "evidence": [
+      "task:T12.2",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Thirty-five, ten and thirty minutes make seventy-five.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind implement -> status unknown, no comparable samples",
+      "task:T12.2"
+     ]
+    },
+    "risk": {
+     "justification": "Showing the open button to a plan without the Taller exposes a paid tool.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T1.2"
+     ]
+    },
+    "coupling": {
+     "justification": "Reads contract:permission-map and the gallery deep link.",
+     "evidence": [
+      "task:T1.2",
+      "task:T7.8"
+     ]
+    },
+    "confidence": {
+     "justification": "The guided chat's existing card patterns and the deep link are defined.",
+     "evidence": [
+      "task:T7.8",
+      "task:T10.1"
+     ]
+    }
+   },
+   "expected_paths": [
+    "src/components/guiado/TarjetaRecomendacion3D.tsx",
+    "src/components/guiado/textos/recomendaciones-3d.ts",
+    "scripts/test/test-ui-recomendaciones-3d.ts"
+   ],
+   "shared_resources": [
+    "package.json scripts",
+    "contract:permission-map"
+   ],
+   "acceptance_criteria": [
+    "The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run recomendaciones:test-ui",
+     "purpose": "The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan.",
+     "category": "functional",
+     "created_by": "T12.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "implement",
+   "subplan_id": "SP-12",
+   "ui": true
+  },
+  {
+   "id": "T12.4",
+   "milestone_id": "M4",
+   "title": "Browser end-to-end: recommendations for two plans and opening one in the Taller",
+   "objective": "Real browsers prove the two-message brief, the cards for a plan without the Taller and the open-and-save path for Master Designer.",
+   "repository": "pictures",
+   "after": [
+    "T12.3"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 75,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 15 build + 40 two accounts with a stubbed and one live turn + 20 evidence = 75.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Two accounts, a chat brief and a Taller hand-off need careful sequencing.",
+     "evidence": [
+      "task:T12.3",
+      "task:T12.2"
+     ]
+    },
+    "scope": {
+     "justification": "Adds the recommendations Playwright script and SP-12 evidence only.",
+     "evidence": [
+      "task:T12.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Fifteen, forty and twenty minutes make seventy-five.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T12.3"
+     ]
+    },
+    "risk": {
+     "justification": "Last barrier before customers get decoration recommendations.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.6"
+     ]
+    },
+    "coupling": {
+     "justification": "Exercises the recommender, the cards and the gallery deep link together.",
+     "evidence": [
+      "task:T12.2",
+      "task:T7.8"
+     ]
+    },
+    "confidence": {
+     "justification": "Reuses the SP-7 tools integration helpers.",
+     "evidence": [
+      "task:T7.9",
+      "task:T1.6"
+     ]
+    }
+   },
+   "expected_paths": [
+    "scripts/test/test-integracion-recomendaciones-3d.ts",
+    ".evidence/REQ-021/SP-12.integration.json"
+   ],
+   "shared_resources": [
+    "package.json scripts"
+   ],
+   "acceptance_criteria": [
+    "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run recomendaciones:test-integracion",
+     "purpose": "On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it.",
+     "category": "integration",
+     "created_by": "T12.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "test",
+   "subplan_id": "SP-12"
+  },
+  {
+   "id": "T12.5",
+   "milestone_id": "M4",
+   "title": "SP-12 visual review against the chat-a-3d@v1 contract",
+   "objective": "A fresh reviewer compares the rendered recommendation cards with the approved contract and records every mismatch with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T12.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 45,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 25 reviewing recommendation cards with and without the open button + 20 ledger and report = 45.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Judging recommendation cards with and without the open button screens against their contract needs care, not new design.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "Writes the SP-12 visual report and ledger and no product file.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "25 minutes for recommendation cards with and without the open button and twenty for the SP-12 ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T12.4"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect in recommendation cards with and without the open button reaches pilot users of SP-12.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.3"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-12-visual can send T12.3 back.",
+     "evidence": [
+      "task:T12.3"
+     ]
+    },
+    "confidence": {
+     "justification": "The SP-12 tasks and their tests bound this review of recommendation cards with and without the open button.",
+     "evidence": [
+      "task:T12.4",
+      "task:T12.3"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-12.visual.md",
+    ".evidence/REQ-021/SP-12.visual.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-12-visual"
+   ],
+   "acceptance_criteria": [
+    "The rendered recommendation cards with and without the open button match the approved chat-a-3d@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-12 visual ledger."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json",
+     "purpose": "The rendered recommendation cards with and without the open button match the approved chat-a-3d@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-12 visual ledger.",
+     "category": "static",
+     "created_by": "T12.5"
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-12"
+  },
+  {
+   "id": "T12.6",
+   "milestone_id": "M4",
+   "title": "SP-12 audit: recommendation sources, invented values and the open-button gate",
+   "objective": "An independent read-only review confirms SP-12 against R13 and records each confirmed defect with the task to redo.",
+   "repository": "pictures",
+   "after": [
+    "T12.5"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 55,
+   "risk": "high",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 35 reviewing recommendation sources, invented names or counts and the open-button permission + 20 ledger and report = 55.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "Reviewing recommendation sources, invented names or counts and the open-button permission needs independent judgement across the subplan.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "scope": {
+     "justification": "Writes the SP-12 audit report and ledger and no product file.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "35 minutes for recommendation sources, invented names or counts and the open-button permission and twenty for the SP-12 ledger.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind audit -> status unknown, no comparable samples",
+      "task:T12.4"
+     ]
+    },
+    "risk": {
+     "justification": "A missed defect in recommendation sources, invented names or counts and the open-button permission reaches pilot users of SP-12.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.2"
+     ]
+    },
+    "coupling": {
+     "justification": "Its ledger:SP-12 can send T12.2, T12.3 back.",
+     "evidence": [
+      "task:T12.2",
+      "task:T12.3"
+     ]
+    },
+    "confidence": {
+     "justification": "The SP-12 tasks and their tests bound this review of recommendation sources, invented names or counts and the open-button permission.",
+     "evidence": [
+      "task:T12.4",
+      "task:T12.3"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/SP-12.audit.md",
+    ".evidence/REQ-021/SP-12.findings.json"
+   ],
+   "shared_resources": [
+    "ledger:SP-12"
+   ],
+   "acceptance_criteria": [
+    "An independent audit of SP-12 checks recommendation sources, invented names or counts and the open-button permission, records every confirmed defect with the task that must redo it in the SP-12 findings ledger, and the ledger has no open critical or high finding."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json",
+     "purpose": "An independent audit of SP-12 checks recommendation sources, invented names or counts and the open-button permission, records every confirmed defect with the task that must redo it in the SP-12 findings ledger, and the ledger has no open critical or high finding.",
+     "category": "static",
+     "created_by": "T12.6"
+    }
+   ],
+   "covers": [
+    "R13"
+   ],
+   "kind": "audit",
+   "subplan_id": "SP-12"
   },
   {
    "id": "T14.1",
@@ -11176,46 +13372,46 @@
    "estimate_rationale": "Agent estimate in minutes: 10 setup + 20 composed flow + 10 evidence = 40.",
    "classification_evidence": {
     "complexity": {
+     "justification": "Runs one composed flow across tools, saved projects and the spend view.",
      "evidence": [
       "task:T7.9",
       "task:T96"
-     ],
-     "justification": "Runs one composed flow across tools, saved projects and the spend view."
+     ]
     },
     "scope": {
+     "justification": "Changes are limited to the CG-7 evidence file.",
      "evidence": [
       "task:T7.9",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "Changes are limited to the CG-7 evidence file."
+     ]
     },
     "duration": {
+     "justification": "Ten setup, twenty for the composed flow and ten for evidence make forty minutes.",
      "evidence": [
       "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
       "task:T7.9"
-     ],
-     "justification": "Ten setup, twenty for the composed flow and ten for evidence make forty minutes."
+     ]
     },
     "risk": {
+     "justification": "A failing composition would show tools to the wrong plan or lose a gallery scene on save.",
      "evidence": [
       "spec:SPEC.md#requirements",
       "task:T7.11"
-     ],
-     "justification": "A failing composition would show tools to the wrong plan or lose a gallery scene on save."
+     ]
     },
     "coupling": {
+     "justification": "Composes SP-7 with the candidate closed by CG-6, so it follows that gate and the SP-7 audit.",
      "evidence": [
       "task:T96",
       "task:T7.11"
-     ],
-     "justification": "Composes SP-7 with the candidate closed by CG-6, so it follows that gate and the SP-7 audit."
+     ]
     },
     "confidence": {
+     "justification": "The composed mode reuses the SP-7 integration script with one extra save step.",
      "evidence": [
       "task:T7.9",
       "spec:SPEC.md#requirements"
-     ],
-     "justification": "The composed mode reuses the SP-7 integration script with one extra save step."
+     ]
     }
    },
    "expected_paths": [
@@ -11232,8 +13428,8 @@
      "type": "command",
      "value": "npm run herramientas:test-integracion -- --modo CG-7",
      "purpose": "On the integrated candidate with SP-7, an Entusiasta counts a decoration without prices and is refused the calculator, a Master Designer opens a gallery decoration as a new project and saves it as a project, and each tool's paid calls appear under its own tag in the staff spend view.",
-     "created_by": "T7.9",
      "category": "integration",
+     "created_by": "T7.9",
      "requires": [
       "PICTURES_REQ021_DATABASE_URL"
      ]
@@ -11329,6 +13525,352 @@
    ],
    "covers": [
     "R12"
+   ],
+   "kind": "test"
+  },
+  {
+   "id": "T99",
+   "milestone_id": "M3",
+   "title": "Composition check CG-9: English product and decoration texts across tools and the Taller",
+   "objective": "On the integrated candidate run `npm run textos:test-integracion -- --modo CG-9` and record .evidence/REQ-021/CG-9.integration.json.",
+   "repository": "pictures",
+   "after": [
+    "T98",
+    "T9.6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 10 setup + 20 composed flow + 10 evidence = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "One composed flow for CG-9 crosses the subplans already integrated.",
+     "evidence": [
+      "task:T9.5",
+      "task:T98"
+     ]
+    },
+    "scope": {
+     "justification": "Changes are limited to the CG-9 evidence file.",
+     "evidence": [
+      "task:T9.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Ten setup, 20 composed flow and ten evidence make 40 minutes for CG-9.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T9.5"
+     ]
+    },
+    "risk": {
+     "justification": "A failing CG-9 composition would ship a subplan that breaks earlier ones.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T9.6"
+     ]
+    },
+    "coupling": {
+     "justification": "CG-9 composes the new subplan with the candidate of the previous gate, so it follows both.",
+     "evidence": [
+      "task:T98",
+      "task:T9.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The CG-9 mode reuses the subplan's own integration script.",
+     "evidence": [
+      "task:T9.5",
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/CG-9.integration.json"
+   ],
+   "shared_resources": [
+    "candidate:CG-9"
+   ],
+   "acceptance_criteria": [
+    "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run textos:test-integracion -- --modo CG-9",
+     "purpose": "On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names.",
+     "category": "integration",
+     "created_by": "T9.5",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "test"
+  },
+  {
+   "id": "T100",
+   "milestone_id": "M3",
+   "title": "Composition check CG-10: the whole external app in English",
+   "objective": "On the integrated candidate run `npm run idioma:test-integracion-resto -- --modo CG-10` and record .evidence/REQ-021/CG-10.integration.json.",
+   "repository": "pictures",
+   "after": [
+    "T99",
+    "T10.6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 10 setup + 20 composed flow + 10 evidence = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "One composed flow for CG-10 crosses the subplans already integrated.",
+     "evidence": [
+      "task:T10.5",
+      "task:T99"
+     ]
+    },
+    "scope": {
+     "justification": "Changes are limited to the CG-10 evidence file.",
+     "evidence": [
+      "task:T10.5",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Ten setup, 20 composed flow and ten evidence make 40 minutes for CG-10.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T10.5"
+     ]
+    },
+    "risk": {
+     "justification": "A failing CG-10 composition would ship a subplan that breaks earlier ones.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T10.6"
+     ]
+    },
+    "coupling": {
+     "justification": "CG-10 composes the new subplan with the candidate of the previous gate, so it follows both.",
+     "evidence": [
+      "task:T99",
+      "task:T10.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The CG-10 mode reuses the subplan's own integration script.",
+     "evidence": [
+      "task:T10.5",
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/CG-10.integration.json"
+   ],
+   "shared_resources": [
+    "candidate:CG-10"
+   ],
+   "acceptance_criteria": [
+    "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run idioma:test-integracion-resto -- --modo CG-10",
+     "purpose": "On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish.",
+     "category": "integration",
+     "created_by": "T10.5",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R12"
+   ],
+   "kind": "test"
+  },
+  {
+   "id": "T101",
+   "milestone_id": "M4",
+   "title": "Composition check CG-11: edited structures in saved projects, decorations and English",
+   "objective": "On the integrated candidate run `npm run trenza:test-integracion -- --modo CG-11` and record .evidence/REQ-021/CG-11.integration.json.",
+   "repository": "pictures",
+   "after": [
+    "T11.4"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 10 setup + 20 composed flow + 10 evidence = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "One composed flow for CG-11 crosses the subplans already integrated.",
+     "evidence": [
+      "task:T11.3",
+      "task:T11.4"
+     ]
+    },
+    "scope": {
+     "justification": "Changes are limited to the CG-11 evidence file.",
+     "evidence": [
+      "task:T11.3",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Ten setup, 20 composed flow and ten evidence make 40 minutes for CG-11.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T11.3"
+     ]
+    },
+    "risk": {
+     "justification": "A failing CG-11 composition would ship a subplan that breaks earlier ones.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T11.4"
+     ]
+    },
+    "coupling": {
+     "justification": "CG-11 composes the new subplan with the candidate of the previous gate, so it follows both.",
+     "evidence": [
+      "task:T11.4",
+      "task:T11.4"
+     ]
+    },
+    "confidence": {
+     "justification": "The CG-11 mode reuses the subplan's own integration script.",
+     "evidence": [
+      "task:T11.3",
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/CG-11.integration.json"
+   ],
+   "shared_resources": [
+    "candidate:CG-11"
+   ],
+   "acceptance_criteria": [
+    "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run trenza:test-integracion -- --modo CG-11",
+     "purpose": "On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account.",
+     "category": "integration",
+     "created_by": "T11.3",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R15"
+   ],
+   "kind": "test"
+  },
+  {
+   "id": "T102",
+   "milestone_id": "M4",
+   "title": "Composition check CG-12: chat recommendations into saved projects, in both languages",
+   "objective": "On the integrated candidate run `npm run recomendaciones:test-integracion -- --modo CG-12` and record .evidence/REQ-021/CG-12.integration.json.",
+   "repository": "pictures",
+   "after": [
+    "T12.6"
+   ],
+   "complexity": "medium",
+   "scope": "small_change",
+   "estimated_minutes": 40,
+   "risk": "medium",
+   "coupling": "medium",
+   "confidence": "medium",
+   "estimate_rationale": "Agent estimate in minutes: 10 setup + 20 composed flow + 10 evidence = 40.",
+   "classification_evidence": {
+    "complexity": {
+     "justification": "One composed flow for CG-12 crosses the subplans already integrated.",
+     "evidence": [
+      "task:T12.4",
+      "task:T12.6"
+     ]
+    },
+    "scope": {
+     "justification": "Changes are limited to the CG-12 evidence file.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    },
+    "duration": {
+     "justification": "Ten setup, 20 composed flow and ten evidence make 40 minutes for CG-12.",
+     "evidence": [
+      "command:python3 /home/david/.claude/skills/metodologia/scripts/bitacora.py --project pictures plan-json history --kind test -> status unknown, no comparable samples",
+      "task:T12.4"
+     ]
+    },
+    "risk": {
+     "justification": "A failing CG-12 composition would ship a subplan that breaks earlier ones.",
+     "evidence": [
+      "spec:SPEC.md#requirements",
+      "task:T12.6"
+     ]
+    },
+    "coupling": {
+     "justification": "CG-12 composes the new subplan with the candidate of the previous gate, so it follows both.",
+     "evidence": [
+      "task:T12.6",
+      "task:T12.6"
+     ]
+    },
+    "confidence": {
+     "justification": "The CG-12 mode reuses the subplan's own integration script.",
+     "evidence": [
+      "task:T12.4",
+      "spec:SPEC.md#requirements"
+     ]
+    }
+   },
+   "expected_paths": [
+    ".evidence/REQ-021/CG-12.integration.json"
+   ],
+   "shared_resources": [
+    "candidate:CG-12"
+   ],
+   "acceptance_criteria": [
+    "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag."
+   ],
+   "verification": [
+    {
+     "type": "command",
+     "value": "npm run recomendaciones:test-integracion -- --modo CG-12",
+     "purpose": "On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag.",
+     "category": "integration",
+     "created_by": "T12.4",
+     "requires": [
+      "PICTURES_REQ021_DATABASE_URL"
+     ]
+    }
+   ],
+   "covers": [
+    "R13"
    ],
    "kind": "test"
   }

@@ -1,0 +1,38 @@
+{
+  "name": "Espacio de composición",
+  "axes": {
+    "concept": "Espacio de composición: keep the existing Taller shell and arrange the personal library, isolated preview and item inspector as three connected working areas.",
+    "layout": "At 1100px+ a 280px library, flexible central preview and 264px inspector share one continuous workshop panel; at 640–1099px the inspector sits below the preview; at 320–639px all three areas stack.",
+    "navigation": "Preserve the Pictures/Sempertex masthead and neutral Taller 3D/Proyectos route rule. Inside the workshop, Biblioteca/Vista previa/Ficha moves focus to each area; account/browser source buttons change the list without changing route.",
+    "typography": "Use the existing embedded Geist Sans and Geist Mono. H1 stays 24px; inspector heading 20px, library heading 18px, item name 14px, labels 12–14px and supporting metadata 12–13px.",
+    "density": "A compact thumbnail list and a single expanded item share the screen; filters beyond occasion use native disclosure. Desktop insets are 20–24px inside the inherited shell, with 20px phone gutters and 44px controls.",
+    "components": "Recompose real installed shadcn Button, Input and Skeleton with Animate UI/Base UI Dialog and AlertDialog; use semantic native source buttons, selects and details, an inline SVG mock scene and a Motion shared area marker.",
+    "colour": "Use only Pictures globals.css tokens and the finalized sibling aliases: fondo/superficie/texto/acento plus Taller preview roles; texto-tenue supplies accessible control edges, and exito/error/aviso identify actual feedback. Both themes retain the same palette and fonts.",
+    "motion": "Spatial choreography: library travels 20px from the left, inspector 24px from the right, records stagger 65ms, preview seats horizontally and its object enters with 25px travel/−12deg Y rotation. Expressive travel 640ms, natural 360ms, subtle 160ms, easing cubic-bezier(.23,1,.32,1); shared area marker uses the kit profile spring. Reduced motion and still mode remove all travel."
+  },
+  "evidence": {
+    "layout": [
+      ".spatial-workspace",
+      ".library",
+      ".canvas-zone",
+      ".inspector"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".zone-nav",
+      ".source-nav"
+    ],
+    "typography": [
+      ".heading h1",
+      ".section-head h2",
+      ".inspector h2",
+      ".record strong"
+    ],
+    "motion": [
+      ".library",
+      ".record",
+      ".canvas-art .scene-art",
+      ".inspector"
+    ]
+  }
+}

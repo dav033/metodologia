@@ -1,0 +1,39 @@
+{
+  "name": "Registro junto a la escena",
+  "axes": {
+    "concept": "Registro operativo de guardados junto a la escena abierta, con procedencia de cuenta y de navegador separadas.",
+    "layout": "Riel heredado de 52 px, registro lateral de 340–390 px y visor con guardado contextual; en teléfono visor y panel se apilan.",
+    "navigation": "Rutas Taller 3D / Proyectos del shell hermano; riel Añadir/Piezas/Plantillas/Sala; anclas Mi biblioteca / En este navegador y fichas contextuales.",
+    "typography": "Geist Sans existente: H1 24 px, panel 20 px, escena 16 px, registros 14 px y metadatos 12 px. Geist Mono solo en Sempertex.",
+    "density": "Filas con miniatura 64 px (56 px en teléfono), nombre y ocasión en dos líneas, acceso de ficha de 44 px; filtros de ocasión/tipo pareados en escritorio y color/globo desplegables.",
+    "components": "Button/Input/Skeleton reales de shadcn/Base UI; Dialog/AlertDialog con Animate UI; selects, radio, details y anclas nativos recompuestos dentro de los tokens Pictures.",
+    "colour": "Tokens exactos de Pictures y Taller; acento solo en acción primaria/selección, éxito tras confirmación y error en rechazo. Navegación neutral, sin paleta nueva.",
+    "motion": "Registro preciso: filas entran desde x=-12 px con 35 ms de secuencia; visor y formulario se asientan 8/12 px; confirmación escala y rota. 360 ms cubic-bezier(.77,0,.175,1), controles 150 ms; perfiles y reducción sin movimiento."
+  },
+  "evidence": {
+    "layout": [
+      ".workbody",
+      ".library-panel",
+      ".scene-area",
+      ".item-row"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".panel-rail",
+      ".group-nav",
+      ".view-item"
+    ],
+    "typography": [
+      ".heading h1",
+      ".panel-heading h2",
+      ".item-name",
+      ".item-meta"
+    ],
+    "motion": [
+      ".item-row",
+      ".scene-preview",
+      ".save-panel",
+      ".view-item"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Escena junto al chat",
+  "axes": {
+    "concept": "Keep the short guided conversation beside a spatial recommendation workspace; enlarge one existing decoration without leaving the chat.",
+    "layout": "At 1100px and above a 280–340px conversation column sits beside a flexible scene stage; three compact recommendation cards form a preview index below the stage. Narrow layouts stack the conversation, stage and index.",
+    "navigation": "Preserved horizontal Pictures route navigation. A local preview index selects one scene in place, with current-preview text, aria-pressed and retained focus; each authorized card can open its own decoration as a new workshop project.",
+    "typography": "Existing embedded Geist Sans: 24px page title, 20px selected decoration, 18px panel titles, 14–15px working copy and 12–13px metadata; Geist Mono only in the inherited Sempertex wordmark. Counts use tabular figures.",
+    "density": "The desktop scene is the largest peer object. Compact cards carry preview, full wrapping name and count; the conversation remains at hand. At 840–1099px the preview index becomes horizontal rows; at 640–839px it is three columns; phone cards become single-column horizontal compositions.",
+    "components": "Real installed shadcn/Base UI Button, Input, Skeleton and Animate UI Dialog, plus the inherited native account disclosure and language selector. Custom SVG mock previews and semantic card-preview buttons recompose the product vocabulary.",
+    "colour": "Pictures globals.css tokens and sibling role mapping without new palette: fondo/superficie, texto/texto-suave, acento/sobre-acento, texto-tenue control edges and error. Decoration drawings are explicitly neutral illustrative mock previews.",
+    "motion": "Opposed spatial docking: conversation travels -18px, scene stage +26px; preview cards seat from +16px and .6deg with 65ms offsets; the selected scene translates 24px and scales .975 to 1. Expressive 580ms, natural 360ms, subtle 180ms; controls 180/140/100ms. Reduced motion, Quieto and still=1 settle immediately; hidden tabs pause effects."
+  },
+  "evidence": {
+    "layout": [".workspace", ".conversation", ".scene-stage", ".decoration-index"],
+    "navigation": [".route-nav", ".card-preview[aria-pressed='true']", ".preview-label"],
+    "typography": [".heading h1", ".stage-info h3", ".recommendation-card h3", ".stage-info p"],
+    "motion": [".conversation", ".scene-stage", ".recommendation-card", ".stage-art .scene-object"]
+  }
+}

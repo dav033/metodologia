@@ -1,0 +1,40 @@
+{
+  "name": "Edición en la pieza",
+  "axes": {
+    "concept": "Edición en la pieza: guardar la selección desde el inspector existente y cambiar nombre/ocasión dentro de su propia fila, sin salir del Taller.",
+    "layout": "Masthead y rutas compartidos; riel de 60 px, biblioteca de 320 px, visor flexible e inspector de 264 px. La edición expande solo la fila elegida. En teléfono, visor → captura abierta → biblioteca.",
+    "navigation": "Taller 3D y Proyectos conservan su regla horizontal. Buscar y filtrar actúan en la biblioteca; En este navegador se revela con details. La edición se confirma/cancela en su fila; el borrado abre AlertDialog.",
+    "typography": "Geist Sans/Geist Mono locales del producto. H1 24 px, biblioteca 18 px, nombre 15 px, formularios 13–14 px y metadatos 12 px; nombres y acciones envuelven dentro del mismo panel.",
+    "density": "Biblioteca compacta de filas con miniatura de 64×70 px, 16 px entre registros y filtros nativos 2×2. El nombre/ocasión se ocultan hasta Editar; el panel de captura solo se despliega al guardar.",
+    "components": "Button e Input reales shadcn/Base UI, Skeleton y AlertDialog con Animate UI. Filas, formulario en contexto, visor SVG y details nativo recompuestos con los radios y controles de los contratos hermanos.",
+    "colour": "Tokens exactos de Pictures en ambos temas: fondo/superficie/texto/acento y familia taller-*. Acento en Colocar/Guardar y selección; exito solo tras respuesta simulada confirmada; error junto al intento fallido. Borde de control alias texto-tenue, como los hermanos.",
+    "motion": "Asiento táctil: filas comprimen a .965 y asientan a 1.006 en 520 ms, desfase 65 ms; campos abren desde el punto de edición; confirmar asienta con giro ±2 grados; copia viaja 35 px al visor. Controles 170 ms con presión .965. Natural 320/140 ms; sutil 160/100 ms. Quieto, still, reduced-motion sin desplazamiento ni animación; pestaña oculta pausa CSS."
+  },
+  "evidence": {
+    "layout": [
+      ".workbench",
+      ".library",
+      ".canvas-zone",
+      ".inspector.sp5"
+    ],
+    "navigation": [
+      ".route-nav",
+      ".library-search",
+      ".filters",
+      ".legacy summary",
+      ".item-actions"
+    ],
+    "typography": [
+      ".heading h1",
+      ".library h2",
+      ".item-title",
+      ".item-meta",
+      ".capture h3"
+    ],
+    "motion": [
+      ".library-item",
+      ".btn",
+      ".capture-form"
+    ]
+  }
+}

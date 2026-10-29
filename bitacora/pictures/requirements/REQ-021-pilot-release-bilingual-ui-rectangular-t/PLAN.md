@@ -946,7 +946,7 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
   - Acceptance / functional: The cost calculator page takes the counter's result or materials typed by hand, lets the person edit balloon prices and add labour, transport, indirect costs and margin, and shows per-product prices from the real catalogue and the professional quote totals. Check: `npm run calculadora:test-ui`
 
-- [ ] T7.8 — Ready-made decorations gallery in the Taller with an open-as-new-project link · repo: pictures · after: T7.1, T7.4 · verify: `npm run galeria:test-ui -- --solo galeria` · files: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · resources: package.json scripts, contract:taller-scene · covers: R13, R16 · kind: implement · subplan: SP-7 · ui: yes
+- [ ] T7.8 — Ready-made decorations gallery in the Taller with an open-as-new-project link · repo: pictures · after: T7.1, T7.4 · verify: `npm run galeria:test-ui -- --solo galeria` · files: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · resources: package.json scripts, contract:taller-scene, contract:galeria-index · covers: R13, R16 · kind: implement · subplan: SP-7 · ui: yes
 
   Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence medium; estimate 150 minutes.
   `galeria-decoraciones.ts` builds one index `{ id, nombre, ocasion, tamano, miniatura }` from `IDEAS_ASISTENTE` and `IDEAS_SEMPERTEX`. The Taller reads `?decoracion=<id>` once, opens it as a new unsaved scene with the same rule as «Abrir en Escena» (SP-4: pending edits of the open project are saved first or the user is asked) and removes the parameter. npm script `galeria:test-ui` = `tsx scripts/test/test-ui-galeria.ts`.
@@ -1115,14 +1115,262 @@ The interface follows the browser language on the first visit and the account's 
 <!-- /CG-8 tasks -->
 
 
-- **SP-9 — Product and decoration texts in English** (UI: `textos-producto@v1`): English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator. Covers R12.
-- **SP-10 — Remaining screens and AI replies in English** (UI: `idioma-resto@v1`): The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language. Covers R12.
+- **SP-9 — Product and decoration texts in English** (no Designer, owner round 16): English names and descriptions for every product and decoration are generated once from the Spanish source, stored, shown when the language is English with the Spanish text as fallback, and correctable by an administrator. Covers R12.
+
+<!-- SP-9 tasks -->
+
+  SP-9 tasks (owner round 16, 2026-10-29): q1 names and descriptions of the 1,615 products, their variant colour and size names and the 448 ready-made decorations (25 Ideas del asistente, 423 Ideas Sempertex), never people's own texts; q2 never regenerated, only the administrator changes them; q3 no Designer: an «Textos en inglés» tab in Administración following the existing tabs. The catalogue lives in SQLite re-seeded on every Vercel start (src/lib/shopify/persistir-catalogo.ts, snapshot src/lib/shopify/datos/catalogo-publico.json), so English texts live in Postgres keyed by Shopify id. Translation runs once with Haiku 5.5 through the owner's Claude accounts (SPEC Inputs) and is committed as data files, so production receives it by the seed step of SP-13 without any AI call there.
+  DAG: T9.1 (storage, lookup) → T9.2 (one-time generation, validation, seed) → {T9.3 show English at the boundaries, T9.4 admin tab} → T9.5 integration → T9.6 audit; CG-9 adds SP-9 after CG-8.
+
+- [ ] T9.1 — English-text storage and the lookup with Spanish fallback · repo: pictures · after: T8.8 · verify: `npm run textos:test -- --test-name-pattern=almacen` · files: scripts/migrations/041_textos_ingles.sql, src/lib/textos-ingles/repositorio.ts, src/lib/textos-ingles/consulta.ts, scripts/test/test-textos-ingles.ts · resources: package.json scripts, contract:textos-ingles · covers: R12 · kind: implement · subplan: SP-9 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling high; confidence high; estimate 75 minutes.
+  Table `textos_ingles` (tipo `producto|variante_opcion|idea`, clave, campo `nombre|descripcion`, texto_es_fuente, texto_en, origen `ia|admin`, actualizado_en; unique (tipo, clave, campo)). `textosEn(peticiones, idioma)` returns a map in one query. npm script `textos:test` = `tsx --conditions=react-server --test scripts/test/test-textos-ingles.ts`.
+
+  - Acceptance / functional: Migration 041 creates a Postgres table of English texts keyed by kind, source id and field with the Spanish source text, the English text and its origin (ia or admin), and a lookup returns the English text in English and the Spanish source when no English exists. Check: `npm run textos:test -- --test-name-pattern=almacen`
+
+- [ ] T9.2 — One-time English generation with Haiku 5.5, its validator and the idempotent seed · repo: pictures · after: T9.1 · verify: `npm run textos:validar` · files: scripts/textos/traducir.ts, scripts/textos/glosario.ts, scripts/textos/validar.ts, scripts/textos/sembrar.ts, data/textos-ingles/productos.json, data/textos-ingles/variantes.json, data/textos-ingles/ideas.json, scripts/textos/test-textos-scripts.ts · resources: package.json scripts, contract:textos-ingles · covers: R12 · kind: implement · subplan: SP-9 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 180 minutes.
+  `npm run textos:traducir` reads the snapshot (titulo/titulo_limpio, descripcion_txt), the distinct variant option values and both idea sets, sends batches of 40 to `claude -p --model claude-haiku-5-5 --output-format json` with the glossary (balloon sizes like R12 and 260Q, Sempertex, Fashion, Deco and Metallic lines kept as written) and writes the three data files. `npm run textos:validar` and `npm run textos:sembrar` work without any model; `textos:test-scripts` = `tsx --test scripts/textos/test-textos-scripts.ts`.
+
+  - Acceptance / static: npm run textos:validar accepts the generated English files only when every catalogue product, variant colour or size name and ready-made decoration in the repository snapshot has a non-empty English name and description where a Spanish one exists, product codes and brand names are unchanged, and no English text equals its Spanish source unless the pair is listed as a brand or code. Check: `npm run textos:validar`
+  - Acceptance / functional: npm run textos:sembrar loads the generated files into the database idempotently: a second run changes nothing, and a text whose origin is admin is never overwritten. Check: `npm run textos:test-scripts -- --test-name-pattern=sembrar`
+
+- [ ] T9.3 — Show English product and decoration texts at every boundary that sends them to the browser · repo: pictures · after: T9.2 · verify: `npm run textos:test-fronteras` · files: src/lib/textos-ingles/aplicar.ts, src/app/catalogo/page.tsx, src/app/catalogo/[handle]/page.tsx, src/app/api/catalogo/repositorios/route.ts, src/app/api/taller/buscar/route.ts, src/lib/globos3d/biblioteca.ts, src/lib/globos3d/galeria-decoraciones.ts, src/lib/ia/herramientas/registro-herramientas.ts, scripts/test/test-textos-fronteras.ts · resources: package.json scripts, contract:textos-ingles, contract:idioma · covers: R12 · kind: implement · subplan: SP-9 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 150 minutes.
+  `aplicarTextosIngles(items, idioma)` replaces name and description fields only when idioma is en; npm script `textos:test-fronteras` = `tsx --conditions=react-server --test scripts/test/test-textos-fronteras.ts` (each boundary in English and Spanish, Spanish compared with today's output).
+
+  - Acceptance / functional: With the language set to English, every serialization boundary that sends product or decoration names to the browser (catalogue pages and APIs, Taller search, shopping list, chat product results, gallery index and the Taller idea library) sends the English text, falling back to Spanish, and with Spanish sends exactly what it sends today. Check: `npm run textos:test-fronteras`
+
+- [ ] T9.4 — «Textos en inglés» administration tab and its protected API · repo: pictures · after: T9.2 · verify: `npm run textos:test-admin -- --solo correccion` · files: src/components/admin/TextosInglesTab.tsx, src/components/admin/AdminTabs.tsx, src/app/api/admin/textos-ingles/route.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-admin-textos-ingles.ts · resources: package.json scripts, contract:textos-ingles, contract:permission-map · covers: R12 · kind: implement · subplan: SP-9 · ui: no
+
+  Classification: complexity medium; scope full_feature; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  Staff screens stay Spanish (round 16 q4). npm script `textos:test-admin` = `tsx scripts/test/test-admin-textos-ingles.ts`.
+
+  - Acceptance / functional: An administrator with textos.corregir finds a text in the «Textos en inglés» administration tab by name or id, filters by pendiente, IA, corregido or la fuente cambió, saves a correction that becomes origin admin, and accounts without the permission get 403 from its API. Check: `npm run textos:test-admin -- --solo correccion`
+  - Acceptance / functional: Nothing regenerates an English text after it is stored: a later change of the Spanish source only marks the text «la fuente cambió» in the administration list, and products added later show Spanish until an administrator writes English. Check: `npm run textos:test-admin -- --solo fuente-cambio`
+
+- [ ] T9.5 — Browser end-to-end: English catalogue, Taller and gallery names with an administrator correction · repo: pictures · after: T9.3, T9.4 · verify: `npm run textos:test-integracion` · files: scripts/test/test-integracion-textos-ingles.ts, .evidence/REQ-021/SP-9.integration.json · resources: package.json scripts · covers: R12 · kind: test · subplan: SP-9
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  npm script `textos:test-integracion` = `tsx scripts/test/test-integracion-textos-ingles.ts`.
+
+  - Acceptance / integration: On a production build against the REQ-021 database with the seeded English texts, an English session sees English product and decoration names in the catalogue, the Taller library, the shopping list and the gallery; an administrator's correction appears there on the next request; and a Spanish session sees today's Spanish names. Check: `npm run textos:test-integracion`
+
+- [ ] T9.6 — SP-9 audit: English texts, fallback, no regeneration and correction permissions · repo: pictures · after: T9.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-9.findings.json` · files: .evidence/REQ-021/SP-9.audit.md, .evidence/REQ-021/SP-9.findings.json · resources: ledger:SP-9 · covers: R12 · kind: audit · subplan: SP-9
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 65 minutes.
+  Read-only; checks the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission.
+
+  - Acceptance / static: An independent audit of SP-9 checks the English texts' coverage, Spanish fallback, the no-regeneration rule and the correction permission, records every confirmed defect with the task that must redo it in the SP-9 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-9.findings.json`
+
+<!-- /SP-9 tasks -->
+
+<!-- CG-9 tasks -->
+
+  Composition gate CG-9: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9 (cumulative).
+
+- [ ] T99 — Composition check CG-9: English product and decoration texts across tools and the Taller · repo: pictures · after: T98, T9.6 · verify: `npm run textos:test-integracion -- --modo CG-9` · files: .evidence/REQ-021/CG-9.integration.json · resources: candidate:CG-9 · covers: R12 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run textos:test-integracion -- --modo CG-9`.
+
+  - Acceptance / integration: On the integrated candidate with SP-9, an English session sees English product names in the counter's shopping list, the calculator and the Taller library, and a saved project reopens with English names. Check: `npm run textos:test-integracion -- --modo CG-9`
+
+<!-- /CG-9 tasks -->
+
+
+- **SP-10 — Remaining screens and AI replies in English** (no Designer, Planner ruling after round 16): The chat tools, catalogue, administration, spend and statistics screens are fully in English, and the scene AI and the chat tools reply in the user's language. Covers R12.
+
+<!-- SP-10 tasks -->
+
+  SP-10 tasks (owner round 16, 2026-10-29): q4 every screen an external user sees plus the AI replies; staff screens stay Spanish; q5 the model understands English and searches the Spanish catalogue, answering in English with SP-9's names. No Designer (Planner ruling, same reason as SP-8 q8: only texts change; overflow is tested). Measured on origin/main: about 180 literals in src/components/guiado (47 files) and 325 in src/components/plan (62 files), plus the SP-4, SP-5 and SP-7 text modules.
+  DAG: T10.1 (guided chat and plan views) ∥ T10.2 (tools, catalogue, gallery, projects, library) ∥ T10.3 (reply language and search) → T10.4 staff exclusion list → T10.5 integration → T10.6 audit; CG-10 adds SP-10 after CG-9. Cut order 1 (owner): SP-10 is the first language work to drop if late.
+
+- [ ] T10.1 — Guided chat and structure-plan views in English · repo: pictures · after: T9.6 · verify: `npm run idioma:test-cobertura -- src/components/guiado src/components/propuesta src/components/plan` · files: src/components/guiado/**/*.tsx, src/components/propuesta/**/*.tsx, src/components/plan/**/*.tsx, src/components/guiado/textos/chat-guiado.ts, src/components/plan/textos/planes-estructura.ts, src/lib/estado/pasos-asistente.ts, src/lib/guiada-motor/mensajes-cliente.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling high; confidence high; estimate 240 minutes.
+  npm script `idioma:test-cobertura` (SP-8) over the listed directories.
+
+  - Acceptance / static: The guided chat and its components (src/components/guiado, src/components/propuesta) and the structure-plan views (src/components/plan) pass the coverage guard and render in English with no Spanish string left, while Spanish rendering is unchanged. Check: `npm run idioma:test-cobertura -- src/components/guiado src/components/propuesta src/components/plan`
+
+- [ ] T10.2 — Tools, catalogue, gallery, saved projects and personal library in English · repo: pictures · after: T9.6 · verify: `npm run idioma:test-cobertura -- src/components/herramientas src/components/cotizacion src/components/catalogo src/app/catalogo src/components/tres-d/galeria src/components/proyectos src/components/tres-d/biblioteca` · files: src/components/herramientas/**/*.ts, src/components/herramientas/**/*.tsx, src/components/cotizacion/**/*.tsx, src/components/catalogo/**/*.tsx, src/app/catalogo/page.tsx, src/app/catalogo/[handle]/page.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/components/proyectos/textos-proyectos.ts, src/components/tres-d/biblioteca/textos-biblioteca.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling medium; confidence high; estimate 150 minutes.
+  The professional quote keeps COP in English (round 15 q7).
+
+  - Acceptance / static: The home, counter, calculator and professional quote (src/components/herramientas, src/components/cotizacion), the catalogue (src/components/catalogo, src/app/catalogo), the gallery and the saved-project and personal-library screens pass the coverage guard and render in English with no Spanish string left. Check: `npm run idioma:test-cobertura -- src/components/herramientas src/components/cotizacion src/components/catalogo src/app/catalogo src/components/tres-d/galeria src/components/proyectos src/components/tres-d/biblioteca`
+
+- [ ] T10.3 — AI replies in the user's language with catalogue searches kept in Spanish · repo: pictures · after: T9.6 · verify: `npm run idioma:test-respuestas -- --test-name-pattern=prompt` · files: src/lib/ia/guiado/prompt-guiado.ts, src/lib/ia/omoikane/prompt-sistema.ts, src/lib/ia/escena/entorno-escena.ts, src/lib/ia/herramientas/herramientas.ts, src/lib/contador/contar.ts, src/lib/ia/nucleo/python-adapter.ts, services/ai-api/app/main.py, scripts/test/test-idioma-respuestas-ia.ts, services/ai-api/tests/test_idioma_respuesta.py · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 150 minutes.
+  npm script `idioma:test-respuestas` = `tsx --conditions=react-server --test scripts/test/test-idioma-respuestas-ia.ts`; ai-api test runs with `uv run --directory services/ai-api pytest tests/test_idioma_respuesta.py`.
+
+  - Acceptance / functional: Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt. Check: `npm run idioma:test-respuestas -- --test-name-pattern=prompt`
+  - Acceptance / functional: With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9. Check: `npm run idioma:test-respuestas -- --test-name-pattern=busqueda`
+
+- [ ] T10.4 — Explicit list of staff screens that stay in Spanish · repo: pictures · after: T10.1, T10.2, T10.3 · verify: `npm run idioma:test-personal` · files: scripts/idioma/pantallas-personal.ts, scripts/idioma/test-pantallas-personal.ts · resources: package.json scripts · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence high; estimate 40 minutes.
+  `PANTALLAS_PERSONAL` = every page whose map permission is `internas.usar`, `gasto.ver`, `cuentas.administrar` or `roles.administrar`; the test fails if an external page is listed. npm script `idioma:test-personal` = `tsx --test scripts/idioma/test-pantallas-personal.ts`.
+
+  - Acceptance / functional: Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list. Check: `npm run idioma:test-personal`
+
+- [ ] T10.5 — Browser end-to-end: external screens and one live AI turn in English · repo: pictures · after: T10.4 · verify: `npm run idioma:test-integracion-resto` · files: scripts/test/test-integracion-idioma-resto.ts, .evidence/REQ-021/SP-10.integration.json · resources: package.json scripts · covers: R12 · kind: test · subplan: SP-10
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes.
+  npm script `idioma:test-integracion-resto` = `tsx scripts/test/test-integracion-idioma-resto.ts`; the live turn uses the cheapest configured model once.
+
+  - Acceptance / integration: On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens. Check: `npm run idioma:test-integracion-resto`
+
+- [ ] T10.6 — SP-10 audit: external screens and AI replies in English · repo: pictures · after: T10.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-10.findings.json` · files: .evidence/REQ-021/SP-10.audit.md, .evidence/REQ-021/SP-10.findings.json · resources: ledger:SP-10 · covers: R12 · kind: audit · subplan: SP-10
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 65 minutes.
+  Read-only; checks external-screen coverage, unchanged Spanish prompts and English replies.
+
+  - Acceptance / static: An independent audit of SP-10 checks external-screen coverage, unchanged Spanish prompts and English replies, records every confirmed defect with the task that must redo it in the SP-10 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-10.findings.json`
+
+<!-- /SP-10 tasks -->
+
+<!-- CG-10 tasks -->
+
+  Composition gate CG-10: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10 (cumulative).
+
+- [ ] T100 — Composition check CG-10: the whole external app in English · repo: pictures · after: T99, T10.6 · verify: `npm run idioma:test-integracion-resto -- --modo CG-10` · files: .evidence/REQ-021/CG-10.integration.json · resources: candidate:CG-10 · covers: R12 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run idioma:test-integracion-resto -- --modo CG-10`.
+
+  - Acceptance / integration: On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish. Check: `npm run idioma:test-integracion-resto -- --modo CG-10`
+
+<!-- /CG-10 tasks -->
+
+
 
 ### M4 — Editable modules and chat → 3D
 Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop.
 
-- **SP-11 — Editable modules and quartets** (UI: `modulos-editables@v1`): A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update. Covers R15.
+- **SP-11 — Editable modules and quartets** (no Designer, Planner ruling after round 16): A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update. Covers R15.
+
+<!-- SP-11 tasks -->
+
+  SP-11 tasks (owner round 16 q6 a, 2026-10-29): only spacing between quartets and thickness of columns, arches and garlands. Today `armarTrenza` (src/lib/globos3d/trenza.ts) fixes them with PASO_POR_DIAMETRO = 0.8 and RADIO_TRENZA_POR_DIAMETRO = 0.62 and the editor (EditorTrenzaCompleto in ParametrosPieza.tsx) has no control for them. Ranges 0.6–1.2 and 0.5–0.8 diameters are a Planner ruling (below 0.6 balloons overlap, above 1.2 gaps show); the defaults stay the constants. No Designer (Planner ruling): two sliders in the existing editor follow its slider pattern. Cut order 2 (owner): SP-11 drops before chat→3D if late.
+  DAG: T11.1 (engine and schema) → T11.2 (editor controls) → T11.3 integration → T11.4 audit; CG-11 adds SP-11 after CG-10.
+
+- [ ] T11.1 — Optional spacing and thickness in the quartet engine and the scene schema · repo: pictures · after: T100 · verify: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto` · files: src/lib/globos3d/trenza.ts, src/lib/globos3d/piezas.ts, src/lib/globos3d/esquema-escena.ts, src/lib/globos3d/hoja-armado-estructura.ts, scripts/test/test-trenza-separacion.ts · resources: package.json scripts, contract:taller-scene · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence high; estimate 120 minutes.
+  Fields `separacion?: number` and `grosor?: number` (in diameters) on columna and arco and in OpcionesGuirnalda; `armarTrenza` reads them with the constants as defaults. npm script `trenza:test-separacion` = `tsx --conditions=react-server --test scripts/test/test-trenza-separacion.ts`; the existing goldens (`npm run globos3d:test`) stay unchanged.
+
+  - Acceptance / functional: Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema. Check: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto`
+  - Acceptance / functional: Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count. Check: `npm run trenza:test-separacion -- --test-name-pattern=conteos`
+
+- [ ] T11.2 — Spacing and thickness controls in the column, arch and garland editor · repo: pictures · after: T11.1 · verify: `npm run trenza:test-ui -- --solo controles` · files: src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-ui-separacion-trenza.ts · resources: package.json scripts · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence high; estimate 75 minutes.
+  npm script `trenza:test-ui` = `tsx scripts/test/test-ui-separacion-trenza.ts`.
+
+  - Acceptance / functional: Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values. Check: `npm run trenza:test-ui -- --solo controles`
+  - Acceptance / functional: A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry. Check: `npm run trenza:test-ui -- --solo guardar-y-exportar`
+
+- [ ] T11.3 — Browser end-to-end: edit spacing and thickness, save, reopen and export · repo: pictures · after: T11.2 · verify: `npm run trenza:test-integracion` · files: scripts/test/test-integracion-separacion-trenza.ts, .evidence/REQ-021/SP-11.integration.json · resources: package.json scripts · covers: R15 · kind: test · subplan: SP-11
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  npm script `trenza:test-integracion` = `tsx scripts/test/test-integracion-separacion-trenza.ts`.
+
+  - Acceptance / integration: On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged. Check: `npm run trenza:test-integracion`
+
+- [ ] T11.4 — SP-11 audit: quartet spacing and thickness, counts and compatibility · repo: pictures · after: T11.3 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json` · files: .evidence/REQ-021/SP-11.audit.md, .evidence/REQ-021/SP-11.findings.json · resources: ledger:SP-11 · covers: R15 · kind: audit · subplan: SP-11
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
+  Read-only; checks the spacing and thickness ranges, count updates and unchanged existing scenes.
+
+  - Acceptance / static: An independent audit of SP-11 checks the spacing and thickness ranges, count updates and unchanged existing scenes, records every confirmed defect with the task that must redo it in the SP-11 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json`
+
+<!-- /SP-11 tasks -->
+
+<!-- CG-11 tasks -->
+
+  Composition gate CG-11: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11 (cumulative).
+
+- [ ] T101 — Composition check CG-11: edited structures in saved projects, decorations and English · repo: pictures · after: T11.4 · verify: `npm run trenza:test-integracion -- --modo CG-11` · files: .evidence/REQ-021/CG-11.integration.json · resources: candidate:CG-11 · covers: R15 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run trenza:test-integracion -- --modo CG-11`.
+
+  - Acceptance / integration: On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account. Check: `npm run trenza:test-integracion -- --modo CG-11`
+
+<!-- /CG-11 tasks -->
+
+
 - **SP-12 — Normal chat recommends ready-made 3D decorations** (UI: `chat-a-3d@v1`): In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine. Covers R13.
+
+<!-- SP-12 tasks -->
+
+  SP-12 tasks (owner round 16 q7 a, 2026-10-29): every plan sees 2–3 recommended ready-made decorations with image, name and count; only Master Designer and staff see «Abrir en el Taller» (decoraciones.explorar), without naming the plan. Recommendations come from the SP-7 gallery index (galeria-index@1: IDEAS_ASISTENTE and IDEAS_SEMPERTEX) and counts from each idea's own shopping list, never from the model. Cut order 3 (owner): chat→3D drops before the never-cut items if late.
+  DAG: T12.1 (design) ∥ T12.2 (recommender and chat tool) → T12.3 (cards) → T12.4 integration → T12.5 visual review → T12.6 audit; CG-12 adds SP-12 after CG-11.
+
+- [ ] T12.1 — Copy the owner-approved chat-a-3d@v1 contract into the repository · repo: pictures · after: T101 · verify: `test -s design/contracts/chat-a-3d@v1.md` · files: design/contracts/chat-a-3d@v1.md · resources: design:chat-a-3d@v1 · covers: R13 · kind: design · subplan: SP-12 · ui: no
+
+  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
+  The scheduler supplies the plan-approved draft; the task copies it unchanged.
+
+  - Acceptance / static: The owner-approved chat-a-3d@v1 contract is copied byte for byte into design/contracts/chat-a-3d@v1.md. Check: `test -s design/contracts/chat-a-3d@v1.md`
+
+- [ ] T12.2 — Deterministic 3D decoration recommender and its guided-chat tool · repo: pictures · after: T101 · verify: `npm run recomendaciones:test -- --test-name-pattern=ranking` · files: src/lib/recomendaciones-3d/recomendar.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, scripts/test/test-recomendaciones-3d.ts · resources: package.json scripts, contract:galeria-index · covers: R13 · kind: implement · subplan: SP-12 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  Tool `recomendar_decoraciones_3d` {ocasion, tamano, colores} → `[{ id, nombre, imagen, globos }]`. npm script `recomendaciones:test` = `tsx --conditions=react-server --test scripts/test/test-recomendaciones-3d.ts`.
+
+  - Acceptance / functional: Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits. Check: `npm run recomendaciones:test -- --test-name-pattern=ranking`
+  - Acceptance / functional: Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard. Check: `npm run recomendaciones:test -- --test-name-pattern=herramienta`
+
+- [ ] T12.3 — Recommendation cards in the guided chat with a plan-gated open button · repo: pictures · after: T12.1, T12.2 · verify: `npm run recomendaciones:test-ui` · files: src/components/guiado/TarjetaRecomendacion3D.tsx, src/components/guiado/textos/recomendaciones-3d.ts, scripts/test/test-ui-recomendaciones-3d.ts · resources: package.json scripts, contract:permission-map · covers: R13 · kind: implement · subplan: SP-12 · ui: yes
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  npm script `recomendaciones:test-ui` = `tsx scripts/test/test-ui-recomendaciones-3d.ts`.
+
+  - Acceptance / functional: The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan. Check: `npm run recomendaciones:test-ui`
+
+- [ ] T12.4 — Browser end-to-end: recommendations for two plans and opening one in the Taller · repo: pictures · after: T12.3 · verify: `npm run recomendaciones:test-integracion` · files: scripts/test/test-integracion-recomendaciones-3d.ts, .evidence/REQ-021/SP-12.integration.json · resources: package.json scripts · covers: R13 · kind: test · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  npm script `recomendaciones:test-integracion` = `tsx scripts/test/test-integracion-recomendaciones-3d.ts`.
+
+  - Acceptance / integration: On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it. Check: `npm run recomendaciones:test-integracion`
+
+- [ ] T12.5 — SP-12 visual review against the chat-a-3d@v1 contract · repo: pictures · after: T12.4 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json` · files: .evidence/REQ-021/SP-12.visual.md, .evidence/REQ-021/SP-12.visual.findings.json · resources: ledger:SP-12-visual · covers: R13 · kind: audit · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
+
+  - Acceptance / static: The rendered recommendation cards with and without the open button match the approved chat-a-3d@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-12 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json`
+
+- [ ] T12.6 — SP-12 audit: recommendation sources, invented values and the open-button gate · repo: pictures · after: T12.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json` · files: .evidence/REQ-021/SP-12.audit.md, .evidence/REQ-021/SP-12.findings.json · resources: ledger:SP-12 · covers: R13 · kind: audit · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
+  Read-only; checks recommendation sources, invented names or counts and the open-button permission.
+
+  - Acceptance / static: An independent audit of SP-12 checks recommendation sources, invented names or counts and the open-button permission, records every confirmed defect with the task that must redo it in the SP-12 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json`
+
+<!-- /SP-12 tasks -->
+
+<!-- CG-12 tasks -->
+
+  Composition gate CG-12: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11, SP-12 (cumulative).
+
+- [ ] T102 — Composition check CG-12: chat recommendations into saved projects, in both languages · repo: pictures · after: T12.6 · verify: `npm run recomendaciones:test-integracion -- --modo CG-12` · files: .evidence/REQ-021/CG-12.integration.json · resources: candidate:CG-12 · covers: R13 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run recomendaciones:test-integracion -- --modo CG-12`.
+
+  - Acceptance / integration: On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag. Check: `npm run recomendaciones:test-integracion -- --modo CG-12`
+
+<!-- /CG-12 tasks -->
+
+
 
 ### M5 — Pilot release
 The pilot runs in production with real accounts: the first administrator exists, every shipped subplan is published, a production smoke passes and anything cut is listed.
