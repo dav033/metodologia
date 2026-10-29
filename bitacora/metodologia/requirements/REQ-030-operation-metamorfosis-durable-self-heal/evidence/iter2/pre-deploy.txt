@@ -21,3 +21,8 @@ rollback: as for the second deploy, with the commit above
 previous main: 7576c86b4e389a03d963a7ea92f546000361d114
 DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-012830.dump sha256 334e91723b295b00967e698aecbac8c892809de0fefd3dea3120df54785d4f80 (pg_restore --list: readable)
 rollback: as for the second deploy, with the commit above
+
+# sixth deploy (repeated reopen), 2026-10-29 02:13, session metodologia-6d
+previous main: dbd984e35451bd7ecf7afc3340bb32b1765141f4
+DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-021350.dump sha256 d250dc0ffd3414ba24c6c19b7cc629645f977f6508d5e48c9f67b8b98476d4cb (pg_restore --list: readable)
+rollback: as for the second deploy, with the commit above

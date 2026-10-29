@@ -194,22 +194,43 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
   rendered (empty, loading, errors, activation success, invalid/duplicate invitation, receipts, role validation,
   deletion guards, dialog keyboard). The first of the two audits stored its captures inside the repository, which a
   read-only audit may not do; the gate made it audit again (`problems`), and the second one is clean.
-- 01:45 T2.7 held at its round limit on F8 alone; incarnation `@2` ended `blocked`. State (web panel): 34 tasks completed,
+- 01:45 T2.7 held at its round limit on F8 alone; incarnation `@2` ended `blocked`. A second retry (exhaustive
+  coverage) exposed that a reopened run could not be reopened again (`@3` ended at once): fixed (`3996c9895`, sixth
+  deploy), and the retry reopened the run as `@4`. State (web panel): 34 tasks completed,
   T2.7 blocked with its reason; T2.8, T91, T14.x, T94, T92 wait on it, so no composition gate has been composed yet.
+
+- 02:14–02:39 T2.7 (incarnation `@4`) audited every state of the contract (119 captures, kept outside the
+  repository in the requirement's `evidence/visual-sp2/`): F8 fixed, six medium mismatches open (non-blocking under the
+  owner's policy) → `audit_passed`.
+- 02:43 T2.8 (SP-2 audit) found a high finding: activation recorded the data-notice acceptance without a
+  server-validated consent; the gate sent it as one coordinated repair to T2.2, which fixed the activation route and
+  the service with tests (02:56); re-audit `audit_passed` (02:58). Item 4's full cycle on a real defect.
+- 02:58 gate CG-1 composed for the first time: candidate C1 `rejected`, `git_text_conflict` on 14 files between SP-1 and
+  SP-2, although SP-1 is an ancestor of SP-2 and every conflicting file's merge base is SP-1's version. Cause:
+  `bt_composition` (CONSERVAR, shared with the legacy runtime) merges each member with the run line's base as the
+  forced merge base (`merge_tree(version.line_base, …)`), assuming disjoint subplan deltas, while REQ-021's subplan
+  scopes include their ancestors (SP-2 ⊇ SP-1). See "Blocked".
+- The run (`@4`) stays open waiting for a command: its reopening count assumed every earlier incarnation had reopened
+  (`@3` never did), so it reopened once more instead of ending. Harmless (it behaves like a legacy run held for the
+  owner) and documented; a reopened run that ends is reopened again by the next retry.
+- State at 03:10: 37 of 45 tasks done (SP-1, SP-2 and SP-3 complete; T2.7 and T2.8 audits passed); T91 held by CG-1;
+  T14.1–T14.6, T94, T92 not started.
 
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 
 ## Blocked, with reason and procedure
 
-- REQ-021 T2.7 (SP-2 visual audit) — a quality decision for the owner, no longer an environment gap: F8 says the audit
-  could not render every state the contract declares (list in the audit report on the SP-2 line,
-  `.evidence/REQ-021/SP-2.visual.md`). Only the owner may accept that risk (ledger rule). Procedure: either accept F8
-  in the ledger (`"status": "accepted", "accepted_by": "owner", "reason": …`) and `uv run bt-durable retry-task
-  pictures REQ-021 T2.7` so the audit passes on the next judgement, or ask for an exhaustive state audit with the same
-  command and a note (the disposable database `req021-visual-audit-pg` is still running for it; remove it afterwards
-  with `docker rm -f req021-visual-audit-pg`). F4–F7 are medium findings: they do not block, but they are real.
+- REQ-021 gate CG-1 (and, by the same cause, CG-4 and CG-2): composition rejects members whose subplan scopes overlap.
+  Reason: a design decision in `bt_composition`, used by both runtimes — a member version is folded as a delta from the
+  run line's base, so a subplan that contains another (SP-2 ⊇ SP-1) conflicts with it. Two ways to close it, the
+  owner's choice: (a) compose with git's own merge base when a member's history already contains the integrated tree
+  (C1 would then equal SP-2's tip plus nothing to resolve); (b) publish each subplan version relative to the tips of
+  the subplans it depends on. Either needs the durable composer to compose again when a member's line changes (the
+  legacy owner rebuilds a candidate on every pass; the durable run records a rejection as final). Then T91 runs on the
+  candidate. SP-14 starts with T14.1, a design task whose contract the owner approves.
 
+- Done (02:39): REQ-021 T2.7 passed with full state coverage (see the live state); the disposable database `req021-visual-audit-pg` stays for T14.5 (remove with `docker rm -f req021-visual-audit-pg`).
 - Superseded (01:30): the T2.7 environment gap was closed with a disposable database, no credential needed.
 - Phone panel signed in, and the credential-only probes of the live smoke (`signin-start`, `sse`, `telegram-delivery`:
   `ok: false` in `remote/deploy/receipts/live-smoke.json`, the same as for the previous release). Reason: they need

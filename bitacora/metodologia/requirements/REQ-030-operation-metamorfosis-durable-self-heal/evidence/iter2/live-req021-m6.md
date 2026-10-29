@@ -63,3 +63,15 @@
   `fork_workflow` with a chosen id); the fork replays the history and, behind `DBOS.patch("bt-run-reopened")`, waits
   for the owner's command instead of ending; `Client.command` reopens before a `retry_task`; status, commands and the
   panels' projection follow the current incarnation. E2e `test_durable_reopen` (2).
+
+## T2.7 rendered without credentials; reopening twice (01:30–02:55)
+
+- A disposable PostgreSQL container on loopback (`req021-visual-audit-pg`, empty, random password) and the harness's
+  CI test-database mode (`CI=true APP_ENV=test DATABASE_URL=…`) let the visual auditor render the candidate with no
+  user credential; the repository's UI harness passed against it before the audit was retried.
+- `retry-task` reopened the ended run (`@2`). The audit captured 44 screens, closed F1–F3, found F4–F7 (medium), and
+  F8 (high: states not yet rendered); held at the round limit, `@2` ended blocked.
+- A second `retry-task` (exhaustive coverage) created `@3`, which ended at once: replaying `@2`'s history set the single
+  `reopened` flag. Fix `3996c9895`: incarnation `@N` waits for N-1 reopenings (e2e `test_a_run_reopened_twice_waits_each_time`;
+  regression `regression-reopen2.txt`, 270 files, only the 4 baseline failures). After deploying, the retry reopened the
+  run as `@4` and T2.7 ran again (a501).
