@@ -99,37 +99,6 @@ def label(ctx: dict, sid: str) -> tuple[str, str]:
     return DOT[item["state"]], STATE_ES[item["state"]]
 
 
-def actions(ctx: dict, s: dict) -> str:
-    """The subplan's place in the flow and what the owner can do with it."""
-    st = ctx["flow"]
-    if st["phase"] in ("interview", "outline") or ctx["status"] in ("approved", "launched", "in-progress", "done"):
-        return ""
-    item = st["subplans"].get(s["id"]) or {"state": "pending", "problems": []}
-    state, missing = item["state"], item["problems"]
-    buttons = []
-    if state != "confirmed" and s["id"] != st["focus"]:
-        buttons.append(_form(ctx, "planning-focus", "Definir ahora", sp=s["id"], cls="outline"))
-    if state != "confirmed":
-        buttons.append(_form(ctx, "planning-confirm", "Confirmar subplan", sp=s["id"], disabled=bool(missing)))
-    run = _run_button(ctx, s)
-    note = ""
-    if state == "confirmed":
-        where = " en la conversación" if item.get("via") == "conversation" else " en la web" if item.get("via") else ""
-        note = (f'Confirmado{where} {e((item.get("confirmed_at") or "")[:16].replace("T", " "))}. Si cambia, '
-                "vuelve a pedir confirmación.")
-    elif missing:
-        note = "Para confirmarlo falta: " + e("; ".join(missing)) + "."
-        import bt_page_planning as planning
-        asked = planning._asking(ctx["rdir"])
-        if asked and any(m.startswith("faltan entradas") for m in missing):          # the answer is one click away
-            note += (f' <a data-nav href="{e(link(ctx["project"], ctx["rid"], ctx["opts"], view="asks"))}">'
-                     f'Responde {asked} pregunta{"s" if asked != 1 else ""} abierta{"s" if asked != 1 else ""}</a>.')
-    else:
-        note = "Todo listo: revisa diseño, tareas, criterios y entradas, y confírmalo."
-    return (f'<div class="pp-flow {e(state)}"><span class="pp-state {e(DOT[state])}">{e(STATE_ES[state])}</span>'
-            f'<span class="pp-meta grow">{note}</span>{run}{"".join(buttons)}</div>')
-
-
 def stage_info(ctx: dict) -> dict:
     """The approved stages (D-134), computed once per fragment."""
     if "stages" not in ctx:

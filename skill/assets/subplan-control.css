@@ -1,0 +1,90 @@
+/* Subplan control block (bt_page_subplan_control): the subplan's flow, what waits for the owner, what blocks it, who
+   works on it now, what changed and the decisions taken. Mosaico tokens only; the owner's action is the one accent. */
+.sc { display: flex; flex-direction: column; gap: 12px; padding: 14px; border-radius: var(--radius); background: var(--mantle);
+  border: 1px solid var(--border); }
+.sc .sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sc h3 { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 8px; }
+.sc ul, .sc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sc time { flex: none; font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sc-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* The flow: six steps, the current one carries the accent. */
+.sc-steps { flex-direction: row !important; flex-wrap: wrap; gap: 4px !important; counter-reset: sc; }
+.sc-steps li { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--surface); border: 1px solid var(--border); }
+.sc-steps li + li::before { content: ""; width: 10px; height: 1px; background: var(--border); margin: 0 4px 0 -12px; }
+.sc-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--pp-ctl, var(--muted)); flex: none; }
+.sc-steps li.done { color: var(--ok); }
+.sc-steps li.done .sc-dot { background: var(--ok); box-shadow: none; }
+.sc-steps li.now { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
+.sc-steps li.now .sc-dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.sc-steps li.na { opacity: .55; text-decoration: line-through; text-decoration-thickness: 1px; }
+
+.sc-now { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+
+/* Three cards: owner (accent), blockers (warn), work in progress (info). */
+.sc-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.sc-card { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 12px; background: var(--surface);
+  border: 1px solid var(--border); min-width: 0; }
+.sc-card.you.has { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.sc-card.stop.has h3 { color: var(--warn); }
+.sc-card.work.has h3 { color: var(--info); }
+.sc-card li { display: flex; align-items: baseline; gap: 8px; font-size: 13px; line-height: 1.4; min-width: 0; }
+.sc-what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.sc-empty { margin: 0; font-size: 12.5px; color: var(--muted); }
+.sc-n { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  font-size: 11.5px; letter-spacing: 0; background: var(--code); color: var(--text); }
+.sc-card.you.has .sc-n { background: var(--accent); color: var(--on-accent); }
+.sc-go { flex: none; font-size: 12.5px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.sc-card .pp-inline button { height: 30px; font-size: 12.5px; }
+.sc-who { flex: none; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; background: var(--code); color: var(--muted); }
+.sc-who.you { background: var(--accent-soft); color: var(--accent); }
+.sc-who.planner { background: var(--warn-soft); color: var(--warn); }
+.sc-who.designer { background: var(--ok-soft); color: var(--ok); }
+.sc-who.run { background: var(--info-soft); color: var(--info); }
+.sc-pulse { flex: none; align-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--info);
+  animation: scpulse 1.8s ease-in-out infinite; }
+@keyframes scpulse { 0%, 100% { box-shadow: 0 0 0 0 var(--info-soft); } 50% { box-shadow: 0 0 0 5px var(--info-soft); } }
+
+/* What changed and the decisions taken. */
+.sc-more { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 10px; align-items: start; }
+.sc-news, .sc-dec { padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.sc-news li, .sc-dec li { display: grid; grid-template-columns: 62px auto minmax(0, 1fr); align-items: baseline; gap: 8px; font-size: 12.5px; }
+.sc-dec li { grid-template-columns: 62px minmax(0, 1fr); }
+.sc-news li.is-new { position: relative; }
+.sc-news li.is-new::after { content: "nuevo"; position: absolute; right: 0; top: -1px; font-size: 10.5px; font-weight: 700;
+  padding: 0 6px; border-radius: 6px; background: var(--accent); color: var(--on-accent); }
+.sc-news li.is-new .sc-what { padding-right: 46px; font-weight: 600; }
+.sc-new { font-size: 11px; letter-spacing: 0; text-transform: none; padding: 1px 7px; border-radius: 999px;
+  background: var(--accent); color: var(--on-accent); }
+.sc-dec summary { cursor: pointer; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+.sc-dec[open] summary { margin-bottom: 2px; }
+
+/* Subplan list: what waits for the owner, and new since the last visit. */
+.pp-item .sc-badge { flex: none; align-self: flex-start; margin-top: 2px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  display: inline-grid; place-items: center; font-size: 11.5px; font-weight: 700; background: var(--accent); color: var(--on-accent); }
+.pp-item .sc-fresh { flex: none; align-self: flex-start; margin-top: 3px; font-size: 10.5px; font-weight: 700; padding: 1px 6px;
+  border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.pp-item .sc-fresh[hidden] { display: none; }
+
+/* Right column scope switch. */
+.pp-feed-scope { display: flex; gap: 6px; padding-right: 12px; }
+.pp-feed-scope a { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 8px; font-size: 12px;
+  border: 1px solid var(--pp-ctl, var(--border)); color: var(--muted); }
+.pp-feed-scope a:hover { text-decoration: none; background: var(--code); }
+.pp-feed-scope a.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+@container (max-width: 760px) {
+  .sc-cols, .sc-more { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .sc { padding: 10px; }
+  .sc-steps li { height: 26px; padding: 0 8px 0 6px; font-size: 12px; }
+  .sc-steps li + li::before { display: none; }
+  .sc-news li, .sc-dec li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .sc-news li .sc-who { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .sc-pulse { animation: none; } }

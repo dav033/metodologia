@@ -56,7 +56,8 @@ def options(rdir: Path, q: dict) -> dict:
             "sp": sp if re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sp) else "",
             "rev": int(q["rev"]) if _number(q.get("rev", "")) else 0,
             "only": q.get("only") == "1",
-            "filter": q.get("filter") if q.get("filter") in ("ui", "changed") else ""}
+            "filter": q.get("filter") if q.get("filter") in ("ui", "changed") else "",
+            "feed": "all" if q.get("feed") == "all" else ""}
 
 
 def _asking(rdir: Path) -> int:
@@ -78,7 +79,7 @@ def link(project: str, rid: str, opts: dict, **change) -> str:
     merged = {**opts, **change}
     query = {"tab": "plan", "lang": merged["lang"], "mode": merged["mode"], "view": merged["view"],
              "sp": merged["sp"], "rev": merged["rev"] or "", "only": "1" if merged["only"] else "",
-             "filter": merged.get("filter") or ""}
+             "filter": merged.get("filter") or "", "feed": merged.get("feed") or ""}
     return purl(project, "req", rid) + "?" + urlencode({k: v for k, v in query.items() if v != ""})
 
 
@@ -258,6 +259,7 @@ def _list(ctx: dict) -> str:
     plan = drafts._plan(ctx["rdir"])
     milestones = {m.get("id"): m.get("title") or m.get("id") for m in plan.get("milestones") or [] if isinstance(m, dict)}
     owner = {item.get("id"): item.get("milestone_id") for item in plan.get("subplans") or [] if isinstance(item, dict)}
+    import bt_page_subplan_control as control
     items, last = [], None
     verified = {r["id"]: r["state"] for r in verification.state(ctx["rdir"])["subplans"]} \
         if verification.applies(ctx["rdir"]) else {}
@@ -289,7 +291,7 @@ def _list(ctx: dict) -> str:
         items.append(f'<a class="pp-item{" on" if on else ""}" href="{e(link(p, r, opts, sp=s["id"], mode="subplans", view=destination))}"'
                      f' data-nav{" aria-current=true" if on else ""}><span class="pp-id">{e(s["id"])}</span>'
                      f'<span class="pp-item-main"><span class="pp-item-title" title="{e(s["title"])}">{text(ctx, s["title"])}</span>'
-                     f'<span class="pp-meta">{e(meta)}</span></span>'
+                     f'<span class="pp-meta">{e(meta)}</span></span>{control.badge(ctx, s["id"])}'
                      f'<span class="pp-dot {e(cls)}" title="{e(label)}"></span></a>')
     return (f'<nav class="pp-list" aria-label="Subplanes" data-k="list"><div class="pp-list-head"><strong>Subplanes'
             f'</strong><span class="pp-meta">{len(ctx["subplans"])} · {ui} con UI</span></div><nav class="pp-filters" '
@@ -314,14 +316,13 @@ def _detail(ctx: dict) -> str:
             ("criteria", f"Criterios ({len(s['criteria'])})")]
     if (asked := _asking(ctx["rdir"])):
         tabs.insert(0, ("asks", f"Preguntas · {asked}"))
-    flow_actions = ""
     if ctx["flow"]:
         import bt_page_planning_flow as flow_view
         import bt_planning_flow
         pending = sum(1 for row in bt_planning_flow.inputs_for(ctx["rdir"], s["id"], ctx["flow"]["inputs"])
                       if row["pending"])
         tabs.append(("inputs", f"Entradas{f' · faltan {pending}' if pending else ''}"))
-        flow_actions = flow_view.actions(ctx, s)
+    import bt_page_subplan_control as control
     import bt_page_planning_run as run_view
     if run_view.counts(ctx).get(s["id"]):
         tabs.append(("run", run_view.tab_label(ctx, s["id"])))
@@ -356,7 +357,7 @@ def _detail(ctx: dict) -> str:
     return (f'<section class="pp-detail" data-k="detail-{e(s["id"])}-{e(opts["view"])}">'
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
             f'</h2><span class="pp-state {e(cls)}">{e(label)}</span>{_design_buttons(ctx, row)}</header>'
-            f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{flow_actions}'
+            f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
             f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}</section>')
 
 
@@ -374,8 +375,11 @@ def _design_buttons(ctx: dict, row: dict | None) -> str:
 def _feed(ctx: dict) -> str:
     opts, p, r = ctx["opts"], ctx["project"], ctx["rid"]
     tone = {"Planner": "changed", "Designer": "ready", "Tú → Designer": "accent", "Traducción": "info"}
+    whole = opts.get("feed") == "all" or opts["mode"] == "outline" or not opts.get("sp")
+    events = [ev for ev in activity.events(ctx["rdir"], 25 if whole else 300)
+              if whole or (ev.get("sp") == opts["sp"] and ev.get("who") != "Traducción")][:25]
     items = []
-    for ev in activity.events(ctx["rdir"], 25):
+    for ev in events:
         when = (ev.get("at") or "")[11:16]
         target = f' href="{e(link(p, r, opts, sp=ev["sp"], mode="subplans"))}" data-nav' if ev.get("sp") else ""
         tag = "a" if target else "div"
@@ -383,10 +387,17 @@ def _feed(ctx: dict) -> str:
         items.append(f'<{tag} class="pp-ev"{target}><span class="pp-dot {tone.get(ev.get("who"), "none")}" '
                      f'aria-hidden="true"></span><span class="pp-ev-main"><span class="pp-meta">{e(when)} · '
                      f'{e(ev.get("who") or "")}</span><span>{e(ev.get("text") or "")}</span>{diff}</span></{tag}>')
-    empty = '<p class="pp-meta">Aún no hay cambios: aparecerán aquí mientras planeas en la conversación.</p>'
-    return (f'<aside class="pp-feed" aria-label="Lo que cambió en la conversación" data-k="feed">'
-            f'<div class="pp-feed-in"><strong>Lo que cambió en la conversación</strong>'
-            f'<div class="pp-feed-list">{"".join(items) or empty}</div></div></aside>')
+    if whole:
+        title, empty = "Lo que cambió en la conversación", "Aún no hay cambios: aparecerán aquí mientras planeas en la conversación."
+    else:
+        title, empty = f"Lo que cambió en {opts['sp']}", f"Todavía no hay cambios en {opts['sp']}."
+    switch = "" if opts["mode"] == "outline" or not opts.get("sp") else (
+        f'<nav class="pp-feed-scope" aria-label="Qué cambios mostrar">'
+        f'<a href="{e(link(p, r, opts, feed=""))}" data-nav{" class=on aria-current=true" if not whole else ""}>{e(opts["sp"])}</a>'
+        f'<a href="{e(link(p, r, opts, feed="all"))}" data-nav{" class=on aria-current=true" if whole else ""}>Todo el plan</a></nav>')
+    return (f'<aside class="pp-feed" aria-label="{e(title)}" data-k="feed">'
+            f'<div class="pp-feed-in"><strong>{e(title)}</strong>{switch}'
+            f'<div class="pp-feed-list">{"".join(items) or f"<p class=pp-meta>{e(empty)}</p>"}</div></div></aside>')
 
 
 def _dialog(ctx: dict) -> str:
