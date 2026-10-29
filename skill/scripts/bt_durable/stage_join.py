@@ -126,11 +126,11 @@ def plan(*, state_dir: Path, old: RunRef, new: RunRef, status: dict, inherited: 
     return {"tasks": tasks, "live": live, "redone": redone}
 
 
-def progress(report: dict) -> LegacyProgress:
+def progress(report: dict, *, paused: bool = False) -> LegacyProgress:
     items = tuple(t["item"] for t in report["tasks"] if t["item"] is not None)
     digest = hashlib.sha256(json.dumps([i.model_dump(mode="json") for i in items], sort_keys=True,
                                        default=str).encode()).hexdigest()
-    return LegacyProgress(inventory_digest=digest, tasks=items)
+    return LegacyProgress(inventory_digest=digest, tasks=items, paused=paused)
 
 
 def copy_lines(repositories, roles, old: RunRef, new: RunRef) -> list[str]:
@@ -181,18 +181,27 @@ def join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, sett
         from .settings import Settings
         settings = Settings.model_validate(args[1]) if len(args) > 1 else Settings()
     report = plan(state_dir=state_dir, old=old, new=new, status=status, inherited=inherited)
+    # the owner's pause carries over; the pause this join itself sent while it waited for live attempts does not
+    try:
+        pending = json.loads((Path(rdir) / PENDING).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        pending = None
+    paused = bool(pending.get("owner_paused")) if isinstance(pending, dict) else \
+        (status.get("summary") or {}).get("status") == "paused"
     if report["redone"] and not confirm and not dry_run:
         raise JoinRefused("JOIN_NEEDS_CONFIRM", "the new stage changes accepted tasks, which would run again: "
                           + ", ".join(report["redone"]))
     counts = {v: sum(1 for t in report["tasks"] if t["verdict"] == v) for v in ("inherit", "reconcile", "redo")}
     if dry_run:
         return {"status": "dry_run", "from": old.run_id, "to": new.run_id, "counts": counts, "live": report["live"],
+                "paused": paused,
                 "redone": report["redone"],
                 "tasks": {t["task_id"]: f"{t['verdict']} (was {t['previous'] or 'not started'})" for t in report["tasks"]}}
     if report["live"]:
         client.command(old, "pause", request_id=f"join-r{new.revision}-pause", by="stage join")
         (Path(rdir) / PENDING).write_text(json.dumps({"run": new.model_dump(mode="json"), "since": time.time(), "by": by,
-                                                      "confirm": confirm, "settings": settings.model_dump(mode="json")},
+                                                      "confirm": confirm, "settings": settings.model_dump(mode="json"),
+                                                      "owner_paused": paused},
                                                      indent=1) + "\n", encoding="utf-8")
         emit("stage_join_waiting", run_id=old.run_id, to=new.run_id, live=report["live"])
         return {"status": "waiting", "run_id": old.run_id, "live": report["live"], "counts": counts}
@@ -202,12 +211,14 @@ def join(client, rdir: Path, *, state_dir: Path, new: RunRef, repositories, sett
     record = OwnerRecord(run_id=new.run_id, backend=Backend.DBOS, workflow_id=f"bt:{new.run_id}", since=time.time(),
                          by=by, migrated_from=f"durable {old.run_id}")
     bt_run_owner.write(rdir, record.model_dump(mode="json"), expect=owner)
-    workflow = client.start(new, settings, progress(report))
+    workflow = client.start(new, settings, progress(report, paused=paused))
     # the run pointer moves last: a join interrupted before this point is finished by asking for it again
     (Path(rdir) / "RUN.durable-run.json").write_text(new.model_dump_json(indent=1), encoding="utf-8")
     (Path(rdir) / PENDING).unlink(missing_ok=True)
-    emit("stage_joined", run_id=old.run_id, to=new.run_id, counts=counts, lines=len(copied), cancelled=len(cancelled))
+    emit("stage_joined", run_id=old.run_id, to=new.run_id, counts=counts, lines=len(copied), cancelled=len(cancelled),
+         paused=paused)
     return {"status": "joined", "from": old.run_id, "to": new.run_id, "workflow": workflow, "counts": counts,
+            "paused": paused,
             "reconcile": [t["task_id"] for t in report["tasks"] if t["verdict"] == "reconcile"],
             "cancelled": cancelled, "lines": copied}
 

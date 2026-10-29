@@ -323,6 +323,7 @@ def _detail(ctx: dict) -> str:
                       if row["pending"])
         tabs.append(("inputs", f"Entradas{f' · faltan {pending}' if pending else ''}"))
     import bt_page_subplan_control as control
+    frame = ""
     import bt_page_planning_run as run_view
     if run_view.counts(ctx).get(s["id"]):
         tabs.append(("run", run_view.tab_label(ctx, s["id"])))
@@ -338,6 +339,7 @@ def _detail(ctx: dict) -> str:
         body = flow_view.inputs_panel(ctx, s)
     elif opts["view"] == "run":
         body = run_view.panel(ctx, s)
+        frame = run_view.flow_frame(ctx, s)
     elif opts["view"] == "verify":
         body = verify_view.panel(ctx, s)
     elif opts["view"] == "session":
@@ -358,7 +360,7 @@ def _detail(ctx: dict) -> str:
             f'<header class="pp-dhead"><span class="pp-id lg">{e(s["id"])}</span><h2>{text(ctx, s["title"], block=True)}'
             f'</h2><span class="pp-state {e(cls)}">{e(label)}</span>{_design_buttons(ctx, row)}</header>'
             f'<p class="pp-outcome">{text(ctx, s["outcome"], block=True)}</p>{control.block(ctx, s)}'
-            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}</section>')
+            f'<nav class="pp-tabs" aria-label="Detalle del subplan">{nav}</nav>{body}{frame}</section>')
 
 
 def _design_buttons(ctx: dict, row: dict | None) -> str:

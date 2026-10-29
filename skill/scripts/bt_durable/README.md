@@ -63,6 +63,10 @@ rebuild without the file starts at the current time in ms); `status_seq` / `task
 sequence of each subject's last change. Task states: `pending queued waiting_quota running verifying recovering
 needs_decision blocked failed completed cancelled`; run: `running paused completed blocked failed cancelled`.
 
+The Flow page (`/flow`, and each subplan's «Ejecución» in the Plan tab, D-150) reads the run's telemetry through
+`bt_flow_durable` (stdlib only): every record of the run becomes a message between the same parties as the legacy stores
+(M1 the workflows, M2 the router, M3 the attempt, M5 recovery, M6 verification and audits, the owner).
+
 The stdlib panels read it through `bt_durable_panel` (stdlib only): `bt_planstatus` (plan pages, list, flow, now),
 the run tab, `bt_remote_snapshot` (states mapped to the snapshot vocabulary: queued/waiting_quota → `ready`,
 recovering/needs_decision → `rejected`, failed → `blocked`; `revision` = the subject's sequence; decision ids name
@@ -140,7 +144,9 @@ uv run bt-durable join pictures REQ-021              # joined | waiting | refuse
 - Then the current run's workflows are cancelled (its open owner decisions end with it), `RUN.owner.json` moves by
   compare-and-swap and the new run starts with the current run's settings; `RUN.durable-run.json` moves last, so an
   interrupted join is finished by asking again.
-- No running workflow changes its step sequence: only a new run's input can carry `integrated`, so no patch is needed.
+- The owner's pause carries over (`LegacyProgress.paused`): a stage joined to a paused run starts nothing until resumed.
+- No running workflow changes its step sequence: only a new run's input can carry `integrated` or `paused`, so no patch
+  is needed.
 
 ## Recovery and rollback
 

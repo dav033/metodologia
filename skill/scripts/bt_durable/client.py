@@ -19,6 +19,19 @@ from .settings import Settings
 RUN_WORKFLOW, TASK_WORKFLOW = "bt.run", "bt.task"
 
 
+def progress_input(legacy: LegacyProgress | None) -> dict:
+    """The run workflow's starting progress as sent: fields added after an engine release (`paused`, a task's
+    `integrated`, D-149/D-150) travel only when set, so an engine that predates them still takes every input it can run
+    as asked (one that cannot honour a pause or a copied line refuses it instead of ignoring it)."""
+    data = (legacy or LegacyProgress()).model_dump(mode="json")
+    if not data.get("paused"):
+        data.pop("paused", None)
+    for task in data.get("tasks") or []:
+        if not task.get("integrated"):
+            task.pop("integrated", None)
+    return data
+
+
 class Client:
     def __init__(self, system_database_url: str):
         self.client = DBOSClient(system_database_url=system_database_url)
@@ -34,7 +47,7 @@ class Client:
         existing = self.client.list_workflows(workflow_ids=[workflow_id], load_input=False, load_output=False)
         if not existing:
             self.client.enqueue(options, run.model_dump(mode="json"), settings.model_dump(mode="json"),
-                                (legacy or LegacyProgress()).model_dump(mode="json"))
+                                progress_input(legacy))
         return workflow_id
 
     def current_run_workflow(self, run: RunRef) -> str:

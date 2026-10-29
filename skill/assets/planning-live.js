@@ -37,6 +37,20 @@
     });
   }
   function render(n) { if (window.renderMarkdown) window.renderMarkdown(n); setWidth(n); }
+  // a block holding a [data-persist] child (the subplan's framed Flow) keeps that child: moving or replacing an iframe
+  // reloads it, so its siblings and the block's attributes change around it instead
+  function swap(o, n) {
+    var keep = o.querySelector(':scope > [data-persist]'), next = n.querySelector(':scope > [data-persist]');
+    if (!keep || !next || keep.dataset.persist !== next.dataset.persist) { o.replaceWith(n); return n; }
+    Array.prototype.forEach.call(n.attributes, function (a) { o.setAttribute(a.name, a.value); });
+    Array.prototype.slice.call(o.childNodes).forEach(function (c) { if (c !== keep) o.removeChild(c); });
+    var before = true;
+    Array.prototype.slice.call(n.childNodes).forEach(function (c) {
+      if (c === next) { before = false; return; }
+      if (before) o.insertBefore(c, keep); else o.appendChild(c);
+    });
+    return o;
+  }
   // «nuevo» since the owner's last visit, per subplan, remembered by this browser only (bt_page_subplan_control).
   var SEEN = 'bt-sc-seen:' + location.pathname, baseline = {};
   function seen() { try { return JSON.parse(localStorage.getItem(SEEN) || 'null'); } catch (err) { return null; } }
@@ -84,7 +98,7 @@
       if (o.dataset.h === n.dataset.h) { o.classList.remove('pl-waiting'); return; }
       if (busy(o)) { o.classList.add('pl-waiting'); return; }
       var keep = opened(o);
-      o.replaceWith(n);
+      n = swap(o, n);
       Array.prototype.forEach.call(n.querySelectorAll('details'), function (d, j) { if (keep[j]) d.open = true; });
       render(n);
       // live status blocks (the agent strip, its text box, the Designer's progress card, the subplan's control block)

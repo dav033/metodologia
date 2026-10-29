@@ -291,7 +291,8 @@ selected subplan with its control block on top (D-147, `bt_subplan_status`: the 
 Ejecutar → Probar → Aprobado, «Te toca a ti» with the action at hand — open round questions, a design to choose, inputs,
 confirmation, sending it to run, run decisions of its tasks or gates, a version to try —, what blocks it and who resolves
 it, which agent works on it now, its changes marked «nuevo» since this browser's last visit, and the decisions taken),
-its tabs (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios; Entradas), the
+its tabs (Diseño: mockup at phone/tablet/desktop width, Designer questions, feedback; Tareas; Criterios; Entradas;
+Ejecución, with the subplan's own Flow framed live — `/flow?scope=subplan:P/REQ/SP`, D-150), the
 subplan list with a count of what waits for the owner in each, "lo que cambió" in the open subplan without translation
 noise (switch «Todo el plan»; `.planning/activity.jsonl`), a design review per subplan, the whole plan
 in English, Spanish or both, and the approval dialog; it updates itself while you edit SPEC/PLAN. The Stop hook keeps

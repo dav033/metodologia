@@ -109,6 +109,46 @@ class StageJoin(EngineCase):
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])
 
+    def test_the_owners_pause_carries_into_the_new_stage(self):
+        """pictures REQ-021: the owner paused r15 from the web while T94 waited for a decision; a stage joined then must
+        not start anything until the owner resumes."""
+        first = [task("T1", scenario="own"), task("T2", scenario="fixlater", after=["T1"])]
+        run1 = self.stage(first, 1)
+        self.lab.own(run1.model_dump(mode="json"))
+        self.start_engine()
+        self.client.start(run1, ONE_ATTEMPT)
+        wait_until(lambda: (self.client.status(run1)["tasks"].get("T2") or {}).get("decision"), 180, interval=0.5,
+                   what="T2 to stop and ask the owner")
+        self.client.command(run1, "pause")
+        wait_until(lambda: (self.client.status(run1)["summary"] or {}).get("status") == "paused", 60, interval=0.5,
+                   what="the run to pause")
+        run2 = self.stage([*first, task("T3", scenario="own", after=["T1"])], 2)
+        joined = self.join(run2, settings=FAST)
+        self.assertEqual((joined["status"], joined["paused"]), ("joined", True), joined)
+        wait_until(lambda: (self.client.status(run2)["summary"] or {}).get("status") == "paused", 60, interval=0.5,
+                   what="the new run to start paused")
+        self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])   # nothing started while paused
+        self.client.command(run2, "resume")
+        status = self.settled(run2, timeout=240)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])
+
+class ProgressInput(unittest.TestCase):
+    def test_new_progress_fields_travel_only_when_set(self):
+        """An engine older than D-149/D-150 refuses unknown input fields: the regression of D-150 caught every upgrade
+        suite failing once `paused` was always sent."""
+        from bt_contracts.execution import LegacyProgress, LegacyTask
+        from bt_durable.client import progress_input
+        self.assertEqual(progress_input(None), {"inventory_digest": "", "tasks": []})
+        item = LegacyTask(task_id="T1", verdict="inherit", snapshot_sha="a" * 40, base_sha="b" * 40, repository=Path("/r"),
+                          attempt_dir=Path("/a"), manifest_path=Path("/a/m.json"))
+        plain = progress_input(LegacyProgress(tasks=(item,)))
+        self.assertNotIn("paused", plain)
+        self.assertNotIn("integrated", plain["tasks"][0])
+        joined = progress_input(LegacyProgress(tasks=(item.model_copy(update={"integrated": True}),), paused=True))
+        self.assertEqual((joined["paused"], joined["tasks"][0]["integrated"]), (True, True))
+        self.assertEqual(LegacyProgress.model_validate(plain), LegacyProgress(tasks=(item,)))
+
 
 if __name__ == "__main__":
     unittest.main()

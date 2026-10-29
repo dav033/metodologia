@@ -131,9 +131,9 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         if parts == ["flow"]:
             import bt_page_flow
             scope = q.get("scope", "global")
-            sim = "/".join(scope.split(":", 1)[1].split("/")[:2]) if scope.startswith(("run:", "task:")) else \
+            sim = "/".join(scope.split(":", 1)[1].split("/")[:2]) if scope.startswith(("run:", "task:", "subplan:")) else \
                 "metodologia/REQ-026"
-            return self.send(bt_page_flow.flow_page(scope, sim, token()))
+            return self.send(bt_page_flow.flow_page(scope, sim, token(), embed=q.get("embed") == "1"))
         if parts == ["flow", "review"]:
             import bt_page_flow_review
             return self.send(bt_page_flow_review.review_page(ROOT, q))

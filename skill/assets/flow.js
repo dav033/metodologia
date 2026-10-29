@@ -607,11 +607,11 @@
   function start() {
     drawMap(); wire();
     if (reduced) S.paused = true;
-    var pick = scope.match(/^(?:run|task):([^/]+\/[^/]+)(?:\/(.+))?$/);
+    var pick = scope.match(/^(run|task|subplan):([^/]+\/[^/]+)(?:\/(.+))?$/);
     fetch('/api/flow?scope=' + encodeURIComponent(scope) + '&limit=5000').then(function (r) { return r.json(); })
       .then(function (d) {
         absorb(d);
-        if (pick) { S.run = pick[1]; S.task = pick[2] || ''; if (S.task) S.tab = 'trace'; }
+        if (pick) { S.run = pick[2]; S.task = pick[1] === 'task' ? pick[3] || '' : ''; if (S.task) S.tab = 'trace'; }
         setMode('live');
         refreshDoing();
         if (q.get('simulate') === '1') $('flow-sim').click();

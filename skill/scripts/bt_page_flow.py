@@ -18,8 +18,9 @@ TASK_KEY = (("k-verify", "aceptada"), ("k-run", "en curso"), ("k-recover", "rein
             ("k-state", "pendiente"))
 
 
-def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026", token: str = "") -> str:
-    """`sim` = project/REQ whose plan «Simular» runs on the core's doubles (default: the DEMO plan)."""
+def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026", token: str = "", embed: bool = False) -> str:
+    """`sim` = project/REQ whose plan «Simular» runs on the core's doubles (default: the DEMO plan). `embed`: inside the
+    Plan tab's «Ejecución» of a subplan (D-150): no page header, navigation or run cards, only that scope's flow."""
     key = "".join(f'<span class="{cls}"><i></i>{e(text)}</span>' for cls, text in TASK_KEY)
     label = {"global": "todas las ejecuciones"}.get(scope, scope.replace(":", " · "))
     body = f"""<link rel="stylesheet" href="/static/flow.css"><div class="head"><div><p class="eyebrow" id="fl-eyebrow">flujo · {e(label)}</p><h1>Cómo hablan los módulos</h1></div>
@@ -55,4 +56,5 @@ def flow_page(scope: str = "global", sim: str = "metodologia/REQ-026", token: st
 <noscript><p class="muted">Esta vista necesita JavaScript.</p></noscript>
 <script src="/static/flow-core.js"></script><script src="/static/flow-failure-links.js"></script>
 <script src="/static/flow.js"></script><script src="/static/flow-decisions.js"></script>"""
-    return layout("Flujo", body, [("Flujo", "/flow")])
+    page = layout("Flujo", body, [("Flujo", "/flow")])
+    return page.replace("<body>", '<body class="flow-embed">', 1) if embed else page

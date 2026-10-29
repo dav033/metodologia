@@ -200,7 +200,8 @@ def _durable_join(project: str, rdir: Path, join: Callable[[], dict] | None) -> 
     if outcome.get("status") == "joined":
         return (f"El runtime durable sigue en la etapa ({outcome.get('to')}): {counts.get('inherit', 0)} tareas aceptadas "
                 f"se conservan sin repetirse, {counts.get('reconcile', 0)} se reanudan desde su último trabajo y "
-                f"{counts.get('redo', 0)} empiezan.")
+                f"{counts.get('redo', 0)} empiezan." + (" Sigue en pausa, como la dejaste: reanúdala para que arranque."
+                                                         if outcome.get("paused") else ""))
     if outcome.get("status") == "waiting":
         live = ", ".join(outcome.get("live") or [])
         return (f"El run quedó en pausa hasta que terminen los intentos en curso ({live}); en cuanto acaben, el motor "
