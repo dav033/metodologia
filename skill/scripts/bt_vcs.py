@@ -71,7 +71,12 @@ def _commit_locked(root: Path, message: str, push: bool) -> bool:
         set_alert(root, report)
         return False
     clear_alert(root)
-    if not _ok(_run(root, "commit", "-q", "-m", message, "--", ".")):
+    done = _run(root, "commit", "-q", "-m", message, "--", ".")
+    if not _ok(done):          # a refused commit leaves nothing staged, and a secret-scan refusal is said out loud
+        _run(root, "reset", "-q", "--", ".")
+        said = ((done.stdout or "") + (done.stderr or "")).strip() if done else ""
+        if "gitleaks" in said or "leaks found" in said:
+            set_alert(root, "The repository's pre-commit hook (gitleaks) refused the bitácora commit:\n" + said[-3000:])
         return False
     if push:
         push_async(root)
