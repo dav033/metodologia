@@ -234,6 +234,31 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
 - 05:01 T14.4 (SP-14 integration tests) failed on two real test defects (a duplicate heading in strict mode, a menu
   locator) and used its token budget in one attempt; owner `retry_with_note`: restore its own a1 work and fix those two.
 
+2026-10-29, session 7db4552d (stages on the durable runtime; integrations into `main` with local restarts, a DBOS
+backup before each engine restart, notes in [evidence/iter2/pre-deploy.txt](evidence/iter2/pre-deploy.txt)):
+
+- 05:36–06:01 SP-14 completed (T14.2–T14.6); its gates composed (C3–C5).
+- Methodology integrated today: D-146 (the Designer drafts every unconfirmed subplan in parallel; a finished
+  exploration marks the comments it was given as applied), D-147 (subplan control block), D-149 (durable stage join,
+  `bt-durable join`, superseding the interim refusal D-148; engine restarted 08:38 after backup
+  `bt_durable-20261029-083807.dump`), D-150 (each subplan's «Ejecución» frames its own Flow from the durable
+  telemetry; an owner's pause carries into a joined stage; engine restarted 09:53 after `bt_durable-20261029-095338.dump`),
+  D-151 (Designer on Opus 5.5 high first, GPT-6.1 Terra high as its Codex fallback; web only). Each one passed a full
+  regression with only the 4 baseline failures.
+- 10:26 the owner confirmed SP-3 and pressed «Ejecutar SP-4»: first real stage join, r15 → r16 (inherit 43,
+  reconcile 1 = T94, redo 12), started paused because the owner had paused r15 at 08:21 (D-150), resumed on the owner's
+  word. CG-2 and CG-4 composed without conflicts (C1, C2): the `package.json` conflict forecast at 03:48 had been
+  settled by the owner's SP-3 resolution.
+- T94's verifier failed only on the order of a permissions list; operator notes `RUN.notes/T94.md` and `T92.md`
+  (order-independent comparison; the disposable test database by file path, never the URL). T94 completed 11:10, T92
+  11:16.
+- 11:11–11:14 T4.1 (copy of the approved `proyectos@v1` contract) failed three times and stopped for a person: its
+  check compared with the bitácora's file by absolute path, which the verifier's sandbox never holds; the copy was
+  byte-identical. The owner approved r17 = r16 with only that check replaced by a sha256 pin; frozen with
+  `freeze_revision` (spliced into the draft) and joined 11:22 (inherit 45, redo 11); T4.1 completed 11:23 on its first
+  r17 attempt, T4.2 started. Prevention: D-152 (the planner warns about checks naming host paths; approval refuses new
+  ones).
+
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 

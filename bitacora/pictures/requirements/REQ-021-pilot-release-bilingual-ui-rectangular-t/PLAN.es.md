@@ -947,48 +947,48 @@ Cada usuario que inicia sesión guarda y vuelve a abrir proyectos y decoraciones
   Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 90 minutos.
   Los totales provienen de la cotización profesional existente de Python; la página nunca calcula un total por su cuenta. Script de npm `calculadora:test-ui` = `tsx scripts/test/test-ui-calculadora.ts`.
 
-  - Criterio de aceptación / funcional: La página de la calculadora de costos recibe el resultado del contador o los materiales ingresados manualmente, permite editar los precios de los globos y agregar mano de obra, transporte, costos indirectos y margen, y muestra los precios por producto del catálogo real y los totales de la cotización profesional. Comprobación: `npm run calculadora:test-ui`
+  - Aceptación / funcional: La página de la calculadora de costos toma el resultado del contador o los materiales ingresados a mano, permite editar los precios de los globos y agregar mano de obra, transporte, costos indirectos y margen, y muestra los precios por producto del catálogo real y los totales de la cotización profesional. Verificación: `npm run calculadora:test-ui`
 
-- [ ] T7.8 — Galería de decoraciones prediseñadas en el Taller con un enlace para abrirlas como proyecto nuevo · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run galeria:test-ui -- --solo galeria` · archivos: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · recursos: scripts de package.json, contract:taller-scene · cubre: R13, R16 · tipo: implementación · subplan: SP-7 · interfaz de usuario: sí
+- [ ] T7.8 — Galería de decoraciones prediseñadas en el Taller con un enlace para abrir como proyecto nuevo · repo: pictures · después de: T7.1, T7.4 · verificar: `npm run galeria:test-ui -- --solo galeria` · archivos: src/app/3d/decoraciones/page.tsx, src/components/tres-d/galeria/GaleriaDecoraciones.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/lib/globos3d/galeria-decoraciones.ts, src/components/tres-d/Taller3D.tsx, scripts/test/test-ui-galeria.ts · recursos: scripts de package.json, contract:taller-scene, contract:galeria-index · cubre: R13, R16 · tipo: implementación · subplan: SP-7 · ui: sí
 
   Clasificación: complejidad media; alcance: funcionalidad completa; riesgo medio; acoplamiento medio; confianza media; estimación: 150 minutos.
-  `galeria-decoraciones.ts` crea un índice `{ id, nombre, ocasion, tamano, miniatura }` a partir de `IDEAS_ASISTENTE` y `IDEAS_SEMPERTEX`. El Taller lee `?decoracion=<id>` una sola vez, la abre como una escena nueva sin guardar, con la misma regla que «Abrir en Escena» (SP-4: primero se guardan las ediciones pendientes del proyecto abierto o se consulta al usuario) y elimina el parámetro. Script de npm `galeria:test-ui` = `tsx scripts/test/test-ui-galeria.ts`.
+  `galeria-decoraciones.ts` crea un índice `{ id, nombre, ocasion, tamano, miniatura }` a partir de `IDEAS_ASISTENTE` e `IDEAS_SEMPERTEX`. El Taller lee `?decoracion=<id>` una vez, la abre como una escena nueva sin guardar, con la misma regla que «Abrir en Escena» (SP-4: primero se guardan los cambios pendientes del proyecto abierto o se pregunta al usuario) y elimina el parámetro. El script npm `galeria:test-ui` = `tsx scripts/test/test-ui-galeria.ts`.
 
-  - Criterio de aceptación / funcional: La galería de decoraciones en /3d/decoraciones muestra todos los elementos de Ideas del asistente e Ideas Sempertex, con búsqueda, filtros por ocasión y tamaño, y una vista previa; «Abrir como proyecto nuevo» abre /3d?decoracion=<id> como una escena nueva sin guardar. Comprobación: `npm run galeria:test-ui -- --solo galeria`
-  - Criterio de aceptación / funcional: Solo se puede acceder a la galería y a su enlace directo con decoraciones.explorar; las demás cuentas reciben la página de acceso denegado, y un id de decoración desconocido muestra un mensaje de no encontrado sin cambiar la escena abierta. Comprobación: `npm run galeria:test-ui -- --solo permisos`
+  - Aceptación / funcional: La galería de decoraciones en /3d/decoraciones muestra todos los elementos de Ideas del asistente e Ideas Sempertex con búsqueda, filtros de ocasión y tamaño, y una vista previa; «Abrir como proyecto nuevo» abre /3d?decoracion=<id> como una escena nueva sin guardar. Verificación: `npm run galeria:test-ui -- --solo galeria`
+  - Aceptación / funcional: Solo se puede acceder a la galería y a su enlace profundo con decoraciones.explorar; las demás cuentas reciben la página de acceso denegado, y un id de decoración desconocido muestra un mensaje de que no se encontró, sin cambiar la escena abierta. Verificación: `npm run galeria:test-ui -- --solo permisos`
 
 - [ ] T7.9 — Prueba de extremo a extremo en navegador de las tres herramientas y la galería en una compilación de producción · repo: pictures · después de: T7.5, T7.6, T7.7, T7.8 · verificar: `npm run herramientas:test-integracion` · archivos: scripts/test/test-integracion-herramientas.ts, .evidence/REQ-021/SP-7.integration.json · recursos: scripts de package.json · cubre: R13, R16 · tipo: prueba · subplan: SP-7
 
   Clasificación: complejidad media; alcance: cambio pequeño; riesgo alto; acoplamiento medio; confianza media; estimación: 90 minutos.
-  Script de npm `herramientas:test-integracion` = `tsx scripts/test/test-integracion-herramientas.ts`; las llamadas pagadas al modelo usan el proveedor configurado de menor costo y una llamada por herramienta.
+  El script npm `herramientas:test-integracion` = `tsx scripts/test/test-integracion-herramientas.ts`; las llamadas a modelos de pago usan el proveedor configurado de menor costo y una llamada por herramienta.
 
-  - Criterio de aceptación / integración: En una compilación de producción contra la base de datos de REQ-021, con los resultados esperados indicados a partir del SPEC, Entusiasta ve el chat y el contador en la página principal, cuenta mediante formulario y foto sin ver precios y no puede usar la calculadora; Designer Plus envía el resultado del contador a la calculadora y obtiene los totales con margen; Master Designer abre una decoración de la galería como proyecto nuevo; y el libro de uso contiene una fila por cada llamada pagada con la etiqueta de su herramienta. Comprobación: `npm run herramientas:test-integracion`
+  - Aceptación / integración: En una compilación de producción conectada a la base de datos de REQ-021, con los resultados esperados escritos a partir de SPEC, una cuenta Entusiasta ve el chat y el contador en la página de inicio, cuenta por forma y foto sin precios y no puede usar la calculadora; una cuenta Designer Plus envía el resultado del contador a la calculadora y obtiene los totales con margen; una cuenta Master Designer abre una decoración de la galería como proyecto nuevo; y el registro de uso contiene una fila por cada llamada de pago, con la etiqueta de su herramienta. Verificación: `npm run herramientas:test-integracion`
 
 - [ ] T7.10 — Revisión visual de SP-7 según el contrato herramientas-chat@v1 · repo: pictures · después de: T7.9 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json` · archivos: .evidence/REQ-021/SP-7.visual.md, .evidence/REQ-021/SP-7.visual.findings.json · recursos: ledger:SP-7-visual · cubre: R13 · tipo: auditoría · subplan: SP-7
 
   Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 60 minutos.
   Eje de revisión `visual` (rendered-ui-fidelity-audit).
 
-  - Criterio de aceptación / estático: Las pantallas renderizadas de inicio, contador, calculadora y galería coinciden con el contrato aprobado herramientas-chat@v1 en anchos de teléfono, tableta y escritorio, y cada hallazgo queda registrado junto con la tarea que debe rehacerlo en el registro visual de SP-7. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json`
+  - Aceptación / estática: Las pantallas renderizadas de inicio, contador, calculadora y galería coinciden con el contrato aprobado herramientas-chat@v1 en anchos de teléfono, tableta y escritorio, y cada hallazgo queda registrado con la tarea que debe rehacerse en el registro visual de SP-7. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.visual.findings.json`
 
 - [ ] T7.11 — Auditoría de SP-7: control de acceso a herramientas, filtraciones de precios, fuentes de conteo y etiquetas de gasto · repo: pictures · después de: T7.10 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json` · archivos: .evidence/REQ-021/SP-7.audit.md, .evidence/REQ-021/SP-7.findings.json · recursos: ledger:SP-7 · cubre: R13, R16 · tipo: auditoría · subplan: SP-7
 
   Clasificación: complejidad media; alcance: cambio pequeño; riesgo alto; acoplamiento medio; confianza media; estimación: 75 minutos.
-  Comprobaciones mínimas: ninguna ruta de cálculo de costos sin costos.usar (herramientas de modelo, respuestas a reglas, texto final, API); conteos solo de los motores; la etiqueta de gasto nunca concede acceso; el enlace directo no puede sobrescribir trabajo sin guardar.
+  Verificaciones mínimas: no hay rutas de cálculo de costos sin costos.usar (herramientas de modelo, respuestas de reglas, texto final, APIs); los conteos provienen únicamente de los motores; la etiqueta de gasto nunca otorga acceso; el enlace profundo no puede sobrescribir trabajo sin guardar.
 
-  - Criterio de aceptación / estático: Una auditoría independiente de SP-7 registra cada defecto confirmado junto con la tarea que debe rehacerlo en el registro de hallazgos de SP-7, y el registro no tiene hallazgos críticos ni altos abiertos. Comprobación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json`
+  - Aceptación / estática: Una auditoría independiente de SP-7 registra cada defecto confirmado junto con la tarea que debe rehacerse en el registro de hallazgos de SP-7, y el registro no tiene hallazgos críticos o altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-7.findings.json`
 
-<!-- tareas de SP-7 -->
+<!-- /SP-7 tasks -->
 
 
-<!-- tareas de CG-3 -->
+<!-- CG-3 tasks -->
 
   Composición de subplanes aceptados en el candidato integrado.
 
-- [ ] T93 — Comprobación de composición CG-3: cuentas y proyectos guardados · repo: pictures · después de: T92, T4.9 · verificar: `npm run proyectos:test-composicion` · archivos: .evidence/REQ-021/CG-3.integration.json · recursos: candidate:CG-3 · cubre: R2, R6, R7, R9, R11 · tipo: prueba · interfaz de usuario: no
+- [ ] T93 — Verificación de composición CG-3: cuentas y proyectos guardados · repo: pictures · después de: T92, T4.9 · verificar: `npm run proyectos:test-composicion` · archivos: .evidence/REQ-021/CG-3.integration.json · recursos: candidate:CG-3 · cubre: R2, R6, R7, R9, R11 · tipo: prueba · ui: no
 
   Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 45 minutos.
-  Ejecutar en el candidato integrado el modo de composición creado por T4.6 (CG-3 contiene SP-1, SP-2, SP-14, SP-3 y SP-4, por lo que sigue a CG-2, que a su vez sigue a CG-4). Registrar la identidad del candidato y del árbol; no crear ni reparar el arnés aquí.
+  Ejecutar en el candidato integrado el modo de composición creado por T4.6 (CG-3 contiene SP-1, SP-2, SP-14, SP-3 y SP-4, así que sigue a CG-2, que sigue a CG-4). Registrar la identidad del candidato/árbol; aquí no se crea ni se repara el entorno de pruebas.
 
   - Aceptación / integración: El candidato integrado supera las pruebas de guardar y volver a abrir proyectos con alcance de cuenta, con todos los tipos de tabla y todas las propiedades de Backing; lectura y copia por parte del personal; rechazo de conflictos y negativa a eliminar cuentas. Comprobación: `npm run proyectos:test-composicion`
 
@@ -1079,53 +1079,301 @@ La interfaz sigue el idioma del navegador en la primera visita y la elección de
   Clasificación: complejidad baja; alcance large_change; riesgo medio; acoplamiento alto; confianza alta; estimación: 210 minutos.
   Diccionario `src/components/tres-d/textos/taller-edicion.ts`. El script de npm `idioma:test-taller` = `tsx scripts/test/test-idioma-taller.ts <area>` muestra el área en ambos idiomas y compara el español con el resultado anterior al cambio; `HojaArmado.test.ts` sigue pasando sin cambios en español. Las medidas se mantienen en cm/m y los precios en COP.
 
-  - Aceptación / funcional: El inspector del Taller, los editores de piezas, los paneles de escena y decoración, la lista de compras, el diálogo de compra y la hoja de montaje pasan el control de cobertura y se muestran en inglés sin dejar ninguna cadena en español, mientras que la visualización en español permanece idéntica byte por byte. Verificación: `npm run idioma:test-taller -- edicion`
+  - Aceptación / funcional: El inspector del Taller, los editores de piezas, los paneles de escena y decoración, la lista de compras, el diálogo de compra y la hoja de ensamblaje pasan la verificación de cobertura y se muestran en inglés sin dejar cadenas en español, mientras que la versión en español permanece idéntica byte por byte. Verificación: `npm run idioma:test-taller -- edicion`
 
-- [ ] T8.6 — Taller en inglés, parte 3: panel de IA y frases para el usuario generadas en lib · repo: pictures · después de: T8.3 · verificar: `npm run idioma:test-mensajes` · archivos: src/components/tres-d/ia/BannerVerAntes.tsx, src/components/tres-d/ia/CalificacionTurno.tsx, src/components/tres-d/ia/ComposicionIA.tsx, src/components/tres-d/ia/MenuConversacion.tsx, src/components/tres-d/ia/PanelIA.tsx, src/components/tres-d/ia/PestanasLaterales.tsx, src/components/tres-d/ia/TarjetaEnCurso.tsx, src/components/tres-d/ia/TarjetaFotoRealista.tsx, src/components/tres-d/ia/TarjetaPregunta.tsx, src/components/tres-d/ia/TarjetaTurno.tsx, src/components/tres-d/ia/useNombresDePasos.ts, src/lib/globos3d/avisos-usuario.ts, src/lib/globos3d/glosario-taller.ts, src/lib/errores-ui/traducir-error-servidor.ts, src/components/tres-d/textos/taller-ia.ts, scripts/test/test-idioma-mensajes-taller.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · UI: no
+- [ ] T8.6 — Taller en inglés, parte 3: panel de IA y frases visibles para el usuario creadas en lib · repo: pictures · después de: T8.3 · verificar: `npm run idioma:test-mensajes` · archivos: src/components/tres-d/ia/BannerVerAntes.tsx, src/components/tres-d/ia/CalificacionTurno.tsx, src/components/tres-d/ia/ComposicionIA.tsx, src/components/tres-d/ia/MenuConversacion.tsx, src/components/tres-d/ia/PanelIA.tsx, src/components/tres-d/ia/PestanasLaterales.tsx, src/components/tres-d/ia/TarjetaEnCurso.tsx, src/components/tres-d/ia/TarjetaFotoRealista.tsx, src/components/tres-d/ia/TarjetaPregunta.tsx, src/components/tres-d/ia/TarjetaTurno.tsx, src/components/tres-d/ia/useNombresDePasos.ts, src/lib/globos3d/avisos-usuario.ts, src/lib/globos3d/glosario-taller.ts, src/lib/errores-ui/traducir-error-servidor.ts, src/components/tres-d/textos/taller-ia.ts, scripts/test/test-idioma-mensajes-taller.ts · recursos: scripts de package.json, contract:idioma · cubre: R12 · tipo: implementación · subplan: SP-8 · ui: no
 
-  Clasificación: complejidad media; alcance: cambio_grande; riesgo medio; acoplamiento medio; confianza media; estimación: 150 minutos.
-  Las funciones que generan frases reciben `idioma: Idioma` (valor predeterminado 'es'). El idioma de las respuestas del modelo corresponde a SP-10. El script de npm `idioma:test-mensajes` = `tsx --test scripts/test/test-idioma-mensajes-taller.ts`.
+  Clasificación: complejidad media; alcance: cambio amplio; riesgo medio; acoplamiento medio; confianza media; estimación: 150 minutos.
+  Los constructores de frases reciben `idioma: Idioma` (valor predeterminado 'es'). El idioma de las respuestas del modelo corresponde a SP-10. El script npm `idioma:test-mensajes` = `tsx --test scripts/test/test-idioma-mensajes-taller.ts`.
 
-  - Aceptación / funcional: El panel de IA del Taller y las frases para el usuario generadas en src/lib (avisos de herramientas, el glosario del Taller y los mensajes de error del servidor que se muestran en el Taller) se producen en el idioma solicitado, y los archivos del panel de IA pasan el control de cobertura. Verificación: `npm run idioma:test-mensajes`
+  - Aceptación / funcional: El panel de IA del Taller y las frases visibles para el usuario creadas en src/lib (avisos de herramientas, el glosario del Taller y los mensajes de error del servidor que se muestran en el Taller) se generan en el idioma de la solicitud, y los archivos del panel de IA pasan la verificación de cobertura. Verificación: `npm run idioma:test-mensajes`
 
-- [ ] T8.7 — Prueba de extremo a extremo en el navegador: primera visita en inglés, elección guardada, sin texto en español y texto que cabe · repo: pictures · después de: T8.2, T8.4, T8.5, T8.6 · verificar: `npm run idioma:test-integracion` · archivos: scripts/test/test-integracion-idioma.ts, .evidence/REQ-021/SP-8.integration.json · recursos: scripts de package.json · cubre: R12 · tipo: prueba · subplan: SP-8
+- [ ] T8.7 — Prueba de extremo a extremo en navegador: primera visita en inglés, preferencia guardada, sin texto en español y textos que caben · repo: pictures · después de: T8.2, T8.4, T8.5, T8.6 · verificar: `npm run idioma:test-integracion` · archivos: scripts/test/test-integracion-idioma.ts, .evidence/REQ-021/SP-8.integration.json · recursos: scripts de package.json · cubre: R12 · tipo: prueba · subplan: SP-8
 
-  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 100 minutos.
-  El script de npm `idioma:test-integracion` = `tsx scripts/test/test-integracion-idioma.ts`; también ejecuta el control de cobertura en todos los archivos de T8.2, T8.4, T8.5 y T8.6.
+  Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 100 minutos.
+  El script npm `idioma:test-integracion` = `tsx scripts/test/test-integracion-idioma.ts`; también ejecuta la verificación de cobertura en todos los archivos de T8.2, T8.4, T8.5 y T8.6.
 
-  - Aceptación / integración: En una compilación de producción, una primera visita con un navegador en inglés muestra la pantalla de inicio de sesión, la navegación y el Taller 3D en inglés, con los textos esperados tomados de los diccionarios; al cambiar al español, la elección se conserva en la cuenta y se refleja en un segundo navegador; un análisis del Taller en inglés renderizado no encuentra ninguna cadena en español; y ninguna etiqueta, botón ni elemento de menú se desborda de su contenedor a 390, 768 y 1280 px. Verificación: `npm run idioma:test-integracion`
+  - Aceptación / integración: En una compilación de producción, una primera visita con un navegador en inglés muestra la pantalla de inicio de sesión, la navegación y el Taller 3D en inglés, con los textos esperados tomados de los diccionarios; al cambiar a español, la preferencia se conserva en la cuenta al abrirla en un segundo navegador; un análisis del Taller renderizado en inglés no encuentra cadenas en español; y ninguna etiqueta, botón ni elemento del menú se desborda de su contenedor en anchos de 390, 768 y 1280 px. Verificación: `npm run idioma:test-integracion`
 
-- [ ] T8.8 — Auditoría de SP-8: detección del idioma, elección guardada, cobertura y español sin cambios · repo: pictures · después de: T8.7 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json` · archivos: .evidence/REQ-021/SP-8.audit.md, .evidence/REQ-021/SP-8.findings.json · recursos: ledger:SP-8 · cubre: R12 · tipo: auditoría · subplan: SP-8
+- [ ] T8.8 — Auditoría de SP-8: detección de idioma, preferencia guardada, cobertura y español sin cambios · repo: pictures · después de: T8.7 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json` · archivos: .evidence/REQ-021/SP-8.audit.md, .evidence/REQ-021/SP-8.findings.json · recursos: ledger:SP-8 · cubre: R12 · tipo: auditoría · subplan: SP-8
 
-  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
-  Verifica como mínimo: orden de detección, coherencia de la cookie y la cuenta, ausencia de español en los archivos cubiertos, salida en español sin cambios, unidades cm/m y COP conservadas.
+  Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
+  Verificaciones mínimas: orden de detección, coherencia entre cookie y cuenta, ausencia de español en los archivos cubiertos, salida en español sin cambios, unidades cm/m y COP conservadas.
 
-  - Aceptación / estática: Una auditoría independiente de SP-8 registra cada defecto confirmado junto con la tarea que debe corregirlo en el registro de hallazgos de SP-8, y el registro no tiene hallazgos críticos ni altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json`
+  - Aceptación / estática: Una auditoría independiente de SP-8 registra cada defecto confirmado junto con la tarea que debe rehacerse en el registro de hallazgos de SP-8, y el registro no tiene hallazgos críticos o altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-8.findings.json`
 
-<!-- tareas de /SP-8 -->
+<!-- /SP-8 tasks -->
 
-<!-- tareas de CG-8 -->
+<!-- CG-8 tasks -->
 
   Puerta de composición CG-8: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8 (acumulativa, después de CG-7).
 
 - [ ] T98 — Verificación de composición CG-8: inglés en cuentas, proyectos guardados, herramientas y el Taller · repo: pictures · después de: T97, T8.8 · verificar: `npm run idioma:test-integracion -- --modo CG-8` · archivos: .evidence/REQ-021/CG-8.integration.json · recursos: candidate:CG-8 · cubre: R12 · tipo: prueba
 
-  Clasificación: complejidad media; alcance: cambio_pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 40 minutos.
+  Clasificación: complejidad media; alcance: cambio pequeño; riesgo medio; acoplamiento medio; confianza media; estimación: 40 minutos.
   `npm run idioma:test-integracion -- --modo CG-8`.
 
-  - Aceptación / integración: En el candidato integrado con SP-8, una primera visita en inglés inicia sesión, abre un proyecto guardado y una decoración de la galería en el Taller en inglés, cuenta con el contador y, al cambiar al español, la elección se conserva en la cuenta y se refleja en otro navegador. Verificación: `npm run idioma:test-integracion -- --modo CG-8`
+  - Aceptación / integración: En el candidato integrado con SP-8, una primera visita en inglés inicia sesión, abre un proyecto guardado y una decoración de la galería en el Taller en inglés, cuenta elementos con el contador y, al cambiar a español, la preferencia se conserva en la cuenta en otro navegador. Verificación: `npm run idioma:test-integracion -- --modo CG-8`
 
-<!-- tareas de /CG-8 -->
+<!-- /CG-8 tasks -->
 
 
-- **SP-9 — Textos de productos y decoraciones en inglés** (UI: `textos-producto@v1`): Los nombres y las descripciones en inglés de cada producto y decoración se generan una sola vez a partir del texto en español, se almacenan, se muestran cuando el idioma es inglés con el texto en español como alternativa y pueden ser corregidos por un administrador. Cubre R12.
-- **SP-10 — Pantallas restantes y respuestas de IA en inglés** (UI: `idioma-resto@v1`): Las pantallas de herramientas de chat, catálogo, administración, gastos y estadísticas están completamente en inglés, y la IA de escena y las herramientas de chat responden en el idioma del usuario. Cubre R12.
+- **SP-9 — Textos de productos y decoraciones en inglés** (sin Designer, ronda 16 del propietario): Los nombres y las descripciones en inglés de cada producto y decoración se generan una vez a partir del texto en español, se almacenan, se muestran cuando el idioma es inglés con el texto en español como alternativa y pueden ser corregidos por un administrador. Cubre R12.
 
-### M4 — Módulos editables y chat → 3D
-Los usuarios editan módulos y cuartetos más allá de sus colores, y el chat normal recomienda decoraciones 3D prediseñadas que se abren en el Taller.
+<!-- SP-9 tasks -->
 
-- **SP-11 — Módulos y cuartetos editables** (UI: `modulos-editables@v1`): Un usuario edita un módulo o cuarteto de la escena más allá de sus colores (las ediciones exactas se acuerdan con el propietario en este subplan) y se actualizan las cantidades y la lista de compras. Cubre R15.
-- **SP-12 — El chat normal recomienda decoraciones 3D prediseñadas** (UI: `chat-a-3d@v1`): En dos o tres mensajes, el chat normal define la necesidad y recomienda decoraciones 3D existentes que se abren en el Taller 3D como un nuevo proyecto, usando el catálogo y el motor reales. Cubre R13.
+  Tareas de SP-9 (ronda 16 del propietario, 2026-10-29): q1 nombres y descripciones de los 1,615 productos, los nombres de color y tamaño de sus variantes y las 448 decoraciones prediseñadas (25 Ideas del asistente, 423 Ideas Sempertex), nunca los textos propios de las personas; q2 nunca se vuelven a generar, solo el administrador los cambia; q3 sin Designer: una pestaña «Textos en inglés» en Administración, siguiendo las pestañas existentes. El catálogo vive en SQLite y se vuelve a sembrar en cada inicio de Vercel (src/lib/shopify/persistir-catalogo.ts, snapshot src/lib/shopify/datos/catalogo-publico.json), por lo que los textos en inglés viven en Postgres, identificados por el id de Shopify. La traducción se ejecuta una sola vez con Haiku 5.5 mediante las cuentas Claude del propietario (SPEC Inputs) y se confirma como archivos de datos, para que producción la reciba durante el paso de sembrado de SP-13 sin ninguna llamada a IA.
+  DAG: T9.1 (almacenamiento, consulta) → T9.2 (generación única, validación, sembrado) → {T9.3 mostrar inglés en los límites, T9.4 pestaña de administración} → T9.5 integración → T9.6 auditoría; CG-9 agrega SP-9 después de CG-8.
+
+- [ ] T9.1 — Almacenamiento de textos en inglés y consulta con alternativa en español · repo: pictures · después de: T8.8 · verificar: `npm run textos:test -- --test-name-pattern=almacen` · archivos: scripts/migrations/041_textos_ingles.sql, src/lib/textos-ingles/repositorio.ts, src/lib/textos-ingles/consulta.ts, scripts/test/test-textos-ingles.ts · recursos: scripts de package.json, contract:textos-ingles · cubre: R12 · tipo: implement · subplan: SP-9 · ui: no
+
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento alto; confianza alta; estimación: 75 minutos.
+  Tabla `textos_ingles` (tipo `producto|variante_opcion|idea`, clave, campo `nombre|descripcion`, texto_es_fuente, texto_en, origen `ia|admin`, actualizado_en; unique (tipo, clave, campo)). `textosEn(peticiones, idioma)` devuelve un mapa en una consulta. El script de npm `textos:test` = `tsx --conditions=react-server --test scripts/test/test-textos-ingles.ts`.
+
+  - Aceptación / funcional: La migración 041 crea una tabla de Postgres con textos en inglés identificados por tipo, id de origen y campo, que contiene el texto fuente en español, el texto en inglés y su origen (ia o admin); una consulta devuelve el texto en inglés cuando el idioma es inglés y el texto fuente en español cuando no hay una versión en inglés. Verificación: `npm run textos:test -- --test-name-pattern=almacen`
+
+- [ ] T9.2 — Generación única de textos en inglés con Haiku 5.5, su validador y el sembrado idempotente · repo: pictures · después de: T9.1 · verificar: `npm run textos:validar` · archivos: scripts/textos/traducir.ts, scripts/textos/glosario.ts, scripts/textos/validar.ts, scripts/textos/sembrar.ts, data/textos-ingles/productos.json, data/textos-ingles/variantes.json, data/textos-ingles/ideas.json, scripts/textos/test-textos-scripts.ts · recursos: scripts de package.json, contract:textos-ingles · cubre: R12 · tipo: implement · subplan: SP-9 · ui: no
+
+  Clasificación: complejidad media; alcance large_change; riesgo medio; acoplamiento medio; confianza media; estimación: 180 minutos.
+  `npm run textos:traducir` lee el snapshot (titulo/titulo_limpio, descripcion_txt), los valores distintos de las opciones de variante y ambos conjuntos de ideas; envía lotes de 40 a `claude -p --model claude-haiku-5-5 --output-format json` con el glosario (los tamaños de globos como R12 y 260Q, Sempertex y las líneas Fashion, Deco y Metallic se conservan tal como están) y escribe los tres archivos de datos. `npm run textos:validar` y `npm run textos:sembrar` funcionan sin ningún modelo; `textos:test-scripts` = `tsx --test scripts/textos/test-textos-scripts.ts`.
+
+  - Aceptación / estática: npm run textos:validar acepta los archivos en inglés generados solo cuando cada producto del catálogo, nombre de color o tamaño de variante y decoración prediseñada del snapshot del repositorio tiene un nombre en inglés no vacío y una descripción cuando existe una en español, los códigos de producto y nombres de marca no han cambiado, y ningún texto en inglés es igual a su fuente en español, salvo que el par esté listado como marca o código. Verificación: `npm run textos:validar`
+  - Aceptación / funcional: npm run textos:sembrar carga los archivos generados en la base de datos de forma idempotente: una segunda ejecución no cambia nada y nunca sobrescribe un texto cuyo origen sea admin. Verificación: `npm run textos:test-scripts -- --test-name-pattern=sembrar`
+
+- [ ] T9.3 — Mostrar los textos en inglés de productos y decoraciones en cada límite que los envía al navegador · repo: pictures · después de: T9.2 · verificar: `npm run textos:test-fronteras` · archivos: src/lib/textos-ingles/aplicar.ts, src/app/catalogo/page.tsx, src/app/catalogo/[handle]/page.tsx, src/app/api/catalogo/repositorios/route.ts, src/app/api/taller/buscar/route.ts, src/lib/globos3d/biblioteca.ts, src/lib/globos3d/galeria-decoraciones.ts, src/lib/ia/herramientas/registro-herramientas.ts, scripts/test/test-textos-fronteras.ts · recursos: scripts de package.json, contract:textos-ingles, contract:idioma · cubre: R12 · tipo: implement · subplan: SP-9 · ui: no
+
+  Clasificación: complejidad media; alcance large_change; riesgo medio; acoplamiento medio; confianza media; estimación: 150 minutos.
+  `aplicarTextosIngles(items, idioma)` reemplaza los campos de nombre y descripción solo cuando idioma es en; el script de npm `textos:test-fronteras` = `tsx --conditions=react-server --test scripts/test/test-textos-fronteras.ts` (cada límite en inglés y español; el español se compara con la salida actual).
+
+  - Aceptación / funcional: Con el idioma configurado en inglés, cada límite de serialización que envía nombres de productos o decoraciones al navegador (páginas y API del catálogo, búsqueda de Taller, lista de compras, resultados de productos del chat, índice de la galería y biblioteca de ideas de Taller) envía el texto en inglés, con alternativa en español; con el idioma español envía exactamente lo que envía hoy. Verificación: `npm run textos:test-fronteras`
+
+- [ ] T9.4 — Pestaña de administración «Textos en inglés» y su API protegida · repo: pictures · después de: T9.2 · verificar: `npm run textos:test-admin -- --solo correccion` · archivos: src/components/admin/TextosInglesTab.tsx, src/components/admin/AdminTabs.tsx, src/app/api/admin/textos-ingles/route.ts, src/lib/cuentas/mapa-rutas.ts, scripts/test/test-admin-textos-ingles.ts · recursos: scripts de package.json, contract:textos-ingles, contract:permission-map · cubre: R12 · tipo: implement · subplan: SP-9 · ui: no
+
+  Clasificación: complejidad media; alcance full_feature; riesgo medio; acoplamiento medio; confianza media; estimación: 120 minutos.
+  Las pantallas del personal permanecen en español (ronda 16 q4). El script de npm `textos:test-admin` = `tsx scripts/test/test-admin-textos-ingles.ts`.
+
+  - Aceptación / funcional: Un administrador con textos.corregir encuentra un texto en la pestaña de administración «Textos en inglés» por nombre o id, filtra por pendiente, IA, corregido o la fuente cambió, guarda una corrección que pasa a tener origen admin, y las cuentas sin el permiso reciben 403 de su API. Verificación: `npm run textos:test-admin -- --solo correccion`
+  - Aceptación / funcional: Ningún texto en inglés se vuelve a generar después de almacenarse: un cambio posterior de la fuente en español solo marca el texto como «la fuente cambió» en la lista de administración, y los productos agregados más adelante muestran español hasta que un administrador escriba el texto en inglés. Verificación: `npm run textos:test-admin -- --solo fuente-cambio`
+
+- [ ] T9.5 — Prueba de extremo a extremo en el navegador: nombres en inglés en el catálogo, Taller y galería, con una corrección del administrador · repo: pictures · después de: T9.3, T9.4 · verificar: `npm run textos:test-integracion` · archivos: scripts/test/test-integracion-textos-ingles.ts, .evidence/REQ-021/SP-9.integration.json · recursos: scripts de package.json · cubre: R12 · tipo: test · subplan: SP-9
+
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 75 minutos.
+  El script de npm `textos:test-integracion` = `tsx scripts/test/test-integracion-textos-ingles.ts`.
+
+  - Aceptación / integración: En una compilación de producción contra la base de datos de REQ-021 con los textos en inglés sembrados, una sesión en inglés muestra nombres de productos y decoraciones en inglés en el catálogo, la biblioteca de Taller, la lista de compras y la galería; la corrección de un administrador aparece en la siguiente solicitud; y una sesión en español muestra los nombres actuales en español. Verificación: `npm run textos:test-integracion`
+
+- [ ] T9.6 — Auditoría de SP-9: textos en inglés, alternativa en español, sin regeneración y permisos de corrección · repo: pictures · después de: T9.5 · verificar: `bitacora.py audit-ledger check .evidence/REQ-021/SP-9.findings.json` · archivos: .evidence/REQ-021/SP-9.audit.md, .evidence/REQ-021/SP-9.findings.json · recursos: ledger:SP-9 · cubre: R12 · tipo: audit · subplan: SP-9
+
+  Clasificación: complejidad media; alcance small_change; riesgo alto; acoplamiento medio; confianza media; estimación: 65 minutos.
+  Solo lectura; comprueba la cobertura de los textos en inglés, la alternativa en español, la regla de no regeneración y el permiso de corrección.
+
+  - Aceptación / estática: Una auditoría independiente de SP-9 comprueba la cobertura de los textos en inglés, la alternativa en español, la regla de no regeneración y el permiso de corrección; registra cada defecto confirmado junto con la tarea que debe volver a ejecutarlo en el registro de hallazgos de SP-9, y el registro no tiene hallazgos críticos ni altos abiertos. Verificación: `bitacora.py audit-ledger check .evidence/REQ-021/SP-9.findings.json`
+
+<!-- /SP-9 tasks -->
+
+<!-- CG-9 tasks -->
+
+  Puerta de composición CG-9: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9 (acumulativo).
+
+- [ ] T99 — Comprobación de composición CG-9: textos en inglés de productos y decoraciones en las herramientas y Taller · repo: pictures · después de: T98, T9.6 · verificar: `npm run textos:test-integracion -- --modo CG-9` · archivos: .evidence/REQ-021/CG-9.integration.json · recursos: candidate:CG-9 · cubre: R12 · tipo: test
+
+  Clasificación: complejidad media; alcance small_change; riesgo medio; acoplamiento medio; confianza media; estimación: 40 minutos.
+  `npm run textos:test-integracion -- --modo CG-9`.
+
+  - Aceptación / integración: En la propuesta integrada con SP-9, una sesión en inglés muestra los nombres de productos en inglés en la lista de compras del mostrador, la calculadora y la biblioteca de Taller, y un proyecto guardado vuelve a abrirse con los nombres en inglés. Verificación: `npm run textos:test-integracion -- --modo CG-9`
+
+<!-- /CG-9 tasks -->
+
+
+- **SP-10 — Pantallas restantes y respuestas de IA en inglés** (sin Designer, decisión del Planner después de la ronda 16): Las herramientas de chat, el catálogo, la administración y las pantallas de gastos y estadísticas están completamente en inglés, y la IA de escenas y las herramientas de chat responden en el idioma del usuario. Cubre R12.
+
+<!-- SP-10 tasks -->
+
+  Tareas de SP-10 (ronda 16 del propietario, 2026-10-29): q4 todas las pantallas que ve un usuario externo y las respuestas de IA; las pantallas del personal permanecen en español; q5 el modelo entiende inglés y busca en el catálogo en español, y responde en inglés con los nombres de SP-9. Sin Designer (decisión del Planner, por la misma razón que SP-8 q8: solo cambian los textos; se prueba el desbordamiento). Medido en origin/main: unos 180 literales en src/components/guiado (47 archivos) y 325 en src/components/plan (62 archivos), más los módulos de texto de SP-4, SP-5 y SP-7.
+  DAG: T10.1 (chat guiado y vistas de planes) ∥ T10.2 (herramientas, catálogo, galería, proyectos, biblioteca) ∥ T10.3 (idioma de respuesta y búsqueda) → T10.4 lista de exclusión del personal → T10.5 integración → T10.6 auditoría; CG-10 agrega SP-10 después de CG-9. Orden de recorte 1 (propietario): SP-10 es el primer trabajo de idioma que se descarta si hay retraso.
+
+- [ ] T10.1 — Guided chat and structure-plan views in English · repo: pictures · after: T9.6 · verify: `npm run idioma:test-cobertura -- src/components/guiado src/components/propuesta src/components/plan` · files: src/components/guiado/**/*.tsx, src/components/propuesta/**/*.tsx, src/components/plan/**/*.tsx, src/components/guiado/textos/chat-guiado.ts, src/components/plan/textos/planes-estructura.ts, src/lib/estado/pasos-asistente.ts, src/lib/guiada-motor/mensajes-cliente.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling high; confidence high; estimate 240 minutes.
+  npm script `idioma:test-cobertura` (SP-8) over the listed directories.
+
+  - Acceptance / static: The guided chat and its components (src/components/guiado, src/components/propuesta) and the structure-plan views (src/components/plan) pass the coverage guard and render in English with no Spanish string left, while Spanish rendering is unchanged. Check: `npm run idioma:test-cobertura -- src/components/guiado src/components/propuesta src/components/plan`
+
+- [ ] T10.2 — Tools, catalogue, gallery, saved projects and personal library in English · repo: pictures · after: T9.6 · verify: `npm run idioma:test-cobertura -- src/components/herramientas src/components/cotizacion src/components/catalogo src/app/catalogo src/components/tres-d/galeria src/components/proyectos src/components/tres-d/biblioteca` · files: src/components/herramientas/**/*.ts, src/components/herramientas/**/*.tsx, src/components/cotizacion/**/*.tsx, src/components/catalogo/**/*.tsx, src/app/catalogo/page.tsx, src/app/catalogo/[handle]/page.tsx, src/components/tres-d/galeria/textos-galeria.ts, src/components/proyectos/textos-proyectos.ts, src/components/tres-d/biblioteca/textos-biblioteca.ts · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope large_change; risk medium; coupling medium; confidence high; estimate 150 minutes.
+  The professional quote keeps COP in English (round 15 q7).
+
+  - Acceptance / static: The home, counter, calculator and professional quote (src/components/herramientas, src/components/cotizacion), the catalogue (src/components/catalogo, src/app/catalogo), the gallery and the saved-project and personal-library screens pass the coverage guard and render in English with no Spanish string left. Check: `npm run idioma:test-cobertura -- src/components/herramientas src/components/cotizacion src/components/catalogo src/app/catalogo src/components/tres-d/galeria src/components/proyectos src/components/tres-d/biblioteca`
+
+- [ ] T10.3 — AI replies in the user's language with catalogue searches kept in Spanish · repo: pictures · after: T9.6 · verify: `npm run idioma:test-respuestas -- --test-name-pattern=prompt` · files: src/lib/ia/guiado/prompt-guiado.ts, src/lib/ia/omoikane/prompt-sistema.ts, src/lib/ia/escena/entorno-escena.ts, src/lib/ia/herramientas/herramientas.ts, src/lib/contador/contar.ts, src/lib/ia/nucleo/python-adapter.ts, services/ai-api/app/main.py, scripts/test/test-idioma-respuestas-ia.ts, services/ai-api/tests/test_idioma_respuesta.py · resources: package.json scripts, contract:idioma · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity medium; scope large_change; risk medium; coupling medium; confidence medium; estimate 150 minutes.
+  npm script `idioma:test-respuestas` = `tsx --conditions=react-server --test scripts/test/test-idioma-respuestas-ia.ts`; ai-api test runs with `uv run --directory services/ai-api pytest tests/test_idioma_respuesta.py`.
+
+  - Acceptance / functional: Every prompt builder that sets the model's reply language (guided chat, plan agent, counter phrase extraction and the Taller scene AI, in Next and in services/ai-api) receives the request's language, and with a stub provider an English request produces an English instruction while a Spanish request produces exactly today's prompt. Check: `npm run idioma:test-respuestas -- --test-name-pattern=prompt`
+  - Acceptance / functional: With English input the chat's catalogue tools still search the Spanish catalogue: the tool instructions tell the model to search in Spanish, and a stubbed English conversation calls the search tool with Spanish terms and answers in English with the English product names of SP-9. Check: `npm run idioma:test-respuestas -- --test-name-pattern=busqueda`
+
+- [ ] T10.4 — Explicit list of staff screens that stay in Spanish · repo: pictures · after: T10.1, T10.2, T10.3 · verify: `npm run idioma:test-personal` · files: scripts/idioma/pantallas-personal.ts, scripts/idioma/test-pantallas-personal.ts · resources: package.json scripts · covers: R12 · kind: implement · subplan: SP-10 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence high; estimate 40 minutes.
+  `PANTALLAS_PERSONAL` = every page whose map permission is `internas.usar`, `gasto.ver`, `cuentas.administrar` or `roles.administrar`; the test fails if an external page is listed. npm script `idioma:test-personal` = `tsx --test scripts/idioma/test-pantallas-personal.ts`.
+
+  - Acceptance / functional: Staff-only screens (administration, orders, statistics, AI spend, AI feedback, laboratories) stay in Spanish and are excluded from the coverage guard by an explicit list. Check: `npm run idioma:test-personal`
+
+- [ ] T10.5 — Browser end-to-end: external screens and one live AI turn in English · repo: pictures · after: T10.4 · verify: `npm run idioma:test-integracion-resto` · files: scripts/test/test-integracion-idioma-resto.ts, .evidence/REQ-021/SP-10.integration.json · resources: package.json scripts · covers: R12 · kind: test · subplan: SP-10
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 90 minutes.
+  npm script `idioma:test-integracion-resto` = `tsx scripts/test/test-integracion-idioma-resto.ts`; the live turn uses the cheapest configured model once.
+
+  - Acceptance / integration: On a production build, with expected texts taken from the dictionaries, an English Designer Plus account uses the home, the guided chat, the counter and the calculator, and a Master Designer opens the gallery and a saved project, all in English; one live chat turn on the cheapest configured model answers in English; and a scan of each rendered page finds no Spanish string outside staff screens. Check: `npm run idioma:test-integracion-resto`
+
+- [ ] T10.6 — SP-10 audit: external screens and AI replies in English · repo: pictures · after: T10.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-10.findings.json` · files: .evidence/REQ-021/SP-10.audit.md, .evidence/REQ-021/SP-10.findings.json · resources: ledger:SP-10 · covers: R12 · kind: audit · subplan: SP-10
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 65 minutes.
+  Read-only; checks external-screen coverage, unchanged Spanish prompts and English replies.
+
+  - Acceptance / static: An independent audit of SP-10 checks external-screen coverage, unchanged Spanish prompts and English replies, records every confirmed defect with the task that must redo it in the SP-10 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-10.findings.json`
+
+<!-- /SP-10 tasks -->
+
+<!-- CG-10 tasks -->
+
+  Composition gate CG-10: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10 (cumulative).
+
+- [ ] T100 — Composition check CG-10: the whole external app in English · repo: pictures · after: T99, T10.6 · verify: `npm run idioma:test-integracion-resto -- --modo CG-10` · files: .evidence/REQ-021/CG-10.integration.json · resources: candidate:CG-10 · covers: R12 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run idioma:test-integracion-resto -- --modo CG-10`.
+
+  - Acceptance / integration: On the integrated candidate with SP-10, an English Master Designer goes from sign-in through the home, chat, counter, calculator, gallery, a saved project and the Taller entirely in English, and a Spanish account sees today's Spanish. Check: `npm run idioma:test-integracion-resto -- --modo CG-10`
+
+<!-- /CG-10 tasks -->
+
+
+
+### M4 — Editable modules and chat → 3D
+Users edit modules and quartets beyond colours, and the normal chat recommends ready-made 3D decorations that open in the workshop.
+
+- **SP-11 — Editable modules and quartets** (no Designer, Planner ruling after round 16): A user edits a module or quartet in the scene beyond its colours (the exact edits are settled with the owner in this subplan) and the counts and shopping list update. Covers R15.
+
+<!-- SP-11 tasks -->
+
+  SP-11 tasks (owner round 16 q6 a, 2026-10-29): only spacing between quartets and thickness of columns, arches and garlands. Today `armarTrenza` (src/lib/globos3d/trenza.ts) fixes them with PASO_POR_DIAMETRO = 0.8 and RADIO_TRENZA_POR_DIAMETRO = 0.62 and the editor (EditorTrenzaCompleto in ParametrosPieza.tsx) has no control for them. Ranges 0.6–1.2 and 0.5–0.8 diameters are a Planner ruling (below 0.6 balloons overlap, above 1.2 gaps show); the defaults stay the constants. No Designer (Planner ruling): two sliders in the existing editor follow its slider pattern. Cut order 2 (owner): SP-11 drops before chat→3D if late.
+  DAG: T11.1 (engine and schema) → T11.2 (editor controls) → T11.3 integration → T11.4 audit; CG-11 adds SP-11 after CG-10.
+
+- [ ] T11.1 — Optional spacing and thickness in the quartet engine and the scene schema · repo: pictures · after: T100 · verify: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto` · files: src/lib/globos3d/trenza.ts, src/lib/globos3d/piezas.ts, src/lib/globos3d/esquema-escena.ts, src/lib/globos3d/hoja-armado-estructura.ts, scripts/test/test-trenza-separacion.ts · resources: package.json scripts, contract:taller-scene · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence high; estimate 120 minutes.
+  Fields `separacion?: number` and `grosor?: number` (in diameters) on columna and arco and in OpcionesGuirnalda; `armarTrenza` reads them with the constants as defaults. npm script `trenza:test-separacion` = `tsx --conditions=react-server --test scripts/test/test-trenza-separacion.ts`; the existing goldens (`npm run globos3d:test`) stay unchanged.
+
+  - Acceptance / functional: Columns, arches and garlands built from quartets accept an optional spacing between quartets of 0.6 to 1.2 balloon diameters and an optional thickness of 0.5 to 0.8 diameters; without them every existing piece, count and golden scene is byte-identical, and values outside the range are refused by the scene schema. Check: `npm run trenza:test-separacion -- --test-name-pattern=rango-y-defecto`
+  - Acceptance / functional: Changing the spacing of a column, arch or garland changes its number of quartets as height or length divided by the spacing, and the balloon counts, the shopping list and the assembly sheet change accordingly, while changing only the thickness changes no count. Check: `npm run trenza:test-separacion -- --test-name-pattern=conteos`
+
+- [ ] T11.2 — Spacing and thickness controls in the column, arch and garland editor · repo: pictures · after: T11.1 · verify: `npm run trenza:test-ui -- --solo controles` · files: src/components/tres-d/ParametrosPieza.tsx, src/components/tres-d/textos/taller-edicion.ts, scripts/test/test-ui-separacion-trenza.ts · resources: package.json scripts · covers: R15 · kind: implement · subplan: SP-11 · ui: no
+
+  Classification: complexity low; scope small_change; risk low; coupling medium; confidence high; estimate 75 minutes.
+  npm script `trenza:test-ui` = `tsx scripts/test/test-ui-separacion-trenza.ts`.
+
+  - Acceptance / functional: Selecting a column, arch or garland shows spacing and thickness controls in its editor with the current value in centimetres and a reset to the default; moving them updates the scene, the counts and the shopping list, and undo restores the previous values. Check: `npm run trenza:test-ui -- --solo controles`
+  - Acceptance / functional: A scene holding pieces with spacing and thickness saves as a project, reopens with the same values and exports to GLB with the edited geometry. Check: `npm run trenza:test-ui -- --solo guardar-y-exportar`
+
+- [ ] T11.3 — Browser end-to-end: edit spacing and thickness, save, reopen and export · repo: pictures · after: T11.2 · verify: `npm run trenza:test-integracion` · files: scripts/test/test-integracion-separacion-trenza.ts, .evidence/REQ-021/SP-11.integration.json · resources: package.json scripts · covers: R15 · kind: test · subplan: SP-11
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 60 minutes.
+  npm script `trenza:test-integracion` = `tsx scripts/test/test-integracion-separacion-trenza.ts`.
+
+  - Acceptance / integration: On a production build against the REQ-021 database, a Master Designer edits the spacing and thickness of a column and an arch, sees the counts and shopping list change, saves the project, reopens it in another browser with the same values, and exports a GLB whose column height is unchanged. Check: `npm run trenza:test-integracion`
+
+- [ ] T11.4 — SP-11 audit: quartet spacing and thickness, counts and compatibility · repo: pictures · after: T11.3 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json` · files: .evidence/REQ-021/SP-11.audit.md, .evidence/REQ-021/SP-11.findings.json · resources: ledger:SP-11 · covers: R15 · kind: audit · subplan: SP-11
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
+  Read-only; checks the spacing and thickness ranges, count updates and unchanged existing scenes.
+
+  - Acceptance / static: An independent audit of SP-11 checks the spacing and thickness ranges, count updates and unchanged existing scenes, records every confirmed defect with the task that must redo it in the SP-11 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-11.findings.json`
+
+<!-- /SP-11 tasks -->
+
+<!-- CG-11 tasks -->
+
+  Composition gate CG-11: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11 (cumulative).
+
+- [ ] T101 — Composition check CG-11: edited structures in saved projects, decorations and English · repo: pictures · after: T11.4 · verify: `npm run trenza:test-integracion -- --modo CG-11` · files: .evidence/REQ-021/CG-11.integration.json · resources: candidate:CG-11 · covers: R15 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run trenza:test-integracion -- --modo CG-11`.
+
+  - Acceptance / integration: On the integrated candidate with SP-11, an edited column saves as a project and as a personal decoration, reopens with the same spacing, and its editor controls read in English for an English account. Check: `npm run trenza:test-integracion -- --modo CG-11`
+
+<!-- /CG-11 tasks -->
+
+
+- **SP-12 — Normal chat recommends ready-made 3D decorations** (UI: `chat-a-3d@v1`): In two or three messages the normal chat defines the need and recommends existing 3D decorations that open in the Taller 3D as a new project, using the real catalogue and engine. Covers R13.
+
+<!-- SP-12 tasks -->
+
+  SP-12 tasks (owner round 16 q7 a, 2026-10-29): every plan sees 2–3 recommended ready-made decorations with image, name and count; only Master Designer and staff see «Abrir en el Taller» (decoraciones.explorar), without naming the plan. Recommendations come from the SP-7 gallery index (galeria-index@1: IDEAS_ASISTENTE and IDEAS_SEMPERTEX) and counts from each idea's own shopping list, never from the model. Cut order 3 (owner): chat→3D drops before the never-cut items if late.
+  DAG: T12.1 (design) ∥ T12.2 (recommender and chat tool) → T12.3 (cards) → T12.4 integration → T12.5 visual review → T12.6 audit; CG-12 adds SP-12 after CG-11.
+
+- [ ] T12.1 — Copy the owner-approved chat-a-3d@v1 contract into the repository · repo: pictures · after: T101 · verify: `test -s design/contracts/chat-a-3d@v1.md` · files: design/contracts/chat-a-3d@v1.md · resources: design:chat-a-3d@v1 · covers: R13 · kind: design · subplan: SP-12 · ui: no
+
+  Classification: complexity low; scope isolated_fix; risk low; coupling medium; confidence high; estimate 10 minutes.
+  The scheduler supplies the plan-approved draft; the task copies it unchanged.
+
+  - Acceptance / static: The owner-approved chat-a-3d@v1 contract is copied byte for byte into design/contracts/chat-a-3d@v1.md. Check: `test -s design/contracts/chat-a-3d@v1.md`
+
+- [ ] T12.2 — Deterministic 3D decoration recommender and its guided-chat tool · repo: pictures · after: T101 · verify: `npm run recomendaciones:test -- --test-name-pattern=ranking` · files: src/lib/recomendaciones-3d/recomendar.ts, src/app/api/asistente-guiado/route.ts, src/lib/ia/guiado/prompt-guiado.ts, scripts/test/test-recomendaciones-3d.ts · resources: package.json scripts, contract:galeria-index · covers: R13 · kind: implement · subplan: SP-12 · ui: no
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 120 minutes.
+  Tool `recomendar_decoraciones_3d` {ocasion, tamano, colores} → `[{ id, nombre, imagen, globos }]`. npm script `recomendaciones:test` = `tsx --conditions=react-server --test scripts/test/test-recomendaciones-3d.ts`.
+
+  - Acceptance / functional: Given a brief with event type, approximate size and colours, the recommender returns two or three existing gallery decorations ranked by occasion, colour match and size, each with its id, name, preview image and total balloon count taken from the decoration's own shopping list, and returns none rather than a weak match when nothing fits. Check: `npm run recomendaciones:test -- --test-name-pattern=ranking`
+  - Acceptance / functional: Within at most three customer messages the guided chat collects the brief and calls the recommendation tool; its reply names only the decorations the tool returned, and a stubbed model that tries to name another decoration or another count is corrected by the final-text guard. Check: `npm run recomendaciones:test -- --test-name-pattern=herramienta`
+
+- [ ] T12.3 — Recommendation cards in the guided chat with a plan-gated open button · repo: pictures · after: T12.1, T12.2 · verify: `npm run recomendaciones:test-ui` · files: src/components/guiado/TarjetaRecomendacion3D.tsx, src/components/guiado/textos/recomendaciones-3d.ts, scripts/test/test-ui-recomendaciones-3d.ts · resources: package.json scripts, contract:permission-map · covers: R13 · kind: implement · subplan: SP-12 · ui: yes
+
+  Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  npm script `recomendaciones:test-ui` = `tsx scripts/test/test-ui-recomendaciones-3d.ts`.
+
+  - Acceptance / functional: The chat shows each recommendation as a card with preview, name in the session's language and balloon count; «Abrir en el Taller» appears only for accounts with decoraciones.explorar and opens /3d?decoracion=<id> as a new project, and other accounts see the card without the button and without any mention of a plan. Check: `npm run recomendaciones:test-ui`
+
+- [ ] T12.4 — Browser end-to-end: recommendations for two plans and opening one in the Taller · repo: pictures · after: T12.3 · verify: `npm run recomendaciones:test-integracion` · files: scripts/test/test-integracion-recomendaciones-3d.ts, .evidence/REQ-021/SP-12.integration.json · resources: package.json scripts · covers: R13 · kind: test · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 75 minutes.
+  npm script `recomendaciones:test-integracion` = `tsx scripts/test/test-integracion-recomendaciones-3d.ts`.
+
+  - Acceptance / integration: On a production build, with expected results written from the SPEC, an Entusiasta describes a birthday in two messages and gets two or three recommendation cards without an open button, and a Master Designer gets the same cards, opens one in the Taller as a new unsaved project and saves it. Check: `npm run recomendaciones:test-integracion`
+
+- [ ] T12.5 — SP-12 visual review against the chat-a-3d@v1 contract · repo: pictures · after: T12.4 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json` · files: .evidence/REQ-021/SP-12.visual.md, .evidence/REQ-021/SP-12.visual.findings.json · resources: ledger:SP-12-visual · covers: R13 · kind: audit · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 45 minutes.
+  Reviewer axis `visual` (rendered-ui-fidelity-audit).
+
+  - Acceptance / static: The rendered recommendation cards with and without the open button match the approved chat-a-3d@v1 contract at phone, tablet and desktop widths, and every finding is recorded with the task to redo in the SP-12 visual ledger. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.visual.findings.json`
+
+- [ ] T12.6 — SP-12 audit: recommendation sources, invented values and the open-button gate · repo: pictures · after: T12.5 · verify: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json` · files: .evidence/REQ-021/SP-12.audit.md, .evidence/REQ-021/SP-12.findings.json · resources: ledger:SP-12 · covers: R13 · kind: audit · subplan: SP-12
+
+  Classification: complexity medium; scope small_change; risk high; coupling medium; confidence medium; estimate 55 minutes.
+  Read-only; checks recommendation sources, invented names or counts and the open-button permission.
+
+  - Acceptance / static: An independent audit of SP-12 checks recommendation sources, invented names or counts and the open-button permission, records every confirmed defect with the task that must redo it in the SP-12 findings ledger, and the ledger has no open critical or high finding. Check: `bitacora.py audit-ledger check .evidence/REQ-021/SP-12.findings.json`
+
+<!-- /SP-12 tasks -->
+
+<!-- CG-12 tasks -->
+
+  Composition gate CG-12: SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6, SP-7, SP-8, SP-9, SP-10, SP-11, SP-12 (cumulative).
+
+- [ ] T102 — Composition check CG-12: chat recommendations into saved projects, in both languages · repo: pictures · after: T12.6 · verify: `npm run recomendaciones:test-integracion -- --modo CG-12` · files: .evidence/REQ-021/CG-12.integration.json · resources: candidate:CG-12 · covers: R13 · kind: test
+
+  Classification: complexity medium; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
+  `npm run recomendaciones:test-integracion -- --modo CG-12`.
+
+  - Acceptance / integration: On the integrated candidate with SP-12, an English Master Designer gets English recommendation cards, opens one as a new project, edits a column's spacing and saves it, and the AI spend view shows the chat call under its tag. Check: `npm run recomendaciones:test-integracion -- --modo CG-12`
+
+<!-- /CG-12 tasks -->
+
+
 
 ### M5 — Lanzamiento piloto
 El piloto funciona en producción con cuentas reales: existe la primera cuenta administradora, se publica cada subplan incluido, se supera una prueba de humo en producción y se enumeran los elementos excluidos.

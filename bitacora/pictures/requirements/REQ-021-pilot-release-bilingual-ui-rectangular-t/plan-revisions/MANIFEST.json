@@ -257,6 +257,12 @@
     "requirements_sha256": "69cd7a8ab4181ce6233f176852c911686fcad39cd722f18b841e4096f3ed69db",
     "plan_md_sha256": "e6000933cfd3635aa967462de3c21f174f1206d31c3a4dab1f37622e5a49f2a8"
    }
+  },
+  {
+   "revision": 17,
+   "sha256": "337868605763f25edba39670e732374c00692d793b71620cdb4616c40089743b",
+   "frozen_at": "2026-10-29T11:22:01",
+   "source": "approval"
   }
  ]
 }

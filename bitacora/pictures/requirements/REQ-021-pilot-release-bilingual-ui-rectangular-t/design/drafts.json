@@ -4135,8 +4135,10 @@
   "decoraciones@v1": {
    "attempt": 3,
    "auto_runs": 1,
+   "before": null,
+   "before_html": null,
    "behavior": "decoraciones@v1.r3.behavior.md",
-   "chosen": null,
+   "chosen": "b",
    "comparison": {
     "directions": [
      {
@@ -5204,7 +5206,7 @@
     "schema_version": 1
    },
    "continuation_choice": null,
-   "delegation": "D-20261029-102310-963d",
+   "delegation": "D-20261029-113017-ba31",
    "digest": "285702fdcd87b5aa",
    "direction_history": [
     {
@@ -7151,10 +7153,11 @@
    "finished": "2026-10-29T10:59:57-05:00",
    "fresh": false,
    "iterate_from": null,
-   "phase": "explore",
+   "phase": "finalise",
    "reason": "focus",
-   "started": "2026-10-29T10:23:04-05:00",
-   "status": "choosing",
+   "selected_sha256": "5275c3628551b64348b7fee6b7bff475310cc82629c985fd1b32d77c0c098078",
+   "started": "2026-10-29T11:30:17-05:00",
+   "status": "drafting",
    "subplan_id": "SP-5",
    "ui_digest": "e0815163c3cdc7cb"
   },

@@ -1546,3 +1546,46 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Evidence:** `test_subplan_flow` (4), `test_durable_stage_join.test_the_owners_pause_carries_into_the_new_stage`;
   Playwright on a copy of REQ-021: SP-2's frame shows its 8 tasks, its gates and 80 messages, keeps its window across a
   refresh that changed the detail block, no page errors.
+
+## D-151 — The Designer runs on Opus 5.5 high first, GPT-6.1 Terra high as its Codex fallback
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-146
+- **Context:** the Designer's choices were Opus 5.5 high and GPT-6.1 Sol high, ranked by quota headroom. Codex was
+  running out of quota (codex-1 91 %, codex-2 96 % of the five-hour window), yet the design explorations of pictures
+  REQ-021 went to Sol: the Opus account whose five-hour window had just renewed read as «unknown» and lost the ranking.
+- **Decision:** the owner orders the Designer (`bt_role_policy.ORDERED_ROLES`): Opus 5.5 high first whenever its
+  account is below the high-pressure line and not blocked, the same owner order explicit high complexity already
+  had; GPT-6.1 Terra high replaces Sol as the fallback. `gpt-6.1-terra` joins the model catalog (Codex, rank 1, quota
+  weight 4, estimated). The Codex Designer profile (`agents/designer.md`) names Terra.
+- **Consequences:** + designs stop spending the scarce Codex quota while Opus has room; + the owner's preference holds
+  even when a renewed window reads as unknown; − Terra's quota weight is a guess until telemetry measures it;
+  − ranking by headroom no longer applies to the Designer (only to unordered roles).
+- **Source:** owner, 2026-10-29 («codex se está quedando sin cuota… cambiemos los modelos diseñador de sol 6.1 a terra
+  6.1 alto y de preferencia opus 5.5, hagamos que los diseñadores actuales corran con opus»).
+- **Evidence:** `test_role_routing` (ordered Designer picks Opus over a headroom-richer Codex), `test_role_policy`,
+  `test_scheduler_decision_sources`, `test_agent_skills_static`; live ranking: claude opus high (claude-luis) first,
+  then codex gpt-6.1-terra high.
+
+## D-152 — A sandbox check that names a host path is refused at approval
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-134
+- **Context:** pictures REQ-021 T4.1 (copy the approved `proyectos@v1` contract into the repository) was verified with
+  `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/…/design/proyectos@v1.md`. The verifier runs checks
+  in a sandbox holding only a copy of the repository, so the check failed on every attempt although the copy was
+  byte-identical: three attempts on GPT-6 Luna, a coordinated repair, then decision `T4.1:d1` for a person. T3.4 carries
+  the same pattern (inherited, accepted under the legacy runtime).
+- **Decision:** `bt_planner.command_checks.host_paths` finds sandbox command checks naming `~` or a path under `/home`,
+  `/root`, `/Users`, `/mnt` or `/media` (also as `--flag=` or `NAME=` values). The contract reports them as warnings
+  (`plan-json check`, the Planner's stage readiness); stage approval and whole-plan approval refuse a new or changed
+  one with `PLAN_CHECK_HOST_PATH`. A check frozen exactly so in the latest revision was approved before this gate and
+  is not re-gated. For REQ-021 the owner approved r17 = r16 with only T4.1's check replaced by a sha256 pin of the
+  approved contract (`node -e`, runs in the sandbox, still byte-for-byte), frozen with `freeze_revision` (spliced into
+  the draft) and joined into the durable run.
+- **Consequences:** + the Planner learns while writing, the owner's «Ejecutar subplan» refuses before a run can stall;
+  − the list of host roots is a heuristic (a system path the sandbox does not mount still passes); − a check that
+  reads the bitácora on purpose must pin content instead.
+- **Source:** owner, 2026-10-29 (approved «r17 con huella sha256»); the gate follows the self-improvement rule
+  (reproducible defect).
+- **Evidence:** `test_plan_host_path_gate` (7); live REQ-021: the draft's only host path is T3.4 (warned, not gated),
+  r16 judged as new is refused for T3.4 and T4.1; `join` r16→r17 inherit 45 / redo 11, T4.1 completed on its first
+  r17 attempt.
