@@ -91,6 +91,37 @@ def input_findings(plan: dict, ignored: IgnoredPath | None) -> tuple[list[str], 
     return errors, warnings
 
 
+# Where a host keeps its people's files: never inside the verifier's sandbox, which holds only a copy of the repository.
+HOST_PATH = re.compile(r"^(?:~|/(?:home|root|Users|mnt|media|run/media)/)")
+
+
+def host_paths(plan: dict) -> list[dict[str, object]]:
+    """Sandbox command checks that name a path on the host. The verifier runs them in a sandbox holding only a copy of the
+    repository, so they fail on every attempt whatever the task did (pictures REQ-021 T4.1 compared its copy of a design
+    contract with the bitácora's by absolute path: three attempts, then a stop for a person)."""
+    found: list[dict[str, object]] = []
+    tasks = plan.get("tasks")
+    for task in tasks if isinstance(tasks, list) else ():
+        checks = task.get("verification") if isinstance(task, dict) else None
+        for index, check in enumerate(checks if isinstance(checks, list) else ()):
+            if not isinstance(check, dict) or check.get("type") != "command" or not isinstance(check.get("value"), str) \
+                    or check.get("environment", "sandbox") != "sandbox":
+                continue
+            for word in tokens(check["value"]):
+                path = word.split("=", 1)[1] if "=" in word and not HOST_PATH.match(word) else word
+                if HOST_PATH.match(path):
+                    found.append({"task_id": task.get("id"), "verification_index": index, "path": path,
+                                  "value": check["value"]})
+                    break
+    return found
+
+
+def host_path_warnings(plan: dict) -> list[str]:
+    return [f"{c['task_id']}.verification[{c['verification_index']}]: names {c['path']}, outside the repository; the "
+            "verifier runs the check in a sandbox holding only a copy of the repository, so it fails on every attempt "
+            "(use a repository path, or pin the content, e.g. its sha256 with `node -e`)" for c in host_paths(plan)]
+
+
 def project_ledger_checks(plan: dict, ledger_command: str = "engine audit-ledger check") -> list[str]:
     warnings = []
     tasks = plan.get("tasks")
