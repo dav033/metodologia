@@ -26,3 +26,8 @@ rollback: as for the second deploy, with the commit above
 previous main: dbd984e35451bd7ecf7afc3340bb32b1765141f4
 DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-021350.dump sha256 d250dc0ffd3414ba24c6c19b7cc629645f977f6508d5e48c9f67b8b98476d4cb (pg_restore --list: readable)
 rollback: as for the second deploy, with the commit above
+
+# seventh deploy (composition of dependent subplans, gate recompose), 2026-10-29 03:27, session metodologia-6d
+previous main: 08a1c7bc7e511edf83c3fd64c2171d70a636c619
+DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-032733.dump sha256 c0eff6ffd3925eea5cdbcb7d17defcc25db212b41e76d316fd66690c59f259c1 (pg_restore --list: readable)
+rollback: as for the second deploy, with the commit above

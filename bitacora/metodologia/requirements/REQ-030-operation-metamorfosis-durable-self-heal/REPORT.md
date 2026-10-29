@@ -216,20 +216,22 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
 - State at 03:10: 37 of 45 tasks done (SP-1, SP-2 and SP-3 complete; T2.7 and T2.8 audits passed); T91 held by CG-1;
   T14.1–T14.6, T94, T92 not started.
 
+- 03:28 composition fixed (`298b8996a`, seventh deploy; regression `regression-compose.txt`, 271 files, only the 4
+  baseline failures): the durable composer publishes each member from its merge base with the member folded before it,
+  so a subplan that contains another composes cleanly (offline on REQ-021's refs: the old rule reproduces the 14
+  conflicts, the new one merges cleanly); the owner's retry of a gate task composes a rejected gate again
+  (`bt-run-recompose-gate`). `retry-task … T91` → `gate_recompose` → CG-1 candidate **C2** composed; T91 ran on it
+  (one automatic retry after a failed check) and was accepted at 03:48. First composition gate of REQ-021 passed.
+- 03:48 SP-14 started with T14.1 (design). Forecast: CG-2 (SP-1, SP-2, SP-14, SP-3) will meet a genuine conflict in
+  `package.json` between SP-3 and SP-2 (both append npm scripts at the same point; checked offline with git
+  merge-tree) — two independent subplans, a decision for the owner when it is reached.
+
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 
 ## Blocked, with reason and procedure
 
-- REQ-021 gate CG-1 (and, by the same cause, CG-4 and CG-2): composition rejects members whose subplan scopes overlap.
-  Reason: a design decision in `bt_composition`, used by both runtimes — a member version is folded as a delta from the
-  run line's base, so a subplan that contains another (SP-2 ⊇ SP-1) conflicts with it. Two ways to close it, the
-  owner's choice: (a) compose with git's own merge base when a member's history already contains the integrated tree
-  (C1 would then equal SP-2's tip plus nothing to resolve); (b) publish each subplan version relative to the tips of
-  the subplans it depends on. Either needs the durable composer to compose again when a member's line changes (the
-  legacy owner rebuilds a candidate on every pass; the durable run records a rejection as final). Then T91 runs on the
-  candidate. SP-14 starts with T14.1, a design task whose contract the owner approves.
-
+- Done (03:48): REQ-021 CG-1 composed after the composer fix; T91 accepted on the candidate.
 - Done (02:39): REQ-021 T2.7 passed with full state coverage (see the live state); the disposable database `req021-visual-audit-pg` stays for T14.5 (remove with `docker rm -f req021-visual-audit-pg`).
 - Superseded (01:30): the T2.7 environment gap was closed with a disposable database, no credential needed.
 - Phone panel signed in, and the credential-only probes of the live smoke (`signin-start`, `sse`, `telegram-delivery`:
