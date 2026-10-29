@@ -1526,3 +1526,23 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   the copied line, confirmation for changed accepted work, a join that waits for a live attempt and is completed by the
   engine); `test_stages` (the durable branch never starts the legacy Scheduler); a read-only plan against live REQ-021:
   43 inherit (24 legacy material, 19 durable attempts), T94 reconcile from `19ca9774`, T92 redo, nothing live or redone.
+
+## D-150 — Each subplan's «Ejecución» frames its own Flow; the Flow reads the durable runtime
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-147, D-149
+- **Context:** the owner asked to monitor the Flow (module map, messages, each task's route) for one subplan from its
+  «Ejecución» tab. The Flow only read the legacy Scheduler stores, so for pictures REQ-021 (durable since r15) it said
+  «en pausa, último mensaje hace 15 h» while the durable runtime worked. Found on the way: a stage joined to a run the
+  owner had paused (REQ-021 was paused from the web at 08:21) would have started unpaused.
+- **Decision:** `bt_flow_durable` turns the run's durable telemetry into flow messages between the same parties (new bus
+  store `dbos`, cursor = line, unknown records kept); the live API accepts `subplan:P/REQ/SP` (the subplan's tasks and
+  the gate tasks that compose it); `/flow?embed=1` drops the page chrome; the subplan's «Ejecución» frames that Flow
+  with `data-persist`, and the Plan tab's live refresh swaps everything around such a child instead of reloading it.
+  `LegacyProgress.paused` carries the owner's pause into a joined stage (not the join's own waiting pause).
+- **Consequences:** + one subplan's execution is watched where it is planned, for legacy and durable runs alike;
+  − the telemetry file is read whole per refresh (small today); − gate tasks of every gate a subplan is in show in its
+  Flow, including gates of later stages.
+- **Source:** owner, 2026-10-29 («quiero que aquí también pueda monitorear lo de flow, pero para el subplan específico»).
+- **Evidence:** `test_subplan_flow` (4), `test_durable_stage_join.test_the_owners_pause_carries_into_the_new_stage`;
+  Playwright on a copy of REQ-021: SP-2's frame shows its 8 tasks, its gates and 80 messages, keeps its window across a
+  refresh that changed the detail block, no page errors.

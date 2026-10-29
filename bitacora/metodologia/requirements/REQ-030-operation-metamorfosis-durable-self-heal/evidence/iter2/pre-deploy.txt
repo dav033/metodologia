@@ -51,3 +51,8 @@ rollback: git revert the merge of subplan-control (57cbdd184) on main, then syst
 previous main: d5a5402ed92c06209cd2ca460e46bd62db139536
 /home/david/bitacora/.state/durable/backups/bt_durable-20261029-080452.dump 5871696 357fd5cbecabb5ca72f501029d3b79e3a62ab66cc8b83938ade3fe1b1062a70c
 rollback: git revert the merge of durable-stage-guard (96ab20ea8) on main, then systemctl --user restart bitacora-web.service
+
+# eleventh deploy (durable stage join D-149, supersedes D-148; engine restart + web restart), 2026-10-29 08:38, session 7db4552d
+previous main: 57cadf88e58af16ad3a9126e20550589979ab29f
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-083807.dump 5887252 252a85c1e745ce4d8202eaf0a12a22d7380cb19714d12966a0332d59e3ac6308
+rollback: git revert the merge of durable-stage-guard (5f63c2c21) on main, restart bt-durable.service and bitacora-web.service; a join already made is undone with `bt-durable cancel` on the new run, RUN.owner.json/RUN.durable-run.json restored to the previous run and `retry-task` on it (its workflows were cancelled)
