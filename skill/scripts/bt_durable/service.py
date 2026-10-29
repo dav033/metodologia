@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import signal
 import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -112,17 +113,35 @@ class _KeyRef:
         self.workflow_id = f"bt:{key}:agent"
 
 
-def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, stop: threading.Event | None = None) -> None:
+def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, project_seconds: float = 5.0,
+          stop: threading.Event | None = None, marker: Path | None = None) -> None:
+    """Run the engine until SIGTERM/SIGINT: reap orphan units and refresh the panels' projections of every run
+    (`bt_durable.projection`; a read model the workflows never read back). `marker` (default
+    `<state>/engine.json`) tells operator tools which message features this engine's workflows understand."""
+    from .projection import EngineProjector
+    from .remote import write_marker
     stop = stop or threading.Event()
     for sig in (signal.SIGTERM, signal.SIGINT):
         signal.signal(sig, lambda *_: stop.set())
     engine.start(cfg, ports)
+    write_marker(marker or cfg.state_dir / "engine.json")
+    projector = EngineProjector(DBOS)
+    tick = max(0.2, min(reap_seconds, project_seconds))
+    last_reap = time.monotonic()
     try:
-        while not stop.wait(reap_seconds):
+        while True:
             try:
-                reap_once()
-            except Exception as error:  # noqa: BLE001
-                LOG.warning("reaper pass failed: %s", error)
+                projector.refresh()
+            except Exception as error:  # noqa: BLE001 - the panels show the last projection until the next pass
+                LOG.warning("projection pass failed: %s", error)
+            if stop.wait(tick):
+                break
+            if time.monotonic() - last_reap >= reap_seconds:
+                last_reap = time.monotonic()
+                try:
+                    reap_once()
+                except Exception as error:  # noqa: BLE001
+                    LOG.warning("reaper pass failed: %s", error)
     finally:
         engine.stop()
 

@@ -90,6 +90,22 @@ class Lab:
         return {"project": "proj", "req": "REQ-900", "plan_id": "REQ-900", "revision": revision,
                 "plan_sha256": hashlib.sha256(text.encode()).hexdigest(), "plan_path": str(path)}
 
+    def own(self, run: dict) -> None:
+        """Make the lab requirement a durable-owned run the panels and `bt-durable` CLI see: PLAN.json/PLAN.md for the
+        plan pages, RUN.owner.json (backend dbos), RUN.durable-run.json, and the lab database in the lab's config."""
+        import bt_run_owner
+        frozen = Path(run["plan_path"]).read_text(encoding="utf-8")
+        (self.rdir / "PLAN.json").write_text(frozen, encoding="utf-8")
+        (self.rdir / "PLAN.md").write_text("---\nstatus: approved\n---\n# Plan — REQ-900 — Lab\n", encoding="utf-8")
+        run_id = f"{run['project']}:{run['req']}:r{run['revision']}"
+        record = {"run_id": run_id, "backend": "dbos", "workflow_id": f"bt:{run_id}", "since": time.time(),
+                  "by": "lab", "migrated_from": None}
+        bt_run_owner.write(self.rdir, record, expect=bt_run_owner.read(self.rdir))
+        (self.rdir / "RUN.durable-run.json").write_text(json.dumps(run, indent=1), encoding="utf-8")
+        state = self.bitacora / ".state"
+        state.mkdir(mode=0o700, exist_ok=True)
+        (state / "config.json").write_text(json.dumps({"execution": {"database_url": self.database_url}}))
+
     def env(self) -> dict:
         return {"BITACORA_ROOT": str(self.bitacora), "PATH": f"{self.bin}:{os.environ.get('PATH', '')}",
                 "FAKE_COUNT": str(self.count), "PYTHONPATH": f"{SCRIPTS}:{HERE}",
@@ -166,13 +182,39 @@ def wait_until(predicate, timeout: float, interval: float = 0.25, what: str = "c
     raise AssertionError(f"timed out after {timeout}s waiting for {what} (last: {last!r})")
 
 
+SYSTEMD = subprocess.run(["systemctl", "--user", "is-system-running"], capture_output=True, text=True,
+                         check=False).stdout.strip() in ("running", "degraded")
+
+
+def engine_client(case, lab: Lab):
+    """Spawn the lab engine for a TestCase and return (engine process, DBOS client); both are cleaned up."""
+    from bt_durable.client import Client
+    engine = lab.spawn_engine()
+
+    def stop():
+        if engine.poll() is None:
+            engine.send_signal(signal.SIGTERM)
+            try:
+                engine.wait(20)
+            except subprocess.TimeoutExpired:
+                engine.kill()
+    case.addCleanup(stop)
+    wait_until(lambda: (lab.state / "dbos.sqlite3").exists() or engine.poll() is not None, 60, what="DBOS database")
+    if engine.poll() is not None:
+        raise AssertionError("engine exited: " + (lab.root / "engine.log").read_text()[-3000:])
+    time.sleep(1.0)
+    client = Client(lab.database_url)
+    case.addCleanup(client.close)
+    return engine, client
+
+
 def _serve(config_path: str) -> None:
     data = json.loads(Path(config_path).read_text())
     lab = Lab(Path(data["root"]), backend=data["backend"])
     lab.database_override = data.get("database_url")
     from bt_durable.service import serve
     cfg, ports = lab.ports()
-    serve(cfg, ports, reap_seconds=2.0)
+    serve(cfg, ports, reap_seconds=2.0, marker=lab.bitacora / ".state" / "durable" / "engine.json")
 
 
 if __name__ == "__main__":

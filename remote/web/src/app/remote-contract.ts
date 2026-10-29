@@ -143,5 +143,10 @@ export function parseCommandHistory(value: unknown): CommandHistoryItem[] {
 export function runReopen(run: Pick<RunView, "project" | "req" | "state" | "tasks">): { target: TaskTarget; precondition: Precondition } | null {
   if (!(REOPENABLE_RUN_STATUSES as readonly string[]).includes(run.state)) return null;
   const task = run.tasks.find((item) => (REOPENABLE_TASK_STATES as readonly string[]).includes(item.state));
-  return task ? { target: { kind: "task", project: run.project, req: run.req, taskId: task.id }, precondition: { state: task.state } } : null;
+  return task ? { target: { kind: "task", project: run.project, req: run.req, taskId: task.id }, precondition: taskPrecondition(task) } : null;
+}
+
+/** A task command's guard: its state, and for durable runs the sequence at which it last changed (stale views are refused). */
+export function taskPrecondition(task: Pick<TaskView, "state" | "revision">): Precondition {
+  return { state: task.state, ...(typeof task.revision === "number" ? { revision: task.revision } : {}) };
 }

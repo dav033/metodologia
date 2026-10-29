@@ -26,8 +26,10 @@ DEFAULTS: dict = {
     # execution: which runtime owns NEW runs (REQ-030). `legacy` is the Scheduler M1–M6; `dbos` is bt_durable, whose
     # engine service needs the uv environment. Existing runs never change owner implicitly (RUN.owner.json decides).
     # `database_url` empty = SQLite under the state folder; set a postgresql:// URL for the durable system database.
+    # `durable_cli` (argv list) is how stdlib panels reach `bt-durable` for remote commands on durable runs; empty =
+    # `uv run --project <repository of this checkout> bt-durable`, else `bt-durable` on PATH (a release copy).
     "execution": {"backend": "legacy", "database_url": "", "agent_concurrency": 2, "verify_concurrency": 1,
-                  "routes": ["claude::sonnet"]},
+                  "routes": ["claude::sonnet"], "durable_cli": []},
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)

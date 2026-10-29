@@ -4,7 +4,10 @@
   start PROJECT REQ                       start the latest frozen revision of a NEW run under the durable runtime
   migrate PROJECT REQ [--apply|--rollback]  move a legacy run (dry run by default; see bt_durable.migrate)
   status PROJECT REQ                      run summary, task states, open decisions
-  answer PROJECT REQ TASK REQUEST ACTION  answer an open decision (retry|retry_with_note|retry_other_route|stop)
+  project PROJECT REQ                     rebuild the panels' projection of the run from DBOS (bt_durable.projection)
+  remote PROJECT REQ  < request.json      a remote panel command, checked against a fresh projection (JSON out)
+  answer PROJECT REQ TASK REQUEST ACTION  answer an open decision (retry|retry_with_note|retry_other_route|stop);
+                                          REQUEST may name the task round (`T2:d1@k3`, as the panels show it)
   pause|resume PROJECT REQ                stop/allow starting new tasks (running agents continue)
   retry-task PROJECT REQ TASK             start a blocked task again (new round)
   cancel PROJECT REQ                      cancel every workflow of the run; the engine's reaper stops their units
@@ -174,11 +177,45 @@ def cmd_status(args) -> int:
 def cmd_answer(args) -> int:
     client = _client()
     try:
-        answer = OwnerAnswer(request_id=args.request_id, action=args.action, note=args.note or "", by="owner")
-        print(client.answer(_run_of(args.project, args.req), args.task, answer))
+        request_id, _, round_no = args.request_id.partition("@k")
+        answer = OwnerAnswer(request_id=request_id, action=args.action, note=args.note or "", by="owner")
+        print(client.answer(_run_of(args.project, args.req), args.task, answer,
+                            round_no=int(round_no) if round_no.isdigit() else None))
     finally:
         client.close()
     return 0
+
+
+def cmd_project(args) -> int:
+    from . import projection
+    run = _run_of(args.project, args.req)
+    client = _client()
+    try:
+        doc = projection.project(client.client, run, projection.load_plan(run))
+    finally:
+        client.close()
+    print(json.dumps({"path": str(projection.target(run)), "sequence": doc["sequence"], "status": doc["status"],
+                      "workflow_status": doc["workflow_status"], "counts": doc["counts"],
+                      "decisions": [d["id"] for d in doc["decisions"]]}, ensure_ascii=False))
+    return 0
+
+
+def cmd_remote(args) -> int:
+    """One remote command: JSON request on stdin, JSON result on stdout (exit 0 sent, 3 refused, 2 invalid)."""
+    from . import projection, remote
+    try:
+        request = json.loads(sys.stdin.read() or "{}")
+    except ValueError:
+        request = None
+    run = _run_of(args.project, args.req)
+    client = _client()
+    try:
+        outcome = remote.handle(client, run, request, projection.load_plan(run),
+                                remote.engine_features(Path(bt_core.STATE) / "durable" / "engine.json"))
+    finally:
+        client.close()
+    print(json.dumps(outcome, ensure_ascii=False))
+    return {"OK": 0, "REJECTED": 2 if outcome.get("code") == "INVALID" else 3}.get(outcome["status"], 1)
 
 
 def cmd_command(args) -> int:
@@ -207,7 +244,7 @@ def main(argv: list[str] | None = None) -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("engine")
-    for name in ("start", "status", "pause", "resume", "cancel"):
+    for name in ("start", "status", "pause", "resume", "cancel", "project", "remote"):
         p = sub.add_parser(name)
         p.add_argument("project")
         p.add_argument("req")
@@ -229,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     handlers = {"engine": cmd_engine, "start": cmd_start, "migrate": cmd_migrate, "status": cmd_status,
                 "answer": cmd_answer, "pause": cmd_command, "resume": cmd_command, "retry-task": cmd_command,
-                "cancel": cmd_cancel}
+                "cancel": cmd_cancel, "project": cmd_project, "remote": cmd_remote}
     return handlers[args.cmd](args)
 
 

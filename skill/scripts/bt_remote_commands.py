@@ -114,6 +114,9 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
         except OSError:
             updated_at = None
         return {"state": plan.get("status"), "revision": plan.get("revision"), "updatedAt": updated_at}
+    if run.get("authority") == "dbos":           # a durable run: its projection, with per-subject sequences
+        import bt_durable_panel
+        return bt_durable_panel.target_state(rdir, command, params)
     if run.get("authority") != "scheduler":
         return None
     revision = plan.get("revision")
@@ -136,9 +139,16 @@ def target_state(target: str, command: str | None = None, params: dict | None = 
     return {"state": state, "revision": revision, "updatedAt": run.get("updated_at")}
 
 
-def dispatch_run_command(command: str, target: str, params: dict, *, precondition: dict | None = None) -> Any:
-    """Apply a remote run move through the existing Scheduler operator and decision APIs."""
+def dispatch_run_command(command: str, target: str, params: dict, *, precondition: dict | None = None,
+                         key: str = "") -> Any:
+    """Apply a remote run move through the existing Scheduler operator and decision APIs. A run owned by the durable
+    runtime (RUN.owner.json) gets it as a durable DBOS message keyed by the ledger's idempotency key instead."""
     project, req, rdir = _run_target(target)
+    import bt_durable_panel
+    if bt_durable_panel.owned(rdir):
+        if not key:
+            raise ValueError("Un comando para una ejecución durable necesita su clave de idempotencia.")
+        return bt_durable_panel.dispatch(project, req, rdir, command, params, key=key, precondition=precondition)
     import bt_scheduler_ops as ops
 
     if command == "revise":
@@ -213,12 +223,10 @@ def dispatch_run_command(command: str, target: str, params: dict, *, preconditio
 
 def dispatch_handlers() -> dict[str, Handler]:
     """Build handlers for commands owned by the Scheduler run surface."""
-    handlers = {command: (lambda target, params, action=command: dispatch_run_command(action, target, params))
-                for command in ("pause", "resume", "cancel-attempt", "reopen", "revise", "answer-decision")}
-    handlers["cancel-attempt"] = lambda target, params, precondition: dispatch_run_command(
-        "cancel-attempt", target, params, precondition=precondition)
-    handlers["retry"] = lambda target, params, precondition: dispatch_run_command(
-        "retry", target, params, precondition=precondition)
+    # Run commands take the precondition and the idempotency key by name (see _call): a durable run needs both.
+    handlers = {command: (lambda target, params, precondition=None, key="", action=command: dispatch_run_command(
+                    action, target, params, precondition=precondition, key=key))
+                for command in ("pause", "resume", "cancel-attempt", "reopen", "revise", "answer-decision", "retry")}
     handlers.update({command: (lambda target, params, action=command: dispatch_plan_command(action, target, params))
                      for command in ("approve", "launch", "answer-round", "cancel-plan", "delete-plan")})
     handlers["edit-brief"] = dispatch_edit_brief
@@ -227,7 +235,14 @@ def dispatch_handlers() -> dict[str, Handler]:
 
 def dispatch_edit_brief(target: str, params: dict) -> Any:
     """Edit and approve a plan revision before rebasing its active run."""
+    import bt_durable_panel
     import bt_remote_edit
+    try:
+        rdir = _run_target(target)[2]
+    except Exception:  # noqa: BLE001 - an unknown target is refused by the edit dispatcher with its own message
+        rdir = None
+    if rdir is not None and bt_durable_panel.owned(rdir):
+        raise ValueError("El runtime durable no admite editar el brief de una ejecución en curso.")
     return bt_remote_edit.dispatch_edit_brief(target, params)
 
 
@@ -274,6 +289,23 @@ def _read_state(state_of: StateReader, req: dict) -> dict | None:
     if takes_context:
         return state_of(req["target"], req["command"], req["params"])
     return state_of(req["target"])
+
+
+def _call(handler: Handler, command: str, target: str, params: dict, precondition: dict, key: str) -> Any:
+    """Run one effect. A handler that names a `key` parameter receives the precondition and the idempotency key by
+    name (a durable run sends the key as its DBOS message key); retry/cancel-attempt handlers with a third positional
+    parameter receive the precondition; any other handler receives (target, params)."""
+    import inspect
+
+    try:
+        names = inspect.signature(handler).parameters
+    except (TypeError, ValueError):
+        names = {}
+    if "key" in names:
+        return handler(target, params, precondition=precondition, key=key)
+    if command in {"retry", "cancel-attempt"} and len(names) >= 3:
+        return handler(target, params, precondition)
+    return handler(target, params)
 
 
 def _now() -> str:
@@ -476,15 +508,8 @@ class Ledger:
             if req["command"] in CHALLENGED:
                 params["typed_req"] = confirmation.get("typed_req", confirmation.get("typedReq"))
             try:
-                handler = handlers[req["command"]]
-                if req["command"] in {"retry", "cancel-attempt"}:
-                    import inspect
-                    if len(inspect.signature(handler).parameters) >= 3:
-                        outcome = handler(req["target"], params, req["precondition"])
-                    else:
-                        outcome = handler(req["target"], params)
-                else:
-                    outcome = handler(req["target"], params)
+                outcome = _call(handlers[req["command"]], req["command"], req["target"], params,
+                                req["precondition"], key)
                 status, code = "OK", None
             except RouteUnavailableError as exc:
                 outcome, status, code = {"error": str(exc)[:300]}, "FAILED", "ROUTE_UNAVAILABLE"

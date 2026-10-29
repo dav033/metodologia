@@ -2,7 +2,8 @@
 
 Every command carries the id of what it answers (`request_id` of the open decision) or a unique command id, so a
 command sent from a stale screen, or delivered twice, cannot change a newer state: the workflow refuses an answer
-whose request id is not the open one and applies a run command id at most once.
+whose request id is not the open one and applies a run command id at most once. A run command may also name the
+state it was built against (`expect_paused`, `expect_round`); the run workflow refuses it when that state changed.
 """
 from __future__ import annotations
 
@@ -31,3 +32,7 @@ class RunCommand(BaseModel):
     task_id: TaskId | None = None
     note: str = Field(default="", max_length=6000)
     by: str = Field(default="owner", min_length=1, max_length=80)
+    # The state the command was built against (REQ-030 M7, remote panel). Absent in commands sent before these
+    # fields existed: those are applied exactly as they were, so a replayed run history is unchanged.
+    expect_paused: bool | None = None                                # pause/resume: the pause state the sender saw
+    expect_round: int | None = Field(default=None, ge=1, le=100000)  # retry_task: the task round the sender saw

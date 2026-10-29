@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 import bt_core
+import bt_durable_panel as durable_panel
 import bt_flow_bus as bus
 import bt_presence
 import bt_planstatus as ps
@@ -50,12 +51,12 @@ _runs_seen: dict[Path, tuple[float, list[tuple[str, Path]]]] = {}
 
 
 def runs(root: Path | None = None) -> list[tuple[str, Path]]:
-    """Every requirement whose runtime is the Scheduler: (project, requirement dir)."""
+    """Every requirement whose runtime is the Scheduler or the durable runtime (RUN.owner.json): (project, dir)."""
     base = _root(root)
     at, found = _runs_seen.get(base, (0.0, []))
     if time.monotonic() - at > RUNS_TTL:
         found = [(project, rdir) for project, rdir in ps._requirement_dirs(base)
-                 if scheduler_.authority(rdir) == "scheduler"]
+                 if scheduler_.authority(rdir) == "scheduler" or durable_panel.owned(rdir)]
         _runs_seen[base] = (time.monotonic(), found)
     return list(found)
 
@@ -328,13 +329,14 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
                   "attempts_used": t.get("attempts_used"), "max_attempts": t.get("max_attempts"),
                   "retries_remaining": t.get("retries_remaining"),
                   "retry_exhausted": t.get("retry_exhausted"), "reason": t.get("reason"),
-                  "history": [_attempt(a) for a in t.get("history") or []]}
+                  "revision": t.get("revision"), "history": [_attempt(a) for a in t.get("history") or []]}
                  for m in status["milestones"] for t in m["tasks"]]
         held = _stage_subplans(rdir)
         subplans = [{"id": sp["id"], "title": sp.get("title") or "", "milestone_id": sp.get("milestone_id"),
                      "in_stage": held is None or sp["id"] in held} for sp in status.get("subplans") or []]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],
                     "title": status["title"], "status": status["run"].get("status"), "active": status["run"].get("active"),
+                    "authority": status["run"].get("authority"), "revision": status["run"].get("revision"),
                     "updated_at": status["run"].get("updated_at"), "summary": status["summary"], "tasks": tasks,
                     "subplans": subplans, "stage": held})
     out.sort(key=lambda r: r["updated_at"] or "", reverse=True)
