@@ -34,12 +34,24 @@ PROBE = r"""() => {
  density:all.length, sizes:[...new Set(styles.map(s=>s.fontSize))].sort()};
 }"""
 
+# Motion that already ran or runs by script leaves no computed style behind: a Framer Motion marker that scaled in on
+# mount, a toggle whose chevron child carries the transition (pictures REQ-021 SP-6: A's `.group-marker`, C's
+# `.band-toggle`, both hidden from the owner as "not shown"). Record every element that moved while the page was measured.
+MOTION_LOG = r"""(() => {
+ const moved=window.__btMoved=new Set();const add=e=>{if(e instanceof Element)moved.add(e)};
+ const animate=Element.prototype.animate;Element.prototype.animate=function(...a){add(this);return animate.apply(this,a)};
+ for(const type of ['transitionrun','animationstart'])addEventListener(type,e=>add(e.target),true);
+ new MutationObserver(rows=>rows.forEach(r=>add(r.target))).observe(document,{subtree:true,attributes:true,attributeFilter:['style']});
+})()"""
+
 EVIDENCE = r"""claims => {
+ const declared=e=>{const s=getComputedStyle(e);return e.getAnimations().length>0||s.animationName!=='none'||
+  s.transitionDuration.split(',').some(v=>parseFloat(v)>0)};
+ const moved=[...(window.__btMoved||[])];
  const result={};for(const [axis,selectors] of Object.entries(claims)){
  result[axis]=selectors.map(selector=>{try{const els=[...document.querySelectorAll(selector)];
  const visible=els.filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0});
- const animated=visible.some(e=>e.getAnimations({subtree:true}).length>0||getComputedStyle(e).animationName!=='none'||
- (getComputedStyle(e).transitionDuration.split(',').some(v=>parseFloat(v)>0)));
+ const animated=visible.some(e=>declared(e)||[...e.querySelectorAll('*')].some(declared)||moved.some(m=>e.contains(m)));
  return {selector,ok:visible.length>0&&(axis!=='motion'||animated)};
  }catch{return {selector,ok:false}}});}return result;
 }"""
@@ -87,6 +99,7 @@ def measure(paths: list[Path]) -> dict:
                        ("layout", "navigation", "typography", "motion")):
                     raise ValueError(f"{path.name}: missing measurable axis claims")
                 page = browser.new_page(viewport={"width": 1280, "height": 900}, reduced_motion="no-preference")
+                page.add_init_script(MOTION_LOG)
                 errors = []
                 page.on("pageerror", lambda err, errors=errors: errors.append(str(err)))
                 page.route("http://**/*", lambda route: route.abort())
