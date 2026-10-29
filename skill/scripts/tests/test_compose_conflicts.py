@@ -99,6 +99,39 @@ class OwnWork(Repo):
         self.assertEqual(_own_work_base(self.repo, tip, [{"task_id": "T5.1", "snapshot": tip}]), "")
 
 
+class LineIntegration(Repo):
+    """A gate task built on a composed candidate is integrated into the subplan lines that hold it; there, too, npm
+    scripts appended by different subplans merge by key (pictures REQ-021 r24: T93 conflicted with SP-11's line, D-164)."""
+
+    def integrate(self, composer):
+        from types import SimpleNamespace
+        from bt_contracts.execution import RunRef, Snapshot
+        from bt_durable.adapters.integration import GitLineIntegrator
+        git(self.repo, "checkout", "-q", "main")
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        lines = GitLineIntegrator({"app": self.repo}, composer=composer)
+        lines.sync(run, "app", {"SP-1": []})
+        line = lines.subplan_ref(run, "app", "SP-1")
+        git(self.repo, "update-ref", line, self.branch("line", {"package.json": manifest({"a": "x", "b": "y"})}))
+        snapshot = self.branch("gate", {"package.json": manifest({"a": "x", "c": "z"})})
+        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
+                                                Snapshot(snapshot_sha=snapshot, base_sha=self.base,
+                                                         manifest_path=self.tmp / "none.json"), lines=("SP-1",))
+        return conflict, line
+
+    def test_a_line_merges_package_json_by_key_like_the_composer(self):
+        from types import SimpleNamespace
+        conflict, line = self.integrate(SimpleNamespace(state_dir=self.tmp / "state"))
+        self.assertEqual(conflict, "")
+        merged = json.loads(git(self.repo, "cat-file", "blob", f"{line}:package.json"))
+        self.assertEqual(merged["scripts"], {"a": "x", "b": "y", "c": "z"})
+
+    def test_without_a_composer_the_conflict_stays_as_git_found_it(self):
+        conflict, _line = self.integrate(None)
+        self.assertEqual(conflict, "conflicts with accepted work in: package.json (line of SP-1)")
+
+
 class BlockedNotice(unittest.TestCase):
     def test_a_run_blocked_by_rejected_gates_tells_the_owner_once(self):
         from types import SimpleNamespace
