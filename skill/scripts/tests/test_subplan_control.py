@@ -106,6 +106,14 @@ class ControlTests(unittest.TestCase):
         html = self.page(sp="SP-2")
         self.assertIn("stage-run", html)
         self.assertNotIn('class="pp-flow', html)       # the control block replaced the one-line flow bar
+        (self.rdir / "RUN.owner.json").write_text(json.dumps({"run_id": "demo:REQ-001:r1", "backend": "dbos"}),
+                                                  encoding="utf-8")
+        st = self.status("SP-2")                        # the durable runtime cannot join a later stage yet: say so
+        self.assertNotIn("Mandarlo a ejecutar: aprobarlo como etapa", [i["text"] for i in st["you"]])
+        self.assertIn("Ejecución", [b["who"] for b in st["blockers"]])
+        html = self.page(sp="SP-2")
+        self.assertNotIn("stage-run", html)
+        self.assertIn("aún no disponible en el runtime durable", html)
 
     def test_run_decisions_gate_waits_and_versions_to_try_reach_the_owner(self):
         self.spec("location given")
