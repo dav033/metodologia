@@ -8,7 +8,7 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from bt_composition import (Action, CompositionEngine, EvidenceKey, GitResult, PropagationChange, Store,
                             VerdictProof, propagate as _propagate)
@@ -108,7 +108,108 @@ class GitSubprocessPort:
         if not lines or len(lines[0].strip()) not in (40, 64):
             raise GitCommandError("git_merge_tree_output_invalid")
         conflicts = tuple(sorted({line.strip() for line in lines[1:] if line.strip()})) if result.returncode else ()
-        return GitResult(lines[0].strip(), conflicts)
+        tree = lines[0].strip()
+        if conflicts:
+            tree, conflicts = self._merge_manifests(tree, base, ours, theirs, conflicts)
+        if conflicts:
+            tree, conflicts = self._recorded(tree, base, ours, theirs, conflicts)
+        return GitResult(tree, conflicts)
+
+    resolutions: Path | None = None             # create_engine: <store folder>/resolutions; None leaves conflicts as they are
+
+    def _recorded(self, tree: str, base: str, ours: str, theirs: str,
+                  conflicts: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
+        """A conflict resolved once is resolved the same way whenever the same three versions of the file meet again (like
+        git rerere): its context waits in `<resolutions>/<key>.diff3` and `.json`; writing `<key>.resolved` (the file's
+        final content) settles it, for this gate and every later one composing the same members (pictures REQ-021: SP-4
+        and SP-5 both edited TABLAS_TRABAJO_CUENTA, and every gate after them was rejected). A member that changes the
+        file gets a new key and asks again."""
+        if self.resolutions is None:
+            return tree, conflicts
+        folder = Path(self.resolutions)
+        blobs: dict[str, str] = {}
+        for path in conflicts:
+            ids = [self._blob_id(revision, path) for revision in (base, ours, theirs)]
+            key = hashlib.sha256("\0".join((path, *ids)).encode()).hexdigest()[:32]
+            resolved = folder / f"{key}.resolved"
+            if resolved.is_file():
+                blobs[path] = self._run_input(resolved.read_text(encoding="utf-8"), "hash-object", "-w", "--stdin").stdout.strip()
+                continue
+            context = folder / f"{key}.json"
+            if not context.exists():
+                folder.mkdir(parents=True, exist_ok=True)
+                (folder / f"{key}.diff3").write_text(self._diff3(path, ids), encoding="utf-8")
+                context.write_text(json.dumps({"path": path, "blobs": dict(zip(("base", "ours", "theirs"), ids)),
+                                               "commits": {"base": base, "ours": ours, "theirs": theirs},
+                                               "resolve": f"write the final content of {path} to {resolved}"},
+                                              indent=1) + "\n", encoding="utf-8")
+        if not blobs:
+            return tree, conflicts
+        return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
+
+    def _blob_id(self, revision: str, path: str) -> str:
+        found = self._run("rev-parse", f"{revision}:{path}", check=False)
+        return found.stdout.strip() if found.returncode == 0 else "-"
+
+    def _diff3(self, path: str, ids: list[str]) -> str:
+        with tempfile.TemporaryDirectory(prefix="bt-compose-diff3-") as scratch:
+            files = []
+            for name, blob in zip(("base", "ours", "theirs"), ids):
+                target = Path(scratch) / name
+                target.write_bytes(self._run_bytes("cat-file", "blob", blob).stdout if blob != "-" else b"")
+                files.append(str(target))
+            merged = subprocess.run(["git", "merge-file", "-p", "--diff3", "-L", f"ours ({path})", "-L", "base",
+                                     "-L", "theirs", files[1], files[0], files[2]], capture_output=True, check=False)
+            return merged.stdout.decode("utf-8", "replace")
+
+    def _merge_manifests(self, tree: str, base: str, ours: str, theirs: str,
+                         conflicts: tuple[str, ...]) -> tuple[str, tuple[str, ...]]:
+        """A `package.json` both sides changed is merged by key: each subplan appends its npm scripts at the end of
+        "scripts", a text conflict every time (pictures REQ-021: SP-3 needed the owner's hand, r19 rejected three gates).
+        Only a value both sides changed differently stays a conflict. Returns the tree and the conflicts left."""
+        blobs: dict[str, str] = {}
+        for path in conflicts:
+            if Path(path).name != "package.json":
+                continue
+            docs = [self._json_at(revision, path) for revision in (base, ours, theirs)]
+            if docs[1] is None or docs[2] is None:
+                continue
+            merged, clashes = merge_json(docs[0] if docs[0] is not None else {}, docs[1], docs[2])
+            if clashes:
+                continue
+            text = json.dumps(merged, indent=_json_indent(self._run("show", f"{ours}:{path}").stdout), ensure_ascii=False)
+            blobs[path] = self._run_input(text + "\n", "hash-object", "-w", "--stdin").stdout.strip()
+        if not blobs:
+            return tree, conflicts
+        return self._with_blobs(tree, blobs), tuple(path for path in conflicts if path not in blobs)
+
+    def _json_at(self, revision: str, path: str) -> object | None:
+        shown = self._run("show", f"{revision}:{path}", check=False)
+        if shown.returncode:
+            return None
+        try:
+            return json.loads(shown.stdout)
+        except ValueError:
+            return None
+
+    def _run_input(self, text: str, *arguments: str, extra: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+        result = subprocess.run(self._command(*arguments), env={**self._environment(), **(extra or {})}, input=text,
+                                capture_output=True, text=True, check=False)
+        if result.returncode:
+            detail = result.stderr.strip().splitlines()
+            raise GitCommandError(detail[-1] if detail else "git_command_failed")
+        return result
+
+    def _with_blobs(self, tree: str, blobs: Mapping[str, str]) -> str:
+        """`tree` with each path's blob replaced, through a throwaway index (the repository's own index is never used)."""
+        with tempfile.TemporaryDirectory(prefix="bt-compose-index-") as scratch:
+            index = {"GIT_INDEX_FILE": str(Path(scratch) / "index")}
+            self._run_input("", "read-tree", tree, extra=index)
+            for path, blob in blobs.items():
+                listed = self._run("ls-tree", tree, "--", path).stdout.split()
+                mode = listed[0] if listed else "100644"
+                self._run_input("", "update-index", "--add", "--cacheinfo", f"{mode},{blob},{path}", extra=index)
+            return self._run_input("", "write-tree", extra=index).stdout.strip()
 
     def commit_tree(self, tree: str, parents: Sequence[str], message: str) -> str:
         args = ["commit-tree", tree]
@@ -234,6 +335,7 @@ def create_engine(repository: str | Path, store_path: str | Path,
     if (state_path == repo or repo in state_path.parents) and not owner_state:
         raise ValueError("STORE_PATH_INSIDE_REPOSITORY")
     git = GitSubprocessPort(repository, workspace_root)
+    git.resolutions = state_path.parent / "resolutions"
     store = Store(store_path)
     return CompositionEngine(git, store, workspace_root), store
 
@@ -251,3 +353,42 @@ def get_candidate(store: Store, candidate_id: str):
 
 __all__ = ["Action", "EvidenceKey", "GitCommandError", "GitSubprocessPort", "PropagationChange", "VerdictProof",
            "create_engine", "get_candidate", "propagate"]
+
+
+def merge_json(base: object, ours: object, theirs: object, path: str = "") -> tuple[object, list[str]]:
+    """Three-way merge of two JSON documents by key: what one side changed wins, what both changed alike is kept, a value
+    both changed differently is a clash. Objects merge key by key (ours' order, then the keys only theirs added); any
+    other value is atomic. Returns (merged, clash paths)."""
+    clashes: list[str] = []
+    if isinstance(ours, dict) and isinstance(theirs, dict):
+        base = base if isinstance(base, dict) else {}
+        merged: dict = {}
+        for key in [*ours, *(k for k in theirs if k not in ours)]:
+            at = f"{path}.{key}"
+            if key in ours and key in theirs:
+                merged[key], found = merge_json(base.get(key), ours[key], theirs[key], at)
+                clashes += found
+            elif key in ours:                                   # theirs lacks it: added by ours, or deleted by theirs
+                if key not in base:
+                    merged[key] = ours[key]
+                elif base[key] != ours[key]:
+                    clashes.append(at)
+            else:
+                if key not in base:
+                    merged[key] = theirs[key]
+                elif base[key] != theirs[key]:
+                    clashes.append(at)
+        return merged, clashes
+    if ours == theirs or base == theirs:
+        return ours, clashes
+    if base == ours:
+        return theirs, clashes
+    return ours, [path or "."]
+
+
+def _json_indent(text: str) -> int:
+    for line in text.splitlines()[1:]:
+        stripped = line.lstrip(" ")
+        if stripped.startswith('"') and len(line) > len(stripped):
+            return len(line) - len(stripped)
+    return 2

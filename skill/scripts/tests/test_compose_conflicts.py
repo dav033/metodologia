@@ -1,0 +1,122 @@
+"""Compositions of pictures REQ-021 r19: a member folds only its own work, package.json merges by key, a resolved conflict
+is reused, and a run blocked by rejected gates tells the owner (D-160)."""
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+import bt_composition_adapter as adapter
+
+
+def git(repo: Path, *args: str) -> str:
+    return subprocess.run(["git", "-c", "user.name=T", "-c", "user.email=t@t", *args], cwd=repo, check=True,
+                          capture_output=True, text=True).stdout.strip()
+
+
+def commit(repo: Path, files: dict[str, str], message: str) -> str:
+    for name, text in files.items():
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        (repo / name).write_text(text)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", message)
+    return git(repo, "rev-parse", "HEAD")
+
+
+def manifest(scripts: dict) -> str:
+    return json.dumps({"name": "app", "scripts": scripts}, indent=2) + "\n"
+
+
+class Repo(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="bt-compose-"))
+        self.repo = self.tmp / "repo"
+        self.repo.mkdir()
+        git(self.repo, "init", "-q", "-b", "main")
+        self.base = commit(self.repo, {"package.json": manifest({"a": "x"}), "list.ts": "export const T = [\"a\"];\n"}, "base")
+        self.port = adapter.GitSubprocessPort(self.repo, self.tmp / "ws")
+        self.port.resolutions = self.tmp / "resolutions"
+
+    def branch(self, name: str, files: dict[str, str]) -> str:
+        git(self.repo, "checkout", "-q", "-b", name, self.base)
+        return commit(self.repo, files, name)
+
+
+class ManifestMerge(Repo):
+    def test_merge_json_unions_added_keys_and_reports_a_real_clash(self):
+        merged, clashes = adapter.merge_json({"s": {"a": 1}}, {"s": {"a": 1, "b": 2}}, {"s": {"a": 1, "c": 3}})
+        self.assertEqual((merged, clashes), ({"s": {"a": 1, "b": 2, "c": 3}}, []))
+        self.assertEqual(adapter.merge_json({"a": 1}, {"a": 2}, {"a": 3})[1], [".a"])
+        self.assertEqual(adapter.merge_json({"a": 1, "b": 1}, {"a": 1}, {"a": 1, "b": 1}), ({"a": 1}, []))     # ours deleted
+        self.assertEqual(adapter.merge_json({"a": 1, "b": 1}, {"a": 1}, {"a": 1, "b": 2})[1], [".b"])          # deleted vs changed
+
+    def test_two_subplans_appending_npm_scripts_compose_without_a_conflict(self):
+        ours = self.branch("ours", {"package.json": manifest({"a": "x", "b": "y"})})
+        theirs = self.branch("theirs", {"package.json": manifest({"a": "x", "c": "z"})})
+        result = self.port.merge_tree(self.base, ours, theirs)
+        self.assertEqual(result.conflicts, ())
+        merged = json.loads(git(self.repo, "cat-file", "blob", f"{result.tree}:package.json"))
+        self.assertEqual(merged["scripts"], {"a": "x", "b": "y", "c": "z"})
+
+    def test_a_script_both_sides_changed_differently_stays_a_conflict(self):
+        ours = self.branch("ours", {"package.json": manifest({"a": "one"})})
+        theirs = self.branch("theirs", {"package.json": manifest({"a": "two"})})
+        self.port.resolutions = None
+        self.assertEqual(self.port.merge_tree(self.base, ours, theirs).conflicts, ("package.json",))
+
+
+class RecordedResolution(Repo):
+    def test_a_conflict_waits_with_its_context_and_a_written_resolution_is_reused(self):
+        ours = self.branch("ours", {"list.ts": "export const T = [\"p\", \"a\"];\n"})
+        theirs = self.branch("theirs", {"list.ts": "export const T = [\"a\", \"d\"];\n"})
+        first = self.port.merge_tree(self.base, ours, theirs)
+        self.assertEqual(first.conflicts, ("list.ts",))
+        contexts = list(self.port.resolutions.glob("*.json"))
+        self.assertEqual(len(contexts), 1)
+        self.assertIn("<<<<<<<", contexts[0].with_suffix(".diff3").read_text())
+        contexts[0].with_suffix(".resolved").write_text("export const T = [\"p\", \"a\", \"d\"];\n")
+        second = self.port.merge_tree(self.base, ours, theirs)
+        self.assertEqual(second.conflicts, ())
+        self.assertEqual(git(self.repo, "cat-file", "blob", f"{second.tree}:list.ts"), "export const T = [\"p\", \"a\", \"d\"];")
+
+
+class OwnWork(Repo):
+    def test_a_member_folds_from_where_its_own_snapshots_start(self):
+        from bt_durable.adapters.composition import _own_work_base
+        git(self.repo, "checkout", "-q", "-b", "line", self.base)
+        foreign = commit(self.repo, {"other.ts": "1\n"}, "bt: integrate T9 into proj:REQ-001:r1 (SP-2)")
+        first = commit(self.repo, {"own.ts": "1\n"}, "m3 snapshot proj-REQ-001-r1-T2.1-a1-0123abcd")
+        tip = commit(self.repo, {"own.ts": "2\n"}, "m3 snapshot proj-REQ-001-r2-T2.2-a2-89abcdef")
+        items = [{"task_id": "T2.1", "snapshot": first}, {"task_id": "T2.2", "snapshot": tip}]
+        self.assertEqual(_own_work_base(self.repo, tip, items), foreign)
+        self.assertEqual(_own_work_base(self.repo, tip, [*items, {"task_id": "T2.0", "snapshot": self.base}]), "")
+        self.assertEqual(_own_work_base(self.repo, tip, [{"task_id": "T5.1", "snapshot": tip}]), "")
+
+
+class BlockedNotice(unittest.TestCase):
+    def test_a_run_blocked_by_rejected_gates_tells_the_owner_once(self):
+        from types import SimpleNamespace
+        from bt_durable import projection
+        rdir = Path(tempfile.mkdtemp(prefix="bt-blocked-")) / "REQ-021-x"
+        rdir.mkdir()
+        run = SimpleNamespace(run_id="p:REQ-021:r19")
+        plan = SimpleNamespace(composition_gates=[SimpleNamespace(id="CG-5", task="T95")])
+        source = SimpleNamespace()
+        with patch.object(projection, "requirement_dir", return_value=rdir), \
+                patch.object(projection, "_event", return_value={"gates": {"rejected": {"CG-5": "git_text_conflict"}}}), \
+                patch("bt_planning_activity.record") as record, patch("bt_runutil.notify") as notify:
+            projection._announce_blocked(source, "wf", run, plan)
+            projection._announce_blocked(source, "wf", run, plan)
+        record.assert_called_once()
+        notify.assert_called_once()
+        self.assertIn("CG-5 (T95)", record.call_args.args[2])
+
+
+if __name__ == "__main__":
+    unittest.main()

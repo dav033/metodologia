@@ -16,6 +16,7 @@ its gate task is accepted on a snapshot built on the candidate (the gate task's 
 from __future__ import annotations
 
 import hashlib
+import re
 import subprocess
 import threading
 from collections.abc import Callable, Mapping
@@ -72,7 +73,7 @@ class CompositionComposer:
             # often contains an earlier one (pictures REQ-021: SP-2 ⊇ SP-1). Folded as a delta from the run line's
             # base, the shared work would be applied twice and conflict with itself; measured from its merge base with
             # the member folded just before it, a member brings only what it adds (the run line's base otherwise).
-            own_base = _merge_base(repo, tip, previous) or base
+            own_base = _own_work_base(repo, tip, evidence.get(subplan_id, ())) or _merge_base(repo, tip, previous) or base
             previous = tip
             items = [{"task_id": item["task_id"], "kind": item["kind"], "verdict_id": item["verdict_id"],
                       "tree_digest": _tree(repo, item.get("snapshot") or tip), "environment": VERIFIER}
@@ -127,6 +128,43 @@ class CompositionComposer:
 def _composition_order(plan: Plan, gate) -> list[str]:
     """The gate's members in the order `_build` folds them (plan order)."""
     return [item.id for item in plan.subplans if item.id in gate.subplans]
+
+
+_SNAPSHOT = re.compile(r"^m3 snapshot \S+-(T[A-Za-z0-9.]+)-a\d+-[0-9a-f]{8}$")
+
+
+def _own_work_base(repo: Path, tip: str, items) -> str:
+    """Where the member's own work starts on its line: the first commit, walking back the line's first parents from its
+    tip, that is not a snapshot of one of its own tasks. A line a stage join built carries its prerequisites as
+    integrations of other subplans' work, not as their published tips (pictures REQ-021 SP-4 at r16), so a delta from its
+    merge base with the member folded before it re-applied copies of SP-1, SP-2 and SP-14 and every candidate of r19
+    conflicted. Used only when every accepted snapshot of the member lies on that stretch; otherwise "" (the merge-base
+    rule decides, as for lines whose history predates the durable runtime)."""
+    own = {str(item.get("task_id")) for item in items if item.get("task_id")}
+    snapshots = [str(item["snapshot"]) for item in items if item.get("snapshot")]
+    if not own or not snapshots:
+        return ""
+    log = subprocess.run(["git", "-C", str(repo), "log", "--first-parent", "--format=%H%x00%s", tip], capture_output=True,
+                         text=True, check=False)
+    if log.returncode:
+        return ""
+    boundary, mine = "", 0
+    for line in log.stdout.splitlines():
+        sha, _, subject = line.partition("\0")
+        found = _SNAPSHOT.match(subject.strip())
+        if found and found.group(1) in own:
+            mine += 1
+            continue
+        boundary = sha
+        break
+    if not boundary or not mine:
+        return ""
+    for snapshot in snapshots:
+        inside = subprocess.run(["git", "-C", str(repo), "merge-base", "--is-ancestor", boundary, snapshot],
+                                capture_output=True, check=False).returncode == 0
+        if not inside or snapshot == boundary:
+            return ""
+    return boundary
 
 
 def _merge_base(repo: Path, tip: str, other: str) -> str:
