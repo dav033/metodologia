@@ -24,7 +24,8 @@ A palette/font swap on one skeleton fails, and so does a palette/font change on 
    primary action, no new values), motion (easing, durations, choreography, triggers). Every claim must describe
    something present in the mockup.
 4. JSON note: `name`, `axes` (eight nonempty strings), `evidence` (selector arrays for layout, navigation,
-   typography, motion). Selectors identify rendered evidence; motion selectors must animate or transition.
+   typography, motion). Selectors identify rendered evidence; motion selectors must animate or transition (the element or
+   a descendant declares it, or it moved by script while measured).
    Do not point all four axes at `body`. Build and audit both themes at 1280/390; write actual results.
 5. The system runs `kit/compare_directions.py A.html B.html C.html --json` offline. It checks the DOM geometry,
    navigation, density, actual keyframes/easing and selector evidence; fonts/scale are reported but do not count,
