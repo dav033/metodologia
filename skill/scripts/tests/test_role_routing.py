@@ -67,6 +67,17 @@ class RoleRoutingTests(AgentTests):
         self.assertEqual(chosen['role'], 'designer')
         self.assertEqual(chosen['agent'], 'claude')
 
+    def test_the_designer_keeps_opus_while_it_has_quota_and_falls_back_to_terra(self):
+        """D-151 (pictures REQ-021): quota-first ranking sent every design to Codex Sol while Opus had room; the owner
+        wants Opus first whenever its account can run, and Codex Terra only when it cannot."""
+        self.usage('claude', 60)
+        self.usage('codex-named', 5)                          # Codex has more headroom, Opus still has quota
+        chosen = self.route('designer')
+        self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), ('claude', 'opus', 'high'))
+        self.usage('claude', 95)                              # Opus near its limit: Terra, never Sol
+        chosen = self.route('designer')
+        self.assertEqual((chosen['agent'], chosen['model'], chosen['effort']), ('codex', 'gpt-6.1-terra', 'high'))
+
     def test_explicit_complexity_changes_explorer_and_reviewer_only_to_approved_models(self):
         normal = self.route('explorer', risk='high')
         complex_route = self.route('explorer', complexity='L')

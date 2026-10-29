@@ -13,7 +13,8 @@ _KINDS = {"implement": "implementer", "test": "runner", "audit": "reviewer", "re
 _DEFAULTS = {
     "planner": (("codex", "gpt-6.1-sol", "high"), ("claude", "opus", "high")),   # planning: high, never xhigh by default
     "reviewer": (("codex", "gpt-6.1-sol", "medium"), ("claude", "sonnet", "medium")),
-    "designer": (("claude", "opus", "high"), ("codex", "gpt-6.1-sol", "high")),
+    # owner 2026-10-29 (D-151): Opus 5.5 high first, kept while its account has quota; Codex Terra high only when not
+    "designer": (("claude", "opus", "high"), ("codex", "gpt-6.1-terra", "high")),
     "explorer": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "medium")),
     "implementer": (("claude", "sonnet", "medium"), ("codex", "gpt-6-luna", "high")),
     "researcher": (("codex", "gpt-6-luna", "high"), ("claude", "sonnet", "low")),
@@ -30,6 +31,11 @@ _HIGH = {
     "runner": tuple(reversed(_DEFAULTS["runner"])),
     "antagonist": tuple(reversed(_DEFAULTS["antagonist"])),
 }
+
+
+# Roles whose owner order holds whenever the first choice's account has quota (below HIGH_PRESSURE and not blocked):
+# the router then ranks by preference, not by which subscription has more headroom (D-151).
+ORDERED_ROLES = frozenset({"designer"})
 
 
 def high_complexity(complexity: str | None) -> bool:

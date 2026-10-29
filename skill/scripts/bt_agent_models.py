@@ -23,6 +23,9 @@ MODELS: dict[str, dict] = {
                    "use": "fast subagent work: well-specified modules, tests, docs, exploration"},
     "gpt-6.1-sol": {"provider": "codex", "label": "GPT-6.1 Sol", "rank": 1, "cost": 6,
                     "use": "implementation that needs judgment, independent audits, architecture at xhigh"},
+    # cost is an estimate (Codex calls Terra its balanced line, below Sol); not measured on this subscription yet
+    "gpt-6.1-terra": {"provider": "codex", "label": "GPT-6.1 Terra", "rank": 1, "cost": 4,
+                      "use": "balanced Codex work; the Designer's fallback when Opus has no quota (owner, 2026-10-29)"},
     # Gemini 3.8 Flash (Antigravity CLI, Google AI Pro): the effort is part of the id. Measured 3-6x slower than the
     # others and high effort only costs time (D-004): low is the working level.
     "gemini-3.8-flash-low": {"provider": "antigravity", "label": "Gemini 3.8 Flash low", "rank": 0, "cost": 2,
