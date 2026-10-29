@@ -18,7 +18,8 @@ from .sandbox_provision import provision
 
 WORKSPACE = "/workspace"
 NODE_OPTIONS = "--max-old-space-size=6144"  # tsc and next build need more than Node's default heap
-DEPENDENCY_DIRECTORIES = ("node_modules",)
+DEPENDENCY_DIRECTORIES = ("node_modules", ".venv")
+UV_CACHE = "/tmp/uv-cache"            # writable and throwaway inside the sandbox; the host cache is never mounted
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,19 @@ def _discover(search_path: str, browsers: str, home: str) -> Toolchain:
             mounts.append(Mount(str(prefix), str(prefix)))
             path.append(str(prefix / "bin"))
             environment.append(("NODE_OPTIONS", NODE_OPTIONS))
+    # uv and the Pythons it manages: a repository's own checks run its Python services with `uv run` (pictures REQ-021
+    # T6.3: `uv run --frozen --directory services/ai-api --extra test pytest`, «uv: command not found», exit 127).
+    uv = shutil.which("uv", path=search_path)
+    binary = Path(uv).resolve() if uv else None
+    if binary is not None and binary.is_file() and _under(binary, Path(home)):
+        mounts.append(Mount(str(binary), str(binary)))
+        path.append(str(binary.parent))
+        environment += [("UV_CACHE_DIR", UV_CACHE), ("UV_PYTHON_DOWNLOADS", "never"), ("UV_NO_PROGRESS", "1"),
+                        ("UV_LINK_MODE", "copy")]
+        pythons = Path(home) / ".local" / "share" / "uv" / "python"
+        if pythons.is_dir() and _under(pythons, Path(home)):
+            mounts.append(Mount(str(pythons), str(pythons)))
+            environment.append(("UV_PYTHON_INSTALL_DIR", str(pythons)))
     cache = Path(browsers) if browsers else Path(home) / ".cache" / "ms-playwright"
     if cache.is_dir() and _under(cache, Path(home)):
         mounts.append(Mount(str(cache), str(cache)))
@@ -108,11 +122,14 @@ def attempt_mounts(
             ):
                 target = Path(WORKSPACE) / relative / name
                 mounts.append(Mount(str(source), str(target)))
+                if name == ".venv":           # its scripts' shebangs name the interpreter by the venv's own path
+                    mounts.append(Mount(str(source), str(source)))
     mounts.extend(_git_mounts(worktree, repository))
     return tuple(mounts)
 
 
-LOCKFILES = {"node_modules": "package-lock.json"}
+LOCKFILES = {"node_modules": "package-lock.json", ".venv": "uv.lock"}
+COMPLETE = {"node_modules": ".package-lock.json", ".venv": "pyvenv.cfg"}       # written last by a finished install
 
 
 def _package_roots(snapshot_root: Path | None) -> tuple[Path, ...]:
@@ -121,7 +138,7 @@ def _package_roots(snapshot_root: Path | None) -> tuple[Path, ...]:
         for directory, children, files in os.walk(snapshot_root, followlinks=False):
             children[:] = sorted(name for name in children if not name.startswith('.') and name != 'node_modules')
             package = Path(directory)
-            if package != snapshot_root and 'package.json' in files:
+            if package != snapshot_root and ('package.json' in files or 'pyproject.toml' in files):
                 roots.append(package.relative_to(snapshot_root))
     return tuple(roots)
 
@@ -132,7 +149,7 @@ def _complete(tree: Path, snapshot_root: Path | None, name: str) -> bool:
     lock = LOCKFILES.get(name)
     if snapshot_root is None or lock is None or not (snapshot_root / lock).is_file():
         return True
-    return (tree / ".package-lock.json").is_file()
+    return (tree / COMPLETE[name]).is_file()
 
 
 def _dependency_source(name: str, worktree: Path, repository: Path | None, snapshot_root: Path | None) -> Path | None:

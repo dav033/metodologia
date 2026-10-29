@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .policy import CheckSpec, QualityPolicy
-from .sandbox_mounts import Mount, toolchain
+from .sandbox_mounts import WORKSPACE, Mount, toolchain
 from .sandbox_prepare import prepare_steps
 
 NAMESPACE_FIELDS = {
@@ -242,7 +242,7 @@ def _sandbox_config(
 def _mount_arguments(policy: QualityPolicy, mounts_: tuple[Mount, ...]) -> list[str]:
     arguments: list[str] = []
     for mount in (*toolchain(policy).mounts, *mounts_):
-        if mount.target.endswith("/node_modules"):
+        if mount.target.endswith(("/node_modules", "/.venv")) and mount.target.startswith(WORKSPACE + "/"):
             # Writable inside the sandbox, never on the host: vite/vitest bundle their config into node_modules/.vite-temp, tools keep
             # caches there (EROFS in david-ui REQ-001 T1 cost three attempts). Writes land in a throwaway overlay of the sandbox.
             arguments += ["--overlay-src", mount.source, "--tmp-overlay", mount.target]

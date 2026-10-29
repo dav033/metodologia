@@ -133,7 +133,7 @@ class M3Attempts:
         timed_out = process.result == "timeout"
         cancelled = process.result in ("cancelled", "signal") and process.exit_code is None
         found = self.driver(attempt.run.project).classify(_m3_route(route), raw, process.exit_code, timed_out=timed_out, cancelled=cancelled)
-        total = budget_tokens(dict(found.usage or {}))
+        total = budget_tokens(dict(found.usage or {}), route.provider)
         return AgentReport(status=found.status, reset_epoch=found.reset_epoch, text=(found.text or "")[-4000:],
                            total_tokens=int(total) if isinstance(total, (int, float)) else None)
 
@@ -168,20 +168,25 @@ def _continuation(ws) -> str:
             "conversation or agent reasoning is transferred.")
 
 
-def budget_tokens(usage: Mapping[str, object]) -> int | None:
-    """Tokens an attempt counts against its task's budget. Codex reports cache reads inside `input_tokens` (pictures
-    REQ-021 T4.2: 12.36 M input, 12.16 M of them cached, 59 k output), so one long session used the whole 8 M budget
-    and stopped for a person; cache reads count a tenth, as providers bill them. Claude reports them apart already."""
-    total = usage.get("total_tokens")
-    if isinstance(total, (int, float)) and not isinstance(total, bool):
-        return int(total)
-    fresh = usage.get("input_tokens")
-    if not isinstance(fresh, int) or isinstance(fresh, bool):
-        return None
-    cached = usage.get("cached_input_tokens")
-    cached = cached if isinstance(cached, int) and not isinstance(cached, bool) and 0 <= cached <= fresh else 0
-    output = usage.get("output_tokens")
-    return fresh - cached + cached // 10 + (output if isinstance(output, int) and not isinstance(output, bool) else 0)
+def _count(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def budget_tokens(usage: Mapping[str, object], provider: str = "") -> int | None:
+    """Tokens an attempt counts against its task's budget: fresh input and output in full, cache reads a tenth, as
+    providers bill them. The driver hands over its split (`input_tokens`, `output_tokens`, `cache_read_tokens`) plus a
+    `total_tokens` that sums input and output; Codex's input INCLUDES its cache reads (pictures REQ-021 T6.3: 23.86 M
+    input, 23.54 M cached, 80 k output, so one session used the task's whole 8 M budget and stopped for a person; T4.2
+    and T5.2 too), Claude's leaves them out. Only the total when there is no split."""
+    fresh, output = _count(usage.get("input_tokens")), _count(usage.get("output_tokens"))
+    cached = _count(usage.get("cache_read_tokens")) or _count(usage.get("cached_input_tokens")) or 0
+    if fresh is None:
+        total = usage.get("total_tokens")
+        return int(total) if isinstance(total, (int, float)) and not isinstance(total, bool) else None
+    if provider == "codex":
+        cached = min(cached, fresh)
+        fresh -= cached
+    return fresh + cached // 10 + (output or 0)
 
 
 def agent_test_env(project: str) -> dict[str, str]:
