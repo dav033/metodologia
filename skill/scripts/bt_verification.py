@@ -238,8 +238,13 @@ def decide(project: str, rdir: Path, sid: str, decision: str, note: str = "", by
                     kind="verify", sp=sid)
     left = gate(rdir)
     if decision == "approved":
+        try:                                     # stages queued behind this subplan run now (bt_stage_queue)
+            import bt_stage_queue
+            ran = bt_stage_queue.drain(project, rdir)
+        except Exception:  # noqa: BLE001 - the owner's approval stands; the queue says why it could not run
+            ran = []
         return f"{sid} aprobado." + (" Todos los subplanes están aprobados: ya se puede fusionar en Revisar." if not left else
-                                     f" Faltan {len(left)} por aprobar.")
+                                     f" Faltan {len(left)} por aprobar.") + "".join(f" {m}" for m in ran)
     pid = _open_pending(rdir, sid, row["version"], note.strip())
     return f"{sid} rechazado. Tu nota quedó guardada" + (f" y abrí el pendiente {pid}" if pid else "") + \
         "; el requisito sigue por verificar."

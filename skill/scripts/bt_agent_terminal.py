@@ -149,29 +149,70 @@ def remember_planner(rdir: Path, session_id: str, config_dir: str, cwd: str) -> 
     _save_record(rdir, {**_record(rdir), "session_id": session_id, "config_dir": config_dir, "cwd": str(cwd)})
 
 
-def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False) -> tuple[bool, str]:
-    """Start the dedicated Planner in tmux. It picks up its own earlier CONVERSATION (`claude --resume`) when that exists,
-    so killing it and starting another loses nothing; `fresh` or a missing transcript starts a new conversation that
-    relies on `planning resume` and the saved notes."""
+# What Claude Code prints when the account ran out: every notice typed into such a Planner is lost (pictures REQ-021,
+# 2026-10-29: claude-work hit its weekly limit and five notices from the web reached nobody).
+LIMITED = re.compile(r"hit your (?:weekly |usage |session )?limit|usage limit reached|/usage-credits", re.I)
+# A question only the owner may answer: Claude Code's first run under an account asks him to accept bypass-permissions
+# mode, and a Planner moved to that account waits on it (claude-luis, 2026-10-29); an operator may not accept it for him.
+OWNER_PROMPT = re.compile(r"Bypass Permissions mode.*Yes, I accept", re.S)
+
+
+def planner_account(project: str, avoid: str = "") -> str:
+    """CLAUDE_CONFIG_DIR of the Claude account the Planner runs on: the owner's override; else the Claude account the
+    router ranks first for the planner role (quota headroom, not blocked) other than `avoid`; else ~/.claude-work."""
+    if override := os.environ.get("BITACORA_PLANNER_CLAUDE_CONFIG_DIR"):
+        return override
+    try:
+        import bt_agents
+        import bt_profiles
+        profiles = bt_profiles.load()
+        pool = bt_agents.pool_for(project, bt_agents._config("routing.pool", []) or None)
+        routes, _ = bt_agents.candidates(project, pool, bt_agents.start_tier(None, "plan"), "plan", allow_explore=False,
+                                         role="planner")
+        for route in routes:
+            if route.get("agent") != "claude":
+                continue
+            env = (profiles.get(route.get("profile")) or {}).get("env") or {}
+            path = env.get("CLAUDE_CONFIG_DIR") or str(Path.home() / ".claude")
+            if path != avoid:
+                return path
+    except Exception:  # noqa: BLE001 - no ranking: the account it always used
+        pass
+    work = Path.home() / ".claude-work"
+    return str(work) if work.is_dir() and str(work) != avoid else ""
+
+
+def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False, avoid: str = "",
+                  message: str = "") -> tuple[bool, str]:
+    """Start the dedicated Planner in tmux, on the Claude account with quota (`planner_account`). It picks up its own
+    earlier CONVERSATION (`claude --resume`) when that exists, copied to that account when it lived in another one, so
+    killing it and starting another loses nothing; `fresh` or a missing transcript starts a new conversation that
+    relies on `planning resume` and the saved notes. `message` is told on start (a notice that found it out of quota)."""
     req = re.match(r"REQ-\d+", Path(rdir).name)
     name = name_for(project, req.group(0) if req else Path(rdir).name, "planner")
     if exists(name):
         return False, f"Ya hay un Planner en marcha para este plan ({name})."
-    account = os.environ.get("BITACORA_PLANNER_CLAUDE_CONFIG_DIR") or (
-        str(Path.home() / ".claude-work") if (Path.home() / ".claude-work").is_dir() else "")
+    account = planner_account(project, avoid)
     env = {"CLAUDE_CONFIG_DIR": account} if account else {}
     flags = "--model opus --effort high --dangerously-skip-permissions"
     prior = {} if fresh else _record(rdir)
     sid = prior.get("session_id") or ""
-    resumed = bool(sid) and transcript(prior.get("config_dir", account), prior.get("cwd", str(root)), sid).is_file()
+    if sid:
+        old = transcript(prior.get("config_dir", account), prior.get("cwd", str(root)), sid)
+        new = transcript(account, str(root), sid)
+        if old.is_file() and not new.is_file():
+            new.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(old, new)
+    resumed = bool(sid) and transcript(account, str(root), sid).is_file()
+    restart = RESTART_MESSAGE + (f"\n\n{message}" if message else "")
     if resumed:
-        command = f'claude --resume {shlex.quote(sid)} {flags} {shlex.quote(RESTART_MESSAGE)}'
+        command = f'claude --resume {shlex.quote(sid)} {flags} {shlex.quote(restart)}'
         how = "retomó su conversación anterior"
     else:
         sid = str(uuid.uuid4())
         prompt_file = Path.home() / ".local" / "share" / "bitacora-sessions" / project / f"{name}.prompt.md"
         prompt_file.parent.mkdir(parents=True, exist_ok=True)
-        prompt_file.write_text(planner_prompt(project, rdir), encoding="utf-8")
+        prompt_file.write_text(planner_prompt(project, rdir) + (f"\n\n{message}" if message else ""), encoding="utf-8")
         command = f'claude --session-id {sid} {flags} "$(cat {shlex.quote(str(prompt_file))})"'
         how = "empezó una conversación nueva (leerá el plan y sus notas guardadas)"
     try:
@@ -185,9 +226,41 @@ def start_planner(root: Path, project: str, rdir: Path, *, fresh: bool = False) 
 
 def notify_planner(project: str, req: str, text: str) -> bool:
     """Tell the dedicated Planner, if it runs here, what the owner just did on the web (an idle agent never learns it
-    otherwise). Returns False when there is no such Planner or the message could not be typed."""
+    otherwise). A Planner whose account ran out is started again on one with quota and told on start. Returns False
+    when there is no such Planner or the message could not be typed."""
     name = name_for(project, req, "planner")
-    return exists(name) and send(name, "[Automatic notice from the web, not typed by the owner] " + text) == "Enviado."
+    if not exists(name):
+        return False
+    notice = "[Automatic notice from the web, not typed by the owner] " + text
+    shown = screen(name, 20)
+    if OWNER_PROMPT.search(shown):
+        _ask_owner(project, req, name)
+        return False
+    if LIMITED.search(shown):
+        from bt_core import ROOT
+        rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
+        if rdir is not None:
+            avoid = _record(rdir).get("config_dir", "")
+            kill(name)
+            return start_planner(Path(ROOT), project, rdir, avoid=avoid, message=notice)[0]
+    return send(name, notice) == "Enviado."
+
+
+def _ask_owner(project: str, req: str, name: str) -> None:
+    """The Planner waits on a question only the owner answers: tell him where, on the desktop and in the plan's feed."""
+    text = (f"El Planner de {req} espera que aceptes el modo Bypass Permissions en su cuenta: abre una terminal, "
+            f"`tmux -L {socket()} attach -t {name}`, elige «Yes, I accept» y sal con Ctrl-b d. Hasta entonces no recibe "
+            "los avisos de la web.")
+    try:
+        import bt_runutil
+        bt_runutil.notify("El Planner espera tu respuesta", text)
+        from bt_core import ROOT
+        import bt_planning_activity as activity
+        rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
+        if rdir is not None:
+            activity.record(rdir, "Planner", text, kind="flow")
+    except Exception:  # noqa: BLE001 - telling him is best effort; the panel's agent strip shows the screen too
+        pass
 
 
 REVIVE_WITHIN_DAYS = 3

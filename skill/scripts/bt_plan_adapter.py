@@ -435,7 +435,7 @@ def stage_readiness(rdir: Path, *, compatibility_report: dict[str, object] | Non
             item["depends_on_unfinished"] = blocked_by
         else:
             chain.append(sid)
-            problem = stage_problem(rdir, list(chain), compatibility_report=compatibility_report, allow_unmapped=True, draft=draft)
+            problem = stage_problem(rdir, list(chain), compatibility_report=compatibility_report, draft=draft)
             item["ok"], item["problem"] = problem is None, problem or ""
         out.append(item)
     return out
