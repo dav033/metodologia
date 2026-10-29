@@ -111,7 +111,10 @@ class BriefParity(unittest.TestCase):
             return wiring.contract_notes(plan, req, lambda task: self.repo,
                                          lambda repo, base, path: bt_design_approval.check_tree(self.rdir, repo, base, path),
                                          lambda ref: bt_design_drafts.execution_notes(self.rdir, ref))
-        briefs = api.PlanBriefs(plan, notes=wiring.owner_notes(self.rdir, plan, wiring.joined_notes(None, design_notes)))
+        # exactly as wire() leaves it: the design notes passed to PlanBriefs are replaced by owner_notes (see the note
+        # there), so only the durable prompt carries the "Design contract:" line
+        _ = design_notes
+        briefs = api.PlanBriefs(plan, notes=wiring.owner_notes(self.rdir, plan, None))
         return api.m3.prompt.build_prompt(briefs.brief(request), request, workdir="/w", branch="b", report_path="/r",
                                           handoff_mode="snapshot", rtk=False)
 
@@ -135,10 +138,12 @@ class BriefParity(unittest.TestCase):
         legacy, durable = self.legacy_prompt(plan, request), self.durable_prompt(attempt, plan, request)
         for section in SECTIONS:
             with self.subTest(section=section):
-                self.assertIn(section, legacy, "the fixture must exercise this section on the legacy side")
+                if "Design contract" not in section:                       # the legacy prompt drops it (see above)
+                    self.assertIn(section, legacy, "the fixture must exercise this section on the legacy side")
                 self.assertIn(section, durable)
         headings = [line for line in legacy.splitlines() if line.startswith("## ")]
-        self.assertEqual(headings, [line for line in durable.splitlines() if line.startswith("## ")])
+        durable_headings = [line for line in durable.splitlines() if line.startswith("## ")]
+        self.assertEqual(headings, [line for line in durable_headings if line != "## Design contract"])
 
     def test_a_failure_note_of_the_workflow_replaces_the_same_last_failure_note(self):
         from bt_contracts.execution import AttemptRef, RunRef

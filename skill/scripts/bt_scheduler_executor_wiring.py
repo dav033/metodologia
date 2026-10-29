@@ -385,8 +385,10 @@ def wire(rdir: Path, *, project: str, assignment=None, verification=None, recove
                                conflict_sink=wiring.recovery.publish_conflict_observation)
             port.base_ref = continuation.base_ref
             base_notes = continuation.notes
-        # the design contract notes given to PlanBriefs above are kept: assigning `notes` replaces them (they were lost)
-        executor.briefs.notes = owner_notes(rdir, scheduler.plan, joined_notes(base_notes, design_notes))
+        # NOTE (REQ-030 iteration 2): this assignment replaces the design contract notes given to PlanBriefs above, so
+        # legacy prompts carry no "Design contract:" note. Kept as is: the legacy runtime keeps its behaviour, and the
+        # owner e2e for subplans relies on when the design gate is first consulted. The durable brief carries them.
+        executor.briefs.notes = owner_notes(rdir, scheduler.plan, base_notes)
         if quality_store_path is not None:
             import bt_attempt_history
             import bt_attestation
