@@ -118,11 +118,30 @@ class GitLineIntegrator:
             files = [line.split("\t", 1)[-1] for line in merged.stdout.splitlines()[1:] if "\t" in line]
             if not files:                                # git failed without naming a conflicted file: not a conflict
                 raise RuntimeError(f"merge-tree failed: {(merged.stderr or merged.stdout).strip()[:300]}")
-            return None, "conflicts with accepted work in: " + ", ".join(sorted(set(files))[:20])
-        if merged.returncode:
+            tree, files = self._settle(repo, tip, snapshot, files)
+            if files:
+                return None, "conflicts with accepted work in: " + ", ".join(sorted(set(files))[:20])
+        elif merged.returncode:
             raise RuntimeError(f"merge-tree failed: {merged.stderr.strip()[:300]}")
-        tree = merged.stdout.splitlines()[0].strip()
+        else:
+            tree = merged.stdout.splitlines()[0].strip()
         return _git(repo, "commit-tree", tree, "-p", tip, "-p", snapshot, "-m", message, env=IDENT).stdout.strip(), ""
+
+    def _settle(self, repo: Path, tip: str, snapshot: str, files: list[str]) -> tuple[str, list[str]]:
+        """Settle the conflicts the composer settles (D-160) the same way on a line: `package.json` merged by key and
+        the recorded resolutions in `<state>/composition/resolutions`. pictures REQ-021 r24: gate task T93, built on the
+        composed CG-3 candidate, conflicted with SP-11's line on the npm scripts every subplan appends (D-164).
+        Returns (tree, conflicts left); with no composer, or a criss-cross history, the conflicts stay as git found them."""
+        bases = _git(repo, "merge-base", "--all", tip, snapshot, check=False).stdout.split()
+        state_dir = getattr(self.composer, "state_dir", None)
+        if len(bases) != 1 or state_dir is None:
+            return "", files
+        from bt_composition_adapter import GitSubprocessPort
+        root = Path(state_dir) / "composition"
+        port = GitSubprocessPort(repo, root / "ws")
+        port.resolutions = root / "resolutions"
+        result = port.merge_tree(bases[0], tip, snapshot)
+        return result.tree, list(result.conflicts)
 
     def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
                   lines: tuple[str, ...] = ()) -> tuple[str | None, str, str]:
