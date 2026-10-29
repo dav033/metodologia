@@ -61,3 +61,9 @@ rollback: git revert the merge of durable-stage-guard (5f63c2c21) on main, resta
 previous main: 0d70a9db4bfcd0c57290d7754c65dee250f7942d
 /home/david/bitacora/.state/durable/backups/bt_durable-20261029-095338.dump 5895095 26d23a036eae24803618a0b4c719411446ae55a2a574149909c02eea24cb7b17
 rollback: git revert the merge of subplan-flow (8b1c4e2e6) on main, restart bt-durable.service and bitacora-web.service
+
+# integration of D-154 (agents receive execution.agent_env_file test variables; Codex cache reads count a tenth of the token budget) with D-153's tool, local restart of engine + web, 2026-10-29 12:15, session 7db4552d
+previous main: 678b51806a95dd80f4e1c43e880f15aca82a1df8
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-121446.dump 7748012 b32fab0007f87ce49197f74e813d395e65fb2c4438430f36a76ddbee532caf42
+regression: 278 files, only the 4 baseline failures (scratchpad regress15.txt)
+rollback: git revert the merge of agent-test-env on main, restart bt-durable.service and bitacora-web.service
