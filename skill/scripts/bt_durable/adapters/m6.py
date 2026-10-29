@@ -26,6 +26,7 @@ from bt_contracts.execution import (
 from bt_scheduler_quality import sandbox_mounts
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy
+from bt_scheduler_quality.runner import SandboxRunner
 from bt_scheduler_quality.snapshot import SnapshotSource
 from bt_scheduler_quality.store import QualityStore
 
@@ -53,6 +54,25 @@ def relaxed(policy: QualityPolicy) -> QualityPolicy:
     )
 
 
+class EngineCommands:
+    """The checks the engine owns, answered without the sandbox, as the legacy owner's runner answers them
+    (`quality_audit_evidence.EvidenceRunner`): the findings-ledger contract `bitacora.py audit-ledger check <ledger>`
+    of every audit task. A product's sandbox has no bitácora code, so run there the check could only fail as
+    `M6_SETUP_ERROR:EXEC` (pictures REQ-021 T2.7, the first audit on the durable runtime). Everything else runs in the
+    sandbox unchanged."""
+
+    def __init__(self, runner):
+        self.runner = runner
+
+    def run(self, spec, snapshot_root, **kwargs):
+        from bitacora_platform.quality_ledger_command import run as ledger_check
+        owned = ledger_check(spec, snapshot_root)
+        return owned if owned is not None else self.runner.run(spec, snapshot_root, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.runner, name)
+
+
 class M6Verifier:
     """`policy_for(run)` / `authority_for(run)` give each run its operator policy (verifier env, requires, accepted
     fingerprints) and its authorization callbacks, the same ones the legacy owner uses."""
@@ -76,7 +96,8 @@ class M6Verifier:
         if key not in self._engines:
             policy = self.policy_for(run)
             policy = relaxed(policy) if profile == "relaxed" else policy
-            self._engines[key] = QualityEngine(policy, self.store, verification_authority=self.authority_for(run),
+            self._engines[key] = QualityEngine(policy, self.store, runner=EngineCommands(SandboxRunner(policy)),
+                                               verification_authority=self.authority_for(run),
                                                attestations=self.attestations_for(run))
         return self._engines[key]
 
