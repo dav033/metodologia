@@ -226,6 +226,14 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
   `package.json` between SP-3 and SP-2 (both append npm scripts at the same point; checked offline with git
   merge-tree) — two independent subplans, a decision for the owner when it is reached.
 
+- 03:56–04:23 T14.2 stopped four times, its agent hashing the mockup instead of the contract: the UI brief said "a
+  file matching the approved SHA-256" right after the mockup line, while `design/contracts/planes@v1.md` matched the
+  owner's approval exactly. Owner `stop`, then `retry-task` with a clarifying note (the run, ended blocked, reopened as
+  `@5`); T14.2 accepted at 04:23. The wording now names the contract file (`ee5cd4300`, eighth deploy; regression
+  `regression-designnote.txt`, 271 files, only the 4 baseline failures). T14.3 accepted 04:35.
+- 05:01 T14.4 (SP-14 integration tests) failed on two real test defects (a duplicate heading in strict mode, a menu
+  locator) and used its token budget in one attempt; owner `retry_with_note`: restore its own a1 work and fix those two.
+
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 

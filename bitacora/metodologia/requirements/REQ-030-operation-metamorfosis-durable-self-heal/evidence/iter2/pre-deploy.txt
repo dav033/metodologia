@@ -31,3 +31,8 @@ rollback: as for the second deploy, with the commit above
 previous main: 08a1c7bc7e511edf83c3fd64c2171d70a636c619
 DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-032733.dump sha256 c0eff6ffd3925eea5cdbcb7d17defcc25db212b41e76d316fd66690c59f259c1 (pg_restore --list: readable)
 rollback: as for the second deploy, with the commit above
+
+# eighth deploy (design note names the contract file), 2026-10-29 04:22, session metodologia-6d
+previous main: 489576209c9fc543423982f14910d3635fcd69f4
+DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261029-042234.dump sha256 9a6d9981980c3a0156d2919d8ced3777e968e44e62280a724716f5e8ec08e202 (pg_restore --list: readable)
+rollback: as for the second deploy, with the commit above
