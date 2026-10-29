@@ -1489,7 +1489,7 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 
 ## D-148 — «Ejecutar subplan» is refused on a plan the durable runtime runs, until it can join a later stage
 
-- **Date:** 2026-10-29 · **Status:** Accepted (interim) · **Refines:** D-134, D-145
+- **Date:** 2026-10-29 · **Status:** Superseded by D-149 before deployment · **Refines:** D-134, D-145
 - **Context:** pictures REQ-021 belongs to the durable runtime (`RUN.owner.json` backend `dbos`). «Ejecutar subplan»
   froze a new stage and asked the legacy Scheduler to join it; the legacy owner refuses a durable run, and the durable
   runtime has no stage join, so the stage was approved, nothing ran and the page said «El Scheduler empezó la
@@ -1502,3 +1502,27 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Source:** found while building D-147 (session 7db4552d).
 - **Evidence:** `test_stages.Eligibility.test_a_plan_run_by_the_durable_runtime_is_refused_before_anything_is_frozen`
   (red on `main` d5a5402ed: the stage was attempted), `test_subplan_control`.
+
+## D-149 — A later stage continues a durable run in a new run of the stage's revision
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-134, D-145 · **Supersedes:** D-148
+- **Context:** pictures REQ-021 runs on the durable runtime (r15: SP-1, SP-2, SP-14, SP-3); the owner confirmed SP-4 and
+  more subplans follow. D-134's join belongs to the legacy Scheduler, which refuses a durable run, and a durable run is
+  bound to one frozen revision (line refs, attempt keys, compositions carry `r<N>`), so it could not take a stage.
+- **Decision:** «Ejecutar subplan» freezes the stage as before; for a durable owner `bt_stages` calls `bt-durable join`
+  (`bt_durable.stage_join`). The run of the new revision continues the current one: its lines are copied (create-only);
+  accepted, unchanged tasks are inherited without a step (`LegacyTask.integrated`, only a new run's input can carry it,
+  so no running workflow changes its step sequence and no patch is needed); a task with a captured but unaccepted
+  snapshot is reconciled; the rest runs; gates compose again. A stage that changes accepted tasks needs confirmation
+  (`JOIN_NEEDS_CONFIRM`). With live attempts the run is paused and the engine completes the join when they end
+  (`RUN.join.json`). Then the old run's workflows are cancelled, `RUN.owner.json` moves by CAS and the new run starts
+  with the old run's settings; `RUN.durable-run.json` moves last.
+- **Consequences:** + approved subplans of a durable plan run without re-running accepted work, and operator commits on
+  the lines (REQ-021's package.json union on SP-3) are kept; − open owner decisions of the old run end with it (a
+  reconciled task asks again if needed); − the old run's history stays under its own revision (the panels follow the
+  owner record).
+- **Source:** owner, 2026-10-29 («sí»: implement it so SP-4 onward can run).
+- **Evidence:** `test_durable_stage_join` (2 e2e: inherit without relaunch, reconcile from the snapshot, a new task on
+  the copied line, confirmation for changed accepted work, a join that waits for a live attempt and is completed by the
+  engine); `test_stages` (the durable branch never starts the legacy Scheduler); a read-only plan against live REQ-021:
+  43 inherit (24 legacy material, 19 durable attempts), T94 reconcile from `19ca9774`, T92 redo, nothing live or redone.
