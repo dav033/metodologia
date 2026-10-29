@@ -297,6 +297,8 @@ py-modules = [
   "bt_stage_queue",
   "bt_stages",
   "bt_verification",
+  "bt_verify_servers",
+  "bt_page_verify_run",
   "bt_verifier_env",
   "bt_views",
   "bt_watch",

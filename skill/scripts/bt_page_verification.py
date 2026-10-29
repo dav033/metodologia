@@ -37,11 +37,28 @@ def _text(value: str) -> str:
     return re.sub(r'(https?://[^\s<)]+)', r'<a href="\1" target="_blank" rel="noopener noreferrer">\1</a>', out)
 
 
-def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False) -> str:
+def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: bool = False, danger: bool = False,
+          blank: bool = False) -> str:
     field = ('<textarea name="comments" rows="3" required placeholder="Qué falló o qué esperabas ver"></textarea>' if note else "")
-    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}">'
+    target = ' target="_blank" rel="noopener"' if blank else ""
+    return (f'<form method="post" action="{purl(ctx["project"], "req", ctx["rid"], action)}" class="pp-vform{" note" if note else ""}"{target}>'
             f'<input type="hidden" name="token" value="{e(ctx["token"])}"><input type="hidden" name="anchor" value="{e(sp)}">'
             f'{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
+
+
+def _servers(ctx: dict, row: dict) -> str:
+    """«Probar esta versión»: start its test servers and open it in a new tab; while they run, the link and «Detener»."""
+    import bt_verify_servers as servers
+    if servers.recipe(ctx["root"], ctx["project"]) is None:
+        return ""
+    now = servers.status(ctx["root"], ctx["project"], ctx["rdir"], row["id"])
+    if now["state"] == "stopped":
+        return _form(ctx, "verify-run", "Probar esta versión ↗", row["id"], cls="pp-approve", blank=True)
+    link = (f'<a class="pp-vopen" href="{e(now["url"])}" target="_blank" rel="noopener">Abrir {e(now["url"])} ↗</a>'
+            if now["state"] == "ready" else
+            f'<a class="pp-vopen" href="{purl(ctx["project"], "req", ctx["rid"], "verify-run")}?sp={e(row["id"])}" '
+            f'target="_blank" rel="noopener">Preparando… ↗</a>')
+    return link + _form(ctx, "verify-stop", "Detener servidores", row["id"])
 
 
 def _where(rows: list[dict]) -> str:
@@ -84,7 +101,8 @@ def _actions(ctx: dict, row: dict) -> str:
         target = None
     if target is not None and target.exists():
         opened = (f'<p class="pp-vpath">Abierta en <code>{e(str(target))}</code></p>' + _form(ctx, "verify-close", "Cerrar la copia", sid))
-    buttons = (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened else "") + \
+    run = _servers(ctx, row) if root and row["state"] != "waiting" else ""
+    buttons = run + (_form(ctx, "verify-open", "Abrir esta versión en local", sid) if not opened and not run else "") + \
         _form(ctx, "verify-approve", "Aprobar" if row["state"] != "approved" else "Aprobado ✓", sid, cls="pp-approve") + \
         f'<details class="pp-vreject"><summary>Rechazar…</summary>{_form(ctx, "verify-reject", "Rechazar con esta nota", sid, note=True, danger=True)}</details>'
     command = verification.revert_command(root, ctx["project"], rdir, sid) if root else ""

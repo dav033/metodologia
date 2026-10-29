@@ -105,12 +105,23 @@ class PlanningActions:
         from bt_server import ROOT, commit
         """The owner's per-subplan checkpoint: open that exact version locally, approve it or reject it with a note."""
         import bt_verification as verification
+        import bt_verify_servers as servers
         sid = form.get("anchor", "")
         if not re.fullmatch(r"[A-Za-z0-9_.-]{1,40}", sid):
             msg, sid = "Subplan no válido.", ""
+        elif action in ("verify-run", "verify-stop") and self.client_address[0] not in ("127.0.0.1", "::1"):
+            msg = "Los servidores de prueba solo se arrancan desde esta máquina."
+        elif action == "verify-run":                  # «Probar esta versión»: start its servers, the new tab waits for them
+            started = servers.start(ROOT, project, rdir, sid)
+            if started["ok"]:
+                return f"{base}/verify-run?sp={quote(sid)}"
+            msg = started["message"]
+        elif action == "verify-stop":
+            msg = servers.stop(ROOT, project, rdir, sid)
         elif action == "verify-open":
             msg = verification.open_local(ROOT, project, rdir, sid)[1]
         elif action == "verify-close":
+            servers.stop(ROOT, project, rdir, sid)
             msg = verification.close_local(ROOT, project, rdir, sid)
         else:
             msg = verification.decide(project, rdir, sid, "approved" if action == "verify-approve" else "rejected",
