@@ -410,3 +410,4 @@
 {"at": "2026-10-29T12:05:27-05:00", "who": "Tú", "kind": "flow", "sp": "SP-5", "text": "Ejecutar SP-5: etapa r18 aprobada (SP-1, SP-2, SP-14, SP-3, SP-4, SP-5), faltan 8 subplanes", "diff": ""}
 {"at": "2026-10-29T12:06:19-05:00", "who": "Tú", "kind": "flow", "sp": "SP-6", "text": "Confirmaste SP-6 en la web; sigue SP-7", "diff": ""}
 {"at": "2026-10-29T12:09:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-6", "text": "Ejecutar SP-6: etapa r19 aprobada (SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6), faltan 7 subplanes", "diff": ""}
+{"at": "2026-10-29T12:12:24-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1: elegida dirección A · Operación en paralelo", "diff": ""}
