@@ -1,0 +1,40 @@
+{
+  "name": "Operación en paralelo",
+  "axes": {
+    "concept": "Operational: keep inputs and engine output visible together inside the existing Pictures working paper.",
+    "layout": "Persistent left tool sidebar (248px) beside one divided working paper: 0.85:1.35 input/result split; quote reverses to a wide line editor and narrow totals column; gallery is a thumbnail register with adjacent preview. Splits stack by container width, not viewport.",
+    "navigation": "Left sidebar (real shadcn Sidebar, static) lists only the account's tools — Herramientas home, then each tool, with Decoraciones nested under Taller 3D — and switches between them in place with aria-current; on phones it collapses behind a «Herramientas · <tool>» toggle. Method buttons switch form/phrase/photo in place; gallery rows select an inline preview.",
+    "typography": "Inherited Geist Sans, 24px H1, 18px sections, 13–15px controls and rows; 28px tabular count and quote totals. Geist Mono remains the inherited Sempertex treatment.",
+    "density": "Compact ruled rows and grouped 2-column fields, 24px panel gutters; no ornamental dashboard metrics. Phone stacks the same working groups with 20px gutters.",
+    "components": "Real shadcn Sidebar (SidebarProvider, Sidebar collapsible=none, SidebarMenu/Button/Sub), Button, Input, Textarea, Skeleton and Animate UI AlertDialog, recomposed into sidebar + one paper; native selects and the inherited account disclosure.",
+    "colour": "Exactly Pictures light/dark tokens and inherited accessible control-edge alias. Accent only for primary actions and focus; sidebar current item is a neutral superficie-2 step with weight, no coloured bar.",
+    "motion": "Precise cuts: paper enters 5px vertically, sidebar items and rows enter 8px horizontally with 35ms stagger, the neutral current-tool marker slides between sidebar items (shared layout), results arrive from the opposite edge, preview seats at .985 scale. 280ms cubic-bezier(.23,1,.32,1), repeated actions 150ms; natural/subtle scale down; reduced motion removes travel and transitions."
+  },
+  "evidence": {
+    "layout": [
+      ".tool-shell",
+      ".work-grid",
+      ".quote-grid",
+      ".gallery-work"
+    ],
+    "navigation": [
+      ".tool-sidebar",
+      ".tool-link",
+      ".tabs",
+      ".decoration-row .btn"
+    ],
+    "typography": [
+      ".heading h1",
+      ".count-total",
+      ".summary-total"
+    ],
+    "motion": [
+      ".paper",
+      ".tool-nav-item",
+      ".tool-marker",
+      ".count-line",
+      ".preview-stage",
+      ".btn"
+    ]
+  }
+}

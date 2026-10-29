@@ -1,94 +1,76 @@
 {
- "digest": "6cf9eb1b735458b59406eeae47d5d3e8aede6f921db6c9c1347c6d19f3939ab3",
+ "digest": "63f6c09f37a52142e12c52590f37bd652532ae9ec5ad87e79e8f443bc0d7ec2f",
  "rows": [
   {
    "subplan": "SP-5",
    "tasks": 6,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
-   "new_errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ]
+   "errors": [],
+   "new_errors": []
   },
   {
    "subplan": "SP-6",
    "tasks": 7,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-7",
    "tasks": 11,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-8",
    "tasks": 8,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-9",
    "tasks": 6,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-10",
    "tasks": 6,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-11",
    "tasks": 4,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {
    "subplan": "SP-12",
    "tasks": 6,
-   "ok": false,
-   "problem": "PLAN_INVALID: the stage cannot be approved: T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`",
+   "ok": true,
+   "problem": "",
    "depends_on_unfinished": "",
-   "errors": [
-    "T4.1.verification: PLAN.md verifies with `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` but PLAN.json has only `node -e \"process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)\"`"
-   ],
+   "errors": [],
    "new_errors": []
   },
   {

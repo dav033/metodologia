@@ -1589,3 +1589,53 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
 - **Evidence:** `test_plan_host_path_gate` (7); live REQ-021: the draft's only host path is T3.4 (warned, not gated),
   r16 judged as new is refused for T3.4 and T4.1; `join` r16→r17 inherit 45 / redo 11, T4.1 completed on its first
   r17 attempt.
+
+## D-153 — A direction's motion claim holds when the element or a descendant declares motion, or it moved by script
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-146
+- **Context:** pictures REQ-021 SP-6 (`gasto-ia@v1`): the owner could only choose direction B. The comparison reported
+  A's `.group-marker` and C's `.band-toggle` as traits their mockups do not show, so `choosable` hid their buttons. Both
+  move: A's marker is scaled in by Framer Motion on mount and on every grouping change, C's toggle carries its motion on
+  its chevron child (`.band-toggle svg { transition: transform }`) and in `whileTap`. The probe read only the element's
+  own computed transition and the animations running at that instant.
+- **Decision:** `compare_directions.py` installs an init script that records every element animated through WAAPI, a
+  transition or CSS animation event, or a style change while the page is measured; a motion claim holds when the
+  element or a descendant declares motion or moved. The stored comparisons of REQ-021's pending designs were recomputed
+  (backup of `drafts.json` in the session scratchpad): SP-6 A, B and C choosable; SP-7 and SP-12 keep A unavailable
+  (`.count-total`/`.summary-total`, `.loading-scan`), B and C choosable. Those three show only in one state of the
+  mockup's `#state` select (counter result, calculator totals, loading), which the probe never changed: it now measures
+  every view as it opens, then every view in every state (`fea1c3d12`). Recomputed again: SP-7's iteration r2 (direction
+  A, the owner's left tool bar) and SP-12 A, B, C choosable.
+- **Consequences:** + a direction is no longer hidden for motion the probe could not see; − a motion selector on a
+  large container passes when any descendant declares a transition (weaker than before for such claims).
+- **Source:** owner, 2026-10-29 («estoy en sp6 quiero elegir la dirección … pero no veo botón»).
+- **Evidence:** `test_compare_motion_evidence` (child transition and finished script animation pass, a still element
+  fails; fails on the previous tool), `test_design_directions`, `test_design_drafts`; live: SP-6 shows three «Elegir esta
+  dirección» buttons and «Direcciones distintas: comprobado». Integrated before its full regression to unblock the owner;
+  the full regression runs with D-154.
+
+## D-154 — Agents of a durable run receive the owner's test variables; cache reads count a tenth of the token budget
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** REQ-030 (durable runtime)
+- **Context:** pictures REQ-021 T4.2 stopped for a person after one attempt: «the task used its token budget», checks
+  failed. Two causes that also stopped T3.12, T14.4 (twice) and T94. (1) The agent wrote a Postgres test it could not
+  run: the verifier receives `PICTURES_REQ021_DATABASE_URL` from the owner's secret files (`verifier.secret_files`), an
+  agent receives only the engine's environment, by design (no real credentials for agents); so a mismatch between the
+  agent's own test and code (`DOCUMENTO_INVALIDO` expected, `PIEZA_INVALIDA` thrown) reached the verifier. Only T94/T92
+  had a database, through an operator note. (2) The attempt reported 12.36 M input tokens, 12.16 M of them Codex cache
+  reads, plus 59 k output; the budget (8 M per task) summed them all, so one long Codex session used it whole and the
+  engine escalated instead of retrying. Claude reports cache reads apart, so only Codex attempts were hit, and all 52
+  durable REQ-021 attempts ran on GPT-6 Luna (the engine's `execution.routes`).
+- **Decision:** `execution.agent_env_file` (default `~/.config/metodologia/agent-{project}.env`) is a dotenv file the
+  owner keeps with TEST values only; every agent of the project's durable runs receives its variables and its brief names
+  them (never the values). For pictures it holds the disposable container `req021-visual-audit-pg` (loopback, random
+  password), never the owner's own databases or secrets. `budget_tokens` counts cached input a tenth. T4.2 was answered
+  `retry_with_note` (restore a1 from `daa50bdd`, make code and test agree, run the test with the disposable database).
+- **Consequences:** + agents run their database checks before finishing; + a long Codex session no longer exhausts its
+  task's budget by re-reading its cache; − the container was started with `--rm` and has no restart policy: a reboot
+  removes it and the file's URL stops working until it is recreated (the owner's list keeps its removal as his call);
+  − the legacy runtime's agents do not read the file.
+- **Source:** owner, 2026-10-29 («las dos cosas y además investigar por qué no tenía acceso a la base de datos, dárselo
+  y que no pase de nuevo»).
+- **Evidence:** `test_durable_agent_env` (4); full regression with D-153 running; telemetry and the attempt's
+  `output.log` usage line.

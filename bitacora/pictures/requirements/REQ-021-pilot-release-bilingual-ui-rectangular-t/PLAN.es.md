@@ -708,12 +708,12 @@ Cada usuario que inicia sesión guarda y vuelve a abrir proyectos y decoraciones
 
   El comportamiento y el desglose de tareas reflejan las respuestas del responsable a la ronda 9. La confirmación del subplan y la del diseño siguen siendo acciones independientes del responsable; el foco se mantiene en SP-2.
 
-- [ ] T4.1 — Copiar el contrato de diseño aprobado para proyectos guardados · repo: pictures · después de: T94, T3.3 · verificar: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` · archivos: design/contracts/proyectos@v1.md · recursos: design:T4.1 · cubre: R6, R7 · tipo: design · subplan: SP-4 · ui: no
+- [ ] T4.1 — Copiar el contrato de diseño aprobado para proyectos guardados · repo: pictures · después de: T94, T3.3 · verificar: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"` · archivos: design/contracts/proyectos@v1.md · recursos: design:T4.1 · cubre: R6, R7 · tipo: design · subplan: SP-4 · ui: no
 
   Clasificación: complejidad baja; alcance small_change; riesgo bajo; acoplamiento medio; confianza media; estimación: 20 minutos.
   Copiar el contrato aprobado por el responsable y fijado, sin reescribirlo. Comienza después de CG-4 (M1 cerrado) y de T3.3, que define taller-scene@1; SP-4 ya no espera la auditoría de SP-3.
 
-  - Aceptación / estática: El contrato del repositorio es idéntico byte por byte al artefacto proyectos@v1 aprobado por el responsable. Comprobación: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md`
+  - Aceptación / estática: El contrato del repositorio es idéntico byte por byte al artefacto proyectos@v1 aprobado por el responsable. Comprobación: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"`
 
 - [ ] T4.2 — Implementar el almacenamiento versionado de proyectos y la validación de escenas · repo: pictures · después de: T4.1 · verificar: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts` · archivos: scripts/migrations/038_proyectos.sql, src/lib/proyectos/contrato.ts, src/lib/proyectos/servicio.ts, src/lib/proyectos/repositorio.ts, src/lib/proyectos/validar-escena.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-proyectos-servicio.ts · recursos: proyectos:document · cubre: R6, R7 · tipo: implement · subplan: SP-4 · ui: no
 

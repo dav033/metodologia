@@ -705,12 +705,12 @@ Each signed-in user saves and reopens projects and decorations from any browser,
 
   Behavior and task breakdown reflect the owner answers to round 9. Subplan and design confirmation remain separate owner actions; focus stays SP-2.
 
-- [ ] T4.1 — Copy the approved saved-projects design contract · repo: pictures · after: T94, T3.3 · verify: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md` · files: design/contracts/proyectos@v1.md · resources: design:T4.1 · covers: R6, R7 · kind: design · subplan: SP-4 · ui: no
+- [ ] T4.1 — Copy the approved saved-projects design contract · repo: pictures · after: T94, T3.3 · verify: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"` · files: design/contracts/proyectos@v1.md · resources: design:T4.1 · covers: R6, R7 · kind: design · subplan: SP-4 · ui: no
 
   Classification: complexity low; scope small_change; risk low; coupling medium; confidence medium; estimate 20 minutes.
   Copy the pinned owner-approved contract without rewriting it. Starts after CG-4 (M1 closed) and after T3.3, which defines taller-scene@1; SP-4 no longer waits for SP-3's audit.
 
-  - Acceptance / static: The repository contract is byte-identical to the owner-approved proyectos@v1 artifact. Check: `cmp -- design/contracts/proyectos@v1.md /home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/proyectos@v1.md`
+  - Acceptance / static: The repository contract is byte-identical to the owner-approved proyectos@v1 artifact. Check: `node -e "process.exit(require('crypto').createHash('sha256').update(require('fs').readFileSync('design/contracts/proyectos@v1.md')).digest('hex')==='0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897'?0:1)"`
 
 - [ ] T4.2 — Implement versioned project storage and scene validation · repo: pictures · after: T4.1 · verify: `npx tsx --conditions=react-server scripts/test/test-proyectos-servicio.ts` · files: scripts/migrations/038_proyectos.sql, src/lib/proyectos/contrato.ts, src/lib/proyectos/servicio.ts, src/lib/proyectos/repositorio.ts, src/lib/proyectos/validar-escena.ts, src/lib/cuentas/dependientes.ts, scripts/test/test-proyectos-servicio.ts · resources: proyectos:document · covers: R6, R7 · kind: implement · subplan: SP-4 · ui: no
 
