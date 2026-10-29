@@ -1,6 +1,7 @@
 """Generate the published JSON Schemas and the phone's TypeScript types from the Pydantic contracts.
 
-    uv run python -m bt_contracts.schemas          # rewrite remote/contract/*.schema.json and contract.generated.ts
+    uv run python -m bt_contracts.schemas          # rewrite remote/contract/*.schema.json, contract.generated.ts
+                                                   # and bt_contracts/schemas/plan.schema.json
     uv run python -m bt_contracts.schemas --check  # exit 1 when any generated file is stale
 
 The TypeScript is derived from the same JSON Schema that is published, so the phone, the gateway docs and the
@@ -17,12 +18,14 @@ from typing import Any
 
 from pydantic.json_schema import models_json_schema
 
-from bt_contracts import remote
+from bt_contracts import plan, remote
 
 REPO = Path(__file__).resolve().parents[3]
 CONTRACT_DIR = REPO / "remote" / "contract"
 TS_PATH = REPO / "remote" / "web" / "src" / "contract.generated.ts"
 SCHEMA_ID = "https://flow-remote.invalid/contract/v1/"
+PLAN_SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "plan.schema.json"
+PLAN_SCHEMA_ID = "https://bitacora.invalid/contract/plan.schema.json"
 _IDENTIFIER = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*$")
 
 
@@ -49,6 +52,34 @@ def model_schema(name: str, model: type) -> dict[str, Any]:
 def json_files() -> dict[Path, str]:
     return {CONTRACT_DIR / name: json.dumps(model_schema(name, model), indent=2, ensure_ascii=False) + "\n"
             for name, model in remote.SCHEMA_FILES.items()}
+
+
+def _drop_null_defaults(value: Any) -> Any:
+    """`X = None` fields may be absent but never null; a `default: null` next to a non-null type only misleads."""
+    if isinstance(value, dict):
+        return {key: _drop_null_defaults(item) for key, item in value.items()
+                if not (key == "default" and item is None)}
+    if isinstance(value, list):
+        return [_drop_null_defaults(item) for item in value]
+    return value
+
+
+def plan_schema() -> dict[str, Any]:
+    """PLAN.json 1.0.0-1.3.0 as one document: one definition per schema version, chosen by `schema_version`."""
+    schema = _drop_null_defaults(_strip_titles(plan.PLAN_ADAPTER.json_schema(by_alias=True)))
+    head = {"$schema": "https://json-schema.org/draft/2020-12/schema", "$id": PLAN_SCHEMA_ID,
+            "title": f"Bitácora PLAN.json, schema {' / '.join(plan.SCHEMA_VERSIONS)}",
+            "description": "Generated from the Pydantic models of bt_contracts/plan.py; do not edit. Rules across "
+                           "objects (unique ids, references that resolve, an acyclic `after`, consumed contracts "
+                           "produced by the subplan they name, a stage listing the revision's subplans, text that is "
+                           "not blank, relative paths) are enforced by the models' validators and are not all "
+                           "expressible here. Text and evidence quality, coverage totality, task roles and ordering "
+                           "remain the planner's authoring rules."}
+    return {**head, **schema}
+
+
+def plan_file() -> dict[Path, str]:
+    return {PLAN_SCHEMA_PATH: json.dumps(plan_schema(), indent=2, ensure_ascii=False) + "\n"}
 
 
 # ---- TypeScript ----
@@ -127,7 +158,7 @@ def typescript() -> str:
 
 
 def generated() -> dict[Path, str]:
-    return {**json_files(), TS_PATH: typescript()}
+    return {**json_files(), TS_PATH: typescript(), **plan_file()}
 
 
 def stale() -> list[Path]:
