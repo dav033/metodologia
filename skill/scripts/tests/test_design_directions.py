@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -203,18 +204,30 @@ class Directions(unittest.TestCase):
         self.assertEqual(drafts.sync("demo", self.rdir), [])
         self.assertEqual(len(self.orders), 3)
 
-    def test_plan_change_invalidates_an_unselected_exploration(self):
-        drafts.request("demo", self.rdir)
-        for i in range(3):
-            self.finish(i)
-        drafts.rows(self.rdir)
+    def changed_after_exploring(self):
+        self.explored()
         plan = json.loads((self.rdir / "PLAN.json").read_text())
         plan["subplans"][1]["outcome"] = "Changed behaviour"
         (self.rdir / "PLAN.json").write_text(json.dumps(plan))
         self.assertTrue(drafts.rows(self.rdir)[0]["stale"])
-        with self.assertRaisesRegex(SystemExit, "subplan cambió"):
-            directions.choose("demo", self.rdir, "checkout@v1", "a", "cli")
-        self.assertEqual(drafts.request("demo", self.rdir), ["checkout@v1"])
+
+    def test_a_plan_change_keeps_the_directions_awaiting_the_owner_and_choosing_folds_it_in(self):
+        self.changed_after_exploring()                   # pictures REQ-021 SP-12 (D-162)
+        settled = time.time() + drafts.DEBOUNCE_SEC + 1
+        self.assertEqual(drafts.sync("demo", self.rdir, now=settled), [])
+        self.assertEqual(drafts.request("demo", self.rdir, reason="focus"), [])
+        self.assertEqual(len(self.orders), 3)
+        self.assertIn("elegida", directions.choose("demo", self.rdir, "checkout@v1", "a", "cli"))
+        brief = self.orders[3]["task"]
+        self.assertIn("PLAN CHANGE", brief)
+        self.assertIn("Changed behaviour", brief)
+        self.assertIn("checkout@v1.r1.chosen.behavior.md", brief)
+        self.assertFalse(drafts.rows(self.rdir)[0]["stale"])
+
+    def test_the_owner_can_still_ask_for_new_directions_after_a_plan_change(self):
+        self.changed_after_exploring()
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], force=True, fresh=True, reason="web"),
+                         ["checkout@v1"])
         self.assertIn("r2.dir-a.html", self.orders[3]["task"])
 
 

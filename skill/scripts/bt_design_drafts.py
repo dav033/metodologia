@@ -339,6 +339,8 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
             continue
         if row["status"] in ACTIVE or row["status"] == "approved":
             continue  # one Designer batch per subplan; different subplans are designed in parallel (owner, 2026-10-29)
+        if row["status"] == "choosing" and not (force or fresh or row.get("amend")):
+            continue  # directions the owner has not chosen yet are redone only when asked (D-162)
         due = force or fresh or row["status"] in ("none", "failed") or row["stale"] or row["pending_feedback"]
         if due and reason != "plan changed" and row.get("failures"):
             with _locked(rdir) as data:  # an explicit request is the owner's retry: the failure count starts over

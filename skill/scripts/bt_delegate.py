@@ -309,7 +309,8 @@ def _attempt(d: Path, order: dict, agent_cmd: str | None) -> dict:
                                                         "workdir": workdir.as_posix(), "result": result_file.as_posix(),
                                                         "id": did}), None, True
     else:
-        argv, stdin_text = rp.agent_argv(state, workdir, prompt, order.get("model"), order.get("effort"))
+        argv, stdin_text = rp.agent_argv(state, workdir, prompt, order.get("model"), order.get("effort"),
+                                         max_turns=_max_turns())
         shell = False
     start, timed_out, rc = time.time(), False, None
     with log_file.open("wb", buffering=0) as out:
@@ -385,6 +386,13 @@ def _finish(d: Path, order: dict, base: dict, rc, report: dict | None, seconds: 
                                                 "profile": order.get("profile")},
                              order["id"], order.get("attempt", 1), info, status, detail)
     return outcome
+
+
+def _max_turns() -> int:
+    """Turns one Claude delegation may use (`delegate.max_turns`)."""
+    import bt_config
+    value = bt_config.get("delegate.max_turns", 120)
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 1 else 120
 
 
 def start_background(did: str) -> int:

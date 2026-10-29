@@ -122,6 +122,18 @@ class MarathonBounds(unittest.TestCase):
         argv, _ = bt_runprompt.agent_argv({"agent": "claude"}, Path("."), "P", "haiku", None)
         self.assertEqual(argv[argv.index("--max-turns") + 1], "45")
 
+    def test_a_delegation_gets_the_configured_turns_not_the_marathon_45(self):
+        import bt_delegate                    # pictures REQ-021 SP-12: Opus Designers stopped at 45 turns
+        self.assertEqual(bt_delegate._max_turns(), 120)
+        with patch("bt_config.get", return_value=200):
+            self.assertEqual(bt_delegate._max_turns(), 200)
+        with patch("bt_config.get", return_value=0):
+            self.assertEqual(bt_delegate._max_turns(), 120)
+        argv, _ = bt_runprompt.agent_argv({"agent": "claude"}, Path("."), "P", "opus", "high",
+                                          max_turns=bt_delegate._max_turns())
+        self.assertEqual(argv[argv.index("--max-turns") + 1], "120")
+        self.assertIn("max_turns=_max_turns()", Path(bt_delegate.__file__).read_text())   # what the delegation passes
+
 
 if __name__ == "__main__":
     unittest.main()

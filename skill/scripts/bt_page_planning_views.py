@@ -107,7 +107,11 @@ def _notices(ctx: dict, row: dict) -> str:
     out = [banner(ctx, row)]
     if row["status"] in drafts.ACTIVE:
         out.append(f'<p class="pp-note warn">El Designer está trabajando ({e(REASONS.get(row.get("reason"), "en curso"))}).</p>')
-    if row["stale"] and not row.get("amend"):
+    if row["stale"] and not row.get("amend") and row["status"] == "choosing":
+        out.append('<p class="pp-note warn">El subplan cambió después de dibujar estas direcciones. Puedes elegir una '
+                   "igual: el Designer incorpora el cambio al finalizarla. Si el cambio pide otro diseño, usa «Rehacer "
+                   "diseño».</p>")
+    elif row["stale"] and not row.get("amend"):
         out.append('<p class="pp-note warn">El subplan cambió en la conversación y aún no elegiste una dirección: el '
                    "Designer preparará direcciones nuevas cuando el plan deje de cambiar.</p>")
     if row.get("error"):

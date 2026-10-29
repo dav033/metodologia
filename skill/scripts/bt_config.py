@@ -142,6 +142,10 @@ DEFAULTS: dict = {
     # min_free_mb: the watchdog does not restart a run's owner below this much free disk (it says how much is free and where)
     "scheduler": {"max_attempts": 3, "max_parallel_tasks": 3, "attempt_timeout_minutes": 120, "max_turns": 120,
                   "exclusive_scopes": [], "min_free_mb": 1024},
+    # delegate.max_turns: turns one Claude delegation (Designer, review, research) may use. Was Claude's 45 by default:
+    # pictures REQ-021 SP-12, 2026-10-29, two of three Opus Designer explorations stopped at 45 turns with the mockup
+    # written and its note and comparison JSON missing ($4 each, nothing usable)
+    "delegate": {"max_turns": 120},
 }
 ALLOWED: dict[str, tuple] = {
     "executor.display": ("background", "window"),

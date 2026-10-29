@@ -283,8 +283,8 @@ def choose(project: str, rdir: Path, ref: str, key: str, via: str) -> str:
         if not entry or entry.get("status") != "choosing":
             raise SystemExit("No hay direcciones pendientes de elección.")
         row = next((s for s in drafts.subplans(rdir) if s["ref"] == ref), None)
-        if row is None or drafts.behind(entry, row):
-            raise SystemExit("El subplan cambió: rehace las direcciones antes de elegir.")
+        if row is None:
+            raise SystemExit("Contrato de interfaz no válido.")
         chosen = next((d for d in entry["directions"] if d["id"] == key and d["status"] == "ready"), None)
         if chosen is None:
             raise SystemExit("Esa dirección no está lista.")
@@ -304,6 +304,8 @@ behavioural defects. Name components as source:id variant state. Read the Design
 Run contrast.py and the offline audit on {html}. Report the actual RESULT or AUDIT NOT RUN in CONCERNS.
 Do not edit any exploration, history, SPEC, PLAN or production file. Do not approve the contract.
 """
+        if drafts.behind(entry, row):        # the plan changed after the directions were drawn: fold it in (D-162)
+            brief += _plan_change(project, rdir, ref, row, entry, chosen)
         order = bt_delegate.create(project, brief, None, None, Path(rdir), [], None, drafts.TIMEOUT_MIN,
                                    None, None, kind="design", role="designer")
         entry.update(chosen=key, phase="finalise", status="drafting", delegation=order["id"],
@@ -318,6 +320,25 @@ Do not edit any exploration, history, SPEC, PLAN or production file. Do not appr
             data["drafts"][ref].update(status="failed", error=str(exc)[:400])
         raise SystemExit(f"No se pudo finalizar la dirección: {exc}") from exc
     return f"Dirección {key.upper()} elegida; el Designer está finalizando el contrato."
+
+
+def _plan_change(project: str, rdir: Path, ref: str, row: dict, entry: dict, chosen: dict) -> str:
+    """The plan delta since the directions were drawn, for the finalise brief; the entry then follows the current brief
+    (pictures REQ-021 SP-12, 2026-10-29: one engineering sentence in a UI task's objective discarded three directions
+    awaiting the owner's choice and started three new explorations)."""
+    import bt_design_amend
+    import bt_design_brief_diff as brief_diff
+    change = bt_design_amend.delta(project, rdir, row, entry)
+    behavior = Path(rdir) / "design" / f"{ref}.r{chosen['revision']}.chosen.behavior.md"
+    behavior.write_text(change["new"], encoding="utf-8")
+    previous = change["previous_path"] or "(not recorded: check the whole contract against the new brief)"
+    entry.update(behavior=behavior.name, digest=row["digest"], ui_digest=row["ui_digest"])
+    return f"""
+PLAN CHANGE. The plan changed after these directions were drawn. The direction was drawn from {previous}; the current
+UI brief is {behavior}. Mechanical diff, previous → new (+ added, - removed, ~ changed):
+{brief_diff.render(change['changes'])}
+Fold ONLY this delta into the contract and the mockup; keep the chosen composition, navigation, motion and tokens.
+"""
 
 
 def _settle_final(rdir: Path, ref: str, entry: dict) -> None:
