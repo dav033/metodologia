@@ -21,6 +21,17 @@
    "via": "plan",
    "when": "2026-10-27T23:48:34+00:00",
    "who": "owner"
+  },
+  "proyectos@v1": {
+   "comments": "approved with the plan",
+   "contract": "proyectos@v1",
+   "draft": "/home/david/bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/design/history/proyectos@v1/approved.md",
+   "path": "design/contracts/proyectos@v1.md",
+   "sha256": "0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897",
+   "status": "approved",
+   "via": "plan",
+   "when": "2026-10-29T15:26:00+00:00",
+   "who": "owner"
   }
  },
  "schema_version": 1

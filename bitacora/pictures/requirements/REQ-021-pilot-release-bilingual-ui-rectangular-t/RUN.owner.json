@@ -1,8 +1,8 @@
 {
  "backend": "dbos",
- "by": "bt-durable migrate --apply",
- "migrated_from": "legacy@8e0f865109bd",
- "run_id": "pictures:REQ-021:r15",
- "since": 1793225716.7268896,
- "workflow_id": "bt:pictures:REQ-021:r15"
+ "by": "bt-durable join",
+ "migrated_from": "durable pictures:REQ-021:r15",
+ "run_id": "pictures:REQ-021:r16",
+ "since": 1793287564.8015192,
+ "workflow_id": "bt:pictures:REQ-021:r16"
 }

@@ -228,6 +228,35 @@
    "sha256": "a4eb945b823d1e2575ee86ebe1e3dc1e54a05b0d87d61b6b9febec5543705b26",
    "frozen_at": "2026-10-28T14:11:37",
    "source": "healing"
+  },
+  {
+   "revision": 16,
+   "sha256": "356adc2e4b6013b945a902124b5ea1be250738afc5441fc8452341282c693b9d",
+   "frozen_at": "2026-10-29T10:26:03",
+   "source": "approval",
+   "stage": {
+    "subplans": [
+     "SP-1",
+     "SP-2",
+     "SP-14",
+     "SP-3",
+     "SP-4"
+    ],
+    "pending_subplans": [
+     "SP-5",
+     "SP-6",
+     "SP-7",
+     "SP-8",
+     "SP-9",
+     "SP-10",
+     "SP-11",
+     "SP-12",
+     "SP-13"
+    ],
+    "complete": false,
+    "requirements_sha256": "69cd7a8ab4181ce6233f176852c911686fcad39cd722f18b841e4096f3ed69db",
+    "plan_md_sha256": "e6000933cfd3635aa967462de3c21f174f1206d31c3a4dab1f37622e5a49f2a8"
+   }
   }
  ]
 }

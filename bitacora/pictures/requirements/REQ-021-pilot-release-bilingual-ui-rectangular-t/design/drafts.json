@@ -9235,6 +9235,7 @@
   },
   "proyectos@v1": {
    "agent": "codex",
+   "approved": "2026-10-29T10:26:00-05:00",
    "attempt": 12,
    "auto_runs": 3,
    "before": "5dbe092fdc220552e38b68169f397af89942dab87313a397fc91c21224ef4c98",
@@ -12791,7 +12792,7 @@
    "selected_sha256": "403ac3672d0c14edf9f280ba26368b971bc09ce8227acd9ea9649db9236b465f",
    "sha256": "0bf08313894d4d1f810ee7e5a1567423b5776869b2aa5da1e824017948e46897",
    "started": "2026-10-29T06:30:07-05:00",
-   "status": "ready",
+   "status": "approved",
    "subplan_id": "SP-4",
    "summary": "Finalized the owner's selected Edición en contexto (c) as the canonical proyectos@v1 twelve-section draft and rebuilt HTML. Composition and motion are preserved; the contract is not approved.",
    "ui_digest": "efc4338fbf71ccd6"
