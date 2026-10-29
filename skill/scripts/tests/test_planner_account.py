@@ -16,9 +16,9 @@ import bt_profiles
 
 PROFILES = {"claude-work": {"provider": "claude", "env": {"CLAUDE_CONFIG_DIR": "/acc/work"}},
             "claude-luis": {"provider": "claude", "env": {"CLAUDE_CONFIG_DIR": "/acc/luis"}},
-            "codex-1": {"provider": "codex", "env": {}}}
-ROUTES = [{"agent": "codex", "profile": "codex-1"}, {"agent": "claude", "profile": "claude-luis"},
-          {"agent": "claude", "profile": "claude-work"}]
+            "codex-luis": {"provider": "codex", "env": {"CODEX_HOME": "/acc/codex-luis"}}}
+ROUTES = [{"agent": "codex", "profile": "codex-luis", "model": "gpt-6.1-sol", "effort": "high"},
+          {"agent": "claude", "profile": "claude-luis"}, {"agent": "claude", "profile": "claude-work"}]
 
 
 class PlannerAccount(unittest.TestCase):
@@ -32,11 +32,43 @@ class PlannerAccount(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def test_the_first_claude_account_the_router_ranks_and_never_the_one_to_avoid(self):
-        self.assertEqual(terminal.planner_account("pictures"), "/acc/luis")
-        self.assertEqual(terminal.planner_account("pictures", avoid="/acc/luis"), "/acc/work")
+    def test_the_first_unattended_claude_account_the_router_ranks_and_never_the_one_to_avoid(self):
+        with patch.object(terminal, "unattended", return_value=True):
+            self.assertEqual(terminal.planner_route("pictures")["home"], "/acc/luis")
+            self.assertEqual(terminal.planner_route("pictures", avoid="/acc/luis")["home"], "/acc/work")
         with patch.dict(os.environ, {"BITACORA_PLANNER_CLAUDE_CONFIG_DIR": "/acc/owner"}):
-            self.assertEqual(terminal.planner_account("pictures"), "/acc/owner")
+            self.assertEqual(terminal.planner_route("pictures")["home"], "/acc/owner")
+
+    def test_an_account_that_would_ask_the_owner_first_is_skipped_for_codex(self):
+        with patch.object(terminal, "unattended", side_effect=lambda path: path == "/acc/work"):
+            self.assertEqual(terminal.planner_route("pictures")["home"], "/acc/work")
+        with patch.object(terminal, "unattended", return_value=False):
+            route = terminal.planner_route("pictures")
+        self.assertEqual((route["provider"], route["home"], route["model"]), ("codex", "/acc/codex-luis", "gpt-6.1-sol"))
+
+    def test_unattended_reads_the_owners_setting_of_the_account(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertFalse(terminal.unattended(tmp))
+            (Path(tmp) / "settings.json").write_text(json.dumps({"skipDangerousModePermissionPrompt": True}))
+            self.assertTrue(terminal.unattended(tmp))
+
+    def test_a_codex_planner_starts_from_the_plan_and_keeps_the_claude_conversation_on_record(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {"HOME": tmp}):
+            root, rdir = Path(tmp) / "root", Path(tmp) / "root" / "pictures" / "requirements" / "REQ-021-x"
+            (rdir / ".planning").mkdir(parents=True)
+            (rdir / terminal.RECORD).write_text(json.dumps({"session_id": "sid-1", "config_dir": "/acc/luis"}))
+            route = {"provider": "codex", "home": "/acc/codex-luis", "model": "gpt-6.1-sol", "effort": "high"}
+            with patch.object(terminal, "planner_route", return_value=route), \
+                    patch.object(terminal, "exists", return_value=False), patch.object(terminal, "start") as start:
+                ok, message = terminal.start_planner(root, "pictures", rdir, message="[notice] escribe las Pruebas")
+            self.assertTrue(ok, message)
+            command, env = start.call_args.args[2], start.call_args.args[3]
+            self.assertIn("codex --dangerously-bypass-approvals-and-sandbox -m gpt-6.1-sol", command)
+            self.assertEqual(env, {"CODEX_HOME": "/acc/codex-luis"})
+            prompt = next((Path(tmp) / ".local/share/bitacora-sessions/pictures").glob("*.prompt.md")).read_text()
+            self.assertIn("escribe las Pruebas", prompt)
+            record = json.loads((rdir / terminal.RECORD).read_text())
+            self.assertEqual((record["provider"], record["codex_home"], record["session_id"]), ("codex", "/acc/codex-luis", "sid-1"))
 
     def test_the_conversation_moves_to_the_account_with_quota(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -47,7 +79,7 @@ class PlannerAccount(unittest.TestCase):
             old.parent.mkdir(parents=True)
             old.write_text('{"type": "user"}\n')
             (rdir / terminal.RECORD).write_text(json.dumps({"session_id": "sid-1", "config_dir": str(old_account), "cwd": str(root)}))
-            with patch.object(terminal, "planner_account", return_value=str(new_account)), \
+            with patch.object(terminal, "planner_route", return_value={"provider": "claude", "home": str(new_account)}), \
                     patch.object(terminal, "exists", return_value=False), patch.object(terminal, "start") as start:
                 ok, message = terminal.start_planner(root, "pictures", rdir, message="[notice] SP-8 confirmado")
             self.assertTrue(ok, message)
