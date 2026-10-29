@@ -189,6 +189,14 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
             return self.send(req_page(project, rest[1], q.get("tab", ""), token(), q.get("msg", ""), q))
         if kind == "req" and len(rest) == 3 and rest[2] in ("planning", "mockup"):
             return self.planning_get(project, rest[1], rest[2], q)
+        if kind == "req" and len(rest) == 3 and rest[2] == "verify-run":
+            import bt_page_verify_run
+            rdir = find_req(ROOT / project, rest[1])
+            if rdir is None:
+                return self.send("Not found", 404, "text/plain")
+            if q.get("format") == "json":
+                return self.send(bt_page_verify_run.status_json(ROOT, project, rdir, q.get("sp", "")), 200, "application/json")
+            return self.send(bt_page_verify_run.page(ROOT, project, rest[1], rdir, q.get("sp", "")))
         if kind == "req" and len(rest) == 3 and rest[2] == "preview":
             import bt_design_web
             rdir = find_req(ROOT / project, rest[1])
@@ -253,7 +261,7 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
                 return self.redirect(f"{base}?tab=plan&msg={quote(msg)}")
             if action in ("design-draft", "design-feedback", "design-answer", "design-choose", "design-iterate", "design-amend", "planning-outline", "planning-focus", "planning-confirm"):
                 return self.redirect(self.planning_post(project, rdir, action, form, base))
-            if action in ("verify-open", "verify-close", "verify-approve", "verify-reject"):
+            if action in ("verify-open", "verify-close", "verify-approve", "verify-reject", "verify-run", "verify-stop"):
                 return self.redirect(self.verify_post(project, rid, rdir, action, form, base))
             if action in ("agent-say", "agent-start", "agent-restart"):
                 return self.redirect(self.agent_post(project, rid, rdir, action, form, base))
