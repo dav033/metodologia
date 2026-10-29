@@ -26,12 +26,35 @@ from bt_contracts.execution import (
 from bt_scheduler_quality import sandbox_mounts
 from bt_scheduler_quality.engine import QualityEngine
 from bt_scheduler_quality.policy import QualityPolicy
+from bt_scheduler_quality.runner import SandboxRunner
 from bt_scheduler_quality.snapshot import SnapshotSource
 from bt_scheduler_quality.store import QualityStore
 
 from ..legacy import TaskSpec
 
 LOG = logging.getLogger("bt_durable.m6")
+# What a check must never inherit under `verifier.inherit_env` (the operator's environment): the engine's own variables
+# (its database URL, DBOS settings, the service manager's per-unit names; the same rule as an agent's environment,
+# adapters/m3.py) and the names that point at the host session's devices and sockets, which the sandbox does not have:
+# with VK_DRIVER_FILES naming the host's GPU driver, Chromium's software WebGL (SwiftShader over Vulkan) cannot start in
+# the sandbox (pictures REQ-021 T3.11, every attempt, both runtimes).
+HOST_SESSION_ENV = frozenset({
+    "VK_DRIVER_FILES", "VK_ICD_FILENAMES", "VK_ADD_DRIVER_FILES", "VK_LAYER_PATH", "VK_ADD_LAYER_PATH",
+    "__EGL_VENDOR_LIBRARY_FILENAMES", "__EGL_VENDOR_LIBRARY_DIRS", "__GLX_VENDOR_LIBRARY_NAME", "LIBVA_DRIVER_NAME",
+    "AQ_DRM_DEVICES", "WLR_DRM_DEVICES", "DISPLAY", "WAYLAND_DISPLAY", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS",
+    "HYPRLAND_INSTANCE_SIGNATURE", "XAUTHORITY",
+})
+
+
+def sandbox_policy(policy: QualityPolicy) -> QualityPolicy:
+    """`policy` with the inherited environment cleared of engine and host-session names; what the operator declares
+    explicitly (`environment`: the project's env file, the plan's `requires`) is kept as it is."""
+    from bt_supervisor.model import MANAGER_ENV
+
+    from .m3 import ENGINE_ONLY_PREFIXES
+    kept = tuple((name, value) for name, value in policy.ambient_environment
+                 if not name.startswith(ENGINE_ONLY_PREFIXES) and name not in MANAGER_ENV and name not in HOST_SESSION_ENV)
+    return policy if kept == policy.ambient_environment else dataclasses.replace(policy, ambient_environment=kept)
 RELAXED_NODE_HEAP_MB = 12288          # twice the sandbox default (sandbox_mounts.NODE_OPTIONS), the repair ceiling
 _HEAP = re.compile(r"--max-old-space-size=(\d+)")
 
@@ -51,6 +74,25 @@ def relaxed(policy: QualityPolicy) -> QualityPolicy:
         environment=tuple(sorted(env.items())),
         rerun_failed_checks=max(policy.rerun_failed_checks, 1),
     )
+
+
+class EngineCommands:
+    """The checks the engine owns, answered without the sandbox, as the legacy owner's runner answers them
+    (`quality_audit_evidence.EvidenceRunner`): the findings-ledger contract `bitacora.py audit-ledger check <ledger>`
+    of every audit task. A product's sandbox has no bitácora code, so run there the check could only fail as
+    `M6_SETUP_ERROR:EXEC` (pictures REQ-021 T2.7, the first audit on the durable runtime). Everything else runs in the
+    sandbox unchanged."""
+
+    def __init__(self, runner):
+        self.runner = runner
+
+    def run(self, spec, snapshot_root, **kwargs):
+        from bitacora_platform.quality_ledger_command import run as ledger_check
+        owned = ledger_check(spec, snapshot_root)
+        return owned if owned is not None else self.runner.run(spec, snapshot_root, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self.runner, name)
 
 
 class M6Verifier:
@@ -74,9 +116,10 @@ class M6Verifier:
     def _engine(self, run, profile: str) -> QualityEngine:
         key = (run.run_id, profile)
         if key not in self._engines:
-            policy = self.policy_for(run)
+            policy = sandbox_policy(self.policy_for(run))
             policy = relaxed(policy) if profile == "relaxed" else policy
-            self._engines[key] = QualityEngine(policy, self.store, verification_authority=self.authority_for(run),
+            self._engines[key] = QualityEngine(policy, self.store, runner=EngineCommands(SandboxRunner(policy)),
+                                               verification_authority=self.authority_for(run),
                                                attestations=self.attestations_for(run))
         return self._engines[key]
 

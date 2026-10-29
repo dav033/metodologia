@@ -80,6 +80,25 @@ class DurableAudits(EngineCase):
         self.assertEqual(len(self.events("audit_passed")), 1)
         self.assertEqual(self.projected(run)["TA"]["state"], "completed")
 
+    def test_the_audit_check_is_the_engine_owned_ledger_contract(self):
+        """Every audit of pictures REQ-021 checks its ledger with `bitacora.py audit-ledger check <ledger>`, a command a
+        product's sandbox cannot run (T2.7 failed live as M6_SETUP_ERROR:EXEC, a missing environment): the engine
+        answers it as the legacy owner does (adapters/m6.EngineCommands), and the audit is judged as usual."""
+        ledger_check = "bitacora.py audit-ledger check docs/TA.findings.json"
+        tasks = [task("T1", scenario="fixk", subplan="SP-1", kind="implement"),
+                 task("TA", scenario="auditk", subplan="SP-1", kind="audit", after=["T1"], check=ledger_check,
+                      paths=["docs/TA.md", "docs/TA.findings.json"]),
+                 task("T9", scenario="own", kind="implement", after=["TA"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0", subplans=[subplan("SP-1", "T1", "TA")]))
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=420)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual({task_id: len(items) for task_id, items in self.per_task().items()}, {"T1": 2, "TA": 2, "T9": 1})
+        self.assertEqual(len(self.events("audit_blocked")), 1)          # judged on its ledger, repaired, judged again
+        self.assertEqual(len(self.events("audit_passed")), 1)
+        self.assertFalse(self.events("decision_requested"))             # never mistaken for a missing environment
+
     def test_an_audit_that_never_clears_stops_at_its_round_limit(self):
         run = self.freeze("auditnever")
         self.start_engine()
