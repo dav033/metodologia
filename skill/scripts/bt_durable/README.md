@@ -25,7 +25,7 @@ legacy core and executor are reached only through their adapters (`bt_durable/le
   the integration line (now compare-and-swap), owner decisions.
 - **New Metodología logic**: evidence-based classifier, bounded recovery policy (re-verify instead of re-run for
   environment limits, durable quota waits, one coordinated remediation, escalation with options), migration bridge,
-  plan pre-flight (`bt_planner.preflight`).
+  plan pre-flight: the typed plan contract (`bt_contracts.plan`, `PLAN_CONTRACT`) then `bt_planner.preflight`.
 
 ## Install (Linux)
 

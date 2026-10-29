@@ -22,6 +22,7 @@ from pathlib import Path
 import bt_config
 import bt_core
 import bt_run_owner
+from bt_contracts import plan as plan_contracts
 from bt_contracts.execution import Backend, OwnerRecord, Route, RunRef
 from bt_contracts.owner import OwnerAnswer
 
@@ -66,19 +67,31 @@ def requirement_dir(project: str, req: str) -> Path:
     return hits[0]
 
 
+def plan_contract(path: Path):
+    """The frozen plan validated by its schema version's Pydantic contract (bt_contracts.plan), or SystemExit
+    PLAN_CONTRACT naming every structural issue: a renamed key, an array for an object, a missing field, an unknown
+    kind or category, an id that resolves to nothing. Runs before an owner record, a workflow or an agent exists."""
+    try:
+        return plan_contracts.validate_file(path)
+    except plan_contracts.PlanContractError as exc:
+        raise SystemExit(f"{path.name}: {exc}") from None
+
+
 def latest_frozen(rdir: Path, project: str, req: str) -> RunRef:
     manifest = json.loads((rdir / "plan-revisions" / "MANIFEST.json").read_text(encoding="utf-8"))
     last = max(manifest["revisions"], key=lambda r: r["revision"])
     path = rdir / "plan-revisions" / f"PLAN.r{last['revision']}.json"
     if hashlib.sha256(path.read_bytes()).hexdigest() != last["sha256"]:
         raise SystemExit(f"{path.name} does not match its frozen hash")
-    plan_id = json.loads(path.read_text())["plan_id"]
+    plan_id = plan_contract(path).plan_id
     return RunRef(project=project, req=req, plan_id=plan_id, revision=int(last["revision"]),
                   plan_sha256=last["sha256"], plan_path=path)
 
 
 def preflight(run: RunRef, rdir: Path) -> None:
-    """Refuse a run whose frozen plan has structural defects (bt_planner.preflight) before anything is enqueued."""
+    """Refuse a run whose frozen plan breaks its contract (bt_contracts.plan) or has structural defects
+    (bt_planner.preflight) before anything is enqueued."""
+    plan_contract(run.plan_path)
     import bt_plan_adapter
     import bt_verifier_env
     from bt_scheduler_verification_authority import owner_verification_authority
