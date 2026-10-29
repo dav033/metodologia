@@ -251,8 +251,16 @@ def start_or_join(project: str, rdir: Path, *, start: Callable[[str, str, Path],
 def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str = "web",
         start: Callable[[str, str, Path], bool] | None = None, join: Callable[[], dict] | None = None) -> str:
     """«Ejecutar subplan»: approve the stage with `add`, then have the Scheduler run it (a durable run: continue it in
-    the stage). Raises StageError."""
-    entry = freeze(project, rdir, add)
+    the stage). A stage that only needs subplans not run yet waits for them in the queue (`bt_stage_queue`) instead of
+    being refused. Raises StageError."""
+    try:
+        entry = freeze(project, rdir, add)
+    except StageError as exc:
+        import bt_stage_queue
+        after = [] if exc.code == "STAGE_SUBPLAN_UNCONFIRMED" or via == "stage-queue" else bt_stage_queue.needs(rdir, add)
+        if not after:
+            raise
+        return bt_stage_queue.queue(rdir, add, after, by=by, via=via)
     message = start_or_join(project, rdir, start=start, join=join)
     stage = entry.get("stage") or {}
     held = ", ".join(stage.get("subplans") or approved(rdir))
