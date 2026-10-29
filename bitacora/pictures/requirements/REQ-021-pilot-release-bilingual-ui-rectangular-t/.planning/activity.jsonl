@@ -416,3 +416,6 @@
 {"at": "2026-10-29T12:46:30-05:00", "who": "operator, at the owner's request", "kind": "flow", "sp": "SP-8", "text": "Ejecutar SP-8: en cola hasta que SP-7 se ejecute y lo apruebes en «Probar»", "diff": ""}
 {"at": "2026-10-29T13:04:28-05:00", "who": "Planner", "kind": "plan", "sp": "SP-13", "text": "Actualizó SP-13 (resultado, criterios, tareas)", "diff": "+ The cleanup CLI defaults to a read-only inventory, refuses an unknown database identity or an unreviewed test-account id, and applies a reviewed inventory only with a verified private backup and successful restore rehearsal; it deletes only the listed test accounts and their test projects, persona"}
 {"at": "2026-10-29T13:04:28-05:00", "who": "Planner", "kind": "doc", "sp": "", "text": "PLAN.md: «M5 — Pilot release» cambió", "diff": ""}
+{"at": "2026-10-29T13:45:57-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-14", "text": "SP-14 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-29T13:45:57-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-2", "text": "SP-2 terminó y está listo para probar", "diff": ""}
+{"at": "2026-10-29T13:45:57-05:00", "who": "Scheduler", "kind": "verify", "sp": "SP-3", "text": "SP-3 terminó y está listo para probar", "diff": ""}

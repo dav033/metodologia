@@ -1671,3 +1671,23 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   «de SP-9 para arriba faltan pruebas, eso debería hacerse automáticamente»).
 - **Evidence:** `test_stage_queue` (6), `test_planner_account` (4); live: `stage_problem` for [SP-8] refused, for
   [SP-7, SP-8] OK; `planner_account` → claude-luis, avoiding it → claude-work.
+
+## D-156 — «Probar» sees the subplan versions a durable run published; the engine announces them
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-131, D-155
+- **Context:** checking that SP-8's queue (D-155) could ever drain: in pictures REQ-021, SP-1, SP-2, SP-14 and SP-3
+  were complete and their versions published by the durable composer (`publish_subplan_version`, stores under
+  `.state/durable/composition/`), yet «Probar» showed only SP-1 (from the legacy projection) and the rest «se está
+  construyendo». `bt_verification` read only `RUN.projection.json`, which the legacy Scheduler writes and the durable
+  runtime never does (last written 2026-10-28 17:13, before the migration). No subplan of a durable run could be
+  approved, so a stage queued behind one would have waited forever, and the owner was never told a subplan was ready.
+- **Decision:** `bt_verification.durable_versions` reads the durable composition stores (one per approved revision)
+  when `RUN.owner.json` gives the run to the durable runtime; a version is a change of the subplan's commit over time
+  (a stage join re-publishing the same tree keeps the owner's decision, a new commit outdates it). The engine projector
+  calls `on_projection` after each projection, as the legacy Scheduler does (desktop notice and feed line «SPx terminó
+  y está listo para probar»).
+- **Consequences:** + D-131's owner verification works on durable runs; + SP-8 runs when SP-7 is approved;
+  − version numbers differ from the composer's per-revision numbers (they count distinct commits).
+- **Source:** operator, 2026-10-29, while verifying the owner's request «que espere la ejecución y aprobación de sp7».
+- **Evidence:** `test_durable_verification` (4); live read: SP-1 v1, SP-2 v1, SP-14 v1, SP-3 v2 (`8ac04102`, the owner's
+  conflict resolution) «por probar»; their commits are in `~/dev/pictures`, so «Probar» can open them.
