@@ -17,7 +17,7 @@ MIB = 1024 * 1024
 ATTEMPT_KEY_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,100}$")
 ENV_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 MARKER_ENV = "BT_ATTEMPT_KEY"           # set on every process of an attempt; reserved, callers may not pass it
-SUPERVISOR_ENV = "BT_SUPERVISOR_ID"     # set on the systemd unit (not on the agent) to recognise our own units
+SUPERVISOR_ENV = "BT_SUPERVISOR_ID"     # set on the unit and on the agent: recognise our own units and processes
 # Variables the service manager sets for each unit. A caller that copies its own environment (an engine that itself
 # runs as a systemd service) would otherwise hand the agent the ENGINE's INVOCATION_ID, and the supervisor's identity
 # check would then see its own unit as foreign (REQ-030, pictures REQ-021 att a1, 2026-10-28).

@@ -52,7 +52,30 @@ class LifecycleTests:
         self.sup.launch(self.spec(key, [PY, "-I", "-c", code], env={**BASE_ENV, "X_GIVEN": "v a l$HOME\"\n"}))
         done = self.wait_state(key)
         env = json.loads(done.log_path.read_text().strip().splitlines()[-1])
-        self.assertEqual(env, {**BASE_ENV, "X_GIVEN": "v a l$HOME\"\n", "BT_ATTEMPT_KEY": key})
+        self.assertEqual(env, {**BASE_ENV, "X_GIVEN": "v a l$HOME\"\n", "BT_ATTEMPT_KEY": key,
+                               "BT_SUPERVISOR_ID": self.sup.store.supervisor_id})
+
+    def test_another_supervisors_process_with_the_same_key_is_never_ours(self):
+        # two engines (or two test labs) may hand out the same attempt key: terminating ours must not touch theirs,
+        # and their process must not make ours look alive (REQ-030 iteration 2: a lab killed another lab's agent)
+        import os
+
+        from bt_supervisor.api import make_supervisor
+        key = self.key("shared")
+        other = make_supervisor(self.tmp / "other-state", self.BACKEND, unit_prefix=self.prefix + "o-")
+        self.addCleanup(lambda: other.terminate(key) and None)
+        theirs = other.launch(self.sh(key, "sleep 30"))
+        mine = self.sup.launch(self.sh(key, "sleep 30"))
+        self.assertNotEqual(theirs.unit or theirs.main_pid, mine.unit or mine.main_pid)
+        ended = self.sup.terminate(key)
+        self.assertEqual(ended.live_pids, [])
+        still = other.observe(key)
+        self.assertEqual(still.state, "running")
+        self.assertTrue(still.live_pids)
+        for pid in still.live_pids:
+            os.kill(pid, 0)                                      # alive: our terminate never reached it
+        other.terminate(key)
+
 
     def test_an_inherited_service_identity_never_reaches_the_unit(self):
         # an engine running as a systemd service copies its own INVOCATION_ID into the agent environment: the unit
