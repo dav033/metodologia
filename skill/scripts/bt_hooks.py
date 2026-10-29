@@ -83,7 +83,7 @@ def hook_start(harness: str = "claude") -> None:
     if sync_warning:
         ctx += f"\nWARNING: {sync_warning} — tell the user in one line."
     from bt_secrets import alert
-    if alert(ROOT):
+    if alert(ROOT) and not system_run():
         ctx += ("\nWARNING: a possible SECRET was found in the bitácora and was NOT committed. Remove it (keep only a "
                 "reference: key path, env var name, ssh alias), then run `bitacora.py commit \"fix: remove secret\"`. "
                 f"Redacted report:\n{alert(ROOT)[:1500]}")
@@ -121,10 +121,22 @@ def dirty_since_log(project: str, cwd: Path, day: Path) -> tuple[bool, str]:
     return (True, f"{newer} workspace file(s) changed since the bitácora was last updated") if newer else (False, "")
 
 
+SYSTEM_RUN = ("BITACORA_ATTEMPT", "BITACORA_TASK", "BITACORA_DELEGATION")
+
+
+def system_run() -> bool:
+    """A session the system started to do one task (a durable attempt, a legacy run session, a delegation): the
+    bitácora's own chores (its secret alert, its day log) are never its job (D-168: pictures REQ-021 T93's agent read
+    the bitácora's secret alert at its Stop hook and committed a gitleaks exemption into the methodology's repository)."""
+    return any(os.environ.get(key) for key in SYSTEM_RUN)
+
+
 def hook_stop(harness: str = "claude") -> None:
     data = _read_stdin_json()
+    if os.environ.get("BITACORA_ATTEMPT"):          # a durable task attempt answers to its task and its verifier only
+        return
     from bt_secrets import alert
-    if alert(ROOT) and not data.get("stop_hook_active"):
+    if alert(ROOT) and not data.get("stop_hook_active") and not system_run():
         print(json.dumps({"decision": "block", "reason": (
             "[bitácora] A possible secret was written into the bitácora and blocked from git. Find it (report: "
             f"{(ROOT / '.state' / 'secret-alert.txt').as_posix()}), replace the value with a reference (key path, env "

@@ -101,6 +101,7 @@ class M3Attempts:
                if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
         env.update(test_env)
         env.update(dict(launch.env_set))
+        env["BITACORA_ATTEMPT"] = attempt.attempt_key      # a task attempt: the bitácora hooks leave it its task (D-168)
         env_file = adir / "agent.env.json"
         atomic_write(env_file, _env_file(env), 0o600)            # secrets live only in this 0600 file
         stdin_path = None

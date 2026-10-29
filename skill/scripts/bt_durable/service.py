@@ -180,6 +180,10 @@ def serve(cfg: EngineConfig, ports: Ports, *, reap_seconds: float = 30.0, projec
                     _drain_joins(cfg, ports)
                 except Exception as error:  # noqa: BLE001 - a join is tried again on the next pass
                     LOG.warning("stage join pass failed: %s", error)
+                try:
+                    _heal_decisions(cfg)
+                except Exception as error:  # noqa: BLE001 - an open decision is looked at again on the next pass
+                    LOG.warning("healing pass failed: %s", error)
     finally:
         engine.stop()
 
@@ -199,6 +203,24 @@ def _drain_joins(cfg: EngineConfig, ports: Ports) -> None:
             LOG.info("stage join: %s", outcome)
     finally:
         client.close()
+
+
+def _heal_decisions(cfg: EngineConfig) -> None:
+    """Answer the open decisions a diagnosing model may answer (bt_durable.healing, D-167)."""
+    import bt_core
+
+    from . import healing
+    if not healing.enabled():
+        return
+    global _healing_client
+    if _healing_client is None:                     # one client for the engine's life: a pass runs every 30 s
+        from .client import Client
+        _healing_client = Client(cfg.system_database_url)
+    for said in healing.heal(Path(bt_core.ROOT), _healing_client):
+        LOG.info("healing: %s", said)
+
+
+_healing_client = None
 
 
 __all__ = ["Path", "reap_once", "serve", "wire"]

@@ -361,6 +361,11 @@ the verified snapshot after M6 says PASS and judges it with `bt_audit_gate.evalu
   `unknown`), takes the validated option of the diagnosing model (`bt_block_agent`, `diagnosis.*`) — only `retry` / `retry_with_note`,
   only a task stop the owner could answer with a plain retry (never an owner-only decision or a review), never when the model is
   `baja` or its note is thinner than 20 characters (that becomes a plain `retry`), once per signature, then the owner decides.
+  Durable runs (D-167, `bt_durable/healing.py`): the engine's 30-second maintenance pass does the same for every open decision
+  of a durable run, under the same switches and limits (`healing.enabled`, `healing.model_diagnosis`, `diagnosis.auto`,
+  `healing.max_per_task`, `healing.max_actions`); the diagnosis runs in a background thread and the answer goes to that exact
+  round, by `healing`, state in `RUN.durable-healing.json`. A diagnosis of kind `plan` is sent to the run's Planner with its
+  steps and the decision stays for the owner. Outside the workflows: no step of bt.run/bt.task changes;
   `gates.attestation_bind_attempt` (default on, REQ-029 A11): a manual-check receipt (`scheduler-op REQ attest`) covers only the attempt
   being verified, so a redone task has to be attested again; attesting needs a verification waiting for evidence;
 - **structural recovery** (REQ-029, `bt_recovery_*`, `bt_scheduler_recovery_lifecycle`): for a conflict or an audit the ordinary budgets
