@@ -308,10 +308,23 @@ py-modules = [
   "install_rtk",
   "migration_inventory",
   "relay_run",
+  "bt_design_amend",
+  "bt_design_brief_diff",
+  "bt_design_follow",
+  "bt_design_iterate",
+  "bt_design_ui_brief",
+  "bt_flow_durable",
+  "bt_input_rounds",
+  "bt_mockup_bridge",
+  "bt_page_design_amend",
+  "bt_page_planning_run",
+  "bt_page_subplan_control",
+  "bt_stage_readiness",
+  "bt_subplan_status",
 ]
 
 # Templates, assets, policy references and agent definitions travel inside the wheel (REQ-007 R2).
-# test_package_install.py keeps py-modules complete against skill/scripts.
+# test_package_modules.py keeps py-modules complete against skill/scripts.
 [tool.setuptools.package-data]
 bt_planner = ["data/*.json", "README.md"]
 bt_knowledge = ["README.md"]

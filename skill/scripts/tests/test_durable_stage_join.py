@@ -133,5 +133,22 @@ class StageJoin(EngineCase):
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])
 
+class ProgressInput(unittest.TestCase):
+    def test_new_progress_fields_travel_only_when_set(self):
+        """An engine older than D-149/D-150 refuses unknown input fields: the regression of D-150 caught every upgrade
+        suite failing once `paused` was always sent."""
+        from bt_contracts.execution import LegacyProgress, LegacyTask
+        from bt_durable.client import progress_input
+        self.assertEqual(progress_input(None), {"inventory_digest": "", "tasks": []})
+        item = LegacyTask(task_id="T1", verdict="inherit", snapshot_sha="a" * 40, base_sha="b" * 40, repository=Path("/r"),
+                          attempt_dir=Path("/a"), manifest_path=Path("/a/m.json"))
+        plain = progress_input(LegacyProgress(tasks=(item,)))
+        self.assertNotIn("paused", plain)
+        self.assertNotIn("integrated", plain["tasks"][0])
+        joined = progress_input(LegacyProgress(tasks=(item.model_copy(update={"integrated": True}),), paused=True))
+        self.assertEqual((joined["paused"], joined["tasks"][0]["integrated"]), (True, True))
+        self.assertEqual(LegacyProgress.model_validate(plain), LegacyProgress(tasks=(item,)))
+
+
 if __name__ == "__main__":
     unittest.main()
