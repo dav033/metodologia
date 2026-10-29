@@ -26,7 +26,7 @@ run the durable runtime owns.
 | 1 | Subplans and composition gates (1.3.0) | done | `test_durable_subplans` (8): per-subplan lines hold their scope, a member starts from its line, the gate task starts from the composition candidate (bt_composition) and work after the gate waits for it; the migration keeps each subplan's line; atomic multi-line integration; the run survives a failing line sync or composition. Live: REQ-021 turned subplans on at its first turn after the 22:12 restart (`subplans_enabled` 22:16: SP-1, SP-2, SP-14, SP-3; gates CG-1, CG-4, CG-2) and created its four subplan lines from the pin `fa101a47` with no conflict |
 | 2 | Brief parity with legacy | done | `test_durable_briefs` (3): no section of the legacy prompt is missing from the durable one; the live REQ-021 T2.6 brief carries `RUN.notes/T2.6.md`. The legacy runtime keeps its prompt (design-contract notes stay out of it, 73eb93b3c); the durable brief carries them |
 | 3 | Manual checks with attestations | done | `test_durable_attestations` (2): a valid receipt settles the manual check without asking; a missing one is a decision with `reverify` and `bt-durable attest` passes the same snapshot. Live: REQ-021 T3.2 completed at 22:19 by `bt-durable answer pictures REQ-021 T3.2 T3.2:d1@k1 reverify`: the owner's receipt bound to legacy att-0059 settled its manual check on re-verification, no agent run |
-| 4 | Milestone audit → coordinated remediation (scenario K) | done | `test_durable_audits` (3 e2e + 2 pure): related findings become one repair with probes, re-audit, bounded rounds, panels show a held audit; `test_durable_audits_upgrade` (2): an engine upgrade replays an old audit unjudged and judges a new one. REQ-021's five audits declare their ledgers; live policy `ledger_required`, `read_only`, `remediate`, 2 rounds |
+| 4 | Milestone audit → coordinated remediation (scenario K) | done | `test_durable_audits` (3 e2e + 2 pure): related findings become one repair with probes, re-audit, bounded rounds, panels show a held audit; `test_durable_audits_upgrade` (2): an engine upgrade replays an old audit unjudged and judges a new one. REQ-021's audits declare their ledgers; live policy `ledger_required`, `read_only`, `remediate`, 2 rounds. Live: REQ-021 T2.7 judged three times, its findings grouped into coordinated repairs (T2.3, T2.4, T2.5), held blocked at the round limit with its reason in the panel; the engine-owned ledger check fixed on the way (`992d1706d`) |
 | 5 | Router with the M2 decision engine, LiveQuota as capacity | done | `test_durable_router` (13): an account without quota is never chosen and the other runs without spending an attempt; the decision is the `route_decision` telemetry event |
 | 6 | Panels show durable runs; remote commands as durable messages | done | `test_durable_remote` (9): projection sequencing, a stale command refused at the ledger and by the run workflow, an old recorded pause replays; `test_remote_contracts` (15) validates the snapshot of a real durable run. Live: the web dashboard (`/api/plans/pictures/REQ-021`) shows REQ-021 with authority `dbos`, status `running`, T2.6 and T3.11 running with their attempt ids; the remote snapshot built by the deployed release validates against `RemoteSnapshot` with REQ-021 in it |
 | 7 | Plan/subplan contracts in Pydantic | done | `test_plan_contract_models` (15): every frozen plan of the bitácora gets the same verdict from the runtime loader and the planner; each known defect (`req`/`req_id`, array/object, unknown state) is refused before anything is enqueued; generated JSON Schema is fresh |
@@ -145,21 +145,70 @@ Deploy of 2026-10-28 22:11–22:30 ([evidence/iter2/pre-deploy.txt](evidence/ite
   `remote/deploy/smoke.py --live`: same result as the previous release (`partial`: probes that need the owner's
   session or Telegram credentials not run; negative paths pass).
 
-pictures REQ-021 r15 — durable runtime, running:
+pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
 
-- 22:18:54 owner answered `T3.2:d1@k1 reverify` → T3.2 completed 22:19:01 (attestation, item 3).
-- 22:19:22 owner answered `T2.6:d1@k1 retry`; 22:19 `bt-durable resume pictures REQ-021`.
-- T3.11: its legacy snapshot (att-0094) re-verified and rejected, then attempt a1 started 22:20:45; T2.6: attempt a2
-  started 22:24:26 from its legacy snapshot (att-0095, `04a0d767`), its brief carrying `RUN.notes/T2.6.md`
-  (item 2). Both routed by M2 (`route_policy_preferred` → `codex:codex-luis:gpt-6-luna`, item 5).
+- 22:19 owner `T3.2:d1@k1 reverify` → T3.2 completed by its att-0059 receipt, no agent run (item 3).
+- 22:19 owner `T2.6:d1@k1 retry`, run resumed. T2.6 a2 (from its legacy snapshot att-0095, brief carrying
+  `RUN.notes/T2.6.md`, item 2; routed by M2 `route_policy_preferred` → `codex:codex-luis:gpt-6-luna`, item 5) was
+  accepted at 22:37 and went into the run line, SP-2 and SP-14 and not into SP-3 (item 1). In the legacy runtime this
+  task had used 24 attempts.
 - Agent processes carry their own unit's `INVOCATION_ID` and `BT_SUPERVISOR_ID`, and no `BT_DURABLE_*`/`DBOS_*`.
-- 29 of 45 tasks done (28 inherited + T3.2), 2 running (T2.6, T3.11), 14 not started, including the audits T2.7, T2.8, T3.15, T14.5, T14.6 (item 4
-  judges them when they finish) and the gate tasks T91, T94, T92 (item 1 composes their candidates).
+- Two verifier defects found live and fixed (details: [evidence/iter2/live-req021-m6.md](evidence/iter2/live-req021-m6.md);
+  regression [evidence/iter2/regression-m6-fixes.txt](evidence/iter2/regression-m6-fixes.txt): 269 files, only the 4
+  baseline failures; third deploy 23:34 with a DBOS backup first, `main` `bc7425690`):
+  - every REQ-021 audit checks its ledger with `bitacora.py audit-ledger check`, which the durable verifier ran in the
+    product sandbox (`M6_SETUP_ERROR:EXEC`); now answered by the engine as in the legacy runtime (`992d1706d`);
+  - checks inherited the engine's environment (`verifier.inherit_env: ['*']`), including `VK_DRIVER_FILES` from the
+    desktop session — Chromium's software WebGL could not start, so T3.11 failed in every attempt of both runtimes —
+    and the engine's database URL; now filtered (`a6174efa7`).
+- T3.11: its a4 snapshot passed the real check through the real M6 runner once the environment was fixed; owner
+  `reverify` twice (M6 marks the first pass after a failure as flaky and confirms on the second) → completed 23:47, no
+  further agent attempt; in the run line and SP-3 only.
+- T2.7 (SP-2 visual audit) — item 4 live: a2, run with the operator's note authorizing the repository's UI harness and
+  Playwright, was judged by the gate at 23:40: 3 blocking findings, grouped into 3 coordinated repairs (T2.3←F1,
+  T2.4←F2, T2.5←F3). The findings were in fact one environment limitation (the harness needs the REQ-021 test database,
+  which no agent receives in either runtime): the three repairs made no change (snapshot = base) and the audit runs
+  again (round 2, a101), bounded by `remediation_rounds = 2`. Decision for the owner below.
+- 00:10 T2.7's third audit still could not render: blocked at its round limit (2 rounds, 6 repair attempts that changed
+  nothing, 3 audits), held with its reason; the web panel shows it `blocked` with "auditoría bloqueada: 3 blocking
+  finding(s) … after 2 remediation round(s) (limit 2)". The run goes on: T3.12 (SP-3) running.
+- State at 00:15: 31 of 45 tasks done (25 inherited + T3.2, T2.6, T3.11 and the no-change repairs of T2.3, T2.4, T2.5),
+  T2.7 blocked, T3.12 running. The composition gates (CG-1 → T91, CG-4 → T94, CG-2 → T92) all depend on T2.7/T2.8, so
+  no candidate can be composed until the owner decides on T2.7 (see "Blocked"); composition itself is proven end to end
+  in `test_durable_subplans`.
 
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 
+## Blocked, with reason and procedure
+
+- REQ-021's visual audits (T2.7, T14.5) cannot render the candidate: the repository's UI harness needs
+  `PICTURES_REQ021_DATABASE_URL` (the dedicated REQ-021 test database), which the verifier receives (operator env file)
+  but no agent does, in either runtime. Reason it is not decided here: it gives agents a database credential. Procedure
+  for the owner: either add `PICTURES_REQ021_DATABASE_URL` to the environment visual-audit agents receive (the durable
+  M3 adapter's agent environment), then `bt-durable retry-task pictures REQ-021 T2.7` (one more round); or review the
+  SP-2 screens yourself and record the ledger's findings as `accepted` with `accepted_by: owner` and a reason.
+  Lesson recorded: the operator's note told the auditor to record states it could not capture as open findings, so
+  the gate would not read an empty ledger as a pass; the gate then sent an environment limitation to product tasks as
+  repairs (harmless here: no change, but 6 attempts). An audit that cannot capture should stop as an owner decision,
+  not as findings against product tasks: proposal below.
+
+- Phone panel signed in, and the credential-only probes of the live smoke (`signin-start`, `sse`, `telegram-delivery`:
+  `ok: false` in `remote/deploy/receipts/live-smoke.json`, the same as for the previous release). Reason: they need
+  the owner's GitHub session or the Telegram bot token, which agents may not read or use. What was verified without
+  them: the negative paths of the live smoke pass, and the snapshot the deployed remote API serves (built with the
+  release `3519eec09` code) validates against `RemoteSnapshot` with REQ-021 in it. Procedure for the owner: sign in at
+  https://flow-remote.vercel.app on the phone (360 px), open pictures REQ-021 and check that it shows the durable run
+  (state, attempts, open decisions); then run `python remote/deploy/smoke.py --live` from a shell that has the owner's
+  session to complete the receipt.
+
 ## Not done / remaining debt
+
+- Proposals for the owner (not done): (1) the legacy verifier inherits the same session variables as the durable one
+  did (`VK_DRIVER_FILES`), so its WebGL checks fail the same way: apply `adapters/m6.sandbox_policy`'s filter in
+  `bt_verifier_env.ambient_for_run`, or narrow `verifier.inherit_env`; (2) a ledger status for "could not audit" that
+  the gate turns into an owner decision instead of findings against product tasks; (3) the `quality_audit_evidence`
+  cross-check (evidence files behind each finding) in the durable gate.
 
 - Audit-driven plan revisions (new remediation tasks in the frozen plan) are not ported: the durable repair is a new
   round of an existing task. The `quality_audit_evidence` cross-check is not ported.

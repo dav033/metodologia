@@ -10,5 +10,8 @@ The session that shared this iteration (metodologia-b1) ended at ~21:25 before t
 metodologia-6d reviewed its integrated branch (`evidence/iter2/review-3cdace8f4.md`), fixed what the review found
 (`a6a2706c9`), ran the regression, deployed and resumed REQ-021.
 
-Watch next: T2.6 a2 and T3.11 a1 (running), then the SP-2 audits T2.7/T2.8 (first real judgement of item 4) and the
-first composition gate CG-1 (T91).
+After the first deploy REQ-021 exposed two defects of the durable verifier, both fixed with tests, a full regression and a
+third deploy (23:34, `bc7425690`): the engine-owned ledger check of every audit, and the operator's session variables
+(`VK_DRIVER_FILES`, the engine's DB URL) leaking into checks. T2.6, T3.2 and T3.11 are accepted; T2.7 (visual audit)
+was judged live three times and is held blocked at its round limit: it needs an owner decision (a test-database
+credential for visual-audit agents, or the owner's own review). T3.12 runs; every gate depends on T2.7/T2.8.
