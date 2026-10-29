@@ -45,6 +45,12 @@ class DurableAudits(EngineCase):
             out.setdefault(launch["task"], []).append(launch)
         return out
 
+    def projected(self, run: RunRef) -> dict[str, dict]:
+        """The panels' read model of `run`, built from DBOS as the engine builds it (REQ-030 item 6)."""
+        from bt_durable import projection
+        doc = projection.build(self.client.client, run, projection.load_plan(run))
+        return {item["id"]: item for item in doc["tasks"]}
+
     def events(self, name: str) -> list[dict]:
         rows = [json.loads(line) for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines()]
         return [row for row in rows if row.get("event") == name]
@@ -72,6 +78,7 @@ class DurableAudits(EngineCase):
         for ref in ("refs/bt/subplan/proj/REQ-900/r1/app/SP-1", "refs/bt/line/proj/REQ-900/r1/app"):
             self.assertIn("fixed-k.txt", lab_support.git(self.lab.repo, "ls-tree", "--name-only", ref).split())
         self.assertEqual(len(self.events("audit_passed")), 1)
+        self.assertEqual(self.projected(run)["TA"]["state"], "completed")
 
     def test_an_audit_that_never_clears_stops_at_its_round_limit(self):
         run = self.freeze("auditnever")
@@ -85,6 +92,12 @@ class DurableAudits(EngineCase):
         # gates.remediation_rounds = 2: two coordinated repairs, three audits, and nothing after the audit
         self.assertEqual({task_id: len(items) for task_id, items in launches.items()}, {"T1": 3, "T2": 1, "TA": 3})
         self.assertEqual(len(self.events("audit_blocked")), 3)
+        # the panels show the audit held by the run (its last round itself completed), with the reason, and offer retry
+        import bt_durable_panel as panel
+        held = self.projected(run)["TA"]
+        self.assertEqual((held["state"], held["workflow_status"]), ("blocked", "SUCCESS"))
+        self.assertIn("remediation round", panel.reason_of(held))
+        self.assertIn(held["state"], panel.STOPPED)
 
 
 class RepairCompilation(unittest.TestCase):
@@ -110,6 +123,34 @@ class RepairCompilation(unittest.TestCase):
         self.assertIn("F2 (critical)", out[0]["note"])
         orphan = repairs(self.plan(), "TA", [{"id": "F9", "severity": "high", "summary": "x", "tasks": [], "evidence": ""}])
         self.assertEqual(orphan[0]["owner"], "")
+
+
+class AuditInThePanels(unittest.TestCase):
+    """The projection (REQ-030 item 6) of an audit the run holds: its round workflow ended SUCCESS/completed, the run's
+    summary says `remediating` while the coordinated repairs run, and dependents are not queued meanwhile."""
+
+    def test_a_remediating_audit_is_not_shown_completed(self):
+        from types import SimpleNamespace
+
+        import bt_durable_panel as panel
+        from bt_durable import projection
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        wid = f"bt:{run.run_id}"
+        rows = [SimpleNamespace(workflow_id=wid, name=projection.RUN, status="PENDING", output=None),
+                SimpleNamespace(workflow_id=f"{wid}:TA:k1", name=projection.TASK, status="SUCCESS",
+                                output={"status": "completed"}),
+                SimpleNamespace(workflow_id=f"{wid}:T1:k2", name=projection.TASK, status="PENDING", output=None)]
+        summary = {"status": "running", "tasks": {"TA": "remediating", "T1": "running"}, "results": {}}
+        source = SimpleNamespace(
+            list_workflows=lambda workflow_id_prefix, **_: [r for r in rows if r.workflow_id.startswith(workflow_id_prefix)],
+            get_event=lambda workflow_id, key, **_: summary if (workflow_id, key) == (wid, "summary") else None)
+        tasks = {item["id"]: item for item in projection.build(source, run)["tasks"]}
+        self.assertEqual(tasks["TA"]["state"], "recovering")
+        self.assertIn("reparación coordinada", panel.reason_of(tasks["TA"]))
+        self.assertNotIn(tasks["TA"]["state"], panel.STOPPED)          # nothing to retry while the repair runs
+        summary["tasks"]["TA"] = "completed"                             # the re-audit passed
+        self.assertEqual({t["id"]: t["state"] for t in projection.build(source, run)["tasks"]}["TA"], "completed")
 
 
 if __name__ == "__main__":

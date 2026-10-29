@@ -45,6 +45,7 @@ def build(source, run: RunRef, plan=None) -> dict[str, Any]:
     summary = _event(source, run_wid, "summary") if run_row else None
     summary = summary if isinstance(summary, dict) else {}
     summary_tasks = summary.get("tasks") if isinstance(summary.get("tasks"), dict) else {}
+    summary_results = summary.get("results") if isinstance(summary.get("results"), dict) else {}
     rounds: dict[str, list] = {}
     for row in rows:
         if row.name == TASK and row.workflow_id.startswith(run_wid + ":"):
@@ -58,6 +59,7 @@ def build(source, run: RunRef, plan=None) -> dict[str, Any]:
     for task_id in order:
         task, decision = _task(source, task_id, rounds.get(task_id, []), summary_tasks.get(task_id),
                                attempts.get(task_id, []))
+        _audit_hold(task, summary_tasks.get(task_id), summary_results.get(task_id))
         tasks.append(task)
         if decision:
             decisions.append(decision)
@@ -139,6 +141,16 @@ def _task(source, task_id: str, rounds: list, summary_state: str | None, attempt
                                  and a["number"] % 100 != 99)
     task["history"] = attempts[-HISTORY:]
     return task, decision
+
+
+def _audit_hold(task: dict, summary_state: str | None, result: Any) -> None:
+    """A milestone audit (REQ-030 item 4) ends its round completed, but the run holds it while its blocking findings
+    are repaired (`remediating`) or once its remediation rounds ran out (`blocked`): the run decides, not the round."""
+    if task["state"] != "completed" or summary_state not in ("remediating", "blocked"):
+        return
+    reason = result.get("audit") if isinstance(result, dict) else None
+    task.update(state="recovering" if summary_state == "remediating" else "blocked", durable_state=summary_state,
+                outcome=summary_state, audit=str(reason)[:1000] if reason else None)
 
 
 def _decision(task_id: str, k: int, workflow_id: str, request: dict, attempt: str | None) -> dict:
