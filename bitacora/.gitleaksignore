@@ -154,6 +154,7 @@ bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/
 # Verified false positives: translation cache keyed by SHA-256 hashes, Spanish text that mentions API or APP_PASSWORD (REQ-021).
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:185
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:245
+bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:332
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:606
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:628
 bitacora/pictures/requirements/REQ-021-pilot-release-bilingual-ui-rectangular-t/.translations/cache.json:generic-api-key:811
