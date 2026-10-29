@@ -152,6 +152,9 @@ def remember_planner(rdir: Path, session_id: str, config_dir: str, cwd: str) -> 
 # What Claude Code prints when the account ran out: every notice typed into such a Planner is lost (pictures REQ-021,
 # 2026-10-29: claude-work hit its weekly limit and five notices from the web reached nobody).
 LIMITED = re.compile(r"hit your (?:weekly |usage |session )?limit|usage limit reached|/usage-credits", re.I)
+# A question only the owner may answer: Claude Code's first run under an account asks him to accept bypass-permissions
+# mode, and a Planner moved to that account waits on it (claude-luis, 2026-10-29); an operator may not accept it for him.
+OWNER_PROMPT = re.compile(r"Bypass Permissions mode.*Yes, I accept", re.S)
 
 
 def planner_account(project: str, avoid: str = "") -> str:
@@ -229,7 +232,11 @@ def notify_planner(project: str, req: str, text: str) -> bool:
     if not exists(name):
         return False
     notice = "[Automatic notice from the web, not typed by the owner] " + text
-    if LIMITED.search(screen(name, 12)):
+    shown = screen(name, 20)
+    if OWNER_PROMPT.search(shown):
+        _ask_owner(project, req, name)
+        return False
+    if LIMITED.search(shown):
         from bt_core import ROOT
         rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
         if rdir is not None:
@@ -237,6 +244,23 @@ def notify_planner(project: str, req: str, text: str) -> bool:
             kill(name)
             return start_planner(Path(ROOT), project, rdir, avoid=avoid, message=notice)[0]
     return send(name, notice) == "Enviado."
+
+
+def _ask_owner(project: str, req: str, name: str) -> None:
+    """The Planner waits on a question only the owner answers: tell him where, on the desktop and in the plan's feed."""
+    text = (f"El Planner de {req} espera que aceptes el modo Bypass Permissions en su cuenta: abre una terminal, "
+            f"`tmux -L {socket()} attach -t {name}`, elige «Yes, I accept» y sal con Ctrl-b d. Hasta entonces no recibe "
+            "los avisos de la web.")
+    try:
+        import bt_runutil
+        bt_runutil.notify("El Planner espera tu respuesta", text)
+        from bt_core import ROOT
+        import bt_planning_activity as activity
+        rdir = next(iter(sorted((Path(ROOT) / project / "requirements").glob(f"{req}-*"))), None)
+        if rdir is not None:
+            activity.record(rdir, "Planner", text, kind="flow")
+    except Exception:  # noqa: BLE001 - telling him is best effort; the panel's agent strip shows the screen too
+        pass
 
 
 REVIVE_WITHIN_DAYS = 3

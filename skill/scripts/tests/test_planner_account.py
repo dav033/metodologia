@@ -81,6 +81,18 @@ class PlannerAccount(unittest.TestCase):
         kill.assert_not_called()
         self.assertIn("SP-8 confirmado", send.call_args.args[1])
 
+    def test_a_planner_waiting_on_the_owners_consent_is_not_typed_into_and_the_owner_is_told_where(self):
+        prompt = ("  WARNING: Claude Code running in Bypass Permissions mode\n  ❯ No, exit\n    Yes, I accept\n"
+                  "  Enter to confirm · Esc to cancel")
+        with patch.object(terminal, "exists", return_value=True), patch.object(terminal, "screen", return_value=prompt), \
+                patch.object(terminal, "send") as send, patch.object(terminal, "kill") as kill, \
+                patch("bt_runutil.notify") as notify:
+            self.assertFalse(terminal.notify_planner("pictures", "REQ-021", "SP-8 confirmado"))
+        send.assert_not_called()
+        kill.assert_not_called()
+        self.assertIn("attach -t bit-pictures-REQ-021-planner", notify.call_args.args[1])
+        self.assertIn("Yes, I accept", notify.call_args.args[1])
+
 
 if __name__ == "__main__":
     unittest.main()
