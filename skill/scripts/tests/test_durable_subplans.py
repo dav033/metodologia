@@ -177,6 +177,35 @@ class SubplanFrontier(unittest.TestCase):
         self.assertIn("G1", frontier.compute(plan, done, max_parallel=4).ready)    # gates=None: pre-patch behaviour
 
 
+class MembersAcrossSubplans(EngineCase):
+    """Two subplans append to the same file (pictures REQ-021: SP-2 and SP-3 each added npm scripts at the end of
+    package.json). As in the legacy runtime (`SubplanLineRouter`), a member's work counts once it is in its own subplan
+    line; meeting another subplan's work is the composition gate's business. The run line still takes everything that
+    merges cleanly; what does not is reported (`run_line_conflict`), never a failure the member could not fix by
+    retrying (it starts from its own line every time)."""
+
+    def test_a_member_conflicting_only_on_the_run_line_is_accepted_in_its_subplan_line(self):
+        tasks = [task("T1", scenario="append", subplan="SP-1", kind="implement", paths=["T1.task", "out.txt", "README.md"]),
+                 task("T2", scenario="append", subplan="SP-2", kind="implement", paths=["T2.task", "out.txt", "README.md"])]
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0",
+                                                    subplans=[subplan("SP-1", "T1", "T1"), subplan("SP-2", "T2", "T2")]))
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2"])     # no retry wasted
+        prefix = "refs/bt/subplan/proj/REQ-900/r1/app"
+        self.assertEqual(self.files(f"{prefix}/SP-1"), {"T1.task"})
+        self.assertEqual(self.files(f"{prefix}/SP-2"), {"T2.task"})
+        import json
+        rows = [json.loads(line) for line in (self.lab.state / "telemetry.jsonl").read_text().splitlines()]
+        conflicts = [row for row in rows if row.get("event") == "run_line_conflict"]
+        self.assertEqual(len(conflicts), 1, conflicts)                  # the second member, on README.md
+        self.assertIn("README.md", conflicts[0]["conflict"])
+
+    files = DurableSubplans.files
+
+
 class AtomicLines(unittest.TestCase):
     """A snapshot goes into the run line and its subplan lines together or not at all: a writer that moves any of the
     lines between the merge and the move (the run's `sync` seeding the same subplan line) leaves every line as it was,
@@ -233,8 +262,8 @@ class AtomicLines(unittest.TestCase):
         self.assertEqual(self.tip(self.run_line), before_run)        # the run line did not move without its subplan line
         self.assertEqual(self.tip(self.sp_line), other)
         self.lines._merge = merge                                    # the step's retry, on the new tips: both move
-        new_tip, conflict = self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
-        self.assertEqual((new_tip, conflict), (self.tip(self.run_line), ""))
+        new_tip, conflict, note = self.lines.integrate(self.run_ref, self.task, snap, lines=("SP-1",))
+        self.assertEqual((new_tip, conflict, note), (self.tip(self.run_line), "", ""))
         for ref in (self.run_line, self.sp_line):
             lab_support.git(self.repo, "merge-base", "--is-ancestor", snap.snapshot_sha, ref)    # raises if not in
 

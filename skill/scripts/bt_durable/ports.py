@@ -76,7 +76,9 @@ class Integrator(Protocol):
     never loses accepted work. `home`/`lines` come from `control.subplans` ("" / () for plans without subplans)."""
     def base_ref(self, run: RunRef, task: TaskSpec, *, home: str = "") -> str: ...
     def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
-                  lines: tuple[str, ...] = ()) -> tuple[str | None, str]: ...  # (ref, conflict)
+                  lines: tuple[str, ...] = ()) -> tuple[str | None, str, str]: ...
+    # (ref, conflict, run-line note): a subplan member counts once its subplan lines take it (legacy SubplanLineRouter);
+    # a conflict on the run line alone is the note, left to the composition gates
     def sync(self, run: RunRef, role: str, items: dict[str, list[tuple[str, str]]]) -> dict[str, dict]: ...
 
 

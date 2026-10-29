@@ -155,10 +155,12 @@ def verify(attempt: dict, prepared: dict, snapshot: dict, profile: str) -> dict:
 def integrate(run: dict, task_id: str, snapshot: dict) -> dict:
     ref = RunRef.model_validate(run)
     lines = subplans.lines_of(plan(ref), task_id)
-    integrated, conflict = _port(lambda: engine.ports().integrator.integrate(ref, frontier.task(plan(ref), task_id),
-                                                                             Snapshot.model_validate(snapshot),
-                                                                             lines=lines))
-    return {"ref": integrated, "conflict": conflict}
+    integrated, conflict, *rest = _port(lambda: engine.ports().integrator.integrate(
+        ref, frontier.task(plan(ref), task_id), Snapshot.model_validate(snapshot), lines=lines))
+    note = rest[0] if rest else ""
+    if note:                                         # inside the step: the workflow's sequence of steps is unchanged
+        engine.ports().telemetry.emit("run_line_conflict", run_id=ref.run_id, task_id=task_id, conflict=note[:500])
+    return {"ref": integrated, "conflict": conflict, **({"run_line_conflict": note[:500]} if note else {})}
 
 
 @DBOS.step(name="bt.sync_lines", retries_allowed=True, max_attempts=3, interval_seconds=2)
