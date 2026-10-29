@@ -339,3 +339,18 @@ class OneSource(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CoreLoaderTypes(unittest.TestCase):
+    """The core loader refuses a non-string kind or verification category as PLAN_INVALID instead of crashing with
+    TypeError (an unhashable value in a set membership test), found while comparing it with the contract."""
+
+    def test_a_list_where_a_name_is_required_is_plan_invalid(self):
+        for task in ({"id": "T1", "kind": ["implement"], "verification": []},
+                     {"id": "T1", "kind": "implement",
+                      "verification": [{"type": "command", "value": "x", "purpose": "p", "category": ["static"]}]}):
+            raw = json.dumps({"schema_version": "1.2.0", "plan_id": "P", "revision": 1, "tasks": [task]}).encode()
+            with self.subTest(task=task):
+                with self.assertRaises(legacy.core.errors.SchedulerError) as caught:
+                    legacy.load_plan(raw, approved_sha256=hashlib.sha256(raw).hexdigest())
+                self.assertEqual(caught.exception.code, "PLAN_INVALID")
