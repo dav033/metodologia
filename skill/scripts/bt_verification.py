@@ -20,7 +20,9 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import contextlib
 import re
+import sqlite3
 import subprocess
 import tempfile
 from contextlib import contextmanager
@@ -154,7 +156,49 @@ def published(rdir: Path) -> dict[str, dict]:
             and isinstance(f.get("commit"), str) and SHA.fullmatch(f["commit"])}
 
 
+def durable_versions(rdir: Path) -> list[dict] | None:
+    """The subplan versions the durable runtime published, as projection rows; None when the run is not the durable
+    runtime's. They live in its composition stores (`<root>/.state/durable/composition/<project>-<REQ>-r<N>-<role>.db`,
+    one per approved revision), never in RUN.projection.json, which only the legacy Scheduler writes: without this, a
+    durable run's subplans stayed «se está construyendo» forever and a stage queued behind one never ran (pictures
+    REQ-021, 2026-10-29). A version is a change of the subplan's commit over time, so a stage join re-publishing the
+    same tree keeps the owner's decision."""
+    rdir = Path(rdir)
+    try:
+        import bt_run_owner
+        if bt_run_owner.backend(rdir) != "dbos" or rdir.parent.name != "requirements":
+            return None
+    except Exception:  # noqa: BLE001 - an unreadable owner record is not a durable run
+        return None
+    store = rdir.parent.parent.parent / ".state" / "durable" / "composition"
+    seen: dict[str, list[tuple[str, str]]] = {}
+    for db in store.glob(f"{rdir.parent.parent.name}-{_req(rdir)}-r*-*.db"):
+        try:
+            with contextlib.closing(sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=2.0)) as conn:
+                rows = conn.execute("SELECT subplan_id, body FROM versions").fetchall()
+        except sqlite3.Error:
+            continue
+        for sid, body in rows:
+            try:
+                item = json.loads(body)
+            except ValueError:
+                continue
+            if isinstance(item.get("commit"), str) and SHA.fullmatch(item["commit"]):
+                seen.setdefault(str(sid), []).append((str(item.get("published_at") or ""), item["commit"]))
+    out = []
+    for sid, items in sorted(seen.items()):
+        commits: list[str] = []
+        for _at, commit in sorted(items):
+            if not commits or commits[-1] != commit:
+                commits.append(commit)
+        out.append({"id": sid, "status": "published", "version": len(commits), "commit": commits[-1]})
+    return out
+
+
 def projection_subplans(rdir: Path) -> list[dict]:
+    durable = durable_versions(rdir)
+    if durable is not None:
+        return durable
     try:
         data = json.loads((Path(rdir) / PROJECTION).read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError):
@@ -170,6 +214,8 @@ def _enrolled(rdir: Path) -> bool:
 
 
 def _reports_subplans(rdir: Path) -> bool:
+    if durable_versions(rdir) is not None:
+        return True
     try:
         data = json.loads((Path(rdir) / PROJECTION).read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError):
