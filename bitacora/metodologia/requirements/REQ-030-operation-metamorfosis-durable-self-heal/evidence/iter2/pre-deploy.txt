@@ -1,2 +1,8 @@
 previous release (engine code before REQ-030 iteration 2): 9865150006b2166a1b73840e32c033eef3fc18b3 metodologia: session b4d5d9f9 end; DBOS backup /home/david/bitacora/.state/durable/backups/bt_durable-20261028-201838.dump
 fa101a4759feb3f435c2500b3b2bc9684ff2f482
+
+# second deploy (iteration 2 integration), 2026-10-28 22:11, session metodologia-6d
+previous main: 646cb712688cb58780ab8912bd5ac56d2d0c055a (code = 986515000; the engine process running since 17:14:53 runs the code before 366cbf372 was restarted in)
+previous remote API release: ~/.local/share/bitacora-remote/003b7d6fc442dfc346f5d80b68a01384d8275d05 (drop-in exec.conf)
+DBOS backup: /home/david/bitacora/.state/durable/backups/bt_durable-20261028-221114.dump sha256 a8e299b9f22bc594a984b144a56205050acbe9d28bdfc12353b4369888b460a8 (pg_restore --list: readable)
+rollback: in ~/dev/metodologia `git switch --detach 646cb7126`, stop bt-durable, restore the dump if the new engine recorded any step (`docker exec -i metodologia-dbos-pg pg_restore --clean -d bt_durable` from the file above: histories with the new patches cannot replay on the old code), start bt-durable; remote API: point exec.conf back to the 003b7d6fc release, daemon-reload, restart
