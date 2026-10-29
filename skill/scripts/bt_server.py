@@ -96,7 +96,16 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         self.send(p.read_bytes(), 200, ctype, sandbox=p.suffix == ".html")
 
     # ------------------------------------------------------------ GET
+    def _version(self) -> bool:
+        """A request for a running test version (`p<port>.localhost`) goes to it, not to the panel (bt_version_proxy)."""
+        if not self.strict_host:
+            return False
+        import bt_version_proxy
+        return bt_version_proxy.serve(self)
+
     def do_GET(self):
+        if self._version():
+            return
         if self.strict_host and not _local_host(self.headers.get("Host") or ""):
             return self.send("Forbidden", 403, "text/plain")
         try:
@@ -207,7 +216,19 @@ class Handler(PlanningActions, PlanListActions, BaseHTTPRequestHandler):
         self.send("Not found", 404, "text/plain")
 
     # ------------------------------------------------------------ POST
+    def do_HEAD(self):
+        if not self._version():
+            self.send("Method not allowed", 405, "text/plain")
+
+    def do_PUT(self):
+        if not self._version():
+            self.send("Method not allowed", 405, "text/plain")
+
+    do_PATCH = do_DELETE = do_OPTIONS = do_PUT
+
     def do_POST(self):
+        if self._version():
+            return
         u = urlparse(self.path)
         parts = [unquote(p) for p in u.path.strip("/").split("/") if p]
         try:

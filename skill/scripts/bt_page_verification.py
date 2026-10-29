@@ -76,9 +76,11 @@ def _urls(ctx: dict, row: dict, paths: list[str]) -> str:
     now = _running(ctx, row) if ctx.get("root") and row["state"] != "waiting" else {"state": "stopped", "url": ""}
     origin = re.match(r"https?://[^/]+", now.get("url") or "")
     if now["state"] == "ready" and origin:
-        items = "".join(f'<li><a href="{e(origin.group(0) + p)}" target="_blank" rel="noopener">{e(origin.group(0) + p)} ↗</a></li>'
-                        for p in paths)
-        lead = f"La versión está en marcha en <strong>{e(origin.group(0))}</strong>. Páginas que hay que probar:"
+        port = origin.group(0).rsplit(":", 1)[-1]
+        items = "".join(f'<li><a href="{e(origin.group(0) + p)}" target="_blank" rel="noopener" data-vport="{e(port)}" '
+                        f'data-vpath="{e(p)}" data-vsuffix=" ↗">{e(origin.group(0) + p)} ↗</a></li>' for p in paths)
+        lead = (f"La versión está en marcha (puerto {e(port)}); los enlaces pasan por el panel, así que funcionan también "
+                f"por el túnel SSH. Páginas que hay que probar:")
     else:
         items = "".join(f"<li><code>{e(p)}</code></li>" for p in paths)
         lead = "Páginas que hay que probar; se vuelven enlaces cuando la versión está en marcha («Probar esta versión»):"
@@ -93,8 +95,10 @@ def _servers(ctx: dict, row: dict) -> str:
     now = _running(ctx, row)
     if now["state"] == "stopped":
         return _form(ctx, "verify-run", "Probar esta versión ↗", row["id"], cls="pp-approve", blank=True)
-    link = (f'<a class="pp-vopen" href="{e(now["url"])}" target="_blank" rel="noopener">Abrir {e(now["url"])} ↗</a>'
-            if now["state"] == "ready" else
+    found = re.match(r"https?://[^/:]+:(\d+)(/.*)?$", now.get("url") or "")
+    link = (f'<a class="pp-vopen" href="{e(now["url"])}" target="_blank" rel="noopener" data-vport="{found.group(1)}" '
+            f'data-vpath="{e(found.group(2) or "/")}" data-vprefix="Abrir " data-vsuffix=" ↗">Abrir {e(now["url"])} ↗</a>'
+            if now["state"] == "ready" and found else
             f'<a class="pp-vopen" href="{purl(ctx["project"], "req", ctx["rid"], "verify-run")}?sp={e(row["id"])}" '
             f'target="_blank" rel="noopener">Preparando… ↗</a>')
     return link + _form(ctx, "verify-stop", "Detener servidores", row["id"])

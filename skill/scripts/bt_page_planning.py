@@ -109,7 +109,7 @@ def plan_tab(project: str, rid: str, rdir: Path, status: str | None, token: str,
     api = purl(project, "req", rid, "planning")
     return (f'<link rel="stylesheet" href="/static/plans.css"><div class="pp" id="planning" data-api="{e(api)}">'
             f'{fragment(project, rid, rdir, status, token, opts)}'
-            '</div><script src="/static/planning-live.js"></script><script src="/static/mockup-nav.js"></script>')
+            '</div><script src="/static/planning-live.js"></script><script src="/static/mockup-nav.js"></script><script src="/static/verify-run.js"></script>')
 
 
 def fragment(project: str, rid: str, rdir: Path, status: str | None, token: str, opts: dict) -> str:
