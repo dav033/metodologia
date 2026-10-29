@@ -1,0 +1,6 @@
+# CG-2 composition resolution, 2026-10-29 06:00, session metodologia-6d (operator)
+ref: refs/bt/subplan/pictures/REQ-021/r15/pictures/SP-3
+previous tip: a1a540ae7f94aa3a71b0b32f73919ab290b15e02 (rollback: git update-ref refs/bt/subplan/pictures/REQ-021/r15/pictures/SP-3 a1a540ae7f94aa3a71b0b32f73919ab290b15e02 8ac04102674cedaf454623ad530837bd6c705b92)
+resolution commit: 8ac04102674cedaf454623ad530837bd6c705b92 (parent: previous tip; only package.json changes)
+content: package.json = CG-4 candidate C3's file + the 11 SP-3-only scripts inserted after "dev" (union of SP-1, SP-2, SP-14, SP-3; no key with two values); copy: cg2-package-json-union.json
+checked before applying: git merge-tree of C3 with the new SP-3 tip at merge-base(SP-3', SP-14): clean (rc 0); composed package.json 297 scripts

@@ -609,7 +609,15 @@ Each signed-in user saves and reopens projects and decorations from any browser,
   - Acceptance / functional: Photo reading knows every approved new Backing: the reading prompt lists it, a deterministic reading that names it or one of its synonyms compiles into that prop with its measured size and colours, and a box the reader did not name is not invented as that prop. Check: `npx tsx --conditions=react-server scripts/test/test-lectura-backing-nuevos.ts`
   - Acceptance / regression: The owner reference photos compile exactly as before, so the seven existing Backing props and the other catalogue props keep their photo discovery. Check: `npx tsx --conditions=react-server scripts/test/test-compilar-lectura.ts`
 
-- [ ] T3.8 — Checkpoint: run the registry and modelling suites before Taller UI and export work · repo: pictures · after: T3.5, T3.7 · verify: `npx tsc --noEmit` · files: .evidence/REQ-021/SP-3.checkpoint.json · resources: taller:scene · covers: R9, R11 · kind: test · subplan: SP-3 · ui: no
+- [ ] T3.1 — Repair what blocks T3.8 · repo: pictures · after: T3.5, T3.7 · files: src/lib/globos3d/mobiliario-conjunto-tipos.ts, src/lib/globos3d/mobiliario-mesas-param.ts, src/lib/globos3d/mobiliario-conjunto.ts, src/lib/globos3d/herramientas-escena-mesas.ts, src/lib/globos3d/herramientas-escena.ts, src/lib/globos3d/tipos-escena.ts, src/lib/globos3d/fondos-backing.ts, src/lib/globos3d/fondos-escenografia.ts, src/lib/globos3d/backing.ts, scripts/test/test-taller-registros-completos.ts, scripts/test/test-catalogo-dorado.ts, scripts/test/dorado/catalogo-mesas-nuevas.json, scripts/test/dorado/catalogo-backing-nuevos.json, scripts/test/test-mobiliario-libre.ts, scripts/test/test-anadir-repositorios.tsx, src/lib/globos3d/escenografia.ts · resources: taller:catalogue, taller:furniture-model, taller:scene · covers: R10, R11, R9 · kind: implement · subplan: SP-3 · ui: no
+
+  Repair task added by the run's self-repair (legacy runtime) when T3.8 could not pass; completed and inherited by the durable run. Objective, criteria and evidence are in PLAN.json.
+
+- [ ] T3.14 — Repair what blocks T3.8 · repo: pictures · after: T3.5, T3.7, T3.1 · files: .evidence/REQ-021/SP-3.checkpoint.json · resources: taller:scene · covers: R11, R9 · kind: implement · subplan: SP-3 · ui: no
+
+  Repair task added by the run's self-repair (legacy runtime) when T3.8 could not pass; completed and inherited by the durable run. Objective, criteria and evidence are in PLAN.json.
+
+- [ ] T3.8 — Checkpoint: run the registry and modelling suites before Taller UI and export work · repo: pictures · after: T3.5, T3.7, T3.1, T3.14 · verify: `npx tsc --noEmit` · files: .evidence/REQ-021/SP-3.checkpoint.json · resources: taller:scene · covers: R9, R11 · kind: test · subplan: SP-3 · ui: no
 
   Classification: complexity low; scope small_change; risk medium; coupling medium; confidence medium; estimate 40 minutes.
   Spec: Run, on one tree and without repairs, the suites authored by T3.3, T3.5, T3.6 and T3.7 plus the existing regressions, and write .evidence/REQ-021/SP-3.checkpoint.json with the tree identity and each command's exit status and summary. A failure sends back only the task whose suite failed.

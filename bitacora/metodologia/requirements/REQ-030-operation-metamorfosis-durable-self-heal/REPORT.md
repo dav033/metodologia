@@ -253,6 +253,11 @@ stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchan
 
 ## Not done / remaining debt
 
+- Proposal (found live, both runtimes): agents never receive a test database, so a task whose checks need one
+  (REQ-021: the accounts and plans UI harnesses, visual audits) cannot run its own checks and fixes blind (T14.4:
+  two attempts and two token budgets before the operator gave it a database). A disposable PostgreSQL in CI mode
+  (`CI=true APP_ENV=test DATABASE_URL=…`, no user credential) works, as the operator showed; the runtime could start
+  one per run and hand its URL to the agents of tasks whose checks declare `requires: [PICTURES_REQ021_DATABASE_URL]`.
 - Proposals for the owner (not done): (1) the legacy verifier inherits the same session variables as the durable one
   did (`VK_DRIVER_FILES`), so its WebGL checks fail the same way: apply `adapters/m6.sandbox_policy`'s filter in
   `bt_verifier_env.ambient_for_run`, or narrow `verifier.inherit_env`; (2) a ledger status for "could not audit" that
