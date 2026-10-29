@@ -269,15 +269,18 @@ Designer build the plan together, in four phases the web Plan tab shows as a ste
    subplans' Designers (one batch per subplan, `design_scope`; owner, 2026-10-29), from the subplan's UI brief (write its `ui_brief`: flows, screens/states, existing surface to change, must-not-change;
    `plan-contract.md`): relay its
    questions, fold the answers into the plan, send owner comments with `design feedback`. The owner confirms the
-   subplan («Confirmar subplan», or `planning confirm REQ-NNN SP-n --by owner` only when they say so in the chat);
+   subplan («Confirmar y ejecutar», which also sends it to run as below; or `planning confirm REQ-NNN SP-n --by owner`
+   only when they say so in the chat);
    confirmation is refused while it has no tasks, a task without criteria, a pending input or a design that is not
    ready. The focus then moves to the next subplan and its Designer starts if it had not already. `planning focus REQ-NNN SP-n` (or
    «Definir ahora») jumps. Any later change to a confirmed subplan (its PLAN.json part, tasks, inputs or design)
    reopens it.
    Each subplan also needs its `## Pruebas` rows in SPEC (where to try it when built: local, production and every external
    place; how; what to see); confirmation is refused without them and any later change to them reopens the subplan.
-   **Run a confirmed subplan (D-134).** The owner can press «Ejecutar subplan» or authorize
-   `bitacora.py --project P stage run REQ-NNN SP-n[,SP-m]`. The Scheduler executes a frozen cumulative stage
+   **Run a confirmed subplan (D-134).** On the web, confirming runs it too (D-161; «Ejecutar subplan» remains for a
+   subplan confirmed in the chat); or the owner authorizes `bitacora.py --project P stage run REQ-NNN SP-n[,SP-m]`. A
+   stage that needs earlier subplans not run yet waits in `.planning/stage-queue.json` («En cola · espera SP-n») and
+   runs when the owner approves them in «Probar» (D-155). The Scheduler executes a frozen cumulative stage
    while the Planner continues the remaining draft. Keep approved scope fixed; changing it requires owner
    re-confirmation and another approval. Later stages join the same run after live attempts drain, preserving accepted
    unchanged work (a run the durable runtime owns continues in a new run of the stage's revision: `bt-durable join`,

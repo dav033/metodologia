@@ -88,14 +88,28 @@
       n.hidden = n.dataset.scSp === open || !latest || latest <= (map[n.dataset.scSp] || '');
     });
   }
+  // The subplan list scrolls on its own (planning.css). Swapping it for a fresh copy, navigating, or the reload after a
+  // form (confirm, approve) would bring it back to the top: each keeps where the owner left it, and arriving on another
+  // subplan brings that one into sight.
+  var LIST = 'bt-pp-list:' + location.pathname;
+  function listTop() { var l = root.querySelector('.pp-list'); return l ? l.scrollTop : null; }
+  function openId() { var on = root.querySelector('.pp-list .pp-item.on .pp-id'); return on ? on.textContent : ''; }
+  function keepList(top) { var l = root.querySelector('.pp-list'); if (l && top !== null && l.scrollTop !== top) l.scrollTop = top; }
+  function showOpen() {
+    var l = root.querySelector('.pp-list'), on = l && l.querySelector('.pp-item.on');
+    if (!on) return;
+    var r = on.getBoundingClientRect(), box = l.getBoundingClientRect();
+    if (r.top < box.top || r.bottom > box.bottom) l.scrollTop += r.top - box.top - (box.height - r.height) / 2;
+  }
   function apply(html, force) {
     var t = document.createElement('template');
     t.innerHTML = html;
-    var fresh = blocks(t.content), old = blocks(root);
+    var fresh = blocks(t.content), old = blocks(root), top = listTop();
     var keys = function (list) { return list.map(function (n) { return n.dataset.k; }).join('|'); };
     if (force || keys(fresh) !== keys(old)) {
       if (!force && old.some(busy)) return;
       root.replaceChildren(t.content);
+      keepList(top);
       render(root);
       marks();
       return;
@@ -113,6 +127,7 @@
       if (['bar', 'agent', 'agent-say'].indexOf(n.dataset.k) < 0 && n.dataset.k.indexOf('control-') !== 0 &&
           !n.querySelector('.pp-dprog')) flash(n);
     });
+    keepList(top);
     marks();
   }
   function load(force) {
@@ -134,6 +149,7 @@
     current = api(href);
     if (push) history.pushState(null, '', href);
     load(true).then(function () {
+      showOpen();
       var top = root.getBoundingClientRect().top;
       if (top < 0) root.scrollIntoView({ block: 'start' });
     });
@@ -188,8 +204,17 @@
   document.addEventListener('click', function (ev) { closePops(ev.target.closest && ev.target.closest('.pp-cxpop')); });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closePops(null); });
   window.addEventListener('popstate', function () { go(location.href, false); });
+  window.addEventListener('pagehide', function () {
+    var top = listTop();
+    try { if (top !== null) sessionStorage.setItem(LIST, JSON.stringify({ top: top, sp: openId() })); } catch (err) { /* private mode */ }
+  });
+  var left = null;
+  try { left = JSON.parse(sessionStorage.getItem(LIST) || 'null'); } catch (err) { /* private mode */ }
   render(root);
   marks();
+  function arrive() { if (left && left.sp === openId() && typeof left.top === 'number') keepList(left.top); else showOpen(); }
+  arrive();
+  window.addEventListener('load', arrive, { once: true });     // the list grows once its fonts arrive
   flowFrames(root);
   setInterval(function () { if (!document.hidden) load(false); }, 4000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden) load(false); });

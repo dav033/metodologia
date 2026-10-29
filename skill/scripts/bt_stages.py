@@ -261,6 +261,8 @@ def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str
         if not after:
             raise
         return bt_stage_queue.queue(rdir, add, after, by=by, via=via)
+    import bt_stage_queue
+    bt_stage_queue.settle(rdir, approved(rdir))           # a queued stage this one already holds is done waiting
     message = start_or_join(project, rdir, start=start, join=join)
     stage = entry.get("stage") or {}
     held = ", ".join(stage.get("subplans") or approved(rdir))
@@ -273,10 +275,13 @@ def run(project: str, rdir: Path, add: list[str], *, by: str = "owner", via: str
 
 
 def info(rdir: Path) -> dict:
-    """For pages: approved stages, the subplans the latest one holds and the draft subplans still outside."""
+    """For pages: approved stages, the subplans the latest one holds, the draft subplans still outside and the queued
+    ones with what each waits for (`bt_stage_queue`)."""
     import bt_plan_adapter
+    import bt_stage_queue
     summary = bt_plan_adapter.stage_summary(rdir)
     held = summary["stages"][-1]["subplans"] if summary["stages"] else []
     draft = bt_plan_adapter.draft_subplans(rdir)
-    return {**summary, "held": held, "outside": [s for s in draft or [] if s not in held],
+    queued = {sid: item for item in bt_stage_queue.pending(rdir) for sid in item["add"] if sid not in held}
+    return {**summary, "held": held, "outside": [s for s in draft or [] if s not in held], "queued": queued,
             "revision": summary["stages"][-1]["revision"] if summary["stages"] else None}

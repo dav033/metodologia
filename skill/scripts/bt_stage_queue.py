@@ -66,12 +66,23 @@ def queue(rdir: Path, add: list[str], after: list[str], *, by: str, via: str) ->
             f"se haya ejecutado y lo apruebes en «Probar».")
 
 
+def settle(rdir: Path, held: list[str]) -> None:
+    """Drop the queued stages whose subplans all run already in the approved stage (pictures REQ-021, 2026-10-29: SP-8
+    queued behind SP-7, then the owner ran SP-7 and SP-8 from their buttons; the stale entry would have approved a second,
+    identical stage when SP-7 passed «Probar»)."""
+    items = pending(rdir)
+    left = [i for i in items if not set(i["add"]) <= set(held)]
+    if len(left) != len(items):
+        _save(rdir, left)
+
+
 def drain(project: str, rdir: Path) -> list[str]:
     """Run every queued stage whose subplans to wait for are all approved in «Probar». Returns what each one said; a
     stage that still cannot run stays queued with its error, which the activity feed shows."""
     import bt_stages
     import bt_verification
 
+    settle(rdir, bt_stages.approved(rdir))
     items = pending(rdir)
     if not items:
         return []

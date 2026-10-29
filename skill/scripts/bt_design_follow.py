@@ -33,8 +33,9 @@ def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
                 return [r["ref"]]
             except SystemExit:
                 continue  # comparison or source changed; retain the revision for explicit recovery
-        if r["status"] == "choosing" and not r["stale"] and not new_feedback:
-            continue
+        if r["status"] == "choosing" and not new_feedback and not (r["stale"] and r.get("amend")):
+            continue        # directions wait for the owner, even after a plan change: choosing folds it in (D-162);
+                            # an iteration of a direction already chosen is extended with the delta, as before
         if scope is not None and r["ref"] not in scope and not r["pending_feedback"]:
             continue
         if r["status"] == "failed" and (drafts._age(r.get("finished")) < drafts.FAIL_BACKOFF_SEC or

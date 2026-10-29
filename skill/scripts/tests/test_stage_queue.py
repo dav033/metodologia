@@ -76,6 +76,21 @@ class StageQueue(unittest.TestCase):
             self.assertEqual(sq.drain("pictures", self.rdir), [])
         self.assertIn("STAGE_SUBPLAN_UNCONFIRMED", sq.pending(self.rdir)[0]["error"])
 
+    def test_a_queued_subplan_the_owner_ran_from_its_button_leaves_the_queue(self):
+        sq.queue(self.rdir, ["SP-8"], ["SP-7"], by="owner", via="web")
+        with patch.object(bt_stages, "approved", return_value=["SP-5", "SP-6", "SP-7", "SP-8"]), \
+                patch.object(bt_verification, "state", return_value={"subplans": [{"id": "SP-7", "state": "approved"}]}), \
+                patch.object(bt_stages, "run") as run:
+            self.assertEqual(sq.drain("pictures", self.rdir), [])
+        run.assert_not_called()                                # no second, identical stage
+        self.assertEqual(sq.pending(self.rdir), [])
+        sq.queue(self.rdir, ["SP-9"], ["SP-8"], by="owner", via="web")
+        with patch.object(bt_stages, "freeze", return_value={"revision": 22, "stage": {"subplans": ["SP-5", "SP-6", "SP-9"]}}), \
+                patch.object(bt_stages, "approved", return_value=["SP-5", "SP-6", "SP-9"]), \
+                patch.object(bt_stages, "start_or_join", return_value="La ejecución sigue con la etapa aprobada."):
+            bt_stages.run("pictures", self.rdir, ["SP-9"])
+        self.assertEqual(sq.pending(self.rdir), [])
+
     def test_the_owners_approval_drains_the_queue(self):
         decisions = self.rdir / ".verification"
         decisions.mkdir()
