@@ -56,3 +56,8 @@ rollback: git revert the merge of durable-stage-guard (96ab20ea8) on main, then 
 previous main: 57cadf88e58af16ad3a9126e20550589979ab29f
 /home/david/bitacora/.state/durable/backups/bt_durable-20261029-083807.dump 5887252 252a85c1e745ce4d8202eaf0a12a22d7380cb19714d12966a0332d59e3ac6308
 rollback: git revert the merge of durable-stage-guard (5f63c2c21) on main, restart bt-durable.service and bitacora-web.service; a join already made is undone with `bt-durable cancel` on the new run, RUN.owner.json/RUN.durable-run.json restored to the previous run and `retry-task` on it (its workflows were cancelled)
+
+# integration of D-150 (subplan Flow, durable telemetry in the Flow, pause carried into stage joins; local restart of web + engine), 2026-10-29 09:53, session 7db4552d
+previous main: 0d70a9db4bfcd0c57290d7754c65dee250f7942d
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-095338.dump 5895095 26d23a036eae24803618a0b4c719411446ae55a2a574149909c02eea24cb7b17
+rollback: git revert the merge of subplan-flow (8b1c4e2e6) on main, restart bt-durable.service and bitacora-web.service
