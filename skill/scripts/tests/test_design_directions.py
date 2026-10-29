@@ -71,8 +71,15 @@ class Directions(unittest.TestCase):
         launched = len(self.orders)
         self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], reason="focus"), [])
         self.assertEqual(len(self.orders), launched)
+        with drafts._locked(self.rdir) as data:              # an entry recorded before the fix: still nothing pending
+            for f in data["drafts"]["checkout@v1"]["feedback"]:
+                f.pop("consumed", None)
+        self.assertEqual(drafts.rows(self.rdir)[0]["pending_feedback"], 0)
+        self.assertEqual(drafts.request("demo", self.rdir, ["checkout@v1"], reason="focus"), [])
         drafts.add_feedback("demo", self.rdir, "checkout@v1", "Start over with a list", "web")   # a NEW comment still counts
-        self.assertEqual(drafts.rows(self.rdir)[0]["pending_feedback"], 1)
+        row = drafts.rows(self.rdir)[0]
+        self.assertGreater(len(self.orders), launched)                # it started a new exploration
+        self.assertIn("Start over with a list", [f["text"] for f in row["feedback"] if not f.get("consumed")])
 
     def test_failed_sibling_does_not_lose_other_directions(self):
         drafts.request("demo", self.rdir)
