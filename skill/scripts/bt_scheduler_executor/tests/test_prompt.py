@@ -183,6 +183,19 @@ class PromptDesignContract(unittest.TestCase):
         self.assertIn("approved SHA-256", ui)
         self.assertIn("stop and", ui)
 
+    def test_the_approved_hash_names_the_contract_file_not_the_mockup(self):
+        """pictures REQ-021 T14.2: next to the mockup line, "a file matching the approved SHA-256" made the agent hash the
+        mockup (a different file) and stop four times although the contract matched the owner's approval exactly."""
+        from bt_scheduler_executor.model import Brief
+        from bt_scheduler_executor.prompt import build_prompt
+        ui = build_prompt(Brief(title="UI work", notes="Task kind: implement\nUI task: true\n"
+                                "Design contract: design/contracts/shop@v2.md\nApproval: approved\nSHA-256: " + "a" * 64 +
+                                "\nPlanning mockup: /b/design/history/shop@v2/approved.html"),
+                          SimpleNamespace(task_id="T2", acceptance_criteria=()), workdir="/w", branch="b",
+                          report_path="/r.json")
+        self.assertIn("`design/contracts/shop@v2.md` matching the approved SHA-256", ui)
+        self.assertIn("the mockup is only a visual reference with its own hash", ui)
+
 
 if __name__ == "__main__":
     unittest.main()
