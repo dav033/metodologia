@@ -9027,7 +9027,7 @@
    "failures": 0,
    "feedback": [
     {
-     "consumed": "D-20261029-114114-3c71",
+     "consumed": "D-20261029-121224-c92f",
      "direction": "a",
      "id": "d678756ecb127f3c",
      "text": "Me gusta esta direccion pero prefieroq eu sea como una barra en la izquierda que tenga como las haerramientas yqeus e peuda ir como cambiando entre ellas, como una sisebar oa glo asi",
@@ -9038,14 +9038,27 @@
    "feedback_batch": [
     "d678756ecb127f3c"
    ],
-   "finished": "2026-10-29T11:50:48-05:00",
+   "finished": "2026-10-29T12:46:16-05:00",
    "fresh": false,
+   "history": [
+    {
+     "at": "2026-10-29T12:46:16-05:00",
+     "rev": 1,
+     "summary": "Finalised owner-chosen direction a 'Operación en paralelo' (r2, left tool sidebar) into the draft twelve-section contract herramientas-chat@v1.md and a rebuilt herramientas-chat@v1.html, preserving composition, copy and motion. Two verified layout defects from r2 were fixed in a patched copy of the TSX (quote split never stacked below 1100px viewport — 48px column at 390px; COP/paquete values clip"
+    }
+   ],
+   "mockup": true,
    "phase": "finalise",
+   "questions": [],
    "reason": "iterate",
+   "report": "claimed",
+   "revision": 1,
    "selected_sha256": "9e3753ff7649f24aa1fc68b23ba4f9ae5d7ff76a7660bd754b3106c3fa650460",
+   "sha256": "43231de35ca2be1c22fcbf86bafb1ec0516116637262c7a37069feca2fd57c73",
    "started": "2026-10-29T12:12:24-05:00",
-   "status": "drafting",
+   "status": "ready",
    "subplan_id": "SP-7",
+   "summary": "Finalised owner-chosen direction a 'Operación en paralelo' (r2, left tool sidebar) into the draft twelve-section contract herramientas-chat@v1.md and a rebuilt herramientas-chat@v1.html, preserving composition, copy and motion. Two verified layout defects from r2 were fixed in a patched copy of the TSX (quote split never stacked below 1100px viewport — 48px column at 390px; COP/paquete values clip",
    "ui_digest": "9f0c1908ec9ebe75"
   },
   "planes@v1": {

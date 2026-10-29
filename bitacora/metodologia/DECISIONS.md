@@ -1639,3 +1639,30 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   y que no pase de nuevo»).
 - **Evidence:** `test_durable_agent_env` (4); full regression with D-153 running; telemetry and the attempt's
   `output.log` usage line.
+
+## D-155 — A stage that needs subplans not run yet waits for their approval; the Planner follows quota
+
+- **Date:** 2026-10-29 · **Status:** Accepted · **Refines:** D-134, D-149
+- **Context:** pictures REQ-021. (1) «Ejecutar SP-8» was refused with plan errors about SP-7's tasks and composition
+  gates: SP-8 needs SP-7, which had not run (its design was being finalized); the owner wants to press it now and have
+  SP-8 wait until SP-7 has run and he approved it. (2) «Ejecutar SP-6» was refused for `PLAN_CHECKS_UNMAPPED` (the
+  owner's `planner.require_mapped_checks`), which the stage readiness the Planner reads never showed
+  (`allow_unmapped=True`). (3) The Planner ran on a fixed account, `~/.claude-work`, which hit its weekly limit at 12:05;
+  five notices from the web were answered «You've hit your weekly limit» and lost, so SP-9..SP-13 got no `## Pruebas`
+  rows and the owner was asked for them.
+- **Decision:** `bt_stage_queue`: a stage whose gate passes only with earlier subplans not run yet is queued in
+  `.planning/stage-queue.json` (an unconfirmed subplan is still refused) and runs when the owner approves, in «Probar»,
+  every subplan it waits for (`bt_verification.decide` drains the queue); one that still cannot run stays with its
+  error. Stage readiness applies the mapping gate the button applies. `bt_agent_terminal.planner_account` starts the
+  Planner on the Claude account the router ranks first for the planner role (the owner's override still wins), copying
+  its conversation there; a notice that finds it out of quota starts it again on another account and tells it on start.
+  Operator actions the same day: SP-6's seven summary checks split into one check per criterion with the same command
+  (`keep_confirmed` re-pinned the owner's confirmation); the Planner restarted on claude-luis with the missing tests as
+  its first job.
+- **Consequences:** + the owner can order stages ahead; + the Planner no longer dies silently with its account;
+  − a Planner moved to an account that never accepted Claude Code's bypass-permissions prompt waits on it until the
+  owner accepts it once (the operator may not accept it for him).
+- **Source:** owner, 2026-10-29 («me gustaría poder ejecutar sp8 pero que espere la ejecución y aprobación de sp7»;
+  «de SP-9 para arriba faltan pruebas, eso debería hacerse automáticamente»).
+- **Evidence:** `test_stage_queue` (6), `test_planner_account` (4); live: `stage_problem` for [SP-8] refused, for
+  [SP-7, SP-8] OK; `planner_account` → claude-luis, avoiding it → claude-work.

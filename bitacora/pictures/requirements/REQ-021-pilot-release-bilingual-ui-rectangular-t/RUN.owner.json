@@ -1,8 +1,8 @@
 {
  "backend": "dbos",
  "by": "engine stage join",
- "migrated_from": "durable pictures:REQ-021:r17",
- "run_id": "pictures:REQ-021:r18",
- "since": 1793293661.6265833,
- "workflow_id": "bt:pictures:REQ-021:r18"
+ "migrated_from": "durable pictures:REQ-021:r18",
+ "run_id": "pictures:REQ-021:r19",
+ "since": 1793295339.118725,
+ "workflow_id": "bt:pictures:REQ-021:r19"
 }

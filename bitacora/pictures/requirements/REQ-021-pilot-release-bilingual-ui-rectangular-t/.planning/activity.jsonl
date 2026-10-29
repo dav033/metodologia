@@ -412,3 +412,5 @@
 {"at": "2026-10-29T12:09:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-6", "text": "Ejecutar SP-6: etapa r19 aprobada (SP-1, SP-2, SP-14, SP-3, SP-4, SP-5, SP-6), faltan 7 subplanes", "diff": ""}
 {"at": "2026-10-29T12:12:24-05:00", "who": "Tú → Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1: elegida dirección A · Operación en paralelo", "diff": ""}
 {"at": "2026-10-29T12:12:55-05:00", "who": "Tú", "kind": "flow", "sp": "SP-8", "text": "Confirmaste SP-8 en la web; sigue SP-9", "diff": ""}
+{"at": "2026-10-29T12:46:16-05:00", "who": "Designer", "kind": "design", "sp": "SP-7", "text": "herramientas-chat@v1 · borrador 1 listo", "diff": ""}
+{"at": "2026-10-29T12:46:30-05:00", "who": "operator, at the owner's request", "kind": "flow", "sp": "SP-8", "text": "Ejecutar SP-8: en cola hasta que SP-7 se ejecute y lo apruebes en «Probar»", "diff": ""}
