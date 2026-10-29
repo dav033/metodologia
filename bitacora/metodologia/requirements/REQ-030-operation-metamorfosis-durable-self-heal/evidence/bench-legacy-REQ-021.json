@@ -1,0 +1,20 @@
+{
+ "runtime": "legacy",
+ "run": "pictures/REQ-021",
+ "attempts": 71,
+ "results": {
+  "verify_failed": 34,
+  "stopped": 33,
+  "failed": 4
+ },
+ "verify_failed_share": 0.479,
+ "tokens_reported": 198088200,
+ "max_attempts_one_task": [
+  "T2.6",
+  24
+ ],
+ "human_decisions": 9,
+ "manual_interventions": 20,
+ "automatic_interventions": 32,
+ "minutes_lost_recorded": 296.0
+}

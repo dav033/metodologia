@@ -1,6 +1,6 @@
 # Index — metodologia
 
-_Generated 2026-10-28 09:57 by `bitacora.py index`. Do not edit by hand._
+_Generated 2026-10-28 19:43 by `bitacora.py index`. Do not edit by hand._
 
 **Central:** [Summary](SUMMARY.md) · [Architecture](ARCHITECTURE.md) · [Decisions](DECISIONS.md) · [Pending](PENDING.md) · [Tools](TOOLS.md)  
 **Web:** [project](http://127.0.0.1:8765/p/metodologia) · [graph](http://127.0.0.1:8765/p/metodologia/graph)  
@@ -43,6 +43,7 @@ _Generated 2026-10-28 09:57 by `bitacora.py index`. Do not edit by hand._
 | [REQ-027](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/SPEC.md) | Remote flow control: Vercel frontend, AdvIn API, local or VPS execution | `planned` | [launched](requirements/REQ-027-remote-flow-control-vercel-frontend-advi/PLAN.md) |  |
 | [REQ-028](requirements/REQ-028-per-run-integration-branch-and-remediati/SPEC.md) | Per-run integration branch and remediation tasks: audit findings stop cascading rebuilds | `in-progress` | — |  |
 | [REQ-029](requirements/REQ-029-autonomous-recovery-from-repeated-audit/SPEC.md) | Autonomous recovery from repeated audit and integration failures | `done` | — |  |
+| [REQ-030](requirements/REQ-030-operation-metamorfosis-durable-self-heal/SPEC.md) | Operation Metamorfosis: durable, self-healing, Linux-native execution engine | `in-progress` | — | report ✓ |
 
 ## Top pending (urgency, then complexity)
 
