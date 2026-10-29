@@ -204,3 +204,25 @@ class Panel(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UrlsToTest(unittest.TestCase):
+    ROWS = [{"how": "1) `npm run dev` and open http://localhost:3000/login, sign in. 2) Open /3d → Añadir.",
+             "expect": "Without the flag: sent to /login; account/session stay; see docs/req021/x.md and TCP/IP."}]
+
+    def test_full_local_urls_and_bare_paths_once_each_never_files_or_words(self):
+        import bt_page_verification as page
+        self.assertEqual(page.test_paths(self.ROWS), ["/login", "/3d"])
+
+    def test_links_point_at_the_running_version_and_are_plain_until_it_runs(self):
+        import bt_page_verification as page
+        ctx = {"project": "proj", "rid": "REQ-021", "token": "t", "root": Path("/r"), "rdir": Path("/r/x")}
+        ready = {"state": "ready", "url": "http://localhost:3002/", "servers": {"web": True}, "log": ""}
+        with patch.object(servers, "status", return_value=ready):
+            html = page._urls(dict(ctx), ROW, ["/login", "/3d"])
+        self.assertIn('href="http://localhost:3002/3d"', html)
+        self.assertIn("<strong>http://localhost:3002</strong>", html)
+        with patch.object(servers, "status", return_value={"state": "stopped", "url": "", "servers": {}, "log": ""}):
+            html = page._urls(dict(ctx), ROW, ["/login"])
+        self.assertIn("<code>/login</code>", html)
+        self.assertNotIn("href=", html)

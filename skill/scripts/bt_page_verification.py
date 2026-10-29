@@ -46,12 +46,51 @@ def _form(ctx: dict, action: str, label: str, sp: str, *, cls: str = "", note: b
             f'{field}<button type="submit" class="{e(cls)}{" danger" if danger else ""}">{e(label)}</button></form>')
 
 
+def _running(ctx: dict, row: dict) -> dict:
+    """The version's test servers, asked once per page (they are probed over HTTP)."""
+    import bt_verify_servers as servers
+    cache = ctx.setdefault("_verify_servers", {})
+    if row["id"] not in cache:
+        cache[row["id"]] = servers.status(ctx["root"], ctx["project"], ctx["rdir"], row["id"])
+    return cache[row["id"]]
+
+
+# The pages a test row names: full local URLs and bare paths such as /3d or /proyectos (owner, 2026-10-29: «necesito que
+# salgan la url y las urls específicas que hay que probar»). Navigation through menus stays in «Cómo».
+_FULL_URL = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(/[^\s`)|,;»\"']*)?")
+_BARE_PATH = re.compile(r"(?<![\w/.:@-])(/[a-z0-9][a-z0-9_\-]*(?:/[a-z0-9_\-\[\]]+)*)(?![\w.@/])")
+
+
+def test_paths(rows: list[dict]) -> list[str]:
+    found: list[str] = []
+    for r in rows:
+        text = f"{r.get('how') or ''} {r.get('expect') or ''}"
+        rest = _FULL_URL.sub(lambda m: found.append((m.group(1) or "/").rstrip(".")) or " ", text)
+        found += [m.group(1) for m in _BARE_PATH.finditer(rest)]
+    return list(dict.fromkeys(found))
+
+
+def _urls(ctx: dict, row: dict, paths: list[str]) -> str:
+    if not paths:
+        return ""
+    now = _running(ctx, row) if ctx.get("root") and row["state"] != "waiting" else {"state": "stopped", "url": ""}
+    origin = re.match(r"https?://[^/]+", now.get("url") or "")
+    if now["state"] == "ready" and origin:
+        items = "".join(f'<li><a href="{e(origin.group(0) + p)}" target="_blank" rel="noopener">{e(origin.group(0) + p)} ↗</a></li>'
+                        for p in paths)
+        lead = f"La versión está en marcha en <strong>{e(origin.group(0))}</strong>. Páginas que hay que probar:"
+    else:
+        items = "".join(f"<li><code>{e(p)}</code></li>" for p in paths)
+        lead = "Páginas que hay que probar; se vuelven enlaces cuando la versión está en marcha («Probar esta versión»):"
+    return f'<div class="pp-vurls"><span class="pp-vlabel">URLs a probar</span><p class="pp-meta">{lead}</p><ul>{items}</ul></div>'
+
+
 def _servers(ctx: dict, row: dict) -> str:
     """«Probar esta versión»: start its test servers and open it in a new tab; while they run, the link and «Detener»."""
     import bt_verify_servers as servers
     if servers.recipe(ctx["root"], ctx["project"]) is None:
         return ""
-    now = servers.status(ctx["root"], ctx["project"], ctx["rdir"], row["id"])
+    now = _running(ctx, row)
     if now["state"] == "stopped":
         return _form(ctx, "verify-run", "Probar esta versión ↗", row["id"], cls="pp-approve", blank=True)
     link = (f'<a class="pp-vopen" href="{e(now["url"])}" target="_blank" rel="noopener">Abrir {e(now["url"])} ↗</a>'
@@ -121,7 +160,8 @@ def panel(ctx: dict, s: dict) -> str:
     rdir = ctx["rdir"]
     st = verification.state(rdir)
     row = next((r for r in st["subplans"] if r["id"] == s["id"]), None)
-    where = _where(verification.tests_for(rdir, s["id"]))
+    rows = verification.tests_for(rdir, s["id"])
+    where = _where(rows)
     if not st["applies"] or row is None:
         head = ('<p class="pp-vintro">Cuando este subplan termine de construirse, aquí podrás abrir esa versión, probarla y '
                 'aprobarla o rechazarla. El plan no se da por terminado hasta que apruebes todos los subplanes.</p>')
@@ -133,7 +173,7 @@ def panel(ctx: dict, s: dict) -> str:
              if row["state"] == "outdated" else "")
     head = (f'<p class="pp-vintro">{_state_pill(row["state"])} Versión {e(str(row["version"]))} · commit '
             f'<code>{e(str(row["commit"])[:10])}</code>. Es el árbol integrado exactamente al terminar este subplan.</p>{stale}')
-    return f'<section class="pp-verify">{head}<h3>Dónde probarlo</h3>{where}{_actions(ctx, row)}</section>'
+    return f'<section class="pp-verify">{head}<h3>Dónde probarlo</h3>{where}{_urls(ctx, row, test_paths(rows))}{_actions(ctx, row)}</section>'
 
 
 def tab_label(rdir: Path) -> str:
