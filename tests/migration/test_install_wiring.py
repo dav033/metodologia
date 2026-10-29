@@ -62,6 +62,21 @@ class InstallWiringTests(unittest.TestCase):
         self.assertEqual(sum("/skills/metodologia/scripts/" in c and " hook stop" in c for c in commands), 1)
         self.assertTrue((self.home / ".claude" / "skills" / "metodologia").is_symlink())
 
+    def test_file_guard_matches_shell_tools_and_replaces_an_older_edit_only_group(self) -> None:
+        settings = self.home / ".claude" / "settings.json"
+        data = self.settings()
+        data["hooks"]["PostToolUse"] = [{"matcher": "Edit|Write|MultiEdit", "hooks": [
+            {"type": "command", "command": f'python3 "{self.home}/.claude/skills/metodologia/scripts/file_guard.py"'}]}]
+        settings.write_text(json.dumps(data))
+        done = self.install("--core-only")
+        self.assertEqual(done.returncode, 0, done.stderr + done.stdout)
+        groups = [g for g in self.settings()["hooks"]["PostToolUse"]
+                  if any("file_guard.py" in h["command"] for h in g["hooks"])]
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(set(groups[0]["matcher"].split("|")), {"Edit", "Write", "MultiEdit", "Bash", "PowerShell"})
+        codex = json.loads((self.home / ".codex" / "hooks.json").read_text())["hooks"]["PostToolUse"]
+        self.assertTrue(any("file_guard.py" in h["command"] and "matcher" not in g for g in codex for h in g["hooks"]))
+
     def test_rollback_restores_the_preimage_and_refuses_foreign_edits(self) -> None:
         settings = self.home / ".claude" / "settings.json"
         original = settings.read_bytes()
