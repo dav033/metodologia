@@ -32,6 +32,7 @@ import uuid
 from pathlib import Path
 
 MARKER = "BT_ATTEMPT_KEY"
+SUPERVISOR = "BT_SUPERVISOR_ID"   # the agent carries its supervisor too: attempt keys are not unique across supervisors
 LINE_HOLD_MAX = 64 * 1024
 PARTIAL_FLUSH_SECONDS = 1.0
 TAIL_FLUSH_SECONDS = 1.0
@@ -108,9 +109,12 @@ def send(pid: int, start: float, sig: int) -> bool:
         os.close(fd)
 
 
-def scan(key: str, pgid: int | None = None) -> dict[int, float]:
-    """Live (non-zombie) processes of this user that carry the attempt marker or belong to process group `pgid`."""
+def scan(key: str, pgid: int | None = None, supervisor_id: str | None = None) -> dict[int, float]:
+    """Live (non-zombie) processes of this user that carry the attempt marker or belong to process group `pgid`. With
+    `supervisor_id`, a process another supervisor marked with the same key is not ours (procs.marked: same rule)."""
     needle, me, uid = f"{MARKER}={key}".encode(), os.getpid(), os.getuid()
+    foreign = f"{SUPERVISOR}=".encode()
+    own = f"{SUPERVISOR}={supervisor_id}".encode() if supervisor_id else b""
     found: dict[int, float] = {}
     for entry in os.scandir("/proc"):
         if not entry.name.isdigit() or int(entry.name) == me:
@@ -132,7 +136,8 @@ def scan(key: str, pgid: int | None = None) -> dict[int, float]:
                 environ = handle.read()
         except OSError:
             continue
-        if needle in environ.split(b"\0"):
+        items = environ.split(b"\0")
+        if needle in items and not (own and own not in items and any(i.startswith(foreign) for i in items)):
             found[pid] = fields[3]
     return found
 
@@ -323,6 +328,8 @@ def cmd_run(adir: Path) -> int:
     spec = read_json(adir / "launch.json") or {}
     env = {name: os.environ[name] for name in spec.get("env_keys", []) if name in os.environ}
     env[MARKER] = spec["attempt_key"]
+    if spec.get("supervisor_id"):
+        env[SUPERVISOR] = spec["supervisor_id"]
     unlink(adir / "env")          # secrets at rest only until the start: systemd has already read it
     stdin = _open_stdin(adir)     # not StandardInput=file: ExecStopPost would re-open it after we deleted it
     out = Output(Path(spec["log_dir"]), int(spec["output_cap_bytes"]), int(spec["tail_bytes"]))
@@ -367,10 +374,10 @@ def _leader_exited(pid: int) -> bool:
         return True
 
 
-def _stop_tree(key: str, pgid: int, grace: float, pump: Pump) -> None:
+def _stop_tree(key: str, pgid: int, grace: float, pump: Pump, supervisor_id: str | None = None) -> None:
     """SIGTERM(+SIGCONT, in case it is frozen) everything in the group or carrying the marker, wait `grace`, then
     SIGKILL in sweeps until nothing is left (a process forked between a scan and a kill is caught next sweep)."""
-    targets = scan(key, pgid)
+    targets = scan(key, pgid, supervisor_id)
     if not targets:
         return
     for pid, start in targets.items():
@@ -379,10 +386,10 @@ def _stop_tree(key: str, pgid: int, grace: float, pump: Pump) -> None:
     end = time.monotonic() + grace
     while time.monotonic() < end:
         pump.step(0.1)
-        if not scan(key, pgid):
+        if not scan(key, pgid, supervisor_id):
             return
     for _ in range(200):
-        targets = scan(key, pgid)
+        targets = scan(key, pgid, supervisor_id)
         if not targets:
             return
         for pid, start in targets.items():
@@ -410,6 +417,8 @@ def cmd_reap(adir: Path, launch_id: str = "") -> int:
     key, grace = spec["attempt_key"], float(spec["kill_grace_seconds"])
     env = dict(read_json(adir / "env.json") or {})
     env[MARKER] = key
+    if spec.get("supervisor_id"):
+        env[SUPERVISOR] = spec["supervisor_id"]
     unlink(adir / "env.json")
     stdin = _open_stdin(adir)
     out = Output(Path(spec["log_dir"]), int(spec["output_cap_bytes"]), int(spec["tail_bytes"]))
@@ -440,7 +449,7 @@ def cmd_reap(adir: Path, launch_id: str = "") -> int:
             reason = "timeout"
             break
         pump.step(0.1)
-    _stop_tree(key, child.pid, grace, pump)      # with the leader still unreaped, the pgid is still ours
+    _stop_tree(key, child.pid, grace, pump, spec.get("supervisor_id"))   # the leader still unreaped: the pgid is ours
     returncode = child.wait()
     if reason == "exited" and (flags["term"] or (adir / "terminate.json").exists()):
         reason = "terminated"

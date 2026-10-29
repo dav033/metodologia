@@ -91,6 +91,9 @@ class SnapshotTask(WireModel):
     active_attempt: Attempt | None
     review_attempt: Attempt | None = Field(description="Latest failed or rejected attempt, for the failure review.")
     history: list[Attempt]
+    revision: int | None = Field(default=None, description="Durable runs: the projection sequence at which this task "
+                                 "last changed; task commands send it as `precondition.revision` so a command built "
+                                 "against an older view is refused. Absent for other runs.")
 
 
 class SnapshotRun(WireModel):
@@ -98,11 +101,13 @@ class SnapshotRun(WireModel):
     project: Project
     req: ReqId
     state: str = Field(description="M1 run status (running, paused, completed, blocked, cancelled) for Scheduler "
-                                   "runs; legacy runs report their own status, or idle/running when they have none.")
+                                   "runs; durable runs use the same words plus failed (their run workflow ended in "
+                                   "error); legacy runs report their own status, or idle/running when they have none.")
     status: str | None = Field(description="Deprecated alias window of `state` for older gateways; removed in v2.")
     title: str | None
     active: bool | None
-    revision: int | None
+    revision: int | None = Field(description="Precondition token for run commands: for durable runs the projection "
+                                             "sequence at which the run state last changed; null for other runs.")
     updated_at: Timestamp | None
     active_attempt: Attempt | None
     active_task: ActiveTask | None

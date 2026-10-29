@@ -25,6 +25,9 @@ test("F21: run-level reopen names a reopenable task and uses that task's state a
   });
   for (const state of ["running", "paused", "completed", "cancelled"]) assert.equal(runReopen({ ...run, state }), null, state);
   assert.equal(runReopen({ ...run, state: "blocked", tasks: [] }), null, "a blocked run without a reopenable task offers nothing");
+  // A durable run's task carries the projection sequence of its last change: the reopen pins it (stale views refused).
+  const durable = { ...run, state: "blocked", tasks: run.tasks.map((task) => ({ ...task, revision: 41 })) };
+  assert.deepEqual(runReopen(durable).precondition, { state: "blocked", revision: 41 });
 });
 
 test("snapshot parsing keeps the producer's activity times and review attempts", async () => {

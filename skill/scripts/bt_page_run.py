@@ -121,12 +121,72 @@ def apply_control(rdir: Path, action: str) -> str:
     """Route a run control through its authority, preserving legacy state and Scheduler ownership."""
     if action not in CONTROLS:
         raise SystemExit(f"Acción desconocida: {action}")
+    import bt_durable_panel
+    if bt_durable_panel.owned(rdir):               # RUN.owner.json wins over any legacy store left behind
+        return _durable_control(rdir, action, bt_durable_panel)
     if scheduler_authority(rdir):
         scheduler_.apply_control(rdir, action, by="web")
         return {"pause": "Ejecución Scheduler pausada.", "resume": "Ejecución Scheduler reanudada.",
                 "stop": "Cancelación enviada a M1."}[action]
     raise SystemExit("Ejecución heredada (RUN.json): su supervisor fue retirado y ya no admite controles. "
                      "Los planes nuevos corren con el Scheduler (bitacora.py launch).")
+
+
+def _durable_control(rdir: Path, action: str, panel) -> str:
+    """Pause/resume a durable run as a DBOS message, guarded by the run state the projection shows now."""
+    if action == "stop":
+        raise SystemExit("Ejecución durable: detenerla es irreversible; usa `bt-durable cancel PROYECTO REQ`.")
+    owner = panel.owner(rdir) or {}
+    project, _, rest = str(owner.get("run_id", "")).partition(":")
+    req = rest.partition(":")[0]
+    import secrets
+    try:
+        sent = panel.dispatch(project, req, rdir, action, {}, key=f"web-{action}-{secrets.token_hex(8)}",
+                              precondition=panel.target_state(rdir, action, {}), by="web")
+    except (panel.DurableRejected, ValueError, TypeError, RuntimeError) as error:
+        raise SystemExit(f"No se aplicó: {error}") from error
+    return "Ejecución durable: " + "; ".join(sent["messages"])
+
+
+def durable_run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
+    """The run tab of a durable run, from its projection (bt_durable_panel); same layout as the Scheduler tab."""
+    import bt_durable_panel as panel
+    run = panel.read(rdir)
+    if run is None:
+        return ('<div class="notice warn">Ejecución durable (DBOS) sin proyección todavía. Reconstrúyela con '
+                f'<code>{e(f"bt-durable project {project} {rid}")}</code>.</div>')
+    tasks = [t for t in run.get("tasks") or [] if isinstance(t, dict)]
+    done = sum(1 for t in tasks if t.get("state") == "completed")
+    status = str(run.get("status") or "?")
+    kpis = (f'<span class="kpi">autoridad durable (DBOS)</span><span class="kpi">estado {badge(status)}</span>'
+            f'<span class="kpi">progreso {done}/{len(tasks)}</span>'
+            f'<span class="kpi">workflow {e(str(run.get("workflow_status") or "—"))}</span>'
+            f'<span class="kpi">plan r{e(str((run.get("plan_ref") or {}).get("revision", "?")))}</span>'
+            f'<span class="kpi">secuencia {e(str(run.get("sequence")))} · {e(panel.iso(run.get("projected_at")) or "—")}</span>')
+    rows = []
+    for task in tasks:
+        last = (task.get("history") or [None])[-1] or {}
+        route = " · ".join(str(x) for x in (last.get("provider"), last.get("profile"), last.get("model")) if x) or "—"
+        detail = panel.reason_of(task) or ""
+        rows.append(f'<tr><td>{e(str(task.get("id", "")))}</td><td>{badge(str(task.get("state", "?")))}</td>'
+                    f'<td>{e(str(task.get("round") or "—"))}</td><td>{e(str(task.get("attempts", 0)))}</td>'
+                    f'<td>{e(route)}</td><td class="muted">{e(detail)}</td></tr>')
+    table = ('<table><tr><th>ID</th><th>Estado</th><th>Ronda</th><th>Intentos</th><th>Última ruta</th><th>Detalle</th>'
+             f'</tr>{"".join(rows)}</table>' if rows else '<p class="muted">La proyección no tiene tareas.</p>')
+    asks = "".join(f'<li>{e(d["id"])}: {e(d.get("reason") or "")}</li>' for d in run.get("decisions") or []
+                   if isinstance(d, dict) and d.get("id"))
+    notes = (f'<div class="notice warn">Decisiones abiertas (respóndelas en la pestaña del plan): <ul>{asks}</ul></div>'
+             if asks else "")
+    controls = ""
+    if status in ("running", "paused"):
+        action_url = purl(project, "req", rid, "run")
+        action, label = ("pause", "Pausar") if status == "running" else ("resume", "Reanudar")
+        controls = (f'<div class="actions"><form method="post" action="{action_url}" style="display:inline">'
+                    f'<input type="hidden" name="token" value="{e(token)}">'
+                    f'<input type="hidden" name="action" value="{action}"><button type="submit">{label}</button>'
+                    '</form></div>')
+    return (f'<div class="kpis">{kpis}</div><progress max="{max(len(tasks), 1)}" value="{done}" '
+            f'style="width:100%"></progress>{notes}{controls}<h2>Tareas</h2>{table}')
 
 
 def _tier_cell(run: dict, t: dict) -> str:
@@ -170,6 +230,9 @@ def _log_rows(run: dict) -> str:
 
 
 def run_panel(project: str, rid: str, rdir: Path, token: str) -> str:
+    import bt_durable_panel
+    if bt_durable_panel.owned(rdir):
+        return durable_run_panel(project, rid, rdir, token)
     run = load_run(rdir)
     if run is None:
         if scheduler_authority(rdir):

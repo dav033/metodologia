@@ -5,7 +5,8 @@ decision is a pure control-plane function of checkpointed step results. Workflow
 task and attempt identity, so starting or enqueueing the same work twice returns the existing workflow.
 
 Messages (DBOS.send/recv, durable):
-- topic `run` of the run workflow: task_done, retry_task, pause, resume (owner commands carry a request id);
+- topic `run` of the run workflow: task_done, retry_task, pause, resume (owner commands carry a request id, and may
+  carry the state they were built against, `expect_paused`/`expect_round`: a stale one is refused, never applied);
 - topic `owner:<task>` of a task workflow: the owner's answer to the open decision (stale answers are refused).
 Events (DBOS.set_event): `state`, `decision` on task workflows; `summary` on the run workflow (the projection).
 """
@@ -167,7 +168,11 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         if command.request_id in seen_commands:
             continue                                # an idempotent repeat of a command already applied
         seen_commands.add(command.request_id)
-        if command.kind == "pause":
+        stale = _stale_command(command, paused, rounds)
+        if stale:                                   # built against a state the run has left: never applied
+            steps.emit("command_refused", {"run_id": run.run_id, "request_id": command.request_id,
+                                           "reason": stale})
+        elif command.kind == "pause":
             paused = True
         elif command.kind == "resume":
             paused = False
@@ -257,6 +262,18 @@ def _audit_stuck(audit: str, reason: str, states: dict, results: dict) -> None:
     """The audit's dependents stay waiting; the owner sees why (`retry-task` grants one more round)."""
     states[audit] = "blocked"
     results[audit] = {**(results.get(audit) or {}), "status": "blocked", "audit": reason[:1000]}
+
+
+def _stale_command(command: RunCommand, paused: bool, rounds: dict[str, int]) -> str:
+    """Why a command that names the state it was built against no longer applies ('' when it does). Commands
+    without `expect_*` (every command sent before REQ-030 M7) return '' and take exactly the path they took before,
+    so replaying a recorded history runs the same steps; a refusal is a plain `bt.emit` step on a live message."""
+    if command.expect_paused is not None and command.expect_paused != paused:
+        return f"stale: the run is {'paused' if paused else 'running'} now"
+    if command.expect_round is not None and rounds.get(command.task_id or "") != command.expect_round:
+        return (f"stale: {command.task_id} is in round {rounds.get(command.task_id or '')}, the command was built "
+                f"for round {command.expect_round}")
+    return ""
 
 
 def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, note: str,

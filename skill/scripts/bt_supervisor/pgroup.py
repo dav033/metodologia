@@ -46,7 +46,7 @@ class PgroupSupervisor(BaseSupervisor):
 
     def _targets(self, key: str) -> dict[int, float]:
         """Everything of the attempt that is alive: marked processes + the leader's group while its pgid is ours."""
-        found = procs.marked(key)
+        found = procs.marked(key, self.store.supervisor_id)
         started = self.store.read(key, "started.json") or {}
         if started.get("boot_id") == procs.boot_id() and started.get("pgid") \
                 and procs.same_incarnation(started.get("child_pid"), started.get("child_start")):
@@ -64,7 +64,7 @@ class PgroupSupervisor(BaseSupervisor):
                            or self._reaper_alive(key)):
                 return self._finish_start(key, record)     # a crashed launcher got this far: adopt
             # The reaper died before recording the agent: kill anything it may have spawned, then start over.
-            if record and not procs.terminate_targets(lambda: procs.marked(key), 0.0):
+            if record and not procs.terminate_targets(lambda: procs.marked(key, self.store.supervisor_id), 0.0):
                 raise LaunchFailed(f"leftover processes of a crashed launch of {key} could not be killed")
             if not spec.cwd.is_dir():
                 raise LaunchFailed(f"cwd is not a directory: {spec.cwd}")
@@ -94,7 +94,7 @@ class PgroupSupervisor(BaseSupervisor):
             reaper = self.store.read(key, "reaper.json") or {}
             if procs.alive(reaper.get("pid"), reaper.get("start")):
                 procs.signal_all({reaper["pid"]: reaper["start"]}, signal.SIGKILL)
-            procs.terminate_targets(lambda: procs.marked(key), 0.0)
+            procs.terminate_targets(lambda: procs.marked(key, self.store.supervisor_id), 0.0)
             self.store.remove(key)
             raise LaunchFailed(f"the reaper for {key} did not report a start within {START_WAIT_SECONDS:.0f}s")
         identity = self._identity(key, None)

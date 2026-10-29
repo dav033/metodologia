@@ -6,7 +6,7 @@ database only through a `mode=ro` URI. Cheap enough to call every second (`finge
     plan_status(project, req_dir) -> {
       project, req_id, title,
       plan:    {plan_id, revision, sha256, status, schema_version, has_contract},
-      run:     {authority: scheduler|legacy|none, status, active, updated_at},
+      run:     {authority: scheduler|dbos|legacy|none, status, active, updated_at},   # dbos: bt_durable_panel
       summary: {tasks_total, tasks_done, milestones_total, milestones_done, difficulty},
       milestones: [{id, title, difficulty, difficulty_counts, state, progress: {done, total}, tasks: [
         {id, title, milestone_id, complexity, scope, risk, kind, after, state, attempts, attempt, history, evidence}]}]}
@@ -36,6 +36,7 @@ from typing import Any
 
 import bt_attempt_facts as attempt_facts
 import bt_core
+import bt_durable_panel as durable_panel
 import bt_plan_adapter as plan_adapter
 import bt_run_stores as run_stores
 import bt_runstate as rs
@@ -270,6 +271,9 @@ def _highest(levels: list[str | None]) -> str | None:
 
 
 def _run_block(rdir: Path, authority: str, run: dict | None) -> dict[str, Any]:
+    if authority == durable_panel.AUTHORITY:
+        return durable_panel.run_block(run) if run else {"authority": authority, "status": None, "active": False,
+                                                         "updated_at": None}
     status = run.get("status") if isinstance(run, dict) else None
     status = status if isinstance(status, str) else None
     if authority == "scheduler":
@@ -307,11 +311,15 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
         milestones = [{"id": mid, "title": None, "tasks": []}
                       for mid in dict.fromkeys(t["milestone_id"] for t in task_list if t["milestone_id"])]
     by_id = {t["id"]: t for t in task_list}
-    if run and authority == "scheduler":
+    if durable_panel.owned(rdir):           # RUN.owner.json gives the run to bt_durable: its projection decides
+        authority, run = durable_panel.AUTHORITY, durable_panel.read(rdir)
+        if run:
+            durable_panel.overlay(by_id, run, HISTORY_CAP)
+    elif run and authority == "scheduler":
         _scheduler_overlay(by_id, run, attempt_facts.attempt_facts(rdir))
     elif run:
         _legacy_overlay(by_id, run)
-    plan_ref = (run or {}).get("plan_ref") if authority == "scheduler" else None
+    plan_ref = (run or {}).get("plan_ref") if authority in ("scheduler", durable_panel.AUTHORITY) else None
     evolution = _evolution(rdir, task_list, (contract or {}).get("revision", (plan_ref or {}).get("revision")))
     known = {m["id"] for m in milestones}
     for task in task_list:
@@ -336,7 +344,7 @@ def plan_status(project: str, req_dir: Path) -> dict[str, Any]:
                  "ref": s["ref"], "draft": drafted.get(s["ref"], "none") if s["ref"] else None}
                 for s in bt_design_drafts.subplans(rdir)] if owner else []
     plan_md = rdir / "PLAN.md"
-    ref = (run or {}).get("plan_ref") if authority == "scheduler" else None
+    ref = (run or {}).get("plan_ref") if authority in ("scheduler", durable_panel.AUTHORITY) else None
     ref = ref if isinstance(ref, dict) else {}
     digest = ref.get("sha256")
     if digest is None and contract:
@@ -429,6 +437,8 @@ def _asks(rdir: Path) -> int:
             n += json.loads(f.read_text(encoding="utf-8")).get("status") == "open"
         except (OSError, ValueError, AttributeError):
             continue
+    if durable_panel.owned(rdir):
+        return n + len(durable_panel.decisions(rdir))
     if (rdir / scheduler_.PROJECTION).is_file():
         try:
             import bt_scheduler_decisions
@@ -448,6 +458,9 @@ def fingerprint(root: Path | None = None) -> str:
         for store in (run_stores.paths(rdir).get(name) for name in ("m2", "m4", "m5", "m6")):
             if store is not None:       # the module stores change the attempt facts (tokens, activity) too
                 paths += [store, store.with_name(store.name + "-wal")]
+        owner = durable_panel.owner(rdir)
+        if owner:                       # a durable run changes through its projection (rewritten only on change)
+            paths += [rdir / "RUN.owner.json", durable_panel.path(rdir, owner["run_id"])]
         for path in paths:
             try:
                 stat = path.stat()

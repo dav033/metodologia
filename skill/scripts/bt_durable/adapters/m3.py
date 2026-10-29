@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
@@ -32,6 +33,7 @@ from .files import atomic_write
 DEFAULT_TIMEOUT = 2 * 3600
 # the engine's own configuration (the DBOS database URL carries its password) never reaches an agent
 ENGINE_ONLY_PREFIXES = ("BT_DURABLE_", "DBOS_")
+ENV_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")       # bt_supervisor.model.ENV_NAME_PATTERN
 PATCH_MAX = 16 << 20
 OUTPUT_READ_MAX = 8 << 20
 
@@ -93,8 +95,9 @@ class M3Attempts:
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
         atomic_write(adir / "workspace.json", json.dumps(ws.to_dict(), sort_keys=True).encode(), 0o600)
         launch = self.driver(attempt.run.project).prepare(_m3_route(route), prompt, ws, float(timeout))
+        # names a process environment may hold but an agent's cannot (an exported bash function: BASH_FUNC_x%%)
         env = {k: v for k, v in os.environ.items()
-               if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES)}
+               if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
         env.update(dict(launch.env_set))
         env_file = adir / "agent.env.json"
         atomic_write(env_file, _env_file(env), 0o600)            # secrets live only in this 0600 file

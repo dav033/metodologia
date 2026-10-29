@@ -212,7 +212,7 @@ class SystemdSupervisor(BaseSupervisor):
     def _escapers(self, key: str, control_group: str | None) -> dict[int, float]:
         """Marked processes OUTSIDE the unit's cgroup (moved themselves out). Inside is cgroup.kill's job, and the
         ExecStopPost helper, which also carries the marker, must never be hit."""
-        return {pid: start for pid, start in procs.marked(key).items()
+        return {pid: start for pid, start in procs.marked(key, self.store.supervisor_id).items()
                 if not procs.inside(procs.cgroup_of(pid), control_group)}
 
     def observe(self, attempt_key: str) -> Observation:
@@ -253,7 +253,7 @@ class SystemdSupervisor(BaseSupervisor):
             return False
         if props.get("LoadState") == "loaded" and props.get("ActiveState") in LIVE_STATES:
             return False
-        return not procs.cgroup_pids(control_group) and not procs.marked(key)
+        return not procs.cgroup_pids(control_group) and not procs.marked(key, self.store.supervisor_id)
 
     def terminate(self, attempt_key: str, *, grace: float | None = None) -> Observation:
         """SIGTERM the whole cgroup (+ marked escapers), wait `grace`, then cgroup.kill until the unit is dead and
