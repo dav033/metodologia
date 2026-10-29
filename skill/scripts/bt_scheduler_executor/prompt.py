@@ -157,6 +157,7 @@ def _design_instructions(brief: Brief, design: dict) -> list[str]:
                      f"`{design['mockup']}`.")
     if design["ui"]:
         lines.append(f"Owner approval: `{design['approval'] or 'unknown'}`, SHA-256 `{design['sha256'] or 'none'}`. "
-                     "Proceed only with approval status `approved` and a file matching the approved SHA-256; otherwise stop and "
-                     "report the task as blocked without changing UI code.")
+                     f"Proceed only with approval status `approved` and `{design['path']}` matching the approved SHA-256"
+                     + ("; the mockup is only a visual reference with its own hash, never compare it" if design.get("mockup")
+                        else "") + "; otherwise stop and report the task as blocked without changing UI code.")
     return lines
