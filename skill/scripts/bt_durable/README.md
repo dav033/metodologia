@@ -137,6 +137,16 @@ such a wait has no checkpoint at the patch position yet, takes the patch, and it
 records are (`DBOSUnexpectedStepError`, reproduced on DBOS 3.3.0 and 3.4.0). `tests/test_durable_versioning.py` is the
 template for proving an upgrade. When no workflow can still be on the old path, `deprecate_patch`, then remove it.
 
+Patches in use: `bt-run-subplans`, `bt-run-audit-remediation`, `bt-run-survives-step-failures` (run workflow);
+`bt-task-respects-pause`, `bt-task-owner-reverify`, `bt-task-reconcile-asks-owner` (task workflow).
+
+Steps the run workflow calls itself (`bt.sync_lines`, `bt.compose`, `bt.audit_gate`) must not end the run when their
+retries are spent: DBOS never recovers a workflow in ERROR. Behind `bt-run-survives-step-failures` such a failure is
+reported (`subplan_lines_unavailable`, `gate_compose_failed`, `audit_gate_failed`) and the run goes on: lines are synced
+again next turn, a composition is tried again for `COMPOSE_TURNS` turns before the gate counts as rejected, and an audit
+the gate could not judge is held as blocked (`retry-task` runs it again). Work that runs in child workflows needs no
+such guard: `_enqueue` turns a child's failure into an `internal_error` fact.
+
 ## Troubleshooting
 
 | Symptom | Look at |
@@ -152,7 +162,10 @@ template for proving an upgrade. When no workflow can still be on the old path, 
 ## Verified limitations (not claimed)
 
 - Exactly-once for external effects is NOT claimed. What is proven: one agent process per attempt key across engine
-  crashes (adoption), one integration per snapshot (CAS + ancestry check), one M6 verdict per verify key.
+  crashes (adoption), one integration per snapshot (CAS + ancestry check; the run line and the snapshot's subplan
+  lines move in one `git update-ref --stdin` transaction), one M6 verdict per verify key.
+- The subplan lines of a migrated run hold a superset of their scope: seeding merges each legacy snapshot with its
+  history, which carries whatever the legacy line held when that snapshot was made.
 - The M2 router decides per task from the allowed list; it does not reserve accounts or apply per-account concurrency
   limits (none is configured anywhere today), does not persist decisions to an M2 ledger (telemetry is the record) and
   does not use Laya.

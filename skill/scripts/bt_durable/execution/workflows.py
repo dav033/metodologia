@@ -37,6 +37,9 @@ from bt_contracts.failure import (
 )
 from bt_contracts.owner import OwnerAnswer, RunCommand
 from dbos import DBOS, SetWorkflowID
+from dbos._error import (
+    DBOSMaxStepRetriesExceeded,  # dbos pinned in uv.lock; not re-exported by the package
+)
 
 from ..control import classify, frontier, policy, subplans
 from ..settings import Settings
@@ -51,6 +54,11 @@ PATCH_RECONCILE_ASKS_OWNER = "bt-task-reconcile-asks-owner"
 PATCH_RUN_SUBPLANS = "bt-run-subplans"
 PATCH_TASK_PAUSE = "bt-task-respects-pause"
 PATCH_RUN_AUDITS = "bt-run-audit-remediation"
+PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
+# what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
+# ended in ERROR there (never recovered), so no recorded history goes on past such a failure
+RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
+COMPOSE_TURNS = 3                        # turns a gate's composition may fail before the gate counts as rejected
 
 
 def run_workflow_id(run: RunRef) -> str:
@@ -102,6 +110,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     # repairs (one per group of related findings), then the audit runs again, at most `remediation_rounds` times
     audits_on = False
     remediations: dict[str, dict] = {}
+    compose_failures: dict[str, int] = {}
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
         if not lines_on and subplans.enabled(plan) and DBOS.patch(PATCH_RUN_SUBPLANS):
@@ -113,7 +122,12 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             if frozenset(accepted) != synced or not synced:
                 complete = True
                 for role, items in _line_items(plan, accepted).items():
-                    report = steps.sync_lines(run_data, role, items)
+                    try:
+                        report = steps.sync_lines(run_data, role, items)
+                    except RUN_STEP_ERRORS as error:    # e.g. a stale ref lock: reported, tried again next turn
+                        if not DBOS.patch(PATCH_RUN_STEP_FAILURES):
+                            raise
+                        report = {"error": _step_error(error)}
                     if "error" in report:               # e.g. LINE_BASE_UNKNOWN: reported, tried again next turn
                         complete = False
                         steps.emit("subplan_lines_unavailable", {"run_id": run.run_id, "role": role,
@@ -122,8 +136,18 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
                         steps.emit("subplan_line_conflict", {"run_id": run.run_id, "report": report})
                 synced = frozenset(accepted) if complete else frozenset()
             for gate in subplans.to_compose(plan, states, subplans.Gates(composed, rejected)):
-                built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
-                                                          for sp in gate.subplans})
+                try:
+                    built = steps.compose(run_data, gate.id, {sp: subplans.evidence(plan, sp, results)
+                                                              for sp in gate.subplans})
+                except RUN_STEP_ERRORS as error:
+                    if not DBOS.patch(PATCH_RUN_STEP_FAILURES):
+                        raise
+                    compose_failures[gate.id] = compose_failures.get(gate.id, 0) + 1
+                    steps.emit("gate_compose_failed", {"run_id": run.run_id, "gate": gate.id,
+                                                       "turn": compose_failures[gate.id], "reason": _step_error(error)})
+                    if compose_failures[gate.id] < COMPOSE_TURNS:
+                        continue                        # composed again on a later turn
+                    built = {"state": "rejected", "reason": f"COMPOSE_FAILED {COMPOSE_TURNS} turns: {_step_error(error)}"}
                 if built.get("state") == "rejected":
                     rejected[gate.id] = str(built.get("reason") or "rejected")[:300]
                 else:
@@ -140,7 +164,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         DBOS.set_event("summary", _summary(run, states, results, paused, gates))
         if front.finished:
             break
-        if not paused and not any(s == "running" for s in states.values()) and not front.ready:
+        retrying = [g for g in compose_failures if g not in composed and g not in rejected]
+        if not paused and not any(s == "running" for s in states.values()) and not front.ready and not retrying:
             break                                   # only blocked work and its dependents remain
         message = DBOS.recv(TOPIC_RUN, timeout_seconds=settings.run_poll_seconds)
         if message is None:
@@ -156,8 +181,13 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             elif outcome.status == TaskStatus.COMPLETED and _is_audit(plan, outcome.task_id) \
                     and (audits_on or DBOS.patch(PATCH_RUN_AUDITS)):
                 audits_on = True
-                verdict = steps.audit_gate(run_data, outcome.task_id, outcome.snapshot_sha or "",
-                                           outcome.snapshot_base or "")
+                try:
+                    verdict = steps.audit_gate(run_data, outcome.task_id, outcome.snapshot_sha or "",
+                                               outcome.snapshot_base or "")
+                except RUN_STEP_ERRORS as error:
+                    if not DBOS.patch(PATCH_RUN_STEP_FAILURES):
+                        raise
+                    verdict = {"audit": True, "ok": False, "gate_error": _step_error(error)}
                 _audit_judged(run, outcome.task_id, verdict, remediations, states, results, rounds, settings)
             continue
         try:
@@ -186,7 +216,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             steps.emit("command_refused", {"run_id": run.run_id, "request_id": command.request_id,
                                            "reason": f"{command.kind} does not apply to the current state"})
     summary = _summary(run, states, results, paused, subplans.Gates(composed, rejected) if lines_on else None,
-                       final=True)
+                       final=True, finished=front.finished)
     DBOS.set_event("summary", summary)
     steps.emit("run_settled", {"run_id": run.run_id, "status": summary["status"]})
     return summary
@@ -201,6 +231,11 @@ def _audit_judged(run: RunRef, audit: str, verdict: dict, remediations: dict, st
     """What an accepted audit's judgement means for the run (deterministic: `verdict` is the step's checkpoint)."""
     if not verdict.get("audit") or verdict.get("ok"):
         steps.emit("audit_passed", {"run_id": run.run_id, "task_id": audit, "skipped": verdict.get("skipped", "")})
+        return
+    if verdict.get("gate_error"):                 # the gate itself failed: nothing was judged, the owner decides
+        steps.emit("audit_gate_failed", {"run_id": run.run_id, "task_id": audit, "reason": verdict["gate_error"]})
+        _audit_stuck(audit, f"the audit gate could not judge it ({verdict['gate_error']}); retry-task runs the audit "
+                            "again", states, results)
         return
     entry = remediations.setdefault(audit, {"round": 0, "queue": [], "running": "", "extra": 0, "findings": []})
     limit = int(verdict.get("rounds") or 0) + entry["extra"]
@@ -264,6 +299,10 @@ def _audit_stuck(audit: str, reason: str, states: dict, results: dict) -> None:
     results[audit] = {**(results.get(audit) or {}), "status": "blocked", "audit": reason[:1000]}
 
 
+def _step_error(error: Exception) -> str:
+    return f"{type(error).__name__}: {error}"[:500]
+
+
 def _stale_command(command: RunCommand, paused: bool, rounds: dict[str, int]) -> str:
     """Why a command that names the state it was built against no longer applies ('' when it does). Commands
     without `expect_*` (every command sent before REQ-030 M7) return '' and take exactly the path they took before,
@@ -285,10 +324,13 @@ def _start_task(run: RunRef, task_id: str, round_no: int, settings: Settings, no
 
 
 def _summary(run: RunRef, states: dict, results: dict, paused: bool, gates: subplans.Gates | None = None,
-             final: bool = False) -> dict:
+             final: bool = False, finished: bool = False) -> dict:
+    """`finished`: every task of the PLAN is done (`states` holds only the tasks that started: a run that stops with a
+    gate task never started is not completed)."""
     values = set(states.values())
     if final:
-        status = "completed" if values <= frontier.DONE and states else ("blocked" if values & frontier.STOPPED else "settled")
+        stuck = bool(values & frontier.STOPPED) or bool(gates is not None and gates.rejected)
+        status = "completed" if finished and values <= frontier.DONE else ("blocked" if stuck else "settled")
     else:
         status = "paused" if paused else "running"
     out = {"run_id": run.run_id, "status": status, "tasks": dict(states), "results": results}

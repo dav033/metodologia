@@ -7,12 +7,14 @@ retried on the new tip). A conflict never touches the line: it is returned as a 
 the invariant the legacy line could lose under concurrent writers (M0 finding 9): accepted work is never dropped.
 
 Plan 1.3.0 subplans (REQ-030 item 1): each subplan has its own line, `refs/bt/subplan/<project>/<req>/r<rev>/<role>/<SP>`,
-holding exactly the tasks the legacy `SubplanLineRouter` scopes (members plus their frozen-plan ancestors), started at
-the run line's pinned base (`<run line>-base`). A member task starts from its subplan's line, a gate task from its
-composition candidate (`adapters/composition.py`), and an accepted snapshot is merged, by the same compare-and-swap,
-into the run line and every subplan line whose scope holds it — all merges are computed before any ref moves, so a
-conflict in any line leaves every line as it was. `sync` seeds and catches up the subplan lines from the run's accepted
-snapshots (the migration of a legacy run, a task accepted before its line existed); it is idempotent.
+holding the tasks the legacy `SubplanLineRouter` scopes (members plus their frozen-plan ancestors; a migrated run's
+legacy snapshots also bring their own history), started at the run line's pinned base (`<run line>-base`). A member
+task starts from its subplan's line, a gate task from its composition candidate (`adapters/composition.py`), and an
+accepted snapshot is merged, by the same compare-and-swap, into the run line and every subplan line whose scope holds
+it — all merges are computed before any ref moves, and the moves are one `git update-ref --stdin` transaction, so a
+conflict, or a writer that moved any of the lines in between, leaves every line as it was. `sync` seeds and catches
+up the subplan lines from the run's accepted snapshots (the migration of a legacy run, a task accepted before its
+line existed); it is idempotent.
 """
 from __future__ import annotations
 
@@ -35,10 +37,11 @@ class LineMoved(RuntimeError):
     """The line advanced between read and write; the DBOS step retries on the new tip."""
 
 
-def _git(repo: Path, *args: str, check: bool = True, env: Mapping[str, str] | None = None) -> subprocess.CompletedProcess:
+def _git(repo: Path, *args: str, check: bool = True, env: Mapping[str, str] | None = None,
+         stdin: str | None = None) -> subprocess.CompletedProcess:
     import os
     done = subprocess.run(["git", "-c", "core.hooksPath=/dev/null", *args], cwd=str(repo), capture_output=True, text=True,
-                          env={**os.environ, **(env or {})}, check=False)
+                          env={**os.environ, **(env or {})}, check=False, input=stdin)
     if check and done.returncode:
         raise RuntimeError(f"git {' '.join(args[:3])}: {done.stderr.strip()[:500]}")
     return done
@@ -113,6 +116,8 @@ class GitLineIntegrator:
         merged = _git(repo, "merge-tree", "--write-tree", tip, snapshot, check=False)
         if merged.returncode == 1:
             files = [line.split("\t", 1)[-1] for line in merged.stdout.splitlines()[1:] if "\t" in line]
+            if not files:                                # git failed without naming a conflicted file: not a conflict
+                raise RuntimeError(f"merge-tree failed: {(merged.stderr or merged.stdout).strip()[:300]}")
             return None, "conflicts with accepted work in: " + ", ".join(sorted(set(files))[:20])
         if merged.returncode:
             raise RuntimeError(f"merge-tree failed: {merged.stderr.strip()[:300]}")
@@ -138,9 +143,13 @@ class GitLineIntegrator:
             if conflict:
                 return None, conflict + (f" (line of {scope})" if scope else "")
             moves.append((ref, new or tip, tip))
-        for ref, new, old in moves:
-            if new != old and _git(repo, "update-ref", ref, new, old, check=False).returncode:
-                raise LineMoved(f"{ref} moved while integrating {task.id}")
+        changed = [(ref, new, old) for ref, new, old in moves if new != old]
+        if changed:                                     # all lines or none: each `update` checks its old value
+            script = "start\n" + "".join(f"update {ref} {new} {old}\n" for ref, new, old in changed) + "prepare\ncommit\n"
+            moved = _git(repo, "update-ref", "--stdin", check=False, stdin=script)
+            if moved.returncode:
+                raise LineMoved(f"{', '.join(ref for ref, _, _ in changed)} moved while integrating {task.id}: "
+                                f"{moved.stderr.strip()[:300]}")
         return moves[0][1], ""
 
     def sync(self, run: RunRef, role: str, items: Mapping[str, list[tuple[str, str]]]) -> dict[str, dict]:
@@ -159,6 +168,8 @@ class GitLineIntegrator:
             if not tip:
                 created = _git(repo, "update-ref", ref, base, "", check=False)
                 tip = base if created.returncode == 0 else self._tip(repo, ref)
+                if not tip:                              # e.g. a stale ref lock: never seed or merge on nothing
+                    raise RuntimeError(f"SUBPLAN_LINE_UNWRITABLE: {ref}: {created.stderr.strip()[:300]}")
             applied, conflicts = [], {}
             for task_id, snapshot in entries:
                 new, conflict = self._merge(repo, tip, snapshot, f"bt: integrate {task_id} into {run.run_id} ({subplan_id})")
