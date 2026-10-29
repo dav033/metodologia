@@ -87,7 +87,11 @@ class GitLineIntegrator:
             tip = self._tip(repo, self.subplan_ref(run, task.repository, home))
             if tip:
                 return tip
-        ref = self.line_ref(run, task.repository)
+        return self._run_line(run, task.repository)
+
+    def _run_line(self, run: RunRef, role: str) -> str:
+        """The run line's tip, created at the repository's HEAD (and its base pinned) the first time it is needed."""
+        repo, ref = self._repo(role), self.line_ref(run, role)
         tip = self._tip(repo, ref)
         if tip:
             return tip
@@ -143,6 +147,7 @@ class GitLineIntegrator:
         """Seed/catch up each subplan line with its accepted snapshots `(task, snapshot)` in plan order. A snapshot
         that conflicts stays out and is reported (its own integration already proved it against its own line)."""
         repo = self._repo(role)
+        self._run_line(run, role)                       # a fresh run: the line and its base pin exist from here on
         report: dict[str, dict] = {}
         for subplan_id, entries in items.items():
             ref = self.subplan_ref(run, role, subplan_id)
