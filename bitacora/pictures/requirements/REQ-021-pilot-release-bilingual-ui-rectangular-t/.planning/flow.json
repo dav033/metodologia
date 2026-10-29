@@ -1,5 +1,5 @@
 {
- "focus": "SP-7",
+ "focus": "SP-9",
  "outline": {
   "at": "2026-10-26T14:13:28-05:00",
   "by": "owner",
@@ -66,6 +66,12 @@
    "by": "owner",
    "digest": "39245197dcc1f0d8",
    "repinned": "2026-10-29T12:08:55-05:00 mechanical check mapping: one check per criterion, same command (owner's Ejecutar SP-6 refused PLAN_CHECKS_UNMAPPED)",
+   "via": "web"
+  },
+  "SP-8": {
+   "at": "2026-10-29T12:12:55-05:00",
+   "by": "owner",
+   "digest": "9e7468f33b86ec25",
    "via": "web"
   }
  }
