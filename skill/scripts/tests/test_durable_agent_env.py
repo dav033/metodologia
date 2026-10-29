@@ -67,18 +67,20 @@ class AgentTestEnvironment(unittest.TestCase):
 
 
 class BudgetTokens(unittest.TestCase):
+    """As the Codex driver hands usage over: its split plus a total that counts the cache reads in full."""
+
     def test_codex_cache_reads_count_a_tenth(self):
-        usage = {"input_tokens": 12_355_995, "cached_input_tokens": 12_161_920, "output_tokens": 58_843}
-        self.assertEqual(budget_tokens(usage), 12_355_995 - 12_161_920 + 1_216_192 + 58_843)
-        self.assertLess(budget_tokens(usage), 8_000_000)
+        usage = {"input_tokens": 12_355_995, "cache_read_tokens": 12_161_920, "output_tokens": 58_843,
+                 "total_tokens": 12_414_838}
+        self.assertEqual(budget_tokens(usage, "codex"), 12_355_995 - 12_161_920 + 1_216_192 + 58_843)
+        self.assertLess(budget_tokens(usage, "codex"), 8_000_000)
 
     def test_reported_totals_and_odd_usage(self):
-        self.assertEqual(budget_tokens({"total_tokens": 5000, "input_tokens": 1}), 5000)
-        self.assertEqual(budget_tokens({"input_tokens": 100, "output_tokens": 20}), 120)
-        self.assertEqual(budget_tokens({"input_tokens": 100, "cached_input_tokens": 500, "output_tokens": 20}), 120)
-        self.assertIsNone(budget_tokens({"output_tokens": 20}))
-        self.assertIsNone(budget_tokens({}))
-
+        self.assertEqual(budget_tokens({"total_tokens": 5000}, "codex"), 5000)
+        self.assertEqual(budget_tokens({"input_tokens": 100, "output_tokens": 20}, "codex"), 120)
+        self.assertEqual(budget_tokens({"input_tokens": 100, "cache_read_tokens": 500, "output_tokens": 20}, "codex"), 30)
+        self.assertIsNone(budget_tokens({"output_tokens": 20}, "codex"))
+        self.assertIsNone(budget_tokens({}, "codex"))
 
 if __name__ == "__main__":
     unittest.main()
