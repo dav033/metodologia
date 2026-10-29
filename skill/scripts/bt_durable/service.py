@@ -19,7 +19,7 @@ from .adapters.integration import GitLineIntegrator
 from .adapters.m3 import M3Attempts
 from .adapters.m6 import M6Verifier
 from .adapters.plans import FilePlans
-from .adapters.routes import StaticRouter
+from .adapters.routes import build_router
 from .adapters.runtime import SupervisorRuntime
 from .adapters.telemetry import JsonlTelemetry
 from .execution import engine, steps
@@ -32,7 +32,9 @@ TERMINAL = frozenset({"SUCCESS", "ERROR", "CANCELLED", "MAX_RECOVERY_ATTEMPTS_EX
 
 def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver_for: Callable[[str], object],
          routes: list[Route], verifier: M6Verifier | None = None, runtime=None, capacity=None,
-         briefs_for=None) -> Ports:
+         briefs_for=None, router: str = "m2") -> Ports:
+    """`router`: `m2` ranks the allowed routes with the M2 decision engine (static list if it cannot be built),
+    `static` keeps the ordered list. Either way `capacity` is the live quota signal."""
     cfg.state_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     cfg.state_dir.chmod(0o700)                             # M6 and the supervisor refuse a shared directory
     plans = FilePlans()
@@ -41,10 +43,11 @@ def wire(cfg: EngineConfig, *, repositories_for: Callable[[str], object], driver
                           briefs_for=briefs_for)
 
     integrator = _ProjectIntegrator(repositories_for)
-    return Ports(plans=plans, router=StaticRouter(routes, capacity), preparer=attempts,
-                 runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
+    telemetry = JsonlTelemetry(cfg.state_dir / "telemetry.jsonl")
+    return Ports(plans=plans, router=build_router(router, routes, capacity, telemetry=telemetry.emit),
+                 preparer=attempts, runtime=runtime or SupervisorRuntime(cfg.state_dir / "supervisor"), reader=attempts,
                  capturer=attempts, verifier=verifier or operator_verifier(cfg.state_dir / "m6-quality.sqlite3"),
-                 integrator=integrator, telemetry=JsonlTelemetry(cfg.state_dir / "telemetry.jsonl"))
+                 integrator=integrator, telemetry=telemetry)
 
 
 def requirement_dir(run) -> Path:

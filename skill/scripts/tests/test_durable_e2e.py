@@ -200,6 +200,43 @@ class DurableRuns(unittest.TestCase):
         decisions = [e for e in events if e["event"] == "recovery_decision"]
         self.assertEqual([(d["failure_class"], d["action"]) for d in decisions], [("quota", "wait")])
 
+    def test_an_account_without_quota_is_skipped_without_spending_an_attempt(self):
+        """Two accounts, the first in the operator's order has no quota: M2 routes to the other, no launch on A."""
+        now = time.time()
+        self.lab.use_accounts("lab-a", "lab-b")
+        self.lab.set_quota([_quota_row("lab-a", 100.0, now + 3600), _quota_row("lab-b", 12.0, now + 7200)])
+        run = RunRef.model_validate(self.lab.freeze([task("T1")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        launches = self.lab.launches()
+        self.assertEqual([Path(item["account"]).name for item in launches], ["cfg-lab-b"])   # one launch, on B
+        decisions = [e for e in self.lab.telemetry() if e["event"] == "route_decision"]
+        self.assertEqual([(d["router"], d["kind"], d["basis"], d["route"]) for d in decisions],
+                         [("m2", "run", "m2", "claude:lab-b:sonnet")])
+        refused = {r["route"]: r["reasons"] for r in decisions[0]["rejected"]}
+        self.assertIn("quota_exhausted", refused["claude:lab-a:sonnet"])
+        self.assertEqual(decisions[0]["capacity"]["claude:lab-a:sonnet"]["reset_at"], now + 3600)
+
+    def test_every_account_full_waits_durably_for_the_earliest_reset_then_runs(self):
+        now = time.time()
+        self.lab.use_accounts("lab-a", "lab-b")
+        self.lab.set_quota([_quota_row("lab-a", 100.0, now + 600), _quota_row("lab-b", 98.0, now + 6)])
+        run = RunRef.model_validate(self.lab.freeze([task("T1")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        decisions = [e for e in self.lab.telemetry() if e["event"] == "route_decision"]
+        self.assertEqual(decisions[0]["kind"], "wait")
+        self.assertEqual(decisions[0]["not_before"], now + 6)                  # B's reset, the earliest known
+        self.assertEqual(decisions[-1]["kind"], "run")
+        self.assertGreaterEqual(decisions[-1]["ts"], now + 6)                  # nothing ran before the reset
+        launches = self.lab.launches()
+        self.assertEqual(len(launches), 1)
+        self.assertEqual(Path(launches[0]["account"]).name, f"cfg-{decisions[-1]['route'].split(':')[1]}")
+
     def test_duplicate_concurrent_answers_start_one_attempt(self):
         import threading
         run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="neverfix")]))
@@ -221,6 +258,12 @@ class DurableRuns(unittest.TestCase):
         self.assertEqual(len(self.lab.launches()), before + 1)       # four answers, one new attempt
         self.client.answer(run, "T1", OwnerAnswer(request_id=second["request_id"], action="stop"))
         self.assertEqual(self.settled(run)["summary"]["status"], "blocked")
+
+
+def _quota_row(profile: str, used: float, reset: float) -> dict:
+    """A bt_quota_live reading of one Claude account (its five-hour window)."""
+    return {"profile": profile, "provider": "claude", "status": "ok", "observed_at": time.time(),
+            "windows": {"five_hour": {"used_percent": used, "resets_at": reset, "window_minutes": 300}}}
 
 
 def _marked(proc: Path, agent_pid: int) -> bool:

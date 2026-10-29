@@ -115,7 +115,8 @@ def cmd_engine(_args) -> int:
     cfg = engine_config()
     from .adapters.routes import LiveQuota
     serve(cfg, wire(cfg, repositories_for=lambda project: repositories(project),
-                    driver_for=lambda project: MethodologyDriver(project), routes=routes(), capacity=LiveQuota()))
+                    driver_for=lambda project: MethodologyDriver(project), routes=routes(), capacity=LiveQuota(),
+                    router=bt_config.get("execution.router", "m2")))
     return 0
 
 

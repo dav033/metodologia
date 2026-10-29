@@ -19,12 +19,18 @@ import bt_subscriptions
 import bt_usage
 from bt_scheduler_decision import (
     Candidate,
+    DecisionRequest,
+    QuotaWindowPreference,
     RouteHistory,
+    RoutePolicyEvidence,
     TaskFacts,
     account_reference,
     candidate_route_id,
+    plan_ready_batch,
+    validate_request,
 )
 from bt_scheduler_decision.engine import comparable_metric_snapshots
+from bt_scheduler_decision.policy import rank_with_route_policy
 
 if TYPE_CHECKING:
     from bt_scheduler_monitor_adapter import MetricSample
@@ -277,4 +283,150 @@ def _candidate_rows(project: str, task_kind: str, classifications: Mapping[str, 
     return tuple(candidates)
 
 
-__all__ = ["PLAN_SCHEMA_CAPABILITIES", "POLICY_VERSION", "_candidate_rows", "metric_samples_for_route", "task_facts"]
+# ------------------------------------------------------------------------------------------------- durable runtime
+# The durable runtime (bt_durable) routes over the operator's allowed list (`execution.routes`) instead of the catalogue
+# tiers: the list is the authorization and the baseline order, the live quota reading is the capacity. M2 decides over
+# those candidates with the same hard filters, route policy and per-account matching the Scheduler's dispatch uses.
+DURABLE_POLICY_VERSION = "m2-durable-v1"
+# bt_quota_live caches a reading for 60 s; one older than this is not a statement about capacity now
+LIVE_QUOTA_VALIDITY_SECONDS = 300.0
+_RISK_LEVELS = ("low", "medium", "high")
+
+
+def _durable_profile_facts(project: str, provider: str, profile: str) -> tuple[bool, str]:
+    """(authorized, runtime status) of one allowed route. A named profile must exist for this provider, pass the work
+    gate and not be excluded by the project; the provider's default account (no profile) is gated again by the driver
+    at launch against the engine's ambient environment, as the static route list always was."""
+    if not profile:
+        binary = bt_profiles.DEFAULT_BIN.get(provider) or provider
+        return True, "available" if shutil.which(binary) else "unavailable"
+    try:
+        spec = bt_profiles.get(profile)
+        bt_profiles.authorize(profile, project)
+    except SystemExit:
+        return False, "unknown"
+    authorized = spec.get("provider") == provider and profile not in bt_profiles.excluded_profiles(project)
+    binary = str(spec.get("bin") or bt_profiles.DEFAULT_BIN.get(provider) or provider)
+    return authorized, "available" if shutil.which(binary) else "unavailable"
+
+
+def _durable_candidate(project: str, index: int, route: Mapping[str, Any], kind: str,
+                       histories: Mapping[tuple[str, str, str, str, str], RouteHistory]) -> tuple[Candidate, float | None]:
+    """One allowed route as an M2 candidate, plus the account's cooldown mark. The live reading is the capacity
+    signal: `available` needs a fresh observation, `exhausted` is a hard source reason, anything else is unknown (M2
+    never treats unknown as available). A cooldown mark from an earlier usage limit counts only while the live
+    reading cannot say otherwise: a fresh reading with headroom is newer evidence than the mark."""
+    provider, model = str(route["provider"]), str(route["model"])
+    profile, effort = str(route.get("profile") or ""), str(route.get("effort") or "") or None
+    m2_profile = profile or provider                  # the default account's profile id (bt_profiles.DEFAULTS)
+    status = str(route.get("status") or "")
+    auth = "valid" if status == "ok" else "invalid" if status.lower() in _INVALID_AUTH else "unknown"
+    observed, used = _finite_epoch(route.get("observed_at")), _finite_epoch(route.get("used_percent"))
+    reasons: set[str] = set()
+    valid_until = None
+    if route.get("capacity") == "available" and observed is not None:
+        quota, valid_until = "available", observed + LIVE_QUOTA_VALIDITY_SECONDS
+    elif route.get("capacity") == "exhausted":
+        quota = "exhausted"
+        reasons.add("capacity_exhausted")
+    else:
+        quota = "unknown"
+    cooling = bt_agents.cooling_until(profile or None, provider)
+    source_status = "available"
+    if cooling is not None and quota != "available":
+        source_status = "temporarily_unavailable"
+        reasons.add("cooldown_active")
+    authorized, runtime = _durable_profile_facts(project, provider, profile)
+    history = histories.get((provider, model, profile, effort or "", kind), RouteHistory())
+    return Candidate(candidate_route_id(provider, model, m2_profile, effort), provider, model, m2_profile,
+                     account_reference(bt_agents.account_key(profile or None, provider)), effort, source_status,
+                     tuple(sorted(reasons)), authorized, auth, runtime, quota, observed, valid_until, used, index,
+                     history), cooling
+
+
+def _durable_evidence(candidate: Candidate) -> RoutePolicyEvidence:
+    """Route-policy evidence from the same facts: the live pressure of an available account and measured duration."""
+    windows = ()
+    if candidate.quota_status == "available" and candidate.quota_used_percent is not None and \
+            0 <= candidate.quota_used_percent < 100:
+        windows = (QuotaWindowPreference("live_quota", float(candidate.quota_used_percent), None),)
+    history = candidate.history
+    return RoutePolicyEvidence(quota_windows=windows, duration_seconds=history.median_duration_seconds
+                               if history.duration_samples > 0 else None)
+
+
+def durable_route_ranking(project: str, *, plan_id: str, revision: int, plan_sha256: str, task_id: str, meta: object,
+                          dependencies: Sequence[str] = (), acceptance_criteria: Sequence[str] = (),
+                          verification: Sequence[Mapping[str, Any]] = (), shared_resources: Sequence[str] = (),
+                          expected_paths: Sequence[str] = (), routes: Sequence[Mapping[str, Any]], now: float,
+                          with_history: bool = True) -> dict[str, Any]:
+    """M2's recommendation for one READY task over the durable runtime's allowed routes.
+
+    `routes` are plain facts in the operator's preference order: provider, model, profile ("" = the provider's default
+    account), effort, and the live capacity reading (`capacity` available | exhausted | unknown, `used_percent`,
+    `observed_at`, `status` = the reading's own status code). The answer is plain data keyed by position in `routes`:
+    the selected position (None when M2 finds no eligible route), every eligible position in route-policy order, every
+    rejected position with M2's stable reason codes, each account's cooldown mark, and the identities (batch id, input
+    hash, policy versions) that make the decision replayable. Reads local caches only (profiles, cooldown marks, attempt
+    history); it never refreshes quota, reserves anything or calls a provider."""
+    task, kind, _ = task_facts(task_id, meta, dependencies, acceptance_criteria, verification, shared_resources,
+                               expected_paths)
+    histories: Mapping[tuple[str, str, str, str, str], RouteHistory] = {}
+    if with_history:
+        try:
+            histories = _history_snapshot(bt_events.read_all())
+        except Exception:  # noqa: BLE001 - history only orders equals; an unreadable history is unknown, not an error
+            histories = {}
+    observed = [value for route in routes if (value := _finite_epoch(route.get("observed_at"))) is not None]
+    requested_at = max([float(now), *observed])       # facts are bound after the readings they rely on
+    candidates: list[Candidate] = []
+    index_of: dict[str, int] = {}
+    described: list[dict[str, Any]] = []
+    rejected: dict[int, list[str]] = {}
+    for index, route in enumerate(routes):
+        candidate, cooling = _durable_candidate(project, index, route, kind, histories)
+        described.append({"route_id": candidate.route_id, "account_ref": candidate.account_ref,
+                          "cooldown_until": cooling, "runtime": candidate.runtime_status,
+                          "authorized": candidate.profile_authorized})
+        if candidate.route_id in index_of:
+            rejected[index] = ["duplicate_route"]
+            continue
+        index_of[candidate.route_id] = index
+        candidates.append(candidate)
+    preserve = kind != "docs"                         # as the Scheduler's dispatch: the baseline order leads
+    answer: dict[str, Any] = {"policy_version": DURABLE_POLICY_VERSION, "requested_at": requested_at,
+                              "task_kind": kind, "preserve_baseline": preserve, "routes": described,
+                              "selected": None, "ranked": [], "rejected": [], "batch_id": None, "input_sha256": None,
+                              "route_policy_version": None, "batch_policy_version": None,
+                              "assignment_reason": None, "unassigned_reason": None}
+    if not candidates:
+        answer["rejected"] = [{"index": i, "reasons": r} for i, r in sorted(rejected.items())]
+        return answer
+    request = DecisionRequest(plan_id, revision, plan_sha256, 1, requested_at, task, tuple(candidates),
+                              DURABLE_POLICY_VERSION, None)
+    evidence = {candidate.route_id: _durable_evidence(candidate) for candidate in candidates}
+    validated = validate_request(request)
+    risk = validated.request.task.classifications.get("risk")
+    ranking = rank_with_route_policy(validated, evidence, risk=risk if risk in _RISK_LEVELS else None,
+                                     preserve_baseline=preserve)
+    batch = plan_ready_batch((request,), route_evidence_by_task={task_id: evidence},
+                             preserve_baseline_by_task={task_id: preserve})
+    for exclusion in ranking.hard_exclusions:
+        rejected[index_of[exclusion.route_id]] = list(exclusion.reason_codes)
+    for exclusion in ranking.quality_exclusions:
+        rejected[index_of[exclusion.route_id]] = [exclusion.reason_code]
+    selected = batch.assignments[0] if batch.assignments else None
+    answer.update({
+        "selected": index_of[selected.route_id] if selected else None,
+        "assignment_reason": selected.reason_code if selected else None,
+        "unassigned_reason": batch.unassigned[0].reason_code if batch.unassigned else None,
+        "ranked": [index_of[candidate.route_id] for candidate in ranking.eligible],
+        "rejected": [{"index": i, "reasons": r} for i, r in sorted(rejected.items())],
+        "batch_id": batch.batch_id, "input_sha256": batch.input_sha256,
+        "route_policy_version": batch.route_policy_version, "batch_policy_version": batch.batch_policy_version,
+    })
+    return answer
+
+
+__all__ = ["DURABLE_POLICY_VERSION", "PLAN_SCHEMA_CAPABILITIES", "POLICY_VERSION", "_candidate_rows",
+           "durable_route_ranking", "metric_samples_for_route", "task_facts"]
