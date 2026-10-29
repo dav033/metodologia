@@ -130,6 +130,7 @@ def owner_notes(rdir, plan, base, *, state=None, verify=True):
                 ledgers = tuple(path for path in task.expected_paths if isinstance(path, str)
                                 and path.endswith(bt_audit_gate.LEDGER_SUFFIX))
                 parts.append(bt_audit_gate.ledger_help(ledgers[0] if len(ledgers) == 1 else None))
+                parts.append(bt_audit_gate.evidence_help(rdir, request.task_id))
                 if len(ledgers) > 1:
                     parts.append("This audit has independent ledgers; write one complete audit-findings/1 record to each: "
                                  + ", ".join(f"`{path}`" for path in ledgers) + ".")
