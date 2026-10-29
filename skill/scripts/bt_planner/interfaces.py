@@ -44,6 +44,10 @@ def check(plan: object, ancestors: Mapping[str, set[str]]) -> tuple[list[str], l
     if not isinstance(interfaces, list):
         return ["interfaces: must be a list when provided"], warnings
 
+    task_subplan = {task["id"]: task.get("subplan_id") for task in task_items
+                    if isinstance(task, dict) and isinstance(task.get("id"), str)} if isinstance(task_items, list) else {}
+    subplan_ids = {item.get("id") for item in plan.get("subplans") or [] if isinstance(item, dict)}
+    gate_tasks = {gate.get("task") for gate in plan.get("composition_gates") or [] if isinstance(gate, dict)}
     seen_ids: set[str] = set()
     for index, interface in enumerate(interfaces):
         where = f"interfaces[{index}]"
@@ -134,7 +138,32 @@ def check(plan: object, ancestors: Mapping[str, set[str]]) -> tuple[list[str], l
                 errors.append(f"{where}.integration_task: {integration} must depend on producer and unordered consumer "
                               f"{', '.join(missing)}")
 
+        errors.extend(_foreign_consumers(where, interface, valid_consumers, ancestors, task_subplan, subplan_ids,
+                                         gate_tasks, integration if integration_valid else None))
+
     return errors, warnings
+
+
+def _foreign_consumers(where: str, interface: dict, consumers: list[tuple[int, str]], ancestors: Mapping[str, set[str]],
+                       task_subplan: Mapping[str, object], subplan_ids: set, gate_tasks: set,
+                       integration: str | None) -> list[str]:
+    """A consumer in another subplan than the interface's owner relies on the behaviour the owner proves end to end at
+    the interface's integration task, not only on the producer's contract: it must depend on that task (D-165). pictures
+    REQ-021 T7.4 asserted that every call lands in the usage ledger (IF-3, owner SP-6); it depended on the table's
+    producer T6.2 but not on T6.3/T6.5, which wire and prove the capture, and failed four attempts on a line without it.
+    An integration task that is a composition gate task composes its consumers itself and is left out."""
+    owner = interface.get("owner")
+    if integration is None or owner not in subplan_ids or integration in gate_tasks:
+        return []
+    found = []
+    for consumer_index, consumer in consumers:
+        home = task_subplan.get(consumer)
+        if home in (None, owner) or consumer in gate_tasks or integration in ancestors.get(consumer, set()):
+            continue
+        found.append(f"{where}.consumer_tasks[{consumer_index}]: {consumer} ({home}) relies on {interface.get('id')} of "
+                     f"{owner}; it must depend on {integration}, the task that proves it end to end, or on a composition "
+                     "gate after it")
+    return found
 
 
 def report(plan: object) -> list[dict[str, object]]:

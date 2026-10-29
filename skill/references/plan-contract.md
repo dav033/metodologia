@@ -84,6 +84,13 @@ Tasks may declare `subplan_id` (one subplan) and `ui` (boolean); task kind adds 
 at most 32) identify real integration tests across one or more subplans and optional composition audits. Plans with
 subplans group status rows inside existing milestones; gate/final tasks without a subplan remain visible.
 
+Dependencies are typed when the plan is written, never discovered by a failing attempt (D-165). Whatever a task's
+acceptance or checks rely on and the task does not build itself (code it calls, rows it reads, a service it starts,
+behaviour another task wires) comes from an ancestor in `after`. Across subplans that reliance is an interface: the task
+is in its `consumer_tasks` and depends on its `integration_task`, the task that proves the behaviour end to end, or on a
+composition gate after it; depending on the `producer_task` alone (the contract) is not enough. The validator refuses a
+consumer outside the interface's `owner` subplan that does not, unless the integration task is itself a gate task.
+
 For UI work, a subplan's `ui` block identifies its versioned Designer contract, `design_task`, and `visual_review_task`.
 Every `ui: true` implementation follows the design task, visual review follows all UI tasks, and the subplan audit
 follows visual review. The contract is required for UI work. A preview is optional and configured per project; it is
