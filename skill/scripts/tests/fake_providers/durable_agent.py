@@ -44,6 +44,12 @@ elif scenario == "own":                         # leaves a file of its own, so e
     Path(f"{task_id}.task").write_text(f"{task_id}\n")
     Path("out.txt").write_text("good\n")
     done()
+elif scenario == "append":                      # adds its line at the end of a shared file, like an npm script entry
+    Path(f"{task_id}.task").write_text(f"{task_id}\n")
+    Path("out.txt").write_text("good\n")
+    with open("README.md", "a", encoding="utf-8") as handle:
+        handle.write(f"{task_id} was here\n")
+    done()
 elif scenario == "fixk":                        # scenario K: the defect is fixed only by a coordinated repair
     Path(f"{task_id}.task").write_text(f"{task_id}\n")
     Path("out.txt").write_text("good\n")
