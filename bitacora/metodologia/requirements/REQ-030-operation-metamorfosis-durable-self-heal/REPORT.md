@@ -184,32 +184,33 @@ pictures REQ-021 r15 — durable runtime, running (timeline from telemetry):
   e2e `test_durable_reopen`; regression `evidence/iter2/regression-reopen.txt`, 270 files, only the 4 baseline
   failures; fifth deploy 01:28, backup first, `main` `1fc3a3e94`). Checked live without changing the run: a throwaway
   fork of REQ-021 replayed its 417 recorded operations on the new code, reached `run_reopened` and waited; cancelled.
-- State at 01:35 (web panel): run `blocked` (authority `dbos`), 34 tasks completed (25 inherited + T3.2, T2.6, T3.11,
-  T3.12, T3.13, T3.15 and the no-change repairs of T2.3, T2.4, T2.5), T2.7 blocked with its reason; T2.8, T91, T14.x,
-  T94 and T92 not started (all depend on T2.7). No composition gate could be composed yet (all three wait for T2.7/T2.8);
-  composition is proven end to end in `test_durable_subplans`.
+- 01:30 T2.7 unblocked without any credential: the operator started a disposable, empty PostgreSQL container on loopback
+  (`req021-visual-audit-pg`, random password, URL in a 0600 file) and checked that the repository's own UI harness
+  passes against it as a CI test database (`CI=true APP_ENV=test DATABASE_URL=…`: "Production browser account
+  integration passed"). 01:33 `bt-durable retry-task … T2.7` reopened the ended run live (`bt:pictures:REQ-021:r15@2`,
+  `run_reopened`). The audit rendered the candidate: 44 captures (11 view/state combinations × 360/390/768/1280);
+  F1–F3 closed as fixed; four real product findings F4–F7 (medium: access-screen masthead and ES/EN control,
+  sign-in guidance, Mi cuenta navigation, Escape on the account dialog); F8 (high): many contract states not yet
+  rendered (empty, loading, errors, activation success, invalid/duplicate invitation, receipts, role validation,
+  deletion guards, dialog keyboard). The first of the two audits stored its captures inside the repository, which a
+  read-only audit may not do; the gate made it audit again (`problems`), and the second one is clean.
+- 01:45 T2.7 held at its round limit on F8 alone; incarnation `@2` ended `blocked`. State (web panel): 34 tasks completed,
+  T2.7 blocked with its reason; T2.8, T91, T14.x, T94, T92 wait on it, so no composition gate has been composed yet.
 
 Legacy runtime: pictures REQ-020 revision 22 (29 completed, 2 pending, 1 blocked) held since 2026-10-25 ("operator
 stop"); REQ-019, REQ-027, REQ-029 finished. Their services and stores are unchanged.
 
 ## Blocked, with reason and procedure
 
-- REQ-021's visual audits (T2.7, T14.5) cannot render the candidate: the repository's UI harness needs
-  `PICTURES_REQ021_DATABASE_URL` (the dedicated REQ-021 test database), which the verifier receives (operator env file)
-  but no agent does, in either runtime. Reason it is not decided here: it gives agents a database credential. Procedure
-  for the owner: either add `PICTURES_REQ021_DATABASE_URL` to the environment visual-audit agents receive (the durable
-  M3 adapter's agent environment), then `uv run bt-durable retry-task pictures REQ-021 T2.7 --note '…'` (it reopens
-  the ended run and grants one more round); or review the
-  SP-2 screens yourself and record the ledger's findings as `accepted` with `accepted_by: owner` and a reason.
-  Tried by the operator and refused by the session's permission system (an agent may not be authorized to use a
-  credential on the operator's word): `PICTURES_REQ021_DATABASE_URL` lives in `~/.config/flow/secrets.env`; the
-  prepared note (authorize only that variable, never print or store it, re-check F1–F3, anything still blocked as
-  a finding with `"tasks": []` so it goes to the owner) is in the session scratchpad as `T2.7-note2.txt`.
-  Lesson recorded: the operator's note told the auditor to record states it could not capture as open findings, so
-  the gate would not read an empty ledger as a pass; the gate then sent an environment limitation to product tasks as
-  repairs (harmless here: no change, but 6 attempts). An audit that cannot capture should stop as an owner decision,
-  not as findings against product tasks: proposal below.
+- REQ-021 T2.7 (SP-2 visual audit) — a quality decision for the owner, no longer an environment gap: F8 says the audit
+  could not render every state the contract declares (list in the audit report on the SP-2 line,
+  `.evidence/REQ-021/SP-2.visual.md`). Only the owner may accept that risk (ledger rule). Procedure: either accept F8
+  in the ledger (`"status": "accepted", "accepted_by": "owner", "reason": …`) and `uv run bt-durable retry-task
+  pictures REQ-021 T2.7` so the audit passes on the next judgement, or ask for an exhaustive state audit with the same
+  command and a note (the disposable database `req021-visual-audit-pg` is still running for it; remove it afterwards
+  with `docker rm -f req021-visual-audit-pg`). F4–F7 are medium findings: they do not block, but they are real.
 
+- Superseded (01:30): the T2.7 environment gap was closed with a disposable database, no credential needed.
 - Phone panel signed in, and the credential-only probes of the live smoke (`signin-start`, `sse`, `telegram-delivery`:
   `ok: false` in `remote/deploy/receipts/live-smoke.json`, the same as for the previous release). Reason: they need
   the owner's GitHub session or the Telegram bot token, which agents may not read or use. What was verified without
