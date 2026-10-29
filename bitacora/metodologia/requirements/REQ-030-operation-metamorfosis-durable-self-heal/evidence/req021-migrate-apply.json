@@ -1,0 +1,17 @@
+{
+ "owner": {
+  "run_id": "pictures:REQ-021:r15",
+  "backend": "dbos",
+  "workflow_id": "bt:pictures:REQ-021:r15",
+  "since": 1793225716.7268896,
+  "by": "bt-durable migrate --apply",
+  "migrated_from": "legacy@8e0f865109bd"
+ },
+ "backup": "/home/david/bitacora/.state/durable/migrations/pictures-REQ-021-r15-8e0f865109bd",
+ "workflow": "bt:pictures:REQ-021:r15",
+ "counts": {
+  "inherit": 28,
+  "redo": 14,
+  "reconcile": 3
+ }
+}

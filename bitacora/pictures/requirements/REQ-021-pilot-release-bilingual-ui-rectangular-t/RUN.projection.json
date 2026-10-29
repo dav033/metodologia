@@ -22,16 +22,16 @@
   }
  ],
  "authority": "scheduler",
- "heartbeat_at": "2026-10-28T19:44:00+00:00",
+ "heartbeat_at": "2026-10-28T22:13:48+00:00",
  "plan_ref": {
   "plan_id": "REQ-021",
   "revision": 15,
   "sha256": "a4eb945b823d1e2575ee86ebe1e3dc1e54a05b0d87d61b6b9febec5543705b26"
  },
- "projected_at": "2026-10-28T19:44:00+00:00",
+ "projected_at": "2026-10-28T22:13:48+00:00",
  "projection": true,
  "req": "REQ-021",
- "scheduler_status": "running",
+ "scheduler_status": "paused",
  "sessions": 96,
  "stage": {
   "complete": false,
@@ -56,7 +56,7 @@
    "SP-3"
   ]
  },
- "status": "running",
+ "status": "paused",
  "subplans": [
   {
    "commit": "82885950bdfe1bc2c0ab8e169cce74c4c2332f02",
@@ -1063,7 +1063,7 @@
    "attempts_used": 1,
    "complexity": "low",
    "effort": "medium",
-   "evidence": "",
+   "evidence": "m6://result/d97be194907f6afe16ff764213457eb00882269a7afb0b2bf59f826c5cfb4d2f",
    "executor": "route:m2:v1:375e6f6750523327258b8ea625836a8427bd08973c5635c0a164fed0ca14543c:cdaffdeb321e8b3d0ebea26a6bad58c5131ce0218c1c7125cd379666aa18f5fb",
    "id": "T3.10",
    "max_attempts": 3,
@@ -1082,9 +1082,9 @@
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "completed",
    "selection_reason": "baseline_route;candidate_set_small;estimated_duration;history_no_verified_samples;task_ambiguous",
-   "status": "in_progress",
+   "status": "done",
    "title": "Backing group in Fondos y muebles with the seven existing and the new Backing props",
    "unreachable": false
   },
@@ -1097,7 +1097,7 @@
    "attempts_used": 2,
    "complexity": "high",
    "effort": "high",
-   "evidence": "",
+   "evidence": "m6://result/3e1ab45bf0f4b3f7caa7b7f0112e5f971fbc08c4402eb5dd9c4dae26b1188a0c",
    "executor": "route:m2:v1:bfaf67df5cdb9c778a9bc236683b6f0e3d8e91813b800cf572b3facf0b29cace:ab3a12f2fb9b1b72bc868261a67fbe31fcca7bdb99a15f1e56682d60d0fa63fe",
    "id": "T3.11",
    "max_attempts": 3,
@@ -1116,9 +1116,9 @@
    "retry_exhausted": false,
    "route_reason": "",
    "route_status": "assigned",
-   "scheduler_state": "active",
+   "scheduler_state": "ready",
    "selection_reason": "baseline_route;duration_measured;estimated_duration;task_unambiguous;tokens_measured;verified_history",
-   "status": "in_progress",
+   "status": "todo",
    "title": "Verify and repair the GLB export of every scene element type",
    "unreachable": false
   },

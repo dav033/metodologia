@@ -1,0 +1,284 @@
+{
+ "run_id": "pictures:REQ-021:r15",
+ "inventory_digest": "8e0f865109bd12f74547a3026a977ebef07e160f7900bdf614d26849fb7da3ea",
+ "current_owner": null,
+ "would_own": "dbos",
+ "blockers": [],
+ "counts": {
+  "inherit": 28,
+  "redo": 14,
+  "reconcile": 3
+ },
+ "tasks": [
+  {
+   "task_id": "T1.1",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r1, snapshot present"
+  },
+  {
+   "task_id": "T1.10",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r3, snapshot present"
+  },
+  {
+   "task_id": "T1.11",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r9, snapshot present"
+  },
+  {
+   "task_id": "T1.12",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r10, snapshot present"
+  },
+  {
+   "task_id": "T1.2",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r1, snapshot present"
+  },
+  {
+   "task_id": "T1.3",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r1, snapshot present"
+  },
+  {
+   "task_id": "T1.4",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r1, snapshot present"
+  },
+  {
+   "task_id": "T1.5",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r9, snapshot present"
+  },
+  {
+   "task_id": "T1.6",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r1, snapshot present"
+  },
+  {
+   "task_id": "T1.7",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r9, snapshot present"
+  },
+  {
+   "task_id": "T1.8",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r10, snapshot present"
+  },
+  {
+   "task_id": "T1.8b",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r10, snapshot present"
+  },
+  {
+   "task_id": "T1.9",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r2, snapshot present"
+  },
+  {
+   "task_id": "T14.1",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T14.2",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T14.3",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T14.4",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T14.5",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T14.6",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T2.1",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r3, snapshot present"
+  },
+  {
+   "task_id": "T2.2",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T2.3",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T2.4",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T2.5",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T2.6",
+   "legacy_state": "blocked",
+   "verdict": "reconcile",
+   "reason": "not completed: continue from the last legacy snapshot (att-0095)"
+  },
+  {
+   "task_id": "T2.7",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T2.8",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T3.1",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r14, snapshot present"
+  },
+  {
+   "task_id": "T3.10",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r15, snapshot present"
+  },
+  {
+   "task_id": "T3.11",
+   "legacy_state": "ready",
+   "verdict": "reconcile",
+   "reason": "not completed: continue from the last legacy snapshot (att-0094)"
+  },
+  {
+   "task_id": "T3.12",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T3.13",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T3.14",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r15, snapshot present"
+  },
+  {
+   "task_id": "T3.15",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T3.2",
+   "legacy_state": "completed",
+   "verdict": "reconcile",
+   "reason": "evidence is not a PASS for this exact task specification: re-verify"
+  },
+  {
+   "task_id": "T3.3",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r11, snapshot present"
+  },
+  {
+   "task_id": "T3.4",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T3.5",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T3.6",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T3.7",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r13, snapshot present"
+  },
+  {
+   "task_id": "T3.8",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r15, snapshot present"
+  },
+  {
+   "task_id": "T3.9",
+   "legacy_state": "completed",
+   "verdict": "inherit",
+   "reason": "M6 PASS r15, snapshot present"
+  },
+  {
+   "task_id": "T91",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T92",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  },
+  {
+   "task_id": "T94",
+   "legacy_state": "pending",
+   "verdict": "redo",
+   "reason": "not completed under the legacy runtime"
+  }
+ ]
+}
