@@ -29,8 +29,12 @@ DEFAULTS: dict = {
     # `router`: `m2` ranks `routes` per task with the M2 decision engine and live quota; `static` keeps their order.
     # `durable_cli` (argv list) is how stdlib panels reach `bt-durable` for remote commands on durable runs; empty =
     # `uv run --project <repository of this checkout> bt-durable`, else `bt-durable` on PATH (a release copy).
+    # `agent_env_file`: a dotenv file the owner keeps for the agents of a project (`{project}` replaced), with TEST values
+    # only (a disposable database), never his secrets: every agent of a durable run receives its variables and its brief
+    # names them, so it runs the checks that need them before it finishes (the verifier takes its own from verifier.*).
     "execution": {"backend": "legacy", "database_url": "", "agent_concurrency": 2, "verify_concurrency": 1,
-                  "routes": ["claude::sonnet"], "router": "m2", "durable_cli": []},
+                  "routes": ["claude::sonnet"], "router": "m2", "durable_cli": [],
+                  "agent_env_file": "~/.config/metodologia/agent-{project}.env"},
     # a run without a human retries; up to 3 tasks at once when dependencies, files and resources allow it, but a task
     # whose plan scope is large runs alone in its repository; an agent process may work up to 2 h (the final gate takes
     # longer than 30 min)
