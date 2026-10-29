@@ -131,6 +131,36 @@ class LineIntegration(Repo):
         conflict, _line = self.integrate(None)
         self.assertEqual(conflict, "conflicts with accepted work in: package.json (line of SP-1)")
 
+    def test_a_criss_cross_history_settles_against_a_virtual_base(self):
+        """pictures REQ-021 r25 (D-169): the gate and SP-7's line had both taken SP-3 and SP-4, so they had several merge
+        bases; the line kept the conflict on every retry. A script one side removed is not brought back."""
+        from types import SimpleNamespace
+        from bt_contracts.execution import RunRef, Snapshot
+        from bt_durable.adapters.integration import GitLineIntegrator
+        one = self.branch("one", {"package.json": manifest({"a": "x", "b": "y"})})
+        two = self.branch("two", {"list.ts": "export const T = [\"a\", \"two\"];\n"})
+        git(self.repo, "checkout", "-q", "-b", "line", one)
+        git(self.repo, "merge", "-q", "--no-edit", two)
+        line_tip = commit(self.repo, {"package.json": manifest({"a": "x", "d": "w"})}, "line drops b, adds d")
+        git(self.repo, "checkout", "-q", "-b", "gate", two)
+        git(self.repo, "merge", "-q", "--no-edit", one)
+        snapshot = commit(self.repo, {"package.json": manifest({"a": "x", "b": "y", "e": "v"})}, "gate adds e")
+        self.assertEqual(len(git(self.repo, "merge-base", "--all", line_tip, snapshot).split()), 2)
+        git(self.repo, "checkout", "-q", "main")
+        run = RunRef(project="proj", req="REQ-900", revision=1, plan_id="REQ-900", plan_path="/nonexistent",
+                     plan_sha256="0" * 64)
+        lines = GitLineIntegrator({"app": self.repo}, composer=SimpleNamespace(state_dir=self.tmp / "state"))
+        lines.sync(run, "app", {"SP-7": []})
+        ref = lines.subplan_ref(run, "app", "SP-7")
+        git(self.repo, "update-ref", ref, line_tip)
+        _tip, conflict, _note = lines.integrate(run, SimpleNamespace(id="T93", repository="app"),
+                                                Snapshot(snapshot_sha=snapshot, base_sha=self.base,
+                                                         manifest_path=self.tmp / "none.json"), lines=("SP-7",))
+        self.assertEqual(conflict, "")
+        merged = json.loads(git(self.repo, "cat-file", "blob", f"{ref}:package.json"))
+        self.assertEqual(merged["scripts"], {"a": "x", "d": "w", "e": "v"})
+        self.assertFalse(list((self.tmp / "state" / "composition" / "resolutions").glob("*.json")))
+
 
 class BlockedNotice(unittest.TestCase):
     def test_a_run_blocked_by_rejected_gates_tells_the_owner_once(self):

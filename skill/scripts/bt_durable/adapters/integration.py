@@ -131,17 +131,39 @@ class GitLineIntegrator:
         """Settle the conflicts the composer settles (D-160) the same way on a line: `package.json` merged by key and
         the recorded resolutions in `<state>/composition/resolutions`. pictures REQ-021 r24: gate task T93, built on the
         composed CG-3 candidate, conflicted with SP-11's line on the npm scripts every subplan appends (D-164).
-        Returns (tree, conflicts left); with no composer, or a criss-cross history, the conflicts stay as git found them."""
+        A criss-cross history (several merge bases) is settled against a virtual base, as git's recursive merge does
+        (D-169). Returns (tree, conflicts left); with no composer the conflicts stay as git found them."""
         bases = _git(repo, "merge-base", "--all", tip, snapshot, check=False).stdout.split()
         state_dir = getattr(self.composer, "state_dir", None)
-        if len(bases) != 1 or state_dir is None:
+        if not bases or state_dir is None:
             return "", files
         from bt_composition_adapter import GitSubprocessPort
         root = Path(state_dir) / "composition"
         port = GitSubprocessPort(repo, root / "ws")
+        base = bases[0] if len(bases) == 1 else self._virtual_base(repo, GitSubprocessPort(repo, root / "ws"), bases)
+        if not base:
+            return "", files
         port.resolutions = root / "resolutions"
-        result = port.merge_tree(bases[0], tip, snapshot)
+        result = port.merge_tree(base, tip, snapshot)
         return result.tree, list(result.conflicts)
+
+    def _virtual_base(self, repo: Path, port, bases: list[str], depth: int = 0) -> str:
+        """The merge bases merged into one commit, recursively, like git's recursive strategy: package.json by key, and a
+        conflict left between bases keeps git's markers in the virtual base (a later merge of that file then conflicts).
+        pictures REQ-021 r25: gate T93 and SP-7's line had both taken SP-3 and SP-4, three bases, and the same
+        package.json conflict came back on every retry. `port` records no resolutions: a base conflict asks nobody."""
+        if depth > 3:
+            return ""
+        merged = bases[0]
+        for other in bases[1:]:
+            inner = _git(repo, "merge-base", "--all", merged, other, check=False).stdout.split()
+            base = inner[0] if len(inner) == 1 else self._virtual_base(repo, port, inner, depth + 1) if inner else ""
+            if not base:
+                return ""
+            tree = port.merge_tree(base, merged, other).tree
+            merged = _git(repo, "commit-tree", tree, "-p", merged, "-p", other, "-m", "bt: virtual merge base",
+                          env=IDENT).stdout.strip()
+        return merged
 
     def integrate(self, run: RunRef, task: TaskSpec, snapshot: Snapshot, *,
                   lines: tuple[str, ...] = ()) -> tuple[str | None, str, str]:
