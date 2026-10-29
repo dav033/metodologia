@@ -89,7 +89,8 @@ class M3Attempts:
         workspaces.check(request)
         ws = workspaces.allocate(request)
         adir = self.attempt_dir(attempt)
-        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws), note) if x))
+        test_env = agent_test_env(attempt.run.project)
+        brief = self._brief(attempt, request, "\n\n".join(x for x in (_continuation(ws), _test_env_note(test_env), note) if x))
         prompt = build_prompt(brief, request, workdir=ws.path, branch=ws.branch,
                               report_path=str(adir / "report.json"), handoff_mode="snapshot", rtk=self.prompt_rtk)
         atomic_write(adir / "prompt.txt", prompt.encode("utf-8"), 0o600)
@@ -98,6 +99,7 @@ class M3Attempts:
         # names a process environment may hold but an agent's cannot (an exported bash function: BASH_FUNC_x%%)
         env = {k: v for k, v in os.environ.items()
                if k not in launch.env_remove and not k.startswith(ENGINE_ONLY_PREFIXES) and ENV_NAME.match(k)}
+        env.update(test_env)
         env.update(dict(launch.env_set))
         env_file = adir / "agent.env.json"
         atomic_write(env_file, _env_file(env), 0o600)            # secrets live only in this 0600 file
@@ -131,10 +133,7 @@ class M3Attempts:
         timed_out = process.result == "timeout"
         cancelled = process.result in ("cancelled", "signal") and process.exit_code is None
         found = self.driver(attempt.run.project).classify(_m3_route(route), raw, process.exit_code, timed_out=timed_out, cancelled=cancelled)
-        usage = dict(found.usage or {})
-        total = usage.get("total_tokens")
-        if total is None and isinstance(usage.get("input_tokens"), int):
-            total = int(usage.get("input_tokens") or 0) + int(usage.get("output_tokens") or 0)
+        total = budget_tokens(dict(found.usage or {}))
         return AgentReport(status=found.status, reset_epoch=found.reset_epoch, text=(found.text or "")[-4000:],
                            total_tokens=int(total) if isinstance(total, (int, float)) else None)
 
@@ -167,6 +166,38 @@ def _continuation(ws) -> str:
             f"{ws.base_sha[:12]}): your tree starts from its result. Fix what the notes say failed, keep what is "
             "correct, and recheck the complete frozen acceptance and verification instructions. No private "
             "conversation or agent reasoning is transferred.")
+
+
+def budget_tokens(usage: Mapping[str, object]) -> int | None:
+    """Tokens an attempt counts against its task's budget. Codex reports cache reads inside `input_tokens` (pictures
+    REQ-021 T4.2: 12.36 M input, 12.16 M of them cached, 59 k output), so one long session used the whole 8 M budget
+    and stopped for a person; cache reads count a tenth, as providers bill them. Claude reports them apart already."""
+    total = usage.get("total_tokens")
+    if isinstance(total, (int, float)) and not isinstance(total, bool):
+        return int(total)
+    fresh = usage.get("input_tokens")
+    if not isinstance(fresh, int) or isinstance(fresh, bool):
+        return None
+    cached = usage.get("cached_input_tokens")
+    cached = cached if isinstance(cached, int) and not isinstance(cached, bool) and 0 <= cached <= fresh else 0
+    output = usage.get("output_tokens")
+    return fresh - cached + cached // 10 + (output if isinstance(output, int) and not isinstance(output, bool) else 0)
+
+
+def agent_test_env(project: str) -> dict[str, str]:
+    """The owner's test variables for this project's agents (`execution.agent_env_file`); {} when unset or missing."""
+    import bt_config
+    import bt_verifier_env
+    environment, _ = bt_verifier_env.load(bt_verifier_env.path_for(bt_config.get("execution.agent_env_file", ""), project))
+    return dict(environment)
+
+
+def _test_env_note(env: Mapping[str, str]) -> str:
+    if not env:
+        return ""
+    return ("Test environment: " + ", ".join(sorted(env)) + (" is" if len(env) == 1 else " are") + " set in your "
+            "environment by the owner for testing (a disposable database, never production). Run the verification "
+            "commands that need them yourself before you finish; never print, copy or commit their values.")
 
 
 def _m3_route(route: Route) -> m3.Route:
