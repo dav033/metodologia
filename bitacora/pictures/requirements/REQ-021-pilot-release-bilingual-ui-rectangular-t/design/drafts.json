@@ -7171,6 +7171,7 @@
    "ui_digest": "e0815163c3cdc7cb"
   },
   "gasto-ia@v1": {
+   "approved": "2026-10-29T12:09:51-05:00",
    "attempt": 1,
    "auto_runs": 1,
    "before": null,
@@ -8025,7 +8026,7 @@
    "selected_sha256": "a7f43154cc781c45b7cb16e2108c83cc399e51ece7bb2d9aa19ee9ec98eae037",
    "sha256": "596cdf78650c524aad78bddab351c1eb34e39474bc7b3dbd9a2db9c4f1f1640e",
    "started": "2026-10-29T11:37:22-05:00",
-   "status": "ready",
+   "status": "approved",
    "subplan_id": "SP-6",
    "summary": "Finalised gasto-ia@v1 (direction c, Desglose en el lugar) as a twelve-section draft contract and rebuilt the canonical HTML with the current offline builder, preserving composition and motion. One verified behavioural defect fixed: per owner round 16 q4 / PLAN SP-10 the spend screen stays Spanish; only the shared shell (language label, account menu, footer) follows ES/EN. Contract remains draft, n",
    "ui_digest": "cf1f45e7764e89be"

@@ -7688,7 +7688,7 @@
         {
           "type": "command",
           "value": "test -s design/contracts/gasto-ia@v1.md",
-          "purpose": "Confirm the approved dashboard contract is available to implementation tasks.",
+          "purpose": "The repository contract is byte-identical to the approved planning snapshot.",
           "category": "static"
         }
       ],
@@ -7780,7 +7780,14 @@
         {
           "type": "command",
           "value": "npm run gasto:test-esquema",
-          "purpose": "Verify migration, schema validation, idempotency and preservation of partial usage.",
+          "purpose": "Every completed paid model call in the covered Next and ai-api paths produces one durable usage row linked to the authenticated account and session, with project plus conversation detail when applicable (otherwise conversation), tool, call kind, provider/model, available token details and estimated USD cost; missing provider fields remain unknown.",
+          "created_by": "T6.2",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-esquema",
+          "purpose": "A provider error with known billable usage retains those tokens/cost with an explicit partial/error status; fields not returned by the provider remain unknown and are never fabricated.",
           "created_by": "T6.2",
           "category": "functional"
         }
@@ -7874,7 +7881,14 @@
         {
           "type": "command",
           "value": "npm run gasto:test-captura",
-          "purpose": "Exercise representative text and image calls through Next and ai-api, including duplicate delivery and provider partial/error cases.",
+          "purpose": "Every completed paid model call in the covered Next and ai-api paths produces one durable usage row linked to the authenticated account and session, with project plus conversation detail when applicable (otherwise conversation), tool, call kind, provider/model, available token details and estimated USD cost; missing provider fields remain unknown.",
+          "created_by": "T6.3",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-captura",
+          "purpose": "A provider error with known billable usage retains those tokens/cost with an explicit partial/error status; fields not returned by the provider remain unknown and are never fabricated.",
           "created_by": "T6.3",
           "category": "functional"
         }
@@ -7968,7 +7982,14 @@
         {
           "type": "command",
           "value": "npm run gasto:test-ui -- --solo filtros",
-          "purpose": "Verify staff filters, totals, permission refusal and absence of prompt content in the UI/API.",
+          "purpose": "An employee or administrator can filter usage by user and kind and see totals by session and work item without seeing prompts, generated content, API secrets or other unnecessary personal data.",
+          "created_by": "T6.4",
+          "category": "functional"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-ui -- --solo filtros",
+          "purpose": "A Usuario account, signed-out visitor or caller without gasto.ver cannot access the dashboard or its API; authorization is checked on the server.",
           "created_by": "T6.4",
           "category": "functional"
         }
@@ -8059,7 +8080,28 @@
         {
           "type": "command",
           "value": "npm run gasto:test-integracion",
-          "purpose": "Verify durable attribution and staff-only review through production entrypoints.",
+          "purpose": "A project-associated call rolls up under its project with conversation detail; a standalone call groups by conversation, in both cases linked to the authenticated account and session.",
+          "created_by": "T6.5",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-integracion",
+          "purpose": "A provider error with known billable usage retains those tokens/cost with an explicit partial/error status; fields not returned by the provider remain unknown and are never fabricated.",
+          "created_by": "T6.5",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-integracion",
+          "purpose": "A Usuario account, signed-out visitor or caller without gasto.ver cannot access the dashboard or its API; authorization is checked on the server.",
+          "created_by": "T6.5",
+          "category": "integration"
+        },
+        {
+          "type": "command",
+          "value": "npm run gasto:test-integracion",
+          "purpose": "Calls without provider usage metadata or with a provider error do not fabricate token counts or charges; any known billable usage is retained with an explicit partial/error state.",
           "created_by": "T6.5",
           "category": "integration"
         }
@@ -8147,7 +8189,7 @@
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-6.visual.findings.json",
-          "purpose": "Validate visual findings and repair-task assignments.",
+          "purpose": "The rendered dashboard matches the approved contract and every visual or accessibility finding names the task that repairs it.",
           "category": "static"
         }
       ],
@@ -8234,7 +8276,7 @@
         {
           "type": "command",
           "value": "bitacora.py audit-ledger check .evidence/REQ-021/SP-6.findings.json",
-          "purpose": "Validate the independent SP-6 audit ledger.",
+          "purpose": "The audit verifies paid-call coverage across Next and ai-api, account/session attribution, retry idempotency, permission enforcement, and absence of prompt/response data in spend views; no critical or high findings remain open.",
           "category": "static"
         }
       ],

@@ -64,7 +64,8 @@
   "SP-6": {
    "at": "2026-10-29T12:06:19-05:00",
    "by": "owner",
-   "digest": "2a448ea44d57191f",
+   "digest": "39245197dcc1f0d8",
+   "repinned": "2026-10-29T12:08:55-05:00 mechanical check mapping: one check per criterion, same command (owner's Ejecutar SP-6 refused PLAN_CHECKS_UNMAPPED)",
    "via": "web"
   }
  }
