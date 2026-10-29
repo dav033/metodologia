@@ -114,8 +114,10 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
     remediations: dict[str, dict] = {}
     compose_failures: dict[str, int] = {}
     # an incarnation forked by `reopen` from a run that ended blocked waits for the owner's command that reopened it
-    # (a retry) instead of ending again at once; the original run never takes this path
-    reopened = awaiting_command = False
+    # (a retry) instead of ending again at once; the original run never takes this path. Incarnation `@N` replays the
+    # reopenings of `@2`..`@N-1` from its history, so it waits once more than they did: N-1 reopenings in all
+    reopenings, awaiting_command = 0, False
+    incarnation = _incarnation(DBOS.workflow_id, run)
     DBOS.set_event("summary", _summary(run, states, results, paused))
     while True:
         if not lines_on and subplans.enabled(plan) and DBOS.patch(PATCH_RUN_SUBPLANS):
@@ -172,8 +174,8 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
         retrying = [g for g in compose_failures if g not in composed and g not in rejected]
         if not paused and not any(s == "running" for s in states.values()) and not front.ready and not retrying \
                 and not awaiting_command:
-            if not reopened and DBOS.workflow_id != run_workflow_id(run) and DBOS.patch(PATCH_RUN_REOPENED):
-                reopened = awaiting_command = True
+            if reopenings < incarnation - 1 and DBOS.patch(PATCH_RUN_REOPENED):
+                reopenings, awaiting_command = reopenings + 1, True
                 steps.emit("run_reopened", {"run_id": run.run_id, "workflow_id": DBOS.workflow_id})
             else:
                 break                               # only blocked work and its dependents remain
@@ -308,6 +310,12 @@ def _audit_stuck(audit: str, reason: str, states: dict, results: dict) -> None:
     """The audit's dependents stay waiting; the owner sees why (`retry-task` grants one more round)."""
     states[audit] = "blocked"
     results[audit] = {**(results.get(audit) or {}), "status": "blocked", "audit": reason[:1000]}
+
+
+def _incarnation(workflow_id: str, run: RunRef) -> int:
+    """1 for the run's own workflow, N for `bt:<run>@N` (a reopened incarnation, client.reopen)."""
+    suffix = workflow_id[len(run_workflow_id(run)):]
+    return int(suffix[1:]) if suffix.startswith("@") and suffix[1:].isdigit() else 1
 
 
 def _step_error(error: Exception) -> str:
