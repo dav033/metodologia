@@ -22,6 +22,36 @@ def interface_errors(plan: dict) -> list[str]:
     return interfaces.check(plan, quality.ancestors(plan))[0]
 
 
+def subplan_plan(consumer_after: list[str], integration: str = "T3") -> dict:
+    """SP-1 owns IF-1: T1 writes the contract, T2 wires it, T3 proves it end to end; T4 in SP-2 consumes it."""
+    tasks = [{"id": "T1", "after": [], "subplan_id": "SP-1"}, {"id": "T2", "after": ["T1"], "subplan_id": "SP-1"},
+             {"id": "T3", "after": ["T1", "T2"], "subplan_id": "SP-1"},
+             {"id": "T4", "after": consumer_after, "subplan_id": "SP-2"},
+             {"id": "G1", "after": ["T3", "T4"]}]
+    return {"tasks": tasks, "subplans": [{"id": "SP-1"}, {"id": "SP-2"}],
+            "composition_gates": [{"id": "CG-1", "subplans": ["SP-1", "SP-2"], "task": "G1"}],
+            "interfaces": [{"id": "IF-1", "title": "ledger@1", "owner": "SP-1", "producer_task": "T1",
+                            "integration_task": integration, "consumer_tasks": ["T2", "T4"], "inputs": ["calls"],
+                            "outputs": ["rows"], "invariants": ["one row per call"],
+                            "integration_criteria": ["a call writes one row"]}]}
+
+
+class ForeignConsumers(unittest.TestCase):
+    """A consumer outside the owner subplan depends on the task that proves the interface (D-165, pictures REQ-021 T7.4)."""
+
+    def test_a_consumer_in_another_subplan_must_wait_for_the_proven_interface(self):
+        errors = interface_errors(subplan_plan(["T1"]))
+        self.assertEqual(len(errors), 1, errors)
+        self.assertIn("T4 (SP-2) relies on IF-1 of SP-1; it must depend on T3", errors[0])
+        self.assertEqual(interface_errors(subplan_plan(["T3"])), [])
+
+    def test_owner_consumers_gate_integration_and_plans_without_subplans_keep_the_old_rule(self):
+        self.assertEqual(interface_errors(subplan_plan(["T1"], integration="G1")), [])     # the gate composes T4 itself
+        plan = subplan_plan(["T1"])
+        plan["interfaces"][0]["owner"] = "Payments team"
+        self.assertFalse(any("relies on" in e for e in interface_errors(plan)))
+
+
 class InterfaceContracts(unittest.TestCase):
     def test_interfaces_is_optional_but_must_be_a_list_when_present(self):
         plan = proposed_plan()

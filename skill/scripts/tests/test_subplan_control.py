@@ -169,7 +169,7 @@ class ControlTests(unittest.TestCase):
         from types import SimpleNamespace
         import bt_server
         handler = SimpleNamespace(client_address=(address, 50000), tell_planner=unittest.mock.Mock())
-        handler.run_confirmed = lambda *args: bt_server.Handler.run_confirmed(handler, *args)
+        handler.run_confirmed = lambda *args, **kw: bt_server.Handler.run_confirmed(handler, *args, **kw)
         return handler
 
     def test_confirming_on_the_web_also_sends_the_subplan_to_run(self):
@@ -204,6 +204,25 @@ class ControlTests(unittest.TestCase):
         run.assert_not_called()
         self.assertIn("SP-2 confirmado", unquote(url))
         self.assertIn("solo se lanza desde esta máquina", unquote(url))
+
+    def test_reconfirming_a_running_subplan_approves_the_stage_again(self):
+        import bt_server
+        import bt_stages
+        held = {"held": ["SP-2"], "queued": {}, "revision": 24}
+        handler = self.handler()
+        with patch.object(bt_server, "commit"), patch.object(bt_stages, "info", return_value=held), \
+                patch.object(bt_stages, "run", return_value="Etapa r25 aprobada con SP-2.") as run:
+            same = bt_server.Handler.run_confirmed(handler, "demo", "REQ-001", self.rdir, "SP-2")
+            run.assert_not_called()                              # «Ejecutar subplan» on a running subplan: nothing to do
+            self.assertEqual(same, "SP-2 ya está en ejecución en la etapa r24.")
+            again = bt_server.Handler.run_confirmed(handler, "demo", "REQ-001", self.rdir, "SP-2", reconfirmed=True)
+        run.assert_called_once_with("demo", self.rdir, ["SP-2"], by="owner", via="web")
+        self.assertEqual(again, "Etapa r25 aprobada con SP-2.")
+        waits = bt_stages.StageError("STAGE_SUBPLAN_UNCONFIRMED", "SP-3: cambió desde que lo confirmaste")
+        with patch.object(bt_server, "commit"), patch.object(bt_stages, "info", return_value=held), \
+                patch.object(bt_stages, "run", side_effect=waits):
+            said = bt_server.Handler.run_confirmed(handler, "demo", "REQ-001", self.rdir, "SP-2", reconfirmed=True)
+        self.assertIn("cuando confirmes también lo que falta: SP-3", said)
 
     def test_a_queued_subplan_says_what_it_waits_for_instead_of_asking_to_run_it(self):
         import bt_server
