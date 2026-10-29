@@ -11,7 +11,7 @@ from collections.abc import Iterable
 
 from bt_contracts.execution import LegacyProgress, RunRef
 from bt_contracts.owner import OwnerAnswer, RunCommand
-from dbos import DBOSClient, EnqueueOptions
+from dbos import DBOSClient, EnqueueOptions, SetWorkflowID
 
 from .execution.engine import APP_VERSION, RUNS
 from .settings import Settings
@@ -37,8 +37,34 @@ class Client:
                                 (legacy or LegacyProgress()).model_dump(mode="json"))
         return workflow_id
 
+    def current_run_workflow(self, run: RunRef) -> str:
+        """The run workflow that owns the run now: `bt:<run>`, or after `reopen` its latest incarnation `bt:<run>@N`."""
+        base = f"bt:{run.run_id}"
+        rows = self.client.list_workflows(workflow_id_prefix=base + "@", load_input=False, load_output=False)
+        numbers = [int(r.workflow_id.rsplit("@", 1)[1]) for r in rows if r.workflow_id.rsplit("@", 1)[1].isdigit()]
+        return f"{base}@{max(numbers)}" if numbers else base
+
+    def reopen(self, run: RunRef) -> str:
+        """Fork the run's ended incarnation at its final summary into the next one (`bt:<run>@N`). The fork replays
+        the history up to there and, instead of ending blocked again, waits for the owner's next command
+        (`bt-run-reopened`). A run whose workflow has not ended needs no reopening and is returned as it is."""
+        current = self.current_run_workflow(run)
+        rows = self.client.list_workflows(workflow_ids=[current], load_input=False, load_output=False)
+        if not rows:
+            raise LookupError(f"{run.run_id} has no run workflow")
+        if rows[0].status != "SUCCESS":
+            return current
+        final = [step["function_id"] for step in self.client.list_workflow_steps(current)
+                 if step["function_name"] == "DBOS.setEvent"]
+        if not final:
+            raise RuntimeError(f"REOPEN_UNSUPPORTED: {current} recorded no summary")
+        number = int(current.rsplit("@", 1)[1]) + 1 if "@" in current[len(f"bt:{run.run_id}"):] else 2
+        with SetWorkflowID(f"bt:{run.run_id}@{number}"):
+            handle = self.client.fork_workflow(current, max(final))
+        return handle.workflow_id
+
     def summary(self, run: RunRef) -> dict | None:
-        return self.client.get_event(f"bt:{run.run_id}", "summary", timeout_seconds=0)
+        return self.client.get_event(self.current_run_workflow(run), "summary", timeout_seconds=0)
 
     def status(self, run: RunRef) -> dict:
         """The projection operators read: run summary plus each task workflow's state and open decision."""
@@ -51,8 +77,9 @@ class Client:
             tasks[task_id] = {"workflow_id": row.workflow_id, "workflow_status": row.status,
                               "state": self.client.get_event(row.workflow_id, "state", timeout_seconds=0),
                               "decision": self.client.get_event(row.workflow_id, "decision", timeout_seconds=0)}
-        run_row = next((r for r in rows if r.workflow_id == f"bt:{run.run_id}"), None)
-        return {"run_id": run.run_id, "workflow_status": run_row.status if run_row else None,
+        current = self.current_run_workflow(run)
+        run_row = next((r for r in rows if r.workflow_id == current), None)
+        return {"run_id": run.run_id, "workflow_id": current, "workflow_status": run_row.status if run_row else None,
                 "summary": self.summary(run) if run_row else None, "tasks": tasks}
 
     # --------------------------------------------------------------------------------------------- commands
@@ -74,7 +101,9 @@ class Client:
         them is the same message older engines accept."""
         command = RunCommand(kind=kind, task_id=task_id, note=note, request_id=request_id or uuid.uuid4().hex, by=by,
                              expect_paused=expect_paused, expect_round=expect_round)
-        self.client.send(f"bt:{run.run_id}", command.model_dump(mode="json", exclude_none=True), "run",
+        # a retry of a run that already ended blocked reopens it first: a message to an ended workflow is never read
+        target = self.reopen(run) if kind == "retry_task" else self.current_run_workflow(run)
+        self.client.send(target, command.model_dump(mode="json", exclude_none=True), "run",
                          idempotency_key=f"command:{command.request_id}")
         return command
 

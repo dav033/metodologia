@@ -41,8 +41,12 @@ def build(source, run: RunRef, plan=None) -> dict[str, Any]:
     `plan` is the run's validated Plan when available (it tells queued from pending work)."""
     run_wid = f"bt:{run.run_id}"
     rows = source.list_workflows(workflow_id_prefix=run_wid, load_input=False, load_output=True)
-    run_row = next((r for r in rows if r.workflow_id == run_wid), None)
-    summary = _event(source, run_wid, "summary") if run_row else None
+    # the run's current incarnation: `bt:<run>`, or `bt:<run>@N` after `bt-durable reopen` forked it
+    incarnations = [r for r in rows if r.workflow_id == run_wid or (r.workflow_id.startswith(run_wid + "@")
+                                                                     and r.workflow_id.rsplit("@", 1)[1].isdigit())]
+    run_row = max(incarnations, key=lambda r: int(r.workflow_id.rsplit("@", 1)[1]) if "@" in r.workflow_id else 1,
+                  default=None)
+    summary = _event(source, run_row.workflow_id, "summary") if run_row else None
     summary = summary if isinstance(summary, dict) else {}
     summary_tasks = summary.get("tasks") if isinstance(summary.get("tasks"), dict) else {}
     summary_results = summary.get("results") if isinstance(summary.get("results"), dict) else {}
@@ -70,7 +74,7 @@ def build(source, run: RunRef, plan=None) -> dict[str, Any]:
     for task in tasks:
         counts[task["state"]] = counts.get(task["state"], 0) + 1
     return {"schema": panel.SCHEMA, "projection": True, "authority": panel.AUTHORITY, "project": run.project,
-            "req": run.req, "run_id": run.run_id, "workflow_id": run_wid,
+            "req": run.req, "run_id": run.run_id, "workflow_id": run_row.workflow_id if run_row else run_wid,
             "plan_ref": {"plan_id": run.plan_id, "revision": run.revision, "sha256": run.plan_sha256},
             "workflow_status": run_row.status if run_row else None, "status": status,
             "paused": summary.get("status") == "paused", "counts": counts, "tasks": tasks, "decisions": decisions}
