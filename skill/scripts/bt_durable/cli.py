@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import logging
 import sys
 import time
 from pathlib import Path
@@ -131,12 +132,28 @@ def cmd_engine(_args) -> int:
     from bt_scheduler_executor_adapter import MethodologyDriver, repositories
 
     from .service import serve, wire
+    log_to_journal()
     cfg = engine_config()
     from .adapters.routes import LiveQuota
     serve(cfg, wire(cfg, repositories_for=lambda project: repositories(project),
                     driver_for=lambda project: MethodologyDriver(project), routes=routes(), capacity=LiveQuota(),
                     router=bt_config.get("execution.router", "m2")))
     return 0
+
+
+def log_to_journal() -> logging.Logger:
+    """The engine's own INFO lines («healing: …», «stage join: …») on stderr, the journal under systemd. Without a handler
+    they fell to Python's last-resort handler, which shows WARNING and up only: on 2026-10-29 the operator could not see
+    the self-healing answer T93 (D-170)."""
+    log = logging.getLogger("bt_durable")
+    if not any(getattr(h, "_bt_journal", False) for h in log.handlers):
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)8s] (%(name)s) %(message)s", "%H:%M:%S"))
+        handler._bt_journal = True
+        log.addHandler(handler)
+    log.setLevel(logging.INFO)
+    log.propagate = False
+    return log
 
 
 def cmd_start(args) -> int:
