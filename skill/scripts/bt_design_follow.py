@@ -18,7 +18,7 @@ def sync(project: str, rdir: Path, *, now: float | None = None) -> list[str]:
         return []
     import bt_design_iterate as iterate
     import bt_planning_flow
-    scope = bt_planning_flow.design_scope(rdir)  # collaborative flow: only the subplan in focus, unless asked
+    scope = bt_planning_flow.design_scope(rdir)  # collaborative flow: the focus and every subplan with tasks, in parallel
     due = []
     for r in drafts.rows(rdir):
         if r["status"] in (*drafts.ACTIVE, "approved"):

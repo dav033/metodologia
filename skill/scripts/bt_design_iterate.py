@@ -47,7 +47,7 @@ def add_feedback(project: str, rdir: Path, ref: str, text: str, via: str, *, dir
             return f"{ref} ya fue aprobado con el plan; los cambios van en una versión nueva del contrato."
         if direction and direction not in {d["id"] for d in entry.get("directions", [])}:
             return "Dirección no válida para ese borrador."
-        busy = any(e.get("status") in drafts.ACTIVE for e in data["drafts"].values())
+        busy = entry.get("status") in drafts.ACTIVE
         routed = bool(direction and not busy and not drafts.behind(entry, row) and source(entry, direction))
         if not routed:
             entry.setdefault("feedback", []).append({"id": secrets.token_hex(8), "when": drafts._now(),
@@ -80,8 +80,8 @@ def iterate(project: str, rdir: Path, ref: str, key: str, comments: str, via: st
     with drafts._locked(rdir) as data:
         for name, other in data["drafts"].items():
             drafts._settle(rdir, name, other)
-        if any(e.get("status") in drafts.ACTIVE for e in data["drafts"].values()):
-            raise SystemExit("Otro Designer está trabajando en este requerimiento; itera cuando termine.")
+        if (data["drafts"].get(ref) or {}).get("status") in drafts.ACTIVE:
+            raise SystemExit(f"El Designer ya está trabajando en {ref}; itera cuando termine.")
         entry = data["drafts"].get(ref) or {}
         prior = source(entry, key)
         if prior is None:

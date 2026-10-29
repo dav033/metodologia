@@ -223,7 +223,7 @@ class Directions(unittest.TestCase):
 
     def test_iterate_refuses_while_another_batch_is_active(self):
         drafts.request("demo", self.rdir)
-        with self.assertRaisesRegex(SystemExit, "Otro Designer"):
+        with self.assertRaisesRegex(SystemExit, "ya está trabajando en checkout@v1"):
             iterate.iterate("demo", self.rdir, "checkout@v1", "a", "Rounder", "cli")
         self.assertEqual(len(self.orders), 3)
 

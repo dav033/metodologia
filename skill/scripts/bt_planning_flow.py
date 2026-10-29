@@ -208,7 +208,7 @@ def problems(rdir: Path, sp: dict, design_rows: dict | None = None, input_rows: 
         design_rows = {r["ref"]: r for r in drafts.rows(rdir)} if design_rows is None else design_rows
         row = design_rows.get(sp["ref"])
         if row is None or row["status"] == "none":
-            out.append("el Designer todavía no empezó su diseño (empieza cuando el subplan está en foco)")
+            out.append("el Designer todavía no empezó su diseño (empieza cuando el subplan tiene tareas o está en foco)")
         elif row.get("amend") and row["status"] not in drafts.ACTIVE:
             out.append("el plan cambió después del diseño elegido: actualízalo con lo que ya está («Actualizar diseño»)")
         elif row["stale"] and row["status"] not in drafts.ACTIVE:
@@ -318,16 +318,18 @@ def approval_problems(rdir: Path, snapshot: dict | None = None) -> list[str]:
 
 
 def design_scope(rdir: Path) -> set[str] | None:
-    """UI contracts the Designer may work on by itself: only the subplan in focus under this flow (a reopened one
-    becomes the focus when nothing else is); None = all."""
+    """UI contracts the Designer may work on by itself under this flow, in parallel: the subplan in focus (a reopened one
+    becomes the focus when nothing else is) and every other unconfirmed subplan that already has tasks, so the owner
+    never waits for one design before the next starts (owner, 2026-10-29); None = all."""
     if not active(rdir):
         return None
     data, plan = _load(rdir), drafts._plan(rdir)
     if not data.get("outline") or _editing(rdir, plan):
         return set()
     subplans = _plan_order(rdir)
-    focus = _focus(data, subplans, _done(data, rdir, plan, subplans, inputs(rdir)))
-    return {sp["ref"] for sp in subplans if sp["id"] == focus and sp["ref"]}
+    done = _done(data, rdir, plan, subplans, inputs(rdir))
+    focus = _focus(data, subplans, done)
+    return {sp["ref"] for sp in subplans if sp["ref"] and (sp["id"] == focus or (sp["id"] not in done and sp["tasks"]))}
 
 
 # ------------------------------------------------------------------ actions
@@ -340,11 +342,17 @@ def _next(subplans: list[dict], done: set[str], after: str = "") -> str:
 
 
 def _design(project: str, rdir: Path, sid: str) -> str:
-    ref = next((sp["ref"] for sp in _plan_order(rdir) if sp["id"] == sid and sp["ref"]), None)
-    if not ref:
-        return ""
-    started = drafts.request(project, rdir, [ref], reason="focus")
-    return f" El Designer empezó {ref}." if started else ""
+    """Start the Designer of the subplan now in focus and, in parallel, of every other subplan in `design_scope` whose
+    design never started; `sync` follows the rest (plan changes, feedback, failures with their backoff)."""
+    subplans = _plan_order(rdir)
+    ref = next((sp["ref"] for sp in subplans if sp["id"] == sid and sp["ref"]), None)
+    scope = design_scope(rdir) or set()
+    unstarted = {r["ref"] for r in drafts.rows(rdir) if r["status"] == "none"}
+    others = [sp["ref"] for sp in subplans if sp["ref"] in scope and sp["ref"] != ref and sp["ref"] in unstarted]
+    started = drafts.request(project, rdir, [ref], reason="focus") if ref else []
+    if others:
+        started += drafts.request(project, rdir, others, reason="parallel")
+    return f" El Designer empezó {', '.join(started)}." if started else ""
 
 
 def _guard(rdir: Path) -> str:

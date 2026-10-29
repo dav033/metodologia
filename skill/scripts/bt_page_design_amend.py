@@ -10,11 +10,11 @@ KIND = {"added": "Añadido", "removed": "Quitado", "changed": "Cambiado"}
 
 
 def banner(ctx: dict, row: dict) -> str:
-    """Empty unless the entry has chosen work behind the plan; disabled while any Designer of the requirement works."""
+    """Empty unless the entry has chosen work behind the plan and its own Designer is idle; other subplans' Designers
+    never block it (they work in parallel)."""
     if not row.get("amend") or row["status"] in drafts.ACTIVE:
         return ""
     import bt_design_amend
-    busy = any(r.get("status") in drafts.ACTIVE for r in (ctx.get("rows") or {}).values())
     try:
         change = bt_design_amend.delta(ctx["project"], ctx["rdir"], row, row)
     except (OSError, KeyError, TypeError, ValueError):
@@ -28,7 +28,6 @@ def banner(ctx: dict, row: dict) -> str:
                ('<p class="pp-meta">No hay diferencias que resumir; el Designer comparará los dos briefs.</p>'
                 if change["previous_path"] else
                 '<p class="pp-meta">No hay un brief anterior registrado: el Designer revisará el contrato completo.</p>'))
-    off = " disabled" if busy else ""
     base = purl(ctx["project"], "req", ctx["rid"])
     failed = ('<p class="pp-meta">El intento anterior falló; el diseño elegido sigue intacto.</p>'
               if row["status"] == "failed" else "")
@@ -38,7 +37,5 @@ def banner(ctx: dict, row: dict) -> str:
             f'<form method="post" action="{base}/design-amend"><input type="hidden" name="token" value="{e(ctx["token"])}">'
             f'<input type="hidden" name="contract" value="{e(row["ref"])}"><input type="hidden" name="anchor" '
             f'value="{e(row["id"])}"><input type="hidden" name="lang" value="{e(ctx["opts"]["lang"])}">'
-            f'<label>Indicaciones para el Designer (opcional)<textarea name="comments"{off}></textarea></label>'
-            f'<button type="submit"{off}>Actualizar diseño</button>'
-            + ('<p class="pp-meta">Hay un Designer trabajando en este requerimiento; espera a que termine.</p>'
-               if busy else "") + "</form></section>")
+            f'<label>Indicaciones para el Designer (opcional)<textarea name="comments"></textarea></label>'
+            f'<button type="submit">Actualizar diseño</button></form></section>')

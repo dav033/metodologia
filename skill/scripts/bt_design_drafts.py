@@ -332,9 +332,7 @@ def request(project: str, rdir: Path, refs: list[str] | None = None, *, force: b
         if refs and row["ref"] not in refs:
             continue
         if row["status"] in ACTIVE or row["status"] == "approved":
-            continue
-        if any(e.get("status") in ACTIVE for e in _load(rdir)["drafts"].values()):
-            break  # one exploration batch per requirement: never multiply N by the number of UI subplans
+            continue  # one Designer batch per subplan; different subplans are designed in parallel (owner, 2026-10-29)
         due = force or fresh or row["status"] in ("none", "failed") or row["stale"] or row["pending_feedback"]
         if due and reason != "plan changed" and row.get("failures"):
             with _locked(rdir) as data:  # an explicit request is the owner's retry: the failure count starts over
