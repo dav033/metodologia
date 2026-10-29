@@ -383,6 +383,16 @@ def load_plan(run: RunRef):
         return None
 
 
+def _announce(run: RunRef) -> None:
+    """Tell the owner when a subplan version the composer published is ready to test in «Probar» (the legacy Scheduler
+    does it after writing its projection); never fails the pass."""
+    try:
+        import bt_verification
+        bt_verification.on_projection(requirement_dir(run))
+    except Exception:  # noqa: BLE001 - observing a run must never break it
+        pass
+
+
 class EngineProjector:
     """The engine's periodic refresh: live runs every pass, a finished run once more after it settles."""
 
@@ -407,6 +417,7 @@ class EngineProjector:
             if run.run_id not in self._plans:
                 self._plans[run.run_id] = load_plan(run)
             project(self.source, run, self._plans[run.run_id])
+            _announce(run)
             if row.status not in LIVE:
                 self._settled[row.workflow_id] = row.status
             written.append(run.run_id)
