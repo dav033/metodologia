@@ -43,6 +43,7 @@ elif scenario == "own":                         # leaves a file of its own, so e
     Path("out.txt").write_text("good\n")
     done()
 elif scenario == "fixlater":                    # wrong first, right when it continues from its own snapshot
+    time.sleep(float(os.environ.get("FAKE_FIXLATER_DELAY", "0")))
     if Path("attempt-marker.txt").exists():
         Path("out.txt").write_text("good\n")
     else:

@@ -192,6 +192,24 @@ class DurableRuns(EngineCase):
         alive = [p for p in Path("/proc").iterdir() if p.name.isdigit() and _marked(p, launch["pid"])]
         self.assertEqual(alive, [])
 
+    def test_a_paused_run_starts_no_retry_until_it_is_resumed(self):
+        # a running task workflow used to launch its own retries under a paused run (pictures REQ-021 a1, 2026-10-28)
+        os.environ["FAKE_FIXLATER_DELAY"] = "3"
+        self.addCleanup(os.environ.pop, "FAKE_FIXLATER_DELAY", None)
+        run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="fixlater")]))
+        self.start_engine()
+        self.client.start(run, FAST)
+        wait_until(lambda: self.lab.launches(), 60, what="the first attempt")
+        self.client.command(run, "pause", request_id="pause-during-the-first-attempt")
+        wait_until(lambda: (self.client.status(run)["tasks"]["T1"].get("state") or {}).get("state") == "paused", 90,
+                   interval=0.5, what="the retry to wait for the paused run")
+        time.sleep(3)
+        self.assertEqual(len(self.lab.launches()), 1)                   # no retry while paused
+        self.client.command(run, "resume", request_id="resume-after-the-check")
+        status = self.settled(run)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(len(self.lab.launches()), 2)
+
     def test_no_capacity_waits_durably_for_the_reset_then_runs(self):
         run = RunRef.model_validate(self.lab.freeze([task("T1", scenario="quotaonce")]))
         self.start_engine()

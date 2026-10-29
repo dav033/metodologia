@@ -100,19 +100,25 @@ class EngineUpgrade(EngineCase):
                             what="the re-verification of T4 and its new decision")
         self.assertIn("reverify", second["options"])
         self.client.answer(run, "T4", OwnerAnswer(request_id="T4:d2", action="stop"))
+        # the retry after an escalation starts from the line (the escalation path keeps no snapshot base), so the
+        # fixlater agent fails again and the owner is asked again: the old path behaves exactly as before
+        wait_until(lambda: (self.client.status(run)["tasks"]["T2"].get("decision") or {}).get("request_id") == "T2:d2",
+                   240, interval=0.5, what="T2's second decision")
+        self.client.answer(run, "T2", OwnerAnswer(request_id="T2:d2", action="stop"))
         status = self.settled(run, timeout=240)
 
         rows = self.client.workflows(f"bt:{run.run_id}")
         self.assertFalse([r.workflow_id for r in rows if r.status == "ERROR"], [(r.workflow_id, r.status) for r in rows])
         tasks_state = status["summary"]["tasks"]
-        self.assertEqual((tasks_state["T1"], tasks_state["T2"], tasks_state["T1A"], tasks_state["T4"]),
-                         ("completed", "completed", "completed", "blocked"), status)
+        self.assertEqual((tasks_state["T1"], tasks_state["T2"], tasks_state["T4"]), ("completed", "blocked", "blocked"),
+                         status)
+        self.assertNotIn("T1A", tasks_state)                                    # after a blocked task: never started
         events = self.events()
         self.assertIn("subplans_enabled", events)
         self.assertIn("owner_reverify", events)
         line = "refs/bt/subplan/proj/REQ-900/r1/app/SP-1"
         tip = lab_support.git(self.lab.repo, "rev-parse", line)
-        self.assertEqual(lab_support.git(self.lab.repo, "show", f"{tip}:out.txt"), "good")
+        self.assertEqual(lab_support.git(self.lab.repo, "show", f"{tip}:out.txt"), "good")   # T1, seeded after the pin
         launches = [item.get("scenario") for item in self.lab.launches()]
         self.assertEqual(launches.count("neverfix"), 1)                         # reverify never relaunched T4
         self.assertEqual(launches.count("fixlater"), 2)                         # retry continued from its snapshot
