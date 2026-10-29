@@ -65,7 +65,13 @@ class PostgresOutage(unittest.TestCase):
         engine = self.spawn()
         client = wait_until(lambda: _client(self.url), 90, interval=1, what="the DBOS schema in postgres")
         self.addCleanup(client.close)
-        client.start(run, FAST)
+
+        def started():              # the engine may still be creating the schema (a missing column under load)
+            try:
+                return client.start(run, FAST) or True
+            except Exception:  # noqa: BLE001 - start is idempotent per workflow id: try again
+                return None
+        wait_until(started, 90, interval=1, what="the run to be enqueued once the schema is complete")
         wait_until(lambda: self.lab.launches(), 90, what="the agent to start")
         docker("stop", "-t", "1", self.name)                        # the database disappears mid-attempt
         time.sleep(6)
