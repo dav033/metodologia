@@ -206,6 +206,35 @@ class MembersAcrossSubplans(EngineCase):
     files = DurableSubplans.files
 
 
+def dependent_subplans_on_one_file():
+    """SP-2 depends on SP-1 and edits the file SP-1 edited (pictures REQ-021: SP-2 changed SP-1's account service)."""
+    tasks = [task("T1", scenario="append", subplan="SP-1", kind="implement", paths=["T1.task", "out.txt", "README.md"]),
+             task("T2", scenario="append", subplan="SP-2", kind="implement", after=["T1"],
+                  paths=["T2.task", "out.txt", "README.md"]),
+             task("G1", scenario="own", kind="test", after=["T2"])]
+    return tasks, [subplan("SP-1", "T1", "T1"), subplan("SP-2", "T2", "T2")], [gate("CG-1", ["SP-1", "SP-2"], "G1")]
+
+
+class ComposeDependentSubplans(EngineCase):
+    """A later member contains the earlier one (its line holds the tasks it depends on). Composed as deltas from the run
+    line's base, the shared change conflicted with itself (pictures REQ-021 CG-1: 14 files, SP-1 an ancestor of SP-2);
+    measured from its merge base with the member folded before it, the later member adds only its own work."""
+
+    def test_a_member_that_contains_the_previous_one_composes_cleanly(self):
+        tasks, subplans_, gates = dependent_subplans_on_one_file()
+        run = RunRef.model_validate(self.lab.freeze(tasks, schema="1.3.0", subplans=subplans_, composition_gates=gates))
+        self.start_engine()
+        self.client.start(run, SERIAL)
+        status = self.settled(run, timeout=300)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(status["summary"]["gates"]["composed"], {"CG-1": "C1"})
+        launches = {item["task"]: item for item in self.lab.launches()}
+        self.assertEqual(set(launches["G1"]["seen"]), {"T1.task", "T2.task"})          # G1 ran on the candidate
+        candidate = lab_support.git(self.lab.repo, "rev-parse", "refs/compositions/REQ-900.bt-r1/candidates/C1")
+        readme = lab_support.git(self.lab.repo, "show", f"{candidate}:README.md")
+        self.assertEqual(readme.splitlines()[-2:], ["T1 was here", "T2 was here"])     # each change exactly once
+
+
 class AtomicLines(unittest.TestCase):
     """A snapshot goes into the run line and its subplan lines together or not at all: a writer that moves any of the
     lines between the merge and the move (the run's `sync` seeding the same subplan line) leaves every line as it was,

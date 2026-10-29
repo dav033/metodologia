@@ -56,6 +56,7 @@ PATCH_TASK_PAUSE = "bt-task-respects-pause"
 PATCH_RUN_AUDITS = "bt-run-audit-remediation"
 PATCH_RUN_STEP_FAILURES = "bt-run-survives-step-failures"
 PATCH_RUN_REOPENED = "bt-run-reopened"
+PATCH_RUN_RECOMPOSE = "bt-run-recompose-gate"
 # what a step the run workflow calls itself raises once its retries are spent; before PATCH_RUN_STEP_FAILURES the run
 # ended in ERROR there (never recovered), so no recorded history goes on past such a failure
 RUN_STEP_ERRORS = (steps.StepFailure, DBOSMaxStepRetriesExceeded)
@@ -219,6 +220,13 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             paused = True
         elif command.kind == "resume":
             paused = False
+        elif command.kind == "retry_task" and _rejected_gate(plan, command.task_id, rejected) \
+                and DBOS.patch(PATCH_RUN_RECOMPOSE):
+            # the owner's retry of a gate task held by a rejected candidate composes the gate again (as the legacy
+            # owner rebuilds a candidate on every pass); its members' lines may have changed since
+            gate_id = _rejected_gate(plan, command.task_id, rejected)
+            steps.emit("gate_recompose", {"run_id": run.run_id, "gate": gate_id, "previous": rejected.pop(gate_id)})
+            compose_failures.pop(gate_id, None)
         elif command.kind == "retry_task" and command.task_id and states.get(command.task_id) in frontier.STOPPED:
             if command.task_id in remediations:         # the owner retrying a blocked audit grants it one more round
                 remediations[command.task_id]["extra"] += 1
@@ -310,6 +318,12 @@ def _audit_stuck(audit: str, reason: str, states: dict, results: dict) -> None:
     """The audit's dependents stay waiting; the owner sees why (`retry-task` grants one more round)."""
     states[audit] = "blocked"
     results[audit] = {**(results.get(audit) or {}), "status": "blocked", "audit": reason[:1000]}
+
+
+def _rejected_gate(plan, task_id: str | None, rejected: dict) -> str:
+    """The rejected composition gate that `task_id` runs ('' when it is not such a gate task)."""
+    return next((gate.id for gate in getattr(plan, "composition_gates", ()) or ()
+                 if gate.task == task_id and gate.id in rejected), "")
 
 
 def _incarnation(workflow_id: str, run: RunRef) -> int:

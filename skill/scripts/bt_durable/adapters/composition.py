@@ -63,17 +63,23 @@ class CompositionComposer:
         engine, _store = self._engine(run, role)
         repo = self.lines._repo(role)
         base = self.lines.line_base(run, role)
-        versions = {}
-        for subplan_id in gate.subplans:
+        versions, previous = {}, ""
+        for subplan_id in _composition_order(plan, gate):
             tip = self.lines._tip(repo, self.lines.subplan_ref(run, role, subplan_id))
             if not tip:
                 return {"state": "rejected", "reason": f"SUBPLAN_LINE_MISSING: {subplan_id}"}
+            # A subplan's line holds its scope: its members AND the frozen-plan tasks they depend on, so a later member
+            # often contains an earlier one (pictures REQ-021: SP-2 ⊇ SP-1). Folded as a delta from the run line's
+            # base, the shared work would be applied twice and conflict with itself; measured from its merge base with
+            # the member folded just before it, a member brings only what it adds (the run line's base otherwise).
+            own_base = _merge_base(repo, tip, previous) or base
+            previous = tip
             items = [{"task_id": item["task_id"], "kind": item["kind"], "verdict_id": item["verdict_id"],
                       "tree_digest": _tree(repo, item.get("snapshot") or tip), "environment": VERIFIER}
                      for item in evidence.get(subplan_id, ())]
             version = engine.publish_subplan_version(self.plan_id(run), f"r{run.revision}:{run.plan_sha256}",
-                                                     subplan_id, tip, base, self._contracts(plan, subplan_id, repo, tip),
-                                                     items)
+                                                     subplan_id, tip, own_base,
+                                                     self._contracts(plan, subplan_id, repo, tip), items)
             versions[subplan_id] = version.version
         candidate = self._build(engine, plan, run, gate, versions)
         return {"state": candidate.state, "candidate_id": candidate.id, "commit": candidate.integrated_commit,
@@ -116,6 +122,19 @@ class CompositionComposer:
             out[key] = (next(iter(digests.values())) if len(digests) == 1 else
                         hashlib.sha256(repr(sorted(digests.items())).encode()).hexdigest() if digests else "declared")
         return out
+
+
+def _composition_order(plan: Plan, gate) -> list[str]:
+    """The gate's members in the order `_build` folds them (plan order)."""
+    return [item.id for item in plan.subplans if item.id in gate.subplans]
+
+
+def _merge_base(repo: Path, tip: str, other: str) -> str:
+    if not other:
+        return ""
+    done = subprocess.run(["git", "-C", str(repo), "merge-base", tip, other], capture_output=True, text=True,
+                          check=False)
+    return done.stdout.strip() if done.returncode == 0 else ""
 
 
 def _tree(repo: Path, commit: str) -> str:
