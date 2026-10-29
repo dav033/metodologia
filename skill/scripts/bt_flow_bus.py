@@ -16,12 +16,13 @@ from pathlib import Path
 from typing import Any, Callable
 
 import bt_design_flow
+import bt_flow_durable
 import bt_run_stores
 import bt_scheduler_adapter as scheduler_
 VERSION = 1
 PARTIES = ("planner", "M1", "M2", "M3", "M4", "M5", "M6", "web", "owner")
 LIMIT = 2000                                    # rows per store per cycle: bounded work, the cursor catches up
-STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal", "cyc", "design")
+STORES = ("m1", "m2", "m3", "m4", "m4i", "m5", "m6", "heal", "cyc", "design", "dbos")
 
 
 # What each module's database holds and what the bus does with it. A table nobody classified here fails
@@ -439,16 +440,12 @@ def sources(rdir: Path, project: str) -> dict[str, tuple[str, int]]:
             out[name] = (str(path), 0)
     out["m4i"] = out["m4"]
     out["cyc"] = out["m5"]
-    try:
-        approval_file = Path(rdir) / "design-approvals.json"
-        out["design"] = (str(approval_file), approval_file.stat().st_ino)
-    except OSError:
-        out["design"] = (str(approval_file), 0)
-    interventions = Path(rdir) / "RUN.interventions.jsonl"
-    try:
-        out["heal"] = (str(interventions), interventions.stat().st_ino)
-    except OSError:
-        out["heal"] = (str(interventions), 0)
+    for name, path in (("design", Path(rdir) / "design-approvals.json"), ("heal", Path(rdir) / "RUN.interventions.jsonl")):
+        try:
+            out[name] = (str(path), path.stat().st_ino)
+        except OSError:
+            out[name] = (str(path), 0)
+    out["dbos"] = bt_flow_durable.source(Path(rdir))       # the durable runtime's telemetry (D-150)
     return out
 
 
@@ -476,6 +473,7 @@ def collect(rdir: Path, project: str, cursors: dict[str, int] | None = None) -> 
         "heal": _heal_events(run, rdir, cur["heal"]),
         "cyc": _cycle_events(run, paths.get("m5"), cur["cyc"]),
         "design": bt_design_flow.events(rdir, project, cur["design"]),
+        "dbos": bt_flow_durable.for_run(run, rdir, cur["dbos"]),
     }
     merged = []
     for name, items in events.items():

@@ -247,6 +247,8 @@ class LegacyTask(Contract):
 class LegacyProgress(Contract):
     inventory_digest: str = Field(default="", max_length=64)
     tasks: tuple[LegacyTask, ...] = ()
+    # a later stage of a run the owner had paused starts paused (bt_durable.stage_join); absent before, hence False
+    paused: bool = False
 
     def of(self, verdict: str) -> dict[str, LegacyTask]:
         return {t.task_id: t for t in self.tasks if t.verdict == verdict}

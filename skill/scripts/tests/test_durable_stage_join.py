@@ -109,6 +109,29 @@ class StageJoin(EngineCase):
         self.assertEqual(status["summary"]["status"], "completed", status)
         self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])
 
+    def test_the_owners_pause_carries_into_the_new_stage(self):
+        """pictures REQ-021: the owner paused r15 from the web while T94 waited for a decision; a stage joined then must
+        not start anything until the owner resumes."""
+        first = [task("T1", scenario="own"), task("T2", scenario="fixlater", after=["T1"])]
+        run1 = self.stage(first, 1)
+        self.lab.own(run1.model_dump(mode="json"))
+        self.start_engine()
+        self.client.start(run1, ONE_ATTEMPT)
+        wait_until(lambda: (self.client.status(run1)["tasks"].get("T2") or {}).get("decision"), 180, interval=0.5,
+                   what="T2 to stop and ask the owner")
+        self.client.command(run1, "pause")
+        wait_until(lambda: (self.client.status(run1)["summary"] or {}).get("status") == "paused", 60, interval=0.5,
+                   what="the run to pause")
+        run2 = self.stage([*first, task("T3", scenario="own", after=["T1"])], 2)
+        joined = self.join(run2, settings=FAST)
+        self.assertEqual((joined["status"], joined["paused"]), ("joined", True), joined)
+        wait_until(lambda: (self.client.status(run2)["summary"] or {}).get("status") == "paused", 60, interval=0.5,
+                   what="the new run to start paused")
+        self.assertEqual([item["task"] for item in self.lab.launches()], ["T1", "T2"])   # nothing started while paused
+        self.client.command(run2, "resume")
+        status = self.settled(run2, timeout=240)
+        self.assertEqual(status["summary"]["status"], "completed", status)
+        self.assertEqual(sorted(item["task"] for item in self.lab.launches()), ["T1", "T2", "T2", "T3"])
 
 if __name__ == "__main__":
     unittest.main()

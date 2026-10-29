@@ -106,7 +106,7 @@ def run_workflow(run_data: dict, settings_data: dict, legacy_data: dict) -> dict
             steps.emit("inherit_refused", {"run_id": run.run_id, "task_id": task.id,
                                            "reason": merged.get("conflict") or merged.get("internal_error")})
     rounds: dict[str, int] = {}
-    paused = False
+    paused = legacy.paused                  # False in every input recorded before stage joins carried the owner's pause
     seen_commands: set[str] = set()
     # plan 1.3.0: subplan lines and composition gates, switched on by a patch so that a run recorded before it replays
     # its old iterations unchanged (the patch returns False where they already recorded a step)

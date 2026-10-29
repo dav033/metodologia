@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 from html import escape as e
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 TOKEN = re.compile(r'(<input type="hidden" name="token" value="[^"]*">)')
 
@@ -94,6 +94,21 @@ def panel(ctx: dict, sub: dict) -> str:
     rows = "".join(_row(plans, t, by_id, base, token, back) for t in tasks)
     return (head + asks + other + f'<h2>Tareas</h2>{rows}' + _rework(tasks, base, token, back) + _run_tools(ctx, status, base, token, back)
             + _tests(ctx, sub) + "</div>")
+
+
+def flow_frame(ctx: dict, sub: dict) -> str:
+    """The Flow page of this subplan (scope `subplan:P/REQ/SP`, D-150) framed under its «Ejecución»: the module map,
+    the messages and each task's route, live. A direct child of the detail block with `data-persist`, so the Plan tab's
+    refresh keeps the frame (and its own live stream) instead of reloading it every few seconds."""
+    if not counts(ctx).get(sub["id"]):
+        return ""
+    scope = f'subplan:{ctx["project"]}/{ctx["rid"]}/{sub["id"]}'
+    src = "/flow?" + urlencode({"scope": scope, "embed": "1"})
+    return (f'<section class="pp-flowframe" data-persist="flow-{e(sub["id"])}" aria-label="Flujo de {e(sub["id"])}">'
+            f'<div class="pp-flowframe-head"><h2>Flujo de {e(sub["id"])}</h2><span class="muted">Mensajes entre módulos y '
+            f'recorrido de cada tarea, en vivo</span><a href="{e("/flow?" + urlencode({"scope": scope}))}" target="_blank" '
+            f'rel="noopener">Abrir en grande ↗</a></div>'
+            f'<iframe src="{e(src)}" title="Flujo de {e(sub["id"])}" loading="lazy"></iframe></section>')
 
 
 def _row(plans, task: dict, asks: dict, base: str, token: str, back: str) -> str:

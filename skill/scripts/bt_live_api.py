@@ -75,17 +75,33 @@ def parse_scope(scope: str) -> tuple[str, str | None, str | None, str | None]:
         return kind, bits[0], None, None
     if kind == "run" and len(bits) == 2:
         return kind, bits[0], bits[1], None
-    if kind == "task" and len(bits) == 3:
+    if kind in ("task", "subplan") and len(bits) == 3:      # subplan:P/REQ/SP — its tasks and the gates it is in
         return kind, bits[0], bits[1], bits[2]
     return "global", None, None, None
+
+
+def scope_tasks(rdir: Path, scope: str) -> set[str] | None:
+    """The tasks a scope shows in one run: one task, a subplan's tasks plus the gate tasks that compose it (D-150), or
+    None (every task)."""
+    kind, _, _, last = parse_scope(scope)
+    if kind == "task":
+        return {last}
+    if kind != "subplan":
+        return None
+    try:
+        plan = json.loads((Path(rdir) / "PLAN.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return set()
+    gates = {g.get("task") for g in plan.get("composition_gates") or [] if last in (g.get("subplans") or [])}
+    return {t["id"] for t in plan.get("tasks") or [] if t.get("subplan_id") == last or t.get("id") in gates}
 
 
 def runs_in_scope(root: Path | None, scope: str) -> list[tuple[str, Path]]:
     kind, project, req, _ = parse_scope(scope)
     found = runs(root)
-    if kind in ("project", "run", "task"):
+    if kind in ("project", "run", "task", "subplan"):
         found = [(p, r) for p, r in found if p == project]
-    if kind in ("run", "task"):
+    if kind in ("run", "task", "subplan"):
         found = [(p, r) for p, r in found if r.name.startswith(f"{req}-") or r.name == req]
     return found
 
@@ -155,7 +171,7 @@ def _planning_events(root: Path | None, scope: str, after_ord: str, cursors: dic
                      ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Planning edits by agent sessions as `agent -> planner` messages (the Planeación module talking)."""
     kind, project, req, _ = parse_scope(scope)
-    if kind in ("run", "task"):
+    if kind in ("run", "task", "subplan"):
         return [], {}
     after = int(((cursors or {}).get("presence/planning") or {}).get("line", 0))
     rows = bt_presence.planning_events(_root(root), after)
@@ -170,8 +186,8 @@ def _planning_events(root: Path | None, scope: str, after_ord: str, cursors: dic
     return [e for e in events if e["ord"] > after_ord], {"line": last}
 
 
-def _match(event: dict[str, Any], task: str | None) -> bool:
-    return task is None or event.get("task") == task
+def _match(event: dict[str, Any], tasks: set[str] | None) -> bool:
+    return tasks is None or event.get("task") in tasks
 
 
 class _RunLog:
@@ -265,23 +281,23 @@ def flow_events(root: Path | None, scope: str, after_ord: str = "", cursors: dic
 
     Without cursors: the newest `limit` messages with `ord` > after_ord (oldest first) and every digest. With the
     cursors a previous call returned: only what arrived since, messages and changed digests."""
-    _, _, _, task = parse_scope(scope)
     out: list[dict[str, Any]] = []
     digests: list[dict[str, Any]] = []
     new: dict[str, Any] = {}
     for project, rdir in runs_in_scope(root, scope):
         key = f"{project}/{rdir.name}"
         log = _log(rdir, project)
+        tasks = scope_tasks(rdir, scope)
         log.advance(max_age)
         with log.lock:
             if cursors is None:
                 events, found, new[key] = list(log.events), [dict(d) for d in log.digests.values()], log.serial
             else:
                 events, found, new[key] = log.since(int(cursors.get(key, 0)))
-        out.extend(e for e in events if e["ord"] > after_ord and _match(e, task))
-        digests.extend(d for d in found if _match(d, task))
+        out.extend(e for e in events if e["ord"] > after_ord and _match(e, tasks))
+        digests.extend(d for d in found if _match(d, tasks))
     planning, new["presence/planning"] = _planning_events(root, scope, after_ord, cursors)
-    out.extend(e for e in planning if _match(e, task))
+    out.extend(planning)
     out.sort(key=lambda e: e["ord"])
     return out[-limit:] if limit else [], digests, new
 
@@ -323,6 +339,7 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
             status = ps.plan_status(project, rdir)
         except Exception:                               # one unreadable plan must not blank the whole map
             continue
+        wanted = scope_tasks(rdir, scope) if parse_scope(scope)[0] == "subplan" else None
         tasks = [{"id": t["id"], "title": t["title"], "objective": (t.get("detail") or {}).get("objective"),
                   "milestone_id": t.get("milestone_id"), "subplan_id": t.get("subplan_id"), "state": t["state"],
                   "attempts": t["attempts"], "attempt": _attempt(t.get("attempt")),
@@ -330,10 +347,11 @@ def run_summaries(root: Path | None, scope: str) -> list[dict[str, Any]]:
                   "retries_remaining": t.get("retries_remaining"),
                   "retry_exhausted": t.get("retry_exhausted"), "reason": t.get("reason"),
                   "revision": t.get("revision"), "history": [_attempt(a) for a in t.get("history") or []]}
-                 for m in status["milestones"] for t in m["tasks"]]
+                 for m in status["milestones"] for t in m["tasks"] if wanted is None or t["id"] in wanted]
         held = _stage_subplans(rdir)
         subplans = [{"id": sp["id"], "title": sp.get("title") or "", "milestone_id": sp.get("milestone_id"),
-                     "in_stage": held is None or sp["id"] in held} for sp in status.get("subplans") or []]
+                     "in_stage": held is None or sp["id"] in held} for sp in status.get("subplans") or []
+                    if wanted is None or sp["id"] == parse_scope(scope)[3]]
         out.append({"run": f'{project}/{status["req_id"]}', "project": project, "req_id": status["req_id"],
                     "title": status["title"], "status": status["run"].get("status"), "active": status["run"].get("active"),
                     "authority": status["run"].get("authority"), "revision": status["run"].get("revision"),

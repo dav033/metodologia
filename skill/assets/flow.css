@@ -100,3 +100,7 @@
   .flowpage *, .flowpage *::before, .flowpage *::after { animation: none !important; transition: none !important; }
   .fl-dotm { display: none; }
 }
+/* embedded in the Plan tab's «Ejecución» of a subplan (bt_page_flow.flow_page(embed=True), D-150) */
+.flow-embed .skip, .flow-embed header.top, .flow-embed .nowbar, .flow-embed main > .head, .flow-embed .fl-runs { display: none !important; }
+.flow-embed main { max-width: none; padding: 12px 14px 24px; }
+.flow-embed .flowpage { gap: 14px; }
