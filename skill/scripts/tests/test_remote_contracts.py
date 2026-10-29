@@ -162,6 +162,63 @@ class LaptopProducers(unittest.TestCase):
         self.assertEqual(history.commands[0].origin, "telegram")
 
 
+class DurableRunProducers(unittest.TestCase):
+    """A durable run (REQ-030 M7) through the real snapshot and events routes, from the projection a REAL lab run
+    produced: real git, DBOS on SQLite, the engine process, the fake provider through the real driver."""
+
+    def setUp(self):
+        from durable_support import SYSTEMD, Lab
+        self.lab = Lab(backend="systemd" if SYSTEMD else "pgroup")
+        self.addCleanup(self.lab.cleanup)
+        env = patch.dict(os.environ, {"FLOW_GATEWAY_KEY": KEY})
+        env.start()
+        self.addCleanup(env.stop)
+        producing = remote_fixture_root.producing(self.lab.bitacora)
+        producing.__enter__()
+        self.addCleanup(producing.__exit__, None, None, None)
+
+    def get(self, path: str):
+        handler = Handler(path)
+        bt_remote_api.route_get(handler)
+        self.assertEqual(handler.status, 200, handler.body)
+        return handler.body
+
+    def test_snapshot_and_events_of_a_real_durable_run_validate(self):
+        import bt_durable_panel
+        from bt_contracts.execution import RunRef
+        from bt_durable.settings import Settings
+        from durable_support import engine_client, task, wait_until
+
+        data = self.lab.freeze([task("T1", scenario="neverfix"), task("T2"), task("T3", after=["T2"])])
+        self.lab.own(data)
+        run = RunRef.model_validate(data)
+        settings = Settings(max_parallel=2, poll_seconds=0.5, run_poll_seconds=5, owner_wait_seconds=5)
+        _, client = engine_client(self, self.lab)
+        client.start(run, settings.model_copy(update={"budget": settings.budget.model_copy(
+            update={"max_attempts": 1})}))
+        self.addCleanup(client.cancel, run)
+
+        def asked():
+            doc = bt_durable_panel.read(self.lab.rdir)
+            return doc if doc and doc["decisions"] else None
+        doc = wait_until(asked, 180, interval=0.5, what="a durable decision in the projection")
+        snapshot = remote.RemoteSnapshot.model_validate_json(self.get("/api/remote/v1/snapshot"))
+        shown = next(r for r in snapshot.runs if r.req == "REQ-900")
+        states = {t.id: t.state for t in shown.tasks}
+        self.assertEqual((shown.state, shown.revision), ("running", doc["status_seq"]))
+        self.assertEqual(states["T1"], "rejected")                        # needs a decision (the M1 "recovering")
+        self.assertEqual(states["T2"], "ready")                           # queued: T1 holds the shared out.txt
+        self.assertEqual(states["T3"], "pending")                         # its dependency is not done
+        self.assertTrue(all(isinstance(t.revision, int) for t in shown.tasks))
+        t1 = next(t for t in shown.tasks if t.id == "T1")
+        self.assertEqual((t1.review_attempt.state, t1.review_attempt.verdict), ("rejected", "FAIL"))
+        decision = next(d for d in snapshot.decision_requests if d.req == "REQ-900")
+        self.assertEqual((decision.id, decision.task), ("T1:d1@k1", "T1"))
+        self.assertEqual([o.id for o in decision.options], ["retry", "retry_with_note", "retry_other_route", "stop"])
+        page = remote.EventsPage.model_validate_json(self.get("/api/remote/v1/events?limit=100"))
+        self.assertIn("attempt.failed", {event.type for event in page.events})
+
+
 class GatewayProducers(unittest.TestCase):
     def runtime(self, laptop=None):
         from config import GatewayConfig

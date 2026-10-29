@@ -56,16 +56,25 @@ class Client:
                 "summary": self.summary(run) if run_row else None, "tasks": tasks}
 
     # --------------------------------------------------------------------------------------------- commands
-    def answer(self, run: RunRef, task_id: str, answer: OwnerAnswer) -> str:
-        workflow = self._open_task_workflow(run, task_id)
+    def answer(self, run: RunRef, task_id: str, answer: OwnerAnswer, round_no: int | None = None) -> str:
+        """Send `answer` to the task's open round, or to round `round_no` exactly (an answer built for an older
+        round must not reach a newer one: request ids restart at d1 in every round). One answer per request id and
+        round: DBOS scopes the idempotency key to the destination workflow."""
+        workflow = self._open_task_workflow(run, task_id) if round_no is None else \
+            self._round_workflow(run, task_id, round_no)
         self.client.send(workflow, answer.model_dump(mode="json"), f"owner:{task_id}",
                          idempotency_key=f"answer:{answer.request_id}")
         return workflow
 
     def command(self, run: RunRef, kind: str, *, task_id: str | None = None, note: str = "",
-                request_id: str | None = None) -> RunCommand:
-        command = RunCommand(kind=kind, task_id=task_id, note=note, request_id=request_id or uuid.uuid4().hex)
-        self.client.send(f"bt:{run.run_id}", command.model_dump(mode="json"), "run",
+                request_id: str | None = None, by: str = "owner", expect_paused: bool | None = None,
+                expect_round: int | None = None) -> RunCommand:
+        """A run command, applied at most once per request id. `expect_*` name the state the command was built
+        against; the run workflow refuses it when the run moved on. Unset fields are not sent, so a command without
+        them is the same message older engines accept."""
+        command = RunCommand(kind=kind, task_id=task_id, note=note, request_id=request_id or uuid.uuid4().hex, by=by,
+                             expect_paused=expect_paused, expect_round=expect_round)
+        self.client.send(f"bt:{run.run_id}", command.model_dump(mode="json", exclude_none=True), "run",
                          idempotency_key=f"command:{command.request_id}")
         return command
 
@@ -75,6 +84,13 @@ class Client:
         if live:
             self.client.cancel_workflows(live, cancel_children=True)
         return live
+
+    def _round_workflow(self, run: RunRef, task_id: str, round_no: int) -> str:
+        workflow = f"bt:{run.run_id}:{task_id}:k{round_no}"
+        rows = self.client.list_workflows(workflow_ids=[workflow], load_input=False, load_output=False)
+        if not rows or rows[0].status != "PENDING":
+            raise LookupError(f"{task_id} round {round_no} is not open in {run.run_id}")
+        return workflow
 
     def _open_task_workflow(self, run: RunRef, task_id: str) -> str:
         rows = self.client.list_workflows(workflow_id_prefix=f"bt:{run.run_id}:{task_id}:k", load_input=False,

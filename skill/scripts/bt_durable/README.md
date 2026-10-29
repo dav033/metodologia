@@ -53,6 +53,26 @@ uv run bt-durable pause|resume|cancel pictures REQ-031
 uv run bt-durable retry-task pictures REQ-031 T2 --note "…"
 ```
 
+## Panels and remote control (M7)
+
+`bt_durable.projection` derives one JSON read model per run from DBOS only (workflow statuses, inputs/outputs, the
+`summary`/`state`/`decision` events): `<root>/.state/durable/projections/<project>/<REQ>-r<N>.json` (0600 file, 0700
+directories; `bt_durable_panel.path`). The engine refreshes it every 5 s (`serve(project_seconds=…)`) and
+`bt-durable project PROJECT REQ` rebuilds it; no workflow reads it back. `sequence` is monotonic (+1 per change, a
+rebuild without the file starts at the current time in ms); `status_seq` / `tasks[].seq` / `decisions[].seq` are the
+sequence of each subject's last change. Task states: `pending queued waiting_quota running verifying recovering
+needs_decision blocked failed completed cancelled`; run: `running paused completed blocked failed cancelled`.
+
+The stdlib panels read it through `bt_durable_panel` (stdlib only): `bt_planstatus` (plan pages, list, flow, now),
+the run tab, `bt_remote_snapshot` (states mapped to the snapshot vocabulary: queued/waiting_quota → `ready`,
+recovering/needs_decision → `rejected`, failed → `blocked`; `revision` = the subject's sequence; decision ids name
+the task round, `T2:d1@k3`). Remote `pause`/`resume`/`reopen`/`retry` (no route pins)/`answer-decision` go through the
+ledger to `bt-durable remote PROJECT REQ` (JSON on stdin; `execution.durable_cli` overrides how it is reached): it
+rebuilds the projection, refuses a stale command (`expect.revision`/`state` differ, decision no longer open, command
+not applicable) and sends a DBOS message keyed by the ledger's idempotency key, carrying `expect_paused` /
+`expect_round`, which `bt.run` checks again on receipt (`command_refused` in telemetry). Commands without those
+fields (every message recorded before M7) take exactly their old path.
+
 `execution.backend` (`legacy` default | `dbos`) names the runtime for new runs; `execution.routes`
 (`provider:profile:model[:effort]`, in order) the allowed routes; `execution.agent_concurrency` / `verify_concurrency`
 the queue sizes. An existing run never changes owner implicitly: `RUN.owner.json` decides, and the legacy owner refuses a
@@ -138,8 +158,9 @@ template for proving an upgrade. When no workflow can still be on the old path, 
   does not use Laya.
 - Milestone audits and audit-driven remediation revisions of the legacy flow are not part of the durable workflows;
   remediation here is the coordinated repair attempt of one task.
-- The remote panel and web UI read legacy projections; durable runs are visible through `bt-durable status` and the
-  run workflow's `summary` event, not yet in the phone panel.
+- The panels show durable runs from a projection refreshed every few seconds: they can lag DBOS by one refresh, which
+  is why every command is checked against a fresh build first. Route pins, cancel-attempt, revise and edit-brief are
+  not offered for durable runs (refused with a reason); cancelling a durable run stays `bt-durable cancel`.
 - The process-group fallback enforces only the runtime limit (see `bt_supervisor/README.md`).
 - Real provider CLIs were not run under the durable runtime during REQ-030 (the lab uses a fake `claude` through the real
   driver); the first real run should be a small plan.

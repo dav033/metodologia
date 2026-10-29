@@ -189,6 +189,9 @@ def _routes(handler) -> None:
         import bt_remote_commands as commands
         import bt_remote_recovery as recovery
         project, _, rdir = commands._run_target(target)
+        import bt_durable_panel
+        if bt_durable_panel.owned(rdir):      # the durable router picks routes; a retry cannot pin one
+            return _send_json(handler, {"routes": []}, 200)
         routes = recovery.route_options(project, rdir, task)
     except (ValueError, OSError, sqlite3.Error, bt_plans_api.PlanError):
         return _problem(handler, 404, "ROUTES_UNAVAILABLE", "Las rutas no están disponibles para esta ejecución.")
