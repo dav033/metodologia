@@ -46,3 +46,8 @@ rollback: git revert the merge of designer-parallel (7570dda33) on main, then sy
 previous main: 0ac2030474173ecb970248dd958ada87759b7330
 /home/david/bitacora/.state/durable/backups/bt_durable-20261029-073756.dump 5870770 9756111b2ca0e10c3f26846b21d5b30b900b71704a1c41f7b9f08a4e59f9ae75
 rollback: git revert the merge of subplan-control (57cbdd184) on main, then systemctl --user restart bitacora-web.service
+
+# eleventh deploy (stage runs refused on durable-owned plans, D-148; web restart only, engine untouched), 2026-10-29 08:04, session 7db4552d
+previous main: d5a5402ed92c06209cd2ca460e46bd62db139536
+/home/david/bitacora/.state/durable/backups/bt_durable-20261029-080452.dump 5871696 357fd5cbecabb5ca72f501029d3b79e3a62ab66cc8b83938ade3fe1b1062a70c
+rollback: git revert the merge of durable-stage-guard (96ab20ea8) on main, then systemctl --user restart bitacora-web.service

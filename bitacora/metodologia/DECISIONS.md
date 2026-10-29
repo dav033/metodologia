@@ -1486,3 +1486,19 @@ REQ-020 preserves the per-task M2 API and adds a versioned batch layer using cac
   chosen: fixed block, feed filtered to the subplan, build directly and review live, «nuevo» marks and list counts).
 - **Evidence:** `test_subplan_control` (7); Playwright run on a copy of REQ-021 (desktop/phone, dark/light, keyboard,
   «nuevo» across visits, feed switch, action links, no horizontal overflow).
+
+## D-148 — «Ejecutar subplan» is refused on a plan the durable runtime runs, until it can join a later stage
+
+- **Date:** 2026-10-29 · **Status:** Accepted (interim) · **Refines:** D-134, D-145
+- **Context:** pictures REQ-021 belongs to the durable runtime (`RUN.owner.json` backend `dbos`). «Ejecutar subplan»
+  froze a new stage and asked the legacy Scheduler to join it; the legacy owner refuses a durable run, and the durable
+  runtime has no stage join, so the stage was approved, nothing ran and the page said «El Scheduler empezó la
+  ejecución». The subplan control block (D-147) would have invited the owner to press it for SP-4.
+- **Decision:** `bt_stages.run`/`start_or_join` raise `DURABLE_OWNER` before anything is frozen when the run's owner is
+  the durable runtime; the button becomes «Ejecutar subplan: aún no disponible en el runtime durable» and the control
+  block lists it under «Falta para avanzar» (who: Ejecución) instead of «Te toca a ti».
+- **Consequences:** + no false «started» and no orphan stage; − confirmed subplans of a durable run wait until the
+  durable runtime can join a later stage into the running run (proposal, needs a `DBOS.patch`-gated change).
+- **Source:** found while building D-147 (session 7db4552d).
+- **Evidence:** `test_stages.Eligibility.test_a_plan_run_by_the_durable_runtime_is_refused_before_anything_is_frozen`
+  (red on `main` d5a5402ed: the stage was attempted), `test_subplan_control`.
