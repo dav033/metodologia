@@ -97,7 +97,9 @@ class QualityEngine:
             if existing is None:
                 raise QualityError("STORE_FAILURE", "completed request has no result")
             return existing
-        if state != "new" or not self.store.claim_work(order.idempotency_key):
+        # "queued": admitted but never claimed, or requeued once after an interruption (`recovery.retry_interrupted`);
+        # the claim is atomic, so only one verifier runs it
+        if state not in ("new", "queued") or not self.store.claim_work(order.idempotency_key):
             raise QualityError(
                 "REQUEST_IN_PROGRESS", "the same request already has an active verifier"
             )

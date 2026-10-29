@@ -67,11 +67,14 @@ def operator_verifier(store_path: Path) -> M6Verifier:
     from bt_scheduler_verification_authority import owner_verification_authority
 
     from .legacy import attestations
-    return M6Verifier(store_path=store_path,
-                      policy_for=lambda run: operator_quality_policy(run.project, requirement_dir(run)),
-                      authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project),
-                      attestations_for=lambda run: attestations(requirement_dir(run)),
-                      on_verdict=record_verdict)
+    verifier = M6Verifier(store_path=store_path,
+                          policy_for=lambda run: operator_quality_policy(run.project, requirement_dir(run)),
+                          authority_for=lambda run: owner_verification_authority(requirement_dir(run), run.project),
+                          attestations_for=lambda run: attestations(requirement_dir(run)),
+                          on_verdict=record_verdict)
+    for key in verifier.recover_interrupted():                # D-171: a restart never leaves a verification orphaned
+        LOG.info("verification %s was interrupted by the restart: queued to run again", key)
+    return verifier
 
 
 def record_verdict(attempt: AttemptRef, outcome) -> None:
